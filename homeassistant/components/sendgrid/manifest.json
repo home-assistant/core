@@ -1,6 +1,7 @@
 {
   "domain": "sendgrid",
   "name": "SendGrid",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/sendgrid",
   "iot_class": "cloud_push",

@@ -5,19 +5,15 @@ from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant.components.local_file.const import (
-    DEFAULT_NAME,
-    DOMAIN,
-    SERVICE_UPDATE_FILE_PATH,
-)
+from homeassistant.components.camera import async_get_image
+from homeassistant.components.local_file.const import DOMAIN, SERVICE_UPDATE_FILE_PATH
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 
 async def test_loading_file(
@@ -38,57 +34,45 @@ async def test_loading_file(
     assert body == "hello"
 
 
-async def test_file_not_readable_after_setup(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
-    loaded_entry: MockConfigEntry,
-) -> None:
-    """Test a warning is shown setup when file is not readable."""
-
-    client = await hass_client()
-
-    with patch(
-        "homeassistant.components.local_file.camera.open", side_effect=FileNotFoundError
+@pytest.mark.usefixtures("loaded_entry")
+async def test_file_not_readable_after_setup(hass: HomeAssistant) -> None:
+    """Test an error is raised when the file is not readable after setup."""
+    with (
+        patch(
+            "homeassistant.components.local_file.camera.open",
+            side_effect=FileNotFoundError,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
-        resp = await client.get("/api/camera_proxy/camera.local_file")
+        await async_get_image(hass, "camera.local_file")
 
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
-    assert "Could not read camera Local File image from file: mock.file" in caplog.text
+    assert exc_info.value.translation_key == "file_not_found"
 
 
 @pytest.mark.parametrize(
-    ("config", "url", "content_type"),
+    ("title", "config", "url", "content_type"),
     [
         (
-            {
-                "name": "test_jpg",
-                "file_path": "/path/to/image.jpg",
-            },
+            "test_jpg",
+            {"file_path": "/path/to/image.jpg"},
             "/api/camera_proxy/camera.test_jpg",
             "image/jpeg",
         ),
         (
-            {
-                "name": "test_png",
-                "file_path": "/path/to/image.png",
-            },
+            "test_png",
+            {"file_path": "/path/to/image.png"},
             "/api/camera_proxy/camera.test_png",
             "image/png",
         ),
         (
-            {
-                "name": "test_svg",
-                "file_path": "/path/to/image.svg",
-            },
+            "test_svg",
+            {"file_path": "/path/to/image.svg"},
             "/api/camera_proxy/camera.test_svg",
             "image/svg+xml",
         ),
         (
-            {
-                "name": "test_no_ext",
-                "file_path": "/path/to/image",
-            },
+            "test_no_ext",
+            {"file_path": "/path/to/image"},
             "/api/camera_proxy/camera.test_no_ext",
             "image/jpeg",
         ),
@@ -97,6 +81,7 @@ async def test_file_not_readable_after_setup(
 async def test_camera_content_type(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    title: str,
     config: dict[str, Any],
     url: str,
     content_type: str,
@@ -105,6 +90,7 @@ async def test_camera_content_type(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
+        title=title,
         options=config,
         entry_id="1",
     )
@@ -132,12 +118,7 @@ async def test_camera_content_type(
 
 @pytest.mark.parametrize(
     "get_config",
-    [
-        {
-            "name": DEFAULT_NAME,
-            "file_path": "mock/path.jpg",
-        }
-    ],
+    [{"file_path": "mock/path.jpg"}],
 )
 async def test_update_file_path(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
@@ -147,10 +128,8 @@ async def test_update_file_path(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
-        options={
-            "name": "local_file_camera_2",
-            "file_path": "mock/path_2.jpg",
-        },
+        title="local_file_camera_2",
+        options={"file_path": "mock/path_2.jpg"},
         entry_id="2",
     )
 

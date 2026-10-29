@@ -3,14 +3,13 @@
 from collections.abc import AsyncIterable
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
+import httpx2
 from openai import RateLimitError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import stt
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def _async_get_audio_stream(data: bytes) -> AsyncIterable[bytes]:
@@ -166,7 +165,7 @@ async def test_stt_process_audio_stream_api_error(
     """Test STT processing audio stream with API errors."""
     entity = hass.data[stt.DOMAIN].get_entity("stt.openai_stt")
     mock_create_transcription.side_effect = RateLimitError(
-        response=httpx.Response(status_code=429, request=""),
+        response=httpx2.Response(status_code=429, request=""),
         body=None,
         message=None,
     )

@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
@@ -16,8 +17,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import ConfigEntryFactoryType, WebsocketDataType
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 TEST_DATA = [
     (  # Air quality sensor

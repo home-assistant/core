@@ -14,6 +14,7 @@ failure modes or corner cases like how out of order packets are handled.
 """
 
 import asyncio
+from collections.abc import Callable
 import fractions
 import io
 import logging
@@ -1050,7 +1051,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
     segment = complete_segments[0]
     part = segment.parts[0]
     av_part = av.open(io.BytesIO(segment.init + part.data))
-    assert av_part.streams.video[0].codec_tag == "hev1"
+    assert av_part.streams.video[0].codec_tag == "hvc1"
     av_part.close()
 
     await stream.stop()
@@ -1140,6 +1141,26 @@ async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> N
         for orientation in (Orientation.NO_TRANSFORM, Orientation.ROTATE_RIGHT):
             stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
             stream.dynamic_stream_settings.orientation = orientation
+
+            # Both recordings must capture the same frame for the comparison
+            # below to hold, so drop every keyframe after the first. Each frame
+            # of the test video has different content, and the worker keeps
+            # stashing keyframes while the recording task is awaited.
+            keyframe_converter = stream._keyframe_converter
+            stash_keyframe_packet = keyframe_converter.stash_keyframe_packet
+            first_keyframe_stashed = threading.Event()
+
+            def stash_first_keyframe_packet(
+                packet: av.Packet,
+                stash: Callable[[av.Packet], None] = stash_keyframe_packet,
+                stashed: threading.Event = first_keyframe_stashed,
+            ) -> None:
+                if stashed.is_set():
+                    return
+                stashed.set()
+                stash(packet)
+
+            keyframe_converter.stash_keyframe_packet = stash_first_keyframe_packet
 
             with patch.object(hass.config, "is_allowed_path", return_value=True):
                 make_recording = hass.async_create_task(stream.async_record(filename))

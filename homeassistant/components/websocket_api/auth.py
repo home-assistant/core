@@ -111,10 +111,11 @@ class AuthPhase:
                 refresh_token.user,
                 refresh_token,
                 remote=self._request.remote,
+                cancel_ws=self._cancel_ws,
             )
             conn.subscriptions["auth"] = (
                 self._hass.auth.async_register_revoke_token_callback(
-                    refresh_token.id, self._cancel_ws
+                    refresh_token.id, conn.async_auth_revoked
                 )
             )
             await self._send_bytes_text(AUTH_OK_MESSAGE)

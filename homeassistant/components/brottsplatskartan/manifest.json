@@ -1,6 +1,7 @@
 {
   "domain": "brottsplatskartan",
   "name": "Brottsplatskartan",
+  "categories": ["local_services", "news_social_media"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/brottsplatskartan",

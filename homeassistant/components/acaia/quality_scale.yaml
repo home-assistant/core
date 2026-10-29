@@ -40,7 +40,9 @@ rules:
   action-exceptions:
     status: exempt
     comment: |
-      No custom actions are defined.
+      Button actions only enqueue commands; aioacaia writes them in a background task,
+      and entities are unavailable while the scale is disconnected, so there is no
+      failure to raise from the action.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

@@ -28,7 +28,7 @@ DOCUMENTATION_URL = (
 
 STEP_USER_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_AUTH_CODE): cv.string,
+        probatio.Required(probatio.Secret(CONF_AUTH_CODE)): cv.string,
     }
 )
 

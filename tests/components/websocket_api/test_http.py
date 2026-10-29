@@ -8,6 +8,15 @@ from unittest.mock import patch
 
 from aiohttp import ServerDisconnectedError, WSMsgType, web
 import pytest
+from pytest_homeassistant.common import (
+    async_call_logger_set_level,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.websocket_api import (
     DOMAIN,
@@ -18,15 +27,10 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import async_call_logger_set_level, async_fire_time_changed
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 
 @pytest.fixture
@@ -417,6 +421,16 @@ async def test_auth_timeout_logs_at_debug(
 
     client = await hass_client()
 
+    disconnected = asyncio.Event()
+
+    @callback
+    def track_disconnected() -> None:
+        disconnected.set()
+
+    async_dispatcher_connect(
+        hass, const.SIGNAL_WEBSOCKET_DISCONNECTED, track_disconnected
+    )
+
     # Patch the auth timeout to be very short (0.001 seconds)
     with (
         caplog.at_level(logging.DEBUG, "homeassistant.components.websocket_api"),
@@ -426,10 +440,11 @@ async def test_auth_timeout_logs_at_debug(
     ):
         # Try to connect - will timeout quickly since we don't send auth
         ws = await client.ws_connect("/api/websocket")
-        # Wait a bit for the timeout to trigger and cleanup to complete
-        await asyncio.sleep(0.1)
-        await ws.close()
-        await asyncio.sleep(0.1)
+        assert (await ws.receive_json())["type"] == "auth_required"
+        # Receiving the close frame lets the client answer it, so the server
+        # finishes closing without waiting for its close timeout
+        assert (await ws.receive()).type is WSMsgType.CLOSE
+        await disconnected.wait()
 
         # Check that "Did not receive auth message" is logged at debug, not warning
         debug_messages = [
@@ -597,3 +612,30 @@ async def test_enable_disable_debug_logging(
         assert msg["id"] == 2
         assert msg["type"] == "pong"
         assert 'Sending b\'{"id":2,"type":"pong"}\'' not in caplog.text
+
+
+async def test_received_secrets_are_redacted_in_debug_log(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test secrets in received messages don't reach the debug log."""
+    with caplog.at_level(logging.DEBUG, "homeassistant.components.websocket_api"):
+        client = await hass_ws_client(hass, hass_access_token)
+        await client.send_json(
+            {"id": 1, "type": "ping", "data": {"password": "nested-secret"}}
+        )
+        await client.receive_json()
+        await client.send_json([{"id": 2, "type": "ping", "new_password": "batched"}])
+        await client.receive_json()
+
+    received = "\n".join(
+        record.getMessage()
+        for record in caplog.records
+        if "Received" in record.getMessage()
+    )
+    assert hass_access_token not in received
+    assert "nested-secret" not in received
+    assert "batched" not in received
+    assert received.count(REDACTED) == 3

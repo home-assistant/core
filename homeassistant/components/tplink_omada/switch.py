@@ -37,8 +37,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
 from .const import DOMAIN
-from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
-from .coordinator import OmadaCoordinator
+from .coordinator import (
+    OmadaCoordinator,
+    OmadaGatewayCoordinator,
+    OmadaSwitchPortCoordinator,
+)
 from .entity import OmadaDeviceEntity, get_switch_port_base_name
 
 PARALLEL_UPDATES = 0

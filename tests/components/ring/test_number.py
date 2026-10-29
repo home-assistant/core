@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import MockConfigEntry, async_check_entity_translations, setup_platform
-
-from tests.common import snapshot_platform
 
 
 @pytest.mark.parametrize(

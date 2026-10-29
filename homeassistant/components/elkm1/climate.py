@@ -88,19 +88,19 @@ class ElkThermostat(ElkEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the temperature unit."""
+    def native_temperature_unit(self) -> str:
+        """Return the native temperature unit."""
         return self._temperature_unit
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._element.current_temp
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we are trying to reach."""
         if self._element.mode in (
             ThermostatMode.HEAT,
@@ -113,13 +113,13 @@ class ElkThermostat(ElkEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the high target temperature."""
         return self._element.cool_setpoint
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the low target temperature."""
         return self._element.heat_setpoint
 

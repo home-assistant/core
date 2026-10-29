@@ -1,6 +1,7 @@
 {
   "domain": "guntamatic",
   "name": "Guntamatic",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@JensTimmerman"],
   "config_flow": true,
   "dependencies": [],

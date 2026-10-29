@@ -31,7 +31,7 @@ class ChaconDioData:
 type ChaconDioConfigEntry = ConfigEntry[ChaconDioData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ChaconDioConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ChaconDioConfigEntry) -> None:
     """Set up chacon_dio from a config entry."""
 
     config = entry.data
@@ -68,13 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ChaconDioConfigEntry) ->
         )
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.client.disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.client.disconnect()

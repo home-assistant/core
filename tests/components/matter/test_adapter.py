@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.matter.adapter import get_clean_name
 from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import create_node_from_fixture
-
-from tests.common import MockConfigEntry
 
 
 def identifier_for(
@@ -327,6 +326,47 @@ async def test_composed_bridged_device_endpoint_removed(
     fire_endpoint_event(matter_client, EventType.ENDPOINT_REMOVED, matter_node, 2)
     await hass.async_block_till_done()
     assert device_registry.async_get_device_by_identifier(identifier, entry_id) is None
+
+
+async def test_migrate_unique_id_for_part_nested_below_another_part(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the unique_id of a part nested below another part is migrated.
+
+    `get_compose_parent()` resolves to the top of a composition instead of the
+    closest parent, so a part nested below another part of a bridge (here,
+    endpoint 4 nested below endpoint 3, itself below the `BridgedNode` endpoint 2)
+    gets a `-2-4-` unique_id postfix instead of the `-MatterNodeDevice-4-` postfix
+    it got before. An existing entity registry entry using the old unique_id must
+    be renamed to the new one so it is not orphaned.
+    """
+    node = create_node_from_fixture("mock_composed_bridge", {"3/29/3": [4]})
+    matter_client.get_nodes.return_value = [node]
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}
+    )
+    config_entry.add_to_hass(hass)
+
+    legacy_entry = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "00000000000004D2-0000000000000063-MatterNodeDevice-4-TemperatureSensor-1026-0",
+        config_entry=config_entry,
+        suggested_object_id="nested_part_temperature",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_entry = entity_registry.async_get(legacy_entry.entity_id)
+    assert migrated_entry is not None
+    assert (
+        migrated_entry.unique_id
+        == "00000000000004D2-0000000000000063-2-4-TemperatureSensor-1026-0"
+    )
+    assert hass.states.get(legacy_entry.entity_id) is not None
 
 
 @pytest.mark.usefixtures("matter_node")

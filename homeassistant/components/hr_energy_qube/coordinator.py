@@ -13,8 +13,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
+
+    from . import QubeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +35,10 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
     sw_version: str | None = None
 
     def __init__(
-        self, hass: HomeAssistant, client: QubeClient, entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        client: QubeClient,
+        entry: QubeConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
@@ -54,13 +58,17 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
             if not connected:
                 await self.client.close()
                 raise UpdateFailed(
-                    f"Unable to connect to Qube heat pump at {self.client.host}"
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders={"host": self.client.host},
                 )
             self.sw_version = await self.client.async_get_software_version()
         except OSError as err:
             await self.client.close()
             raise UpdateFailed(
-                f"Unable to connect to Qube heat pump at {self.client.host}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": self.client.host},
             ) from err
 
     @override
@@ -72,10 +80,15 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
             sg_ready_mode = await self.client.get_sg_ready_mode()
         except OSError as exc:
             raise UpdateFailed(
-                f"Error communicating with Qube heat pump: {exc}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(exc)},
             ) from exc
 
         if state is None:
-            raise UpdateFailed("No data received from Qube heat pump")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_data",
+            )
 
         return QubeData(state=state, switches=switches, sg_ready_mode=sg_ready_mode)

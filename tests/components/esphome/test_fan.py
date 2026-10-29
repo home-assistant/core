@@ -302,6 +302,17 @@ async def test_fan_entity_with_all_features_new_api(
     )
     mock_client.fan_command.reset_mock()
 
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "fan.test_my_fan", ATTR_PRESET_MODE: "Preset2"},
+        blocking=True,
+    )
+    mock_client.fan_command.assert_called_once_with(
+        key=1, state=True, preset_mode="Preset2", device_id=0
+    )
+    mock_client.fan_command.reset_mock()
+
 
 async def test_fan_entity_with_no_features_new_api(
     hass: HomeAssistant,

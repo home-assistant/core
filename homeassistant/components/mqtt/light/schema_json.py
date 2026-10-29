@@ -47,8 +47,9 @@ from homeassistant.util import color as color_util
 from homeassistant.util.json import json_loads_object
 
 from .. import subscription
-from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
+from ..config import MQTT_RW_SCHEMA
 from ..const import (
+    CONF_BRIGHTNESS_SCALE,
     CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
@@ -64,11 +65,14 @@ from ..const import (
     CONF_STATE_TOPIC,
     CONF_SUPPORTED_COLOR_MODES,
     CONF_TRANSITION,
+    CONF_WHITE_SCALE,
     DEFAULT_BRIGHTNESS,
     DEFAULT_BRIGHTNESS_SCALE,
     DEFAULT_EFFECT,
     DEFAULT_FLASH_TIME_LONG,
     DEFAULT_FLASH_TIME_SHORT,
+    DEFAULT_QOS,
+    DEFAULT_RETAIN,
     DEFAULT_WHITE_SCALE,
 )
 from ..entity import MqttEntity
@@ -76,11 +80,7 @@ from ..models import ReceiveMessage
 from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
-from .schema_basic import (
-    CONF_BRIGHTNESS_SCALE,
-    CONF_WHITE_SCALE,
-    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
-)
+from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ PLATFORM_SCHEMA_MODERN_JSON = (
             probatio.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
             probatio.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
             probatio.Optional(CONF_EFFECT_LIST): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(CONF_FLASH, default=DEFAULT_FLASH): cv.boolean,
             probatio.Optional(
@@ -119,7 +119,7 @@ PLATFORM_SCHEMA_MODERN_JSON = (
             probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
             probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
             probatio.Optional(CONF_SUPPORTED_COLOR_MODES): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [probatio.In(VALID_COLOR_MODES)],
                 probatio.Unique(),
                 valid_supported_color_modes,

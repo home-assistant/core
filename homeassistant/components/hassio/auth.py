@@ -15,12 +15,15 @@ import probatio
 
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
-from homeassistant.components.http.const import is_supervisor_unix_socket_request
+from homeassistant.components.http.const import (
+    DATA_SUPERVISOR_USER,
+    is_supervisor_unix_socket_request,
+)
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME, DATA_HASSIO_SUPERVISOR_USER
+from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +44,7 @@ class HassIOBaseAuth(HomeAssistantView):
 
     def _check_access(self, request: web.Request) -> None:
         """Check if this call is from Supervisor."""
-        user = self.hass.data.get(DATA_HASSIO_SUPERVISOR_USER)
+        user = self.hass.data.get(DATA_SUPERVISOR_USER)
         if user is None:
             raise HTTPServiceUnavailable
 

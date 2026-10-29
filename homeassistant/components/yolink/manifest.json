@@ -1,6 +1,7 @@
 {
   "domain": "yolink",
   "name": "YoLink",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@matrixd2"],
   "config_flow": true,
   "dependencies": ["auth", "application_credentials"],

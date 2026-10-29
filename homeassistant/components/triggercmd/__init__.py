@@ -15,7 +15,7 @@ PLATFORMS = [
 type TriggercmdConfigEntry = ConfigEntry[ha.Hub]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> None:
     """Set up TRIGGERcmd from a config entry."""
     hass_client = httpx_client.get_async_client(hass)
     hub = ha.Hub(entry.data[CONF_TOKEN])
@@ -28,9 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -
 
     entry.runtime_data = hub
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -1,6 +1,7 @@
 {
   "domain": "ecowitt",
   "name": "Ecowitt",
+  "categories": ["sensors", "weather_alerts"],
   "codeowners": ["@pvizeli"],
   "config_flow": true,
   "dependencies": ["webhook"],

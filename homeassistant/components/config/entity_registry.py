@@ -11,7 +11,6 @@ from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry as dr,
     entity_registry as er,
     label_registry as lr,
 )
@@ -244,19 +243,6 @@ def websocket_update_entity(
         labels = set(msg["labels"])
         changes["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
-    if "disabled_by" in msg and msg["disabled_by"] is None:
-        # Don't allow enabling an entity of a disabled device
-        if entity_entry.device_id:
-            device_registry = dr.async_get(hass)
-            device = device_registry.async_get(entity_entry.device_id)
-            if device and device.disabled:
-                connection.send_message(
-                    websocket_api.error_message(
-                        msg["id"], "invalid_info", "Device is disabled"
-                    )
-                )
-                return
-
     # Update the categories if provided
     if "categories" in msg:
         categories = entity_entry.categories.copy()
@@ -268,6 +254,8 @@ def websocket_update_entity(
                 # Add or update the category for the given scope
                 categories[scope] = category_id
         changes["categories"] = categories
+
+    was_disabled = entity_entry.disabled_by is not None
 
     try:
         if changes:
@@ -293,7 +281,7 @@ def websocket_update_entity(
         return
 
     result: dict[str, Any] = {"entity_entry": entity_entry.extended_dict}
-    if "disabled_by" in changes and changes["disabled_by"] is None:
+    if was_disabled and entity_entry.disabled_by is None:
         # Enabling an entity requires a config entry reload, or HA restart
         if not (config_entry_id := entity_entry.config_entry_id) or (
             (config_entry := hass.config_entries.async_get_entry(config_entry_id))

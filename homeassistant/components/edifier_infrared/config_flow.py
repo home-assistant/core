@@ -19,7 +19,12 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_COMMAND_SET, CONF_INFRARED_ENTITY_ID, DOMAIN
+from .const import (
+    CONF_COMMAND_SET,
+    CONF_INFRARED_ENTITY_ID,
+    DOMAIN,
+    SUPPORTED_COMMAND_SETS,
+)
 
 
 class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -69,7 +74,11 @@ class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     probatio.Required(CONF_MODEL): SelectSelector(
                         SelectSelectorConfig(
-                            options=[model.value for model in EdifierModel],
+                            options=[
+                                model.value
+                                for model in EdifierModel
+                                if MODEL_TO_COMMAND_SET[model] in SUPPORTED_COMMAND_SETS
+                            ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),

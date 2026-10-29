@@ -90,6 +90,12 @@
     },
     "request_timeout": {
       "message": "Timeout while connecting for entry {config_title}.\n{error}"
+    },
+    "update_connection_failed": {
+      "message": "Connection to transport.opendata.ch cannot be established."
+    },
+    "update_failed": {
+      "message": "Unable to connect and retrieve data from transport.opendata.ch."
     }
   },
   "selector": {

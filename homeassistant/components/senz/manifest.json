@@ -1,6 +1,7 @@
 {
   "domain": "senz",
   "name": "nVent RAYCHEM SENZ",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@milanmeu"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

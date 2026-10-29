@@ -1,12 +1,12 @@
 {
   "domain": "saj",
   "name": "SAJ Solar Inverter",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@fredericvl", "@edurenye"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/saj",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["pysaj"],
-  "quality_scale": "legacy",
-  "requirements": ["pysaj==0.0.16"]
+  "loggers": ["aiosaj"],
+  "requirements": ["aiosaj==0.2.2"]
 }

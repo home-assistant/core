@@ -63,7 +63,7 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
             hw_version=versions.get("hw_sm"),
         )
         if connections is not None:
-            device_info_typed["connections"] = connections
+            device_info_typed.connections = connections
 
         self._attr_device_info = device_info_typed
 

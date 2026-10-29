@@ -4,6 +4,7 @@ from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -63,6 +64,10 @@ class AsusWrtDevice(ScannerEntity):
         self._router = router
         self._device = device
         self._attr_name = device.name or DEFAULT_DEVICE_NAME
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, device.mac)},
+            name=device.name or device.mac,
+        )
 
     @property
     @override

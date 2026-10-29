@@ -1,5 +1,7 @@
 """Test the Coinbase config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 import logging
 from unittest.mock import patch
 
@@ -26,6 +28,23 @@ from .common import (
 from .const import BAD_CURRENCY, BAD_EXCHANGE_RATE, GOOD_CURRENCY, GOOD_EXCHANGE_RATE
 
 
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch the Coinbase client to return valid data."""
+    with (
+        patch(
+            "coinbase.rest.RESTClient.get_portfolios",
+            return_value=mock_get_portfolios(),
+        ),
+        patch("coinbase.rest.RESTClient.get_accounts", new=mocked_get_accounts_v3),
+        patch(
+            "coinbase.rest.RESTClient.get",
+            return_value={"data": mock_get_exchange_rates()},
+        ),
+    ):
+        yield
+
+
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
@@ -47,7 +66,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.coinbase.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -128,6 +147,21 @@ async def test_form_invalid_auth(
         "Coinbase rejected API credentials due to an invalid API secret" in caplog.text
     )
 
+    with (
+        _patch_success(),
+        patch(
+            "homeassistant.components.coinbase.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -150,6 +184,21 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        _patch_success(),
+        patch(
+            "homeassistant.components.coinbase.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_catch_all_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exceptions."""
@@ -171,6 +220,21 @@ async def test_form_catch_all_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        _patch_success(),
+        patch(
+            "homeassistant.components.coinbase.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_option_form(hass: HomeAssistant) -> None:
@@ -231,6 +295,19 @@ async def test_form_bad_account_currency(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "currency_unavailable"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CURRENCIES: [GOOD_CURRENCY],
+                CONF_EXCHANGE_RATES: [GOOD_EXCHANGE_RATE],
+                CONF_EXCHANGE_PRECISION: 5,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_bad_exchange_rate(hass: HomeAssistant) -> None:
     """Test we handle a bad exchange rate."""
@@ -258,6 +335,19 @@ async def test_form_bad_exchange_rate(hass: HomeAssistant) -> None:
         )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "exchange_rate_unavailable"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CURRENCIES: [GOOD_CURRENCY],
+                CONF_EXCHANGE_RATES: [GOOD_EXCHANGE_RATE],
+                CONF_EXCHANGE_PRECISION: 5,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_option_catch_all_exception(hass: HomeAssistant) -> None:
@@ -293,6 +383,19 @@ async def test_option_catch_all_exception(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CURRENCIES: [GOOD_CURRENCY],
+                CONF_EXCHANGE_RATES: [GOOD_EXCHANGE_RATE],
+                CONF_EXCHANGE_PRECISION: 5,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test reauth flow."""
@@ -310,14 +413,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         config_entry = await init_mock_coinbase(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -364,14 +460,7 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
         config_entry = await init_mock_coinbase(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     # Test invalid auth during reauth
     api_auth_error_key = HTTPError("invalid api key")
@@ -390,3 +479,15 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "invalid_auth_key"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "new_key",
+                CONF_API_TOKEN: "new_secret",
+            },
+        )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"

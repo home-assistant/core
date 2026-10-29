@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from harbor import HarborCommandError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -20,8 +21,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import SETTINGS_TOPIC, emit_message
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 NIGHT_MODE_ENTITY = "select.harbor_camera_1234567890_night_mode"
 

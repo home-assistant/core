@@ -2,6 +2,7 @@
   "domain": "owntracks",
   "name": "OwnTracks",
   "after_dependencies": ["mqtt", "cloud"],
+  "categories": ["presence_location.phones_companion_apps"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["webhook"],

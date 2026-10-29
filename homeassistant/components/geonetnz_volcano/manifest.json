@@ -1,6 +1,7 @@
 {
   "domain": "geonetnz_volcano",
   "name": "GeoNet NZ Volcano",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@exxamalte"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geonetnz_volcano",

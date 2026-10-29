@@ -1,6 +1,7 @@
 {
   "domain": "geocaching",
   "name": "Geocaching",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@Sholofly", "@reinder83"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

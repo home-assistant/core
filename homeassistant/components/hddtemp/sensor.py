@@ -40,10 +40,10 @@ SCAN_INTERVAL = timedelta(minutes=1)
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_DISKS, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )

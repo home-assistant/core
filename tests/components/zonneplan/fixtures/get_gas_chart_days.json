@@ -1,0 +1,85 @@
+{
+  "measurement_groups": [
+    {
+      "date": "2026-08-31T22:00:00.000000Z",
+      "group_type": "normal",
+      "measurements": [
+        {
+          "measured_at": "2026-09-16T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 0
+          },
+          "value": 0
+        },
+        {
+          "measured_at": "2026-09-17T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1
+          },
+          "value": 1400
+        },
+        {
+          "measured_at": "2026-09-18T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1
+          },
+          "value": 900
+        },
+        {
+          "measured_at": "2026-09-19T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1
+          },
+          "value": 1300
+        },
+        {
+          "measured_at": "2026-09-20T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1
+          },
+          "value": 1100
+        },
+        {
+          "measured_at": "2026-09-21T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1
+          },
+          "value": 600
+        },
+        {
+          "measured_at": "2026-09-22T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1
+          },
+          "value": 2000
+        },
+        {
+          "measured_at": "2026-09-23T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1
+          },
+          "value": 400
+        },
+        {
+          "measured_at": "2026-09-25T22:00:00.000000Z",
+          "meta": {
+            "has_supply_contract": 1
+          },
+          "value": 0
+        }
+      ],
+      "meta": {
+        "delivery_costs_excl_tax": 76250115,
+        "delivery_costs_incl_tax": 132213608,
+        "delivery_price_per_unit_excl_tax": 9902612.4,
+        "delivery_price_per_unit_incl_tax": 17170598.5,
+        "energy_delivered_sum": 7700,
+        "has_supply_contract": true
+      },
+      "mutable": true,
+      "total": 7700,
+      "type": "days"
+    }
+  ],
+  "powerplay": []
+}

@@ -20,8 +20,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirTouch4ConfigEntry
 from .const import DOMAIN
+from .coordinator import AirTouch4ConfigEntry
 
 AT_TO_HA_STATE = {
     "Heat": HVACMode.HEAT,
@@ -92,7 +92,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator, ac_number, info):
         """Initialize the climate device."""
@@ -117,7 +117,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> int:
+    def native_current_temperature(self) -> int:
         """Return the current temperature."""
         return self._unit.Temperature
 
@@ -211,7 +211,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = AT_GROUP_MODES
 
     def __init__(self, coordinator, group_number, info):
@@ -249,13 +249,13 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> int:
+    def native_current_temperature(self) -> int:
         """Return the current temperature."""
         return self._unit.Temperature
 
     @property
     @override
-    def target_temperature(self) -> int:
+    def native_target_temperature(self) -> int:
         """Return the temperature we are trying to reach."""
         return self._unit.TargetSetpoint
 

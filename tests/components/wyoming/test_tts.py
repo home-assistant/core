@@ -6,6 +6,7 @@ from unittest.mock import patch
 import wave
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.error import Error
@@ -20,8 +21,6 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.util import dt as dt_util
 
 from . import TTS_INFO_LANGUAGE_REPLACED, TTS_INFO_NEW_VOICE, MockAsyncTcpClient
-
-from tests.common import async_fire_time_changed
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:

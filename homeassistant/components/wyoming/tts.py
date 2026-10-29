@@ -25,10 +25,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_SPEAKER
+from .const import ATTR_SPEAKER, DOMAIN
 from .coordinator import WyomingInfoCoordinator
 from .data import WyomingService
-from .error import WyomingError, error_event_message
+from .error import WyomingError, error_event_details
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,6 +71,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self._rebuild_voices(self._tts_service)
 
         self._attr_name = self._tts_service.name
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{config_entry.entry_id}-tts"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override
@@ -156,7 +157,13 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
                         if Error.is_type(event.type):
                             raise HomeAssistantError(
-                                error_event_message(Error.from_event(event))
+                                translation_domain=DOMAIN,
+                                translation_key="service_error",
+                                translation_placeholders={
+                                    "error": error_event_details(
+                                        Error.from_event(event)
+                                    )
+                                },
                             )
 
                         if AudioStop.is_type(event.type):
@@ -257,7 +264,11 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
             while event := await client.read_event():
                 if Error.is_type(event.type):
                     raise HomeAssistantError(
-                        error_event_message(Error.from_event(event))
+                        translation_domain=DOMAIN,
+                        translation_key="service_error",
+                        translation_placeholders={
+                            "error": error_event_details(Error.from_event(event))
+                        },
                     )
 
                 if wav_header_sent and AudioChunk.is_type(event.type):

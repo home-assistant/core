@@ -465,8 +465,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         self._updated_registry = True
         # Create linked HA DeviceEntry now the information is known.
-        device_entry = dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self._config_entry.entry_id, **device_info
+        device_entry = dr.async_get(self.hass).async_get_or_create_from_info(
+            config_entry_id=self._config_entry.entry_id, device_info=device_info
         )
 
         # Update entity registry to link to the device
@@ -558,6 +558,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
     def available(self) -> bool:
         """Device is available when we have a connection to it."""
         return self._device is not None and self._device.profile_device.available
+
+    @property
+    def device(self) -> DmrDevice | None:
+        """Return the connected DMR device, if any."""
+        return self._device
 
     @property
     @override

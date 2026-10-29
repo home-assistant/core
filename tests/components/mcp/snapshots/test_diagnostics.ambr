@@ -1,0 +1,44 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'authentication': False,
+    'server': dict({
+      'capabilities': dict({
+        'tools': dict({
+          'listChanged': True,
+        }),
+      }),
+      'protocolVersion': '2025-03-26',
+      'serverInfo': dict({
+        'name': 'Memory Server',
+        'version': '1.0.0',
+      }),
+    }),
+    'tools': list([
+      dict({
+        'annotations': dict({
+          'destructive': True,
+          'idempotent': False,
+          'open_world': False,
+          'read_only': True,
+        }),
+        'description': 'Search memory for relevant context based on a query.',
+        'input_schema': dict({
+          'additionalProperties': False,
+          'properties': dict({
+            'query': dict({
+              'description': 'A free text query to search context for.',
+              'type': 'string',
+            }),
+          }),
+          'required': list([
+            'query',
+          ]),
+          'type': 'object',
+        }),
+        'name': 'search_memory',
+        'title': 'Search memory',
+      }),
+    ]),
+  })
+# ---

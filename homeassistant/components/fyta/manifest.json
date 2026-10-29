@@ -1,6 +1,7 @@
 {
   "domain": "fyta",
   "name": "FYTA",
+  "categories": ["garden_plants"],
   "codeowners": ["@dontinelli"],
   "config_flow": true,
   "dhcp": [{ "hostname": "fyta*" }],

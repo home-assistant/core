@@ -2,11 +2,11 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:
@@ -18,7 +18,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(

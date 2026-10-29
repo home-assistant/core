@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.components.number import (
@@ -21,8 +22,6 @@ from . import (
     modern_forms_breeze_active_call_mock,
     modern_forms_breeze_call_mock,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_no_breeze_intensity_without_wind_support(

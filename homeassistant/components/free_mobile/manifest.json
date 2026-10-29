@@ -1,6 +1,7 @@
 {
   "domain": "free_mobile",
   "name": "Free Mobile",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/free_mobile",
   "iot_class": "cloud_push",

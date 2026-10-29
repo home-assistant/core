@@ -1,6 +1,10 @@
 {
   "domain": "netgear",
   "name": "NETGEAR",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@Quentame", "@starkillerOG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/netgear",

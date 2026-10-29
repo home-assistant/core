@@ -23,10 +23,6 @@ from homeassistant.const import (
     CONF_SELECTOR,
     CONF_SEQUENCE,
     CONF_VARIABLES,
-    SERVICE_RELOAD,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -48,6 +44,7 @@ from .const import (
     CONF_TRACE,
     DOMAIN,
     LOGGER,
+    ScriptService,
 )
 from .helpers import async_get_blueprints
 
@@ -62,10 +59,10 @@ _MINIMAL_SCRIPT_ENTITY_SCHEMA = probatio.Schema(
 )
 
 _INVALID_OBJECT_IDS = {
-    SERVICE_RELOAD,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_TOGGLE,
+    ScriptService.RELOAD,
+    ScriptService.TURN_OFF,
+    ScriptService.TURN_ON,
+    ScriptService.TOGGLE,
 }
 
 _SCRIPT_OBJECT_ID_SCHEMA = probatio.All(

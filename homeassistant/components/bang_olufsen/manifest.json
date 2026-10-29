@@ -1,6 +1,7 @@
 {
   "domain": "bang_olufsen",
   "name": "Bang & Olufsen",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@mj23000"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bang_olufsen",

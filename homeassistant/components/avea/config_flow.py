@@ -124,7 +124,6 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "name": self._discovery_info.name or self._discovery_info.address
         }
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],

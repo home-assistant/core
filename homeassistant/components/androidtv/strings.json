@@ -32,6 +32,12 @@
     }
   },
   "exceptions": {
+    "cannot_connect_adb_server": {
+      "message": "Could not connect to the device at {address} using the ADB server at {adb_server}"
+    },
+    "cannot_connect_python_adb": {
+      "message": "Could not connect to the device at {address} using the Python ADB implementation with ADB key {adbkey}"
+    },
     "failed_send": {
       "message": "Failed to send command {cmd}"
     }

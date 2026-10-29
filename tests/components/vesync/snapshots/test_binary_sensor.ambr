@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -40,7 +40,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -76,7 +76,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -112,7 +112,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -143,12 +143,48 @@
   list([
   ])
 # ---
+# name: test_sensor_state[Air Purifier Vital 200S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'vital200s-purifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LAP-V201S-WUS',
+      'model_id': None,
+      'name': 'Air Purifier Vital 200S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[Air Purifier Vital 200S][entities]
+  list([
+  ])
+# ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -184,7 +220,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -215,12 +251,48 @@
   list([
   ])
 # ---
+# name: test_sensor_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CoreBreeze 432S][entities]
+  list([
+  ])
+# ---
 # name: test_sensor_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -256,7 +328,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -320,7 +392,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -356,9 +428,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '200s-humidifier4321')]>,
       'disabled_by': None,
       'domain': 'binary_sensor',
       'entity_category': None,
@@ -391,9 +463,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '200s-humidifier4321')]>,
       'disabled_by': None,
       'domain': 'binary_sensor',
       'entity_category': None,
@@ -454,7 +526,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -490,9 +562,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
       'domain': 'binary_sensor',
       'entity_category': None,
@@ -525,9 +597,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
       'domain': 'binary_sensor',
       'entity_category': None,
@@ -588,7 +660,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -624,9 +696,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '600s-humidifier')]>,
       'disabled_by': None,
       'domain': 'binary_sensor',
       'entity_category': None,
@@ -659,9 +731,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '600s-humidifier')]>,
       'disabled_by': None,
       'domain': 'binary_sensor',
       'entity_category': None,
@@ -694,7 +766,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -730,7 +802,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -766,7 +838,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -802,7 +874,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -830,42 +902,6 @@
   ])
 # ---
 # name: test_sensor_state[Wall Switch][entities]
-  list([
-  ])
-# ---
-# name: test_sensor_state[CoreBreeze 432S][devices]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'vesync',
-          'corebreeze432s',
-        ),
-      }),
-      'labels': set({
-      }),
-      'manufacturer': 'VeSync',
-      'model': 'LPF-R432S-AEU',
-      'model_id': None,
-      'name': 'CoreBreeze 432S',
-      'name_by_user': None,
-      'serial_number': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_sensor_state[CoreBreeze 432S][entities]
   list([
   ])
 # ---

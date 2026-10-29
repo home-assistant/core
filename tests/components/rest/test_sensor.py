@@ -6,6 +6,8 @@ import ssl
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config as hass_config
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
@@ -39,9 +41,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import SSLCipherList
-
-from tests.common import get_fixture_path
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_missing_config(hass: HomeAssistant) -> None:

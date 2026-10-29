@@ -91,7 +91,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery confirmation."""
         if user_input is not None:
             return await self.async_step_manual({CONF_DEVICE: self.data[CONF_DEVICE]})
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="usb_confirm",
             description_placeholders={

@@ -1,7 +1,7 @@
 """Helper functions for the Cert Expiry platform."""
 
 import asyncio
-import datetime
+import datetime as dt
 import socket
 import ssl
 from typing import Any
@@ -45,7 +45,7 @@ async def get_cert_expiry_timestamp(
     hass: HomeAssistant,
     hostname: str,
     port: int,
-) -> datetime.datetime:
+) -> dt.datetime:
     """Return the certificate's expiration timestamp."""
     try:
         cert = await async_get_cert(hass, hostname, port)

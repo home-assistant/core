@@ -5,6 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from pycasperglow import CasperGlowError, GlowState
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.casper_glow.const import (
@@ -21,8 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 
 ENTITY_ID = "select.jar_dimming_time"
 

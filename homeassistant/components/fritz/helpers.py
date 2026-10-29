@@ -18,7 +18,7 @@ def device_filter_out_from_trackers(
 ) -> bool:
     """Check if device should be filtered out from trackers."""
     reason: str | None = None
-    if device.ip_address == "":
+    if not device.ip_address:
         reason = "Missing IP"
     elif _is_tracked(mac, current_devices):
         reason = "Already tracked"

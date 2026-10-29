@@ -7,6 +7,7 @@ from pypck.inputs import ModStatusVar, Unknown
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import Var, VarUnit, VarValue
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -32,8 +33,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 CLIMATE_CLIMATE1 = "climate.testmodule_climate1"
 

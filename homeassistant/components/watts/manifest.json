@@ -1,6 +1,7 @@
 {
   "domain": "watts",
   "name": "Watts Vision +",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@theobld-ww", "@devender-verma-ww", "@ssi-spyro"],
   "config_flow": true,
   "dependencies": ["application_credentials", "cloud"],

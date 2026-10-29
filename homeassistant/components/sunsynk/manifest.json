@@ -1,6 +1,7 @@
 {
   "domain": "sunsynk",
   "name": "Sunsynk",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@jamesridgway"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sunsynk",

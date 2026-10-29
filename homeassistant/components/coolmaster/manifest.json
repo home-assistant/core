@@ -1,6 +1,7 @@
 {
   "domain": "coolmaster",
   "name": "CoolMasterNet",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@OnFreund"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/coolmaster",

@@ -1,6 +1,7 @@
 {
   "domain": "aws_s3",
   "name": "AWS S3",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@tomasbedrich"],
   "config_flow": true,
   "dependencies": ["backup"],

@@ -6,6 +6,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 import tibber
 
 from homeassistant.components.application_credentials import (
@@ -19,9 +21,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture

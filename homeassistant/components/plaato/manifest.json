@@ -2,6 +2,7 @@
   "domain": "plaato",
   "name": "Plaato",
   "after_dependencies": ["cloud"],
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@JohNan"],
   "config_flow": true,
   "dependencies": ["webhook"],

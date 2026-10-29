@@ -1,6 +1,7 @@
 {
   "domain": "envisalink",
   "name": "Envisalink",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/envisalink",
   "iot_class": "local_push",

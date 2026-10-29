@@ -37,7 +37,7 @@ class DailyCalendarEventType(StrEnum):
     MINCHA_KETANA = "mincha_ketana"
     PLAG_HAMINCHA = "plag_hamincha"
     SHKIA = "shkia"
-    TSET_HAKOHAVIM = "tset_hakohavim_tsom"
+    TSET_HAKOHAVIM = "tset_hakohavim"
 
 
 class YearlyCalendarEventType(StrEnum):

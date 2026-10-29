@@ -68,6 +68,28 @@ def _infrared_entity_schema(
     )
 
 
+@callback
+def _ac_schema(hass: HomeAssistant) -> probatio.Schema:
+    """Return the AC schema: emitter, optional receiver and supported modes."""
+    return _infrared_entity_schema(hass, emitter_required=True).extend(
+        {
+            probatio.Required(
+                CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES
+            ): probatio.All(
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=[mode.value for mode in _HVAC_MODE_OPTIONS],
+                        translation_key=CONF_HVAC_MODES,
+                        mode=SelectSelectorMode.LIST,
+                        multiple=True,
+                    )
+                ),
+                probatio.Length(min=1, msg="no_hvac_modes"),
+            )
+        }
+    )
+
+
 class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for LG IR."""
 
@@ -78,17 +100,16 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = ent_reg.async_get(entity_id)
         return entry.name or entry.original_name or entity_id if entry else entity_id
 
-    async def _async_create_device_entry(
+    @callback
+    def _async_abort_infrared_entities_match(
         self, device_type: LGDeviceType, user_input: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Abort on a duplicate IR entity and create the entry for the device."""
-        emitter_id = user_input.get(CONF_INFRARED_ENTITY_ID)
-        receiver_id = user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
-        if emitter_id:
+    ) -> None:
+        """Abort if another entry of this device type uses one of these IR entities."""
+        if emitter_id := user_input.get(CONF_INFRARED_ENTITY_ID):
             self._async_abort_entries_match(
                 {CONF_DEVICE_TYPE: device_type, CONF_INFRARED_ENTITY_ID: emitter_id}
             )
-        if receiver_id:
+        if receiver_id := user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
             self._async_abort_entries_match(
                 {
                     CONF_DEVICE_TYPE: device_type,
@@ -96,7 +117,15 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
 
-        title_entity_id = emitter_id or receiver_id
+    async def _async_create_device_entry(
+        self, device_type: LGDeviceType, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Abort on a duplicate IR entity and create the entry for the device."""
+        self._async_abort_infrared_entities_match(device_type, user_input)
+
+        title_entity_id = user_input.get(CONF_INFRARED_ENTITY_ID) or user_input.get(
+            CONF_INFRARED_RECEIVER_ENTITY_ID
+        )
         if TYPE_CHECKING:
             assert title_entity_id is not None
         return self.async_create_entry(
@@ -149,25 +178,41 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_create_device_entry(LGDeviceType.AC, user_input)
 
+        return self.async_show_form(step_id="ac", data_schema=_ac_schema(self.hass))
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the infrared entities and supported modes."""
+        entry = self._get_reconfigure_entry()
+        device_type = LGDeviceType(entry.data[CONF_DEVICE_TYPE])
+        errors: dict[str, str] = {}
+
+        if device_type is LGDeviceType.AC:
+            if not async_get_emitters(self.hass):
+                return self.async_abort(reason="no_infrared_emitters")
+            data_schema = _ac_schema(self.hass)
+        else:
+            if not async_get_emitters(self.hass) and not async_get_receivers(self.hass):
+                return self.async_abort(reason="no_infrared_entities")
+            data_schema = _infrared_entity_schema(self.hass, emitter_required=False)
+
+        if user_input is not None:
+            if device_type is LGDeviceType.TV and not (
+                user_input.get(CONF_INFRARED_ENTITY_ID)
+                or user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
+            ):
+                errors["base"] = "missing_infrared_entity"
+            else:
+                self._async_abort_infrared_entities_match(device_type, user_input)
+                # Replace rather than update the data, so a cleared optional
+                # selector removes that entity from the entry.
+                return self.async_update_reload_and_abort(
+                    entry, data={CONF_DEVICE_TYPE: device_type, **user_input}
+                )
+
         return self.async_show_form(
-            step_id="ac",
-            data_schema=_infrared_entity_schema(
-                self.hass, emitter_required=True
-            ).extend(
-                {
-                    probatio.Required(
-                        CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES
-                    ): probatio.All(
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=[mode.value for mode in _HVAC_MODE_OPTIONS],
-                                translation_key=CONF_HVAC_MODES,
-                                mode=SelectSelectorMode.LIST,
-                                multiple=True,
-                            )
-                        ),
-                        probatio.Length(min=1, msg="no_hvac_modes"),
-                    )
-                }
-            ),
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(data_schema, entry.data),
+            errors=errors,
         )

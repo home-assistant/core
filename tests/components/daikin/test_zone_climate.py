@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
@@ -37,8 +38,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import ZoneDevice, configure_zone_device
-
-from tests.common import MockConfigEntry
 
 HOST = "127.0.0.1"
 

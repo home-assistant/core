@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import DOMAIN
+from .const import DOMAIN
 from .schemata import CONFIG_SCHEMA, get_config_schema_with_default_host
 
 _LOGGER = logging.getLogger(__name__)

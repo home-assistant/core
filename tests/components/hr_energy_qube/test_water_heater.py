@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
@@ -14,14 +15,12 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "water_heater.qube_heat_pump_domestic_hot_water"
 
@@ -61,15 +60,26 @@ async def test_set_temperature(
     mock_qube_client.write_setpoint.assert_awaited_once_with("setpoint_dhw", 55)
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "return_value"),
+    [
+        (ConnectionError, None),
+        (None, False),
+    ],
+)
 async def test_set_temperature_failure(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception] | None,
+    return_value: bool | None,
 ) -> None:
     """Test set temperature raises HomeAssistantError on failure."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_qube_client.write_setpoint = AsyncMock(return_value=False)
+    mock_qube_client.write_setpoint = AsyncMock(
+        side_effect=side_effect, return_value=return_value
+    )
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
@@ -108,6 +118,35 @@ async def test_set_operation_mode(
     )
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "return_value"),
+    [
+        (ConnectionError, None),
+        (None, False),
+    ],
+)
+async def test_set_operation_mode_failure(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception] | None,
+    return_value: bool | None,
+) -> None:
+    """Test set operation mode raises HomeAssistantError on failure."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_qube_client.write_switch = AsyncMock(
+        side_effect=side_effect, return_value=return_value
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_OPERATION_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPERATION_MODE: STATE_PERFORMANCE},
+            blocking=True,
+        )
+
+
 async def test_current_operation_boost(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
@@ -122,3 +161,19 @@ async def test_current_operation_boost(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes["operation_mode"] == STATE_PERFORMANCE
+
+
+async def test_current_operation_unknown(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test current operation is unknown when the boost coil cannot be read."""
+    mock_qube_client.read_all_switches.return_value["tapw_timeprogram_bms_forced"] = (
+        None
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
+from bsblan import State
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,7 +19,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import BSBLanConfigEntry, BSBLanData
 from .coordinator import BSBLanFastData
-from .entity import BSBLanEntity
+from .entity import BSBLanCircuitEntity, BSBLanEntity
 
 PARALLEL_UPDATES = 1
 
@@ -30,20 +32,15 @@ class BSBLanSensorEntityDescription(SensorEntityDescription):
     exists_fn: Callable[[BSBLanFastData], bool] = lambda data: True
 
 
+@dataclass(frozen=True, kw_only=True)
+class BSBLanCircuitSensorEntityDescription(SensorEntityDescription):
+    """Describes BSB-LAN heating circuit sensor entity."""
+
+    value_fn: Callable[[State], StateType]
+    exists_fn: Callable[[State], bool] = lambda state: True
+
+
 SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
-    BSBLanSensorEntityDescription(
-        key="current_temperature",
-        translation_key="current_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: (
-            data.sensor.current_temperature.value
-            if data.sensor.current_temperature is not None
-            else None
-        ),
-        exists_fn=lambda data: data.sensor.current_temperature is not None,
-    ),
     BSBLanSensorEntityDescription(
         key="outside_temperature",
         translation_key="outside_temperature",
@@ -74,6 +71,20 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
     ),
 )
 
+CIRCUIT_SENSOR_TYPES: tuple[BSBLanCircuitSensorEntityDescription, ...] = (
+    BSBLanCircuitSensorEntityDescription(
+        key="current_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda state: (
+            state.current_temperature.value
+            if state.current_temperature is not None
+            else None
+        ),
+        exists_fn=lambda state: state.current_temperature is not None,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -84,11 +95,17 @@ async def async_setup_entry(
     data = entry.runtime_data
 
     # Only create sensors for available data points
-    entities = [
+    entities: list[SensorEntity] = [
         BSBLanSensor(data, description)
         for description in SENSOR_TYPES
         if description.exists_fn(data.fast_coordinator.data)
     ]
+    entities.extend(
+        BSBLanCircuitSensor(data, circuit, description)
+        for circuit in data.available_circuits
+        for description in CIRCUIT_SENSOR_TYPES
+        if description.exists_fn(data.fast_coordinator.data.states[circuit])
+    )
 
     if entities:
         async_add_entities(entities)
@@ -115,3 +132,35 @@ class BSBLanSensor(BSBLanEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class BSBLanCircuitSensor(BSBLanCircuitEntity, SensorEntity):
+    """Defines a BSB-LAN heating circuit sensor."""
+
+    entity_description: BSBLanCircuitSensorEntityDescription
+
+    def __init__(
+        self,
+        data: BSBLanData,
+        circuit: int,
+        description: BSBLanCircuitSensorEntityDescription,
+    ) -> None:
+        """Initialize BSB-LAN heating circuit sensor."""
+        super().__init__(data.fast_coordinator, data, circuit)
+        self.entity_description = description
+        # Circuit 1 keeps the unique ID it had on the main device
+        if circuit == 1:
+            self._attr_unique_id = f"{data.device.MAC}-{description.key}"
+        else:
+            self._attr_unique_id = (
+                f"{data.device.MAC}-circuit-{circuit}-{description.key}"
+            )
+        self._attr_native_unit_of_measurement = (
+            data.fast_coordinator.client.get_temperature_unit
+        )
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self._circuit_state)

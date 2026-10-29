@@ -82,7 +82,7 @@ FAN_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_OSCILLATING): cv.template,
         probatio.Optional(CONF_PERCENTAGE): cv.template,
         probatio.Optional(CONF_PRESET_MODE): cv.template,
-        probatio.Optional(CONF_PRESET_MODES): cv.ensure_list,
+        probatio.Optional(CONF_PRESET_MODES): probatio.EnsureList(),
         probatio.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,

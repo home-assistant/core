@@ -10,10 +10,11 @@ from pybotvac.robot import Robot
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NeatoConfigEntry
-from .const import SCAN_INTERVAL_MINUTES
+from .const import DOMAIN, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
 from .hub import NeatoHub
 
@@ -102,11 +103,11 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
                 self.robot.enable_schedule()
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
-                _LOGGER.error(
-                    "Neato switch connection error '%s': %s", self.entity_id, ex
-                )
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="enable_schedule_failed",
+                ) from ex
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
@@ -114,8 +115,8 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
                 self.robot.disable_schedule()
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
-                _LOGGER.error(
-                    "Neato switch connection error '%s': %s", self.entity_id, ex
-                )
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="disable_schedule_failed",
+                ) from ex

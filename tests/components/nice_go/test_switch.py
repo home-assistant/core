@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 from nice_go import ApiError, AuthFailedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_turn_on(

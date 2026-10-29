@@ -40,26 +40,28 @@ class OverkizExecutor:
                 return self.device.definition.states[state_name]
         return None
 
-    async def async_execute_command(
-        self, command_name: str, *args: Any, refresh_afterwards: bool = True
-    ) -> None:
-        """Execute device command in async context.
-
-        :param refresh_afterwards: Whether to refresh the device
-            state after the command is executed. If several
-            commands are executed, it will be refreshed only once.
-        """
+    async def async_execute_command(self, command_name: str, *args: Any) -> None:
+        """Execute device command in async context."""
         parameters = [arg for arg in args if arg is not None]
+
+        await self.async_execute_commands(
+            [Command(name=command_name, parameters=parameters)]
+        )
+
+    async def async_execute_commands(self, commands: list[Command]) -> None:
+        """Execute multiple device commands as a single batch execution.
+
+        The Overkiz API processes all commands in order within a single action group,
+        which is required when commands depend on each other.
+        """
+        if not commands:
+            return
+
+        actions = [Action(device_url=self.device.device_url, commands=commands)]
 
         try:
             exec_id = await self.coordinator.client.execute_action_group(
-                label="Home Assistant",
-                actions=[
-                    Action(
-                        device_url=self.device.device_url,
-                        commands=[Command(name=command_name, parameters=parameters)],
-                    )
-                ],
+                label="Home Assistant", actions=actions
             )
         # Catch Overkiz exceptions to support `continue_on_error` functionality
         except BaseOverkizError as exception:
@@ -72,55 +74,9 @@ class OverkizExecutor:
             raise HomeAssistantError("Failed to connect") from exception
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need
-        # to register it here. The action queue can merge concurrent action
-        # groups under one exec_id, so accumulate rather than overwrite.
-        self.coordinator.executions.setdefault(exec_id, []).append(
-            {
-                "device_url": self.device.device_url,
-                "command_name": command_name,
-            }
-        )
-        if refresh_afterwards:
-            await self.coordinator.async_refresh()
-
-    async def async_execute_commands(
-        self, commands: list[Command], refresh_afterwards: bool = True
-    ) -> None:
-        """Execute multiple device commands as a single batch execution.
-
-        The Overkiz API processes all commands in order within a single action group,
-        which is required when commands depend on each other.
-
-        :param refresh_afterwards: Whether to refresh the device state
-            after the batch is executed. Disable it to refresh only once
-            when this batch is part of a larger sequence of commands.
-        """
-        if not commands:
-            return
-
-        try:
-            exec_id = await self.coordinator.client.execute_action_group(
-                label="Home Assistant",
-                actions=[Action(device_url=self.device.device_url, commands=commands)],
-            )
-        # Catch Overkiz exceptions to support `continue_on_error` functionality
-        except BaseOverkizError as exception:
-            raise HomeAssistantError(exception) from exception
-        except (
-            TimeoutError,
-            ClientConnectorError,
-            ServerDisconnectedError,
-        ) as exception:
-            raise HomeAssistantError("Failed to connect") from exception
-
-        self.coordinator.executions.setdefault(exec_id, []).append(
-            {
-                "device_url": self.device.device_url,
-                "command_name": commands[-1].name,
-            }
-        )
-        if refresh_afterwards:
-            await self.coordinator.async_refresh()
+        # to register it here.
+        self.coordinator.register_execution(exec_id, actions)
+        self.coordinator.async_execution_started()
 
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
@@ -134,10 +90,12 @@ class OverkizExecutor:
             (
                 exec_id
                 # Reverse dictionary to cancel the last added execution
-                for exec_id, executions in reversed(self.coordinator.executions.items())
-                for execution in executions
-                if execution.get("device_url") == self.device.device_url
-                and execution.get("command_name") in commands_to_cancel
+                for exec_id, device_commands in reversed(
+                    self.coordinator.executions.items()
+                )
+                for device_command in device_commands
+                if device_command.device_url == self.device.device_url
+                and device_command.command_name in commands_to_cancel
             ),
             None,
         )

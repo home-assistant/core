@@ -1,6 +1,7 @@
 {
   "domain": "poolsense",
   "name": "PoolSense",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@haemishkyd"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/poolsense",

@@ -1,6 +1,7 @@
 {
   "domain": "hypontech",
   "name": "Hypontech Cloud",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@jcisio"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hypontech",

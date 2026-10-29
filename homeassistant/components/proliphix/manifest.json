@@ -1,6 +1,7 @@
 {
   "domain": "proliphix",
   "name": "Proliphix",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/proliphix",
   "iot_class": "local_polling",

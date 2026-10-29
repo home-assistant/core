@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energyid.const import (
     CONF_ENERGYID_KEY,
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import InvalidData
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 TEST_PROVISIONING_KEY = "test_prov_key"
 TEST_PROVISIONING_SECRET = "test_prov_secret"

@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 

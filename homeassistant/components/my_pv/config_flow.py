@@ -5,11 +5,12 @@ import logging
 from typing import Any, Final, override
 
 from my_pv import MyPVLocalDevice
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVDeviceNotSupportedError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -31,7 +32,7 @@ HOST_SCHEMA: Final = probatio.Schema(
 )
 AUTH_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -87,12 +88,14 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         password_needed = False
 
-        device = MyPVLocalDevice(self._host)
+        device = MyPVLocalDevice(self._host, session=async_get_clientsession(self.hass))
         try:
             if not await device.connect():
                 return self.async_abort(reason="cannot_connect")
         except MyPVAuthenticationError:
             password_needed = True
+        except MyPVDeviceNotSupportedError:
+            return self.async_abort(reason="unsupported_device")
         finally:
             await device.disconnect()
 
@@ -113,7 +116,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -136,23 +138,25 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             password_needed = False
 
-            device = MyPVLocalDevice(host)
+            device = MyPVLocalDevice(host, session=async_get_clientsession(self.hass))
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
             except MyPVAuthenticationError:
                 password_needed = True
+            except MyPVDeviceNotSupportedError:
+                return self.async_abort(reason="unsupported_device")
             finally:
                 await device.disconnect()
-
-            if not errors and password_needed:
-                self._host = host
-                self._device_model = device.model
-                return await self.async_step_auth()
 
             if not errors:
                 await self.async_set_unique_id(device.serial_number)
                 self._abort_if_unique_id_configured()
+
+                if password_needed:
+                    self._host = host
+                    self._device_model = device.model
+                    return await self.async_step_auth()
 
                 title = f"my-PV {device.model} {device.serial_number[6:]}"
                 data = {
@@ -178,7 +182,9 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = self._host
             password = user_input[CONF_PASSWORD]
 
-            device = MyPVLocalDevice(host, password)
+            device = MyPVLocalDevice(
+                host, password, session=async_get_clientsession(self.hass)
+            )
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
@@ -233,7 +239,9 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             password = user_input[CONF_PASSWORD]
 
-            device = MyPVLocalDevice(host, password)
+            device = MyPVLocalDevice(
+                host, password, session=async_get_clientsession(self.hass)
+            )
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"

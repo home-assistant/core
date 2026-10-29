@@ -1,6 +1,10 @@
 {
   "domain": "nzbget",
   "name": "NZBGet",
+  "categories": [
+    "computers_network.nas_servers",
+    "media_entertainment.tv_streaming"
+  ],
   "codeowners": ["@chriscla"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nzbget",

@@ -81,6 +81,28 @@
         'major': 99,
         'minor': 99,
       }),
+      'device_capabilities': dict({
+        'bluetooth_proxy': dict({
+          'feature_flags': 0,
+          'mac_address': '',
+        }),
+        'sendspin': dict({
+          'client_id': '',
+          'feature_flags': 0,
+        }),
+        'serial_proxies': list([
+        ]),
+        'voice_assistant': dict({
+          'feature_flags': 0,
+        }),
+        'wizard': dict({
+          'configured': False,
+        }),
+        'zwave_proxy': dict({
+          'feature_flags': 0,
+          'home_id': 0,
+        }),
+      }),
       'device_info': dict({
         'api_encryption_provisionable': False,
         'api_encryption_supported': False,

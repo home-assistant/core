@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from python_qube_heatpump import STATUS_CODE_MAP
+from python_qube_heatpump import StatusCode
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,17 +33,11 @@ if TYPE_CHECKING:
     from . import QubeConfigEntry
     from .coordinator import QubeCoordinator
 
-# Status code to state mapping, derived from the library's status code map.
-STATUS_MAP: dict[int, str] = {
-    code: status.value for code, status in STATUS_CODE_MAP.items()
-}
-
-# Options list for the status sensor: unique status strings from STATUS_MAP,
-# in first-seen order. StatusCode also defines ANTI_LEGIONELLA and UNKNOWN,
-# but those are not part of STATUS_CODE_MAP (only surfaced via the library's
-# resolve_status() helper, which this integration does not use), so they are
-# excluded here automatically rather than needing an explicit filter.
-STATUS_OPTIONS: list[str] = list(dict.fromkeys(STATUS_MAP.values()))
+# The library combines the status code with the anti-legionella request into
+# one status; anti-legionella takes precedence over everything except an alarm.
+STATUS_OPTIONS: list[str] = [
+    status.value for status in StatusCode if status is not StatusCode.UNKNOWN
+]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -54,11 +48,11 @@ class QubeSensorEntityDescription(SensorEntityDescription):
 
 
 def _status_value(data: QubeData) -> StateType:
-    """Return status string from status code."""
-    code = data.state.status_code
-    if code is None:
+    """Return the heat pump status."""
+    status = data.state.status
+    if status is None or status is StatusCode.UNKNOWN:
         return None
-    return STATUS_MAP.get(code)
+    return str(status.value)
 
 
 SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (

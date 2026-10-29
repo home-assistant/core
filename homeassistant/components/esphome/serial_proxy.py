@@ -2,10 +2,11 @@
 
 import asyncio
 from collections.abc import Callable
-from typing import cast, override
+from typing import NotRequired, TypedDict, Unpack, cast, override
 
 from aioesphomeapi import APIClient
 from serialx import register_uri_handler
+from serialx.common import BACKEND_CONNECT_KWARGS
 from serialx.platforms.serial_esphome import (
     ESPHomeSerial,
     ESPHomeSerialTransport,
@@ -25,13 +26,33 @@ from .entry_data import ESPHomeConfigEntry
 _HASS_LOOP: asyncio.AbstractEventLoop | None = None
 
 
-def build_url(entry_id: str, port_name: str) -> URL:
-    """Build a canonical `esphome-hass://` URL."""
+class SerialProxyFilters(TypedDict):
+    """Device filters for a serial proxy URL, `None` values are left out."""
+
+    port_name: NotRequired[str | None]
+    port_manufacturer: NotRequired[str | None]
+    port_product: NotRequired[str | None]
+    port_serial_number: NotRequired[str | None]
+    port_usb_vid: NotRequired[int | None]
+    port_usb_pid: NotRequired[int | None]
+    port_usb_bcd_device: NotRequired[int | None]
+    port_usb_interface_num: NotRequired[int | None]
+    port_udev_id: NotRequired[str | None]
+
+
+def build_url(entry_id: str, **filters: Unpack[SerialProxyFilters]) -> URL:
+    """Build a canonical `esphome-hass://` URL from filters."""
+    filters_items = cast(dict[str, str | int | None], filters).items()
+    trimmed_filters = {k: v for k, v in filters_items if v is not None}
+
+    if not trimmed_filters:
+        raise TypeError("Filters are required to connect to an ESPHome serial proxy")
+
     return URL.build(
         scheme="esphome-hass",
         host="esphome",
         path=f"/{entry_id}",
-        query={"port_name": port_name},
+        query=trimmed_filters,
     )
 
 
@@ -70,10 +91,9 @@ class HassESPHomeSerial(ESPHomeSerial):
                     f"No ESPHome config entry id in URL {self._path!r}"
                 )
 
-            if "port_name" not in parsed.query:
-                raise InvalidSettingsError("Port name is required")
-
-            self._port_name = parsed.query["port_name"]
+            # Without a name, serialx finds the port by the device behind it
+            if "port_name" in parsed.query:
+                self._port_name = parsed.query["port_name"]
 
             hass_loop = _HASS_LOOP
             if hass_loop is None:
@@ -109,6 +129,8 @@ def register_serialx_transport(
         unique_scheme="esphome-hass-internal://",  # The unique scheme must differ
         sync_cls=HassESPHomeSerial,
         async_transport_cls=HassESPHomeSerialTransport,
+        # Without these, serialx drops kwargs like `mode` before they reach us
+        connect_kwargs=BACKEND_CONNECT_KWARGS["esphome://"],
     )
 
     @callback

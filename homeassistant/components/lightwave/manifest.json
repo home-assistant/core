@@ -1,6 +1,11 @@
 {
   "domain": "lightwave",
   "name": "Lightwave",
+  "categories": [
+    "hubs_protocols.smart_home_hubs",
+    "plugs_switches",
+    "climate.thermostats_heating"
+  ],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/lightwave",
   "iot_class": "assumed_state",

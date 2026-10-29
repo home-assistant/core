@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_PROMPT
 from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,7 +33,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_PROMPT,
+    CONF_OUTPUT_MODALITIES,
     CONF_WEB_SEARCH,
     DOMAIN,
     RECOMMENDED_CONVERSATION_OPTIONS,
@@ -46,7 +46,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRouter."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     @classmethod
     @callback
@@ -87,7 +87,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,
@@ -212,7 +212,11 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                     probatio.Optional(
                         CONF_WEB_SEARCH,
@@ -276,10 +280,12 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
+            model = self.models[user_input[CONF_MODEL]]
+            user_input[CONF_OUTPUT_MODALITIES] = [
+                str(modality) for modality in model.architecture.output_modalities
+            ]
             if self._is_new:
-                return self.async_create_entry(
-                    title=self.models[user_input[CONF_MODEL]].name, data=user_input
-                )
+                return self.async_create_entry(title=model.name, data=user_input)
             return self.async_update_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),

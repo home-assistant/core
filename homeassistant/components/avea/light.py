@@ -218,13 +218,13 @@ class AveaLight(LightEntity):
         serial_number = _read_device_info_value(self._light.get_serial_number)
 
         if manufacturer:
-            device_info["manufacturer"] = manufacturer
+            device_info.manufacturer = manufacturer
         if hardware_revision:
-            device_info["hw_version"] = hardware_revision
+            device_info.hw_version = hardware_revision
         if firmware_version:
-            device_info["sw_version"] = firmware_version
+            device_info.sw_version = firmware_version
         if serial_number:
-            device_info["serial_number"] = serial_number
+            device_info.serial_number = serial_number
 
         self._device_info_updated = True
 

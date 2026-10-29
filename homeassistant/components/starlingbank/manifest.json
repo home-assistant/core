@@ -1,6 +1,7 @@
 {
   "domain": "starlingbank",
   "name": "Starling Bank",
+  "categories": ["finance"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/starlingbank",
   "iot_class": "cloud_polling",

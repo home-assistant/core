@@ -1,6 +1,7 @@
 {
   "domain": "aftership",
   "name": "AfterShip",
+  "categories": ["productivity_information"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aftership",

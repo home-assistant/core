@@ -33,6 +33,8 @@ OPERATIONAL_STATUS_MASK = 0b11
 # writes to avoid writing intermittent states.
 STATE_WRITE_DEBOUNCE_COOLDOWN = 0.1
 
+WAGO_BLIND_TYPE_ROLLER_SHUTTER = 0
+
 # map Matter window cover types to HA device class
 TYPE_MAP = {
     clusters.WindowCovering.Enums.Type.kRollerShade: CoverDeviceClass.SHADE,
@@ -76,22 +78,21 @@ class MatterCover(MatterEntity, CoverEntity):
     """Representation of a Matter Cover."""
 
     _write_state_debounce_cooldown = STATE_WRITE_DEBOUNCE_COOLDOWN
+    _tilt_only = False
     entity_description: MatterCoverEntityDescription
 
     @property
     @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed, None if no position."""
-        if not self._entity_info.endpoint.has_attribute(
-            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
-        ):
-            return None
-
-        return (
-            self.current_cover_position == 0
-            if self.current_cover_position is not None
-            else None
+        # tilt-only covers have no lift axis, so tilt is the only closure
+        # indicator, even if a non-conformant device reports a lift position
+        position = (
+            self.current_cover_tilt_position
+            if self._tilt_only
+            else self.current_cover_position
         )
+        return position == 0 if position is not None else None
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -126,6 +127,72 @@ class MatterCover(MatterEntity, CoverEntity):
             clusters.WindowCovering.Commands.GoToTiltPercentage((100 - position) * 100)
         )
 
+    @override
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        # tilt button features are only set on tilt-only covers,
+        # where UpOrOpen moves the tilt axis
+        await self.send_device_command(clusters.WindowCovering.Commands.UpOrOpen())
+
+    @override
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        await self.send_device_command(clusters.WindowCovering.Commands.DownOrClose())
+
+    @override
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt movement."""
+        await self.send_device_command(clusters.WindowCovering.Commands.StopMotion())
+
+    @callback
+    def _positions_at_target(self) -> bool | None:
+        """Return whether all supported positions match their target position.
+
+        Returns None if the positions cannot be compared, e.g. the device is
+        not position aware or a position is (still) unknown. The axes to
+        compare are taken from the FeatureMap: lift and tilt are independently
+        position aware (PA_LF conformance `[LF]`, PA_TL conformance `[TL]`),
+        so a supported axis which is not position aware, or lacks its position
+        attributes, makes the covering not comparable as a whole, while
+        position attributes of an unsupported axis (reported as null by e.g.
+        the Shelly 2PM Gen4) are ignored.
+        """
+        feature_map = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.FeatureMap
+        )
+        features = clusters.WindowCovering.Bitmaps.Feature
+        at_target: bool | None = None
+        for feature, position_aware_feature, current_attribute, target_attribute in (
+            (
+                features.kLift,
+                features.kPositionAwareLift,
+                clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
+                clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
+            ),
+            (
+                features.kTilt,
+                features.kPositionAwareTilt,
+                clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+                clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
+            ),
+        ):
+            if not feature_map & feature:
+                continue
+            if not feature_map & position_aware_feature:
+                return None
+            if not self._entity_info.endpoint.has_attribute(
+                None, current_attribute
+            ) or not self._entity_info.endpoint.has_attribute(None, target_attribute):
+                return None
+            current_position = self.get_matter_attribute_value(current_attribute)
+            target_position = self.get_matter_attribute_value(target_attribute)
+            if current_position is None or target_position is None:
+                return None
+            if current_position != target_position:
+                return False
+            at_target = True
+        return at_target
+
     @callback
     @override
     def _update_from_device(self) -> None:
@@ -154,7 +221,41 @@ class MatterCover(MatterEntity, CoverEntity):
                 self._attr_is_opening = False
                 self._attr_is_closing = False
 
-        if self._entity_info.endpoint.has_attribute(
+        # Some bridges (e.g. Rademacher SmartHome Box) report current = target
+        # with a moving status that never clears. Being at the target only ever
+        # clears the moving state; at movement start the debounce hides a status
+        # report arriving before the target update.
+        if (at_target := self._positions_at_target()) is None:
+            detection = "positions not comparable"
+        else:
+            detection = f"positions at target: {at_target}"
+        if at_target and (self._attr_is_opening or self._attr_is_closing):
+            LOGGER.debug(
+                "Ignoring moving operational status for %s, position(s) match target position(s)",
+                self.entity_id,
+            )
+            self._attr_is_opening = False
+            self._attr_is_closing = False
+        LOGGER.debug(
+            "Movement state for %s: opening=%s closing=%s (%s)",
+            self.entity_id,
+            self._attr_is_opening,
+            self._attr_is_closing,
+            detection,
+        )
+
+        feature_map = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.FeatureMap
+        )
+        self._tilt_only = bool(
+            feature_map & clusters.WindowCovering.Bitmaps.Feature.kTilt
+        ) and not (feature_map & clusters.WindowCovering.Bitmaps.Feature.kLift)
+
+        if self._tilt_only:
+            # a lift position reported by a non-conformant tilt-only device
+            # does not describe the covering
+            self._attr_current_cover_position = None
+        elif self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
         ):
             # current position is inverted in matter (100 is closed, 0 is open)
@@ -201,16 +302,30 @@ class MatterCover(MatterEntity, CoverEntity):
         )
         self._attr_device_class = TYPE_MAP.get(device_type, CoverDeviceClass.AWNING)
 
-        supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
+        if self._tilt_only:
+            # tilt-only covers expose the tilt button features instead,
+            # so UIs derive the button state from the tilt position
+            supported_features = (
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+            )
+        else:
+            # the lift commands are mandatory for all window coverings,
+            # so they are the safe default for non-conformant feature maps
+            supported_features = (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+            )
         commands = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.AcceptedCommandList
         )
-        feature_map = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.FeatureMap
-        )
-        if clusters.WindowCovering.Commands.GoToLiftPercentage.command_id in commands:
+        if (
+            not self._tilt_only
+            and clusters.WindowCovering.Commands.GoToLiftPercentage.command_id
+            in commands
+        ):
             supported_features |= CoverEntityFeature.SET_POSITION
         # Some devices report GoToTiltPercentage in AcceptedCommandList even
         # without tilt support, so also require the FeatureMap Tilt bit.
@@ -219,6 +334,23 @@ class MatterCover(MatterEntity, CoverEntity):
             and feature_map & clusters.WindowCovering.Bitmaps.Feature.kTilt
         ):
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
+
+        # The WAGO Home Blind Control keeps reporting the tilt feature and a
+        # tilt blind Type when configured as a roller shutter
+        if (
+            self.get_matter_attribute_value(
+                clusters.WindowCovering.Attributes.WagoBlindType
+            )
+            == WAGO_BLIND_TYPE_ROLLER_SHUTTER
+        ):
+            self._attr_device_class = CoverDeviceClass.SHUTTER
+            self._attr_current_cover_tilt_position = None
+            supported_features &= ~(
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
+            )
         self._attr_supported_features = supported_features
 
 
@@ -251,6 +383,9 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.Type,
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
         ),
+        optional_attributes=(
+            clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
+        ),
         absent_attributes=(
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
         ),
@@ -265,6 +400,9 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.OperationalStatus,
             clusters.WindowCovering.Attributes.Type,
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+        ),
+        optional_attributes=(
+            clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
         ),
         absent_attributes=(
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
@@ -286,6 +424,9 @@ DISCOVERY_SCHEMAS = [
         # disabled, which would otherwise fail schema matching
         optional_attributes=(
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+            clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
+            clusters.WindowCovering.Attributes.TargetPositionTiltPercent100ths,
+            clusters.WindowCovering.Attributes.WagoBlindType,
         ),
     ),
 ]

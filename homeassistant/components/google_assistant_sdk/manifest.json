@@ -1,6 +1,7 @@
 {
   "domain": "google_assistant_sdk",
   "name": "Google Assistant SDK",
+  "categories": ["ai_voice.voice_assistants"],
   "codeowners": ["@tronikos"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http"],

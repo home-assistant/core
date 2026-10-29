@@ -15,14 +15,14 @@ from .const import DOMAIN, LOGGER
 
 STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
 STEP_USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 

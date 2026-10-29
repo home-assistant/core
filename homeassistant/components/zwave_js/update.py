@@ -196,6 +196,7 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
 
         # Entity class attributes
         self._attr_name = "Firmware"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{self._base_unique_id}.firmware_update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_installed_version = node.firmware_version
 

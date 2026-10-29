@@ -50,7 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: HabiticaConfigEntry
-) -> bool:
+) -> None:
     """Set up habitica from a config entry."""
     party_added_by_this_entry: UUID | None = None
     device_reg = dr.async_get(hass)
@@ -156,7 +156,6 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         config_entry.add_update_listener(_async_update_listener)
     )
-    return True
 
 
 async def _async_update_listener(
@@ -172,6 +171,6 @@ async def shutdown_party_coordinator(hass: HomeAssistant, party_added: UUID) -> 
     hass.data[HABITICA_KEY].pop(party_added)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

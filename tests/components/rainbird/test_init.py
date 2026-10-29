@@ -2,9 +2,11 @@
 
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rainbird.const import DOMAIN
@@ -25,9 +27,6 @@ from .conftest import (
     mock_response,
     mock_response_error,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
 async def test_init_success(
@@ -251,6 +250,41 @@ async def test_fix_unique_id_duplicate(
 
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.parametrize(
+    ("config_entry_unique_id"),
+    [(MAC_ADDRESS_UNIQUE_ID)],
+)
+async def test_fix_unique_id_duplicate_setup_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    responses: list[AiohttpClientMockResponse],
+) -> None:
+    """Test the setup error reason of a duplicate config entry."""
+    other_entry = MockConfigEntry(
+        unique_id=None,
+        domain=DOMAIN,
+        data=CONFIG_ENTRY_DATA_OLD_FORMAT,
+    )
+    other_entry.add_to_hass(hass)
+    responses.extend(
+        [
+            mock_response(MODEL_AND_VERSION_RESPONSE),
+            mock_json_response(WIFI_PARAMS_RESPONSE),
+        ]
+    )
+
+    with patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert other_entry.state is ConfigEntryState.SETUP_ERROR
+    assert other_entry.reason == (
+        "Another entry already exists for this Rain Bird controller, this entry will"
+        " be removed"
+    )
+    mock_remove.assert_awaited_once_with(other_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -574,7 +608,7 @@ async def test_options_listener(
     # Changing options triggers reload
     with patch(
         "homeassistant.components.rainbird.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         hass.config_entries.async_update_entry(config_entry, options={"duration": 5})
         await hass.async_block_till_done()

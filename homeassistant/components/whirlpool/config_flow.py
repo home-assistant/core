@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_REGION): probatio.In(list(REGIONS_CONF_MAP)),
         probatio.Required(CONF_BRAND): probatio.In(list(BRANDS_CONF_MAP)),
     }
@@ -31,7 +31,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_BRAND): probatio.In(list(BRANDS_CONF_MAP)),
     }
 )

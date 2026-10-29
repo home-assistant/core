@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from actron_neo_api import ActronAirAPIError
 from actron_neo_api.models.settings import ActronAirModeSupport
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.actron_air.climate import (
@@ -28,8 +29,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_climate_entities(

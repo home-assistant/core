@@ -43,13 +43,13 @@ CONF_ALLOW_BYPASS_LOGIN = "allow_bypass_login"
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
         probatio.Required(CONF_TRUSTED_NETWORKS): probatio.All(
-            cv.ensure_list, [ip_network]
+            probatio.EnsureList(), [ip_network]
         ),
         probatio.Optional(CONF_TRUSTED_USERS, default={}): probatio.Schema(
             # we only validate the format of user_id or group_id
             {
                 ip_network: probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [
                         probatio.Or(
                             cv.uuid4_hex,
@@ -98,12 +98,6 @@ class TrustedNetworksAuthProvider(AuthProvider):
             ip_network(trusted_proxy)
             for trusted_proxy in self.hass.http.trusted_proxies
         ]
-
-    @property
-    @override
-    def support_mfa(self) -> bool:
-        """Trusted Networks auth provider does not support MFA."""
-        return False
 
     @override
     async def async_login_flow(
@@ -207,6 +201,18 @@ class TrustedNetworksAuthProvider(AuthProvider):
 
         if is_cloud_connection(self.hass):
             raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
+
+    @callback
+    @override
+    def async_can_start_login(self, context: AuthFlowContext) -> bool:
+        """Return if the request comes from a trusted network."""
+        if (ip_addr := context.get("ip_address")) is None:
+            return False
+        try:
+            self.async_validate_access(ip_addr)
+        except InvalidAuthError:
+            return False
+        return True
 
     @callback
     @override

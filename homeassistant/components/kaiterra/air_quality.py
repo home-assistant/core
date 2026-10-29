@@ -108,6 +108,7 @@ class KaiterraAirQuality(AirQualityEntity):
     @override
     def unique_id(self):
         """Return the sensor's unique id."""
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         return f"{self._device_id}_air_quality"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property

@@ -1,6 +1,7 @@
 {
   "domain": "iotawatt",
   "name": "IoTaWatt",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@gtdiehl", "@jyavenard", "@agners"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iotawatt",

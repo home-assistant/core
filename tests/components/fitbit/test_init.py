@@ -5,6 +5,8 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.fitbit.const import (
     CONF_CLIENT_ID,
@@ -25,9 +27,6 @@ from .conftest import (
     FAKE_REFRESH_TOKEN,
     SERVER_ACCESS_TOKEN,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_oauth_implementation_not_available(

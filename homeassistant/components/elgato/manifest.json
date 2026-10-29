@@ -1,6 +1,7 @@
 {
   "domain": "elgato",
   "name": "Elgato Light",
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "dhcp": [

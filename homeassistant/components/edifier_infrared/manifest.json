@@ -1,6 +1,7 @@
 {
   "domain": "edifier_infrared",
   "name": "Edifier Infrared",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@abmantis"],
   "config_flow": true,
   "dependencies": ["infrared"],

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pysmarlaapi.federwiege.services.types import UpdateStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.update import (
@@ -25,8 +26,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration, update_property_listeners
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 UPDATE_ENTITY_ID = "update.smarla_firmware"
 

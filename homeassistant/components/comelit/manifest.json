@@ -1,6 +1,10 @@
 {
   "domain": "comelit",
   "name": "Comelit SimpleHome",
+  "categories": [
+    "hubs_protocols.smart_home_hubs",
+    "security_safety.alarm_systems"
+  ],
   "codeowners": ["@chemelli74"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/comelit",

@@ -1,6 +1,7 @@
 {
   "domain": "temper",
   "name": "TEMPer",
+  "categories": ["sensors.temperature_humidity"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/temper",
   "iot_class": "local_polling",

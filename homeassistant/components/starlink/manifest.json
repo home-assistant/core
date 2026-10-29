@@ -1,6 +1,7 @@
 {
   "domain": "starlink",
   "name": "Starlink",
+  "categories": ["computers_network.routers_network"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/starlink",

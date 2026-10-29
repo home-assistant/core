@@ -31,7 +31,7 @@ from homeassistant.helpers.trace import (
     trace_stack_cv,
     trace_stack_top,
 )
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -99,7 +99,7 @@ _ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
 _HASS_LOADER = "template.hass_loader"
 
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
-_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
+_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$", re.ASCII)
 
 EVAL_CACHE_SIZE = 512
 
@@ -261,12 +261,33 @@ def _parse_result(render_result: str) -> Any:
                 return int(render_result)
             except ValueError:
                 pass
-    return _cached_parse_result(render_result)
+    result = _cached_parse_result(render_result)
+    # The cached result is shared, so hand out containers the caller can mutate
+    if (wrapper := RESULT_WRAPPERS.get(type(result))) is not None:
+        return wrapper(_copy_literal(result), render_result=render_result)
+    return result
+
+
+def _copy_literal(value: Any) -> Any:
+    """Copy the containers of a literal_eval result, sharing immutable leaves."""
+    value_type = type(value)
+    if value_type is list:
+        return [_copy_literal(item) for item in value]
+    if value_type is dict:
+        return {key: _copy_literal(item) for key, item in value.items()}
+    if value_type is tuple:
+        return tuple([_copy_literal(item) for item in value])
+    if value_type is set:
+        return value.copy()
+    return value
 
 
 @lru_cache(maxsize=EVAL_CACHE_SIZE)
 def _cached_parse_result(render_result: str) -> Any:
-    """Parse a result and cache the result."""
+    """Parse a result and cache the result.
+
+    Containers are cached unwrapped and must be copied before being returned.
+    """
     # lru_cache does not memoize raised exceptions. The most common template
     # results, plain string states such as "on", "off" or "unavailable", are
     # not Python literals, so literal_eval compiles and raises for them on
@@ -274,10 +295,8 @@ def _cached_parse_result(render_result: str) -> Any:
     # render) so the recompile only happens once per distinct result.
     try:
         result = literal_eval(render_result)
-    except ValueError, TypeError, SyntaxError, MemoryError:
+    except ValueError, TypeError, SyntaxError, MemoryError, RecursionError:
         return render_result
-    if type(result) in RESULT_WRAPPERS:
-        result = RESULT_WRAPPERS[type(result)](result, render_result=render_result)
 
     # If the literal_eval result is a string, use the original
     # render, by not returning right here. The evaluation of strings
@@ -605,10 +624,13 @@ class Template:
         error_value: Any = _SENTINEL,
         variables: dict[str, Any] | None = None,
         parse_result: bool = False,
+        *,
+        value_json: Any = _SENTINEL,
     ) -> Any:
         """Render template with value exposed.
 
-        If valid JSON will expose value_json too.
+        If valid JSON will expose value_json too. A caller that has parsed the
+        value already passes it as value_json, or UNDEFINED if it is not JSON.
 
         This method must be run in the event loop.
         """
@@ -622,10 +644,13 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        try:  # noqa: SIM105 - suppress is much slower
-            variables["value_json"] = json_loads(value)
-        except JSON_DECODE_EXCEPTIONS:
-            pass
+        if value_json is _SENTINEL:
+            try:  # noqa: SIM105 - suppress is much slower
+                variables["value_json"] = json_loads(value)
+            except JSON_DECODE_EXCEPTIONS:
+                pass
+        elif value_json is not UNDEFINED:
+            variables["value_json"] = value_json
 
         try:
             render_result = render_with_context(

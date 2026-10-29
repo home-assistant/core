@@ -1,6 +1,7 @@
 {
   "domain": "watttime",
   "name": "WattTime",
+  "categories": ["energy"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/watttime",

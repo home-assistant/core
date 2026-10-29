@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -28,8 +29,6 @@ from .conftest import (
     setup_integration,
     shutter_control_device,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

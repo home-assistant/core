@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 from mysensors.sensor import Sensor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -25,8 +26,6 @@ from homeassistant.util.unit_system import (
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_gps_sensor(

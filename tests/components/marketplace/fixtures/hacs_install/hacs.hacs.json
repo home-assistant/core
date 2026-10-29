@@ -1,0 +1,10 @@
+{
+  "version": "6",
+  "minor_version": 1,
+  "key": "hacs.hacs",
+  "data": {
+    "archived_repositories": [],
+    "renamed_repositories": {},
+    "ignored_repositories": []
+  }
+}

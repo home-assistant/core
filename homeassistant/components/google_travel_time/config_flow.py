@@ -59,7 +59,7 @@ from .schemas import (
 
 CONFIG_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_DESTINATION): cv.string,
         probatio.Required(CONF_ORIGIN): cv.string,
     }

@@ -166,7 +166,35 @@ async def async_connect_androidtv(
     return aftv, None
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def _connection_error(
+    hass: HomeAssistant, config: Mapping[str, Any]
+) -> ConfigEntryNotReady:
+    """Return the error for a device that can't be connected."""
+    address = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
+    if CONF_ADB_SERVER_IP in config:
+        return ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect_adb_server",
+            translation_placeholders={
+                "address": address,
+                "adb_server": (
+                    f"{config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+                ),
+            },
+        )
+    return ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key="cannot_connect_python_adb",
+        translation_placeholders={
+            "address": address,
+            "adbkey": config.get(
+                CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey")
+            ),
+        },
+    )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
@@ -189,8 +217,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.minor_version,
     )
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Android TV / Fire TV integration."""
@@ -198,7 +224,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> None:
     """Set up Android Debug Bridge platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
@@ -208,14 +234,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) ->
         exceptions = ADB_TCP_EXCEPTIONS
 
     try:
-        aftv, error_message = await async_connect_androidtv(
+        aftv, _ = await async_connect_androidtv(
             hass, entry.data, state_detection_rules=state_det_rules
         )
     except exceptions as exc:
-        raise ConfigEntryNotReady(exc) from exc
+        raise _connection_error(hass, entry.data) from exc
 
     if not aftv:
-        raise ConfigEntryNotReady(error_message)
+        raise _connection_error(hass, entry.data)
 
     async def async_close_connection(event: Event) -> None:
         """Close Android Debug Bridge connection on HA Stop."""
@@ -230,16 +256,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        aftv = entry.runtime_data.aftv
-        await aftv.adb_close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    aftv = entry.runtime_data.aftv
+    await aftv.adb_close()
 
 
 async def update_listener(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> None:

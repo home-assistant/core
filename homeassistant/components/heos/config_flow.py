@@ -16,6 +16,7 @@ from pyheos import (
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -34,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 AUTH_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_USERNAME): selector.TextSelector(),
-        probatio.Optional(CONF_PASSWORD): selector.TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
@@ -173,7 +174,6 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=ENTRY_TITLE, data={CONF_HOST: self._discovered_host}
             )
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="confirm_discovery")
 
     @override
@@ -252,6 +252,15 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         # Abort early when discovery is ignored or host is part of the current system
         if entry and (
             entry.source == SOURCE_IGNORE or hostname in _get_current_hosts(entry)
+        ):
+            return self.async_abort(reason="single_instance_allowed")
+
+        # The host list a discovered device reports is unreliable while players are
+        # rejoining the network, so don't act on it while connected.
+        if (
+            entry
+            and entry.state is ConfigEntryState.LOADED
+            and entry.runtime_data.heos.connection_state is ConnectionState.CONNECTED
         ):
             return self.async_abort(reason="single_instance_allowed")
 

@@ -1,6 +1,7 @@
 {
   "domain": "osoenergy",
   "name": "OSO Energy",
+  "categories": ["climate.water_heaters"],
   "codeowners": ["@osohotwateriot"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/osoenergy",

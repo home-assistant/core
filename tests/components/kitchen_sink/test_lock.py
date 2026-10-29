@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_mock_service
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kitchen_sink import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.components.lock import (
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_capture_events, async_mock_service
 
 LOCKED_LOCK = "lock.basic_lock"
 OPENABLE_LOCK = "lock.openable_lock"

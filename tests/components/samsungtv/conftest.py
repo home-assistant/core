@@ -9,6 +9,7 @@ from async_upnp_client.client import UpnpDevice
 from async_upnp_client.event_handler import UpnpEventHandler
 from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 from samsungctl import Remote
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVCommand
@@ -22,14 +23,12 @@ from homeassistant.core import HomeAssistant
 
 from .const import SAMPLE_DEVICE_INFO_WIFI
 
-from tests.common import async_load_json_object_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.samsungtv.async_setup_entry", return_value=True
+        "homeassistant.components.samsungtv.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

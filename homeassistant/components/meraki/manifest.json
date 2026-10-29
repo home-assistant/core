@@ -1,6 +1,10 @@
 {
   "domain": "meraki",
   "name": "Meraki",
+  "categories": [
+    "presence_location.network_presence",
+    "computers_network.routers_network"
+  ],
   "codeowners": [],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/meraki",

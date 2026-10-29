@@ -109,7 +109,6 @@ from .const import (
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
     SUCCESS,
-    SWITCH_DATA_KEY as DATA_KEY,
 )
 from .coordinator import GatewayDeviceCoordinator
 from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
@@ -334,9 +333,6 @@ async def async_setup_coordinated_entry(
     device = config_entry.runtime_data.device
     coordinator = config_entry.runtime_data.device_coordinator
 
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
-
     device_features = 0
 
     if model in MODEL_TO_FEATURES_MAP:
@@ -399,8 +395,6 @@ async def async_setup_other_entry(
         and model == "lumi.acpartner.v3"
     ):
         device: SwitchEntity
-        if DATA_KEY not in hass.data:
-            hass.data[DATA_KEY] = {}
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
@@ -418,12 +412,10 @@ async def async_setup_other_entry(
                     name, chuangmi_plug, config_entry, unique_id_ch, channel_usb
                 )
                 entities.append(device)
-                hass.data[DATA_KEY][host] = device
         elif model in ["qmi.powerstrip.v1", "zimi.powerstrip.v2"]:
             power_strip = PowerStrip(host, token, model=model)
             device = XiaomiPowerStripSwitch(name, power_strip, config_entry, unique_id)
             entities.append(device)
-            hass.data[DATA_KEY][host] = device
         elif model in [
             "chuangmi.plug.m1",
             "chuangmi.plug.m3",
@@ -436,14 +428,12 @@ async def async_setup_other_entry(
                 name, chuangmi_plug, config_entry, unique_id
             )
             entities.append(device)
-            hass.data[DATA_KEY][host] = device
         elif model == "lumi.acpartner.v3":
             ac_companion = AirConditioningCompanionV3(host, token)
             device = XiaomiAirConditioningCompanionSwitch(
                 name, ac_companion, config_entry, unique_id
             )
             entities.append(device)
-            hass.data[DATA_KEY][host] = device
         else:
             _LOGGER.error(
                 (

@@ -70,7 +70,7 @@ DATA_TEXT_ONLY_SCHEMA = probatio.Schema(
 )
 
 DATA_SCHEMA = probatio.All(
-    cv.ensure_list, [probatio.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
+    probatio.EnsureList(), [probatio.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
 )
 
 

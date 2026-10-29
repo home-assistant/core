@@ -60,6 +60,7 @@ GAS_PRICE_UNITS = tuple(
 )
 GAS_UNIT_ERROR = "entity_unexpected_unit_gas"
 GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
+GAS_PRICE_UNIT_MISMATCH_ERROR = "entity_gas_price_unit_mismatch"
 WATER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.WATER,)
 WATER_USAGE_UNITS: dict[str, tuple[UnitOfVolume, ...]] = {
     sensor.SensorDeviceClass.WATER: (
@@ -316,6 +317,36 @@ def _async_validate_price_entity(
 
     if unit is None or not unit.endswith(allowed_units):
         issues.add_issue(hass, unit_error, entity_id, unit)
+
+
+@callback
+def _async_validate_gas_price_unit_mismatch(
+    hass: HomeAssistant,
+    usage_entity_id: str,
+    price_entity_id: str,
+    issues: ValidationIssues,
+) -> None:
+    """Validate that the gas price unit can be converted to the usage unit."""
+    if (usage_state := hass.states.get(usage_entity_id)) is None or (
+        price_state := hass.states.get(price_entity_id)
+    ) is None:
+        return
+
+    usage_unit = usage_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+    price_unit = (
+        price_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) or ""
+    )
+    price_usage_unit = price_unit.partition("/")[2]
+    energy_units = GAS_USAGE_UNITS[sensor.SensorDeviceClass.ENERGY]
+    volume_units = GAS_USAGE_UNITS[sensor.SensorDeviceClass.GAS]
+    # Unknown price units are reported by _async_validate_price_entity, and the
+    # cost sensor still uses them as a price per meter unit
+    if (usage_unit in energy_units and price_usage_unit in volume_units) or (
+        usage_unit in volume_units and price_usage_unit in energy_units
+    ):
+        issues.add_issue(
+            hass, GAS_PRICE_UNIT_MISMATCH_ERROR, price_entity_id, price_unit
+        )
 
 
 @callback
@@ -592,6 +623,15 @@ def _validate_gas_source(
                 GAS_PRICE_UNIT_ERROR,
             )
         )
+        validate_calls.append(
+            functools.partial(
+                _async_validate_gas_price_unit_mismatch,
+                hass,
+                source["stat_energy_from"],
+                entity_energy_price,
+                source_result,
+            )
+        )
 
     if (
         source.get("entity_energy_price") is not None
@@ -758,6 +798,35 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     source_result,
                 )
             )
+
+        elif source["type"] == "home":
+            wanted_statistics_metadata.add(source["stat_energy_to"])
+            validate_calls.append(
+                functools.partial(
+                    _async_validate_usage_stat,
+                    hass,
+                    statistics_metadata,
+                    source["stat_energy_to"],
+                    ENERGY_USAGE_DEVICE_CLASSES,
+                    ENERGY_USAGE_UNITS,
+                    ENERGY_UNIT_ERROR,
+                    source_result,
+                )
+            )
+            if stat_rate := source.get("stat_rate"):
+                wanted_statistics_metadata.add(stat_rate)
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_power_stat,
+                        hass,
+                        statistics_metadata,
+                        stat_rate,
+                        POWER_USAGE_DEVICE_CLASSES,
+                        POWER_USAGE_UNITS,
+                        POWER_UNIT_ERROR,
+                        source_result,
+                    )
+                )
 
         elif source["type"] == "battery":
             wanted_statistics_metadata.add(source["stat_energy_from"])

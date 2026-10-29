@@ -20,6 +20,7 @@ from habiticalib import (
     TaskType,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import (
@@ -88,8 +89,6 @@ from .conftest import (
     ERROR_NOT_FOUND,
     ERROR_TOO_MANY_REQUESTS,
 )
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica: reason"
 RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again in 5 seconds"

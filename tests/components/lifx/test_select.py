@@ -1,61 +1,41 @@
-"""Tests for the lifx integration select entity."""
+"""Tests for the LIFX select platform."""
 
-from datetime import timedelta
+from collections.abc import Callable
 
+from lifx import LifxError, ThemeLibrary
 import pytest
 
-from homeassistant.components import lifx
-from homeassistant.components.lifx.const import DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_UNKNOWN
+from homeassistant.components.select import ATTR_OPTIONS, DOMAIN as SELECT_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
-from . import (
-    DEFAULT_ENTRY_TITLE,
-    IP_ADDRESS,
-    SERIAL,
-    MockLifxCommand,
-    _mocked_infrared_bulb,
-    _mocked_light_strip,
-    _patch_config_flow_try_connect,
-    _patch_device,
-    _patch_discovery,
+from . import SERIAL, async_setup_lifx_entry, async_trigger_update
+from .helpers import (
+    INFRARED_SELECT_ENTITY_ID,
+    MockDevice,
+    create_mock_infrared_light,
+    create_mock_multizone_light,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_theme_select(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test selecting a theme."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_light_strip()
-    bulb.product = 38
-    bulb.power_level = 0
-    bulb.color = [0, 0, 65535, 3500]
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
+    """Test theme options and selected theme remain lower case."""
+    device = create_mock_multizone_light()
+    await async_setup_lifx_entry(hass, device)
     entity_id = "select.my_group_my_bulb_theme"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert not entity.disabled
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_OPTIONS] == [
+        name.lower() for name in ThemeLibrary.get_available_themes()
+    ]
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -64,237 +44,95 @@ async def test_theme_select(
         blocking=True,
     )
 
-    assert len(bulb.set_extended_color_zones.calls) == 1
-    bulb.set_extended_color_zones.reset_mock()
+    device.apply_theme.assert_awaited_once()
+    applied_theme = device.apply_theme.await_args.args[0]
+    assert applied_theme.colors == ThemeLibrary.get("intense").colors
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "intense"
+
+    await async_trigger_update(hass)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "intense"
 
 
+@pytest.mark.parametrize(
+    ("option", "level", "refreshed_level"),
+    [
+        pytest.param("Disabled", 0.0, 0 / 65535, id="disabled"),
+        pytest.param("25%", 0.25, 16383 / 65535, id="quarter"),
+        pytest.param("50%", 0.5, 32767 / 65535, id="half"),
+        pytest.param("100%", 1.0, 65535 / 65535, id="full"),
+    ],
+)
 async def test_infrared_brightness(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    option: str,
+    level: float,
+    refreshed_level: float,
 ) -> None:
-    """Test getting and setting infrared brightness."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_infrared_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    unique_id = f"{SERIAL}_infrared_brightness"
-    entity_id = "select.my_group_my_bulb_infrared_brightness"
+    """Test typed infrared levels map to unchanged option labels."""
+    device = create_mock_infrared_light()
+    await async_setup_lifx_entry(hass, device)
+    entity_id = INFRARED_SELECT_ENTITY_ID
 
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert not entity.disabled
-    assert entity.unique_id == unique_id
-
-    state = hass.states.get(entity_id)
-    assert state.state == "100%"
-
-
-@pytest.mark.usefixtures("mock_discovery")
-async def test_set_infrared_brightness_25_percent(hass: HomeAssistant) -> None:
-    """Test getting and setting infrared brightness."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_infrared_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    entity_id = "select.my_group_my_bulb_infrared_brightness"
+    assert entity.unique_id == f"{SERIAL}_infrared_brightness"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         "select_option",
-        {ATTR_ENTITY_ID: entity_id, "option": "25%"},
+        {ATTR_ENTITY_ID: entity_id, "option": option},
         blocking=True,
     )
+    device.set_infrared.assert_awaited_once_with(level)
 
-    bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=16383)
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert bulb.set_infrared.calls[0][0][0] == 16383
-
+    device.state.infrared = refreshed_level
+    await async_trigger_update(hass)
     state = hass.states.get(entity_id)
-    assert state.state == "25%"
-
-    bulb.set_infrared.reset_mock()
-
-
-@pytest.mark.usefixtures("mock_discovery")
-async def test_set_infrared_brightness_50_percent(hass: HomeAssistant) -> None:
-    """Test getting and setting infrared brightness."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_infrared_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    entity_id = "select.my_group_my_bulb_infrared_brightness"
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        "select_option",
-        {ATTR_ENTITY_ID: entity_id, "option": "50%"},
-        blocking=True,
-    )
-
-    bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=32767)
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert bulb.set_infrared.calls[0][0][0] == 32767
-
-    state = hass.states.get(entity_id)
-    assert state.state == "50%"
-
-    bulb.set_infrared.reset_mock()
+    assert state
+    assert state.state == option
 
 
-@pytest.mark.usefixtures("mock_discovery")
-async def test_set_infrared_brightness_100_percent(hass: HomeAssistant) -> None:
-    """Test getting and setting infrared brightness."""
+@pytest.mark.parametrize(
+    ("factory", "method", "entity_id", "option"),
+    [
+        pytest.param(
+            create_mock_infrared_light,
+            "set_infrared",
+            INFRARED_SELECT_ENTITY_ID,
+            "50%",
+            id="infrared_brightness",
+        ),
+        pytest.param(
+            create_mock_multizone_light,
+            "apply_theme",
+            "select.my_group_my_bulb_theme",
+            "intense",
+            id="theme",
+        ),
+    ],
+)
+async def test_select_library_error_becomes_home_assistant_error(
+    hass: HomeAssistant,
+    factory: Callable[[], MockDevice],
+    method: str,
+    entity_id: str,
+    option: str,
+) -> None:
+    """Test a library failure surfaces as a Home Assistant error."""
+    device = factory()
+    await async_setup_lifx_entry(hass, device)
+    getattr(device, method).side_effect = LifxError("device unreachable")
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_infrared_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    entity_id = "select.my_group_my_bulb_infrared_brightness"
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        "select_option",
-        {ATTR_ENTITY_ID: entity_id, "option": "100%"},
-        blocking=True,
-    )
-
-    bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=65535)
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert bulb.set_infrared.calls[0][0][0] == 65535
-
-    state = hass.states.get(entity_id)
-    assert state.state == "100%"
-
-    bulb.set_infrared.reset_mock()
-
-
-@pytest.mark.usefixtures("mock_discovery")
-async def test_disable_infrared(hass: HomeAssistant) -> None:
-    """Test getting and setting infrared brightness."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_infrared_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    entity_id = "select.my_group_my_bulb_infrared_brightness"
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        "select_option",
-        {ATTR_ENTITY_ID: entity_id, "option": "Disabled"},
-        blocking=True,
-    )
-
-    bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=0)
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert bulb.set_infrared.calls[0][0][0] == 0
-
-    state = hass.states.get(entity_id)
-    assert state.state == "Disabled"
-
-    bulb.set_infrared.reset_mock()
-
-
-@pytest.mark.usefixtures("mock_discovery")
-async def test_invalid_infrared_brightness(hass: HomeAssistant) -> None:
-    """Test getting and setting infrared brightness."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=DEFAULT_ENTRY_TITLE,
-        data={CONF_HOST: IP_ADDRESS},
-        unique_id=SERIAL,
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_infrared_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    entity_id = "select.my_group_my_bulb_infrared_brightness"
-
-    bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=12345)
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_UNKNOWN
+    with pytest.raises(HomeAssistantError, match="device unreachable"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, "option": option},
+            blocking=True,
+        )

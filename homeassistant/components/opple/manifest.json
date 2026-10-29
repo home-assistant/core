@@ -1,6 +1,7 @@
 {
   "domain": "opple",
   "name": "Opple",
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/opple",
   "iot_class": "local_polling",

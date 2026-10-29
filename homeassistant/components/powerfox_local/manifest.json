@@ -1,6 +1,7 @@
 {
   "domain": "powerfox_local",
   "name": "Powerfox Local",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/powerfox_local",

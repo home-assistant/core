@@ -42,6 +42,7 @@ class LutronCasetaScene(Scene):
             identifiers={(DOMAIN, data.bridge_device["serial"])},
         )
         self._attr_name = scene["name"]
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override

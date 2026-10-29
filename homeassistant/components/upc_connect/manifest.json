@@ -1,6 +1,10 @@
 {
   "domain": "upc_connect",
   "name": "UPC Connect Box",
+  "categories": [
+    "presence_location.network_presence",
+    "computers_network.routers_network"
+  ],
   "codeowners": ["@pvizeli", "@fabaff"],
   "documentation": "https://www.home-assistant.io/integrations/upc_connect",
   "iot_class": "local_polling",

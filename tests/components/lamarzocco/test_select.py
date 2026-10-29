@@ -9,7 +9,7 @@ from pylamarzocco.const import (
     SmartStandByType,
     SteamTargetLevel,
 )
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -169,10 +169,19 @@ async def test_smart_standby_mode(
     )
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(RequestNotSuccessful("Boom"), id="request_not_successful"),
+        pytest.param(AuthFail("Boom"), id="auth_fail"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_select_errors(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
+    side_effect: Exception | type[Exception],
 ) -> None:
     """Test select errors."""
     serial_number = mock_lamarzocco.serial_number
@@ -180,7 +189,7 @@ async def test_select_errors(
     state = hass.states.get(f"select.{serial_number}_prebrew_infusion_mode")
     assert state
 
-    mock_lamarzocco.set_pre_extraction_mode.side_effect = RequestNotSuccessful("Boom")
+    mock_lamarzocco.set_pre_extraction_mode.side_effect = side_effect
 
     # Test setting invalid option
     with pytest.raises(HomeAssistantError) as exc_info:

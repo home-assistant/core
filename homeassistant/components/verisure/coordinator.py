@@ -127,16 +127,11 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         return retry_after
 
     def _raise_rate_limited(self, exc: VerisureRateLimitError, context: str) -> None:
-        """Log rate limiting and defer the next poll."""
+        """Defer the next poll after rate limiting."""
         retry_after = self._rate_limit_retry_seconds()
-        LOGGER.warning(
-            "Verisure rate limited during %s, %s; backing off %s seconds",
-            context,
-            exc,
-            int(retry_after),
-        )
         raise UpdateFailed(
-            f"Verisure rate limited during {context}",
+            f"Verisure rate limited during {context}, {exc}; "
+            f"backing off {int(retry_after)} seconds",
             retry_after=retry_after,
         ) from exc
 
@@ -163,10 +158,9 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         except VerisureRateLimitError as ex:
             self._raise_rate_limited(ex, "cookie refresh")
         except (VerisureRequestError, VerisureResponseError) as ex:
-            LOGGER.warning(
-                "Verisure unreachable or server error during cookie refresh, %s", ex
-            )
-            raise UpdateFailed("Unable to update cookie - Verisure unreachable") from ex
+            raise UpdateFailed(
+                f"Unable to update cookie - Verisure unreachable: {ex}"
+            ) from ex
         except VerisureError as ex:
             raise UpdateFailed("Unable to update cookie") from ex
 
@@ -190,7 +184,6 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 return False
         except VerisureLoginError as ex:
-            LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except (
             VerisureRequestError,
@@ -228,8 +221,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 self.verisure.smartplugs(),
             )
         except VerisureError as err:
-            LOGGER.error("Could not read overview, %s", err)
-            raise UpdateFailed("Could not read overview") from err
+            raise UpdateFailed(f"Could not read overview: {err}") from err
 
         def unpack(overview: list, value: str) -> dict | list:
             unpacked: dict | list | None = next(

@@ -11,6 +11,13 @@ LABS_PREVIEW_FEATURES = {
             "report_issue_url": "https://github.com/OHF-Device-Database/device-database/issues/new",
         },
     },
+    "camera": {
+        "two_way_audio": {
+            "feedback_url": "https://forms.gle/YjoL6e6dtU4F9WBZ6",
+            "learn_more_url": "",
+            "report_issue_url": "",
+        },
+    },
     "cloud": {
         "stt_v2": {
             "feedback_url": "https://forms.gle/Juf2vsxJHUX5y6Ev5",
@@ -30,6 +37,13 @@ LABS_PREVIEW_FEATURES = {
             "feedback_url": "https://community.home-assistant.io",
             "learn_more_url": "https://www.home-assistant.io/integrations/kitchen_sink",
             "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/kitchen_sink&integration_name=Kitchen%20Sink",
+        },
+    },
+    "teslemetry": {
+        "charge_on_solar": {
+            "feedback_url": "https://community.home-assistant.io",
+            "learn_more_url": "https://www.home-assistant.io/integrations/teslemetry",
+            "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/teslemetry&integration_name=Teslemetry",
         },
     },
 }

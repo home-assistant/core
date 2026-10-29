@@ -22,7 +22,7 @@ PARALLEL_UPDATES = 0
 
 # Smart events classify what tripped them. Firmware that does not classify, and
 # every trip of a non-smart event, reports no target at all.
-DETECTION_TARGETS = ("human", "pet", "vehicle")
+DETECTION_TARGETS = ("human", "others", "pet", "vehicle")
 EVENT_TYPE_TRIGGERED = "triggered"
 EVENT_TYPES = [EVENT_TYPE_TRIGGERED, *DETECTION_TARGETS]
 
@@ -135,19 +135,7 @@ class HikvisionEvent(HikvisionEntity, EventEntity):
         """Get sensor attributes from camera."""
         return self._camera.fetch_attributes(self._sensor_type, self._channel)
 
-    @property
     @override
-    def available(self) -> bool:
-        """Return true if the device's event stream is connected."""
-        return self._camera.stream_connected
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register callback when entity is added."""
-        await super().async_added_to_hass()
-
-        self._camera.add_update_callback(self._update_callback, self._callback_id)
-
     def _update_callback(self, msg: str) -> None:
         """Handle an update from pyhik's event stream thread."""
         # Read the state on the callback thread: a trip that has already ended

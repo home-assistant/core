@@ -127,6 +127,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         """Add an tracked entity to proximity entity mapping."""
         self.entity_mapping[tracked_entity_id].append(entity_id)
 
+    @callback
+    def async_update_entity_mapping(
+        self, tracked_entity_id: str, old_entity_id: str, new_entity_id: str
+    ) -> None:
+        """Update the proximity entity mapping of a renamed proximity entity."""
+        entity_ids = self.entity_mapping[tracked_entity_id]
+        entity_ids[entity_ids.index(old_entity_id)] = new_entity_id
+
     async def async_check_proximity_state_change(
         self,
         event: Event[EventStateChangedData],

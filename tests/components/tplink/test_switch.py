@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from kasa import AuthenticationError, Device, KasaException, Module, TimeoutError
 from kasa.iot import IotStrip
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tplink
@@ -40,8 +41,6 @@ from . import (
     snapshot_platform,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_states(

@@ -1,6 +1,7 @@
 {
   "domain": "recollect_waste",
   "name": "ReCollect Waste",
+  "categories": ["local_services"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/recollect_waste",

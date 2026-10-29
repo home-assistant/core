@@ -36,7 +36,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         data_schema = {
             probatio.Required(
-                CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+                probatio.Secret(CONF_API_KEY), default=user_input.get(CONF_API_KEY, "")
             ): str,
             probatio.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
             probatio.Optional(
@@ -73,7 +73,9 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
 

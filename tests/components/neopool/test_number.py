@@ -10,6 +10,11 @@ from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus.exceptions import NeoPoolConnectionError
 from neopool_modbus.registers import MaskedFlag, SetpointKind
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -24,8 +29,6 @@ from homeassistant.helpers import entity_platform, entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 # Longer than the entity's settle delay so a single tick flushes the write.
 FLUSH = timedelta(seconds=5)
@@ -272,6 +275,30 @@ async def test_heating_setpoint_writes_via_high_level_api(
 
     mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
         SetpointKind.HEATING, 28
+    )
+
+
+async def test_intelligent_setpoint_writes_via_high_level_api(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Writing the intelligent setpoint delegates to async_set_setpoint(INTELLIGENT)."""
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={"MBF_PAR_INTELLIGENT_TEMP": 28}
+    )
+
+    await setup_integration(hass, mock_config_entry_number)
+    entity_id = _number_entity_id(
+        hass, mock_config_entry_number, "mbf_par_intelligent_temp"
+    )
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    await _write(hass, freezer, entity_id, 28.0)
+
+    mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
+        SetpointKind.INTELLIGENT, 28
     )
 
 

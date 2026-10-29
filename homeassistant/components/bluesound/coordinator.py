@@ -12,7 +12,7 @@ from pyblu import Input, Player, Preset, Status, SyncStatus
 from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,6 +113,14 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
     @override
     async def _async_update_data(self) -> BluesoundData:
         return self.data
+
+    @override
+    @callback
+    def async_set_updated_data(self, data: BluesoundData) -> None:
+        # The polling loops bypass _async_refresh, which normally logs recovery.
+        if not self.last_update_success:
+            self.logger.info("Fetching %s data recovered", self.name)
+        super().async_set_updated_data(data)
 
     async def _poll_presets_and_inputs_loop(self) -> None:
         while True:

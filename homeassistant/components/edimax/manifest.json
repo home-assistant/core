@@ -1,6 +1,7 @@
 {
   "domain": "edimax",
   "name": "Edimax",
+  "categories": ["plugs_switches"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/edimax",
   "iot_class": "local_polling",

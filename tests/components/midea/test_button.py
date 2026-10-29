@@ -8,6 +8,7 @@ from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.e1 import DeviceAttributes as E1Attributes
 from midealocal.exceptions import ValueWrongType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -19,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _e1_device(*, model: str = "7600024L") -> DummyDevice:
@@ -35,15 +34,33 @@ def _e1_device(*, model: str = "7600024L") -> DummyDevice:
     return device
 
 
+def _ac_device() -> DummyDevice:
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+        },
+    )
+    device.is_filter_reset_supported = True
+    return device
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("device"),
+    [
+        pytest.param(_ac_device(), id="ac"),
+        pytest.param(_e1_device(), id="e1"),
+    ],
+)
 async def test_button_state_snapshot(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    device: DummyDevice,
 ) -> None:
     """Test async_setup_entry creates the start button for a supported E1 dishwasher."""
-    device = _e1_device()
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, config_entry, device)
@@ -51,17 +68,26 @@ async def test_button_state_snapshot(
         await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_button_press_starts_dishwasher(
+@pytest.mark.parametrize(
+    ("device", "entity_name", "expected_call"),
+    [
+        pytest.param(_ac_device(), "reset_filter", ("reset_filter",), id="ac"),
+        pytest.param(_e1_device(), "start", ("start_work",), id="e1"),
+    ],
+)
+async def test_button_press(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    device: DummyDevice,
+    entity_name: str,
+    expected_call: tuple,
 ) -> None:
     """Test pressing the button calls start_work on the device."""
-    device = _e1_device()
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, config_entry, device)
 
-    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_start"]
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_{entity_name}"]
 
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state != "unavailable"
@@ -73,7 +99,8 @@ async def test_button_press_starts_dishwasher(
         {ATTR_ENTITY_ID: entity_entry.entity_id},
         blocking=True,
     )
-    assert device.calls == [("start_work",)]
+    assert len(device.calls) == 1
+    assert device.calls[0] == expected_call
 
 
 async def test_button_press_raises_when_device_off(

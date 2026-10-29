@@ -1,6 +1,7 @@
 {
   "domain": "duotecno",
   "name": "Duotecno",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@cereal2nd"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/duotecno",

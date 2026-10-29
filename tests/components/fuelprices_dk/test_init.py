@@ -6,6 +6,7 @@ from aiohttp import ClientResponseError
 from pybraendstofpriser import Flist
 from pybraendstofpriser.exceptions import ProductNotFoundError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import (
     ConfigEntryState,
@@ -18,8 +19,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_PRICES, TEST_STATION
-
-from tests.common import MockConfigEntry
 
 
 def _client_error(status: int) -> ClientResponseError:

@@ -14,6 +14,7 @@
       "service_uuid": "0000af30-0000-1000-8000-00805f9b34fb"
     }
   ],
+  "categories": ["sensors.motion_presence"],
   "codeowners": ["@930913"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

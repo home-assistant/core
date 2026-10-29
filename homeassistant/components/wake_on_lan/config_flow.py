@@ -48,7 +48,7 @@ async def validate_options(
 
 DATA_SCHEMA = {probatio.Required(CONF_MAC): TextSelector()}
 OPTIONS_SCHEMA = {
-    probatio.Optional(CONF_SECUREON_PASSWORD): TextSelector(),
+    probatio.Optional(probatio.Secret(CONF_SECUREON_PASSWORD)): TextSelector(),
     probatio.Optional(CONF_BROADCAST_ADDRESS): TextSelector(),
     probatio.Optional(CONF_BROADCAST_PORT): NumberSelector(
         NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)

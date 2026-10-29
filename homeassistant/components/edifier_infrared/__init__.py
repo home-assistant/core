@@ -11,17 +11,13 @@ from .const import CONF_COMMAND_SET, CONF_INFRARED_ENTITY_ID
 PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Edifier IR from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old config entries."""
-    if entry.version > 3:
-        return False
-
     if entry.version == 1:
         data = {**entry.data}
         # The R1700BT model was renamed to R1700BT (pre-2017), and its
@@ -51,9 +47,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             version=3,
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload an Edifier IR config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

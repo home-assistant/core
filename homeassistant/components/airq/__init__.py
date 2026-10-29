@@ -12,7 +12,7 @@ PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR]
 AirQConfigEntry = ConfigEntry[AirQCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirQConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirQConfigEntry) -> None:
     """Set up air-Q from a config entry."""
 
     coordinator = AirQCoordinator(
@@ -30,12 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirQConfigEntry) -> bool
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirQConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirQConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

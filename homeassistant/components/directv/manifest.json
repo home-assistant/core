@@ -1,6 +1,7 @@
 {
   "domain": "directv",
   "name": "DirecTV",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/directv",

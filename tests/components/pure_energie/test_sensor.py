@@ -1,5 +1,7 @@
 """Tests for the sensors provided by the Pure Energie integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.pure_energie.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -16,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_sensors(

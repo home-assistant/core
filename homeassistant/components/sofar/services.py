@@ -54,7 +54,7 @@ SET_ACTIVE_POWER_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
         probatio.Required(ATTR_ENABLED): cv.boolean,
         probatio.Required(ATTR_LIMIT): probatio.All(
-            probatio.Coerce(float), probatio.Range(min=0, max=100)
+            probatio.Coerce(float), probatio.Percentage()
         ),
     }
 )

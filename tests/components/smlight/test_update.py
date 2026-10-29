@@ -9,6 +9,13 @@ from pysmlight import Firmware, Info, Radio
 from pysmlight.const import Events as SmEvents
 from pysmlight.sse import MessageEvent
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smlight.const import DOMAIN, SCAN_FIRMWARE_INTERVAL
@@ -27,14 +34,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import get_mock_event_function
 from .conftest import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.typing import WebSocketGenerator
 
 pytestmark = [
     pytest.mark.usefixtures(

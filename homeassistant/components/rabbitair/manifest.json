@@ -2,6 +2,7 @@
   "domain": "rabbitair",
   "name": "Rabbit Air",
   "after_dependencies": ["zeroconf"],
+  "categories": ["climate.air_purifiers_humidifiers"],
   "codeowners": ["@rabbit-air"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rabbitair",

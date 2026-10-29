@@ -46,7 +46,12 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.singleton import singleton
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, WAKE_WORDS_API_PATH, WAKE_WORDS_DIR_NAME
+from .const import (
+    ASSIST_SATELLITE_KEY,
+    DOMAIN,
+    WAKE_WORDS_API_PATH,
+    WAKE_WORDS_DIR_NAME,
+)
 from .entity import EsphomeAssistEntity, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
@@ -147,7 +152,7 @@ class EsphomeAssistSatellite(
     """Satellite running ESPHome."""
 
     entity_description = assist_satellite.AssistSatelliteEntityDescription(
-        key="assist_satellite", translation_key="assist_satellite"
+        key=ASSIST_SATELLITE_KEY, translation_key=ASSIST_SATELLITE_KEY
     )
 
     def __init__(self, entry: ESPHomeConfigEntry) -> None:
@@ -782,8 +787,12 @@ class EsphomeAssistSatellite(
         """Yield audio chunks from the queue until None."""
         while True:
             chunk = await self._audio_queue.get()
-            if not chunk:
+            if chunk is None:
                 break
+
+            # The device can send an empty frame in the middle of the audio
+            if not chunk:
+                continue
 
             yield chunk
 

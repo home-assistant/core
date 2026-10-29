@@ -12,15 +12,20 @@ from aiohttp import WSMsgType, web
 from aiohttp.http_websocket import WebSocketWriter
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.components.http.const import is_supervisor_unix_socket_request
+from homeassistant.components.http.const import (
+    MAX_UNAUTHENTICATED_BODY_SIZE,
+    is_supervisor_unix_socket_request,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .auth import AUTH_REQUIRED_MESSAGE, AuthPhase
+from .connection import REDACT_KEYS
 from .const import (
     DATA_CONNECTIONS,
     MAX_PENDING_MSG,
@@ -422,13 +427,19 @@ class WebSocketHandler:
                     f"Received non-Text message of type {msg.type} during auth phase"
                 )
 
+            if len(msg.data) > MAX_UNAUTHENTICATED_BODY_SIZE:
+                raise Disconnect("Received too large message during auth phase")
             try:
                 auth_msg_data = json_loads(msg.data)
             except ValueError as err:
                 raise Disconnect("Received invalid JSON during auth phase") from err
 
             if self._debug:
-                self._logger.debug("%s: Received %s", self.description, auth_msg_data)
+                self._logger.debug(
+                    "%s: Received %s",
+                    self.description,
+                    async_redact_data(auth_msg_data, REDACT_KEYS),
+                )
             connection = await auth.async_handle(auth_msg_data)
 
         # As the webserver is now started before the start
@@ -524,7 +535,9 @@ class WebSocketHandler:
 
             if self._debug:
                 self._logger.debug(
-                    "%s: Received %s", self.description, command_msg_data
+                    "%s: Received %s",
+                    self.description,
+                    async_redact_data(command_msg_data, REDACT_KEYS),
                 )
 
             # command_msg_data is always deserialized from JSON as a list

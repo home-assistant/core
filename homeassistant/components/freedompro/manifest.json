@@ -1,6 +1,7 @@
 {
   "domain": "freedompro",
   "name": "Freedompro",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@stefano055415"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/freedompro",

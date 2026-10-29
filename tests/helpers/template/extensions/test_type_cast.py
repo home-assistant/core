@@ -25,6 +25,7 @@ def test_float_function(hass: HomeAssistant) -> None:
     # Test handling of default return value
     assert render(hass, "{{ float('bad', 1) }}") == 1
     assert render(hass, "{{ float('bad', default=1) }}") == 1
+    assert render(hass, "{{ float(value, default=1) }}", {"value": 10**400}) == 1
 
 
 def test_float_filter(hass: HomeAssistant) -> None:
@@ -79,6 +80,21 @@ def test_int_function(hass: HomeAssistant) -> None:
     assert render(hass, "{{ int('bad', default=1) }}") == 1
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(math.inf, id="inf"),
+        pytest.param(-math.inf, id="negative_inf"),
+    ],
+)
+def test_int_infinite_float_returns_default(hass: HomeAssistant, value: float) -> None:
+    """Test int returns the default for an infinite float."""
+    assert render(hass, "{{ int(value, default=1) }}", {"value": value}) == 1
+    assert render(hass, "{{ value | int(default=1) }}", {"value": value}) == 1
+    with pytest.raises(TemplateError, match="no default was specified"):
+        render(hass, "{{ int(value) }}", {"value": value})
+
+
 def test_bool_function(hass: HomeAssistant) -> None:
     """Test bool function."""
     assert render(hass, "{{ bool(true) }}") is True
@@ -126,6 +142,7 @@ def test_bool_filter(hass: HomeAssistant) -> None:
         (math.inf, False),
         ("nan", False),
         ("inf", False),
+        pytest.param(10**400, False, id="int_out_of_float_range"),
     ],
 )
 def test_isnumber(hass: HomeAssistant, value: object, expected: bool) -> None:

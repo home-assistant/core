@@ -11,6 +11,7 @@ from pyanglianwater.exceptions import (
     SmartMeterUnavailableError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.anglian_water.const import DOMAIN
 from homeassistant.components.recorder import Recorder
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .const import CONSENT_REQUIRED_ISSUE_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unload_entry(
@@ -105,7 +104,9 @@ async def test_setup_consent_required(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
+    issue = issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
     # Test that the issue is deleted once consent is granted
     mock_anglian_water_authenticator.send_refresh_request.side_effect = None
@@ -113,6 +114,27 @@ async def test_setup_consent_required(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is None
+
+
+@pytest.mark.usefixtures("recorder_mock", "mock_anglian_water_client")
+async def test_consent_required_issue_removed_with_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: MagicMock,
+) -> None:
+    """Test the consent required issue is removed with the config entry."""
+    mock_anglian_water_authenticator.send_refresh_request.side_effect = (
+        ConsentRequiredError
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is None
 
 

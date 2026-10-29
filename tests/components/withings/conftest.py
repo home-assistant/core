@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from aiowithings import Device, WithingsClient
 from aiowithings.models import NotificationConfiguration
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -24,8 +25,6 @@ from . import (
     load_sleep_fixture,
     load_workout_fixture,
 )
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

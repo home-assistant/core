@@ -55,6 +55,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    instance_id,
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -611,7 +612,7 @@ async def webhook_register_sensor(
 @WEBHOOK_COMMANDS.register("update_sensor_states")
 @validate_schema(
     probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [
             # Partial schema, enough to identify schema.
             # We don't validate everything because otherwise 1 invalid sensor
@@ -738,6 +739,7 @@ async def webhook_get_config(
         "longitude": hass_config["longitude"],
         "elevation": hass_config["elevation"],
         "hass_device_id": device.id,
+        "instance_id": await instance_id.async_get(hass),
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],

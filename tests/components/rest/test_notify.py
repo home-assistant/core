@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import get_fixture_path
 import respx
 
 from homeassistant import config as hass_config
@@ -10,8 +11,6 @@ from homeassistant.components.rest import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
 
 
 @respx.mock

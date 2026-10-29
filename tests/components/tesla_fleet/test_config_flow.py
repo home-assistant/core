@@ -1,9 +1,13 @@
 """Test the Tesla Fleet config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from tesla_fleet_api.const import SERVERS
 from tesla_fleet_api.exceptions import (
     InvalidResponse,
@@ -24,16 +28,12 @@ from homeassistant.components.tesla_fleet.const import (
     SCOPES,
     TOKEN_URL,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_DOMAIN, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 REDIRECT = "https://example.com/auth/external/callback"
 UNIQUE_ID = "uid"
@@ -72,6 +72,18 @@ async def create_credential(hass: HomeAssistant) -> None:
         ClientCredential("user_client_id", "user_client_secret"),
         "user_cred",
     )
+
+
+async def _complete_registration(
+    hass: HomeAssistant, flow_id: str, user_input: dict[str, Any]
+) -> ConfigFlowResult:
+    """Submit a step that registers the domain and finish the flow."""
+    with patch(
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_configure(flow_id, user_input)
+        assert result["step_id"] == "registration_complete"
+        return await hass.config_entries.flow.async_configure(flow_id, {})
 
 
 @pytest.fixture
@@ -156,7 +168,7 @@ async def test_region_partner_login_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
-    mock_private_key,
+    mock_private_key: Mock,
 ) -> None:
     """Test a partner login error keeps the user on the region step."""
     result = await hass.config_entries.flow.async_init(
@@ -224,6 +236,11 @@ async def test_region_partner_login_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "domain_input"
 
+    result = await _complete_registration(
+        hass, result["flow_id"], {CONF_DOMAIN: "example.com"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow_with_domain_registration(
@@ -280,7 +297,7 @@ async def test_full_flow_with_domain_registration(
             "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi"
         ) as mock_api_class,
         patch(
-            "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+            "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
         ),
     ):
         mock_api = AsyncMock()
@@ -347,7 +364,7 @@ async def test_domain_input_invalid_domain(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
-    mock_private_key,
+    mock_private_key: Mock,
 ) -> None:
     """Test domain input with invalid domain."""
     result = await hass.config_entries.flow.async_init(
@@ -430,6 +447,12 @@ async def test_domain_input_invalid_domain(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "registration_complete"
 
+    with patch(
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
@@ -444,9 +467,9 @@ async def test_domain_registration_errors(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
-    mock_private_key,
-    side_effect,
-    expected_error,
+    mock_private_key: Mock,
+    side_effect: Exception | type[Exception],
+    expected_error: str,
 ) -> None:
     """Test domain registration with errors that stay on domain_registration step."""
     result = await hass.config_entries.flow.async_init(
@@ -505,6 +528,11 @@ async def test_domain_registration_errors(
         assert result["step_id"] == "domain_registration"
         assert result["errors"] == {"base": expected_error}
 
+    mock_api.partner.register.side_effect = None
+    mock_api.partner.register.return_value = {"response": {"public_key": "test_point"}}
+    result = await _complete_registration(hass, result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_domain_registration_precondition_failed(
@@ -512,7 +540,7 @@ async def test_domain_registration_precondition_failed(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
-    mock_private_key,
+    mock_private_key: Mock,
 ) -> None:
     """Test domain registration with PreconditionFailed redirects to domain_input."""
     result = await hass.config_entries.flow.async_init(
@@ -572,6 +600,13 @@ async def test_domain_registration_precondition_failed(
         assert result["step_id"] == "domain_input"
         assert result["errors"] == {CONF_DOMAIN: "precondition_failed"}
 
+    mock_api.partner.register.side_effect = None
+    mock_api.partner.register.return_value = {"response": {"public_key": "test_point"}}
+    result = await _complete_registration(
+        hass, result["flow_id"], {CONF_DOMAIN: "example.com"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_domain_registration_public_key_not_found(
@@ -579,7 +614,7 @@ async def test_domain_registration_public_key_not_found(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
-    mock_private_key,
+    mock_private_key: Mock,
 ) -> None:
     """Test domain registration with missing public key."""
     result = await hass.config_entries.flow.async_init(
@@ -638,6 +673,10 @@ async def test_domain_registration_public_key_not_found(
         assert result["step_id"] == "domain_registration"
         assert result["errors"] == {"base": "public_key_not_found"}
 
+    mock_api.partner.register.return_value = {"response": {"public_key": "test_point"}}
+    result = await _complete_registration(hass, result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_domain_registration_public_key_mismatch(
@@ -645,7 +684,7 @@ async def test_domain_registration_public_key_mismatch(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
-    mock_private_key,
+    mock_private_key: Mock,
 ) -> None:
     """Test domain registration with public key mismatch."""
     result = await hass.config_entries.flow.async_init(
@@ -706,6 +745,12 @@ async def test_domain_registration_public_key_mismatch(
         assert result["step_id"] == "domain_registration"
         assert result["errors"] == {"base": "public_key_mismatch"}
 
+    mock_api.partner.register.return_value = {
+        "response": {"public_key": "expected_key"}
+    }
+    result = await _complete_registration(hass, result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_region_override(
@@ -753,7 +798,7 @@ async def test_region_override(
             "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi"
         ) as mock_api_class,
         patch(
-            "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+            "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
         ),
     ):
         mock_api = AsyncMock()
@@ -785,6 +830,7 @@ async def test_region_override(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UNIQUE_ID
+    assert result["result"].unique_id == UNIQUE_ID
     # The overridden region determines which server is registered
     assert mock_api_class.call_args.kwargs["server"] == SERVERS["eu"]
 
@@ -866,6 +912,7 @@ async def test_registration_complete_with_domain_and_user_input(
     flow_instance.data = {"token": {"access_token": "test"}}
 
     result = await flow_instance.async_step_registration_complete({"complete": True})
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UNIQUE_ID
 
@@ -932,7 +979,7 @@ async def test_reauthentication(
     )
 
     with patch(
-        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -978,7 +1025,7 @@ async def test_reauth_account_mismatch(
     )
 
     with patch(
-        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

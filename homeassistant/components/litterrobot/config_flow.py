@@ -17,10 +17,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 STEP_REAUTH_RECONFIGURE_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_PASSWORD): str}
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
 )
 
 

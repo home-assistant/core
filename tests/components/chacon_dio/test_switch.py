@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 SWITCH_ENTITY_ID = "switch.switch_mock_1"
 

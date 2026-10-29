@@ -2,12 +2,14 @@
 
 from typing import Any, override
 
+from starline import StarlineDevice
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import StarlineConfigEntry
-from .account import StarlineAccount, StarlineDevice
+from .account import StarlineAccount
 from .entity import StarlineEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (

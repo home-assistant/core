@@ -8,7 +8,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "ignore_ip6_link_local": "IPv6 link local address is not supported.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_supported": "Connected to FRITZ!Box but it's unable to control Smart Home devices."
@@ -72,9 +71,9 @@
   "entity": {
     "binary_sensor": {
       "alarm": { "name": "Alarm" },
-      "device_lock": { "name": "Button lock via UI" },
+      "device_lock": { "name": "Button lock on device" },
       "holiday_active": { "name": "Holiday mode" },
-      "lock": { "name": "Button lock on device" },
+      "lock": { "name": "Button lock via UI" },
       "summer_active": { "name": "Summer mode" },
       "window_open": { "name": "Open window detected" }
     },

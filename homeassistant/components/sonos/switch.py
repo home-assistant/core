@@ -1,6 +1,6 @@
 """Entity representing a Sonos Alarm."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, cast, override
 
@@ -456,7 +456,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             )
         )
 
-        async def async_write_state_daily(now: datetime.datetime) -> None:
+        async def async_write_state_daily(now: dt.datetime) -> None:
             """Update alarm state attributes each calendar day."""
             _LOGGER.debug("Updating state attributes for %s", self.name)
             self.async_write_ha_state()
@@ -547,7 +547,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     def _is_today(self) -> bool:
         """Return whether this alarm is scheduled for today."""
         recurrence = self.alarm.recurrence
-        daynum = int(datetime.datetime.today().strftime("%w"))
+        daynum = int(dt.datetime.today().strftime("%w"))
         return (
             recurrence in ("DAILY", "ONCE")
             or (recurrence == "WEEKENDS" and daynum in WEEKEND_DAYS)

@@ -3,6 +3,11 @@
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -11,8 +16,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_PRICES
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensors(

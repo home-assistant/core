@@ -1,6 +1,7 @@
 {
   "domain": "fressnapf_tracker",
   "name": "Fressnapf Tracker",
+  "categories": ["pets"],
   "codeowners": ["@eifinger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fressnapf_tracker",

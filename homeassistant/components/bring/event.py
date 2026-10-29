@@ -10,8 +10,7 @@ from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BringConfigEntry
-from .coordinator import BringActivityCoordinator
+from .coordinator import BringActivityCoordinator, BringConfigEntry
 from .entity import BringBaseEntity
 
 PARALLEL_UPDATES = 0

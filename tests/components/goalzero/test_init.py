@@ -4,6 +4,8 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from goalzero import exceptions
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
@@ -13,9 +15,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from . import CONF_DATA, async_init_integration, create_entry
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_config_and_unload(

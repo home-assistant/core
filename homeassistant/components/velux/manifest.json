@@ -1,6 +1,7 @@
 {
   "domain": "velux",
   "name": "Velux",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@Julius2342", "@pawlizio", "@wollew"],
   "config_flow": true,
   "dhcp": [

@@ -1,6 +1,7 @@
 {
   "domain": "enocean",
   "name": "EnOcean",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["usb"],

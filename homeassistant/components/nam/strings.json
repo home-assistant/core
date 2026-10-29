@@ -21,12 +21,20 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "The password used to log in to the Nettigo Air Monitor web interface.",
+          "username": "The username used to log in to the Nettigo Air Monitor web interface."
+        },
         "description": "Please enter the username and password."
       },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::nam::config::step::credentials::data_description::password%]",
+          "username": "[%key:component::nam::config::step::credentials::data_description::username%]"
         },
         "description": "Please enter the correct username and password for host: {host}"
       },

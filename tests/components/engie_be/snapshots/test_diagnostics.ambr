@@ -1,0 +1,334 @@
+# serializer version: 1
+# name: test_diagnostics_dynamic_tariff
+  dict({
+    'entry': dict({
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'mfa_method': 'sms',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'engie_be',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'epex': dict({
+      'first_slot_start': '2026-10-03T00:00:00+02:00',
+      'last_slot_end': '2026-10-05T00:00:00+02:00',
+      'last_update_success': True,
+      'slot_counts': dict({
+        'HOURLY': 48,
+        'QUARTER_HOURLY': 192,
+      }),
+      'today_available': True,
+      'today_prices': dict({
+        'HOURLY': dict({
+          'max': 0.24,
+          'min': 0.01,
+        }),
+        'QUARTER_HOURLY': dict({
+          'max': 0.2475,
+          'min': 0.01,
+        }),
+      }),
+      'tomorrow_available': True,
+      'update_interval': '1:00:00',
+    }),
+    'households': dict({
+      '**REDACTED_27d6fbbe5c7d230a': dict({
+        'ean_count': 2,
+        'energy_types': dict({
+          '**REDACTED_473550ae0ee79134': 'ELECTRICITY',
+          '**REDACTED_a289ff0d5e276f6d': 'GAS',
+        }),
+        'is_dynamic': True,
+        'last_update_success': True,
+        'slots': dict({
+          '**REDACTED_473550ae0ee79134': dict({
+            'injection': dict({
+              'S_TOU1_INJECTION_PEAK': dict({
+                'price_value': 0.05,
+                'price_value_excl_vat': 0.04717,
+              }),
+            }),
+            'offtake': dict({
+              'S_TOU1_OFFTAKE_PEAK': dict({
+                'price_value': 0.18,
+                'price_value_excl_vat': 0.169811,
+              }),
+              'S_TOU1_OFFTAKE_WEEKEND': dict({
+                'price_value': 0.15,
+                'price_value_excl_vat': 0.141509,
+              }),
+            }),
+          }),
+          '**REDACTED_a289ff0d5e276f6d': dict({
+            'offtake': dict({
+              'TOTAL_HOURS': dict({
+                'price_value': 0.123456,
+                'price_value_excl_vat': 0.116468,
+              }),
+            }),
+          }),
+        }),
+        'update_interval': '1:00:00',
+      }),
+    }),
+    'relations': dict({
+      'agreement_count': 1,
+      'last_update_success': True,
+      'update_interval': None,
+    }),
+  })
+# ---
+# name: test_diagnostics_epex_truncated_quarter_hour
+  dict({
+    'entry': dict({
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'mfa_method': 'sms',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'engie_be',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'epex': dict({
+      'first_slot_start': '2026-10-03T00:00:00+02:00',
+      'last_slot_end': '2026-10-05T00:00:00+02:00',
+      'last_update_success': True,
+      'slot_counts': dict({
+        'HOURLY': 48,
+        'QUARTER_HOURLY': 190,
+      }),
+      'today_available': False,
+      'today_prices': dict({
+        'HOURLY': dict({
+          'max': 0.24,
+          'min': 0.01,
+        }),
+        'QUARTER_HOURLY': dict({
+          'max': 0.245,
+          'min': 0.01,
+        }),
+      }),
+      'tomorrow_available': False,
+      'update_interval': '1:00:00',
+    }),
+    'households': dict({
+      '**REDACTED_27d6fbbe5c7d230a': dict({
+        'ean_count': 2,
+        'energy_types': dict({
+          '**REDACTED_473550ae0ee79134': 'ELECTRICITY',
+          '**REDACTED_a289ff0d5e276f6d': 'GAS',
+        }),
+        'is_dynamic': True,
+        'last_update_success': True,
+        'slots': dict({
+          '**REDACTED_473550ae0ee79134': dict({
+            'injection': dict({
+              'S_TOU1_INJECTION_PEAK': dict({
+                'price_value': 0.05,
+                'price_value_excl_vat': 0.04717,
+              }),
+            }),
+            'offtake': dict({
+              'S_TOU1_OFFTAKE_PEAK': dict({
+                'price_value': 0.18,
+                'price_value_excl_vat': 0.169811,
+              }),
+              'S_TOU1_OFFTAKE_WEEKEND': dict({
+                'price_value': 0.15,
+                'price_value_excl_vat': 0.141509,
+              }),
+            }),
+          }),
+          '**REDACTED_a289ff0d5e276f6d': dict({
+            'offtake': dict({
+              'TOTAL_HOURS': dict({
+                'price_value': 0.123456,
+                'price_value_excl_vat': 0.116468,
+              }),
+            }),
+          }),
+        }),
+        'update_interval': '1:00:00',
+      }),
+    }),
+    'relations': dict({
+      'agreement_count': 1,
+      'last_update_success': True,
+      'update_interval': None,
+    }),
+  })
+# ---
+# name: test_diagnostics_fixed_tariff
+  dict({
+    'entry': dict({
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'mfa_method': 'sms',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'engie_be',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'epex': None,
+    'households': dict({
+      '**REDACTED_27d6fbbe5c7d230a': dict({
+        'ean_count': 2,
+        'energy_types': dict({
+          '**REDACTED_473550ae0ee79134': 'ELECTRICITY',
+          '**REDACTED_a289ff0d5e276f6d': 'GAS',
+        }),
+        'is_dynamic': False,
+        'last_update_success': True,
+        'slots': dict({
+          '**REDACTED_473550ae0ee79134': dict({
+            'injection': dict({
+              'S_TOU1_INJECTION_PEAK': dict({
+                'price_value': 0.05,
+                'price_value_excl_vat': 0.04717,
+              }),
+            }),
+            'offtake': dict({
+              'S_TOU1_OFFTAKE_PEAK': dict({
+                'price_value': 0.18,
+                'price_value_excl_vat': 0.169811,
+              }),
+              'S_TOU1_OFFTAKE_WEEKEND': dict({
+                'price_value': 0.15,
+                'price_value_excl_vat': 0.141509,
+              }),
+            }),
+          }),
+          '**REDACTED_a289ff0d5e276f6d': dict({
+            'offtake': dict({
+              'TOTAL_HOURS': dict({
+                'price_value': 0.123456,
+                'price_value_excl_vat': 0.116468,
+              }),
+            }),
+          }),
+        }),
+        'update_interval': '1:00:00',
+      }),
+    }),
+    'relations': dict({
+      'agreement_count': 1,
+      'last_update_success': True,
+      'update_interval': None,
+    }),
+  })
+# ---
+# name: test_diagnostics_prices_failure
+  dict({
+    'entry': dict({
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'mfa_method': 'sms',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'engie_be',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'epex': None,
+    'households': dict({
+      '**REDACTED_27d6fbbe5c7d230a': dict({
+        'ean_count': None,
+        'energy_types': dict({
+        }),
+        'is_dynamic': False,
+        'last_update_success': False,
+        'slots': dict({
+        }),
+        'update_interval': '1:00:00',
+      }),
+    }),
+    'relations': dict({
+      'agreement_count': 1,
+      'last_update_success': True,
+      'update_interval': None,
+    }),
+  })
+# ---
+# name: test_diagnostics_setup_retry
+  dict({
+    'entry': dict({
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'mfa_method': 'sms',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'engie_be',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

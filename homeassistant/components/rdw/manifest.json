@@ -1,6 +1,7 @@
 {
   "domain": "rdw",
   "name": "RDW",
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@frenck", "@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rdw",

@@ -1,6 +1,7 @@
 """Tests for the Rituals Perfume Genie select platform."""
 
 import pytest
+from ritualsgenie import RitualsGenieConnectionError, RoomSize
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -10,6 +11,7 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_NEXT,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -18,7 +20,7 @@ from homeassistant.const import (
     UnitOfArea,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -49,9 +51,8 @@ async def test_select_option(hass: HomeAssistant) -> None:
     """Test selecting of a option."""
     config_entry = mock_config_entry(unique_id="select_invalid_option_test")
     diffuser = mock_diffuser(hublot="lot123", room_size_square_meter=60)
-    await init_integration(hass, config_entry, [diffuser])
+    client = await init_integration(hass, config_entry, [diffuser])
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
-    diffuser.room_size_square_meter = 30
 
     state = hass.states.get("select.genie_room_size")
     assert state
@@ -63,6 +64,11 @@ async def test_select_option(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "select.genie_room_size", ATTR_OPTION: "30"},
         blocking=True,
     )
+
+    client.set_room_square_meters.assert_awaited_once_with(diffuser.hub_hash, 30)
+    client.set_room_size_category.assert_not_called()
+
+    diffuser.room_size_square_meter = 30
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
@@ -102,6 +108,73 @@ async def test_select_invalid_option(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
+    state = hass.states.get("select.genie_room_size")
+    assert state
+    assert state.state == "60"
+
+
+async def test_select_next_twice(hass: HomeAssistant) -> None:
+    """Test selecting the next option twice before an update moves on twice."""
+    config_entry = mock_config_entry(unique_id="select_next_twice_test")
+    diffuser = mock_diffuser(hublot="lot123", room_size_square_meter=15)
+    client = await init_integration(hass, config_entry, [diffuser])
+
+    for _ in range(2):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_NEXT,
+            {ATTR_ENTITY_ID: "select.genie_room_size"},
+            blocking=True,
+        )
+
+    assert [call.args[1] for call in client.set_room_square_meters.await_args_list] == [
+        30,
+        60,
+    ]
+
+    state = hass.states.get("select.genie_room_size")
+    assert state
+    assert state.state == "60"
+
+
+async def test_select_option_category_only(hass: HomeAssistant) -> None:
+    """Test a diffuser without square meters only gets the category set."""
+    config_entry = mock_config_entry(unique_id="select_category_only_test")
+    diffuser = mock_diffuser(hublot="lot123", has_square_meters=False)
+    client = await init_integration(hass, config_entry, [diffuser])
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.genie_room_size", ATTR_OPTION: "30"},
+        blocking=True,
+    )
+
+    client.set_room_size_category.assert_awaited_once_with(
+        diffuser.hub_hash, RoomSize.MEDIUM
+    )
+    client.set_room_square_meters.assert_not_called()
+
+    state = hass.states.get("select.genie_room_size")
+    assert state
+    assert state.state == "30"
+
+
+async def test_select_action_error(hass: HomeAssistant) -> None:
+    """Test a failing change of the room size raises a translated error."""
+    config_entry = mock_config_entry(unique_id="id_123_select_action_error")
+    client = await init_integration(hass, config_entry, [mock_diffuser("lot123")])
+    client.set_room_square_meters.side_effect = RitualsGenieConnectionError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.genie_room_size", ATTR_OPTION: "30"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "communication_error"
     state = hass.states.get("select.genie_room_size")
     assert state
     assert state.state == "60"

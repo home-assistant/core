@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
@@ -28,8 +29,6 @@ from . import (
     create_manager,
     initialize_entry,
 )
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_registry_cleanup(
@@ -133,6 +132,13 @@ async def test_device_registry(
     for device_registry_entry in device_registry_entries:
         assert device_registry_entry == snapshot(
             name=list(device_registry_entry.identifiers)[0][1]
+        )
+
+    for child_device_entry in dr.async_child_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    ):
+        assert child_device_entry == snapshot(
+            name=list(child_device_entry.identifiers)[0][1]
         )
 
 

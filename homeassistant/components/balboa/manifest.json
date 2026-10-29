@@ -1,6 +1,7 @@
 {
   "domain": "balboa",
   "name": "Balboa Spa Client",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@garbled1", "@natekspencer"],
   "config_flow": true,
   "dhcp": [

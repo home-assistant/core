@@ -1,6 +1,10 @@
 {
   "domain": "swisscom",
   "name": "Swisscom Internet-Box",
+  "categories": [
+    "presence_location.network_presence",
+    "computers_network.routers_network"
+  ],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/swisscom",

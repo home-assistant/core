@@ -1,6 +1,7 @@
 {
   "domain": "whois",
   "name": "Whois",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/whois",

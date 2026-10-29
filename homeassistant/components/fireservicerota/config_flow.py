@@ -17,7 +17,7 @@ DATA_SCHEMA = probatio.Schema(
             URL_LIST
         ),
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -107,10 +107,10 @@ class FireServiceRotaFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_URL, default="www.brandweerrooster.nl"
                 ): probatio.In(URL_LIST),
                 probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         else:
-            schema = {probatio.Required(CONF_PASSWORD): str}
+            schema = {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
 
         return self.async_show_form(
             step_id=step_id,

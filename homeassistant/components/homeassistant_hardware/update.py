@@ -8,7 +8,6 @@ from typing import Any, cast, override
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 from yarl import URL
 
 from homeassistant.components.update import (
@@ -28,8 +27,10 @@ from .helpers import async_register_firmware_info_callback
 from .util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
+    async_get_flasher_cls,
     async_get_raspberry_pi_firmware_info,
     async_update_raspberry_pi_firmware,
     humanize_rpi_firmware_version,
@@ -96,10 +97,12 @@ class BaseFirmwareUpdateEntity(
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_has_entity_name = True
-    _flasher_cls: type[DeviceSpecificFlasher]
+    _flasher_type: FlasherType
 
     def __init__(
         self,
@@ -245,6 +248,18 @@ class BaseFirmwareUpdateEntity(
             self._attr_release_summary = self._latest_firmware.release_notes
             self._attr_release_url = str(self._latest_manifest.html_url)
 
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return the changelog of every firmware version since the installed one."""
+        if self._latest_firmware is None or self._current_firmware_info is None:
+            return None
+
+        # The parsed installed version cannot be used: for OpenThread it drops the
+        # `SL-OPENTHREAD/` prefix and `_GitHub-<hash>` suffix of changelog versions
+        return self._latest_firmware.release_notes_since(
+            self._current_firmware_info.firmware_version
+        )
+
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
@@ -292,7 +307,9 @@ class BaseFirmwareUpdateEntity(
                     hass=self.hass,
                     device=self._current_device,
                     fw_data=fw_data,
-                    flasher_cls=self._flasher_cls,
+                    flasher_cls=await async_get_flasher_cls(
+                        self.hass, self._flasher_type
+                    ),
                     expected_installed_firmware_type=self.entity_description.expected_firmware_type,
                     progress_callback=self._update_progress,
                 )

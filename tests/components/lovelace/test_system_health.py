@@ -5,12 +5,11 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import get_system_health_info
 
 from homeassistant.components.lovelace import DOMAIN, dashboard
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_system_health_info
 
 
 @pytest.fixture(autouse=True)

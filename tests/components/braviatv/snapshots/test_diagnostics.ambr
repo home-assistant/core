@@ -13,7 +13,7 @@
       }),
       'domain': 'braviatv',
       'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -22,7 +22,7 @@
       'subentries': list([
       ]),
       'title': 'BRAVIA TV-Model',
-      'unique_id': 'very_unique_string',
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
     'device_info': dict({

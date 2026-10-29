@@ -1,6 +1,7 @@
 {
   "domain": "purpleair",
   "name": "PurpleAir",
+  "categories": ["weather_alerts.air_quality_pollen", "sensors.air_quality"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/purpleair",

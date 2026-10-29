@@ -8,6 +8,7 @@
       "manufacturer_id": 36606
     }
   ],
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@pantherale0"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

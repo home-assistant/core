@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.stookwijzer.const import DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
@@ -88,6 +87,10 @@ async def test_entry_migration_failure(
     await hass.async_block_till_done()
 
     assert mock_v1_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert (
+        mock_v1_config_entry.reason
+        == "Failed to migrate the location to the new format"
+    )
     assert issue_registry.async_get_issue(DOMAIN, "location_migration_failed")
 
     assert len(mock_stookwijzer.async_transform_coordinates.mock_calls) == 1

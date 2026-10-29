@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import conversation
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.cloud.conversation import CloudConversationEntity
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent, llm
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

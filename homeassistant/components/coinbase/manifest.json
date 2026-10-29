@@ -1,6 +1,7 @@
 {
   "domain": "coinbase",
   "name": "Coinbase",
+  "categories": ["finance"],
   "codeowners": ["@tombrien"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/coinbase",

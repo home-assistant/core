@@ -239,7 +239,6 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         self.context["title_placeholders"] = {
             "name": self.title,
             "ip_address": self.ip_address,
@@ -286,7 +285,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_IP_ADDRESS, default=self.ip_address): str,
-                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -317,7 +316,9 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Optional(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )

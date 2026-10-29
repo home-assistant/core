@@ -8,6 +8,7 @@
       "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
     }
   ],
+  "categories": ["garden_plants"],
   "codeowners": ["@elupus"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

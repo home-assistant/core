@@ -6,15 +6,17 @@ import logging
 import time
 from typing import Any, override
 
-from subarulink import Controller as SubaruAPI, SubaruException
+from subarulink import Controller as SubaruAPI, InvalidCredentials, SubaruException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_UPDATE_ENABLED,
     COORDINATOR_NAME,
+    DOMAIN,
     FETCH_INTERVAL,
     VEHICLE_LAST_UPDATE,
     VEHICLE_VIN,
@@ -65,6 +67,11 @@ class SubaruDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return await _refresh_subaru_data(
                 self.config_entry, self._vehicle_info, self._controller
             )
+        except InvalidCredentials as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except SubaruException as err:
             raise UpdateFailed(err.message) from err
 

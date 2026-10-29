@@ -3,6 +3,7 @@
 from datetime import datetime
 from enum import Enum, IntEnum, IntFlag, StrEnum
 import gc
+from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -17,6 +18,7 @@ from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
     DOMAIN_STATES_RATE_LIMIT,
 )
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 
 from .helpers import assert_result_info, render, render_to_info
@@ -222,6 +224,29 @@ def test_render_with_possible_json_value_with_invalid_json(hass: HomeAssistant) 
     """Render with possible JSON value with invalid JSON."""
     tpl = template.Template("{{ value_json }}", hass)
     assert tpl.async_render_with_possible_json_value("{ I AM NOT JSON }") == ""
+
+
+@pytest.mark.parametrize(
+    ("value_json", "expected"),
+    [
+        pytest.param({"hello": "world"}, "raw True {'hello': 'world'}", id="parsed"),
+        pytest.param(None, "raw True None", id="null"),
+        pytest.param(UNDEFINED, "raw False", id="not_json"),
+    ],
+)
+def test_render_with_possible_json_value_with_value_json(
+    hass: HomeAssistant, value_json: Any, expected: str
+) -> None:
+    """A value_json passed by the caller is used instead of parsing the value."""
+    tpl = template.Template(
+        "{{ value }} {{ value_json is defined }} {{ value_json }}", hass
+    )
+    with patch("homeassistant.helpers.template.json_loads") as mock_json_loads:
+        assert (
+            tpl.async_render_with_possible_json_value("raw", value_json=value_json)
+            == expected
+        )
+    mock_json_loads.assert_not_called()
 
 
 def test_render_with_possible_json_value_cyclic(hass: HomeAssistant) -> None:
@@ -931,6 +956,10 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         # ("+48100200300", "+48100200300"),  # phone number
         ("010", "010"),
         ("0011101.00100001010001", "0011101.00100001010001"),
+        # Non-ASCII digits are not Python numeric literals
+        ("\u0661\u0662\u0663", "\u0661\u0662\u0663"),
+        ("-\u0967\u0968", "-\u0967\u0968"),
+        ("\uff11.\uff15", "\uff11.\uff15"),
         # Plain string states are not Python literals and must be returned
         # unchanged (literal_eval raises and the original render is used).
         ("on", "on"),
@@ -947,6 +976,25 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         ("set()", set()),
     ):
         assert render(hass, tpl) == result
+
+
+async def test_parse_result_returns_independent_containers(
+    hass: HomeAssistant,
+) -> None:
+    """Renders with the same output do not share mutable containers."""
+    first_list = render(hass, "{{ x }}", {"x": "[[1], 2]"})
+    first_list[0].append("mutated")
+    first_list.append("mutated")
+    assert render(hass, "{{ x }}", {"x": "[[1], 2]"}) == [[1], 2]
+
+    first_dict = render(hass, "{{ x }}", {"x": "{'a': {'b': 1}}"})
+    first_dict["a"]["mutated"] = True
+    first_dict["mutated"] = True
+    assert render(hass, "{{ x }}", {"x": "{'a': {'b': 1}}"}) == {"a": {"b": 1}}
+
+    first_tuple = render(hass, "{{ x }}", {"x": "([1], 2)"})
+    first_tuple[0].append("mutated")
+    assert render(hass, "{{ x }}", {"x": "([1], 2)"}) == ([1], 2)
 
 
 class _Color(StrEnum):
@@ -1107,6 +1155,22 @@ async def test_parse_result_cyclic_container_raises(hass: HomeAssistant) -> None
     cyclic.append(cyclic)
     with pytest.raises(TemplateError):
         render(hass, "{{ x }}", {"x": cyclic})
+
+
+@pytest.mark.parametrize(
+    "operator",
+    [
+        pytest.param("+", id="add"),
+        pytest.param("-", id="subtract"),
+        pytest.param("*", id="multiply"),
+    ],
+)
+async def test_parse_result_long_expression_returns_string(
+    hass: HomeAssistant, operator: str
+) -> None:
+    """A result too deeply nested for literal_eval is returned as a string."""
+    text = "1" + f" {operator} 1" * 60_000
+    assert render(hass, "{{ x }}", {"x": text}) == text
 
 
 @pytest.mark.parametrize(

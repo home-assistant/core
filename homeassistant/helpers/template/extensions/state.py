@@ -66,10 +66,16 @@ class StateExtension(BaseTemplateExtension):
                     "states",
                     AllStates(hass),
                     as_global=True,
-                    as_filter=True,
                     requires_hass=True,
                     limited_ok=False,
                     pass_context=False,
+                ),
+                TemplateFunction(
+                    "states",
+                    AllStates(hass).__call__,
+                    as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
                 ),
             ]
 

@@ -161,7 +161,7 @@ class MideaSelect(MideaEntity, SelectEntity):
         return value
 
     @override
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Select an option."""
         with midea_api_call():
             self._device.set_attribute(attr=self.entity_description.key, value=option)

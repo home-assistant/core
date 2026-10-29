@@ -5,6 +5,11 @@ from unittest.mock import patch
 
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 from homeassistant.components.edifier_infrared import PLATFORMS
 from homeassistant.components.edifier_infrared.const import (
@@ -14,12 +19,6 @@ from homeassistant.components.edifier_infrared.const import (
 )
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import (
-    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
-)
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.fixture

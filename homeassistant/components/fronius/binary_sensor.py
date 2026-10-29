@@ -1,39 +1,52 @@
 """Support for Fronius binary sensors."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
+
+from fronius_solarapi import PowerFlow
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import FroniusEntity, FroniusEntityDescription
+from .coordinator import FroniusPowerFlowUpdateCoordinator
+from .entity import (
+    FroniusEntity,
+    FroniusEntityDescription,
+    async_add_entities_for_seen_keys,
+)
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
-    from .coordinator import FroniusPowerFlowUpdateCoordinator
 
 
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class FroniusBinarySensorEntityDescription(
-    FroniusEntityDescription, BinarySensorEntityDescription
+@dataclass(frozen=True, kw_only=True)
+class FroniusBinarySensorEntityDescription[_DataT](
+    FroniusEntityDescription[_DataT], BinarySensorEntityDescription
 ):
     """Describes Fronius binary sensor entity."""
 
+    value_fn: Callable[[_DataT], bool | None]
 
-POWER_FLOW_BINARY_SENSOR_DESCRIPTIONS: list[FroniusBinarySensorEntityDescription] = [
+
+POWER_FLOW_BINARY_SENSOR_DESCRIPTIONS: list[
+    FroniusBinarySensorEntityDescription[PowerFlow]
+] = [
     FroniusBinarySensorEntityDescription(
         key="backup_mode",
+        value_fn=lambda data: data.site.backup_mode,
     ),
     FroniusBinarySensorEntityDescription(
         key="battery_standby",
+        value_fn=lambda data: data.site.battery_standby,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
@@ -45,27 +58,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Fronius binary sensor entities based on a config entry."""
-    solar_net = config_entry.runtime_data
-    if solar_net.power_flow_coordinator is not None:
-        solar_net.power_flow_coordinator.add_entities_for_seen_keys(
-            async_add_entities, Platform.BINARY_SENSOR, PowerFlowBinarySensor
-        )
+    for coordinator in config_entry.runtime_data.coordinators:
+        if isinstance(coordinator, FroniusPowerFlowUpdateCoordinator):
+            async_add_entities_for_seen_keys(
+                coordinator,
+                POWER_FLOW_BINARY_SENSOR_DESCRIPTIONS,
+                PowerFlowBinarySensor,
+                async_add_entities,
+            )
 
 
 class PowerFlowBinarySensor(FroniusEntity, BinarySensorEntity):
     """Defines a Fronius power flow binary sensor entity."""
 
-    entity_description: FroniusBinarySensorEntityDescription
+    entity_description: FroniusBinarySensorEntityDescription[PowerFlow]
 
     def __init__(
         self,
         coordinator: FroniusPowerFlowUpdateCoordinator,
-        description: FroniusBinarySensorEntityDescription,
+        description: FroniusBinarySensorEntityDescription[PowerFlow],
         solar_net_id: str,
     ) -> None:
         """Set up an individual Fronius power flow binary sensor."""
         super().__init__(coordinator, description, solar_net_id)
-        self._attr_is_on = self._device_data()[self.response_key]["value"]
+        self._attr_is_on = self._value()
         # SolarNet device is already created in FroniusSolarNet._create_solar_net_device
         self._attr_device_info = coordinator.solar_net.system_device_info
         self._attr_unique_id = (
@@ -76,10 +92,7 @@ class PowerFlowBinarySensor(FroniusEntity, BinarySensorEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        try:
-            self._attr_is_on = self._device_data()[self.response_key]["value"]
-        except KeyError:
-            # KeyError: raised when omitted in response, e.g. when backup power
-            # is deactivated after the entity was created
-            self._attr_is_on = None
+        # `None` when omitted in the response, e.g. when backup power is
+        # deactivated after the entity was created
+        self._attr_is_on = self._value()
         self.async_write_ha_state()

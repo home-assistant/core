@@ -46,7 +46,7 @@ from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -67,8 +67,12 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.network import is_ip_address
 
 from .ble_provisioning import (
     ProvisioningState,
@@ -90,18 +94,20 @@ from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
+    get_device_from_manufacturer_data,
     get_http_port,
     get_info_auth,
     get_info_gen,
     get_model_name,
     get_rpc_device_wakeup_period,
     get_ws_context,
+    is_device_supported,
     mac_address_from_name,
 )
 
 CONFIG_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): TextSelector(),
         probatio.Required(CONF_PORT, default=DEFAULT_HTTP_PORT): probatio.Coerce(int),
         probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
@@ -228,8 +234,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     selected_ssid: str = ""
     _provision_task: asyncio.Task | None = None
     _provision_result: ConfigFlowResult | None = None
-    disable_ap_after_provision: bool = True
-    disable_ble_rpc_after_provision: bool = True
     _discovered_devices: dict[str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth]
     _ble_rpc_device: RpcDevice | None = None
 
@@ -440,6 +444,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.info[CONF_MAC], raise_on_progress=False)
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
+        if not is_device_supported(self.info):
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": get_model_name(self.info)},
+            )
+
         self.host = host
         self.port = port
         self.verify_ssl = verify_ssl
@@ -503,6 +513,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device_name = device_data.name
             await self.async_set_unique_id(device_data.mac, raise_on_progress=False)
             self._abort_if_unique_id_configured()
+            if (
+                device := get_device_from_manufacturer_data(
+                    device_data.discovery_info.manufacturer_data
+                )
+            ) and not device.supported:
+                return self.async_abort(
+                    reason="unsupported_device",
+                    description_placeholders={"model": device.name},
+                )
             self.context.update(
                 {
                     "title_placeholders": {"name": self.device_name},
@@ -644,17 +663,27 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if get_info_gen(self.info) in RPC_GENERATIONS:
             schema = {
                 probatio.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                ): str,
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         else:
             schema = {
                 probatio.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
-                ): str,
+                ): TextSelector(TextSelectorConfig(autocomplete="username")),
                 probatio.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                ): str,
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
 
         return self.async_show_form(
@@ -718,12 +747,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_discovered_mac(self, mac: str, host: str) -> None:
         """Abort and reconnect soon if the device with the mac is already configured."""
-        if (
-            current_entry := await self.async_set_unique_id(mac)
-        ) and current_entry.data.get(CONF_HOST) == host:
+        current_entry = await self.async_set_unique_id(mac)
+        current_host = current_entry.data.get(CONF_HOST) if current_entry else None
+        # A user-configured hostname must not be replaced by the resolved IP
+        keep_hostname = current_host is not None and not is_ip_address(current_host)
+        if current_entry and (current_host == host or keep_hostname):
             LOGGER.debug("async_reconnect_soon: host: %s, mac: %s", host, mac)
             await async_reconnect_soon(self.hass, current_entry)
-        if host == INTERNAL_WIFI_AP_IP:
+        if keep_hostname:
+            self._abort_if_unique_id_configured()
+        elif host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip
             # we can't connect to it, so we should not update the
             # entry with the new host as it will be unreachable
@@ -764,6 +797,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         # Check if already configured - abort if device is already set up
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured()
+        if (
+            device := get_device_from_manufacturer_data(
+                discovery_info.manufacturer_data
+            )
+        ) and not device.supported:
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": device.name},
+            )
 
         # Store BLE device and name for WiFi provisioning
         self.ble_device = async_ble_device_from_address(
@@ -786,20 +828,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm bluetooth provisioning."""
         if user_input is not None:
-            self.disable_ap_after_provision = user_input.get("disable_ap", True)
-            self.disable_ble_rpc_after_provision = user_input.get(
-                "disable_ble_rpc", True
-            )
             return await self.async_step_wifi_scan()
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional("disable_ap", default=True): bool,
-                    probatio.Optional("disable_ble_rpc", default=True): bool,
-                }
-            ),
             description_placeholders={
                 "name": self.context["title_placeholders"]["name"]
             },
@@ -855,7 +887,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                                 custom_value=True,
                             )
                         ),
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.PASSWORD,
+                                autocomplete="current-password",
+                            )
+                        ),
                     }
                 ),
                 suggested_values,
@@ -887,16 +924,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             provisioning_registry.pop(normalized_mac, None)
 
     async def _async_secure_device_after_provision(self, host: str, port: int) -> None:
-        """Disable AP and/or BLE RPC after successful WiFi provisioning.
+        """Disable AP and BLE RPC after successful WiFi provisioning.
 
         Must be called via IP after device is on WiFi, not via BLE.
         """
-        if (
-            not self.disable_ap_after_provision
-            and not self.disable_ble_rpc_after_provision
-        ):
-            return
-
         # Connect to device via IP
         options = ConnectionOptions(
             host,
@@ -913,23 +944,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             await device.initialize()
 
-            restart_required = False
+            # Disable WiFi AP
+            wifi_result = await device.wifi_setconfig(ap_enable=False)
+            LOGGER.debug("Disabled WiFi AP on %s", host)
 
-            # Disable WiFi AP if requested
-            if self.disable_ap_after_provision:
-                result = await device.wifi_setconfig(ap_enable=False)
-                LOGGER.debug("Disabled WiFi AP on %s", host)
-                restart_required = restart_required or result.get(
-                    "restart_required", False
-                )
+            # Disable BLE RPC (keep BLE enabled for sensors/buttons)
+            ble_result = await device.ble_setconfig(enable=True, enable_rpc=False)
+            LOGGER.debug("Disabled BLE RPC on %s", host)
 
-            # Disable BLE RPC if requested (keep BLE enabled for sensors/buttons)
-            if self.disable_ble_rpc_after_provision:
-                result = await device.ble_setconfig(enable=True, enable_rpc=False)
-                LOGGER.debug("Disabled BLE RPC on %s", host)
-                restart_required = restart_required or result.get(
-                    "restart_required", False
-                )
+            restart_required = wifi_result.get(
+                "restart_required", False
+            ) or ble_result.get("restart_required", False)
 
             # Restart device once if either operation requires it
             if restart_required:
@@ -1057,7 +1082,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if not device_info[CONF_MODEL]:
             return self.async_abort(reason="firmware_not_fully_provisioned")
 
-        # Secure device after provisioning if requested (disable AP/BLE)
+        # Secure device after provisioning (disable AP/BLE RPC)
         await self._async_secure_device_after_provision(self.host, self.port)
 
         # Clear match history so device can be rediscovered if factory reset
@@ -1179,6 +1204,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             mac = self.info[CONF_MAC]
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
 
+        if not is_device_supported(self.info):
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": get_model_name(self.info)},
+            )
+
         self.host = host
         self.port = port
         self.verify_ssl = verify_ssl
@@ -1230,7 +1261,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     **self._get_ssl_entry_data(self.port, self.verify_ssl),
                 },
             )
-        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
@@ -1284,11 +1314,23 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if get_device_entry_gen(reauth_entry) in BLOCK_GENERATIONS:
             schema = {
-                probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME): TextSelector(
+                    TextSelectorConfig(autocomplete="username")
+                ),
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         else:
-            schema = {probatio.Required(CONF_PASSWORD): str}
+            schema = {
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                )
+            }
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -1339,7 +1381,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_HOST, default=self.host): str,
+                    probatio.Required(CONF_HOST, default=self.host): TextSelector(),
                     probatio.Required(CONF_PORT, default=self.port): probatio.Coerce(
                         int
                     ),
@@ -1387,7 +1429,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         ) in RPC_GENERATIONS and not config_entry.data.get(CONF_SLEEP_PERIOD)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle the option flow for shelly."""
 
     async def async_step_init(
@@ -1404,7 +1446,7 @@ class OptionsFlowHandler(OptionsFlow):
             return self.async_abort(reason="zigbee_firmware")
 
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",

@@ -1,6 +1,7 @@
 {
   "domain": "compensation",
   "name": "Compensation",
+  "categories": ["helpers.calculate_value"],
   "codeowners": ["@Petro31"],
   "documentation": "https://www.home-assistant.io/integrations/compensation",
   "iot_class": "calculated",

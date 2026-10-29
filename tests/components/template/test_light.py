@@ -5,6 +5,11 @@ from itertools import chain
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import light, template
@@ -58,9 +63,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import MockConfigEntry, async_mock_restore_state_shutdown_restart
-from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "light.test_state"
 TEST_SENSOR_STATE_ENTITY_ID = "sensor.test_state"
@@ -2404,3 +2406,51 @@ async def test_attributes_template_with_blocked_attributes(
 
     error = f"Unsupported attribute(s) found for {TEST_LIGHT.entity_id}: {attribute}"
     assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
+            {
+                "effect_list": "{{ ['off', 'disco', 'rainbow'] }}",
+                **SET_EFFECT_ACTION,
+                **ON_OFF_ACTIONS,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        ("off", "off"),
+        ("disco", "disco"),
+        ("rainbow", "rainbow"),
+    ],
+)
+@pytest.mark.usefixtures("setup_light")
+async def test_optimistic_effect(
+    hass: HomeAssistant,
+    mode: str,
+    expected: Any,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic effect."""
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    await _call_and_assert_action(
+        hass, calls, SERVICE_TURN_ON, {"effect": mode}, {"effect": mode}, "set_effect"
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state is not None
+    assert state.attributes.get("effect") == expected

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from huawei_lte_api.enums.device import ControlModeEnum
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.huawei_lte.const import (
@@ -15,8 +16,6 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from . import magic_client
-
-from tests.common import MockConfigEntry
 
 MOCK_CONF_URL = "http://huawei-lte.example.com"
 

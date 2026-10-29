@@ -107,7 +107,7 @@ class ThermostatEntity(ClimateEntity):
         # The API "name" field is a unique device identifier.
         self._attr_unique_id = device.name
         self._attr_device_info = self._device_info.device_info
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         if mode_trait := device.traits.get(ThermostatModeTrait.NAME):
             self._attr_hvac_modes = [
                 THERMOSTAT_MODE_MAP[mode]
@@ -132,7 +132,7 @@ class ThermostatEntity(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if TemperatureTrait.NAME not in self._device.traits:
             return None
@@ -150,7 +150,7 @@ class ThermostatEntity(ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         if not (trait := self._target_temperature_trait):
             return None
@@ -162,7 +162,7 @@ class ThermostatEntity(ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
@@ -172,7 +172,7 @@ class ThermostatEntity(ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
@@ -326,7 +326,7 @@ class ThermostatEntity(ClimateEntity):
                     if high_temp - low_temp < MIN_TEMP_RANGE:
                         # Ensure there is a minimum gap from the new temp. Pick
                         # the temp that is not changing as the one to move.
-                        if abs(high_temp - self.target_temperature_high) < 0.01:
+                        if abs(high_temp - self.native_target_temperature_high) < 0.01:
                             high_temp = low_temp + MIN_TEMP_RANGE
                         else:
                             low_temp = high_temp - MIN_TEMP_RANGE

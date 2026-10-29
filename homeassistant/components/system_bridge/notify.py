@@ -31,6 +31,8 @@ ATTR_AUDIO = "audio"
 ATTR_IMAGE = "image"
 ATTR_TIMEOUT = "timeout"
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

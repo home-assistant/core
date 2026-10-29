@@ -3,6 +3,7 @@
 import json
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from pytradfri.const import (
     ATTR_AIR_PURIFIER_AIR_QUALITY,
     ATTR_DEVICE_BATTERY,
@@ -34,8 +35,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import GATEWAY_ID
 from .common import CommandStore, setup_integration
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(scope="module")

@@ -1,6 +1,7 @@
 {
   "domain": "ekeybionyx",
   "name": "ekey bionyx",
+  "categories": ["security_safety.locks_access"],
   "codeowners": ["@richardpolzer"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http"],

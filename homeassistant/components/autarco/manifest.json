@@ -1,6 +1,7 @@
 {
   "domain": "autarco",
   "name": "Autarco",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/autarco",

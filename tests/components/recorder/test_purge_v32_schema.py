@@ -8,6 +8,23 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    async_attach_db_engine,
+    async_recorder_block_till_done,
+    async_wait_purge_done,
+    async_wait_recording_done,
+    old_db_schema,
+)
+from pytest_homeassistant.components.recorder.db_schema_32 import (
+    EventData,
+    Events,
+    RecorderRuns,
+    StateAttributes,
+    States,
+    StatisticsRuns,
+    StatisticsShortTerm,
+)
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy import text, update
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
@@ -25,25 +42,6 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from .common import (
-    async_attach_db_engine,
-    async_recorder_block_till_done,
-    async_wait_purge_done,
-    async_wait_recording_done,
-    old_db_schema,
-)
-from .db_schema_32 import (
-    EventData,
-    Events,
-    RecorderRuns,
-    StateAttributes,
-    States,
-    StatisticsRuns,
-    StatisticsShortTerm,
-)
-
-from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture

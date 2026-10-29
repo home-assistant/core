@@ -107,8 +107,13 @@ def _async_acquire(
         )
     elif shared.params != params:
         raise HomeAssistantError(
-            f"Modbus device {endpoint} is already in use with different link "
-            f"settings: {shared.params} against {params}"
+            translation_domain=DOMAIN,
+            translation_key="device_in_use",
+            translation_placeholders={
+                "endpoint": str(endpoint),
+                "existing_params": str(shared.params),
+                "params": str(params),
+            },
         )
 
     if entry_id is None:

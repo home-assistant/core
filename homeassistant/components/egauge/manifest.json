@@ -1,6 +1,7 @@
 {
   "domain": "egauge",
   "name": "eGauge",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@neggert"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/egauge",

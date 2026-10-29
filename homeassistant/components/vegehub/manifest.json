@@ -1,6 +1,7 @@
 {
   "domain": "vegehub",
   "name": "Vegetronix VegeHub",
+  "categories": ["garden_plants"],
   "codeowners": ["@thulrus"],
   "config_flow": true,
   "dependencies": ["http", "webhook"],

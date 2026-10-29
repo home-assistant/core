@@ -6,6 +6,7 @@ This includes tests for all mock object types.
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.homekit.accessories import (
     HomeAccessory,
@@ -49,8 +50,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import async_mock_service
 
 
 async def test_accessory_cancels_track_state_change_on_stop(

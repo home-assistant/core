@@ -10,6 +10,7 @@ from dsmr_parser.clients.protocol import create_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import create_rfxtrx_dsmr_reader
 from dsmr_parser.objects import DSMRObject
 import probatio
+from serialx import SerialException
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -17,7 +18,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_PORT, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SerialPortSelector
@@ -120,7 +121,7 @@ class DSMRConnection:
 
         try:
             transport, protocol = await reader_factory()
-        except OSError:
+        except OSError, SerialException:
             LOGGER.exception("Error connecting to DSMR")
             return False
 
@@ -246,7 +247,52 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="encryption_key",
-            data_schema=probatio.Schema({probatio.Required(CONF_ENCRYPTION_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection to the meter."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        encrypted = entry.data[CONF_DSMR_VERSION] in ENCRYPTED_DSMR_VERSIONS
+
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_PORT: user_input[CONF_PORT]})
+            if encrypted and not ENCRYPTION_KEY_PATTERN.fullmatch(
+                user_input[CONF_ENCRYPTION_KEY]
+            ):
+                errors["base"] = "invalid_key"
+            else:
+                data = await self._async_validate_connection(
+                    {**entry.data, **user_input}, errors
+                )
+                if not errors:
+                    await self.async_set_unique_id(data[CONF_SERIAL_ID])
+                    self._abort_if_unique_id_mismatch()
+                    # The port now holds the full address; sensor.py would
+                    # otherwise prefix it with the legacy host.
+                    data.pop(CONF_HOST, None)
+                    return self.async_update_and_abort(entry, data=data)
+
+        suggested_port = entry.data[CONF_PORT]
+        if CONF_HOST in entry.data:
+            suggested_port = f"socket://{entry.data[CONF_HOST]}:{suggested_port}"
+        fields: dict[probatio.Marker, Any] = {
+            probatio.Required(CONF_PORT): SerialPortSelector()
+        }
+        if encrypted:
+            fields[probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY))] = str
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(fields),
+                {CONF_PORT: user_input[CONF_PORT] if user_input else suggested_port},
+            ),
             errors=errors,
         )
 
@@ -254,8 +300,16 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
         self, input_data: dict[str, Any], errors: dict[str, str]
     ) -> dict[str, Any]:
         """Validate dsmr connection and create data."""
-        data = input_data
+        data = await self._async_validate_connection(input_data, errors)
+        if not errors and data[CONF_SERIAL_ID]:
+            await self.async_set_unique_id(data[CONF_SERIAL_ID])
+            self._abort_if_unique_id_configured()
+        return data
 
+    async def _async_validate_connection(
+        self, data: dict[str, Any], errors: dict[str, str]
+    ) -> dict[str, Any]:
+        """Connect to the meter and return the data including serial ids."""
         try:
             try:
                 protocol = DSMR_PROTOCOL
@@ -266,19 +320,14 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
                     raise
                 protocol = RFXTRX_DSMR_PROTOCOL
                 info = await _validate_dsmr_connection(self.hass, data, protocol)
-
-            data = {**data, **info, CONF_PROTOCOL: protocol}
-
-            if info[CONF_SERIAL_ID]:
-                await self.async_set_unique_id(info[CONF_SERIAL_ID])
-                self._abort_if_unique_id_configured()
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except CannotCommunicate:
             errors["base"] = "cannot_communicate"
         except InvalidKey:
             errors["base"] = "invalid_key"
-
+        else:
+            return {**data, **info, CONF_PROTOCOL: protocol}
         return data
 
 

@@ -1,0 +1,536 @@
+[
+  {
+    "slug": "ai_voice",
+    "name": "AI & voice",
+    "description": "AI models and agents, voice assistants, speech-to-text, text-to-speech and image recognition.",
+    "icon": "mdi:creation",
+    "subcategories": [
+      {
+        "slug": "ai_models",
+        "name": "AI models",
+        "icon": "mdi:robot"
+      },
+      {
+        "slug": "image_recognition",
+        "name": "Image recognition",
+        "icon": "mdi:image-search"
+      },
+      {
+        "slug": "speech",
+        "name": "Speech",
+        "icon": "mdi:microphone-message"
+      },
+      {
+        "slug": "voice_assistants",
+        "name": "Voice assistants",
+        "icon": "mdi:account-voice"
+      }
+    ]
+  },
+  {
+    "slug": "appliances_cleaning",
+    "name": "Appliances & cleaning",
+    "description": "Cooking and kitchen appliances (ovens, coffee machines, sous vide, cooking thermometers, brewing), laundry, robot vacuums and mops, and fragrance diffusers.",
+    "icon": "mdi:washing-machine",
+    "subcategories": [
+      {
+        "slug": "cleaning",
+        "name": "Cleaning",
+        "icon": "mdi:robot-vacuum"
+      },
+      {
+        "slug": "cooking",
+        "name": "Cooking",
+        "icon": "mdi:stove"
+      },
+      {
+        "slug": "laundry",
+        "name": "Laundry",
+        "icon": "mdi:tumble-dryer"
+      }
+    ]
+  },
+  {
+    "slug": "blinds_curtains",
+    "name": "Blinds & curtains",
+    "description": "Blinds, curtains, shutters, awnings, garage doors and gates.",
+    "icon": "mdi:blinds-horizontal",
+    "subcategories": []
+  },
+  {
+    "slug": "buttons_remotes",
+    "name": "Buttons & remotes",
+    "description": "Smart buttons, remote controls, and infrared or radio blasters that control other devices.",
+    "icon": "mdi:remote",
+    "subcategories": []
+  },
+  {
+    "slug": "climate",
+    "name": "Climate",
+    "description": "Heating, cooling and ventilation: thermostats, heat pumps, air conditioners, fans, humidifiers, air purifiers and water heaters.",
+    "icon": "mdi:thermostat",
+    "subcategories": [
+      {
+        "slug": "air_purifiers_humidifiers",
+        "name": "Air purifiers & humidifiers",
+        "icon": "mdi:air-purifier"
+      },
+      {
+        "slug": "fans_ventilation",
+        "name": "Fans & ventilation",
+        "icon": "mdi:fan"
+      },
+      {
+        "slug": "heat_pumps_air_conditioning",
+        "name": "Heat pumps & air conditioning",
+        "icon": "mdi:heat-pump"
+      },
+      {
+        "slug": "thermostats_heating",
+        "name": "Thermostats & heating",
+        "icon": "mdi:radiator"
+      },
+      {
+        "slug": "water_heaters",
+        "name": "Water heaters",
+        "icon": "mdi:water-boiler"
+      }
+    ]
+  },
+  {
+    "slug": "computers_network",
+    "name": "Computers & network",
+    "description": "Routers, NAS, servers, printers, 3D printers, cloud hosting, developer tools and uptime monitoring.",
+    "icon": "mdi:server-network",
+    "subcategories": [
+      {
+        "slug": "cloud_developer_tools",
+        "name": "Cloud & developer tools",
+        "icon": "mdi:cloud-braces"
+      },
+      {
+        "slug": "monitoring",
+        "name": "Monitoring",
+        "icon": "mdi:monitor-dashboard"
+      },
+      {
+        "slug": "nas_servers",
+        "name": "NAS & servers",
+        "icon": "mdi:nas"
+      },
+      {
+        "slug": "printers",
+        "name": "Printers",
+        "icon": "mdi:printer"
+      },
+      {
+        "slug": "routers_network",
+        "name": "Routers & network",
+        "icon": "mdi:router-wireless"
+      }
+    ]
+  },
+  {
+    "slug": "diy_makers",
+    "name": "DIY & makers",
+    "description": "Build your own: firmware, message brokers, and generic connectors for web APIs, databases, serial ports and Modbus.",
+    "icon": "mdi:chip",
+    "subcategories": [
+      {
+        "slug": "boards_hardware",
+        "name": "Boards & hardware interfaces",
+        "icon": "mdi:developer-board"
+      },
+      {
+        "slug": "web_data_connectors",
+        "name": "Web & data connectors",
+        "icon": "mdi:api"
+      }
+    ]
+  },
+  {
+    "slug": "energy",
+    "name": "Energy",
+    "description": "Solar panels, home batteries, energy meters, EV chargers, generators, UPS, gas and propane tanks, and energy prices.",
+    "icon": "mdi:lightning-bolt",
+    "subcategories": [
+      {
+        "slug": "backup_power",
+        "name": "Backup power",
+        "icon": "mdi:battery-charging-high"
+      },
+      {
+        "slug": "energy_prices",
+        "name": "Energy prices",
+        "icon": "mdi:cash-clock"
+      },
+      {
+        "slug": "ev_charging",
+        "name": "EV charging",
+        "icon": "mdi:ev-station"
+      },
+      {
+        "slug": "meters_monitoring",
+        "name": "Meters & monitoring",
+        "icon": "mdi:meter-electric"
+      },
+      {
+        "slug": "solar_batteries",
+        "name": "Solar & batteries",
+        "icon": "mdi:solar-power-variant"
+      }
+    ]
+  },
+  {
+    "slug": "finance",
+    "name": "Finance",
+    "description": "Bank accounts, budgeting tools, stocks, currency exchange rates and cryptocurrency.",
+    "icon": "mdi:finance",
+    "subcategories": []
+  },
+  {
+    "slug": "garden_plants",
+    "name": "Garden & plants",
+    "description": "Irrigation, lawn mowers, plant sensors, hydroponics and greenhouses.",
+    "icon": "mdi:flower",
+    "subcategories": []
+  },
+  {
+    "slug": "health_wellbeing",
+    "name": "Health & wellbeing",
+    "description": "Scales, toothbrushes, sleep and fitness tracking, glucose monitoring and baby care.",
+    "icon": "mdi:heart-pulse",
+    "subcategories": []
+  },
+  {
+    "slug": "helpers",
+    "name": "Helpers",
+    "description": "Entities you create yourself, without a device behind them: toggles, numbers, timers and schedules, and values calculated from other entities.",
+    "icon": "mdi:tools",
+    "subcategories": [
+      {
+        "slug": "calculate_value",
+        "name": "Calculate a value",
+        "icon": "mdi:calculator-variant"
+      },
+      {
+        "slug": "store_value",
+        "name": "Store a value",
+        "icon": "mdi:form-textbox"
+      }
+    ]
+  },
+  {
+    "slug": "hubs_protocols",
+    "name": "Hubs & protocols",
+    "description": "Smart home hubs and radio protocols that each bring in many kinds of devices.",
+    "icon": "mdi:hub",
+    "subcategories": [
+      {
+        "slug": "building_automation",
+        "name": "Building automation",
+        "icon": "mdi:office-building-cog"
+      },
+      {
+        "slug": "smart_home_hubs",
+        "name": "Smart home hubs",
+        "icon": "mdi:home-automation"
+      },
+      {
+        "slug": "wireless_protocols",
+        "name": "Wireless protocols",
+        "icon": "mdi:zigbee"
+      }
+    ]
+  },
+  {
+    "slug": "lighting",
+    "name": "Lighting",
+    "description": "Smart bulbs, light strips, fixtures and lighting systems.",
+    "icon": "mdi:lightbulb",
+    "subcategories": [
+      {
+        "slug": "bulbs_lamps",
+        "name": "Bulbs & lamps",
+        "icon": "mdi:lamp"
+      },
+      {
+        "slug": "led_strips_controllers",
+        "name": "LED strips & controllers",
+        "icon": "mdi:led-strip-variant"
+      },
+      {
+        "slug": "lighting_systems",
+        "name": "Lighting systems",
+        "icon": "mdi:lightbulb-group"
+      }
+    ]
+  },
+  {
+    "slug": "local_services",
+    "name": "Local services",
+    "description": "Waste collection, power outages, parking, fuel prices and other city or utility information.",
+    "icon": "mdi:city-variant",
+    "subcategories": []
+  },
+  {
+    "slug": "media_entertainment",
+    "name": "Media & entertainment",
+    "description": "TVs, speakers, streaming, music services, receivers, game consoles, game servers and radio.",
+    "icon": "mdi:television-play",
+    "subcategories": [
+      {
+        "slug": "gaming",
+        "name": "Gaming",
+        "icon": "mdi:gamepad-variant"
+      },
+      {
+        "slug": "music_radio_services",
+        "name": "Music & radio services",
+        "icon": "mdi:music"
+      },
+      {
+        "slug": "speakers_audio",
+        "name": "Speakers & audio",
+        "icon": "mdi:speaker"
+      },
+      {
+        "slug": "tv_streaming",
+        "name": "TV & streaming",
+        "icon": "mdi:television"
+      }
+    ]
+  },
+  {
+    "slug": "messaging_notifications",
+    "name": "Messaging & notifications",
+    "description": "Send and receive messages: push notifications, email, chat apps, SMS and phone calls.",
+    "icon": "mdi:message-badge",
+    "subcategories": [
+      {
+        "slug": "chat_apps",
+        "name": "Chat apps",
+        "icon": "mdi:chat"
+      },
+      {
+        "slug": "email_sms_calls",
+        "name": "Email, SMS & calls",
+        "icon": "mdi:email"
+      },
+      {
+        "slug": "push_notifications",
+        "name": "Push notifications",
+        "icon": "mdi:bell-ring"
+      }
+    ]
+  },
+  {
+    "slug": "news_social_media",
+    "name": "News & social media",
+    "description": "Follow news and RSS feeds, and follow or post to social networks, blogs and video channels.",
+    "icon": "mdi:newspaper-variant",
+    "subcategories": []
+  },
+  {
+    "slug": "other_ecosystems",
+    "name": "Other ecosystems",
+    "description": "Use your Home Assistant devices in Apple Home, Alexa, Google Assistant and other platforms.",
+    "icon": "mdi:home-export-outline",
+    "subcategories": []
+  },
+  {
+    "slug": "pets",
+    "name": "Pets",
+    "description": "Feeders, litter boxes, pet doors, pet trackers and aquariums.",
+    "icon": "mdi:paw",
+    "subcategories": []
+  },
+  {
+    "slug": "plugs_switches",
+    "name": "Plugs & switches",
+    "description": "Smart plugs, light switches, dimmers and relays.",
+    "icon": "mdi:power-socket-eu",
+    "subcategories": []
+  },
+  {
+    "slug": "presence_location",
+    "name": "Presence & location",
+    "description": "Know who is home and where devices are: phones, trackers and network presence.",
+    "icon": "mdi:map-marker-account",
+    "subcategories": [
+      {
+        "slug": "network_presence",
+        "name": "Network presence",
+        "icon": "mdi:lan-connect"
+      },
+      {
+        "slug": "phones_companion_apps",
+        "name": "Phones & companion apps",
+        "icon": "mdi:cellphone"
+      },
+      {
+        "slug": "trackers",
+        "name": "Trackers",
+        "icon": "mdi:crosshairs-gps"
+      }
+    ]
+  },
+  {
+    "slug": "productivity_information",
+    "name": "Productivity & information",
+    "description": "Calendars, to-do and shopping lists, grocery delivery, package tracking, documents, photos and bookmarks.",
+    "icon": "mdi:calendar-check",
+    "subcategories": [
+      {
+        "slug": "calendars_todos",
+        "name": "Calendars & to-dos",
+        "icon": "mdi:calendar"
+      },
+      {
+        "slug": "documents_photos",
+        "name": "Documents & photos",
+        "icon": "mdi:file-document-multiple"
+      },
+      {
+        "slug": "shopping_groceries",
+        "name": "Shopping & groceries",
+        "icon": "mdi:cart"
+      }
+    ]
+  },
+  {
+    "slug": "security_safety",
+    "name": "Security & safety",
+    "description": "Cameras, doorbells, locks, keypads, alarm systems, sirens, and smoke alarms.",
+    "icon": "mdi:shield-home",
+    "subcategories": [
+      {
+        "slug": "alarm_systems",
+        "name": "Alarm systems",
+        "icon": "mdi:alarm-light"
+      },
+      {
+        "slug": "cameras",
+        "name": "Cameras",
+        "icon": "mdi:cctv"
+      },
+      {
+        "slug": "doorbells_intercoms",
+        "name": "Doorbells & intercoms",
+        "icon": "mdi:doorbell-video"
+      },
+      {
+        "slug": "locks_access",
+        "name": "Locks & access",
+        "icon": "mdi:lock"
+      },
+      {
+        "slug": "smoke_co_alarms",
+        "name": "Smoke & CO alarms",
+        "icon": "mdi:smoke-detector"
+      }
+    ]
+  },
+  {
+    "slug": "sensors",
+    "name": "Sensors",
+    "description": "Motion, door and window, temperature, humidity and air quality sensors.",
+    "icon": "mdi:motion-sensor",
+    "subcategories": [
+      {
+        "slug": "air_quality",
+        "name": "Air quality",
+        "icon": "mdi:air-filter"
+      },
+      {
+        "slug": "door_window",
+        "name": "Door & window",
+        "icon": "mdi:door-open"
+      },
+      {
+        "slug": "motion_presence",
+        "name": "Motion & presence",
+        "icon": "mdi:walk"
+      },
+      {
+        "slug": "temperature_humidity",
+        "name": "Temperature & humidity",
+        "icon": "mdi:thermometer-water"
+      }
+    ]
+  },
+  {
+    "slug": "vehicles_transport",
+    "name": "Vehicles & transport",
+    "description": "Cars, EVs, e-bikes, public transport and flight tracking.",
+    "icon": "mdi:car",
+    "subcategories": [
+      {
+        "slug": "bikes_scooters",
+        "name": "Bikes & scooters",
+        "icon": "mdi:bicycle"
+      },
+      {
+        "slug": "cars_evs",
+        "name": "Cars & EVs",
+        "icon": "mdi:car-electric"
+      },
+      {
+        "slug": "flights",
+        "name": "Flights",
+        "icon": "mdi:airplane"
+      },
+      {
+        "slug": "public_transport",
+        "name": "Public transport",
+        "icon": "mdi:bus"
+      }
+    ]
+  },
+  {
+    "slug": "water",
+    "name": "Water",
+    "description": "Water meters, leak detection, softeners and filters, tanks, pools and spas.",
+    "icon": "mdi:water",
+    "subcategories": [
+      {
+        "slug": "meters_leak_detection",
+        "name": "Meters & leak detection",
+        "icon": "mdi:water-alert"
+      },
+      {
+        "slug": "pools_spas",
+        "name": "Pools & spas",
+        "icon": "mdi:pool"
+      },
+      {
+        "slug": "water_treatment",
+        "name": "Water treatment",
+        "icon": "mdi:water-check"
+      }
+    ]
+  },
+  {
+    "slug": "weather_alerts",
+    "name": "Weather & alerts",
+    "description": "Forecasts, outdoor air quality, pollen, and public warnings for storms, floods, earthquakes or air raids.",
+    "icon": "mdi:weather-partly-cloudy",
+    "subcategories": [
+      {
+        "slug": "air_quality_pollen",
+        "name": "Air quality & pollen",
+        "icon": "mdi:flower-pollen"
+      },
+      {
+        "slug": "forecasts",
+        "name": "Forecasts",
+        "icon": "mdi:weather-partly-rainy"
+      },
+      {
+        "slug": "public_warnings",
+        "name": "Public warnings",
+        "icon": "mdi:alert"
+      }
+    ]
+  }
+]

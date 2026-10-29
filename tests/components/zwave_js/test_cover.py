@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.const import (
     CURRENT_STATE_PROPERTY,
     CURRENT_VALUE_PROPERTY,
@@ -45,8 +46,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .common import replace_value_of_zwave_value
-
-from tests.common import MockConfigEntry
 
 WINDOW_COVER_ENTITY = "cover.zws_12"
 GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"

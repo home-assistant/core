@@ -37,10 +37,10 @@ class LastFMUserData:
 class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData]]):
     """A LastFM Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: LastFMConfigEntry
     _client: LastFMNetwork
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: LastFMConfigEntry) -> None:
         """Initialize the LastFM data coordinator."""
         super().__init__(
             hass,
@@ -60,7 +60,10 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             if data is not None:
                 res[username] = data
         if not res:
-            raise UpdateFailed
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            )
         return res
 
     def _get_user_data(self, username: str) -> LastFMUserData | None:

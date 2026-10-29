@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from pynobo import PynoboError, nobo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -34,8 +35,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import entity_unique_ids, fire_hub_update
 from .conftest import SERIAL
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 CLIMATE_ENTITY = "climate.living_room_living_room"
 BEDROOM_ZONE = {

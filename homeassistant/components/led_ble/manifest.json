@@ -30,6 +30,7 @@
       "local_name": "LD-0003"
     }
   ],
+  "categories": ["lighting.led_strips_controllers"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

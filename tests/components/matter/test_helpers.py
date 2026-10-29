@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.helpers import (
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .common import setup_integration_with_node_fixture
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("node_fixture", ["device_diagnostics"])

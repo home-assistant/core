@@ -21,9 +21,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ForecastSolarConfigEntry
 from .const import DOMAIN
-from .coordinator import ForecastSolarDataUpdateCoordinator
+from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 

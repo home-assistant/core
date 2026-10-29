@@ -1,6 +1,7 @@
 {
   "domain": "epic_games_store",
   "name": "Epic Games Store",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@Quentame"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/epic_games_store",

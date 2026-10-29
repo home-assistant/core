@@ -1,6 +1,7 @@
 {
   "domain": "bluetooth_le_tracker",
   "name": "Bluetooth LE Tracker",
+  "categories": ["presence_location"],
   "codeowners": [],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/bluetooth_le_tracker",

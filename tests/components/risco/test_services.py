@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.risco.const import DOMAIN, SERVICE_SET_TIME
 from homeassistant.components.risco.models import CloudData, RiscoData
@@ -13,8 +14,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_CLOUD_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_set_time_service(

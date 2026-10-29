@@ -6,6 +6,12 @@
       'is_registered': True,
       'tv_info': dict({
         'connection': dict({
+          'wifiInfo': dict({
+            'macAddress': '**REDACTED**',
+          }),
+          'wiredInfo': dict({
+            'macAddress': '**REDACTED**',
+          }),
         }),
         'hello': dict({
           'deviceUUID': '**REDACTED**',

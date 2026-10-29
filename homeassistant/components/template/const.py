@@ -1,5 +1,7 @@
 """Constants for the Template Platform Components."""
 
+from enum import StrEnum
+
 from homeassistant.const import Platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -14,6 +16,7 @@ CONF_MIN = "min"
 CONF_PICTURE = "picture"
 CONF_PRESS = "press"
 CONF_STEP = "step"
+CONF_TRIGGER_VARIABLES = "trigger_variables"
 CONF_TURN_OFF = "turn_off"
 CONF_TURN_ON = "turn_on"
 
@@ -33,12 +36,14 @@ PLATFORMS = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
     Platform.WEATHER,
 ]
 
@@ -48,3 +53,9 @@ class TemplateConfig(dict):
 
     raw_config: ConfigType | None = None
     raw_blueprint_inputs: ConfigType | None = None
+
+
+class TemplateService(StrEnum):
+    """Store keys for template services."""
+
+    RELOAD = "reload"

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from .common import ENTITY_HUMIDIFIER_MIST_LEVEL
-
-from tests.common import MockConfigEntry
 
 
 async def test_set_mist_level_bad_range(

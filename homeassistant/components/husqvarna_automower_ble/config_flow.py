@@ -22,14 +22,14 @@ from .const import DOMAIN, LOGGER
 
 BLUETOOTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 
 USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_ADDRESS): str,
-        probatio.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 
@@ -168,6 +168,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             ).probe_gatts(device)
         except (BleakError, TimeoutError) as exception:
             LOGGER.exception("Failed to probe device (%s): %s", self.address, exception)
+            return None
+
+        # The library returns None for the values it couldn't read
+        if manufacturer is None or device_type is None:
+            LOGGER.debug("Failed to read the device info of %s", self.address)
             return None
 
         title = manufacturer + " " + device_type

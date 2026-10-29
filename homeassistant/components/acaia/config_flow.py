@@ -144,7 +144,6 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME: self._discovered[CONF_NAME]
         }
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=placeholders,

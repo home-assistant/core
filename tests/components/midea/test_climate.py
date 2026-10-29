@@ -11,6 +11,7 @@ from midealocal.devices.cc import DeviceAttributes as CCAttributes
 from midealocal.devices.cf import DeviceAttributes as CFAttributes
 from midealocal.devices.fb import DeviceAttributes as FBAttributes
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -53,8 +54,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _assert_service_calls(
@@ -671,7 +670,7 @@ async def test_base_set_temperature_without_target_noop(
 
     device.calls.clear()
     assert entity is not None
-    entity.set_temperature()
+    await entity.async_set_temperature()
     assert device.calls == []
 
 

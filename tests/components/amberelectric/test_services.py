@@ -4,6 +4,7 @@ import re
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.amberelectric.const import DOMAIN
 from homeassistant.components.amberelectric.services import ATTR_CHANNEL_TYPE
@@ -17,8 +18,6 @@ from .helpers import (
     GENERAL_AND_FEED_IN_SITE_ID,
     GENERAL_ONLY_SITE_ID,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_amber_client_forecasts")

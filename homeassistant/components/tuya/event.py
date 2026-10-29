@@ -26,11 +26,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
 
 @dataclass(frozen=True)
-class TuyaEventEntityDescription(EventEntityDescription):
+class TuyaEventEntityDescription(TuyaEntityDescription, EventEntityDescription):
     """Describe a Tuya Event entity."""
 
     wrapper_class: type[DPCodeTypeInformationWrapper] = SimpleEventEnumWrapper
@@ -150,13 +150,13 @@ async def async_setup_entry(
 class TuyaEventEntity(TuyaEntity, EventEntity):
     """Tuya Event Entity."""
 
-    entity_description: EventEntityDescription
+    entity_description: TuyaEventEntityDescription
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: EventEntityDescription,
+        description: TuyaEventEntityDescription,
         definition: EventDefinition,
     ) -> None:
         """Init Tuya event entity."""

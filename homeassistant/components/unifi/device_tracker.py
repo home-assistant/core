@@ -29,7 +29,9 @@ from . import UnifiConfigEntry
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
+    async_client_device_info_fn,
     async_device_available_fn,
+    async_device_device_info_fn,
     is_locally_administered_mac,
 )
 from .hub import UnifiHub
@@ -161,8 +163,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     UnifiTrackerEntityDescription[Clients, Client](
         key="Client device scanner",
         allowed_fn=async_client_allowed_fn,
+        entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.clients,
-        device_info_fn=lambda api, obj_id: None,
+        device_info_fn=async_client_device_info_fn,
         event_is_on=set(WIRED_CONNECTION + WIRELESS_CONNECTION),
         event_to_subscribe=(
             WIRED_CONNECTION
@@ -172,7 +175,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         ),
         heartbeat_timedelta_fn=lambda hub, _: hub.config.option_detection_time,
         is_connected_fn=async_client_is_connected_fn,
-        name_fn=lambda client: client.name or client.hostname,
         object_fn=lambda api, obj_id: api.clients[obj_id],
         unique_id_fn=lambda hub, obj_id: f"{hub.site}-{obj_id}",
         ip_address_fn=lambda api, obj_id: api.clients[obj_id].ip,
@@ -183,10 +185,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         allowed_fn=lambda hub, obj_id: hub.config.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
-        device_info_fn=lambda api, obj_id: None,
+        device_info_fn=async_device_device_info_fn,
         heartbeat_timedelta_fn=async_device_heartbeat_timedelta_fn,
         is_connected_fn=lambda hub, obj_id: hub.api.devices[obj_id].state == 1,
-        name_fn=lambda device: device.name or device.model,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         unique_id_fn=lambda hub, obj_id: obj_id,
         ip_address_fn=lambda api, obj_id: api.devices[obj_id].ip,
@@ -225,6 +226,10 @@ class UnifiScannerEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         Initiate is_connected.
         """
         description = self.entity_description
+        # ScannerEntity disables trackers by default, which hides the description
+        self._attr_entity_registry_enabled_default = (
+            description.entity_registry_enabled_default
+        )
         self._event_is_on = description.event_is_on or set()
         self._ignore_events = False
         self._is_connected = description.is_connected_fn(self.hub, self._obj_id)

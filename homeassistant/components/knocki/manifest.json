@@ -1,6 +1,7 @@
 {
   "domain": "knocki",
   "name": "Knocki",
+  "categories": ["buttons_remotes"],
   "codeowners": ["@joostlek", "@jgatto1", "@JakeBosh"],
   "config_flow": true,
   "dhcp": [

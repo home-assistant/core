@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AdvantageAirDataConfigEntry
 from .const import (
     ADVANTAGE_AIR_AUTOFAN_ENABLED,
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -29,7 +28,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_ON,
     ADVANTAGE_AIR_STATE_OPEN,
 )
-from .coordinator import AdvantageAirCoordinator
+from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 
 ADVANTAGE_AIR_HVAC_MODES = {
@@ -105,7 +104,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     """AdvantageAir AC unit."""
 
     _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
@@ -164,7 +163,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the selected zones current temperature."""
         if self._myzone:
             return self._myzone["measuredTemp"]
@@ -172,7 +171,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the current target temperature."""
         # If the system is in MyZone mode, and a zone is set,
         # return that temperature instead.
@@ -208,13 +207,13 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the temperature cool mode is enabled."""
         return self._ac.get(ADVANTAGE_AIR_COOL_TARGET)
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the temperature heat mode is enabled."""
         return self._ac.get(ADVANTAGE_AIR_HEAT_TARGET)
 
@@ -290,7 +289,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
@@ -333,13 +332,13 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone["measuredTemp"]
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the target temperature."""
         return self._zone["setTemp"]
 

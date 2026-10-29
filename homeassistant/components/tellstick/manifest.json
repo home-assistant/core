@@ -1,6 +1,7 @@
 {
   "domain": "tellstick",
   "name": "TellStick",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/tellstick",
   "iot_class": "assumed_state",

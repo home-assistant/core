@@ -13,6 +13,7 @@ from aiohortos import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.hortimax.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -21,8 +22,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import DEVICE, DEVICE_LABEL, load_readouts
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_hortos_client")

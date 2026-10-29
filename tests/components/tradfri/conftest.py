@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import load_fixture
 from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.gateway import Gateway
@@ -14,8 +15,6 @@ from homeassistant.components.tradfri.const import DOMAIN
 
 from . import TRADFRI_PATH
 from .common import CommandStore
-
-from tests.common import load_fixture
 
 
 @pytest.fixture

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call, patch
 from pybalboa import SpaControl
 from pybalboa.enums import LowHighRange
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import client_update, init_integration
-
-from tests.common import snapshot_platform
 
 ENTITY_SELECT = "select.fakespa_temperature_range"
 

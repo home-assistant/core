@@ -1,15 +1,23 @@
 """Tests for the sensors provided by the EnergyZero integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
+from zoneinfo import ZoneInfo
 
 from energyzero import EnergyZeroNoDataError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.energyzero.const import (
     CONF_ELECTRICITY_PRICE_INTERVAL,
+    DOMAIN,
     SCAN_INTERVAL,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -18,8 +26,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = [pytest.mark.freeze_time("2026-04-10 20:32:59")]
 
@@ -157,3 +163,140 @@ async def test_existing_market_registry_entries(
         assert entry.name == original.name
         assert entry.disabled_by == original.disabled_by
     assert len(er.async_entries_for_config_entry(entity_registry, "12345")) == 16
+
+
+@pytest.mark.parametrize(
+    ("moment", "current", "next_hour"),
+    [
+        pytest.param(
+            "2026-04-10T00:00:00+02:00",
+            "0.54345990633176",
+            "0.54345990633176",
+            id="midnight",
+        ),
+        pytest.param(
+            "2026-04-10T05:00:00+02:00",
+            "0.54345990633176",
+            "0.5468407201224",
+            id="next-hour-boundary",
+        ),
+        pytest.param(
+            "2026-04-10T05:59:59+02:00",
+            "0.54345990633176",
+            "0.5468407201224",
+            id="before-boundary",
+        ),
+        pytest.param(
+            "2026-04-10T06:00:00+02:00",
+            "0.5468407201224",
+            "0.5468407201224",
+            id="boundary",
+        ),
+    ],
+)
+async def test_gas_prices_after_fresh_start(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    moment: str,
+    current: str,
+    next_hour: str,
+) -> None:
+    """Exercise actual REST parsing without a remembered sensor value."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to(moment)
+    electricity = await async_load_json_object_fixture(
+        hass, "today_energy.json", DOMAIN
+    )
+    gas = await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "energyzero.api.rest.RESTClient._request",
+        side_effect=[electricity, gas, electricity],
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.energyzero_today_gas_current_hour_price"))
+    assert state.state == current
+    assert (state := hass.states.get("sensor.energyzero_today_gas_next_hour_price"))
+    assert state.state == next_hour
+
+
+@pytest.mark.parametrize(
+    ("block_count", "expected"),
+    [
+        pytest.param(2, "0.5468407201224", id="new-price"),
+        pytest.param(1, STATE_UNKNOWN, id="missing-price"),
+    ],
+)
+async def test_gas_price_expires_at_boundary(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    block_count: int,
+    expected: str,
+) -> None:
+    """A refresh must select the new interval or report an unknown price."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to(datetime(2026, 4, 10, 5, 55, tzinfo=ZoneInfo("Europe/Amsterdam")))
+    electricity = await async_load_json_object_fixture(
+        hass, "today_energy.json", DOMAIN
+    )
+    gas = await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
+    gas = {
+        **gas,
+        **{
+            stream: gas[stream][:block_count]
+            for stream in ("base", "base_with_vat", "all_in", "all_in_with_vat")
+        },
+    }
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "energyzero.api.rest.RESTClient._request", side_effect=[electricity, gas] * 2
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert (
+            state := hass.states.get("sensor.energyzero_today_gas_current_hour_price")
+        )
+        assert state.state == "0.54345990633176"
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("sensor.energyzero_today_gas_current_hour_price"))
+    assert state.state == expected
+
+
+async def test_gas_price_survives_calendar_rollover(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Refreshing for a new calendar date keeps the still-valid gas interval."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2026-04-09T23:55:00+02:00")
+    electricity = await async_load_json_object_fixture(
+        hass, "today_energy.json", DOMAIN
+    )
+    gas = await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "energyzero.api.rest.RESTClient._request",
+        side_effect=[electricity, gas, electricity] * 2,
+    ) as request:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert (
+            state := hass.states.get("sensor.energyzero_today_gas_current_hour_price")
+        )
+        assert state.state == "0.54345990633176"
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert request.await_args_list[1].kwargs["params"]["date"] == "09-04-2026"
+    assert request.await_args_list[4].kwargs["params"]["date"] == "10-04-2026"
+    assert (state := hass.states.get("sensor.energyzero_today_gas_current_hour_price"))
+    assert state.state == "0.54345990633176"

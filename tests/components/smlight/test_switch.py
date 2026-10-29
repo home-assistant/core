@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from pysmlight import SettingsEvent
 from pysmlight.const import Settings
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = [
     pytest.mark.usefixtures(

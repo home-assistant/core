@@ -2,6 +2,7 @@
   "domain": "overseerr",
   "name": "Seerr",
   "after_dependencies": ["cloud"],
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@joostlek", "@AmGarera", "@felixschndr"],
   "config_flow": true,
   "dependencies": ["http", "webhook"],

@@ -11,6 +11,8 @@ from pysmhi import (
     SMHIPointForecast,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smhi.const import DOMAIN
@@ -38,9 +40,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import ENTITY_ID, TEST_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(

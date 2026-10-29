@@ -101,3 +101,32 @@ async def test_singleton_async_concurrent_raises(mock_hass: HomeAssistant) -> No
     # Only the first caller ran the wrapped function; the waiter observed its error.
     assert calls == 1
     assert "test_key" not in mock_hass.data
+
+
+async def test_singleton_async_concurrent_waiter_cancelled(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Verify cancelling a waiting caller does not break the in-progress call."""
+    release = asyncio.Event()
+    result = object()
+
+    @singleton.singleton("test_key")
+    async def something(hass: HomeAssistant) -> Any:
+        await release.wait()
+        return result
+
+    task1 = asyncio.create_task(something(mock_hass))
+    await asyncio.sleep(0)
+    task2 = asyncio.create_task(something(mock_hass))
+    await asyncio.sleep(0)
+
+    task2.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task2
+
+    release.set()
+    async with asyncio.timeout(1):
+        assert await task1 is result
+
+    assert mock_hass.data["test_key"] is result
+    assert await something(mock_hass) is result

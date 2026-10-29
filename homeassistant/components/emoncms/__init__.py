@@ -57,7 +57,7 @@ async def _check_unique_id_migration(
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> None:
     """Load a config entry."""
     emoncms_client = EmoncmsClient(
         entry.data[CONF_URL],
@@ -70,9 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> b
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EmonCMSConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

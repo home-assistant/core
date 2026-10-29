@@ -1,6 +1,7 @@
 {
   "domain": "data_grand_lyon",
   "name": "Data Grand Lyon",
+  "categories": ["vehicles_transport.public_transport", "local_services"],
   "codeowners": ["@Crocmagnon"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/data_grand_lyon",

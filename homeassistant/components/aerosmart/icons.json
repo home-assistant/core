@@ -1,0 +1,45 @@
+{
+  "entity": {
+    "sensor": {
+      "active_fan_level": {
+        "default": "mdi:fan"
+      },
+      "carbon_dioxide": {
+        "default": "mdi:molecule-co2"
+      },
+      "coarse_dust_filter_operating_hours": {
+        "default": "mdi:air-filter"
+      },
+      "coarse_dust_filter_service_life": {
+        "default": "mdi:air-filter"
+      },
+      "extract_air_fan_actual_speed": {
+        "default": "mdi:fan"
+      },
+      "extract_air_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "fine_dust_filter_operating_hours": {
+        "default": "mdi:air-filter"
+      },
+      "fine_dust_filter_service_life": {
+        "default": "mdi:air-filter"
+      },
+      "heat_pump": {
+        "default": "mdi:heat-pump"
+      },
+      "heat_pump_status": {
+        "default": "mdi:heat-pump"
+      },
+      "heat_pump_status_remaining_time": {
+        "default": "mdi:heat-pump"
+      },
+      "supply_air_fan_actual_speed": {
+        "default": "mdi:fan"
+      },
+      "supply_air_fan_speed": {
+        "default": "mdi:fan"
+      }
+    }
+  }
+}

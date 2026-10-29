@@ -88,6 +88,9 @@
     "delete_error": {
       "message": "Failed to delete from OneDrive: {paths}"
     },
+    "duplicate_drive": {
+      "message": "This drive is already set up as {title}. Remove one of the two entries."
+    },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
     },
@@ -99,6 +102,9 @@
     },
     "filenames_do_not_exist": {
       "message": "The following files do not exist: {filenames}"
+    },
+    "hash_mismatch": {
+      "message": "Hash validation failed, backup file might be corrupt"
     },
     "invalid_destination_path": {
       "message": "Invalid destination path `{destination_path}`: must be non-empty, must not contain `:` or `..` path segments"

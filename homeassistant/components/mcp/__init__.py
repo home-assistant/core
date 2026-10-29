@@ -59,7 +59,7 @@ async def _create_token_manager(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
-) -> bool:
+) -> None:
     """Set up Model Context Protocol from a config entry."""
     token_manager = await _create_token_manager(hass, entry)
     coordinator = ModelContextProtocolCoordinator(hass, entry, token_manager)
@@ -79,14 +79,11 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True
 
 
 @dataclass(kw_only=True)

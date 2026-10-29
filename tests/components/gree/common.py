@@ -5,12 +5,11 @@ import logging
 from unittest.mock import AsyncMock, Mock
 
 from greeclimate.discovery import Listener
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.gree.const import DISCOVERY_TIMEOUT, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

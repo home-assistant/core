@@ -44,7 +44,9 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
+    Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.UPDATE,
 ]
 
@@ -59,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SystemBridgeConfigEntry,
-) -> bool:
+) -> None:
     """Set up System Bridge from a config entry."""
 
     # Check version before initialising
@@ -74,7 +76,6 @@ async def async_setup_entry(
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             supported = await version.check_supported()
     except AuthenticationException as exception:
-        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
@@ -108,6 +109,7 @@ async def async_setup_entry(
             hass=hass,
             domain=DOMAIN,
             issue_id=f"system_bridge_{entry.entry_id}_unsupported_version",
+            config_entry_id=entry.entry_id,
             translation_key="unsupported_version",
             translation_placeholders={"host": entry.data[CONF_HOST]},
             severity=IssueSeverity.ERROR,
@@ -132,7 +134,6 @@ async def async_setup_entry(
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
-        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
@@ -160,6 +161,16 @@ async def async_setup_entry(
             },
         ) from exception
 
+    if coordinator.data.system is None:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        )
+
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
@@ -181,38 +192,17 @@ async def async_setup_entry(
         )
     )
 
-    # Reload entry when its updated.
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SystemBridgeConfigEntry
-) -> bool:
-    """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        coordinator = entry.runtime_data
-
-        # Ensure disconnected and cleanup stop sub
-        await coordinator.websocket_client.close()
-        if coordinator.unsub:
-            coordinator.unsub()
-
-    return unload_ok
-
-
-async def async_reload_entry(
-    hass: HomeAssistant, entry: SystemBridgeConfigEntry
 ) -> None:
-    """Reload the config entry when it changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SystemBridgeConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -260,5 +250,3 @@ async def async_migrate_entry(
             )
 
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
-
-    return True

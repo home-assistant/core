@@ -1,6 +1,7 @@
 {
   "domain": "pi_hole",
   "name": "Pi-hole",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@shenxn"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pi_hole",

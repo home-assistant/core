@@ -43,7 +43,11 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = FunctionDefinition(
         name=tool.name,
-        parameters=to_openapi(tool.parameters, custom_serializer=custom_serializer),
+        parameters=to_openapi(
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
+        ),
     )
     if tool.description:
         tool_spec["description"] = tool.description
@@ -208,10 +212,12 @@ class OVHcloudAIEndpointsEntity(Entity):
             try:
                 result = await client.chat.completions.create(**model_args)
             except openai.OpenAIError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
 
             if not result.choices:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("API returned empty choices")
                 raise HomeAssistantError("API returned empty response")
 

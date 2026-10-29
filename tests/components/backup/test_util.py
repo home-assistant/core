@@ -1,9 +1,10 @@
 """Tests for the Backup integration's utility functions."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 import dataclasses
 import hashlib
+import inspect
 import os
 from pathlib import Path
 import tarfile
@@ -11,6 +12,7 @@ from unittest.mock import Mock, patch
 
 import nacl.bindings.crypto_secretstream as nss
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 import securetar
 
 from homeassistant.components.backup import DOMAIN, AddonInfo, AgentBackup, Folder
@@ -24,8 +26,6 @@ from homeassistant.components.backup.util import (
     validate_password,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import get_fixture_path
 
 
 def _deterministic_init_push(
@@ -417,12 +417,17 @@ async def test_decrypted_backup_streamer_interrupt_stuck_reader(
                 await stuck.wait()
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_decrypted_backup_streamer_interrupt_stuck_writer(
@@ -452,12 +457,17 @@ async def test_decrypted_backup_streamer_interrupt_stuck_writer(
             while chunk := f.read(1024):
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> None:
@@ -623,12 +633,17 @@ async def test_encrypted_backup_streamer_interrupt_stuck_reader(
                 await stuck.wait()
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_encrypted_backup_streamer_interrupt_stuck_writer(
@@ -660,12 +675,17 @@ async def test_encrypted_backup_streamer_interrupt_stuck_writer(
             while chunk := f.read(1024):
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> None:

@@ -116,7 +116,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_HOST): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Optional(CONF_SSL, default=False): bool,
                     probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
@@ -163,7 +163,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Optional(CONF_SSL, default=False): bool,
                     probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
@@ -231,7 +231,7 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=probatio.Schema(
                     {
                         probatio.Required(CONF_HOST): str,
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                         probatio.Optional(CONF_SSL, default=False): bool,
                         probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
                     }

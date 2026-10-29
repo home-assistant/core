@@ -1,6 +1,7 @@
 {
   "domain": "danfoss_air",
   "name": "Danfoss Air",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/danfoss_air",
   "iot_class": "local_polling",

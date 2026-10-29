@@ -1,6 +1,7 @@
 {
   "domain": "private_ble_device",
   "name": "Private BLE Device",
+  "categories": ["presence_location.trackers"],
   "codeowners": ["@Jc2k"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

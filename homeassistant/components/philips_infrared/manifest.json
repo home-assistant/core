@@ -1,0 +1,12 @@
+{
+  "domain": "philips_infrared",
+  "name": "Philips Infrared",
+  "categories": ["media_entertainment.tv_streaming"],
+  "codeowners": ["@javitonino"],
+  "config_flow": true,
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/philips_infrared",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze"
+}

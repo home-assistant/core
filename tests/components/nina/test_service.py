@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pynina import Warning
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nina.const import DOMAIN, SERVICE_GET_DETAILS
@@ -10,8 +11,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from . import setup_platform, setup_single_platform
-
-from tests.common import MockConfigEntry
 
 
 async def test_service_registration(

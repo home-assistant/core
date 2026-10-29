@@ -1,6 +1,7 @@
 {
   "domain": "sentry",
   "name": "Sentry",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@dcramer", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sentry",

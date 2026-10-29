@@ -67,7 +67,7 @@ def async_device_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
         connections={(CONNECTION_NETWORK_MAC, device.mac)},
         manufacturer=ATTR_MANUFACTURER,
         model=device.model,
-        name=device.name or None,
+        name=device.name or device.model,
         sw_version=device.version,
         hw_version=str(device.board_revision),
     )

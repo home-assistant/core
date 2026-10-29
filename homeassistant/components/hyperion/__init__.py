@@ -125,7 +125,7 @@ def listen_for_instance_updates(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HyperionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HyperionConfigEntry) -> None:
     """Set up Hyperion from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -267,22 +267,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HyperionConfigEntry) -> 
     if hyperion_client.instances is not None:
         await async_instances_to_clients_raw(hyperion_client.instances)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HyperionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HyperionConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        # Disconnect the shared instance clients.
-        await asyncio.gather(
-            *(
-                inst.async_client_disconnect()
-                for inst in entry.runtime_data.instance_clients.values()
-            )
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Disconnect the shared instance clients.
+    await asyncio.gather(
+        *(
+            inst.async_client_disconnect()
+            for inst in entry.runtime_data.instance_clients.values()
         )
+    )
 
-        # Disconnect the root client.
-        root_client = entry.runtime_data.root_client
-        await root_client.async_client_disconnect()
-    return unload_ok
+    # Disconnect the root client.
+    root_client = entry.runtime_data.root_client
+    await root_client.async_client_disconnect()

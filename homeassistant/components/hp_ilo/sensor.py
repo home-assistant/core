@@ -52,9 +52,9 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_MONITORED_VARIABLES, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {
@@ -69,7 +69,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
             ],
         ),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 

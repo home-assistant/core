@@ -1,6 +1,7 @@
 {
   "domain": "simplisafe",
   "name": "SimpliSafe",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "dhcp": [

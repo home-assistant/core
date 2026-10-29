@@ -1,6 +1,7 @@
 {
   "domain": "aqualogic",
   "name": "AquaLogic",
+  "categories": ["water.pools_spas"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aqualogic",

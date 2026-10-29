@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_parameters_openapi
+  dict({
+    'config__get_config_entries': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'domain': dict({
+          'anyOf': list([
+            dict({
+              'format': 'strip',
+              'type': 'string',
+            }),
+            dict({
+              'items': dict({
+                'format': 'strip',
+                'type': 'string',
+              }),
+              'minItems': 1,
+              'type': 'array',
+            }),
+          ]),
+          'description': "Filter by integration domain (e.g. 'hue', 'zwave_js'). Accepts a single domain or a list of domains.",
+        }),
+        'status': dict({
+          'description': "Filter by status: 'loaded' (working normally), 'error' (failed setup, retrying, migration error, or failed unload), or 'not_loaded' (including disabled or ignored entries).",
+          'enum': list([
+            'loaded',
+            'error',
+            'not_loaded',
+          ]),
+          'format': 'lower',
+          'type': 'string',
+        }),
+      }),
+      'type': 'object',
+    }),
+    'config__reload_config_entry': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'entry_id': dict({
+          'description': "The entry_id of the config entry to reload (e.g. 'hue:8K2M').",
+          'format': 'strip',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'entry_id',
+      ]),
+      'type': 'object',
+    }),
+    'config__search_integrations': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'query': dict({
+          'description': 'Search text to match against integration name, domain, or brand (case-insensitive).',
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'type': dict({
+          'description': "Filter results by type: 'integration' or 'helper'.",
+          'enum': list([
+            'integration',
+            'helper',
+          ]),
+          'format': 'lower',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'query',
+      ]),
+      'type': 'object',
+    }),
+  })
+# ---

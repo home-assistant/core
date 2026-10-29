@@ -4,15 +4,15 @@ from datetime import datetime, timedelta, tzinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
+from homeassistant.components.tod.binary_sensor import TodEntityStateAttribute
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 
 @pytest.fixture
@@ -640,9 +640,16 @@ async def test_dst1(
 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes["after"] == "2019-03-31T03:00:00+02:00"
-    assert state.attributes["before"] == "2019-03-31T03:00:00+02:00"
-    assert state.attributes["next_update"] == "2019-03-31T03:00:00+02:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-03-31T03:00:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-03-31T03:00:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-03-31T03:00:00+02:00"
+    )
     assert state.state == STATE_OFF
 
     # But the following day, the sensor should resume it normal operation.
@@ -651,9 +658,16 @@ async def test_dst1(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.attributes["after"] == "2019-04-01T02:30:00+02:00"
-    assert state.attributes["before"] == "2019-04-01T02:40:00+02:00"
-    assert state.attributes["next_update"] == "2019-04-01T02:30:00+02:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-04-01T02:30:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-04-01T02:40:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-04-01T02:30:00+02:00"
+    )
 
     assert state.state == STATE_OFF
 
@@ -680,9 +694,16 @@ async def test_dst2(
 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes["after"] == "2019-03-31T04:30:00+02:00"
-    assert state.attributes["before"] == "2019-03-31T04:40:00+02:00"
-    assert state.attributes["next_update"] == "2019-03-31T04:30:00+02:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-03-31T04:30:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-03-31T04:40:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-03-31T04:30:00+02:00"
+    )
     assert state.state == STATE_OFF
 
 
@@ -710,9 +731,16 @@ async def test_dst3(
 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes["after"] == "2023-03-12T04:30:00-07:00"
-    assert state.attributes["before"] == "2023-03-12T04:40:00-07:00"
-    assert state.attributes["next_update"] == "2023-03-12T04:30:00-07:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2023-03-12T04:30:00-07:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2023-03-12T04:40:00-07:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2023-03-12T04:30:00-07:00"
+    )
     assert state.state == STATE_OFF
 
 
@@ -740,9 +768,16 @@ async def test_dst4(
 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes["after"] == "2023-11-05T04:30:00-08:00"
-    assert state.attributes["before"] == "2023-11-05T04:40:00-08:00"
-    assert state.attributes["next_update"] == "2023-11-05T04:30:00-08:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2023-11-05T04:30:00-08:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2023-11-05T04:40:00-08:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2023-11-05T04:30:00-08:00"
+    )
     assert state.state == STATE_OFF
 
 
@@ -770,9 +805,16 @@ async def test_dst5(
 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes["after"] == "2019-03-31T01:50:00+01:00"
-    assert state.attributes["before"] == "2019-03-31T03:00:00+02:00"
-    assert state.attributes["next_update"] == "2019-03-31T01:50:00+01:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-03-31T01:50:00+01:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-03-31T03:00:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-03-31T01:50:00+01:00"
+    )
     assert state.state == STATE_OFF
 
     # Second, test state when sensor is ON but end time has rolled
@@ -782,9 +824,16 @@ async def test_dst5(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.attributes["after"] == "2019-03-31T01:50:00+01:00"
-    assert state.attributes["before"] == "2019-03-31T03:00:00+02:00"
-    assert state.attributes["next_update"] == "2019-03-31T03:00:00+02:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-03-31T01:50:00+01:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-03-31T03:00:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-03-31T03:00:00+02:00"
+    )
 
     assert state.state == STATE_ON
 
@@ -813,9 +862,16 @@ async def test_dst6(
 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes["after"] == "2019-03-31T03:00:00+02:00"
-    assert state.attributes["before"] == "2019-03-31T03:10:00+02:00"
-    assert state.attributes["next_update"] == "2019-03-31T03:00:00+02:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-03-31T03:00:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-03-31T03:10:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-03-31T03:00:00+02:00"
+    )
     assert state.state == STATE_OFF
 
     # Second, test state when sensor is ON but end time has rolled
@@ -825,9 +881,16 @@ async def test_dst6(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.attributes["after"] == "2019-03-31T03:00:00+02:00"
-    assert state.attributes["before"] == "2019-03-31T03:10:00+02:00"
-    assert state.attributes["next_update"] == "2019-03-31T03:10:00+02:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-03-31T03:00:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-03-31T03:10:00+02:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-03-31T03:10:00+02:00"
+    )
 
     assert state.state == STATE_ON
 
@@ -853,9 +916,16 @@ async def test_simple_before_after_does_not_loop_utc_not_in_range(
 
     state = hass.states.get("binary_sensor.night")
     assert state.state == STATE_OFF
-    assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
-    assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
-    assert state.attributes["next_update"] == "2019-01-10T22:00:00+00:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-01-10T22:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-01-11T06:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-01-10T22:00:00+00:00"
+    )
 
 
 @pytest.mark.freeze_time("2019-01-10 22:43:00")
@@ -879,9 +949,16 @@ async def test_simple_before_after_does_not_loop_utc_in_range(
 
     state = hass.states.get("binary_sensor.night")
     assert state.state == STATE_ON
-    assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
-    assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
-    assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-01-10T22:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-01-11T06:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-01-11T06:00:00+00:00"
+    )
 
 
 @pytest.mark.freeze_time("2019-01-11 06:00:00")
@@ -905,9 +982,16 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_before(
 
     state = hass.states.get("binary_sensor.night")
     assert state.state == STATE_OFF
-    assert state.attributes["after"] == "2019-01-11T22:00:00+00:00"
-    assert state.attributes["before"] == "2019-01-12T06:00:00+00:00"
-    assert state.attributes["next_update"] == "2019-01-11T22:00:00+00:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-01-11T22:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-01-12T06:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-01-11T22:00:00+00:00"
+    )
 
 
 @pytest.mark.freeze_time("2019-01-10 22:00:00")
@@ -931,9 +1015,16 @@ async def test_simple_before_after_does_not_loop_utc_fire_at_after(
 
     state = hass.states.get("binary_sensor.night")
     assert state.state == STATE_ON
-    assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
-    assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
-    assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-01-10T22:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-01-11T06:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-01-11T06:00:00+00:00"
+    )
 
 
 @pytest.mark.freeze_time("2019-01-10 22:00:00")
@@ -957,9 +1048,16 @@ async def test_simple_before_after_does_not_loop_utc_both_before_now(
 
     state = hass.states.get("binary_sensor.morning")
     assert state.state == STATE_OFF
-    assert state.attributes["after"] == "2019-01-11T00:00:00+00:00"
-    assert state.attributes["before"] == "2019-01-11T08:00:00+00:00"
-    assert state.attributes["next_update"] == "2019-01-11T00:00:00+00:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-01-11T00:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-01-11T08:00:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-01-11T00:00:00+00:00"
+    )
 
 
 @pytest.mark.freeze_time("2019-01-10 17:43:00+01:00")
@@ -983,9 +1081,16 @@ async def test_simple_before_after_does_not_loop_berlin_not_in_range(
 
     state = hass.states.get("binary_sensor.dark")
     assert state.state == STATE_OFF
-    assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
-    assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
-    assert state.attributes["next_update"] == "2019-01-11T00:00:00+01:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-01-11T00:00:00+01:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-01-11T06:00:00+01:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-01-11T00:00:00+01:00"
+    )
 
 
 @pytest.mark.freeze_time("2019-01-11 00:43:00+01:00")
@@ -1009,9 +1114,16 @@ async def test_simple_before_after_does_not_loop_berlin_in_range(
 
     state = hass.states.get("binary_sensor.dark")
     assert state.state == STATE_ON
-    assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
-    assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
-    assert state.attributes["next_update"] == "2019-01-11T06:00:00+01:00"
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2019-01-11T00:00:00+01:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.BEFORE] == "2019-01-11T06:00:00+01:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2019-01-11T06:00:00+01:00"
+    )
 
 
 async def test_unique_id(

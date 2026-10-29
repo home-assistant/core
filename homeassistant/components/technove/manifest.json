@@ -1,6 +1,7 @@
 {
   "domain": "technove",
   "name": "TechnoVE",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@Moustachauve"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/technove",

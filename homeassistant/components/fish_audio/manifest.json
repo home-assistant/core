@@ -1,6 +1,7 @@
 {
   "domain": "fish_audio",
   "name": "Fish Audio",
+  "categories": ["ai_voice.speech"],
   "codeowners": ["@noambav"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fish_audio",

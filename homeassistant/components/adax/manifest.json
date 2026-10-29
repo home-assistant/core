@@ -1,6 +1,7 @@
 {
   "domain": "adax",
   "name": "Adax",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@danielhiversen", "@lazytarget"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/adax",

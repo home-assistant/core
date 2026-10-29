@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareNotSupportedFeatureError,
@@ -25,8 +26,6 @@ from homeassistant.helpers import entity_registry as er
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
 
-from tests.common import MockConfigEntry, snapshot_platform
-
 VENTILATION_FIXTURES: list[Fixture] = [
     Fixture({"type:ventilation"}, "vicare/ViAir300F.json"),
     Fixture({"type:ventilation"}, "vicare/VitoPure.json"),
@@ -44,10 +43,7 @@ async def setup_switch_platform(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
         patch(f"{MODULE}.PLATFORMS", [Platform.SWITCH]),
     ):
         await setup_integration(hass, mock_config_entry)

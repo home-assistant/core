@@ -1,6 +1,7 @@
 {
   "domain": "aqvify",
   "name": "Aqvify",
+  "categories": ["water"],
   "codeowners": ["@astrandb"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aqvify",

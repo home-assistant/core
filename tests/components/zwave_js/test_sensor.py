@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
@@ -60,8 +61,6 @@ from .common import (
     POWER_SENSOR,
     VOLTAGE_SENSOR,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

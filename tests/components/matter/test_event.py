@@ -15,6 +15,12 @@ from homeassistant.helpers import entity_registry as er
 from .common import snapshot_matter_entities, trigger_subscription_callback
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.EVENT
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_events(
     hass: HomeAssistant,

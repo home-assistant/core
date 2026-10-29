@@ -1,6 +1,7 @@
 {
   "domain": "roku",
   "name": "Roku",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@ctalkington"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/roku",

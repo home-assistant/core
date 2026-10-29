@@ -1,6 +1,7 @@
 {
   "domain": "airzone_cloud",
   "name": "Airzone Cloud",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@Noltari"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airzone_cloud",

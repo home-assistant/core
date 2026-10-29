@@ -5,6 +5,12 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import (
     ATTR_SOURCE,
@@ -29,13 +35,6 @@ from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import (
-    async_capture_events,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-)
-from tests.typing import WebSocketGenerator
 
 
 async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -388,6 +387,17 @@ async def test_sensor_ui_load(knx: KNXTestKit) -> None:
                     "dpt": "9.001",  # temperature 2 byte float
                 },
                 "state_class": "measurement_angle",  # requires degree unit
+                "sync_state": True,
+            }
+        ),
+        (
+            {
+                "ga_sensor": {
+                    "state": "1/1/1",
+                    "passive": [],
+                    "dpt": "9.001",  # temperature 2 byte float
+                },
+                "device_class": "enum",  # options can not be configured
                 "sync_state": True,
             }
         ),

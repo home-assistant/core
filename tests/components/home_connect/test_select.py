@@ -36,6 +36,7 @@ from aiohomeconnect.model.program import (
 )
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.components.select import (
@@ -55,8 +56,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

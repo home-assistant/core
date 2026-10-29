@@ -14,6 +14,7 @@ from kiosker import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kiosker.const import (
@@ -36,8 +37,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 KIOSKER_DEVICE_ID = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
 

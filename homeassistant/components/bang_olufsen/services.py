@@ -41,7 +41,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 "devices",
                 "Define either specific Beolink JIDs or all discovered",
             ): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [jid_regex],
             ),
         },
@@ -55,7 +55,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
             probatio.Required("beolink_jids"): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [jid_regex],
             ),
         },

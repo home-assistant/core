@@ -8,6 +8,7 @@ from mozart_api.models import (
     ButtonEvent,
     PairedRemoteResponse,
 )
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -40,8 +41,6 @@ from .util import (
     get_premiere_entity_ids,
     get_remote_entity_ids,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def _check_button_event_creation(

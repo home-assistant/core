@@ -1,6 +1,7 @@
 {
   "domain": "dyson_infrared",
   "name": "Dyson Infrared",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@elax46"],
   "config_flow": true,
   "dependencies": ["infrared"],

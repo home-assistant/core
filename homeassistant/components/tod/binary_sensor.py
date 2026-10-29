@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
+from enum import StrEnum
 import logging
 from typing import Any, Literal, TypeGuard, override
 
@@ -41,9 +42,14 @@ type SunEventType = Literal["sunrise", "sunset"]
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AFTER = "after"
-ATTR_BEFORE = "before"
-ATTR_NEXT_UPDATE = "next_update"
+
+class TodEntityStateAttribute(StrEnum):
+    """State attributes for times of the day entities."""
+
+    AFTER = "after"
+    BEFORE = "before"
+    NEXT_UPDATE = "next_update"
+
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -150,9 +156,15 @@ class TodSensor(BinarySensorEntity):
         """Return the state attributes of the sensor."""
         if time_zone := dt_util.get_default_time_zone():
             return {
-                ATTR_AFTER: self._time_after.astimezone(time_zone).isoformat(),
-                ATTR_BEFORE: self._time_before.astimezone(time_zone).isoformat(),
-                ATTR_NEXT_UPDATE: self._next_update.astimezone(time_zone).isoformat(),
+                TodEntityStateAttribute.AFTER: self._time_after.astimezone(
+                    time_zone
+                ).isoformat(),
+                TodEntityStateAttribute.BEFORE: self._time_before.astimezone(
+                    time_zone
+                ).isoformat(),
+                TodEntityStateAttribute.NEXT_UPDATE: self._next_update.astimezone(
+                    time_zone
+                ).isoformat(),
             }
         return None
 

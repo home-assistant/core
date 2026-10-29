@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from probatio.error import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sharkiq import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
 
 from homeassistant import exceptions
@@ -55,8 +56,6 @@ from .const import (
     SHARK_PROPERTIES_DICT,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 VAC_ENTITY_ID = f"vacuum.{SHARK_DEVICE_DICT['product_name'].lower()}"
 ROOM_LIST = ["Kitchen", "Living Room"]

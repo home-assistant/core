@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from sn2 import ConnectionStatus, SettingsUpdate, StateChange
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
 from . import find_update_callback
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")

@@ -148,7 +148,7 @@
     {
       "label": "Install all (test & production) Requirements",
       "type": "shell",
-      "command": "uv pip install -r requirements_all.txt -r requirements_test.txt",
+      "command": "uv pip install -e . -e packages/pytest-home-assistant -r requirements_all.txt -r requirements_test.txt --config-settings editable_mode=compat",
       "group": {
         "kind": "build",
         "isDefault": true

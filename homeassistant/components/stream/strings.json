@@ -1,0 +1,10 @@
+{
+  "exceptions": {
+    "already_recording": {
+      "message": "The stream is already recording to {filename}."
+    },
+    "path_not_allowed": {
+      "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
+    }
+  }
+}

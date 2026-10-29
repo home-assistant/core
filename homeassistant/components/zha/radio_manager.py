@@ -182,7 +182,7 @@ class ZhaRadioManager:
         self,
         *,
         connect: bool = True,
-        device_resolver: Callable[[zigpy.device.Device], zigpy.device.Device]
+        device_resolver: Callable[[zigpy.device.BaseDevice], zigpy.device.BaseDevice]
         | None = None,
     ) -> AsyncGenerator[ControllerApplication]:
         """Connect to the radio with the current config and then clean up.

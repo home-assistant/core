@@ -34,6 +34,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "name": "fake_name",
         "yid": "fake_yid",
     }
+    assert result["result"].unique_id == "fake_yid"
 
 
 @pytest.mark.parametrize(

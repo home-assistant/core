@@ -1,4 +1,12 @@
 {
+  "exceptions": {
+    "not_hassio": {
+      "message": "Home Assistant is not running on Home Assistant OS, the Home Assistant Green entry will be removed"
+    },
+    "unsupported_board": {
+      "message": "Home Assistant is not running on a Home Assistant Green ({board}), the Home Assistant Green entry will be removed"
+    }
+  },
   "options": {
     "abort": {
       "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",

@@ -28,7 +28,7 @@ CONFIG_SCHEMA = probatio.Schema(
             {
                 probatio.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
                 probatio.Optional(CONF_ATTR, default=False): cv.boolean,
-                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
                 probatio.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
                 probatio.Optional(CONF_RATE, default=DEFAULT_RATE): probatio.All(
                     probatio.Coerce(int), probatio.Range(min=1)

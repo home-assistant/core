@@ -5,18 +5,17 @@ from typing import Any
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.common import (
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components import zone
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
 
 
 @pytest.fixture

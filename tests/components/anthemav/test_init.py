@@ -5,6 +5,7 @@ from unittest.mock import ANY, AsyncMock, patch
 
 from anthemav.device_error import DeviceError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.anthemav.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(

@@ -12,7 +12,7 @@ def mock_setup_entry():
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.speedtestdotnet.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

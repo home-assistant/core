@@ -194,6 +194,7 @@ class SynoApi:
                     self._hass,
                     DOMAIN,
                     f"{ISSUE_MISSING_BACKUP_SETUP}_{self._entry.unique_id}",
+                    config_entry_id=self._entry.entry_id,
                     data={"entry_id": self._entry.entry_id},
                     is_fixable=True,
                     is_persistent=False,
@@ -273,8 +274,10 @@ class SynoApi:
         self._with_information = bool(
             self._fetching_entities.get(SynoDSMInformation.API_KEY)
         )
+        # Keep fetching while no device is connected, as no entity subscribes yet
         self._with_external_usb = bool(
             self._fetching_entities.get(SynoCoreExternalUSB.API_KEY)
+            or (self.external_usb is not None and not self.external_usb.get_devices)
         )
         self._with_hardware = bool(
             self._fetching_entities.get(SynoCoreHardware.API_KEY)

@@ -8,18 +8,23 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from peblar import (
     PeblarEVInterface,
     PeblarMeter,
+    PeblarMeterHistory,
+    PeblarRfidToken,
     PeblarSystem,
     PeblarSystemInformation,
     PeblarUserConfiguration,
     PeblarVersions,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
@@ -39,7 +44,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.peblar.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.peblar.async_setup_entry", return_value=None):
         yield
 
 
@@ -80,6 +85,19 @@ def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         peblar.system_information.return_value = PeblarSystemInformation.from_dict(
             system_information
         )
+        peblar.meter_history.return_value = PeblarMeterHistory.from_json(
+            load_fixture("meter_history.json", DOMAIN)
+        )
+        peblar.rfid_tokens.return_value = [
+            PeblarRfidToken(
+                rfid_token_uid="1D0A0B0C0D0E03",
+                rfid_token_description="Frenck",
+            ),
+            PeblarRfidToken(
+                rfid_token_uid="1D0102030405D3",
+                rfid_token_description="Spare",
+            ),
+        ]
 
         # The event stream parks here until the entry unloads, the way a
         # real one waits on the charger rather than returning.

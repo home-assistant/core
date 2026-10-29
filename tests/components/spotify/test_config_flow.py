@@ -4,6 +4,9 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 
 from homeassistant.components.spotify.const import DOMAIN
@@ -11,10 +14,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
@@ -77,7 +76,7 @@ async def test_full_flow(
     )
 
     with (
-        patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
+        patch("homeassistant.components.spotify.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -229,7 +228,7 @@ async def test_reauthentication(
     )
 
     with (
-        patch("homeassistant.components.spotify.async_setup_entry", return_value=True),
+        patch("homeassistant.components.spotify.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -287,3 +286,98 @@ async def test_reauth_account_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("setup_credentials")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test Spotify reconfiguration re-runs the OAuth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://accounts.spotify.com/api/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch("homeassistant.components.spotify.async_setup_entry", return_value=None):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.title == "Henk"
+    assert mock_config_entry.data["name"] == "Henk"
+    mock_config_entry.data["token"].pop("expires_at")
+    assert mock_config_entry.data["token"] == {
+        "refresh_token": "new-refresh-token",
+        "access_token": "new-access-token",
+        "type": "Bearer",
+        "expires_in": 60,
+    }
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("setup_credentials")
+async def test_reconfigure_account_mismatch(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test Spotify reconfiguration with a different account."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://accounts.spotify.com/api/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    mock_spotify.return_value.get_current_user.return_value.user_id = (
+        "different_user_id"
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"

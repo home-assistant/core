@@ -41,7 +41,7 @@ DEFAULT_OPTIONS = {CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]}
 
 AUTH_VOL_DICT: VolDictType = {
     probatio.Required(CONF_USERNAME): str,
-    probatio.Required(CONF_PASSWORD): str,
+    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
 }
 AUTH_SCHEMA = probatio.Schema(AUTH_VOL_DICT)
 
@@ -286,7 +286,11 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            events = [event.strip() for event in user_input[CONF_EVENTS].split(",")]
+            events = [
+                event
+                for part in user_input[CONF_EVENTS].split(",")
+                if (event := part.strip())
+            ]
             return self.async_create_entry(title="", data={CONF_EVENTS: events})
 
         current_events = self.config_entry.options.get(CONF_EVENTS, [])

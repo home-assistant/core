@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from pybraendstofpriser import Flist
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fuelprices_dk.const import (
     CONF_COMPANY,
@@ -13,8 +14,6 @@ from homeassistant.components.fuelprices_dk.const import (
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY
-
-from tests.common import MockConfigEntry
 
 TEST_API_KEY = "test-api-key"
 TEST_COMPANY = "Circle K"
@@ -27,7 +26,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry for config flow tests."""
     with patch(
         "homeassistant.components.fuelprices_dk.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

@@ -1,6 +1,7 @@
 {
   "domain": "slack",
   "name": "Slack",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@tkdrob", "@fletcherau"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/slack",

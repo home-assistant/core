@@ -73,6 +73,7 @@ def async_create_issue(hass: HomeAssistant, entry_id: str) -> None:
         hass=hass,
         domain=DOMAIN,
         issue_id=_get_issue_id(entry_id),
+        config_entry_id=entry_id,
         is_fixable=True,
         is_persistent=False,
         severity=ir.IssueSeverity.WARNING,

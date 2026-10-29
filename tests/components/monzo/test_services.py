@@ -10,6 +10,7 @@ from aiohttp import ClientError
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
 from homeassistant.components.monzo.const import (
     DEVICE_MODEL_ACCOUNT,
@@ -35,8 +36,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import TEST_ACCOUNTS, TEST_POTS
-
-from tests.common import MockConfigEntry, MockUser
 
 
 @dataclass
