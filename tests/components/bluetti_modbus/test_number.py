@@ -22,6 +22,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -34,6 +35,7 @@ DISCHARGE_LIMIT_ENTITY = "number.balco_260_discharge_limit"
 DISCHARGE_LIMIT_ADDRESS = 57016
 CHARGE_LIMIT_ENTITY = "number.balco_260_charge_limit"
 CHARGE_LIMIT_ADDRESS = 57017
+BATTERY_VOLTAGE_ENTITY = "sensor.balco_260_battery_voltage"
 
 
 @pytest.mark.usefixtures("mock_modbus_unit")
@@ -197,3 +199,61 @@ async def test_settings_poll_failure(
     entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
     assert entity is not None
     assert entity.state == STATE_UNAVAILABLE
+
+
+async def test_settings_read_failure_at_setup(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Settings that can't be read at setup leave only the numbers unavailable."""
+    mock_modbus_unit.fail_read(DISCHARGE_LIMIT_ADDRESS, ModbusTimeoutError("timed out"))
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    sensor = hass.states.get(BATTERY_VOLTAGE_ENTITY)
+    assert sensor is not None
+    assert sensor.state != STATE_UNAVAILABLE
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == STATE_UNAVAILABLE
+
+    mock_modbus_unit.fail_read(DISCHARGE_LIMIT_ADDRESS, None)
+    freezer.tick(SETTINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == "15"
+
+
+async def test_write_does_not_postpone_the_settings_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A write keeps the settings poll on its schedule."""
+    await setup_integration(hass, mock_config_entry)
+
+    freezer.tick(SETTINGS_SCAN_INTERVAL - SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: CHARGE_LIMIT_ENTITY, ATTR_VALUE: 95},
+        blocking=True,
+    )
+
+    # Changed on the device itself, so only a settings poll can show it.
+    mock_modbus_unit.holding[DISCHARGE_LIMIT_ADDRESS] = 33
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = hass.states.get(DISCHARGE_LIMIT_ENTITY)
+    assert entity is not None
+    assert entity.state == "33"

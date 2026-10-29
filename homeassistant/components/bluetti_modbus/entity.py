@@ -90,6 +90,6 @@ class BluettiModbusSettingEntity(CoordinatorEntity[BluettiModbusSettingsCoordina
                 translation_key="write_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        self.coordinator.async_set_updated_data(
-            self.coordinator.data | {self._field_name: value}
-        )
+        # async_set_updated_data would postpone the next settings poll.
+        self.coordinator.data = self.coordinator.data | {self._field_name: value}
+        self.coordinator.async_update_listeners()

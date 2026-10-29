@@ -41,7 +41,8 @@ async def async_setup_entry(
     coordinator = BluettiModbusDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
     settings = BluettiModbusSettingsCoordinator(hass, entry, settings_device(unit))
-    await settings.async_config_entry_first_refresh()
+    # Settings that can't be read leave only the numbers unavailable.
+    await settings.async_refresh()
 
     # Firmware versions come from the first refresh's own values - device
     # identity, so they go on DeviceInfo rather than becoming sensors.
