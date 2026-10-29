@@ -11,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
@@ -19,7 +20,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import assert_command_call, async_deliver_events, device_unavailable_event
+from .helpers import (
+    assert_command_call,
+    async_deliver_events,
+    device_state_changed_event,
+    device_unavailable_event,
+    oven_local_control_event,
+    oven_remote_control_event,
+)
 
 OPEN_CLOSED_PEDESTRIAN = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
@@ -41,11 +49,17 @@ ACTIVE_ZONES = FixtureDevice(
     "io://1234-1234-6233/2155276",
     "select.willow_house_protexiom_active_zones",
 )
+OVEN_MODE = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "select.oven_mode",
+)
 
-# One representative setup per fixture file; both expose select entities.
+# One representative setup per fixture file; each exposes select entities.
 SNAPSHOT_FIXTURES = [
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "setup/local_somfy_tahoma_v2_europe.json",
+    "setup/cloud_sauter_sop6615lb.json",
 ]
 
 
@@ -113,6 +127,13 @@ async def test_select_entities_snapshot(
             None,
             id="active_zones_off",
         ),
+        pytest.param(
+            OVEN_MODE,
+            "pizza",
+            "setMode",
+            ["pizza"],
+            id="oven_mode",
+        ),
     ],
 )
 async def test_select_option(
@@ -167,3 +188,94 @@ async def test_select_unavailability(
     )
 
     assert hass.states.get(OPEN_CLOSED_PEDESTRIAN.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_oven_mode_options_from_state(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the oven mode options are read live from core:AvailableModesState."""
+    await setup_overkiz_integration(fixture=OVEN_MODE.fixture)
+
+    state = hass.states.get(OVEN_MODE.entity_id)
+    assert state
+    assert state.state == "defrost"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "defrost",
+        "bottomHeat",
+        "bottomFan",
+        "conventional",
+        "conventionalFan",
+        "fannedGrill",
+        "keepingWarm",
+        "fanCooking",
+        "combinedHeat",
+        "bread",
+        "drying",
+        "pizza",
+        "eco",
+        "auto",
+    ]
+
+
+async def test_oven_mode_options_update_on_event(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven mode options follow core:AvailableModesState device events."""
+    await setup_overkiz_integration(fixture=OVEN_MODE.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=OVEN_MODE.device_url,
+                device_states=[
+                    {
+                        "name": "core:AvailableModesState",
+                        "type": 10,
+                        "value": ["eco", "pizza", "auto"],
+                    },
+                    {"name": "core:ModeState", "type": 3, "value": "pizza"},
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(OVEN_MODE.entity_id)
+    assert state.state == "pizza"
+    assert state.attributes[ATTR_OPTIONS] == ["eco", "pizza", "auto"]
+
+
+async def test_oven_select_local_control_transition(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven mode select follows localControl blocks delivered after setup."""
+    await setup_overkiz_integration(fixture=OVEN_MODE.fixture)
+
+    assert hass.states.get(OVEN_MODE.entity_id).state != STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [oven_local_control_event(OVEN_MODE.device_url)],
+    )
+
+    assert hass.states.get(OVEN_MODE.entity_id).state == STATE_UNAVAILABLE
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [oven_remote_control_event(OVEN_MODE.device_url)],
+    )
+
+    assert hass.states.get(OVEN_MODE.entity_id).state != STATE_UNAVAILABLE
