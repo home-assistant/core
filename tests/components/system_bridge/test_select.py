@@ -113,6 +113,28 @@ async def test_select_duplicate_names(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_select_name_matching_added_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a name matching another input's name with its ID added stays unique."""
+    coordinator = mock_config_entry.runtime_data
+    microphone = FIXTURE_AUDIO.inputs[0]
+    twin = replace(microphone, id="twin", default=False)
+    lookalike = replace(
+        microphone, id="lookalike", name=f"{microphone.name} (twin)", default=False
+    )
+
+    await coordinator.async_handle_module(
+        Module.AUDIO, replace(FIXTURE_AUDIO, inputs=[microphone, twin, lookalike])
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert len(set(state.attributes[ATTR_OPTIONS])) == 3
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_select_available_without_default(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
