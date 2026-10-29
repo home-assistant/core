@@ -8,15 +8,18 @@ from typing import Any, Generic, override
 from aiopyarr import Diskspace, RootFolder, SystemStatus
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import EntityCategory, UnitOfInformation
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import RadarrConfigEntry, RadarrDataUpdateCoordinator, T
 from .entity import RadarrEntity
 
@@ -31,33 +34,47 @@ def get_space(data: list[Diskspace], path: str) -> str:
     return f"{space[0]:.2f}"
 
 
-def get_folder_names(mounts: list[RootFolder]) -> list[str]:
-    """Return a unique name for each root folder."""
-    basenames = [mount.path.rsplit("/")[-1].rsplit("\\")[-1] for mount in mounts]
-    # Every original basename is reserved, so existing unique IDs don't change
-    taken = set(basenames)
-    claimed: set[str] = set()
-    names: list[str] = []
-    for mount, name in zip(mounts, basenames, strict=True):
-        if name in claimed:
-            while name in taken:
-                name = f"{name}_{mount.id}"
-            taken.add(name)
-        claimed.add(name)
-        names.append(name)
-    return names
+def get_folder_name(mount: RootFolder) -> str:
+    """Return the last part of a root folder path."""
+    return mount.path.rsplit("/")[-1].rsplit("\\")[-1]
 
 
 def get_modified_description(
-    description: RadarrSensorEntityDescription[T], mount: RootFolder, name: str
+    description: RadarrSensorEntityDescription[T], mount: RootFolder
 ) -> tuple[RadarrSensorEntityDescription[T], str]:
     """Return modified description and folder path."""
+    name = get_folder_name(mount)
     desc = dataclasses.replace(
         description,
-        key=f"{description.key}_{name}",
+        key=f"root_folder_{mount.id}_{description.key}",
         name=f"{description.name} {name}".capitalize(),
     )
     return desc, mount.path
+
+
+@callback
+def async_migrate_disk_space_unique_ids(
+    hass: HomeAssistant, entry: RadarrConfigEntry, mounts: list[RootFolder]
+) -> None:
+    """Migrate disk space sensors from folder name to root folder ID unique IDs."""
+    entity_registry = er.async_get(hass)
+    seen: set[str] = set()
+    for mount in mounts:
+        name = get_folder_name(mount)
+        # The folder name ID belonged to the first root folder with that name
+        if name in seen:
+            continue
+        seen.add(name)
+        old_unique_id = f"{entry.entry_id}_disk_space_{name}"
+        new_unique_id = f"{entry.entry_id}_root_folder_{mount.id}_disk_space"
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                SENSOR_DOMAIN, DOMAIN, old_unique_id
+            )
+        ) and not entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, new_unique_id
+        ):
+            entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -77,7 +94,7 @@ class RadarrSensorEntityDescription(
 
     description_fn: (
         Callable[
-            [RadarrSensorEntityDescription[T], RootFolder, str],
+            [RadarrSensorEntityDescription[T], RootFolder],
             tuple[RadarrSensorEntityDescription[T], str] | None,
         ]
         | None
@@ -139,12 +156,10 @@ async def async_setup_entry(
         if coordinator_type != "disk_space":
             entities.append(RadarrSensor(coordinator, description))
         else:
-            names = get_folder_names(coordinator.data)
+            async_migrate_disk_space_unique_ids(hass, entry, coordinator.data)
             entities.extend(
-                RadarrSensor(
-                    coordinator, *get_modified_description(description, mount, name)
-                )
-                for mount, name in zip(coordinator.data, names, strict=True)
+                RadarrSensor(coordinator, *get_modified_description(description, mount))
+                for mount in coordinator.data
                 if description.description_fn
             )
     async_add_entities(entities)

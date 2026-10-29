@@ -8,8 +8,10 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
+from homeassistant.components.radarr.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -23,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import setup_integration
+from . import mock_calendar, mock_connection, setup_integration
 
 
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
@@ -94,54 +96,23 @@ async def test_windows(
     [
         pytest.param(
             "rootfolder-duplicate-names",
-            {
-                "movies": ("Movies", "263.10"),
-                "movies_2": ("Movies_2", "93.13"),
-            },
+            {1: "263.10", 2: "93.13"},
             id="linux_duplicate_names",
         ),
         pytest.param(
             "rootfolder-duplicate-names-windows",
-            {
-                "movies": ("Movies", "263.10"),
-                "movies_2": ("Movies_2", "93.13"),
-            },
+            {1: "263.10", 2: "93.13"},
             id="windows_duplicate_names",
         ),
         pytest.param(
             "rootfolder-overlapping-names",
-            {
-                "movies4k": ("Movies4K", "93.13"),
-                "movies": ("Movies", "263.10"),
-            },
+            {1: "93.13", 2: "263.10"},
             id="overlapping_names",
         ),
         pytest.param(
             "rootfolder-similar-paths",
-            {
-                "movies": ("Movies", "263.10"),
-                "movies_2": ("Movies_2", "93.13"),
-                "movies_3": ("Movies_3", "46.57"),
-            },
+            {1: "263.10", 2: "93.13", 3: "46.57"},
             id="similar_paths",
-        ),
-        pytest.param(
-            "rootfolder-suffix-taken",
-            {
-                "movies_2": ("Movies_2", "46.57"),
-                "movies": ("Movies", "263.10"),
-                "movies_2_2": ("Movies_2_2", "93.13"),
-            },
-            id="suffix_already_taken",
-        ),
-        pytest.param(
-            "rootfolder-suffix-taken-later",
-            {
-                "movies": ("Movies", "263.10"),
-                "movies_2_2": ("Movies_2_2", "93.13"),
-                "movies_2": ("Movies_2", "46.57"),
-            },
-            id="suffix_taken_by_later_folder",
         ),
     ],
 )
@@ -152,21 +123,85 @@ async def test_root_folder_names(
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     root_folder_fixture: str,
-    expected: dict[str, tuple[str, str]],
+    expected: dict[int, str],
 ) -> None:
     """Test each root folder gets its own disk space sensor and free space."""
     entry = await setup_integration(
         hass, aioclient_mock, root_folder_fixture=root_folder_fixture
     )
 
-    for object_id, (name, free_space) in expected.items():
-        entity_id = f"sensor.mock_title_disk_space_{object_id}"
-        assert hass.states.get(entity_id).state == free_space
-        assert (
-            entity_registry.async_get(entity_id).unique_id
-            == f"{entry.entry_id}_disk_space_{name}"
+    for folder_id, free_space in expected.items():
+        entity_id = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"{entry.entry_id}_root_folder_{folder_id}_disk_space",
         )
+        assert hass.states.get(entity_id).state == free_space
     assert "does not generate unique IDs" not in caplog.text
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_migrate_folder_name_unique_id(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a folder name unique ID migrates to the first root folder with that name."""
+    entry = await setup_integration(
+        hass,
+        aioclient_mock,
+        root_folder_fixture="rootfolder-duplicate-names",
+        skip_entry_setup=True,
+    )
+    entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{entry.entry_id}_disk_space_Movies",
+        config_entry=entry,
+        suggested_object_id="mock_title_disk_space_movies",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = entity_registry.async_get(entity.entity_id)
+    assert migrated.unique_id == f"{entry.entry_id}_root_folder_1_disk_space"
+    assert hass.states.get(entity.entity_id).state == "263.10"
+
+
+@pytest.mark.parametrize(
+    "root_folder_fixture",
+    [
+        pytest.param("rootfolder-added", id="folder_added"),
+        pytest.param("rootfolder-removed-first", id="folder_removed"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_root_folder_changes(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    root_folder_fixture: str,
+) -> None:
+    """Test adding or removing a root folder keeps the other sensors unchanged."""
+    entry = await setup_integration(
+        hass, aioclient_mock, root_folder_fixture="rootfolder-duplicate-names"
+    )
+    unique_id = f"{entry.entry_id}_root_folder_2_disk_space"
+    entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
+    assert hass.states.get(entity_id).state == "93.13"
+
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock, root_folder_fixture=root_folder_fixture)
+    mock_calendar(aioclient_mock)
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
+        == entity_id
+    )
+    assert hass.states.get(entity_id).state == "93.13"
 
 
 async def test_update_failed(
