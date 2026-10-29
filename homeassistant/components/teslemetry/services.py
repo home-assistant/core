@@ -23,7 +23,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import handle_command, handle_energy_site_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 if TYPE_CHECKING:
@@ -121,7 +121,7 @@ async def async_dispatch_battery_power(call: ServiceCall) -> None:
     device, config = async_get_device_and_config_for_service_call(call.hass, call)
     site = async_get_energy_site_for_entry(call.hass, device, config)
 
-    await handle_command(
+    await handle_energy_site_command(
         site.api.dispatch_battery_power(call.data[ATTR_POWER], call.data[ATTR_DURATION])
     )
 
@@ -131,7 +131,7 @@ async def async_resume_battery_operation(call: ServiceCall) -> None:
     device, config = async_get_device_and_config_for_service_call(call.hass, call)
     site = async_get_energy_site_for_entry(call.hass, device, config)
 
-    await handle_command(site.api.resume_battery_operation())
+    await handle_energy_site_command(site.api.resume_battery_operation())
 
 
 @callback
