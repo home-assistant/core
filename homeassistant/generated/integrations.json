@@ -8908,6 +8908,17 @@
         }
       }
     },
+    "powersensor_au": {
+      "name": "Powersensor",
+      "integration_type": "hub",
+      "categories": [
+        "energy.meters_monitoring",
+        "water.meters_leak_detection"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
+    },
     "prana": {
       "name": "Prana",
       "integration_type": "device",
