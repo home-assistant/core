@@ -5,6 +5,7 @@ from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -109,17 +110,17 @@ async def test_media_player_image_data_url(
     init_integration: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test media player entity picture with a data URL thumbnail."""
+    """Test media player entity picture with a data URL thumbnail and updates."""
     b64_png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
     png_bytes = base64.b64decode(b64_png)
-    data_url = f"data:image/png;base64,{b64_png}"
+    data_url_png = f"data:image/png;base64,{b64_png}"
 
     coordinator = init_integration.runtime_data
     await coordinator.async_handle_module(
         Module.MEDIA,
         Media(
             title="Test Song",
-            thumbnail=data_url,
+            thumbnail=data_url_png,
         ),
     )
     await hass.async_block_till_done()
@@ -135,6 +136,39 @@ async def test_media_player_image_data_url(
     assert resp.status == HTTPStatus.OK
     assert resp.headers["Content-Type"] == "image/png"
     assert await resp.read() == png_bytes
+
+    # Update with a different thumbnail (JPEG) and verify cache token and image change
+    b64_jpeg = (
+        "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP///////////////////////////////////"
+        "///////////////////////////////////////////////////wgALCAABAAEBAREA"
+        "/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA="
+    )
+    jpeg_bytes = base64.b64decode(b64_jpeg)
+    data_url_jpeg = f"data:image/jpeg;base64,{b64_jpeg}"
+
+    await coordinator.async_handle_module(
+        Module.MEDIA,
+        Media(
+            title="Another Song",
+            thumbnail=data_url_jpeg,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    entity_picture_updated = state.attributes.get("entity_picture")
+    assert entity_picture_updated is not None
+    assert entity_picture_updated != entity_picture
+
+    cache_1 = parse_qs(urlsplit(entity_picture).query)["cache"][0]
+    cache_2 = parse_qs(urlsplit(entity_picture_updated).query)["cache"][0]
+    assert cache_1 != cache_2
+
+    resp = await client.get(entity_picture_updated)
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Type"] == "image/jpeg"
+    assert await resp.read() == jpeg_bytes
 
 
 async def test_media_player_image_http_url(
