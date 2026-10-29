@@ -27,9 +27,9 @@
       "reconfigure": {
         "data": {
           "baudrate": "[%key:component::aerosmart::config::step::serial::data::baudrate%]",
-          "device": "[%key:component::aerosmart::config::step::serial::data::device%]",
-          "host": "[%key:component::aerosmart::config::step::tcp::data::host%]",
-          "port": "[%key:component::aerosmart::config::step::tcp::data::port%]",
+          "device": "[%key:common::config_flow::data::device%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "unit_heat_pump": "[%key:component::aerosmart::config::step::serial::data::unit_heat_pump%]",
           "unit_ventilation": "[%key:component::aerosmart::config::step::serial::data::unit_ventilation%]"
         },
