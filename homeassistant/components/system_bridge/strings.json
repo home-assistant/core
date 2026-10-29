@@ -41,6 +41,23 @@
         "name": "Pending reboot"
       }
     },
+    "button": {
+      "power_hibernate": {
+        "name": "Hibernate"
+      },
+      "power_lock": {
+        "name": "Lock"
+      },
+      "power_logout": {
+        "name": "Log out"
+      },
+      "power_shutdown": {
+        "name": "Shut down"
+      },
+      "power_sleep": {
+        "name": "Sleep"
+      }
+    },
     "media_player": {
       "media": {
         "name": "Media"
@@ -241,6 +258,9 @@
     },
     "no_data_received": {
       "message": "No data received from {host}"
+    },
+    "power_command_failed": {
+      "message": "Failed to send the power command: {error}"
     },
     "process_not_found": {
       "message": "Could not find process with ID {id}."
