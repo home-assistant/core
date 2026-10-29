@@ -18,6 +18,7 @@ from satel_integra import (
     SatelResultCode,
 )
 from satel_integra.commands import SatelWriteCommand
+from satel_integra.exceptions import SatelCommandExpiredError, SatelNotConnectedError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.satel_integra.const import DOMAIN
@@ -169,30 +170,23 @@ async def test_switch_change_state(
 
 
 @pytest.mark.parametrize(
-    ("result_code", "translation_key", "error_type"),
+    ("result_code", "translation_key"),
     [
         (
             SatelResultCode.USER_CODE_NOT_FOUND,
             "command_invalid_access_code",
-            ServiceValidationError,
         ),
-        (
-            SatelResultCode.NO_ACCESS,
-            "command_no_access",
-            ServiceValidationError,
-        ),
-        (0x8A, "command_rejected", HomeAssistantError),
+        (SatelResultCode.NO_ACCESS, "command_no_access"),
     ],
 )
-async def test_switch_command_rejected(
+async def test_switch_command_validation_error(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
-    result_code: SatelResultCode | int,
+    result_code: SatelResultCode,
     translation_key: str,
-    error_type: type[HomeAssistantError],
 ) -> None:
-    """Test switch actions report a command rejected by the panel."""
+    """Test switch actions report validation errors."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
     mock_satel.set_output.side_effect = SatelCommandRejectedError(
@@ -200,7 +194,7 @@ async def test_switch_command_rejected(
         SatelCommandResult(result_code),
     )
 
-    with pytest.raises(error_type) as err:
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -210,25 +204,55 @@ async def test_switch_command_rejected(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == translation_key
-    assert type(err.value) is error_type
-    if translation_key == "command_rejected":
-        assert err.value.translation_placeholders == {"result_code": "0x8A"}
-    else:
-        assert err.value.translation_placeholders is None
     state = hass.states.get("switch.switchable_output")
     assert state is not None
     assert state.state == STATE_OFF
 
 
-async def test_switch_command_outcome_unknown(
+@pytest.mark.parametrize(
+    ("exception", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            SatelCommandRejectedError(
+                SatelWriteCommand.OUTPUTS_ON,
+                SatelCommandResult(0x8A),
+            ),
+            "command_rejected",
+            {"result_code": "0x8A"},
+            id="rejected",
+        ),
+        pytest.param(
+            SatelNoResponseError(),
+            "command_outcome_unknown",
+            None,
+            id="outcome-unknown",
+        ),
+        pytest.param(
+            SatelCommandExpiredError(),
+            "command_not_sent",
+            None,
+            id="expired",
+        ),
+        pytest.param(
+            SatelNotConnectedError(),
+            "command_not_sent",
+            None,
+            id="not-connected",
+        ),
+    ],
+)
+async def test_switch_command_error(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
+    exception: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
 ) -> None:
-    """Test switch actions report when the panel returns no command result."""
+    """Test switch actions report command errors."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
-    mock_satel.set_output.side_effect = SatelNoResponseError
+    mock_satel.set_output.side_effect = exception
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
@@ -239,7 +263,9 @@ async def test_switch_command_outcome_unknown(
         )
 
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "command_outcome_unknown"
+    assert err.value.translation_key == translation_key
+    assert type(err.value) is HomeAssistantError
+    assert err.value.translation_placeholders == translation_placeholders
     state = hass.states.get("switch.switchable_output")
     assert state is not None
     assert state.state == STATE_OFF
