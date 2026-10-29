@@ -19,6 +19,8 @@ from homeassistant import config_entries
 from homeassistant.components.gree.const import CONF_IDENTIFIER, DOMAIN
 from homeassistant.components.gree.discovery import device_info_to_data
 from homeassistant.components.gree.migration import (
+    _MIGRATION_LOCK,
+    _child_entry_id,
     async_get_legacy_identifiers,
     async_migrate_legacy_entry,
     async_reconcile_migrated_entry,
@@ -321,6 +323,31 @@ def _stored_state(hass: HomeAssistant) -> dict[str, Any]:
     )
 
 
+def _assign_stored_owner(
+    stored: dict[str, Any],
+    source_id: str,
+    owner_id: str,
+    identifier: str,
+    *,
+    device: bool,
+    entities: bool,
+) -> None:
+    """Replay independently persisted registry ownership changes."""
+    device_rows = stored[dr.STORAGE_KEY]["data"]["devices"]
+    device_row = next(
+        row
+        for row in device_rows
+        if row["config_entry_id"] == source_id
+        and [DOMAIN, identifier] in row["identifiers"]
+    )
+    if device:
+        device_row["config_entry_id"] = owner_id
+    if entities:
+        for row in stored[er.STORAGE_KEY]["data"]["entities"]:
+            if row["device_id"] == device_row["id"]:
+                row["config_entry_id"] = owner_id
+
+
 def _identity_snapshot(stored: dict[str, Any]) -> dict[str, Any]:
     """Project durable identity and customization with stable ownership labels."""
     entries = stored[config_entries.STORAGE_KEY]["data"]["entries"]
@@ -533,11 +560,21 @@ async def test_interrupted_add_and_between_groups(
         assert restored_source.unique_id == _CANONICAL[0]
         assert restored_source.version == 2
         assert len(restored.config_entries.async_entries(DOMAIN)) == 3
-        for identifier, (old_device, entities) in zip(_CANONICAL, records, strict=True):
+        expected_entry_ids = [
+            source.entry_id,
+            *(
+                _child_entry_id(source.entry_id, identifier)
+                for identifier in _CANONICAL[1:]
+            ),
+        ]
+        for identifier, (old_device, entities), expected_entry_id in zip(
+            _CANONICAL, records, expected_entry_ids, strict=True
+        ):
             entry = restored.config_entries.async_entry_for_domain_unique_id(
                 DOMAIN, identifier
             )
             assert entry is not None
+            assert entry.entry_id == expected_entry_id
             _assert_records(
                 restored_devices,
                 restored_entities,
@@ -546,6 +583,400 @@ async def test_interrupted_add_and_between_groups(
                 entry.entry_id,
             )
         assert _identity_snapshot(_stored_state(restored)) == snapshot(name="recovered")
+
+
+@pytest.mark.parametrize(
+    ("move_device", "move_entities"),
+    [
+        pytest.param(True, False, id="device-only-transfer"),
+        pytest.param(False, True, id="entity-only-transfer"),
+        pytest.param(True, True, id="both-transferred"),
+    ],
+)
+async def test_recover_missing_child_entry_after_registry_save(
+    hass: HomeAssistant,
+    discovery: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    move_device: bool,
+    move_entities: bool,
+) -> None:
+    """A source-only config store can recreate a child from proven registry owners."""
+    source = _legacy(hass)
+    representative = _records(device_registry, entity_registry, source, _IDENTIFIERS[0])
+    missing_records = _records(
+        device_registry, entity_registry, source, _IDENTIFIERS[1]
+    )
+    owner_id = _child_entry_id(source.entry_id, _CANONICAL[1])
+    stored = _stored_state(hass)
+    assert [
+        row["entry_id"] for row in stored[config_entries.STORAGE_KEY]["data"]["entries"]
+    ] == [source.entry_id]
+    _assign_stored_owner(
+        stored,
+        source.entry_id,
+        owner_id,
+        _IDENTIFIERS[1],
+        device=move_device,
+        entities=move_entities,
+    )
+    discovery.mock_devices = []
+
+    async with _restore(stored) as (restored, restored_devices, restored_entities):
+        restored_source = restored.config_entries.async_get_known_entry(source.entry_id)
+        assert await async_setup_component(restored, DOMAIN, {})
+        await restored.async_block_till_done()
+
+        child = restored.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, _CANONICAL[1]
+        )
+        assert child is not None
+        assert child.entry_id == owner_id
+        assert restored_source.version == 2
+        _assert_records(
+            restored_devices, restored_entities, *representative, source.entry_id
+        )
+        _assert_records(
+            restored_devices, restored_entities, *missing_records, child.entry_id
+        )
+
+        dr.async_cleanup(restored, restored_devices, restored_entities)
+        _assert_records(
+            restored_devices, restored_entities, *missing_records, child.entry_id
+        )
+
+
+@pytest.mark.parametrize(
+    ("identifiers", "connections"),
+    [
+        pytest.param({(DOMAIN, _IDENTIFIERS[1])}, set(), id="gree-identifier"),
+        pytest.param(
+            set(),
+            {(dr.CONNECTION_NETWORK_MAC, _IDENTIFIERS[1])},
+            id="mac-connection",
+        ),
+    ],
+)
+async def test_recover_device_only_orphan(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    discovery: MagicMock,
+    entity_registry: er.EntityRegistry,
+    identifiers: set[tuple[str, str]],
+    connections: set[tuple[str, str]],
+) -> None:
+    """A device-only orphan is recovered from its original identity records."""
+    source = _legacy(hass)
+    representative = _records(device_registry, entity_registry, source, _IDENTIFIERS[0])
+    missing_device = device_registry.async_get_or_create(
+        config_entry_id=source.entry_id,
+        identifiers=identifiers,
+        connections=connections,
+    )
+    owner_id = _child_entry_id(source.entry_id, _CANONICAL[1])
+    stored = _stored_state(hass)
+    next(
+        row
+        for row in stored[dr.STORAGE_KEY]["data"]["devices"]
+        if row["id"] == missing_device.id
+    )["config_entry_id"] = owner_id
+    discovery.mock_devices = []
+
+    async with _restore(stored) as (restored, restored_devices, restored_entities):
+        assert await async_setup_component(restored, DOMAIN, {})
+        await restored.async_block_till_done()
+        child = restored.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, _CANONICAL[1]
+        )
+        assert child is not None
+        assert child.entry_id == owner_id
+        _assert_records(
+            restored_devices, restored_entities, *representative, source.entry_id
+        )
+        _assert_records(
+            restored_devices, restored_entities, missing_device, [], child.entry_id
+        )
+
+        dr.async_cleanup(restored, restored_devices, restored_entities)
+        _assert_records(
+            restored_devices, restored_entities, missing_device, [], child.entry_id
+        )
+
+
+async def test_recover_entity_only_orphan(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    discovery: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """An entity-only orphan is recovered from its Gree unique ID."""
+    source = _legacy(hass)
+    _records(device_registry, entity_registry, source, _IDENTIFIERS[0])
+    missing_entity = entity_registry.async_get_or_create(
+        "climate", DOMAIN, _IDENTIFIERS[1], config_entry=source
+    )
+    owner_id = _child_entry_id(source.entry_id, _CANONICAL[1])
+    stored = _stored_state(hass)
+    entity_row = next(
+        row
+        for row in stored[er.STORAGE_KEY]["data"]["entities"]
+        if row["unique_id"] == _IDENTIFIERS[1]
+    )
+    entity_row["config_entry_id"] = owner_id
+    discovery.mock_devices = []
+
+    async with _restore(stored) as (restored, restored_devices, restored_entities):
+        assert await async_setup_component(restored, DOMAIN, {})
+        await restored.async_block_till_done()
+        child = restored.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, _CANONICAL[1]
+        )
+        assert child is not None
+        assert child.entry_id == owner_id
+        restored_entity = restored_entities.async_get(missing_entity.entity_id)
+        assert restored_entity is not None
+        assert restored_entity.config_entry_id == child.entry_id
+        assert restored_entity.unique_id == missing_entity.unique_id
+        assert not dr.async_entries_for_config_entry(restored_devices, child.entry_id)
+
+
+async def test_recover_multiple_missing_child_entries(
+    hass: HomeAssistant,
+    discovery: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """One startup recreates every child whose config write was interrupted."""
+    source = _legacy(hass)
+    records = [
+        _records(device_registry, entity_registry, source, identifier)
+        for identifier in _IDENTIFIERS
+    ]
+    stored = _stored_state(hass)
+    assert [
+        row["entry_id"] for row in stored[config_entries.STORAGE_KEY]["data"]["entries"]
+    ] == [source.entry_id]
+    for identifier, raw_identifier in zip(
+        _CANONICAL[1:], _IDENTIFIERS[1:], strict=True
+    ):
+        _assign_stored_owner(
+            stored,
+            source.entry_id,
+            _child_entry_id(source.entry_id, identifier),
+            raw_identifier,
+            device=True,
+            entities=True,
+        )
+    discovery.mock_devices = []
+
+    async with _restore(stored) as (restored, restored_devices, restored_entities):
+        restored_source = restored.config_entries.async_get_known_entry(source.entry_id)
+        assert await async_setup_component(restored, DOMAIN, {})
+        await restored.async_block_till_done()
+
+        assert restored_source.version == 2
+        assert len(restored.config_entries.async_entries(DOMAIN)) == 3
+        expected_entry_ids = [
+            source.entry_id,
+            *(
+                _child_entry_id(source.entry_id, identifier)
+                for identifier in _CANONICAL[1:]
+            ),
+        ]
+        for identifier, (old_device, entities), expected_entry_id in zip(
+            _CANONICAL, records, expected_entry_ids, strict=True
+        ):
+            entry = restored.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, identifier
+            )
+            assert entry is not None
+            assert entry.entry_id == expected_entry_id
+            _assert_records(
+                restored_devices,
+                restored_entities,
+                old_device,
+                entities,
+                entry.entry_id,
+            )
+
+
+@pytest.mark.parametrize(
+    "owner_id",
+    [
+        pytest.param("unrelated-orphan", id="unrelated"),
+        pytest.param(
+            _child_entry_id("another-source", _CANONICAL[1]), id="other-source"
+        ),
+    ],
+)
+async def test_do_not_adopt_unrelated_or_other_source_orphans(
+    hass: HomeAssistant,
+    discovery: MagicMock,
+    owner_id: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Only this source's deterministic owner ID authorizes orphan recovery."""
+    source = _legacy(hass)
+    _records(device_registry, entity_registry, source, _IDENTIFIERS[0])
+    missing_records = _records(
+        device_registry, entity_registry, source, _IDENTIFIERS[1]
+    )
+    stored = _stored_state(hass)
+    _assign_stored_owner(
+        stored,
+        source.entry_id,
+        owner_id,
+        _IDENTIFIERS[1],
+        device=True,
+        entities=True,
+    )
+    discovery.mock_devices = []
+
+    async with _restore(stored) as (restored, restored_devices, restored_entities):
+        restored_source = restored.config_entries.async_get_known_entry(source.entry_id)
+        assert await async_setup_component(restored, DOMAIN, {})
+        await restored.async_block_till_done()
+
+        assert restored_source.version == 2
+        assert (
+            restored.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, _CANONICAL[1]
+            )
+            is None
+        )
+        device = restored_devices.async_get(missing_records[0].id)
+        assert device is not None
+        assert device.config_entry_id == owner_id
+        assert all(
+            entity.config_entry_id == owner_id
+            for entity in er.async_entries_for_device(
+                restored_entities, device.id, include_disabled_entities=True
+            )
+        )
+
+
+async def test_invalid_unrelated_orphan_does_not_block_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Malformed orphan identities and foreign helpers cannot enroll devices."""
+    source = _legacy(hass)
+    representative = _records(device_registry, entity_registry, source, _IDENTIFIERS[0])
+    orphan = device_registry.async_get_or_create(
+        config_entry_id=source.entry_id, identifiers={(DOMAIN, "")}
+    )
+    unsupported = entity_registry.async_get_or_create(
+        "sensor", DOMAIN, "unsupported", config_entry=source, device_id=orphan.id
+    )
+    helper = entity_registry.async_get_or_create(
+        "sensor", "template", "helper", device_id=orphan.id
+    )
+    stored = _stored_state(hass)
+    _assign_stored_owner(
+        stored,
+        source.entry_id,
+        "unrelated-orphan",
+        "",
+        device=True,
+        entities=True,
+    )
+    next(
+        row
+        for row in stored[er.STORAGE_KEY]["data"]["entities"]
+        if row["entity_id"] == helper.entity_id
+    )["config_entry_id"] = None
+
+    async with _restore(stored) as (restored, restored_devices, restored_entities):
+        assert await async_setup_component(restored, DOMAIN, {})
+        await restored.async_block_till_done()
+        restored_source = restored.config_entries.async_get_known_entry(source.entry_id)
+        assert restored_source.version == 2
+        assert restored.config_entries.async_entries(DOMAIN) == [restored_source]
+        _assert_records(
+            restored_devices, restored_entities, *representative, source.entry_id
+        )
+        _assert_records(
+            restored_devices,
+            restored_entities,
+            orphan,
+            [unsupported],
+            "unrelated-orphan",
+        )
+        assert restored_entities.async_get(helper.entity_id).device_id == orphan.id
+
+
+async def test_orphan_identity_conflict_fails_without_mutations(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A deterministic owner cannot transfer a device for a different identity."""
+    source = _legacy(hass)
+    for identifier in _IDENTIFIERS:
+        _records(device_registry, entity_registry, source, identifier)
+    stored = _stored_state(hass)
+    owner_id = _child_entry_id(source.entry_id, _CANONICAL[1])
+    _assign_stored_owner(
+        stored,
+        source.entry_id,
+        owner_id,
+        _IDENTIFIERS[1],
+        device=False,
+        entities=True,
+    )
+    _assign_stored_owner(
+        stored,
+        source.entry_id,
+        owner_id,
+        _IDENTIFIERS[2],
+        device=True,
+        entities=False,
+    )
+
+    async with _restore(stored) as (restored, restored_devices, restored_entities):
+        restored_source = restored.config_entries.async_get_known_entry(source.entry_id)
+        await _assert_rejected(
+            restored,
+            restored_devices,
+            restored_entities,
+            restored_source,
+            match="Gree destination owns another device",
+        )
+
+
+async def test_disabled_source_waiting_for_migration_lock_is_unchanged(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A source disabled during its lock wait cannot transfer registry rows."""
+    source = _legacy(hass)
+    records = [
+        _records(device_registry, entity_registry, source, identifier)
+        for identifier in _IDENTIFIERS[:2]
+    ]
+    lock = hass.data.setdefault(_MIGRATION_LOCK, asyncio.Lock())
+    await lock.acquire()
+    migration = asyncio.create_task(async_migrate_legacy_entry(hass, source))
+    await asyncio.sleep(0)
+    try:
+        await hass.config_entries.async_set_disabled_by(
+            source.entry_id, ConfigEntryDisabler.USER
+        )
+    finally:
+        lock.release()
+    await migration
+    await hass.async_block_till_done()
+
+    assert source.version == 1
+    assert source.disabled_by is ConfigEntryDisabler.USER
+    assert hass.config_entries.async_entries(DOMAIN) == [source]
+    for old_device, entities in records:
+        _assert_records(
+            device_registry, entity_registry, old_device, entities, source.entry_id
+        )
 
 
 async def test_add_reconciles_before_setup_or_await(
@@ -615,17 +1046,42 @@ async def test_entity_only_source(
     assert entity_registry.async_get(entity.entity_id) == entity
 
 
-async def test_empty_source_removed_after_setup_lock(
-    hass: HomeAssistant,
-) -> None:
-    """An empty source queues removal instead of awaiting its own setup lock."""
+async def test_empty_source_is_retained(hass: HomeAssistant) -> None:
+    """An empty legacy entry remains available as a discovery anchor."""
     source = _legacy(hass)
-    async with source.setup_lock:
-        await async_migrate_legacy_entry(hass, source)
-        assert source.version == 1
-        assert hass.config_entries.async_get_entry(source.entry_id) is source
+    await async_migrate_legacy_entry(hass, source)
     await hass.async_block_till_done()
-    assert hass.config_entries.async_get_entry(source.entry_id) is None
+    assert source.version == 1
+    assert hass.config_entries.async_get_entry(source.entry_id) is source
+
+
+async def test_empty_legacy_anchor_survives_restart_and_offers_returning_device(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery: MagicMock,
+) -> None:
+    """A retained v1 source starts without devices and still offers discovery."""
+    source = _legacy(hass)
+    stored = _stored_state(hass)
+    discovery.mock_devices = [device()]
+
+    async with _restore(stored) as (restored, restored_devices, restored_entities):
+        restored_source = restored.config_entries.async_get_known_entry(source.entry_id)
+        assert await async_setup_component(restored, DOMAIN, {})
+        await restored.async_block_till_done(wait_background_tasks=True)
+
+        assert restored_source.version == 1
+        assert restored_source.state is ConfigEntryState.LOADED
+        assert restored.config_entries.async_entries(DOMAIN) == [restored_source]
+        flows = restored.config_entries.flow.async_progress()
+        assert len(flows) == 1
+        assert flows[0]["step_id"] == "discovery_confirm"
+        assert flows[0]["context"]["unique_id"] == device().device_info.mac
+        assert not restored_devices.devices
+        assert not restored_entities.entities
+        assert not restored.states.async_all("climate")
+        device().bind.assert_not_awaited()
+        device().update_state.assert_not_awaited()
 
 
 async def _assert_rejected(
@@ -764,6 +1220,29 @@ async def test_destination_collision_preflight(
         hass
     )
     await _assert_rejected(hass, device_registry, entity_registry, source)
+
+
+async def test_deterministic_child_entry_id_collision_preflight(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A foreign entry occupying a recovery ID blocks all registry changes."""
+    source = _legacy(hass)
+    for identifier in _IDENTIFIERS:
+        _records(device_registry, entity_registry, source, identifier)
+    collision = MockConfigEntry(
+        domain="other",
+        entry_id=_child_entry_id(source.entry_id, _CANONICAL[1]),
+    )
+    collision.add_to_hass(hass)
+    await _assert_rejected(
+        hass,
+        device_registry,
+        entity_registry,
+        source,
+        match="entry ID is already in use",
+    )
 
 
 @pytest.mark.parametrize(
@@ -933,7 +1412,7 @@ async def test_legacy_inventory_skips_invalid_records(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Malformed rows do not prevent discovery from reserving valid identities."""
-    source = _legacy(hass, disabled_by=ConfigEntryDisabler.USER)
+    source = _legacy(hass)
     invalid_device = device_registry.async_get_or_create(
         config_entry_id=source.entry_id, identifiers={(DOMAIN, ":-.")}
     )
@@ -956,13 +1435,12 @@ async def test_legacy_inventory_skips_invalid_records(
     entity_registry.async_remove(invalid_entity.entity_id)
     assert async_get_legacy_identifiers(hass) == set(_CANONICAL[:2])
     assert source.version == 1
-    assert source.disabled_by is ConfigEntryDisabler.USER
 
 
 async def test_existing_child_with_no_legacy_rows_is_not_empty(
     hass: HomeAssistant,
 ) -> None:
-    """Existing children prohibit the destructive empty-source removal branch."""
+    """Existing children still require a representative owned by the source."""
     source = _legacy(hass)
     _child(hass, source, _CANONICAL[1], _IDENTIFIERS[1])
     with pytest.raises(HomeAssistantError, match="representative"):

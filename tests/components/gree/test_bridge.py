@@ -12,6 +12,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, HVACMode
 from homeassistant.components.gree.const import UPDATE_INTERVAL
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -65,6 +66,44 @@ async def test_bind_failure_does_not_publish_entities(
     scanner.async_scan.assert_awaited_once_with(wait_for=0)
     device().update_state.assert_not_awaited()
     device().close.assert_called_once_with()
+
+
+async def test_initial_state_timeout_does_not_create_entities(
+    hass: HomeAssistant, device: Mock
+) -> None:
+    """A first timeout without a valid state keeps the entry retryable."""
+    device().has_valid_state = False
+    device().raw_properties = {}
+    device().update_state.side_effect = DeviceTimeoutError
+
+    entry = await async_setup_gree(hass)
+    device().bind.assert_awaited_once_with()
+    device().update_state.assert_awaited_once_with()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.states.async_all(CLIMATE_DOMAIN) == []
+    assert hass.states.async_all(SWITCH_DOMAIN) == []
+
+
+async def test_initial_state_timeout_after_bind_response_is_allowed(
+    hass: HomeAssistant, device: Mock
+) -> None:
+    """A valid response during binding allows a transient first timeout."""
+    device().has_valid_state = False
+    device().raw_properties = {}
+    device().update_state.side_effect = DeviceTimeoutError
+
+    async def bind_with_valid_state() -> None:
+        device().has_valid_state = True
+        device().emit_response(Response.RESULT)
+
+    device().bind.side_effect = bind_with_valid_state
+
+    entry = await async_setup_gree(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ENTITY_ID_1).state == HVACMode.OFF
+    device().update_state.assert_awaited_once_with()
 
 
 async def test_coordinator_updates(

@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> None
     """Set up Gree Climate from a config entry."""
     async_reconcile_migrated_entry(hass, entry)
     if entry.version == 1:
-        # An empty legacy entry is removed after Core releases its setup lock.
+        # Empty legacy entries anchor discovery until a device returns.
         return
     if not entry.data[CONF_HOST]:
         raise ConfigEntryNotReady("Waiting for discovery of the migrated Gree device")

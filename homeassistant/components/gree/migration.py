@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any
+from uuid import NAMESPACE_URL, uuid5
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -18,6 +19,11 @@ from .switch import GREE_SWITCHES
 _MIGRATION_LOCK: HassKey[asyncio.Lock] = HassKey("gree_migration_lock")
 _SOURCE = "_migration_source_entry_id"
 _SWITCH_SUFFIXES = tuple(f"_{description.key}" for description in GREE_SWITCHES)
+
+
+def _child_entry_id(source_id: str, identifier: str) -> str:
+    """Make new child IDs recoverable from their legacy source and device."""
+    return uuid5(NAMESPACE_URL, f"homeassistant:{DOMAIN}:{source_id}:{identifier}").hex
 
 
 @dataclass
@@ -92,6 +98,56 @@ def _validate_group_identity(
 
 
 @callback
+def _orphan_identifiers(hass: HomeAssistant, source_id: str) -> dict[str, str]:
+    """Recognize missing child owners bound to this source and device identity."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    all_entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries()}
+    orphan_identifiers: dict[str, str] = {}
+    for entity in entity_registry.entities.values():
+        owner = entity.config_entry_id
+        if owner is None or owner in all_entry_ids or entity.platform != DOMAIN:
+            continue
+        try:
+            identifier = _canonical(_entity_identifier(entity))
+        except HomeAssistantError:
+            continue
+        if owner == _child_entry_id(source_id, identifier):
+            orphan_identifiers[owner] = identifier
+
+    for device in device_registry.devices:
+        owner = device.config_entry_id
+        if owner in all_entry_ids:
+            continue
+        raw_identifiers = {
+            value for domain, value in device.identifiers if domain == DOMAIN
+        }
+        linked_identifiers: set[str] = set()
+        for entity in er.async_entries_for_device(
+            entity_registry, device.id, include_disabled_entities=True
+        ):
+            if entity.platform != DOMAIN:
+                continue
+            try:
+                linked_identifiers.add(_entity_identifier(entity))
+            except HomeAssistantError:
+                continue
+        if raw_identifiers or linked_identifiers:
+            raw_identifiers |= linked_identifiers
+        else:
+            raw_identifiers = _device_identifiers(device)
+        for raw_identifier in raw_identifiers:
+            try:
+                identifier = _canonical(raw_identifier)
+            except HomeAssistantError:
+                continue
+            if owner == _child_entry_id(source_id, identifier):
+                orphan_identifiers[owner] = identifier
+                break
+    return orphan_identifiers
+
+
+@callback
 def _inventory(hass: HomeAssistant, source_id: str) -> dict[str, _Group]:
     """Validate the entire source and all previously created destinations."""
     device_registry = dr.async_get(hass)
@@ -115,6 +171,11 @@ def _inventory(hass: HomeAssistant, source_id: str) -> dict[str, _Group]:
         group.child = child
         group.raw_identifiers.add(child.data[CONF_IDENTIFIER])
         child_identifiers[child.entry_id] = identifier
+
+    orphan_identifiers = _orphan_identifiers(hass, source_id)
+
+    owners.update(orphan_identifiers)
+    child_identifiers.update(orphan_identifiers)
 
     devices: dict[str, dr.DeviceEntry] = {}
     for owner in owners:
@@ -208,9 +269,13 @@ def _transfer(
     """Move entities first because device-move listeners run synchronously."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
+    orphan_id = _child_entry_id(source_id, _canonical(group.raw_identifier))
+    owners = {source_id, orphan_id}
     for old_entity in group.entities:
-        if (entity := entity_registry.async_get(old_entity.entity_id)) is not None and (
-            entity.config_entry_id == source_id
+        if (
+            (entity := entity_registry.async_get(old_entity.entity_id)) is not None
+            and entity.config_entry_id != target_id
+            and entity.config_entry_id in owners
         ):
             entity_registry.async_update_entity(
                 entity.entity_id,
@@ -218,8 +283,10 @@ def _transfer(
                 disabled_by=entity.disabled_by,
             )
     for old_device in group.devices:
-        if (device := device_registry.async_get(old_device.id)) is not None and (
-            device.config_entry_id == source_id
+        if (
+            (device := device_registry.async_get(old_device.id)) is not None
+            and device.config_entry_id != target_id
+            and device.config_entry_id in owners
         ):
             device_registry.async_update_device(
                 device.id,
@@ -256,14 +323,10 @@ async def async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) ->
     """Preflight and split a shared entry, preserving its representative."""
     lock = hass.data.setdefault(_MIGRATION_LOCK, asyncio.Lock())
     async with lock:
-        if entry.version != 1:
+        if entry.version != 1 or entry.disabled_by is not None:
             return
         groups = _inventory(hass, entry.entry_id)
         if not groups:
-            hass.async_create_task(
-                hass.config_entries.async_remove(entry.entry_id),
-                f"Remove empty legacy Gree entry {entry.entry_id}",
-            )
             return
         representatives = [
             identifier
@@ -284,6 +347,17 @@ async def async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) ->
                 "Legacy Gree source has no remaining representative"
             )
         representative = min(representatives)
+
+        existing_entry_ids = {
+            candidate.entry_id for candidate in hass.config_entries.async_entries()
+        }
+        for identifier, group in groups.items():
+            if identifier != representative and group.child is None:
+                child_id = _child_entry_id(entry.entry_id, identifier)
+                if child_id in existing_entry_ids:
+                    raise HomeAssistantError(
+                        f"Gree migration child entry ID is already in use: {child_id}"
+                    )
         for identifier in sorted(groups):
             if identifier == representative:
                 continue
@@ -292,6 +366,7 @@ async def async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) ->
             if child is None:
                 device = group.devices[0] if group.devices else None
                 child = ConfigEntry(
+                    entry_id=_child_entry_id(entry.entry_id, identifier),
                     domain=DOMAIN,
                     version=2,
                     minor_version=1,

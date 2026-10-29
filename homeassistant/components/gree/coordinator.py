@@ -136,6 +136,10 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except DeviceTimeoutError as error:
                 self._error_count += 1
 
+                if not self.device.has_valid_state:
+                    raise UpdateFailed(
+                        f"Device {self.name} has no valid state"
+                    ) from error
                 # Under normal conditions GREE units timeout every once in a while
                 if self.last_update_success and self._error_count >= MAX_ERRORS:
                     raise UpdateFailed(

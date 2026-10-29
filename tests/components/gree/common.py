@@ -81,6 +81,7 @@ def build_device_mock(
         bind=AsyncMock(),
         push_state_update=AsyncMock(),
         raw_properties=Mock(name="raw_properties", spec=dict),
+        has_valid_state=True,
         temperature_units=0,
         mode=0,
         fan_speed=0,
