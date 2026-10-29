@@ -235,6 +235,32 @@ async def test_stopping_home_assistant_closes_every_connection(
     first_close.assert_called_once()
 
 
+async def test_a_connection_failing_to_close_on_stop_does_not_block_the_rest(
+    hass: HomeAssistant,
+    consumer: ConsumerFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """One connection raising while closing is logged and the others still close."""
+    one = consumer()
+    await hass.config_entries.async_setup(one.entry_id)
+    two = consumer()
+    await hass.config_entries.async_setup(two.entry_id)
+
+    async_get_unit(hass, one, ModbusTcpParams(host="1.2.3.4", port=502), 1)
+    async_get_unit(hass, two, ModbusTcpParams(host="5.6.7.8", port=502), 1)
+    first, second = (s.connection for s in hass.data[DATA_MODBUS_CONNECTIONS].values())
+
+    with (
+        patch.object(first, "close", side_effect=OSError("boom")),
+        patch.object(second, "close") as second_close,
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    second_close.assert_called_once()
+    assert "Error closing the Modbus connection to" in caplog.text
+
+
 async def test_one_entry_holding_twice_releases_twice(
     hass: HomeAssistant, consumer: ConsumerFactory
 ) -> None:
