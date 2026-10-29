@@ -109,6 +109,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         self.entity_description = description
         self._cached_thumb: str | None = None
         self._cached_thumb_result: tuple[bytes, str] | None = None
+        self._cached_thumb_hash: str | None = None
 
     @property
     @override
@@ -240,7 +241,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             and (thumb := media.thumbnail) is not None
             and self._decode_image_data(thumb) is not None
         ):
-            return hashlib.sha256(thumb.encode("utf-8")).hexdigest()[:16]
+            return self._cached_thumb_hash
 
         return super().media_image_hash
 
@@ -262,6 +263,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             return self._cached_thumb_result
 
         result: tuple[bytes, str] | None = None
+        thumb_hash: str | None = None
         if thumb.startswith("data:"):
             with contextlib.suppress(ValueError, binascii.Error):
                 prefix, image_data = thumb.split(",", 1)
@@ -269,9 +271,13 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
                     mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1].strip().lower()
                     if mime in ALLOWED_IMAGE_MIME_TYPES:
                         result = (base64.b64decode(image_data, validate=True), mime)
+                        thumb_hash = hashlib.sha256(thumb.encode("utf-8")).hexdigest()[
+                            :16
+                        ]
 
         self._cached_thumb = thumb
         self._cached_thumb_result = result
+        self._cached_thumb_hash = thumb_hash
 
         return result
 
