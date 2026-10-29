@@ -474,11 +474,11 @@ class _DefaultPipelineProcessor:
         _LOGGER.debug("speech-to-text result %s", result)
 
         # The provider detected the end of speech by returning the transcribed text
-        if provider_vad and self._stt_last_timestamp_ms is not None:
+        if provider_vad:
             self.host.process_event(
                 PipelineEvent(
                     PipelineEventType.STT_VAD_END,
-                    {"timestamp": self._stt_last_timestamp_ms},
+                    {"timestamp": self._stt_last_timestamp_ms or 0},
                 )
             )
 
