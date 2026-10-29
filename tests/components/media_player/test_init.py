@@ -6,7 +6,11 @@ from unittest.mock import patch
 from aiohttp import hdrs
 import probatio
 import pytest
-from pytest_homeassistant.common import MockEntityPlatform, MockUser
+from pytest_homeassistant.common import (
+    MockEntityPlatform,
+    MockUser,
+    setup_test_component_platform,
+)
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -21,6 +25,8 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerNavigation,
     SearchMedia,
     SearchMediaQuery,
 )
@@ -797,6 +803,56 @@ async def test_get_async_get_browse_image_quoting(
         url = player.get_browse_image_url("album", media_content_id)
         await client.get(url)
         mock_browse_image.assert_called_with("album", media_content_id, None)
+
+
+class NavigationMediaPlayer(MediaPlayerEntity):
+    """Media player that supports navigation through the synchronous method only."""
+
+    _attr_name = "Navigation"
+    _attr_supported_features = MediaPlayerEntityFeature.NAVIGATE
+
+    def __init__(self) -> None:
+        """Initialize the media player."""
+        self.navigated: list[MediaPlayerNavigation] = []
+
+    def navigate(self, direction: MediaPlayerNavigation) -> None:
+        """Record the navigation action."""
+        self.navigated.append(direction)
+
+
+async def test_navigate_default_list_and_sync_implementation(
+    hass: HomeAssistant,
+) -> None:
+    """Test navigation defaults to all directions and runs a sync implementation."""
+    entity = NavigationMediaPlayer()
+    setup_test_component_platform(hass, DOMAIN, [entity])
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.navigation")
+    assert state is not None
+    assert state.attributes["supported_navigation"] == list(MediaPlayerNavigation)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "navigate",
+        {ATTR_ENTITY_ID: "media_player.navigation", "direction": "menu"},
+        blocking=True,
+    )
+    assert entity.navigated == [MediaPlayerNavigation.MENU]
+
+
+async def test_navigate_not_exposed_without_feature(hass: HomeAssistant) -> None:
+    """Test the supported navigation list is only exposed with the feature."""
+    entity = NavigationMediaPlayer()
+    entity._attr_supported_features = MediaPlayerEntityFeature(0)
+    setup_test_component_platform(hass, DOMAIN, [entity])
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.navigation")
+    assert state is not None
+    assert "supported_navigation" not in state.attributes
 
 
 async def test_play_media_via_selector(hass: HomeAssistant) -> None:

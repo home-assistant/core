@@ -1,6 +1,9 @@
 """The tests for the Remote component, adapted from Light Test."""
 
-from pytest_homeassistant.common import async_mock_service
+from pytest_homeassistant.common import (
+    async_mock_service,
+    setup_test_component_platform,
+)
 
 from homeassistant.components import remote
 from homeassistant.components.remote import (
@@ -12,6 +15,9 @@ from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     ATTR_TIMEOUT,
     DOMAIN,
+    RemoteEntity,
+    RemoteEntityFeature,
+    RemoteNavigation,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -22,6 +28,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 TEST_PLATFORM = {DOMAIN: {CONF_PLATFORM: "test"}}
 SERVICE_SEND_COMMAND = "send_command"
@@ -116,6 +123,56 @@ async def test_learn_command(hass: HomeAssistant) -> None:
     assert call.domain == DOMAIN
     assert call.service == SERVICE_LEARN_COMMAND
     assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
+
+
+class NavigationRemote(RemoteEntity):
+    """Remote that supports navigation through the synchronous method only."""
+
+    _attr_name = "Navigation"
+    _attr_supported_features = RemoteEntityFeature.NAVIGATE
+
+    def __init__(self) -> None:
+        """Initialize the remote."""
+        self.navigated: list[RemoteNavigation] = []
+
+    def navigate(self, direction: RemoteNavigation) -> None:
+        """Record the navigation action."""
+        self.navigated.append(direction)
+
+
+async def test_navigate_default_list_and_sync_implementation(
+    hass: HomeAssistant,
+) -> None:
+    """Test navigation defaults to all directions and runs a sync implementation."""
+    entity = NavigationRemote()
+    setup_test_component_platform(hass, DOMAIN, [entity])
+    assert await async_setup_component(hass, DOMAIN, TEST_PLATFORM)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("remote.navigation")
+    assert state is not None
+    assert state.attributes["supported_navigation"] == list(RemoteNavigation)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "navigate",
+        {ATTR_ENTITY_ID: "remote.navigation", "direction": "menu"},
+        blocking=True,
+    )
+    assert entity.navigated == [RemoteNavigation.MENU]
+
+
+async def test_navigate_not_exposed_without_feature(hass: HomeAssistant) -> None:
+    """Test the supported navigation list is only exposed with the feature."""
+    entity = NavigationRemote()
+    entity._attr_supported_features = RemoteEntityFeature(0)
+    setup_test_component_platform(hass, DOMAIN, [entity])
+    assert await async_setup_component(hass, DOMAIN, TEST_PLATFORM)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("remote.navigation")
+    assert state is not None
+    assert "supported_navigation" not in state.attributes
 
 
 async def test_delete_command(hass: HomeAssistant) -> None:
