@@ -584,6 +584,8 @@ async def test_hanging_reverse_dns_does_not_delay_auth(
         assert resp.status == HTTPStatus.UNAUTHORIZED
         # The lookup is bounded well below the 10s companion app timeout.
         assert elapsed < RESOLVE_HOST_TIMEOUT + 2
+        # The bounds above only prove something if the lookup actually ran.
+        assert await hass.async_add_executor_job(started.wait, 5)
     finally:
         # The request already returned, but the blocked lookup outlives it.
         # Signal the slice loop to stop so the dedicated thread frees itself
