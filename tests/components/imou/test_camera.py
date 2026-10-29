@@ -14,8 +14,11 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.camera import async_get_image, async_get_stream_source
-from homeassistant.components.camera.helper import get_camera_from_entity_id
+from homeassistant.components.camera import (
+    async_get_image,
+    async_get_stream_source,
+    get_camera_from_entity_id,
+)
 from homeassistant.components.imou.camera import (
     CAMERA_STREAM_RESOLUTION_SD,
     PYIMOUAPI_LIVE_PROTOCOL,
