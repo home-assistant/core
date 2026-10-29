@@ -355,8 +355,8 @@ async def test_water_heater_missing_boost_state(
         clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive
     )
     assert hass.states.get("water_heater.water_heater").state == STATE_ECO
-    # The device never reports the attribute, but the cluster instance keeps
-    # its default (0 == kInactive). That default must not read as eco.
+    # Drop the reported attribute: the read path now only sees the cluster
+    # default (0 == kInactive), and that default must not read as eco.
     matter_node.node_data.attributes.pop(boost_path)
     await trigger_subscription_callback(
         hass,
@@ -385,7 +385,7 @@ async def test_water_heater_missing_boost_state_system_mode_off(
         attribute=clusters.WaterHeaterManagement.Attributes.BoostState,
     )
     assert hass.states.get("water_heater.water_heater").state == STATE_ECO
-    # The device never reports BoostState, but reports SystemMode as off.
+    # Drop BoostState and report SystemMode as off instead.
     matter_node.node_data.attributes.pop(boost_path)
     set_node_attribute(matter_node, 2, 513, 28, 0)
     await trigger_subscription_callback(
