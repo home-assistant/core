@@ -1,5 +1,7 @@
 """Base entity for the Update platform."""
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, final, override
 
@@ -22,7 +24,22 @@ from .const import (
     UpdateDeviceClass,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateReleaseNotesMessageSeverity,
 )
+
+
+@dataclass(frozen=True, kw_only=True)
+class UpdateReleaseNotesMessage:
+    """Message shown before update release notes.
+
+    This is intended for static guidance that accompanies release notes, not for
+    translating the release notes themselves.
+    """
+
+    translation_domain: str
+    translation_key: str
+    severity: UpdateReleaseNotesMessageSeverity = UpdateReleaseNotesMessageSeverity.INFO
+    translation_placeholders: Mapping[str, str] | None = None
 
 
 class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -31,6 +48,7 @@ class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: UpdateDeviceClass | None = None
     display_precision: int = 0
     entity_category: EntityCategory | None = EntityCategory.CONFIG
+    release_notes_messages: tuple[UpdateReleaseNotesMessage, ...] = ()
     restart_required: bool = False
 
 
@@ -87,6 +105,7 @@ class UpdateEntity(
     _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
     _attr_update_percentage: int | float | None = None
+    _attr_release_notes_messages: tuple[UpdateReleaseNotesMessage, ...]
     __skipped_version: str | None = None
     __in_progress: bool = False
 
@@ -177,6 +196,15 @@ class UpdateEntity(
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return self._attr_release_url
+
+    @property
+    def release_notes_messages(self) -> tuple[UpdateReleaseNotesMessage, ...]:
+        """Messages shown before the release notes."""
+        if hasattr(self, "_attr_release_notes_messages"):
+            return self._attr_release_notes_messages
+        if hasattr(self, "entity_description"):
+            return self.entity_description.release_notes_messages
+        return ()
 
     @cached_property
     def restart_required(self) -> bool:

@@ -723,7 +723,7 @@ async def test_release_notes(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == snapshot
+    assert response["result"]["release_notes"] == snapshot
 
 
 async def test_release_notes_while_pending_restart(
@@ -743,7 +743,7 @@ async def test_release_notes_while_pending_restart(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] is None
+    assert response["result"]["release_notes"] is None
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -927,7 +927,7 @@ async def test_release_notes_rate_limited_without_github(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == ""
+    assert response["result"]["release_notes"] == ""
     assert not marketplace.system.disabled
 
 
@@ -967,8 +967,8 @@ async def test_release_notes_stop_at_the_version_on_offer(
     )
     response = await client.receive_json()
 
-    assert "What 2.0.0 brings" in response["result"]
-    assert "3.0.0" not in response["result"]
+    assert "What 2.0.0 brings" in response["result"]["release_notes"]
+    assert "3.0.0" not in response["result"]["release_notes"]
     assert repository.data.last_version == "2.0.0"
 
 

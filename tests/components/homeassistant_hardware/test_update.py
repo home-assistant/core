@@ -548,7 +548,7 @@ async def test_update_entity_firmware_missing_from_manifest(
         {"type": "update/release_notes", "entity_id": TEST_UPDATE_ENTITY_ID}
     )
     result = await ws_client.receive_json()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
 
 @pytest.mark.parametrize(
@@ -604,7 +604,7 @@ async def test_update_entity_release_notes(
         {"type": "update/release_notes", "entity_id": TEST_UPDATE_ENTITY_ID}
     )
     result = await ws_client.receive_json()
-    assert result["result"] == release_notes
+    assert result["result"]["release_notes"] == release_notes
 
 
 async def test_update_entity_graceful_firmware_type_callback_errors(
