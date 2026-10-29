@@ -5,6 +5,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pyoverkiz.enums import UIClass
+from pyoverkiz.models import Setup
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -279,3 +281,21 @@ async def test_oven_select_local_control_transition(
     )
 
     assert hass.states.get(OVEN_MODE.entity_id).state != STATE_UNAVAILABLE
+
+
+def _as_heating_system(setup: Setup) -> None:
+    """Present the oven as a heating system exposing the same mode states."""
+    setup.devices[0].ui_class = UIClass.HEATING_SYSTEM
+
+
+async def test_oven_mode_not_created_for_other_devices(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the oven mode select is not created for other devices exposing modes."""
+    await setup_overkiz_integration(
+        fixture=OVEN_MODE.fixture, mutate=_as_heating_system
+    )
+
+    assert entity_registry.async_get(OVEN_MODE.entity_id) is None
