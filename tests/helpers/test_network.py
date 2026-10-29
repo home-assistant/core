@@ -1138,13 +1138,15 @@ async def test_is_hass_url(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.cloud.async_remote_ui_urls",
-        return_value=["https://example.nabu.casa"],
+        return_value=["https://ha.example.com", "https://example.nabu.casa"],
     ):
         assert is_hass_url(hass, "https://example.nabu.casa") is False
+        assert is_hass_url(hass, "https://ha.example.com") is False
 
         hass.config.components.add("cloud")
         assert is_hass_url(hass, "https://example.nabu.casa:443") is True
         assert is_hass_url(hass, "https://example.nabu.casa") is True
+        assert is_hass_url(hass, "https://ha.example.com") is True
         assert is_hass_url(hass, "http://example.nabu.casa:443") is False
         assert is_hass_url(hass, "http://example.nabu.casa") is False
 
