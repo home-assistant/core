@@ -105,6 +105,19 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_MSG_WAIT,
     CONF_NAN_VALUE,
+    CONF_OFF_VALUE,
+    CONF_ON_VALUE,
+    CONF_ONOFF_COIL,
+    CONF_ONOFF_REGISTER,
+    CONF_OPERATION_MODE_ECO,
+    CONF_OPERATION_MODE_ELECTRIC,
+    CONF_OPERATION_MODE_GAS,
+    CONF_OPERATION_MODE_HEAT_PUMP,
+    CONF_OPERATION_MODE_HIGH_DEMAND,
+    CONF_OPERATION_MODE_OFF,
+    CONF_OPERATION_MODE_PERFORMANCE,
+    CONF_OPERATION_MODE_REGISTER,
+    CONF_OPERATION_MODE_VALUES,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_SCALE,
@@ -136,6 +149,7 @@ from .const import (
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
+    CONF_WATER_HEATERS,
     CONF_WRITE_REGISTERS,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
@@ -153,6 +167,7 @@ from .const import (
 )
 from .validators import (
     duplicate_fan_mode_validator,
+    duplicate_operation_mode_validator,
     duplicate_swing_mode_validator,
     ensure_and_check_conflicting_scales_and_offsets,
     hvac_fixedsize_reglist_validator,
@@ -463,6 +478,71 @@ LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
 
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
+WATER_HEATER_SCHEMA = probatio.All(
+    BASE_STRUCT_SCHEMA.extend(
+        {
+            probatio.Required(CONF_TARGET_TEMP): cv.positive_int,
+            probatio.Optional(
+                CONF_TARGET_TEMP_WRITE_REGISTERS, default=False
+            ): cv.boolean,
+            probatio.Optional(CONF_MAX_TEMP, default=60): probatio.Coerce(int),
+            probatio.Optional(CONF_MIN_TEMP, default=40): probatio.Coerce(int),
+            probatio.Optional(CONF_STEP, default=0.5): probatio.Coerce(float),
+            probatio.Optional(
+                CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT
+            ): cv.string,
+            probatio.Optional(CONF_CURRENT_TEMP_SCALE): probatio.All(
+                probatio.Coerce(float),
+                lambda v: not_zero_value(
+                    v, "Current temperature scale cannot be zero."
+                ),
+            ),
+            probatio.Optional(CONF_TARGET_TEMP_SCALE): probatio.All(
+                probatio.Coerce(float),
+                lambda v: not_zero_value(v, "Target temperature scale cannot be zero."),
+            ),
+            probatio.Optional(CONF_CURRENT_TEMP_OFFSET): probatio.Coerce(float),
+            probatio.Optional(CONF_TARGET_TEMP_OFFSET): probatio.Coerce(float),
+            probatio.Exclusive(CONF_ONOFF_COIL, "onoff_type"): cv.positive_int,
+            probatio.Exclusive(CONF_ONOFF_REGISTER, "onoff_type"): cv.positive_int,
+            probatio.Optional(CONF_ON_VALUE, default=1): cv.positive_int,
+            probatio.Optional(CONF_OFF_VALUE, default=0): cv.positive_int,
+            probatio.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+            probatio.Optional(CONF_OPERATION_MODE_REGISTER): probatio.All(
+                {
+                    probatio.Required(CONF_ADDRESS): cv.positive_int,
+                    probatio.Required(CONF_OPERATION_MODE_VALUES): {
+                        probatio.Optional(CONF_OPERATION_MODE_OFF): probatio.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        probatio.Optional(CONF_OPERATION_MODE_ECO): probatio.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        probatio.Optional(CONF_OPERATION_MODE_ELECTRIC): probatio.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        probatio.Optional(
+                            CONF_OPERATION_MODE_PERFORMANCE
+                        ): probatio.Any(cv.positive_int, [cv.positive_int]),
+                        probatio.Optional(
+                            CONF_OPERATION_MODE_HIGH_DEMAND
+                        ): probatio.Any(cv.positive_int, [cv.positive_int]),
+                        probatio.Optional(CONF_OPERATION_MODE_HEAT_PUMP): probatio.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        probatio.Optional(CONF_OPERATION_MODE_GAS): probatio.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    probatio.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                },
+                duplicate_operation_mode_validator,
+            ),
+        }
+    ),
+    ensure_and_check_conflicting_scales_and_offsets,
+)
+
 SENSOR_SCHEMA = probatio.All(
     BASE_STRUCT_SCHEMA.extend(
         {
@@ -520,6 +600,10 @@ MODBUS_SCHEMA = probatio.Schema(
             probatio.EnsureList(), [SWITCH_SCHEMA]
         ),
         probatio.Optional(CONF_FANS): probatio.All(probatio.EnsureList(), [FAN_SCHEMA]),
+        probatio.Optional(CONF_WATER_HEATERS): probatio.All(
+            probatio.EnsureList(),
+            [probatio.All(WATER_HEATER_SCHEMA, struct_validator)],
+        ),
     },
     extra=probatio.ALLOW_EXTRA,
 )
@@ -574,4 +658,5 @@ PLATFORM_SCHEMAS: dict[Platform, VolSchemaType] = {
     Platform.LIGHT: LIGHT_SCHEMA,
     Platform.SENSOR: probatio.All(SENSOR_SCHEMA, struct_validator),
     Platform.SWITCH: SWITCH_SCHEMA,
+    Platform.WATER_HEATER: probatio.All(WATER_HEATER_SCHEMA, struct_validator),
 }
