@@ -6840,68 +6840,6 @@
     'state': '23.3',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_sauter_sop6615lb.json][sensor.oven_cycle_stage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'analysis',
-        'cooking',
-        'end',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('overkiz', 'ogp://1234-5678-9123/16000211')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.oven_cycle_stage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Cycle stage',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Cycle stage',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cycle_stage',
-    'unique_id': 'ogp://1234-5678-9123/16000211-core:CurrentCycleStageState',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_entities_snapshot[cloud_sauter_sop6615lb.json][sensor.oven_cycle_stage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Cycle stage',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'analysis',
-        'cooking',
-        'end',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.oven_cycle_stage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'end',
-  })
-# ---
 # name: test_sensor_entities_snapshot[cloud_sauter_sop6615lb.json][sensor.oven_end_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

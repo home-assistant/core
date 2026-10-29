@@ -540,14 +540,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Oven/DynamicOven
-    OverkizSensorDescription(
-        key=OverkizState.CORE_CURRENT_CYCLE_STAGE,
-        name="Cycle stage",
-        device_class=SensorDeviceClass.ENUM,
-        options=["analysis", "cooking", "end"],
-        translation_key="cycle_stage",
-    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
