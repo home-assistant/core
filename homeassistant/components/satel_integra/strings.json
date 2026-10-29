@@ -265,6 +265,9 @@
     "command_no_access": {
       "message": "The access code does not have permission to perform this action."
     },
+    "command_not_sent": {
+      "message": "The command was not sent to the alarm panel. Check the connection before trying again."
+    },
     "command_outcome_unknown": {
       "message": "The alarm panel did not confirm the command. The requested action may have completed; check the panel state before trying again."
     },
