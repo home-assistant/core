@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, patch
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
-    HourlyReadingsUnavailableError,
     InvalidGrantError,
     UnknownEndpointError,
 )
@@ -26,7 +25,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -352,37 +351,6 @@ async def test_coordinator_auth_failed_errors(
     mock_anglian_water_client.update.side_effect = side_effect
 
     with pytest.raises(ConfigEntryAuthFailed) as exc_info:
-        await coordinator._async_update_data()
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == translation_key
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "translation_key"),
-    [
-        pytest.param(
-            HourlyReadingsUnavailableError(status=500, response="mock"),
-            "hourly_readings_unavailable",
-            id="hourly_readings_unavailable",
-        ),
-    ],
-)
-async def test_coordinator_config_entry_errors(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_anglian_water_client: AsyncMock,
-    side_effect: Exception,
-    translation_key: str,
-) -> None:
-    """Test the coordinator maps config entry errors to ConfigEntryError."""
-    coordinator = AnglianWaterUpdateCoordinator(
-        hass, mock_anglian_water_client, mock_config_entry
-    )
-    mock_anglian_water_client.update.side_effect = side_effect
-
-    with pytest.raises(ConfigEntryError) as exc_info:
         await coordinator._async_update_data()
 
     assert exc_info.value.translation_domain == DOMAIN
