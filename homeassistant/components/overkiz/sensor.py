@@ -673,7 +673,7 @@ class OverkizEndTimeSensor(OverkizDescriptiveEntity, SensorEntity):
     """End of the running timer.
 
     The remaining time is only pushed when the timer starts or its duration
-    changes, so the end time is computed when a new value is received.
+    changes, so the end time is computed when a new report is received.
     """
 
     def __init__(
@@ -685,26 +685,24 @@ class OverkizEndTimeSensor(OverkizDescriptiveEntity, SensorEntity):
         """Initialize the end time sensor."""
         super().__init__(device_url, coordinator, description)
         self._attr_native_value: datetime | None = None
-        self._running, self._remaining = self._timer()
-
-    def _timer(self) -> tuple[bool, OverkizStateType]:
-        """Return whether the timer runs and the last pushed remaining time."""
-        states = self.device.states
-        return (
-            states.get_value(OverkizState.CORE_RUNNING_TIMER) is True,
-            states.get_value(OverkizState.CORE_REMAINING_TIME),
-        )
+        self._device = self.device
+        self._report = self.device.states.get(OverkizState.CORE_REMAINING_TIME)
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Update the end time when a new remaining time is pushed."""
-        running, remaining = self._timer()
-        if not running or not isinstance(remaining, int):
+        """Update the end time when a new remaining time is reported."""
+        device = self.device
+        report = device.states.get(OverkizState.CORE_REMAINING_TIME)
+        if (
+            device.states.get_value(OverkizState.CORE_RUNNING_TIMER) is not True
+            or report is None
+            or not isinstance(report.value, int)
+        ):
             self._attr_native_value = None
-        elif not self._running or remaining != self._remaining:
-            self._attr_native_value = dt_util.utcnow() + timedelta(seconds=remaining)
-        self._running, self._remaining = running, remaining
+        elif device is self._device and report is not self._report:
+            self._attr_native_value = dt_util.utcnow() + timedelta(seconds=report.value)
+        self._device, self._report = device, report
         super()._handle_coordinator_update()
 
 

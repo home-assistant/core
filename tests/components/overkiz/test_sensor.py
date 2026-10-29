@@ -448,3 +448,43 @@ async def test_oven_end_time_unknown_when_set_up_while_running(
     await setup_overkiz_integration(fixture=OVEN.fixture, mutate=_timer_running)
 
     assert hass.states.get(OVEN.entity_id).state == STATE_UNKNOWN
+
+
+async def test_oven_end_time_restart_in_one_batch(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a timer restarted with the same duration within one poll is followed."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    def timer_event(running: bool, remaining: int | None = None):
+        states = [
+            {
+                "name": OverkizState.CORE_RUNNING_TIMER.value,
+                "type": 6,
+                "value": running,
+            }
+        ]
+        if remaining is not None:
+            states.append(
+                {
+                    "name": OverkizState.CORE_REMAINING_TIME.value,
+                    "type": 1,
+                    "value": remaining,
+                }
+            )
+        return device_state_changed_event(OVEN.device_url, states)
+
+    await async_deliver_events(hass, freezer, mock_client, [timer_event(True, 300)])
+    first_end = hass.states.get(OVEN.entity_id).state
+
+    freezer.tick(timedelta(minutes=2))
+    await async_deliver_events(
+        hass, freezer, mock_client, [timer_event(False), timer_event(True, 300)]
+    )
+
+    end_time = dt_util.utcnow().replace(microsecond=0) + timedelta(seconds=300)
+    assert hass.states.get(OVEN.entity_id).state == end_time.isoformat()
+    assert end_time.isoformat() != first_end
