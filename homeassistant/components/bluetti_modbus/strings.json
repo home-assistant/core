@@ -162,9 +162,6 @@
     "link_settings_in_use": {
       "message": "The device cannot be set up with these link settings: {error}"
     },
-    "setting_unavailable": {
-      "message": "The BLUETTI power station is unavailable, so the setting was not written."
-    },
     "write_failed": {
       "message": "The setting could not be written to the BLUETTI power station: {error}"
     },

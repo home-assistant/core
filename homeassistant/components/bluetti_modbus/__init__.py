@@ -1,7 +1,5 @@
 """Support for BLUETTI power stations over Modbus."""
 
-import asyncio
-
 from modbus_connection import ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
@@ -40,13 +38,9 @@ async def async_setup_entry(
         ) from err
 
     device = restricted_device(unit)
-    # Polls and writes take turns, see BluettiModbusSettingEntity._async_write.
-    io_lock = asyncio.Lock()
-    coordinator = BluettiModbusDataUpdateCoordinator(hass, entry, device, io_lock)
+    coordinator = BluettiModbusDataUpdateCoordinator(hass, entry, device)
     await coordinator.async_config_entry_first_refresh()
-    settings = BluettiModbusSettingsCoordinator(
-        hass, entry, settings_device(unit), io_lock
-    )
+    settings = BluettiModbusSettingsCoordinator(hass, entry, settings_device(unit))
     await settings.async_config_entry_first_refresh()
 
     # Firmware versions come from the first refresh's own values - device

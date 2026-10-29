@@ -1,6 +1,5 @@
 """DataUpdateCoordinator for the BLUETTI Modbus integration."""
 
-import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any, override
@@ -30,11 +29,9 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: BluettiModbusConfigEntry,
         device: Balco260,
-        io_lock: asyncio.Lock,
     ) -> None:
         """Initialize the coordinator."""
         self.device = device
-        self.io_lock = io_lock
         super().__init__(
             hass,
             _LOGGER,
@@ -46,12 +43,6 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Poll the device."""
-        # Held until the serial number is checked, so a write never goes out
-        # while this poll may still find another device at the address.
-        async with self.io_lock:
-            return await self._async_poll()
-
-    async def _async_poll(self) -> dict[str, Any]:
         # Besides BluettiModbusConnectionError, the library lets a device still
         # busy after its retry, or a failed teardown of the link, through unwrapped.
         try:
@@ -84,13 +75,9 @@ class BluettiModbusSettingsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: BluettiModbusConfigEntry,
         device: Balco260,
-        io_lock: asyncio.Lock,
     ) -> None:
         """Initialize the coordinator."""
         self.device = device
-        self.io_lock = io_lock
-        # Counts the writes, see _async_update_data.
-        self.writes = 0
         super().__init__(
             hass,
             _LOGGER,
@@ -102,22 +89,14 @@ class BluettiModbusSettingsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Poll the device's settings."""
-        writes = self.writes
-        # A write waits for this read, so the read cannot replace the value
-        # the write shows with the one from before it.
-        async with self.io_lock:
-            if self.writes != writes:
-                # A write went out while this read waited for its turn, and
-                # the device serves the old value for a moment afterwards.
-                return self.data
-            try:
-                await self.device.async_update_with_retry()
-            except ModbusError as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="communication_error",
-                    translation_placeholders={"error": str(err)},
-                ) from err
+        try:
+            await self.device.async_update_with_retry()
+        except ModbusError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         values = self.device.values
         if str(values["d_serial"]) != self.config_entry.unique_id:
             raise UpdateFailed(

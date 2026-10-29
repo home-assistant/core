@@ -1,6 +1,5 @@
 """Tests for the BLUETTI Modbus diagnostics."""
 
-import asyncio
 from unittest.mock import AsyncMock, patch
 
 from bluetti_modbus_lib import Balco260
@@ -79,27 +78,3 @@ async def test_diagnostics_when_device_does_not_answer(
     assert diag["raw"] is None
     assert diag["raw_error"] == "timed out"
     assert diag["values"]["d_serial"] == "**REDACTED**"
-
-
-async def test_diagnostics_raw_read_waits_for_the_device(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the raw read waits for a poll or a write in progress."""
-    await setup_integration(hass, mock_config_entry)
-    read_raw = AsyncMock(return_value={"holding": {}})
-
-    with patch.object(Balco260, "async_read_raw", read_raw):
-        async with mock_config_entry.runtime_data.coordinator.io_lock:
-            diag_task = asyncio.create_task(
-                get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
-            )
-            for _ in range(20):
-                await asyncio.sleep(0)
-            # Still behind the lock, so nothing was read from the device yet.
-            read_raw.assert_not_awaited()
-        diag = await diag_task
-
-    read_raw.assert_awaited_once()
-    assert diag["raw"] == {"holding": {}}
