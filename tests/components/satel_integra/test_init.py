@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from satel_integra import (
@@ -273,6 +274,7 @@ async def test_unload_cancels_pending_partition_update(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test unload cancels a pending partition state update."""
     await setup_integration(hass, mock_config_entry)
@@ -282,7 +284,9 @@ async def test_unload_cancels_pending_partition_update(
         get_alarm_status_callback(mock_satel)()
 
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        freezer.tick(1)
         async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     set_updated_data.assert_not_called()
 
