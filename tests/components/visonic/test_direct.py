@@ -597,7 +597,10 @@ async def test_create_state_snapshot_connected(
     assert {
         item.args[0] for item in coordinator._client.get_partition_status.call_args_list
     } == set(statuses)
-    coordinator._client.get_partition_status_dict.assert_not_called()
+    assert {
+        item.args[0]
+        for item in coordinator._client.get_partition_status_dict.call_args_list
+    } == set(statuses)
 
 
 @pytest.mark.parametrize(
@@ -739,3 +742,61 @@ async def test_recovery_failure_actually_stops_coordinator_and_client(
     assert direct_parent.data.mode == "stopped"
     direct._client.async_panel_stop.assert_awaited_once_with()
     notify.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("partitions", "partition_data", "expected"),
+    [
+        pytest.param(None, {0: {"ready": True}}, True, id="unpartitioned-ready"),
+        pytest.param({0}, {0: {"ready": False}}, False, id="unpartitioned-not-ready"),
+        pytest.param(
+            {0, 2},
+            {0: {"ready": True}, 2: {"ready": True}},
+            True,
+            id="all-partitions-ready",
+        ),
+        pytest.param(
+            {0, 2},
+            {0: {"ready": True}, 2: {"ready": False}},
+            False,
+            id="one-partition-not-ready",
+        ),
+        pytest.param(
+            {0, 2},
+            {0: {"ready": True}, 2: {}},
+            None,
+            id="one-partition-unknown",
+        ),
+        pytest.param(
+            {0, 2},
+            {0: {"ready": False}, 2: {}},
+            False,
+            id="not-ready-with-unknown-partition",
+        ),
+        pytest.param(None, {0: {}}, None, id="unpartitioned-unknown"),
+    ],
+)
+async def test_snapshot_partition_readiness(
+    direct: VisonicDirectConnection,
+    partitions: set[int] | None,
+    partition_data: dict[int, dict[str, bool]],
+    expected: bool | None,
+) -> None:
+    """Readiness is known only when cached active partition data establishes it."""
+    client = direct._client
+    client.is_panel_connected.return_value = True
+    client.get_partitions_in_use.return_value = partitions
+    client.get_partition_status.return_value = AlPanelStatus.DISARMED
+    client.get_partition_status_dict.side_effect = partition_data.__getitem__
+    client.get_panel_status_dict.side_effect = lambda *_args: {}
+    client.panel_mode_str = "powerlink"
+    client.is_any_siren_active.return_value = (False,)
+
+    state = await direct.create_state_snapshot()
+
+    assert state.panelstate is not None
+    assert state.panelstate.attributes["ready"] is expected
+    assert {
+        item.args[0] for item in client.get_partition_status_dict.call_args_list
+    } == set(partition_data)
+    client.send_command.assert_not_called()

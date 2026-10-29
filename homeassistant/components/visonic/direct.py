@@ -93,9 +93,20 @@ class VisonicDirectConnection(VisonicConnection):
         ):
             self.callbacks.recovery_failed()
 
-    def _get_panel_state(self) -> PanelState:
+    def _get_panel_state(self, partitions: set[int]) -> PanelState:
         attributes = self._client.get_panel_status_dict(self.options.eprom_attributes)
         attributes[TEXT_CLIENT_VERSION] = CLIENT_VERSION
+        readiness = [
+            self._client.get_partition_status_dict(partition).get("ready")
+            for partition in partitions
+        ]
+        attributes["ready"] = (
+            False
+            if any(value is False for value in readiness)
+            else True
+            if all(value is True for value in readiness)
+            else None
+        )
         return PanelState(
             attributes.get("emulationmode", ""),
             attributes.get("trouble", ""),
@@ -190,7 +201,7 @@ class VisonicDirectConnection(VisonicConnection):
             disconnection_count=self._client.disconnection_count,
             model=self._client.panel_model,
             statusdict=self._client.get_panel_status_dict(),
-            panelstate=self._get_panel_state(),
+            panelstate=self._get_panel_state(partitions),
             armcode=armcode,
             siren_active=self._client.is_any_siren_active()[0],
         )
