@@ -28,7 +28,6 @@ PARALLEL_UPDATES = 0
 CAMERA_STREAM_RESOLUTION_SD = "SD"
 
 # Defaults for pyimouapi ImouHaDeviceManager APIs (async_get_device_stream / async_get_device_image).
-# live_protocol is accepted by the library but unused; stream URLs are short-lived RTSP.
 PYIMOUAPI_LIVE_PROTOCOL = "https"
 PYIMOUAPI_SNAPSHOT_WAIT_SECONDS = 3
 
@@ -98,6 +97,7 @@ class ImouCamera(ImouEntity, Camera):
         super().__init__(coordinator, description, device)
         self._idle_unsub: Callable[[], None] | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Cancel the idle check when the entity is removed."""
         await super().async_added_to_hass()
