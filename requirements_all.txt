@@ -2388,7 +2388,7 @@ pyhomeworks==1.1.2
 pyicloud==2026.10.1
 
 # homeassistant.components.imou
-pyimouapi==1.4.0
+pyimouapi==1.4.4
 
 # homeassistant.components.insteon
 pyinsteon==1.7.0
