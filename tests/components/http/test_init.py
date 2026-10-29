@@ -2152,36 +2152,30 @@ async def test_default_config_under_supervisor_starts_redirect(
     assert hass.http._legacy_redirect_server is not None
 
 
+@pytest.mark.parametrize(
+    "stored_config",
+    [
+        pytest.param({"server_port": 80}, id="default-profile"),
+        # 2026.11.0b0 persisted modern_v6 as the default profile.
+        pytest.param(
+            {"server_port": 80, "ssl_profile": "modern_v6"},
+            id="earlier-default-profile",
+        ),
+    ],
+)
 async def test_persisted_default_config_starts_redirect(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    stored_config: dict[str, Any],
 ) -> None:
     """Test the redirect still starts for a default config loaded from disk.
 
     A persisted default config carries created_at/error metadata, so the
     transition gate must compare without it (not by identity or raw equality).
+    Without a certificate the SSL profile is unused, so a config persisted
+    with an earlier default profile is still the default config.
     """
-    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
-
-    with _supervisor_default_config():
-        await _setup_http_with_onboarding(hass)
-
-    assert hass.config.api.port == 80
-    assert hass.http._legacy_redirect_server is not None
-
-
-async def test_persisted_default_config_with_earlier_default_profile_starts_redirect(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-) -> None:
-    """Test the redirect starts for a default config with an earlier default profile.
-
-    2026.11.0b0 persisted modern_v6 as the default profile. Without a
-    certificate the profile is unused, so the config is still the default.
-    """
-    hass_storage[DOMAIN] = _stable_http_storage(
-        {"server_port": 80, "ssl_profile": "modern_v6"}
-    )
+    hass_storage[DOMAIN] = _stable_http_storage(stored_config)
 
     with _supervisor_default_config():
         await _setup_http_with_onboarding(hass)
