@@ -18,12 +18,13 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import HOST, SERIAL, SERIAL_ADDRESS
 
-VOLTAGE_ENTITY = "sensor.balco_260_battery_voltage"
+VOLTAGE_ENTITY = "sensor.balco_260_built_in_battery_voltage"
+BMS_COUNT_ADDRESS = 51210
 
 
 async def test_load_unload_entry(
@@ -43,12 +44,29 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("bms_count", "sw_version"),
+    [
+        pytest.param(
+            1,
+            "ARM 50011.01.12, DSP 50014.01.10, IoT 50012.01.19, BMS 50008.01.10",
+            id="bms",
+        ),
+        pytest.param(
+            0, "ARM 50011.01.12, DSP 50014.01.10, IoT 50012.01.19", id="no_bms"
+        ),
+    ],
+)
 async def test_device_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    bms_count: int,
+    sw_version: str,
 ) -> None:
     """The device carries its identity, firmware and a link to its web page."""
+    mock_modbus_unit.holding[BMS_COUNT_ADDRESS] = bms_count
     await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device_by_identifier(
@@ -61,9 +79,60 @@ async def test_device_info(
     assert device_entry.name == "Balco 260"
     assert device_entry.configuration_url == f"http://{HOST}"
     assert device_entry.serial_number == SERIAL
-    assert device_entry.sw_version == (
-        "ARM 50011.01.12, DSP 50014.01.10, IoT 50012.01.19"
+    assert device_entry.sw_version == sw_version
+
+
+async def test_built_in_battery_is_a_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The built-in battery's readings are on a child device of the power station."""
+    await setup_integration(hass, mock_config_entry)
+
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), mock_config_entry.entry_id
     )
+    assert parent is not None
+    battery = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{SERIAL}_battery"), mock_config_entry.entry_id
+    )
+    assert battery is not None
+    assert battery.parent_device_id == parent.id
+    assert battery.name == "Built-in battery"
+    entity = entity_registry.async_get(VOLTAGE_ENTITY)
+    assert entity is not None
+    assert entity.device_id == battery.id
+
+
+async def test_built_in_battery_entity_keeps_its_entity_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An entity set up on the power station moves to the battery as it was."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{SERIAL}_b_v",
+        config_entry=mock_config_entry,
+        suggested_object_id="balco_260_battery_voltage",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = entity_registry.async_get("sensor.balco_260_battery_voltage")
+    assert entity is not None
+    battery = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{SERIAL}_battery"), mock_config_entry.entry_id
+    )
+    assert battery is not None
+    assert entity.device_id == battery.id
+    assert hass.states.get(VOLTAGE_ENTITY) is None
 
 
 async def test_setup_retry_when_device_unresponsive(
@@ -73,6 +142,19 @@ async def test_setup_retry_when_device_unresponsive(
 ) -> None:
     """A device that answers nothing puts the entry in setup retry."""
     mock_modbus_unit.fail_requests(ModbusTimeoutError("timed out"))
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_retry_when_bms_version_unreadable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A BMS version that can't be read puts the entry in setup retry."""
+    mock_modbus_unit.fail_read(BMS_COUNT_ADDRESS, ModbusTimeoutError("timed out"))
 
     await setup_integration(hass, mock_config_entry)
 
