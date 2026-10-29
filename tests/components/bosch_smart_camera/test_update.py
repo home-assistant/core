@@ -151,18 +151,28 @@ async def test_update_failure_makes_entity_unavailable(
     mock_config_entry: MockConfigEntry,
     mock_get_firmware_status: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the entity becomes unavailable while the firmware cannot be read."""
     await setup_integration(hass, mock_config_entry)
 
     mock_get_firmware_status.side_effect = BoschCameraConnectionError("down")
-    freezer.tick(FIRMWARE_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    for _ in range(2):
+        freezer.tick(FIRMWARE_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    assert caplog.text.count("is unavailable") == 1
+
+    mock_get_firmware_status.side_effect = None
+    freezer.tick(FIRMWARE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert caplog.text.count("is back") == 1
 
 
 async def test_camera_added_and_removed(

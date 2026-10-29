@@ -175,6 +175,7 @@ class BoschFirmwareCoordinator(DataUpdateCoordinator[dict[str, FirmwareStatus]])
             update_interval=FIRMWARE_SCAN_INTERVAL,
         )
         self.cameras = cameras
+        self._unavailable: set[str] = set()
         # Entities are added even when the first refresh fails.
         self.data = {}
 
@@ -189,11 +190,16 @@ class BoschFirmwareCoordinator(DataUpdateCoordinator[dict[str, FirmwareStatus]])
                 statuses[camera_id] = await get_firmware_status(
                     session, token, camera_id
                 )
+                if camera_id in self._unavailable:
+                    self._unavailable.discard(camera_id)
+                    _LOGGER.info("Firmware status of %s is back", camera_id)
             except BoschCameraAuthError as err:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN, translation_key="auth_failed"
                 ) from err
             except BoschCameraConnectionError, BoschCameraInvalidResponseError:
                 # Only this camera's entity goes unavailable.
-                _LOGGER.debug("Firmware status of %s unavailable", camera_id)
+                if camera_id not in self._unavailable:
+                    self._unavailable.add(camera_id)
+                    _LOGGER.info("Firmware status of %s is unavailable", camera_id)
         return statuses
