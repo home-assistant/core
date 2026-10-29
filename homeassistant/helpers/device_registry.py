@@ -35,6 +35,7 @@ from homeassistant.core import (
     ReleaseChannel,
     callback,
     get_release_channel,
+    verify_event_loop_thread,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
@@ -46,7 +47,6 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import storage, translation
 from .debounce import Debouncer
-from .deprecation import deprecated_function
 from .frame import (
     MissingIntegrationFrame,
     ReportBehavior,
@@ -92,10 +92,9 @@ CONNECTION_ZIGBEE = "zigbee"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
-# suggested_area can be removed when suggested_area is removed from DeviceEntry.
 # pending_move can be removed once add_config_entry_id and remove_config_entry_id
 # are removed from the device registry API.
-RUNTIME_ONLY_ATTRS = {"suggested_area", "pending_move"}
+RUNTIME_ONLY_ATTRS = {"pending_move"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -699,8 +698,6 @@ class DeviceEntry(BaseDeviceEntry):
     # Core 2027.8.
     has_composite_identifiers: bool = attr.ib(default=False)
     serial_number: str | None = attr.ib(default=None)
-    # Suggested area is deprecated and will be removed from DeviceEntry in HA Core 2026.9.
-    _suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
     # Transient pending move target (config_entry_id, config_subentry_id) initiated by
@@ -829,14 +826,6 @@ class DeviceEntry(BaseDeviceEntry):
             }
         )
 
-    @property
-    @deprecated_function(
-        "code which ignores suggested_area", breaks_in_ha_version="2026.9"
-    )
-    def suggested_area(self) -> str | None:
-        """Return the suggested area for this device entry."""
-        return self._suggested_area
-
 
 _CHILD_DEVICE_COMPAT_ATTRS = frozenset(
     {
@@ -848,7 +837,6 @@ _CHILD_DEVICE_COMPAT_ATTRS = frozenset(
         "model",
         "model_id",
         "serial_number",
-        # "suggested_area",  # Excluded, to be removed in 2026.9
         "sw_version",
         "via_device_id",
     }
@@ -2088,7 +2076,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: Literal[False],
         include_main_devices: bool = True,
-        include_composite_devices: bool = True,
+        include_composite_devices: bool | None = None,
     ) -> DeviceEntry | None: ...
 
     @overload
@@ -2098,7 +2086,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: Literal[True] = True,
         include_main_devices: Literal[False],
-        include_composite_devices: Literal[False],
+        include_composite_devices: Literal[False] | None = None,
     ) -> ChildDeviceEntry | None: ...
 
     @overload
@@ -2106,19 +2094,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        include_child_devices: Literal[True] = True,
-        include_main_devices: Literal[False],
-        include_composite_devices: Literal[True] = True,
-    ) -> AnyDeviceEntry | None: ...
-
-    @overload
-    def async_get(
-        self,
-        device_id: str,
-        *,
-        include_child_devices: Literal[True] = True,
-        include_main_devices: Literal[True] = True,
-        include_composite_devices: bool = True,
+        include_child_devices: bool = True,
+        include_main_devices: bool = True,
+        include_composite_devices: bool | None = None,
     ) -> AnyDeviceEntry | None: ...
 
     @callback
@@ -2128,7 +2106,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: bool = True,
         include_main_devices: bool = True,
-        include_composite_devices: bool = True,
+        include_composite_devices: bool | None = None,
     ) -> AnyDeviceEntry | None:
         """Get device or child device.
 
@@ -2144,8 +2122,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         With include_child_devices=False a child-device id resolves to None (the child
         is treated as absent) and the return type excludes children. With
         include_main_devices=False a main-device id resolves to None. With
-        include_composite_devices=False a composite-device id resolves to None.
+        include_composite_devices=False a composite-device id resolves to None;
+        it defaults to include_main_devices, as a composite stands in for a main
+        device, so excluding main devices alone guarantees a child device.
         """
+        if include_composite_devices is None:
+            include_composite_devices = include_main_devices
         if (
             include_main_devices
             and (device := self._device_data.get(device_id)) is not None
@@ -2504,7 +2486,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "async_get_or_create() got unexpected keyword arguments "
                 f"{', '.join(map(repr, kwargs))}"
             )
-        return self.async_get_or_create_device(
+        return self._async_get_or_create_from_info(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
@@ -2530,21 +2512,37 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
     @callback
-    def async_get_or_create_device(  # noqa: C901
+    def async_get_or_create_from_info(
         self,
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        # To disable a device if it gets created, does not affect existing devices
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         device_info: DeviceInfo,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist.
 
-        To create or update a child device, use async_get_or_create_child_device.
+        To create or update a child device, use async_get_or_create_child_from_info.
 
         If identifiers overlap with a child device, the method raises.
         """
+        return self._async_get_or_create_from_info(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=UNDEFINED,
+            device_info=device_info,
+        )
+
+    @callback
+    def _async_get_or_create_from_info(  # noqa: C901
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None,
+        # To disable a device if it gets created, does not affect existing devices
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        device_info: DeviceInfo,
+    ) -> DeviceEntry:
+        """Get device. Create if it doesn't exist."""
         # The deprecated fields are hidden from type checkers
         deprecated_values = {
             parameter: getattr(device_info, parameter)
@@ -2838,13 +2836,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device = self._async_update_device(
             device.id,
-            disabled_by=disabled_by,
+            disabled_by=disabled_by if is_new else UNDEFINED,
             entry_type=entry_type,
             is_new=is_new,
             name=name,
             has_composite_identifiers=has_composite_identifiers,
             new_config_subentry_id=config_subentry_id,
-            suggested_area=suggested_area,
             via_device_id=via_device_id,
             **identifiers_connections,
             **validated_fields,
@@ -2899,6 +2896,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         identifiers: set[tuple[str, str]],
         name: str | UndefinedType | None = UNDEFINED,
@@ -2912,7 +2910,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
-        return self.async_get_or_create_child_device(
+        return self._async_get_or_create_child_from_info(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
@@ -2927,12 +2925,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
     @callback
-    def async_get_or_create_child_device(
+    def async_get_or_create_child_from_info(
         self,
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         device_info: ChildDeviceInfo,
     ) -> ChildDeviceEntry:
         """Get child device. Create if it doesn't exist.
@@ -2940,6 +2937,24 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
+        return self._async_get_or_create_child_from_info(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=UNDEFINED,
+            device_info=device_info,
+        )
+
+    @callback
+    def _async_get_or_create_child_from_info(
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None,
+        # To disable a device if it gets created, does not affect existing devices
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        device_info: ChildDeviceInfo,
+    ) -> ChildDeviceEntry:
+        """Get child device. Create if it doesn't exist."""
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
             raise HomeAssistantError(
@@ -3113,7 +3128,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         updated_child_device = self._async_update_child_device(
             child_device.id,
-            disabled_by=disabled_by,
+            disabled_by=disabled_by if is_new else UNDEFINED,
             is_new=is_new,
             merge_identifiers=identifiers,
             name=name,
@@ -3170,6 +3185,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
     @callback
+    @verify_event_loop_thread("device_registry.async_get_or_create_child")
     def _async_convert_device_to_child(
         self,
         device: DeviceEntry,
@@ -3184,8 +3200,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         The caller must have validated the conversion with
         _async_validate_device_to_child_conversion.
         """
-        self.hass.verify_event_loop_thread("device_registry.async_get_or_create_child")
-
         # The update event reports the old values of every conceptually changed
         # field: the fields a child device does not have change to None / empty.
         changes: dict[str, Any] = {"parent_device_id": None}
@@ -3256,6 +3270,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return child_device
 
     @callback
+    @verify_event_loop_thread("device_registry._async_update_device")
     def _async_update_device(  # noqa: C901
         self,
         device_id: str,
@@ -3288,8 +3303,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         serial_number: str | UndefinedType | None = UNDEFINED,
-        # Can be removed when suggested_area is removed from DeviceEntry
-        suggested_area: str | UndefinedType | None = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
@@ -3699,20 +3712,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
 
-        # Can be removed when suggested_area is removed from DeviceEntry
-        if suggested_area is not UNDEFINED and suggested_area != old._suggested_area:  # noqa: SLF001
-            new_values["suggested_area"] = suggested_area
-            old_values["suggested_area"] = old._suggested_area  # noqa: SLF001
-
         if not new_values and not is_new:
             return old
 
-        # This condition can be removed when suggested_area is removed from DeviceEntry
         if not RUNTIME_ONLY_ATTRS.issuperset(new_values):
             # Change modified_at if we are changing something that we store
             new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("device_registry._async_update_device")
         new = attr.evolve(old, **new_values)
         self._devices[device_id] = new
 
@@ -3736,13 +3742,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         ):
             del self._deleted_devices[deleted_device_id]
 
-        # If its only run time attributes (suggested_area)
+        # If its only run time attributes (pending_move)
         # that do not get saved we do not want to write
         # to disk or fire an event as we would end up
         # firing events for data we have nothing to compare
         # against since its never saved on disk
         if RUNTIME_ONLY_ATTRS.issuperset(new_values):
-            # This can be removed when suggested_area is removed from DeviceEntry
             return new
 
         self.async_schedule_save()
@@ -3777,6 +3782,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return new
 
     @callback
+    @verify_event_loop_thread("device_registry._async_update_child_device")
     def _async_update_child_device(
         self,
         child_device_id: str,
@@ -3914,7 +3920,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("device_registry._async_update_child_device")
         new = attr.evolve(old, **new_values)
         self._child_devices[child_device_id] = new
 
@@ -3967,8 +3972,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         serial_number: str | UndefinedType | None = UNDEFINED,
-        # suggested_area is deprecated and will be removed in 2026.9
-        suggested_area: str | UndefinedType | None = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
@@ -4048,7 +4051,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "remove_config_entry_id": remove_config_entry_id,
                 "remove_config_subentry_id": remove_config_subentry_id,
                 "serial_number": serial_number,
-                "suggested_area": suggested_area,
                 "sw_version": sw_version,
                 "via_device_id": via_device_id,
             }
@@ -4071,12 +4073,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 core_behavior=ReportBehavior.ERROR,
                 core_integration_behavior=ReportBehavior.ERROR,
                 breaks_in_ha_version="2027.8.0",
-            )
-        if suggested_area is not UNDEFINED:
-            report_usage(
-                "passes a suggested_area to device_registry.async_update device",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2026.9.0",
             )
         if merge_connections is not UNDEFINED or merge_identifiers is not UNDEFINED:
             report_usage(
@@ -4117,7 +4113,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             new_identifiers=new_identifiers,
             remove_config_entry_id=remove_config_entry_id,
             remove_config_subentry_id=remove_config_subentry_id,
-            suggested_area=suggested_area,
             via_device_id=via_device_id,
             **validated_fields,
         )
@@ -4389,6 +4384,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return self._restore_composite_device(composite_id, remaining)
 
     @callback
+    @verify_event_loop_thread("device_registry.async_remove_device")
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device or child device from the device registry."""
         if (child_device := self._child_device_data.get(device_id)) is not None:
@@ -4400,7 +4396,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             for underlying_id in underlying_ids:
                 self.async_remove_device(underlying_id)
             return
-        self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         # Removing the parent removes its child devices
         for child in self._child_devices.get_children_for_device_id(device_id):
             self._async_remove_child_device(child)
@@ -4433,9 +4428,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.async_schedule_save()
 
     @callback
+    @verify_event_loop_thread("device_registry.async_remove_device")
     def _async_remove_child_device(self, child_device: ChildDeviceEntry) -> None:
         """Remove a child device from the device registry."""
-        self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         del self._child_devices[child_device.id]
         config_entry = self.hass.config_entries.async_get_entry(
             child_device.config_entry_id
@@ -4898,8 +4893,8 @@ def async_get_device_and_config_entry_for_domain(
     device_id: str,
     *,
     domain: str,
-    include_child_devices: Literal[True] = True,
-    include_main_devices: Literal[True] = True,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
 ) -> tuple[AnyDeviceEntry | None, ConfigEntry | None]: ...
 
 

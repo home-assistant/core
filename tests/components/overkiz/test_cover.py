@@ -1296,45 +1296,53 @@ async def test_tilt_position_none_value(
     [
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [0, OverkizCommandParam.LOWSPEED],
-            id="open-low",
+            id="open-slow",
         ),
         pytest.param(
             SERVICE_CLOSE_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [100, OverkizCommandParam.LOWSPEED],
-            id="close-low",
+            id="close-slow",
         ),
         pytest.param(
             SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 35, ATTR_SPEED: "low"},
+            {ATTR_POSITION: 35, ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [65, OverkizCommandParam.LOWSPEED],
-            id="set-position-low",
+            id="set-position-slow",
         ),
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "default"},
+            {ATTR_SPEED: "fast"},
             "open",
             None,
-            id="open-default",
+            id="open-fast",
         ),
         pytest.param(
             SERVICE_CLOSE_COVER,
-            {ATTR_SPEED: "default"},
+            {ATTR_SPEED: "fast"},
             "close",
             None,
-            id="close-default",
+            id="close-fast",
         ),
         pytest.param(
             SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 35, ATTR_SPEED: "default"},
+            {ATTR_POSITION: 35, ATTR_SPEED: "fast"},
             "setClosure",
             [65],
-            id="set-position-default",
+            id="set-position-fast",
+        ),
+        # An unsupported speed is dropped, so the cover opens at its default speed
+        pytest.param(
+            SERVICE_OPEN_COVER,
+            {ATTR_SPEED: "medium"},
+            "open",
+            None,
+            id="open-unsupported",
         ),
     ],
 )
@@ -1381,30 +1389,11 @@ async def test_cover_speed_supported(
 
     state = hass.states.get(LOW_SPEED.entity_id)
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
-    assert state.attributes["supported_speeds"] == ["default", "low"]
+    assert state.attributes["supported_speeds"] == ["fast", "slow"]
 
     state = hass.states.get(DEPRECATED_LOW_SPEED_ENTITY_ID)
     assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
     assert "supported_speeds" not in state.attributes
-
-
-async def test_cover_speed_invalid(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test an unsupported speed is rejected before any command is sent."""
-    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: LOW_SPEED.entity_id, ATTR_SPEED: "fast"},
-            blocking=True,
-        )
-
-    mock_client.execute_action_group.assert_not_awaited()
 
 
 async def test_low_speed_cover_not_created_for_new_installations(

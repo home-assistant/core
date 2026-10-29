@@ -14,7 +14,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
+from .coordinator import MelnorConfigEntry
 from .entity import MelnorZoneEntity, get_entities_for_valves
 
 
@@ -69,15 +69,6 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
     """A switch implementation for a melnor device."""
 
     entity_description: MelnorSwitchEntityDescription
-
-    def __init__(
-        self,
-        coordinator: MelnorDataUpdateCoordinator,
-        entity_description: MelnorSwitchEntityDescription,
-        valve: Valve,
-    ) -> None:
-        """Initialize a switch for a melnor device."""
-        super().__init__(coordinator, entity_description, valve)
 
     @property
     @override

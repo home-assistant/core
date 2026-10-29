@@ -1,8 +1,10 @@
 """Test the Teslemetry sensor platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
+from aiopowerwall import PowerwallConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -19,7 +21,10 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.teslemetry.const import DOMAIN, ENERGY_HISTORY_FIELDS
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
+from homeassistant.components.teslemetry.coordinator import (
+    LOCAL_COMPONENTS_INTERVAL,
+    VEHICLE_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -33,12 +38,19 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import assert_entities, assert_entities_alt, setup_platform
+from . import (
+    SITE_ID,
+    assert_entities,
+    assert_entities_alt,
+    setup_paired_platform,
+    setup_platform,
+)
 from .const import (
     ENERGY_TOTALS,
     ENERGY_TOTALS_NULL,
     LIVE_STATUS,
     METADATA,
+    POWERWALL_COMPONENTS,
     PRODUCTS,
     SITE_INFO,
     VEHICLE_DATA_ALT,
@@ -54,6 +66,14 @@ ENERGY_HISTORY_ENTITY = "sensor.energy_site_battery_discharged"
 # Assistant runs on US/Pacific in tests, so a last_reset derived from its clock
 # or from the event's created_at cannot produce this.
 SITE_MIDNIGHT = "2024-09-18T00:00:00+10:00"
+WALL_CONNECTOR_ENERGY_ENTITY = "sensor.wall_connector_energy_delivered"
+WALL_CONNECTOR_ENERGY_ENTITY_2 = "sensor.wall_connector_energy_delivered_2"
+
+LOCAL_COMPONENTS_KEYS = tuple(
+    f"pv_string_{string}_{measurement}"
+    for string in "abcdef"
+    for measurement in ("voltage", "current")
+)
 
 # Per-tire TPMS warning objects including the Tesla Semi.
 TPMS_NO_WARNINGS = {
@@ -167,6 +187,7 @@ async def test_sensors(
     mock_vehicle_data: AsyncMock,
     mock_legacy: AsyncMock,
     mock_energy_totals_stream: MagicMock,
+    mock_wall_connector_totals_stream: MagicMock,
 ) -> None:
     """Tests that the sensor entities with the legacy polling are correct."""
 
@@ -177,6 +198,7 @@ async def test_sensors(
     entry = await setup_platform(hass, [Platform.SENSOR])
 
     mock_energy_totals_stream.send()
+    mock_wall_connector_totals_stream.send()
     await hass.async_block_till_done()
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
@@ -1195,10 +1217,21 @@ async def test_energy_history_time_zone_fallback(
 
 
 @pytest.mark.parametrize(
-    ("connected", "expected_state"),
+    ("entity_id", "connected", "expected_state"),
     [
-        pytest.param(True, "0.036", id="connected"),
-        pytest.param(False, STATE_UNAVAILABLE, id="disconnected"),
+        pytest.param(ENERGY_HISTORY_ENTITY, True, "0.036", id="history_connected"),
+        pytest.param(
+            ENERGY_HISTORY_ENTITY, False, STATE_UNAVAILABLE, id="history_disconnected"
+        ),
+        pytest.param(
+            WALL_CONNECTOR_ENERGY_ENTITY, True, "7.25", id="wall_connector_connected"
+        ),
+        pytest.param(
+            WALL_CONNECTOR_ENERGY_ENTITY,
+            False,
+            STATE_UNAVAILABLE,
+            id="wall_connector_disconnected",
+        ),
     ],
 )
 async def test_energy_history_update_entity_service(
@@ -1206,10 +1239,12 @@ async def test_energy_history_update_entity_service(
     caplog: pytest.LogCaptureFixture,
     mock_add_connection_listener: MagicMock,
     mock_energy_totals_stream: MagicMock,
+    mock_wall_connector_totals_stream: MagicMock,
+    entity_id: str,
     connected: bool,
     expected_state: str,
 ) -> None:
-    """The generic update service leaves the history sensors as the stream set them.
+    """The generic update service leaves the stream totals sensors as the stream set them.
 
     The stream is their only source, so the service must neither fail on a
     healthy stream nor revive stale totals while it is down.
@@ -1218,6 +1253,7 @@ async def test_energy_history_update_entity_service(
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     mock_energy_totals_stream.send()
+    mock_wall_connector_totals_stream.send()
     await hass.async_block_till_done()
     mock_add_connection_listener.send(connected)
     await hass.async_block_till_done()
@@ -1225,12 +1261,12 @@ async def test_energy_history_update_entity_service(
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: ENERGY_HISTORY_ENTITY},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
     assert "NotImplementedError" not in caplog.text
-    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert (state := hass.states.get(entity_id))
     assert state.state == expected_state
 
 
@@ -1338,3 +1374,206 @@ async def test_location_sensors_require_location_scope(
             )
             is not None
         ) is expected
+
+
+async def test_wall_connector_totals_stream_updates(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_wall_connector_totals_stream: MagicMock,
+) -> None:
+    """Streamed wall_connector_totals drive each Wall Connector's daily energy sensor."""
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    mock_wall_connector_totals_stream.assert_called_once()
+
+    # Nothing has streamed yet, so the sensors are available but hold no value.
+    assert (state := hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY))
+    assert state.state == STATE_UNKNOWN
+    assert "last_reset" not in state.attributes
+
+    # The connect-time snapshot replay populates the sensors; a Wall Connector
+    # absent from the totals had no session that day.
+    mock_wall_connector_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY))
+    assert state.state == "7.25"
+    assert state.attributes["state_class"] == "total"
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+    assert (state := hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY_2))
+    assert state.state == "0.0"
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+
+    # A live update while charging, including a DIN the site has no device for.
+    mock_wall_connector_totals_stream.send(
+        {"abd-123": 8100, "bcd-234": 1200, "zzz-999": 500},
+        created_at="2024-09-18T09:20:00.000Z",
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == "8.1"
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY_2).state == "1.2"
+    assert not any(
+        "zzz" in entity.unique_id
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+
+    # A replay read before the applied update is rejected.
+    mock_wall_connector_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == "8.1"
+
+
+async def test_wall_connector_totals_unavailable_while_stream_disconnected(
+    hass: HomeAssistant,
+    mock_add_connection_listener: MagicMock,
+    mock_wall_connector_totals_stream: MagicMock,
+) -> None:
+    """A dropped stream makes the totals sensors unavailable until a snapshot returns."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_wall_connector_totals_stream.send()
+    await hass.async_block_till_done()
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == "7.25"
+
+    mock_add_connection_listener.send(False)
+    await hass.async_block_till_done()
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == STATE_UNAVAILABLE
+
+    mock_wall_connector_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+    assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == "7.25"
+
+
+def _local_entity_ids(entity_registry: er.EntityRegistry) -> dict[str, str]:
+    """Return the entity ids of the local components sensors by key."""
+    return {
+        key: entity_id
+        for key in LOCAL_COMPONENTS_KEYS
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{SITE_ID}-{key}"
+            )
+        )
+    }
+
+
+def _components_without(name: str) -> dict[str, Any]:
+    """Return the gateway components without one leader PCH signal."""
+    data = deepcopy(POWERWALL_COMPONENTS)
+    pch = data["components"]["pch"][0]
+    pch["signals"] = [signal for signal in pch["signals"] if signal["name"] != name]
+    return data
+
+
+async def test_local_sensors(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a paired energy site creates the local PV string sensors."""
+    await setup_paired_platform(hass, [Platform.SENSOR])
+
+    entity_ids = _local_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_COMPONENTS_KEYS)
+    for entity_id in entity_ids.values():
+        assert entity_registry.async_get(entity_id) == snapshot(
+            name=f"{entity_id}-entry"
+        )
+        assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
+
+
+async def test_local_sensors_unpaired(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_components: AsyncMock,
+) -> None:
+    """Test an energy site without local pairing creates no local sensors."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_powerwall_components.assert_not_called()
+    assert not _local_entity_ids(entity_registry)
+
+
+@pytest.mark.parametrize(
+    ("signal", "missing"),
+    [
+        pytest.param("PCH_PvVoltageF", "pv_string_f_voltage", id="voltage"),
+        pytest.param("PCH_PvCurrentE", "pv_string_e_current", id="current"),
+    ],
+)
+async def test_local_sensors_missing_signal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_components: AsyncMock,
+    signal: str,
+    missing: str,
+) -> None:
+    """Test a signal absent from the first refresh skips its sensor."""
+    mock_powerwall_components.side_effect = None
+    mock_powerwall_components.return_value = _components_without(signal)
+
+    await setup_paired_platform(hass, [Platform.SENSOR])
+
+    assert _local_entity_ids(entity_registry).keys() == set(LOCAL_COMPONENTS_KEYS) - {
+        missing
+    }
+
+
+async def test_local_sensors_first_refresh_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_components: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensors from a failed first local refresh recover without a reload."""
+    mock_powerwall_components.side_effect = PowerwallConnectionError("offline")
+
+    entry = await setup_paired_platform(hass, [Platform.SENSOR])
+
+    assert entry.state is ConfigEntryState.LOADED
+    entity_ids = _local_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_COMPONENTS_KEYS)
+    for entity_id in entity_ids.values():
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNAVAILABLE
+
+    mock_powerwall_components.side_effect = None
+    mock_powerwall_components.return_value = POWERWALL_COMPONENTS
+    freezer.tick(LOCAL_COMPONENTS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_ids["pv_string_a_voltage"]))
+    assert state.state == "385.2"
+
+
+async def test_local_sensors_poll_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_components: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed local poll makes the sensors unavailable until it recovers."""
+    await setup_paired_platform(hass, [Platform.SENSOR])
+    entity_id = _local_entity_ids(entity_registry)["pv_string_a_current"]
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "6.42"
+
+    mock_powerwall_components.side_effect = PowerwallConnectionError("offline")
+    freezer.tick(LOCAL_COMPONENTS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_powerwall_components.side_effect = None
+    mock_powerwall_components.return_value = _components_without("PCH_PvCurrentA")
+    freezer.tick(LOCAL_COMPONENTS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
