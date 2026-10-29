@@ -89,33 +89,56 @@ async def test_windows(
     assert state.state == "263.10"
 
 
+@pytest.mark.parametrize(
+    ("root_folder_fixture", "expected"),
+    [
+        pytest.param(
+            "rootfolder-duplicate-names",
+            {
+                "movies": ("Movies", "263.10"),
+                "media_kids_movies": ("media_Kids_Movies", "93.13"),
+            },
+            id="linux_duplicate_names",
+        ),
+        pytest.param(
+            "rootfolder-duplicate-names-windows",
+            {
+                "movies": ("Movies", "263.10"),
+                "e_kids_movies": ("E:_Kids_Movies", "93.13"),
+            },
+            id="windows_duplicate_names",
+        ),
+        pytest.param(
+            "rootfolder-overlapping-names",
+            {
+                "movies4k": ("Movies4K", "93.13"),
+                "movies": ("Movies", "263.10"),
+            },
+            id="overlapping_names",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_duplicate_root_folder_names(
+async def test_root_folder_names(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
+    root_folder_fixture: str,
+    expected: dict[str, tuple[str, str]],
 ) -> None:
-    """Test root folders with the same name get their own disk space sensors."""
+    """Test each root folder gets its own disk space sensor and free space."""
     entry = await setup_integration(
-        hass, aioclient_mock, root_folder_fixture="rootfolder-duplicate-names"
+        hass, aioclient_mock, root_folder_fixture=root_folder_fixture
     )
 
-    assert hass.states.get("sensor.mock_title_disk_space_movies").state == "263.10"
-    assert (
-        hass.states.get("sensor.mock_title_disk_space_media_kids_movies").state
-        == "93.13"
-    )
-    assert (
-        entity_registry.async_get("sensor.mock_title_disk_space_movies").unique_id
-        == f"{entry.entry_id}_disk_space_Movies"
-    )
-    assert (
-        entity_registry.async_get(
-            "sensor.mock_title_disk_space_media_kids_movies"
-        ).unique_id
-        == f"{entry.entry_id}_disk_space_media_Kids_Movies"
-    )
+    for object_id, (name, free_space) in expected.items():
+        entity_id = f"sensor.mock_title_disk_space_{object_id}"
+        assert hass.states.get(entity_id).state == free_space
+        assert (
+            entity_registry.async_get(entity_id).unique_id
+            == f"{entry.entry_id}_disk_space_{name}"
+        )
     assert "does not generate unique IDs" not in caplog.text
 
 
