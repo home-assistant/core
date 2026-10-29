@@ -10,19 +10,13 @@ import wave
 
 from hass_nabucasa.voice import VoiceError, VoiceTokenError
 from hass_nabucasa.voice_data import TTS_VOICES
-import probatio
 import pytest
 from pytest_homeassistant.common import async_mock_service
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
-from homeassistant.components.cloud.tts import (
-    DEFAULT_VOICES,
-    PLATFORM_SCHEMA,
-    SUPPORT_LANGUAGES,
-    Voice,
-)
+from homeassistant.components.cloud.tts import DEFAULT_VOICES, SUPPORT_LANGUAGES, Voice
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MP_DOMAIN,
@@ -82,28 +76,6 @@ def test_default_voice_is_valid(language: str, voice: str) -> None:
     assert voice in TTS_VOICES[language]
 
 
-def test_schema() -> None:
-    """Test schema."""
-    assert "nl-NL" in SUPPORT_LANGUAGES
-
-    processed = PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
-    assert processed["gender"] == "female"
-
-    with pytest.raises(probatio.Invalid):
-        PLATFORM_SCHEMA(
-            {"platform": "cloud", "language": "non-existing", "gender": "female"}
-        )
-
-    with pytest.raises(probatio.Invalid):
-        PLATFORM_SCHEMA(
-            {"platform": "cloud", "language": "nl-NL", "gender": "not-supported"}
-        )
-
-    # Should not raise
-    PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL", "gender": "female"})
-    PLATFORM_SCHEMA({"platform": "cloud"})
-
-
 @pytest.mark.parametrize(
     ("engine_id", "platform_config"),
     [
@@ -158,26 +130,6 @@ async def test_prefs_default_voice(
 
     assert engine.default_language == "nl-NL"
     assert engine.default_options == {"audio_output": "mp3"}
-
-
-async def test_deprecated_platform_config(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    cloud: MagicMock,
-) -> None:
-    """Test cloud provider uses the preferences."""
-    assert await async_setup_component(
-        hass, TTS_DOMAIN, {TTS_DOMAIN: {"platform": DOMAIN}}
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_tts_platform_config")
-    assert issue is not None
-    assert issue.breaks_in_ha_version == "2024.9.0"
-    assert issue.is_fixable is False
-    assert issue.is_persistent is False
-    assert issue.severity == ir.IssueSeverity.WARNING
-    assert issue.translation_key == "deprecated_tts_platform_config"
 
 
 @pytest.mark.parametrize(

@@ -4,15 +4,12 @@ import logging
 from typing import Any, override
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import MAP_VOICE, AudioOutput, Gender, VoiceError
+from hass_nabucasa.voice import AudioOutput, Gender, VoiceError
 from hass_nabucasa.voice_data import TTS_VOICES
-import probatio
 
 from homeassistant.components.tts import (
     ATTR_AUDIO_OUTPUT,
     ATTR_VOICE,
-    CONF_LANG,
-    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TextToSpeechEntity,
     TTSAudioRequest,
@@ -21,9 +18,8 @@ from homeassistant.components.tts import (
     Voice,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PLATFORM, Platform
-from homeassistant.core import HomeAssistant, async_get_hass, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -232,57 +228,6 @@ def _prepare_voice_args(
         "gender": gender,
         "style": style,
     }
-
-
-def _deprecated_platform(value: str) -> str:
-    """Validate if platform is deprecated."""
-    if value == DOMAIN:
-        _LOGGER.warning(
-            "The cloud tts platform configuration is deprecated, "
-            "please remove it from your configuration "
-            "and use the UI to change settings instead"
-        )
-        hass = async_get_hass()
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_tts_platform_config",
-            breaks_in_ha_version="2024.9.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_tts_platform_config",
-        )
-    return value
-
-
-def validate_lang(value: dict[str, Any]) -> dict[str, Any]:
-    """Validate chosen gender or language."""
-    if (lang := value.get(CONF_LANG)) is None:
-        return value
-
-    if (gender := value.get(ATTR_GENDER)) is None:
-        gender = value[ATTR_GENDER] = next(
-            (chk_gender for chk_lang, chk_gender in MAP_VOICE if chk_lang == lang), None
-        )
-
-    if (lang, gender) not in MAP_VOICE:
-        raise probatio.Invalid("Unsupported language and gender specified.")
-
-    return value
-
-
-PLATFORM_SCHEMA = probatio.All(
-    TTS_PLATFORM_SCHEMA.extend(
-        {
-            probatio.Required(CONF_PLATFORM): probatio.All(
-                cv.string, _deprecated_platform
-            ),
-            probatio.Optional(CONF_LANG): str,
-            probatio.Optional(ATTR_GENDER): str,
-        }
-    ),
-    validate_lang,
-)
 
 
 async def async_get_engine(
