@@ -21,6 +21,7 @@ from homeassistant.components.http.ban import (
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
     RESOLVE_HOST_TIMEOUT,
+    _resolve_host_executor,
     process_success_login,
     setup_bans,
 )
@@ -588,9 +589,12 @@ async def test_hanging_reverse_dns_does_not_delay_auth(
         assert await hass.async_add_executor_job(started.wait, 5)
     finally:
         # The request already returned, but the blocked lookup outlives it.
-        # Signal the slice loop to stop so the dedicated thread frees itself
-        # without blocking the event loop here.
+        # Signal the slice loop to stop, shut the pool down so its worker
+        # can exit once the lookup returns, and join it off the event loop:
+        # the worker otherwise idles until Home Assistant stops, so a bare
+        # join here would sit out the full timeout on the loop.
         stop_lookup.set()
+        _resolve_host_executor.shutdown()
         for thread in threading.enumerate():
             if thread.name.startswith("resolve-host"):
-                thread.join(timeout=5)
+                await hass.async_add_executor_job(thread.join, 5)
