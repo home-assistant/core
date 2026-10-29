@@ -77,6 +77,25 @@
       "message": "Unable to send the notification to Kodi. Is Kodi online?"
     }
   },
+  "issues": {
+    "deprecated_yaml_notify_entity": {
+      "description": "The `{action}` action, set up with the Kodi notify platform in your `configuration.yaml` file, is no longer supported and will be removed in a future release.\n\nA replacement notify entity, `{entity_id}`, was created for your Kodi device {title}. Update your automations and scripts to use the `notify.send_message` or `kodi.send_message` action with this entity.\n\nOnce the new notify entity and actions are in use, remove the Kodi notify configuration (`platform: kodi`) from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The Kodi notify action {action} is deprecated"
+    },
+    "deprecated_yaml_notify_no_entry": {
+      "description": "The `{action}` action, set up with the Kodi notify platform in your `configuration.yaml` file, is no longer supported and will be removed in a future release.\n\nNo Kodi device in Home Assistant matches the host, port, and credentials of this configuration, so no replacement notify entity was created. Follow the [Kodi instructions]({url}) to add your Kodi device. It comes with a notify entity that you can use with the `notify.send_message` or `kodi.send_message` action.\n\nOnce your automations and scripts use the new notify entity, remove the Kodi notify configuration (`platform: kodi`) from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "[%key:component::kodi::issues::deprecated_yaml_notify_entity::title%]"
+    }
+  },
+  "selector": {
+    "icon": {
+      "options": {
+        "error": "Error",
+        "info": "Info",
+        "warning": "Warning"
+      }
+    }
+  },
   "services": {
     "add_to_playlist": {
       "description": "Adds music to the default playlist (i.e. playlistid=0).",
@@ -109,6 +128,28 @@
         }
       },
       "name": "Call method"
+    },
+    "send_message": {
+      "description": "Shows a notification on a Kodi device.",
+      "fields": {
+        "displaytime": {
+          "description": "How long the notification is shown, in milliseconds.",
+          "name": "Display time"
+        },
+        "icon": {
+          "description": "Icon of the notification: info, warning, error, or the path or URL of an image.",
+          "name": "Icon"
+        },
+        "message": {
+          "description": "The message body of the notification.",
+          "name": "Message"
+        },
+        "title": {
+          "description": "Title of the notification.",
+          "name": "Title"
+        }
+      },
+      "name": "Send message"
     }
   }
 }

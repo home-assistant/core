@@ -5,30 +5,46 @@ from typing import Any, override
 
 import aiohttp
 import jsonrpc_async
+from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 import probatio
+from pykodi import CannotConnectError, Kodi
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
+    DOMAIN as NOTIFY_DOMAIN,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
+    NotifyEntity,
+    NotifyEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ICON,
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROXY_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
-from .const import DOMAIN
+from . import KodiConfigEntry
+from .const import (
+    CONF_NOTIFY_LINKED,
+    DEFAULT_NOTIFY_DISPLAYTIME,
+    DEFAULT_NOTIFY_ICON,
+    DOMAIN,
+)
+from .issue import DATA_YAML_NOTIFY, YamlNotifyConfig, async_create_notify_entity_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +97,53 @@ async def async_get_service(
     return KodiNotificationService(hass, url, auth)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: KodiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Kodi notify entity."""
+    if (uid := entry.unique_id) is None:
+        uid = entry.entry_id
+    if yaml_configs := [
+        yaml_config
+        for yaml_config in hass.data.get(DATA_YAML_NOTIFY, [])
+        if yaml_config.matches(entry.data)
+    ]:
+        _async_link_yaml_notify(hass, entry, uid, yaml_configs)
+
+    async_add_entities(
+        [KodiNotifyEntity(entry.runtime_data.kodi, entry.data[CONF_NAME], uid)]
+    )
+
+
+@callback
+def _async_link_yaml_notify(
+    hass: HomeAssistant,
+    entry: KodiConfigEntry,
+    uid: str,
+    yaml_configs: list[YamlNotifyConfig],
+) -> None:
+    """Name the notify entity after the YAML notify platform and raise the issues."""
+    # The first YAML name names a new entity; once linked, the entity keeps its ID
+    name = None if entry.data.get(CONF_NOTIFY_LINKED) else yaml_configs[0].name
+    registry_entry = er.async_get(hass).async_get_or_create(
+        NOTIFY_DOMAIN,
+        DOMAIN,
+        uid,
+        config_entry=entry,
+        suggested_object_id=slugify(name or entry.data[CONF_NAME]),
+    )
+    if not entry.data.get(CONF_NOTIFY_LINKED):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_NOTIFY_LINKED: True}
+        )
+    for yaml_config in yaml_configs:
+        async_create_notify_entity_issue(
+            hass, yaml_config, registry_entry.entity_id, entry.title
+        )
+
+
 class KodiNotificationService(BaseNotificationService):
     """Implement the notification service for Kodi."""
 
@@ -107,6 +170,58 @@ class KodiNotificationService(BaseNotificationService):
             await self._server.GUI.ShowNotification(title, message, icon, displaytime)
 
         except jsonrpc_async.TransportError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notify_failed",
+            ) from err
+
+
+class KodiNotifyEntity(NotifyEntity):
+    """Notify entity of a Kodi device."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_supported_features = NotifyEntityFeature.TITLE
+
+    def __init__(self, kodi: Kodi, name: str, uid: str) -> None:
+        """Initialize the notify entity."""
+        self._kodi = kodi
+        self._attr_unique_id = uid
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, uid)},
+            manufacturer="Kodi",
+            name=name,
+        )
+
+    @override
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send the message via the notify.send_message action."""
+        await self._async_send(message, title)
+
+    async def kodi_send_message(
+        self,
+        message: str,
+        icon: str,
+        displaytime: int,
+        title: str | None = None,
+    ) -> None:
+        """Send the message via the kodi.send_message action."""
+        await self._async_send(message, title, icon, displaytime)
+        self._async_record_notification()
+
+    async def _async_send(
+        self,
+        message: str,
+        title: str | None,
+        icon: str = DEFAULT_NOTIFY_ICON,
+        displaytime: int = DEFAULT_NOTIFY_DISPLAYTIME,
+    ) -> None:
+        """Show the notification on the Kodi device."""
+        try:
+            await self._kodi.send_notification(
+                title or ATTR_TITLE_DEFAULT, message, icon, displaytime
+            )
+        except (TransportError, ProtocolError, CannotConnectError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_failed",
