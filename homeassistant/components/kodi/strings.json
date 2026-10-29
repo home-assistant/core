@@ -82,6 +82,10 @@
       "description": "The `{action}` action, set up with the Kodi notify platform in your `configuration.yaml` file, is no longer supported and will be removed in a future release.\n\nA replacement notify entity, `{entity_id}`, was created for your Kodi device {title}. Update your automations and scripts to use the `notify.send_message` or `kodi.send_message` action with this entity.\n\nOnce the new notify entity and actions are in use, remove the Kodi notify configuration (`platform: kodi`) from your `configuration.yaml` file and restart Home Assistant.",
       "title": "The Kodi notify action {action} is deprecated"
     },
+    "deprecated_yaml_notify_entry_disabled": {
+      "description": "The `{action}` action, set up with the Kodi notify platform in your `configuration.yaml` file, is no longer supported and will be removed in a future release.\n\nYour Kodi device {title} matches this configuration, but it is disabled, so its replacement notify entity is not set up. Enable the Kodi device to get its notify entity, which you can use with the `notify.send_message` or `kodi.send_message` action.\n\nOnce your automations and scripts use the new notify entity, remove the Kodi notify configuration (`platform: kodi`) from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "[%key:component::kodi::issues::deprecated_yaml_notify_entity::title%]"
+    },
     "deprecated_yaml_notify_no_entry": {
       "description": "The `{action}` action, set up with the Kodi notify platform in your `configuration.yaml` file, is no longer supported and will be removed in a future release.\n\nNo Kodi device in Home Assistant matches the host, port, and credentials of this configuration, so no replacement notify entity was created. Follow the [Kodi instructions]({url}) to add your Kodi device. It comes with a notify entity that you can use with the `notify.send_message` or `kodi.send_message` action.\n\nOnce your automations and scripts use the new notify entity, remove the Kodi notify configuration (`platform: kodi`) from your `configuration.yaml` file and restart Home Assistant.",
       "title": "[%key:component::kodi::issues::deprecated_yaml_notify_entity::title%]"
@@ -137,7 +141,7 @@
           "name": "Display time"
         },
         "icon": {
-          "description": "Icon of the notification: info, warning, error, or the path or URL of an image.",
+          "description": "Icon of the notification: info, warning, error, or an image that the Kodi device can open, as a URL or as a path on the Kodi device.",
           "name": "Icon"
         },
         "message": {

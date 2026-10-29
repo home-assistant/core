@@ -1,5 +1,6 @@
 """Tests for the Kodi notify platform."""
 
+import math
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -16,6 +17,7 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryDisabler
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -344,6 +346,12 @@ async def test_yaml_notify_without_matching_entry(
         pytest.param(None, id="empty"),
         pytest.param({"platform": DOMAIN}, id="without_host"),
         pytest.param({**YAML_NOTIFY, "port": "invalid"}, id="invalid_port"),
+        pytest.param({**YAML_NOTIFY, "port": math.inf}, id="infinite_port"),
+        pytest.param({**YAML_NOTIFY, "name": ["living_room"]}, id="name_list"),
+        pytest.param(
+            {key: value for key, value in YAML_NOTIFY.items() if key != "password"},
+            id="username_without_password",
+        ),
     ],
 )
 async def test_yaml_notify_invalid(
@@ -356,3 +364,44 @@ async def test_yaml_notify_invalid(
     await hass.async_block_till_done()
 
     assert not [key for key in issue_registry.issues if key[0] == DOMAIN]
+
+
+async def test_yaml_notify_with_ignored_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored discovery entry does not match a YAML notify platform."""
+    MockConfigEntry(domain=DOMAIN, source=SOURCE_IGNORE, data={}).add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {NOTIFY_DOMAIN: [YAML_NOTIFY]})
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_notify_living_room")
+    assert issue
+    assert issue.translation_key == "deprecated_yaml_notify_no_entry"
+
+
+async def test_yaml_notify_with_disabled_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a matching disabled entry asks to enable the Kodi device."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=mock_config_entry.title,
+        data=mock_config_entry.data,
+        disabled_by=ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
+
+    await setup_yaml_notify(hass, [YAML_NOTIFY])
+
+    # The YAML keeps providing the legacy action until it is removed
+    assert hass.services.has_service(NOTIFY_DOMAIN, "living_room")
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_notify_living_room")
+    assert issue
+    assert issue.translation_key == "deprecated_yaml_notify_entry_disabled"
+    assert issue.translation_placeholders == {
+        "action": "notify.living_room",
+        "title": "name",
+    }

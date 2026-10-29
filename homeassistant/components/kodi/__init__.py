@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_WS_PORT, DOMAIN
 from .issue import (
     DATA_YAML_NOTIFY,
+    async_create_entry_disabled_issue,
     async_create_no_entry_issue,
     async_get_yaml_notify_configs,
 )
@@ -48,11 +49,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
     yaml_configs = async_get_yaml_notify_configs(config)
     hass.data[DATA_YAML_NOTIFY] = yaml_configs
-    entries = hass.config_entries.async_entries(DOMAIN)
+    entries = hass.config_entries.async_entries(DOMAIN, include_ignore=False)
     for yaml_config in yaml_configs:
-        # Matching entries create their issue when their notify entity is set up
-        if not any(yaml_config.matches(entry.data) for entry in entries):
+        matching = [entry for entry in entries if yaml_config.matches(entry.data)]
+        if not matching:
             async_create_no_entry_issue(hass, yaml_config)
+        # Enabled entries create their issue when their notify entity is set up
+        elif all(entry.disabled_by for entry in matching):
+            async_create_entry_disabled_issue(hass, yaml_config, matching[0].title)
     return True
 
 

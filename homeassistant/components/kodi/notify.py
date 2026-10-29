@@ -6,7 +6,6 @@ from typing import Any, override
 import aiohttp
 import jsonrpc_async
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
-import probatio
 from pykodi import CannotConnectError, Kodi
 
 from homeassistant.components.notify import (
@@ -14,7 +13,6 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     DOMAIN as NOTIFY_DOMAIN,
-    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
@@ -30,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,23 +42,18 @@ from .const import (
     DEFAULT_NOTIFY_ICON,
     DOMAIN,
 )
-from .issue import DATA_YAML_NOTIFY, YamlNotifyConfig, async_create_notify_entity_issue
+from .issue import (
+    DATA_YAML_NOTIFY,
+    YAML_NOTIFY_SCHEMA,
+    YamlNotifyConfig,
+    async_create_notify_entity_issue,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = 8080
-DEFAULT_PROXY_SSL = False
-DEFAULT_TIMEOUT = 5
+PLATFORM_SCHEMA = YAML_NOTIFY_SCHEMA
 
-PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
-        probatio.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
-        probatio.Inclusive(CONF_USERNAME, "auth"): cv.string,
-        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "auth"): cv.string,
-    }
-)
+DEFAULT_TIMEOUT = 5
 
 ATTR_DISPLAYTIME = "displaytime"
 
