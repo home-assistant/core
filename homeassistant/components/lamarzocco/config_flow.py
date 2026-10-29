@@ -126,6 +126,51 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self._async_continue_after_login()
                 errors["base"] = error
 
+        return self._async_show_credentials_form(errors)
+
+    @callback
+    def _async_show_credentials_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Show the credentials form of the current flow source."""
+        if self.source == SOURCE_REAUTH:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                    }
+                ),
+                errors=errors,
+            )
+
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_entry = self._get_reconfigure_entry()
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(
+                            CONF_USERNAME, default=reconfigure_entry.data[CONF_USERNAME]
+                        ): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.EMAIL, autocomplete="username"
+                            ),
+                        ),
+                        probatio.Required(
+                            probatio.Secret(CONF_PASSWORD),
+                            default=reconfigure_entry.data[CONF_PASSWORD],
+                        ): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.PASSWORD,
+                                autocomplete="current-password",
+                            ),
+                        ),
+                    }
+                ),
+                errors=errors,
+            )
+
         placeholders: dict[str, str] | None = None
         if self._discovered:
             self.context["title_placeholders"] = placeholders = {
@@ -168,7 +213,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 things = await self._cloud_client.list_things()
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
-                errors["base"] = "invalid_auth"
+                return self._async_show_credentials_form({"base": "invalid_auth"})
             except RequestNotSuccessful as exc:
                 _LOGGER.error("Error connecting to server: %s", exc)
                 errors["base"] = "cannot_connect"
@@ -383,14 +428,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if not user_input:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=probatio.Schema(
-                    {
-                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
-                    }
-                ),
-            )
+            return self._async_show_credentials_form()
 
         return await self.async_step_user(user_input)
 
@@ -399,30 +437,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Perform reconfiguration of the config entry."""
         if not user_input:
-            reconfigure_entry = self._get_reconfigure_entry()
-            return self.async_show_form(
-                step_id="reconfigure",
-                data_schema=probatio.Schema(
-                    {
-                        probatio.Required(
-                            CONF_USERNAME, default=reconfigure_entry.data[CONF_USERNAME]
-                        ): TextSelector(
-                            TextSelectorConfig(
-                                type=TextSelectorType.EMAIL, autocomplete="username"
-                            ),
-                        ),
-                        probatio.Required(
-                            probatio.Secret(CONF_PASSWORD),
-                            default=reconfigure_entry.data[CONF_PASSWORD],
-                        ): TextSelector(
-                            TextSelectorConfig(
-                                type=TextSelectorType.PASSWORD,
-                                autocomplete="current-password",
-                            ),
-                        ),
-                    }
-                ),
-            )
+            return self._async_show_credentials_form()
 
         return await self.async_step_user(user_input)
 

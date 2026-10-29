@@ -240,25 +240,16 @@ async def test_form_accept_policy(
     await __do_sucessful_machine_selection_step(hass, result)
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "error"),
-    [
-        (AuthFail(""), "invalid_auth"),
-        (RequestNotSuccessful(""), "cannot_connect"),
-    ],
-)
-async def test_form_accept_policy_errors(
+async def test_form_accept_policy_cannot_connect(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
-    side_effect: Exception,
-    error: str,
 ) -> None:
-    """Test errors while accepting the privacy policy."""
+    """Test a connection error while accepting the privacy policy."""
     mock_cloud_client.list_things.side_effect = [
         PolicyAcceptanceRequired(""),
         mock_cloud_client.list_things.return_value,
     ]
-    mock_cloud_client.accept_privacy_policy.side_effect = side_effect
+    mock_cloud_client.accept_privacy_policy.side_effect = RequestNotSuccessful("")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -274,7 +265,7 @@ async def test_form_accept_policy_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "accept_policy"
-    assert result["errors"] == {"base": error}
+    assert result["errors"] == {"base": "cannot_connect"}
 
     # test recovery from failure
     mock_cloud_client.accept_privacy_policy.side_effect = None
@@ -285,6 +276,54 @@ async def test_form_accept_policy_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "machine_selection"
+    await __do_sucessful_machine_selection_step(hass, result)
+
+
+async def test_form_accept_policy_invalid_auth(
+    hass: HomeAssistant,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test an auth error while accepting the policy returns to the user step."""
+    mock_cloud_client.list_things.side_effect = [
+        PolicyAcceptanceRequired(""),
+        PolicyAcceptanceRequired(""),
+        mock_cloud_client.list_things.return_value,
+    ]
+    mock_cloud_client.accept_privacy_policy.side_effect = [AuthFail(""), None]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PROFILE_POLICY: False, CONF_COMMERCIAL_POLICY: False},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # test recovery by submitting the credentials again
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "accept_policy"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PROFILE_POLICY: False, CONF_COMMERCIAL_POLICY: False},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "machine_selection"
+    assert len(mock_cloud_client.accept_privacy_policy.mock_calls) == 2
     await __do_sucessful_machine_selection_step(hass, result)
 
 
@@ -395,27 +434,18 @@ async def test_reauth_flow_accept_policy(
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "error"),
-    [
-        (AuthFail(""), "invalid_auth"),
-        (RequestNotSuccessful(""), "cannot_connect"),
-    ],
-)
-async def test_reauth_flow_accept_policy_errors(
+async def test_reauth_flow_accept_policy_cannot_connect(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    side_effect: Exception,
-    error: str,
 ) -> None:
-    """Test errors while accepting the privacy policy during reauth."""
+    """Test a connection error while accepting the privacy policy during reauth."""
     mock_config_entry.add_to_hass(hass)
     mock_cloud_client.list_things.side_effect = [
         PolicyAcceptanceRequired(""),
         mock_cloud_client.list_things.return_value,
     ]
-    mock_cloud_client.accept_privacy_policy.side_effect = side_effect
+    mock_cloud_client.accept_privacy_policy.side_effect = RequestNotSuccessful("")
 
     result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
@@ -429,7 +459,7 @@ async def test_reauth_flow_accept_policy_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "accept_policy"
-    assert result["errors"] == {"base": error}
+    assert result["errors"] == {"base": "cannot_connect"}
 
     # test recovery from failure
     mock_cloud_client.accept_privacy_policy.side_effect = None
@@ -441,6 +471,53 @@ async def test_reauth_flow_accept_policy_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+async def test_reauth_flow_accept_policy_invalid_auth(
+    hass: HomeAssistant,
+    mock_cloud_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an auth error while accepting the policy returns to reauth confirm."""
+    mock_config_entry.add_to_hass(hass)
+    mock_cloud_client.list_things.side_effect = [
+        PolicyAcceptanceRequired(""),
+        PolicyAcceptanceRequired(""),
+        mock_cloud_client.list_things.return_value,
+    ]
+    mock_cloud_client.accept_privacy_policy.side_effect = [AuthFail(""), None]
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new_password"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PROFILE_POLICY: False, CONF_COMMERCIAL_POLICY: False},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # test recovery by submitting corrected credentials
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "corrected_password"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "accept_policy"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PROFILE_POLICY: False, CONF_COMMERCIAL_POLICY: False},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "corrected_password"
 
 
 async def test_reauth_flow_accept_policy_no_machines(
