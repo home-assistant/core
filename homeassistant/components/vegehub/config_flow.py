@@ -120,7 +120,6 @@ class VegeHubConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self._create_entry()
 
         # Show the confirmation form
-        self._set_confirm_only()
         return self.async_show_form(step_id="zeroconf_confirm", errors=errors)
 
     async def _setup_device(self) -> dict[str, str]:

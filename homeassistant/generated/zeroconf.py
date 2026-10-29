@@ -745,6 +745,11 @@ ZEROCONF = {
             "domain": "homewizard",
         },
     ],
+    "_indi-allsky._tcp.local.": [
+        {
+            "domain": "indi_allsky",
+        },
+    ],
     "_iometer._tcp.local.": [
         {
             "domain": "iometer",
@@ -818,6 +823,12 @@ ZEROCONF = {
             "domain": "lutron_caseta",
             "properties": {
                 "SYSTYPE": "ra2select*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "athena*",
             },
         },
     ],

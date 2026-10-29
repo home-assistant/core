@@ -29,11 +29,15 @@ def mock_nmbs_client() -> Generator[AsyncMock]:
     """Mock a NMBS client."""
     with (
         patch(
-            "homeassistant.components.nmbs.iRail",
+            "homeassistant.components.nmbs.IRail",
             autospec=True,
         ) as mock_client,
         patch(
-            "homeassistant.components.nmbs.config_flow.iRail",
+            "homeassistant.components.nmbs.config_flow.IRail",
+            new=mock_client,
+        ),
+        patch(
+            "homeassistant.components.nmbs.sensor.IRail",
             new=mock_client,
         ),
     ):

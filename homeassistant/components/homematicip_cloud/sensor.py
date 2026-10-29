@@ -23,6 +23,7 @@ from homematicip.device import (
     LightSensor,
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
+    MotionDetectorSwitchOutdoor,
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
@@ -37,6 +38,7 @@ from homematicip.device import (
     TiltVibrationSensor,
     UltrasonicDistanceSensor,
     WateringActuator,
+    WaterSupplyStop,
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
@@ -300,6 +302,16 @@ ILLUMINANCE_DESC = HmipSensorDescription[Device](
     channel=1,
 )
 
+MOTION_SWITCH_ILLUMINANCE_DESC = HmipSensorDescription[Device](
+    key="illuminance",
+    device_class=SensorDeviceClass.ILLUMINANCE,
+    native_unit_of_measurement=LIGHT_LUX,
+    state_class=SensorStateClass.MEASUREMENT,
+    channel_value_fn=lambda channel: channel.illumination,
+    channel=1,
+    channel_type=FunctionalChannelType.MOTION_DETECTION_CHANNEL,
+)
+
 POWER_DESC = HmipSensorDescription[Device](
     key="power",
     device_class=SensorDeviceClass.POWER,
@@ -437,6 +449,19 @@ HEIGHT_DESC = HmipSensorDescription[Device](
 )
 
 
+WATER_FLOW_DESC = HmipSensorDescription[Device](
+    key="water_flow",
+    translation_key="water_flow",
+    device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+    native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=1,
+    channel_value_fn=lambda channel: channel.waterFlow,
+    channel=1,
+    channel_type=FunctionalChannelType.WATER_SUPPLY_STOP_CHANNEL,
+)
+
+
 # Keys must not subclass each other so each device matches one key; the setup
 # loop breaks after the first match (enforced by
 # test_simple_sensor_descriptions_no_overlap).
@@ -466,6 +491,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
     LightSensor: (ILLUMINANCE_DESC,),
     MotionDetectorIndoor: (ILLUMINANCE_DESC,),
     MotionDetectorOutdoor: (ILLUMINANCE_DESC,),
+    MotionDetectorSwitchOutdoor: (MOTION_SWITCH_ILLUMINANCE_DESC,),
     PresenceDetectorIndoor: (ILLUMINANCE_DESC,),
     SwitchMeasuring: (POWER_DESC, ENERGY_DESC),
     PassageDetector: (PASSAGE_COUNTER_DESC,),
@@ -476,6 +502,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
     ),
     TiltVibrationSensor: (TILT_ANGLE_DESC, TILT_TEMPERATURE_DESC),
     UltrasonicDistanceSensor: (DISTANCE_DESC, HEIGHT_DESC),
+    WaterSupplyStop: (WATER_FLOW_DESC,),
     WeatherSensor: (
         TEMPERATURE_DESC,
         HUMIDITY_DESC,

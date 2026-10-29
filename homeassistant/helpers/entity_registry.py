@@ -40,6 +40,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
     valid_entity_id,
+    verify_event_loop_thread,
 )
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import async_suggest_report_issue
@@ -1343,13 +1344,35 @@ def _validate_item(
 
 
 @callback
-def _has_own_area_without_own_name(hass: HomeAssistant, entry: RegistryEntry) -> bool:
+def _has_own_area_without_own_name(entry: RegistryEntry) -> bool:
     """Return if an entity has an area of its own but no name of its own."""
     return (
         entry.area_id is not None
         and entry.device_id is not None
         and not entry.entity_name
     )
+
+
+@callback
+def _async_get_child_device_accepting_area(
+    hass: HomeAssistant, entry: RegistryEntry
+) -> dr.ChildDeviceEntry | None:
+    """Return the child device which accepts the area of its new main entity.
+
+    An entity without a name of its own is the main entity of its device, so its
+    own area describes where the device is. A child device without an area, or
+    with the same area, accepts it.
+    """
+    if entry.device_id is None:
+        return None
+    device = dr.async_get(hass).async_get(
+        entry.device_id, include_main_devices=False, include_composite_devices=False
+    )
+    if device is None or (
+        device.area_id is not None and device.area_id != entry.area_id
+    ):
+        return None
+    return device
 
 
 class EntityRegistry(BaseRegistry):
@@ -1573,6 +1596,7 @@ class EntityRegistry(BaseRegistry):
         )
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_get_or_create")
     def async_get_or_create(
         self,
         domain: str,
@@ -1583,9 +1607,7 @@ class EntityRegistry(BaseRegistry):
         # `suggested_object_id` has priority over `object_id_base`.
         object_id_base: str | UndefinedType | None = UNDEFINED,
         suggested_object_id: str | UndefinedType | None = UNDEFINED,
-        # To disable or hide an entity if it gets created, does not affect
-        # existing entities
-        disabled_by: RegistryEntryDisabler | None = None,
+        disabled_by: RegistryEntryDisabler | UndefinedType | None = UNDEFINED,
         hidden_by: RegistryEntryHider | None = None,
         # Function to generate initial entity options if it gets created
         get_initial_options: Callable[[], EntityOptionsType | None] | None = None,
@@ -1607,6 +1629,11 @@ class EntityRegistry(BaseRegistry):
 
         domain: entity component domain (e.g. light, sensor)
         platform: integration domain (e.g. hue, zwave)
+        disabled_by: disables the entity if it gets created, does not affect an
+            existing entity. A derived value, including None, is not stored as
+            passed but derived again.
+        hidden_by: hides the entity if it gets created, does not affect an
+            existing entity.
         """
         config_entry_id: str | UndefinedType | None = UNDEFINED
         if not config_entry:
@@ -1637,7 +1664,6 @@ class EntityRegistry(BaseRegistry):
                 unit_of_measurement=unit_of_measurement,
             )
 
-        self.hass.verify_event_loop_thread("entity_registry.async_get_or_create")
         device_id = self._ignore_composite_device_id(platform, device_id)
         _validate_item(
             self.hass,
@@ -1665,10 +1691,6 @@ class EntityRegistry(BaseRegistry):
             device_class = deleted_entity.device_class
             if deleted_entity.disabled_by is not UNDEFINED:
                 disabled_by = deleted_entity.disabled_by
-                # A stored derived disabled_by can be stale, so reset it to be
-                # derived again below
-                if disabled_by in _DERIVED_DISABLED_BY:
-                    disabled_by = None
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id):
                 entity_id = deleted_entity.entity_id
@@ -1722,14 +1744,14 @@ class EntityRegistry(BaseRegistry):
         )
         config_entry = none_if_undefined(config_entry)
 
-        if (
-            disabled_by is None
-            and config_entry is not None
-            and config_entry.pref_disable_new_entities
-        ):
-            disabled_by = RegistryEntryDisabler.INTEGRATION
-        # Not explicitly disabled, so derive disabled_by
-        if disabled_by is None:
+        if disabled_by is UNDEFINED:
+            disabled_by = (
+                RegistryEntryDisabler.INTEGRATION
+                if config_entry is not None and config_entry.pref_disable_new_entities
+                else None
+            )
+        # Derive disabled_by unless explicitly disabled
+        if disabled_by in _DERIVED_DISABLED_BY:
             device = (
                 dr.async_get(self.hass).async_get(device_id)
                 if device_id is not None
@@ -1784,9 +1806,9 @@ class EntityRegistry(BaseRegistry):
         return entry
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_remove")
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
-        self.hass.verify_event_loop_thread("entity_registry.async_remove")
         if entity_id not in self.entities:
             # Allow attempts to remove an entity which does not exist. If this is
             # not allowed, there will be races during cleanup where we iterate over
@@ -1951,7 +1973,7 @@ class EntityRegistry(BaseRegistry):
             disabled_by = _derived_disabled_by(config_entry, device)
             if disabled_by is entity.disabled_by:
                 continue
-            self.async_update_entity(entity.entity_id, disabled_by=disabled_by)
+            self._async_update_entity(entity.entity_id, disabled_by=disabled_by)
 
     @callback
     def _ignore_composite_device_id(
@@ -1969,7 +1991,10 @@ class EntityRegistry(BaseRegistry):
         device_registry = dr.async_get(self.hass)
         if (
             device_registry.async_get(
-                device_id, include_main_devices=False, include_child_devices=False
+                device_id,
+                include_main_devices=False,
+                include_child_devices=False,
+                include_composite_devices=True,
             )
             is None
         ):
@@ -1991,6 +2016,7 @@ class EntityRegistry(BaseRegistry):
         return UNDEFINED
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_update_entity")
     def _async_update_entity(
         self,
         entity_id: str,
@@ -2134,8 +2160,6 @@ class EntityRegistry(BaseRegistry):
 
         new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("entity_registry.async_update_entity")
-
         if original_name_unprefixed is UNDEFINED and (
             original_name is not UNDEFINED
             or device_id is not UNDEFINED
@@ -2167,14 +2191,26 @@ class EntityRegistry(BaseRegistry):
 
         new = attr.evolve(old, **new_values)
 
-        # Only user edits are rejected, integration updates surface as a repair issue
-        if (
-            "area_id" in new_values or "name" in new_values
-        ) and _has_own_area_without_own_name(self.hass, new):
-            raise ValueError(
-                "An entity without a name of its own cannot have an area of its own, "
-                "set the area on its device instead"
-            )
+        child_device: dr.ChildDeviceEntry | None = None
+        if _has_own_area_without_own_name(new):
+            # The child device only takes the area over when the entity moved to it
+            if "device_id" in new_values:
+                child_device = _async_get_child_device_accepting_area(self.hass, new)
+
+            if child_device is not None:
+                child_device_new_area_id = new.area_id
+                new = attr.evolve(new, area_id=None)
+                old_values.pop("area_id", None)
+                new_values.pop("area_id", None)
+                if old.area_id is not None:
+                    old_values["area_id"] = old.area_id
+                    new_values["area_id"] = None
+            elif "area_id" in new_values or "name" in new_values:
+                # Only user edits are rejected, integration updates surface as a repair issue
+                raise ValueError(
+                    "An entity without a name of its own cannot have an area of its own, "
+                    "set the area on its device instead"
+                )
 
         if entity_id != old.entity_id:
             self.entities.pop(old.entity_id)
@@ -2193,6 +2229,12 @@ class EntityRegistry(BaseRegistry):
 
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id
+
+        # Before the entity event, so listeners never see the entity without an area
+        if child_device is not None:
+            dr.async_get(self.hass).async_update_child_device(
+                child_device.id, area_id=child_device_new_area_id
+            )
 
         self.hass.bus.async_fire_internal(EVENT_ENTITY_REGISTRY_UPDATED, data)
 
@@ -2227,7 +2269,13 @@ class EntityRegistry(BaseRegistry):
         translation_key: str | UndefinedType | None = UNDEFINED,
         unit_of_measurement: str | UndefinedType | None = UNDEFINED,
     ) -> RegistryEntry:
-        """Update properties of an entity."""
+        """Update properties of an entity.
+
+        disabled_by: a derived value, including None, is not stored as passed but
+            derived again.
+        """
+        if disabled_by in _DERIVED_DISABLED_BY:
+            disabled_by = None
         return self._async_update_entity(
             entity_id,
             aliases=aliases,
@@ -2310,14 +2358,13 @@ class EntityRegistry(BaseRegistry):
         return self._async_update_entity(entity_id, options=new_options)
 
     @callback
+    @verify_event_loop_thread("entity_registry.async_update_settings")
     def async_update_settings(
         self,
         *,
         entity_id_parts: list[EntityNamePart] | UndefinedType | None = UNDEFINED,
     ) -> EntityRegistrySettings:
         """Update entity registry settings."""
-        self.hass.verify_event_loop_thread("entity_registry.async_update_settings")
-
         old = self.settings
         new = old
         if entity_id_parts is not UNDEFINED:
@@ -2814,7 +2861,7 @@ def async_config_entry_disabled_by_changed(
         disabled_by = _derived_disabled_by(config_entry, device)
         if disabled_by is entity.disabled_by:
             continue
-        registry.async_update_entity(entity.entity_id, disabled_by=disabled_by)
+        registry._async_update_entity(entity.entity_id, disabled_by=disabled_by)  # noqa: SLF001
 
 
 @callback
@@ -3005,7 +3052,7 @@ def _async_setup_own_area_without_own_name_issues(
     def _handle_registry_update(event: Event[EventEntityRegistryUpdatedData]) -> None:
         if (entry := registry.async_get(event.data["entity_id"])) is None:
             return
-        if _has_own_area_without_own_name(hass, entry):
+        if _has_own_area_without_own_name(entry):
             _async_create_issue(entry)
         else:
             ir.async_delete_issue(
@@ -3024,7 +3071,7 @@ def _async_setup_own_area_without_own_name_issues(
     @callback
     def _async_create_issues(_: Event) -> None:
         for entry in registry.entities.values():
-            if _has_own_area_without_own_name(hass, entry):
+            if _has_own_area_without_own_name(entry):
                 _async_create_issue(entry)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_create_issues)

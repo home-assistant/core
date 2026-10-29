@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000000055')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -63,9 +63,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '00000000-0000-0000-0000-000000000001')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -104,5 +104,274 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_hmip_motion_detector_switch_outdoor[binary_sensor.bewegungsmelder_haustur_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F711000000000SMO230A')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.bewegungsmelder_haustur_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3014F711000000000SMO230A_1_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_motion_detector_switch_outdoor[binary_sensor.bewegungsmelder_haustur_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bewegungsmelder Haustür Motion',
+      'id': '3014F711000000000SMO230A',
+      'is_group': False,
+      'model_type': 'HmIP-SMO230-A',
+      'rssi_device': -70,
+      'rssi_peer': -81,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bewegungsmelder_haustur_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_hmip_motion_detector_switch_outdoor[binary_sensor.home_cloud_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '00000000-0000-0000-0000-000000000001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_cloud_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cloud connection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:access-point-network',
+    'original_name': 'Cloud connection',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_connection',
+    'unique_id': '00000000-0000-0000-0000-000000000001_cloud_connection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_motion_detector_switch_outdoor[binary_sensor.home_cloud_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Cloud connection',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_cloud_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_hmip_water_alarm_sensor[binary_sensor.home_cloud_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '00000000-0000-0000-0000-000000000001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_cloud_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cloud connection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:access-point-network',
+    'original_name': 'Cloud connection',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_connection',
+    'unique_id': '00000000-0000-0000-0000-000000000001_cloud_connection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_water_alarm_sensor[binary_sensor.home_cloud_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Cloud connection',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_cloud_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_hmip_water_alarm_sensor[binary_sensor.wasserstopp_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000000WSS')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.wasserstopp_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3014F7110000000000000WSS_0_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_water_alarm_sensor[binary_sensor.wasserstopp_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wasserstopp Battery',
+      'id': '3014F7110000000000000WSS',
+      'is_group': False,
+      'model_type': 'HmIP-WSS-GB',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.wasserstopp_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_hmip_water_alarm_sensor[binary_sensor.wasserstopp_water_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000000WSS')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.wasserstopp_water_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+    'original_icon': None,
+    'original_name': 'Water alarm',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_alarm',
+    'unique_id': '3014F7110000000000000WSS_1_water_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_water_alarm_sensor[binary_sensor.wasserstopp_water_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wasserstopp Water alarm',
+      'id': '3014F7110000000000000WSS',
+      'is_group': False,
+      'model_type': 'HmIP-WSS-GB',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.wasserstopp_water_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---

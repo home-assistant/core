@@ -80,8 +80,10 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
     CONF_MIN_TEMP,
+    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_TEMP_STEP,
     DEFAULT_TOLERANCE,
     DOMAIN,
     PLATFORMS,
@@ -92,9 +94,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Generic Thermostat"
 
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
-CONF_PRECISION = "precision"
 CONF_TARGET_TEMP = "target_temp"
-CONF_TEMP_STEP = "target_temp_step"
 
 
 PRESETS_SCHEMA: VolDictType = {
@@ -128,7 +128,8 @@ PLATFORM_SCHEMA_COMMON = probatio.Schema(
             probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
         probatio.Optional(CONF_TEMP_STEP): probatio.All(
-            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
+            probatio.Coerce(float),
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
         probatio.Optional(CONF_UNIQUE_ID): cv.string,
         **PRESETS_SCHEMA,

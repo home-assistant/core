@@ -1,7 +1,6 @@
-"""Creates Update entities for the my-PV Home Assistant integration."""
+"""Creates Update entities for the my-PV integration."""
 
-import logging
-from typing import Any, override
+from typing import Any, Final, override
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -17,7 +16,12 @@ from .const import DOMAIN
 from .coordinator import MyPVConfigEntry
 from .entity import MyPVBaseEntity
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
+
+FIRMWARE_UPDATE_DESCRIPTION: Final = UpdateEntityDescription(
+    key="firmware_update",
+    device_class=UpdateDeviceClass.FIRMWARE,
+)
 
 
 async def async_setup_entry(
@@ -27,25 +31,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the my-PV update."""
     coordinator = config_entry.runtime_data
-    entities = []
 
     if (
         coordinator.device.firmware_version
         and coordinator.device.latest_firmware_version
     ):
-        entity_description = UpdateEntityDescription(
-            key="firmware_update",
-            device_class=UpdateDeviceClass.FIRMWARE,
+        async_add_entities(
+            [
+                MyPVFirmwareUpdate(
+                    coordinator,
+                    FIRMWARE_UPDATE_DESCRIPTION,
+                )
+            ]
         )
-        entities.append(
-            MyPVFirmwareUpdate(
-                coordinator,
-                entity_description,
-                coordinator.device.serial_number,
-            )
-        )
-
-    async_add_entities(entities)
 
 
 class MyPVFirmwareUpdate(MyPVBaseEntity, UpdateEntity):

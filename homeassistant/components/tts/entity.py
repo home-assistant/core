@@ -8,11 +8,9 @@ from typing import Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -141,10 +139,10 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         """Speak via a Media Player."""
         await self.hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_entity_id,
-                ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: generate_media_source_id(
                     self.hass,
                     message=message,
                     engine=self.entity_id,
@@ -152,8 +150,8 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
                     options=options,
                     cache=cache,
                 ),
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_ANNOUNCE: True,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.ANNOUNCE: True,
             },
             blocking=True,
             context=self._context,

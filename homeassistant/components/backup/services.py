@@ -1,10 +1,19 @@
 """The Backup integration."""
 
+from enum import StrEnum
+
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DATA_MANAGER, DOMAIN
+
+
+class BackupService(StrEnum):
+    """Store keys for backup services."""
+
+    CREATE = "create"
+    CREATE_AUTOMATIC = "create_automatic"
 
 
 async def _async_handle_create_service(call: ServiceCall) -> None:
@@ -33,8 +42,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register services."""
     if not is_hassio(hass):
         async_register_admin_service(
-            hass, DOMAIN, "create", _async_handle_create_service
+            hass, DOMAIN, BackupService.CREATE, _async_handle_create_service
         )
     async_register_admin_service(
-        hass, DOMAIN, "create_automatic", _async_handle_create_automatic_service
+        hass,
+        DOMAIN,
+        BackupService.CREATE_AUTOMATIC,
+        _async_handle_create_automatic_service,
     )
