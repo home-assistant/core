@@ -1,9 +1,7 @@
 """Test System Monitor sensor."""
 
-from dataclasses import replace
 from datetime import timedelta
 import socket
-from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -15,11 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.coordinator import VirtualMemory
-from homeassistant.components.systemmonitor.sensor import (
-    get_all_network_interfaces,
-    get_cpu_icon,
-    get_ip_address,
-)
+from homeassistant.components.systemmonitor.sensor import get_cpu_icon
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -28,45 +22,26 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import MockProcess
 
 
-def test_ip_address_not_collected_yet() -> None:
-    """A missing coordinator address snapshot must not abort sensor setup."""
-    sensor = SimpleNamespace(
-        coordinator=SimpleNamespace(data=SimpleNamespace(addresses=None)),
-        argument="eth0",
-        entity_description=SimpleNamespace(key="ipv4_address"),
-    )
-    assert get_ip_address(sensor) is None
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_missing_ip_addresses_does_not_block_sensor_setup(
+async def test_ip_addresses_missing_during_initial_setup(
     hass: HomeAssistant,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Missing address data must not prevent other sensors from loading."""
-
-    def discover_interfaces_with_missing_addresses(
-        _hass: HomeAssistant, psutil_wrapper
-    ):
-        interfaces = get_all_network_interfaces(hass, psutil_wrapper)
-        coordinator = mock_config_entry.runtime_data.coordinator
-        coordinator.data = replace(coordinator.data, addresses=None)
-        return interfaces
+    """Missing initial IP address data must not abort sensor setup."""
+    interfaces = mock_psutil.net_if_addrs.return_value
+    mock_psutil.net_if_addrs.side_effect = [None, interfaces]
 
     mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.systemmonitor.sensor.get_all_network_interfaces",
-        side_effect=discover_interfaces_with_missing_addresses,
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert mock_psutil.net_if_addrs.call_count == 2
 
-    ip_sensor = hass.states.get("sensor.system_monitor_ipv4_address_eth0")
-    assert ip_sensor is not None
-    assert ip_sensor.state == STATE_UNKNOWN
+    ipv4_sensor = hass.states.get("sensor.system_monitor_ipv4_address_eth0")
+    assert ipv4_sensor is not None
+    assert ipv4_sensor.state == STATE_UNKNOWN
 
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
