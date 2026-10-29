@@ -355,6 +355,37 @@ async def test_zeroconf_flow(
     assert result["result"].unique_id == SERIAL
 
 
+@pytest.mark.parametrize(
+    ("hostname", "unique_id"),
+    [
+        pytest.param("blhems-1a2b3c4d5e6f.local.", "1a:2b:3c:4d:5e:6f", id="mac"),
+        pytest.param("BLHEMS-1A2B3C4D5E6F.local", "1a:2b:3c:4d:5e:6f", id="upper"),
+        pytest.param("bluetti.local.", SERIAL, id="other_name"),
+        pytest.param("blhems-1a2b3c4d5e6g.local.", SERIAL, id="not_hex"),
+        pytest.param("blhems-1a2b3c4d5e6f0.local.", SERIAL, id="too_long"),
+        pytest.param("blhems-1a2b3c4d5e6f.lan.", SERIAL, id="other_domain"),
+    ],
+)
+async def test_zeroconf_unique_id_from_hostname(
+    hass: HomeAssistant,
+    mock_modbus_unit: MockModbusUnit,
+    hostname: str,
+    unique_id: str,
+) -> None:
+    """Only a Balco 260 hostname gives its MAC, otherwise the serial is used."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_info(hostname=hostname),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert (
+        hass.config_entries.flow.async_get(result["flow_id"])["context"]["unique_id"]
+        == unique_id
+    )
+
+
 async def test_zeroconf_known_address_is_not_probed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

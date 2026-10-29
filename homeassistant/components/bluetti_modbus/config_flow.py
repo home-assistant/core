@@ -1,7 +1,7 @@
 """Config flow to configure the BLUETTI Modbus integration."""
 
 import logging
-import re
+from string import hexdigits
 from typing import TYPE_CHECKING, Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
@@ -25,8 +25,8 @@ from .device import restricted_device
 
 _LOGGER = logging.getLogger(__name__)
 
-# The mDNS hostname a Balco 260 announces itself under, "blhems-<MAC>.local.".
-_HOSTNAME_MAC = re.compile(r"blhems-([0-9a-f]{12})\.local\.?", re.IGNORECASE)
+_HOSTNAME_PREFIX = "blhems-"
+_HOSTNAME_SUFFIX = ".local"
 
 STEP_USER = probatio.Schema(
     {
@@ -49,6 +49,17 @@ STEP_USER = probatio.Schema(
         ),
     }
 )
+
+
+def _hostname_mac(hostname: str) -> str | None:
+    """Return the MAC in a Balco 260 hostname, "blhems-<MAC>.local."."""
+    name = hostname.lower().removesuffix(".")
+    if not name.startswith(_HOSTNAME_PREFIX) or not name.endswith(_HOSTNAME_SUFFIX):
+        return None
+    mac = name.removeprefix(_HOSTNAME_PREFIX).removesuffix(_HOSTNAME_SUFFIX)
+    if len(mac) != 12 or not set(mac) <= set(hexdigits):
+        return None
+    return format_mac(mac)
 
 
 class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -102,8 +113,8 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         # The announcement carries no serial number. The MAC in the hostname
         # identifies the flow until the device has been asked, so an ignored
         # or already discovered power station is dropped without a connection.
-        if match := _HOSTNAME_MAC.fullmatch(discovery_info.hostname):
-            await self.async_set_unique_id(format_mac(match.group(1)))
+        if mac := _hostname_mac(discovery_info.hostname):
+            await self.async_set_unique_id(mac)
             self._abort_if_unique_id_configured()
 
         data = {
