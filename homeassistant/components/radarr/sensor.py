@@ -3,6 +3,7 @@
 from collections.abc import Callable
 import dataclasses
 from datetime import UTC, datetime
+import re
 from typing import Any, Generic, override
 
 from aiopyarr import Diskspace, RootFolder, SystemStatus
@@ -21,27 +22,38 @@ from .coordinator import RadarrConfigEntry, RadarrDataUpdateCoordinator, T
 from .entity import RadarrEntity
 
 
-def get_space(data: list[Diskspace], name: str) -> str:
+def get_space(data: list[Diskspace], path: str) -> str:
     """Get space."""
     space = [
         mount.freeSpace / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES)
         for mount in data
-        if name in mount.path
+        if mount.path == path
     ]
     return f"{space[0]:.2f}"
 
 
+def get_folder_names(mounts: list[RootFolder]) -> list[str]:
+    """Return a unique name for each root folder."""
+    names: list[str] = []
+    for mount in mounts:
+        name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
+        if name in names:
+            # Only repeated names use the full path, so existing unique IDs don't change
+            name = "_".join(part for part in re.split(r"[/\\]", mount.path) if part)
+        names.append(name)
+    return names
+
+
 def get_modified_description(
-    description: RadarrSensorEntityDescription[T], mount: RootFolder
+    description: RadarrSensorEntityDescription[T], mount: RootFolder, name: str
 ) -> tuple[RadarrSensorEntityDescription[T], str]:
-    """Return modified description and folder name."""
-    name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
+    """Return modified description and folder path."""
     desc = dataclasses.replace(
         description,
         key=f"{description.key}_{name}",
         name=f"{description.name} {name}".capitalize(),
     )
-    return desc, name
+    return desc, mount.path
 
 
 @dataclasses.dataclass(frozen=True)
@@ -61,7 +73,7 @@ class RadarrSensorEntityDescription(
 
     description_fn: (
         Callable[
-            [RadarrSensorEntityDescription[T], RootFolder],
+            [RadarrSensorEntityDescription[T], RootFolder, str],
             tuple[RadarrSensorEntityDescription[T], str] | None,
         ]
         | None
@@ -123,9 +135,12 @@ async def async_setup_entry(
         if coordinator_type != "disk_space":
             entities.append(RadarrSensor(coordinator, description))
         else:
+            names = get_folder_names(coordinator.data)
             entities.extend(
-                RadarrSensor(coordinator, *get_modified_description(description, mount))
-                for mount in coordinator.data
+                RadarrSensor(
+                    coordinator, *get_modified_description(description, mount, name)
+                )
+                for mount, name in zip(coordinator.data, names, strict=True)
                 if description.description_fn
             )
     async_add_entities(entities)

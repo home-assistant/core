@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
@@ -86,6 +87,36 @@ async def test_windows(
 
     state = hass.states.get("sensor.mock_title_disk_space_tv")
     assert state.state == "263.10"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_duplicate_root_folder_names(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test root folders with the same name get their own disk space sensors."""
+    entry = await setup_integration(
+        hass, aioclient_mock, root_folder_fixture="rootfolder-duplicate-names"
+    )
+
+    assert hass.states.get("sensor.mock_title_disk_space_movies").state == "263.10"
+    assert (
+        hass.states.get("sensor.mock_title_disk_space_media_kids_movies").state
+        == "93.13"
+    )
+    assert (
+        entity_registry.async_get("sensor.mock_title_disk_space_movies").unique_id
+        == f"{entry.entry_id}_disk_space_Movies"
+    )
+    assert (
+        entity_registry.async_get(
+            "sensor.mock_title_disk_space_media_kids_movies"
+        ).unique_id
+        == f"{entry.entry_id}_disk_space_media_Kids_Movies"
+    )
+    assert "does not generate unique IDs" not in caplog.text
 
 
 async def test_update_failed(

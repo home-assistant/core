@@ -41,6 +41,7 @@ def mock_connection(
     invalid_auth: bool = False,
     windows: bool = False,
     single_return: bool = False,
+    root_folder_fixture: str | None = None,
 ) -> None:
     """Mock radarr connection."""
     if error:
@@ -80,13 +81,14 @@ def mock_connection(
         text=load_fixture("radarr/queue.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
-    root_folder_fixture = "rootfolder-linux"
+    if root_folder_fixture is None:
+        root_folder_fixture = "rootfolder-linux"
 
-    if windows:
-        root_folder_fixture = "rootfolder-windows"
+        if windows:
+            root_folder_fixture = "rootfolder-windows"
 
-    if single_return:
-        root_folder_fixture = f"single-{root_folder_fixture}"
+        if single_return:
+            root_folder_fixture = f"single-{root_folder_fixture}"
 
     aioclient_mock.get(
         f"{url}/api/v3/rootfolder",
@@ -164,6 +166,7 @@ async def setup_integration(
     invalid_auth: bool = False,
     windows: bool = False,
     single_return: bool = False,
+    root_folder_fixture: str | None = None,
 ) -> MockConfigEntry:
     """Set up the radarr integration in Home Assistant."""
     entry = MockConfigEntry(
@@ -185,6 +188,7 @@ async def setup_integration(
         invalid_auth=invalid_auth,
         windows=windows,
         single_return=single_return,
+        root_folder_fixture=root_folder_fixture,
     )
 
     mock_calendar(aioclient_mock, url)
