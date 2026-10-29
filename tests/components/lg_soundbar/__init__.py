@@ -20,5 +20,5 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
 def find_update_callback(
     mock: MagicMock,
 ) -> Callable[[dict[str, Any]], None]:
-    """Return the callback registered with the temescal device."""
+    """Return the callback registered with the BarTalk device."""
     return mock.call_args.kwargs["callback"]

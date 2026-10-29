@@ -22,20 +22,20 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_temescal() -> Generator[MagicMock]:
-    """Mock the temescal library.
+def mock_soundbar_client() -> Generator[MagicMock]:
+    """Mock the BarTalk library.
 
     Only the device constructor is mocked so that the real ``functions`` and
     ``equalisers`` lookup tables remain available to the media player.
     """
     with (
         patch(
-            "homeassistant.components.lg_soundbar.media_player.temescal.temescal",
+            "homeassistant.components.lg_soundbar.media_player.soundbar_client.LGSoundbarClient",
             autospec=True,
-        ) as mock_temescal,
+        ) as mock_soundbar_client,
         patch(
             "homeassistant.components.lg_soundbar.test_connect",
             return_value={"name": "LG Soundbar", "uuid": "uuid"},
         ),
     ):
-        yield mock_temescal
+        yield mock_soundbar_client

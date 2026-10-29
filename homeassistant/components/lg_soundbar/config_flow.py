@@ -4,8 +4,8 @@ import logging
 from queue import Empty, Full, Queue
 from typing import override
 
+import lg_bartalk as soundbar_client
 import probatio
-import temescal
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -49,9 +49,12 @@ def test_connect(host, port):
             queue_add(name_q, response["data"]["s_user_name"])
 
     details = {}
+    connection = None
 
     try:
-        connection = temescal.temescal(host, port=port, callback=msg_callback)
+        connection = soundbar_client.LGSoundbarClient(
+            host, port=port, callback=msg_callback
+        )
         connection.get_info()
         connection.get_mac_info()
         if uuid_q.empty():
@@ -64,6 +67,9 @@ def test_connect(host, port):
         raise ConnectionError(f"Connection timeout with server: {host}:{port}") from err
     except OSError as err:
         raise ConnectionError(f"Cannot resolve hostname: {host}") from err
+    finally:
+        if connection is not None:
+            connection.close()
 
     return details
 

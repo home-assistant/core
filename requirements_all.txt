@@ -1562,6 +1562,9 @@ lektricowifi==0.1
 # homeassistant.components.letpot
 letpot==0.7.0
 
+# homeassistant.components.lg_soundbar
+lg-bartalk==0.1.1
+
 # homeassistant.components.lg_tv_rs232
 lg-rs232-tv==1.3.1
 
@@ -3325,9 +3328,6 @@ tellduslive==0.10.12
 
 # homeassistant.components.teltonika
 teltasync==0.4.1
-
-# homeassistant.components.lg_soundbar
-temescal==0.5
 
 # homeassistant.components.temper
 temperusb==1.6.1
