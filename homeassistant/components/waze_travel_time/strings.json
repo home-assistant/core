@@ -18,6 +18,17 @@
       }
     }
   },
+  "exceptions": {
+    "connection_error": {
+      "message": "An error occurred while connecting to Waze"
+    },
+    "unknown_origin_or_destination": {
+      "message": "Unable to determine origin or destination"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from Waze"
+    }
+  },
   "options": {
     "step": {
       "init": {
