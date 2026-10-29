@@ -1,0 +1,6 @@
+{
+  "domain": "plushome",
+  "name": "+home",
+  "integration_type": "virtual",
+  "supported_by": "electrolux"
+}
