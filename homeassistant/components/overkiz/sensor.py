@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import cast, override
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
@@ -27,10 +28,11 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from . import OverkizDataConfigEntry
 from .const import (
@@ -540,13 +542,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     ),
     # Oven/DynamicOven
     OverkizSensorDescription(
-        key=OverkizState.CORE_REMAINING_TIME,
-        name="Remaining time",
-        native_value=lambda value: cast(int, value),
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-    ),
-    OverkizSensorDescription(
         key=OverkizState.CORE_CURRENT_CYCLE_STAGE,
         name="Cycle stage",
         device_class=SensorDeviceClass.ENUM,
@@ -556,6 +551,12 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
+
+END_TIME_DESCRIPTION = OverkizSensorDescription(
+    key=OverkizState.CORE_REMAINING_TIME,
+    name="End time",
+    device_class=SensorDeviceClass.TIMESTAMP,
+)
 
 
 PARALLEL_UPDATES = 0
@@ -594,6 +595,16 @@ async def async_setup_entry(
             for state in device.definition.states
             if (description := SUPPORTED_STATES.get(state))
         )
+
+        if (
+            OverkizState.CORE_RUNNING_TIMER in device.definition.states
+            and OverkizState.CORE_REMAINING_TIME in device.definition.states
+        ):
+            entities.append(
+                OverkizEndTimeSensor(
+                    device.device_url, data.coordinator, END_TIME_DESCRIPTION
+                )
+            )
 
     async_add_entities(entities)
 
@@ -656,6 +667,45 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         if (valid_units := DEVICE_CLASS_UNITS.get(device_class)) is None:
             return True
         return unit in valid_units
+
+
+class OverkizEndTimeSensor(OverkizDescriptiveEntity, SensorEntity):
+    """End of the running timer.
+
+    The remaining time is only pushed when the timer starts or its duration
+    changes, so the end time is computed when a new value is received.
+    """
+
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+        description: OverkizSensorDescription,
+    ) -> None:
+        """Initialize the end time sensor."""
+        super().__init__(device_url, coordinator, description)
+        self._attr_native_value: datetime | None = None
+        self._running, self._remaining = self._timer()
+
+    def _timer(self) -> tuple[bool, OverkizStateType]:
+        """Return whether the timer runs and the last pushed remaining time."""
+        states = self.device.states
+        return (
+            states.get_value(OverkizState.CORE_RUNNING_TIMER) is True,
+            states.get_value(OverkizState.CORE_REMAINING_TIME),
+        )
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Update the end time when a new remaining time is pushed."""
+        running, remaining = self._timer()
+        if not running or not isinstance(remaining, int):
+            self._attr_native_value = None
+        elif not self._running or remaining != self._remaining:
+            self._attr_native_value = dt_util.utcnow() + timedelta(seconds=remaining)
+        self._running, self._remaining = running, remaining
+        super()._handle_coordinator_update()
 
 
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):

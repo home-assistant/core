@@ -1,11 +1,13 @@
 """Tests for the Overkiz sensor platform."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import MeasuredValueType, OverkizAttribute, OverkizState
+from pyoverkiz.models import Setup
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -19,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
@@ -79,7 +82,7 @@ YUTAKI = FixtureDevice(
 OVEN = FixtureDevice(
     "setup/cloud_sauter_sop6615lb.json",
     "ogp://1234-5678-9123/16000211",
-    "sensor.oven_remaining_time",
+    "sensor.oven_end_time",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -372,3 +375,76 @@ async def test_sensor_unavailability(
     )
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_oven_end_time(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oven end time follows the pushed remaining time."""
+    await setup_overkiz_integration(fixture=OVEN.fixture)
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_UNKNOWN
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                OVEN.device_url,
+                [
+                    {
+                        "name": OverkizState.CORE_RUNNING_TIMER.value,
+                        "type": 6,
+                        "value": True,
+                    },
+                    {
+                        "name": OverkizState.CORE_REMAINING_TIME.value,
+                        "type": 1,
+                        "value": 300,
+                    },
+                ],
+            )
+        ],
+    )
+
+    end_time = dt_util.utcnow().replace(microsecond=0) + timedelta(seconds=300)
+    assert hass.states.get(OVEN.entity_id).state == end_time.isoformat()
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                OVEN.device_url,
+                [
+                    {
+                        "name": OverkizState.CORE_RUNNING_TIMER.value,
+                        "type": 6,
+                        "value": False,
+                    }
+                ],
+            )
+        ],
+    )
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_UNKNOWN
+
+
+def _timer_running(setup: Setup) -> None:
+    """Start the oven timer before Home Assistant sets up."""
+    setup.devices[0].states[OverkizState.CORE_RUNNING_TIMER.value].value = True
+
+
+async def test_oven_end_time_unknown_when_set_up_while_running(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the end time stays unknown when the timer was already running."""
+    await setup_overkiz_integration(fixture=OVEN.fixture, mutate=_timer_running)
+
+    assert hass.states.get(OVEN.entity_id).state == STATE_UNKNOWN
