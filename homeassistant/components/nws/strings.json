@@ -49,6 +49,12 @@
     },
     "entity_unavailable": {
       "message": "The location entity {entity_id} is not available or does not have location coordinates. Setup will be retried."
+    },
+    "no_data": {
+      "message": "No data returned."
+    },
+    "observation_update_error": {
+      "message": "An error occurred while updating the observation data"
     }
   },
   "selector": {

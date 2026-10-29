@@ -13,6 +13,11 @@
         "default": "mdi:volume-high"
       }
     },
+    "number": {
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      }
+    },
     "sensor": {
       "boot_time": {
         "default": "mdi:av-timer"
@@ -25,6 +30,18 @@
       },
       "cpu_speed": {
         "default": "mdi:speedometer"
+      },
+      "disk_device_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_device_write_rate": {
+        "default": "mdi:database-arrow-up"
+      },
+      "disk_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_write_rate": {
+        "default": "mdi:database-arrow-up"
       },
       "display_refresh_rate": {
         "default": "mdi:monitor"
@@ -124,6 +141,14 @@
       },
       "version_latest": {
         "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "display_power": {
+        "default": "mdi:monitor",
+        "state": {
+          "off": "mdi:monitor-off"
+        }
       }
     }
   },

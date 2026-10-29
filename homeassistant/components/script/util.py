@@ -6,7 +6,7 @@ from typing import cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.issue_registry import async_begin_issues_refresh
+from homeassistant.helpers.issue_registry import async_refresh_issues
 from homeassistant.helpers.typing import ConfigType
 
 from .config import ScriptConfig, ValidationStatus
@@ -142,7 +142,7 @@ async def async_process_config(
         for script in removed_scripts
         if isinstance(script, UnavailableScriptEntity)
     ]
-    with async_begin_issues_refresh(
+    with async_refresh_issues(
         hass, DOMAIN, issue_ids=[script.repair_issue_id for script in broken_scripts]
     ):
         # Remove scripts which have changed config or no longer exist

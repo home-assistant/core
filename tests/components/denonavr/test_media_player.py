@@ -1,9 +1,9 @@
 """The tests for the denonavr media player platform."""
 
-from collections.abc import Generator, Mapping
+from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock, create_autospec, patch
+from unittest.mock import MagicMock, create_autospec
 
 from denonavr import DenonAVR
 from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
@@ -34,41 +34,21 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .conftest import (
+    TEST_MANUFACTURER,
+    TEST_MODEL,
+    TEST_NAME,
+    TEST_RECEIVER_TYPE,
+    TEST_SERIALNUMBER,
+)
+
 TEST_HOST = "1.2.3.4"
-TEST_NAME = "Test_Receiver"
-TEST_MODEL = "model5"
-TEST_SERIALNUMBER = "123456789"
-TEST_MANUFACTURER = "Denon"
-TEST_RECEIVER_TYPE = "avr-x"
-TEST_ZONE = "Main"
 TEST_UNIQUE_ID = f"{TEST_MODEL}-{TEST_SERIALNUMBER}"
 TEST_TIMEOUT = 2
 TEST_SHOW_ALL_SOURCES = False
 TEST_ZONE2 = False
 TEST_ZONE3 = False
 ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
-
-
-@pytest.fixture(name="client")
-def client_fixture() -> Generator[MagicMock]:
-    """Patch of client library for tests."""
-    with (
-        patch(
-            "homeassistant.components.denonavr.receiver.DenonAVR",
-            autospec=True,
-        ) as mock_client_class,
-        patch("homeassistant.components.denonavr.config_flow.denonavr.async_discover"),
-    ):
-        mock_client_class.return_value.name = TEST_NAME
-        mock_client_class.return_value.model_name = TEST_MODEL
-        mock_client_class.return_value.serial_number = TEST_SERIALNUMBER
-        mock_client_class.return_value.manufacturer = TEST_MANUFACTURER
-        mock_client_class.return_value.receiver_type = TEST_RECEIVER_TYPE
-        mock_client_class.return_value.zone = TEST_ZONE
-        mock_client_class.return_value.input_func_list = []
-        mock_client_class.return_value.sound_mode_list = []
-        mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
-        yield mock_client_class.return_value
 
 
 async def setup_denonavr(

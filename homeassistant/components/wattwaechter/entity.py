@@ -1,4 +1,4 @@
-"""Base entity for the WattWächter Plus integration."""
+"""Base entity for the WattWächter integration."""
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -8,7 +8,7 @@ from .coordinator import WattwaechterCoordinator
 
 
 class WattwaechterEntity(CoordinatorEntity[WattwaechterCoordinator]):
-    """Base entity for WattWächter Plus devices."""
+    """Base entity for WattWächter devices."""
 
     _attr_has_entity_name = True
 
