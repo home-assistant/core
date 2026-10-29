@@ -66,6 +66,7 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_TTS_DEFAULT_VOICE,
+    REQUEST_WITHOUT_AUTH_TIMEOUT,
     USER_REQUEST_TIMEOUT,
     VOICE_STYLE_SEPERATOR,
 )
@@ -351,7 +352,7 @@ class CloudLogoutView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
 
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(REQUEST_WITHOUT_AUTH_TIMEOUT):
             await cloud.logout()
 
         return self.json_message("ok")

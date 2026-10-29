@@ -30,6 +30,8 @@ EVENT_CLOUD_EVENT = "cloud_event"
 USER_REQUEST_TIMEOUT = AUTH_USER_TIMEOUT + 10
 # Timeout for other uses of the cloud API (that may need to renew auth)
 CLOUD_REQUEST_TIMEOUT = AUTH_RENEW_TIMEOUT + 10
+# Timeout for other requests that do not use cloud auth
+REQUEST_WITHOUT_AUTH_TIMEOUT = 10
 
 PREVIEW_FEATURE_STT_V2 = "stt_v2"
 
