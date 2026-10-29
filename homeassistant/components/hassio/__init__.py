@@ -159,8 +159,9 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 NETWORK_RELOAD_COOLDOWN = 10
 
-# Journal lines read for the log stream, the log since start can be very large
-CORE_LOG_LINES = 50000
+# Journal lines read for the log stream, reading is slow on HAOS (~1 s per 1,000)
+CORE_LOG_LINES = 5000
+CORE_LOG_TIMEOUT = 30
 
 
 DEPRECATION_URL = (
@@ -363,6 +364,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "/core/logs/latest",
                 method="get",
                 return_text=True,
+                timeout=CORE_LOG_TIMEOUT,
                 params={"lines": CORE_LOG_LINES},
             )
         except HassioAPIError as err:

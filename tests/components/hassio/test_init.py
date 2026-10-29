@@ -222,7 +222,7 @@ async def test_core_log_reader(
     caplog.set_level(logging.DEBUG, logger="homeassistant.components.hassio")
     hass.data[KEY_DATA_LOGGING] = None
     aioclient_mock.get(
-        "http://127.0.0.1/core/logs/latest", params={"lines": 50000}, **response
+        "http://127.0.0.1/core/logs/latest", params={"lines": 5000}, **response
     )
     with patch.dict(os.environ, MOCK_ENVIRON):
         assert await async_setup_component(hass, "system_log", {})
