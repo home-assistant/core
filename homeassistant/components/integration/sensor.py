@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Final, Self, override
+from typing import TYPE_CHECKING, Any, Self, override
 
 import probatio
 
@@ -66,11 +66,10 @@ from .const import (
     METHOD_LEFT,
     METHOD_RIGHT,
     METHOD_TRAPEZOIDAL,
+    IntegrationEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_SOURCE_ID: Final = "source"
 
 # SI Metric prefixes
 UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}
@@ -223,7 +222,7 @@ class IntegrationSensorExtraStoredData(SensorExtraStoredData):
         if extra is None:
             return None
 
-        source_entity = restored.get(ATTR_SOURCE_ID)
+        source_entity = restored.get("source_entity")
 
         try:
             last_valid_state = (
@@ -709,7 +708,7 @@ class IntegrationSensor(RestoreSensor):
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the sensor."""
         return {
-            ATTR_SOURCE_ID: self._source_entity,
+            IntegrationEntityStateAttribute.SOURCE: self._source_entity,
         }
 
     @property

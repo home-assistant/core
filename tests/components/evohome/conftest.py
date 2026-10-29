@@ -210,45 +210,26 @@ async def evohome(
         yield mock_client
 
 
-def _tcs_for_config(evo: EvohomeClient, config: ConfigType) -> ControlSystem:
+@pytest.fixture
+def tcs(evohome: MagicMock, config: ConfigType) -> ControlSystem:
     """Return the TCS of the configured location."""
 
+    evo: EvohomeClient = evohome.return_value
     tcs = evo.locations[config.get("location_idx", 0)].tcs
     assert tcs is not None, "Fixture has no TCS"
     return tcs
 
 
 @pytest.fixture
-def tcs(evohome: MagicMock, config: ConfigType) -> ControlSystem:
-    """Return the TCS of the configured location."""
-
-    return _tcs_for_config(evohome.return_value, config)
-
-
-@pytest.fixture
-def ctl_id(
-    evohome: MagicMock,
-    config: ConfigType,
-    entity_id: Callable[[Platform, str], str],
-) -> str:
+def ctl_id(tcs: ControlSystem, entity_id: Callable[[Platform, str], str]) -> str:
     """Return the entity_id of evohome's controller (a Climate entity)."""
-
-    evo: EvohomeClient = evohome.return_value
-    tcs = _tcs_for_config(evo, config)
 
     return entity_id(Platform.CLIMATE, tcs.id)
 
 
 @pytest.fixture
-def zone_id(
-    evohome: MagicMock,
-    config: ConfigType,
-    entity_id: Callable[[Platform, str], str],
-) -> str:
+def zone_id(tcs: ControlSystem, entity_id: Callable[[Platform, str], str]) -> str:
     """Return the entity_id of evohome's first zone (a Climate entity)."""
-
-    evo: EvohomeClient = evohome.return_value
-    tcs = _tcs_for_config(evo, config)
 
     zone: Zone = tcs.zones[0]
 
@@ -256,15 +237,10 @@ def zone_id(
 
 
 @pytest.fixture
-def dhw_id(
-    evohome: MagicMock,
-    config: ConfigType,
-    entity_id: Callable[[Platform, str], str],
-) -> str:
+def dhw_id(tcs: ControlSystem, entity_id: Callable[[Platform, str], str]) -> str:
     """Return the entity_id of Evohome's DHW controller (a WaterHeater entity)."""
 
-    evo: EvohomeClient = evohome.return_value
-    dhw: HotWater | None = _tcs_for_config(evo, config).hotwater
+    dhw: HotWater | None = tcs.hotwater
 
     assert dhw is not None, "Fixture has no DHW zone"
 
