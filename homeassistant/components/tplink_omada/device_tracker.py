@@ -60,6 +60,8 @@ async def async_setup_entry(
         """Return trackers for known clients that this platform has not added."""
         entities: list[OmadaClientScannerEntity] = []
         for client in (known_clients_coordinator.data or {}).values():
+            if not isinstance(client, OmadaWirelessClient):
+                continue
             unique_id = f"scanner_{site_id}_{client.mac}"
             if not _should_add(unique_id):
                 continue

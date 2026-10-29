@@ -12,7 +12,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     async_load_json_array_fixture,
 )
-from tplink_omada_client.clients import OmadaWirelessClient
+from tplink_omada_client.clients import OmadaWiredClient, OmadaWirelessClient
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -250,6 +250,18 @@ async def _get_no_known_clients() -> AsyncGenerator[OmadaWirelessClient]:
     """Yield no known clients."""
     for client in ():
         yield client
+
+
+async def _get_wired_known_clients(
+    hass: HomeAssistant,
+) -> AsyncGenerator[OmadaWiredClient]:
+    """Yield only wired clients from the known-clients fixture."""
+    known_clients_data = await async_load_json_array_fixture(
+        hass, "known-clients.json", DOMAIN
+    )
+    for client in known_clients_data:
+        if not client["wireless"]:
+            yield OmadaWiredClient(client)
 
 
 async def _async_poll_known_clients(
@@ -550,6 +562,38 @@ async def test_cleanup_keeps_trackers_on_empty_known_clients(
     await _async_poll_known_clients(hass, freezer)
 
     assert entity_registry.async_get(tracker.entity_id) is not None
+
+
+async def test_cleanup_runs_when_only_wired_clients_are_known(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a wired-only response still counts as a successful client poll."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    removed_mac = "2C-71-FF-ED-34-83"
+    tracker_entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, f"scanner_Default_{removed_mac}"
+    )
+    assert tracker_entity_id is not None
+    tracker = entity_registry.async_get(tracker_entity_id)
+    assert tracker is not None
+    assert tracker.device_id is not None
+    device_id = tracker.device_id
+
+    site_client = mock_omada_clients_only_client.get_site_client.return_value
+    site_client.get_known_clients.side_effect = partial(_get_wired_known_clients, hass)
+
+    await _async_poll_known_clients(hass, freezer)
+
+    assert entity_registry.async_get(tracker.entity_id) is None
+    assert device_registry.async_get(device_id) is None
 
 
 async def test_migrate_entry_v1_to_v2(

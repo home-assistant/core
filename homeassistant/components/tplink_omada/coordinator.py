@@ -12,7 +12,7 @@ from tplink_omada_client import (
     OmadaSiteClient,
     OmadaSwitchPortDetails,
 )
-from tplink_omada_client.clients import OmadaWirelessClient
+from tplink_omada_client.clients import OmadaNetworkClient, OmadaWirelessClient
 from tplink_omada_client.devices import (
     OmadaFirmwareUpdate,
     OmadaGateway,
@@ -243,8 +243,8 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
         }
 
 
-class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
-    """Coordinator for getting details about all wireless clients known to the controller."""
+class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaNetworkClient]):
+    """Coordinator for getting details about all clients known to the controller."""
 
     def __init__(
         self,
@@ -262,21 +262,21 @@ class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
         )
 
     @override
-    async def _async_update_data(self) -> dict[str, OmadaWirelessClient]:
+    async def _async_update_data(self) -> dict[str, OmadaNetworkClient]:
         """Fetch known clients and remove trackers the controller dropped."""
         clients = await super()._async_update_data()
-        # An empty response is a controller glitch, not proof that every client
-        # is gone; cleanup ignores it and keeps the trackers.
+        if not clients:
+            # A successful but empty response is a controller glitch, not proof
+            # that every client is gone; keep the trackers.
+            return clients
         cleanup_client_trackers(self.hass, self.config_entry.runtime_data, clients)
         return clients
 
     @override
-    async def poll_update(self) -> dict[str, OmadaWirelessClient]:
-        """Poll the site's all-time known wireless clients."""
+    async def poll_update(self) -> dict[str, OmadaNetworkClient]:
+        """Poll the site's all-time known clients."""
         return {
-            client.mac: client
-            async for client in self.omada_client.get_known_clients()
-            if isinstance(client, OmadaWirelessClient)
+            client.mac: client async for client in self.omada_client.get_known_clients()
         }
 
 
@@ -350,7 +350,7 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
 def cleanup_client_trackers(
     hass: HomeAssistant,
     controller: OmadaSiteController,
-    known_clients: dict[str, OmadaWirelessClient] | None = None,
+    known_clients: dict[str, OmadaNetworkClient] | None = None,
 ) -> None:
     """Remove tracker entities for clients missing from the controller list."""
     if known_clients is None:
