@@ -1586,6 +1586,13 @@ async def test_matrix_color_preserves_tile_brightness(
 
 
 @pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(LifxError("device unreachable"), id="library-error"),
+        pytest.param(OSError("network down"), id="unexpected-error"),
+    ],
+)
+@pytest.mark.parametrize(
     ("factory", "method"),
     [
         pytest.param(
@@ -1595,13 +1602,16 @@ async def test_matrix_color_preserves_tile_brightness(
     ],
 )
 async def test_partial_write_is_refused_when_the_state_cannot_be_read(
-    hass: HomeAssistant, factory: Callable[[], MockDevice], method: str
+    hass: HomeAssistant,
+    factory: Callable[[], MockDevice],
+    method: str,
+    error: Exception,
 ) -> None:
     """Test a partial write is not merged over the state of a failed read."""
     device = factory()
     device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
-    device.refresh_state.side_effect = LifxError("device unreachable")
+    device.refresh_state.side_effect = error
 
     with pytest.raises(HomeAssistantError, match="could not be read"):
         await hass.services.async_call(
@@ -1939,17 +1949,91 @@ async def test_library_errors_become_home_assistant_errors(
         )
 
 
-async def test_failed_refresh_marks_light_unavailable(hass: HomeAssistant) -> None:
-    """Test coordinator availability remains visible on the light entity."""
+@pytest.mark.parametrize(
+    ("missed_polls", "expected_state"),
+    [
+        pytest.param(1, STATE_ON, id="one_missed_poll"),
+        pytest.param(2, STATE_ON, id="two_missed_polls"),
+        pytest.param(3, STATE_UNAVAILABLE, id="three_missed_polls"),
+    ],
+)
+async def test_light_is_unavailable_after_three_missed_polls(
+    hass: HomeAssistant, missed_polls: int, expected_state: str
+) -> None:
+    """Test a light keeps its last state until it misses three polls in a row."""
     device = create_mock_light()
+    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
     device.refresh_state.side_effect = LifxError("offline")
 
+    for _ in range(missed_polls):
+        await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == expected_state
+
+
+async def test_answered_poll_resets_missed_polls(hass: HomeAssistant) -> None:
+    """Test the missed polls are counted again after the light answers."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+
+    device.refresh_state.side_effect = LifxError("offline")
+    await async_trigger_update(hass)
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = LifxError("offline")
+    await async_trigger_update(hass)
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_light_recovers_after_being_unavailable(hass: HomeAssistant) -> None:
+    """Test a light is available again as soon as it answers a poll."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+    device.refresh_state.side_effect = LifxError("offline")
+    for _ in range(3):
+        await async_trigger_update(hass)
+
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_unavailable_light_only_recovers_by_answering(
+    hass: HomeAssistant,
+) -> None:
+    """Test a missed poll does not bring back a light that went unavailable."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+
+    device.refresh_state.side_effect = OSError("network down")
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = LifxError("offline")
     await async_trigger_update(hass)
 
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(
