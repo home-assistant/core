@@ -20,7 +20,6 @@ import probatio
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
-from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN, STATELESS_LLM_API
 
@@ -67,19 +66,37 @@ def _format_tool(
     )
 
 
+async def async_get_api_instance(
+    hass: HomeAssistant,
+    llm_api_id: str | list[str],
+    llm_context: llm.LLMContext,
+    read_only: bool,
+) -> llm.APIInstance:
+    """Get the instance of the LLM API served to MCP clients."""
+    # Backwards compatibility with old MCP Server config
+    if llm_api_id == STATELESS_LLM_API:
+        llm_api_id = llm.LLM_API_ASSIST
+
+    llm_api = await llm.async_get_api(hass, llm_api_id, llm_context)
+    if read_only:
+        # Removing the tools also blocks calls to them.
+        llm_api.tools = [tool for tool in llm_api.tools if tool.annotations.read_only]
+    return llm_api
+
+
 async def create_server(
     hass: HomeAssistant,
     llm_api_id: str | list[str],
     llm_context: llm.LLMContext,
     read_only: bool,
+    base_url: str,
 ) -> Server:
     """Create a new Model Context Protocol Server.
 
     A Model Context Protocol Server object is associated with a single session.
-    The MCP SDK handles the details of the protocol.
+    The MCP SDK handles the details of the protocol. The base URL is the origin
+    the client used to reach this instance and is used for absolute URLs.
     """
-    if llm_api_id == STATELESS_LLM_API:
-        llm_api_id = llm.LLM_API_ASSIST
 
     async def get_api_instance(ctx: ServerRequestContext[Any]) -> llm.APIInstance:
         """Get the LLM API selected."""
@@ -87,16 +104,9 @@ async def create_server(
         if device_id is not None and not isinstance(device_id, str):
             raise ValueError(f"{META_DEVICE_ID} must be a string")
 
-        # Backwards compatibility with old MCP Server config
-        llm_api = await llm.async_get_api(
-            hass, llm_api_id, replace(llm_context, device_id=device_id)
+        return await async_get_api_instance(
+            hass, llm_api_id, replace(llm_context, device_id=device_id), read_only
         )
-        if read_only:
-            # Removing the tools also blocks calls to them.
-            llm_api.tools = [
-                tool for tool in llm_api.tools if tool.annotations.read_only
-            ]
-        return llm_api
 
     async def handle_list_prompts(
         ctx: ServerRequestContext[Any],
@@ -233,7 +243,7 @@ async def create_server(
         name="home-assistant",
         icons=[
             types.Icon(
-                src=f"{get_url(hass, require_current_request=True)}/static/icons/favicon-192x192.png",
+                src=f"{base_url}/static/icons/favicon-192x192.png",
                 mime_type="image/png",
                 sizes=["192x192"],
             )
