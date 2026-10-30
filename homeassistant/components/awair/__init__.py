@@ -40,8 +40,9 @@ async def async_setup_entry(
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: AwairConfigEntry) -> None:
-    """Handle options update."""
-    if entry.title != entry.runtime_data.title:
+    """Reload when the title or the host changed."""
+    coordinator = entry.runtime_data
+    if entry.title != coordinator.title or entry.data[CONF_HOST] != coordinator.host:
         await hass.config_entries.async_reload(entry.entry_id)
 
 
