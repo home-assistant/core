@@ -3,11 +3,10 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import RecorderInstanceGenerator
 
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
-
-from tests.typing import RecorderInstanceGenerator
 
 
 @pytest.mark.parametrize(

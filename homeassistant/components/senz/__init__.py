@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import ClientResponseError
-from httpx import HTTPStatusError, RequestError
+from httpx2 import HTTPStatusError, RequestError
 import jwt
 from pysenz import SENZAPI
 
@@ -28,7 +28,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> None:
     """Set up SENZ from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -81,17 +81,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SENZConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     # Use sub(ject) from access_token as unique_id
@@ -109,5 +107,3 @@ async def async_migrate_entry(
             config_entry.version,
             config_entry.minor_version,
         )
-
-    return True

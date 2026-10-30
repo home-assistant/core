@@ -8,8 +8,8 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from . import PROP_TO_ATTR
 from .const import MediaPlayerEntityStateAttribute
+from .entity import PROP_TO_ATTR
 
 INSIGNIFICANT_ATTRIBUTES: set[MediaPlayerEntityStateAttribute] = {
     MediaPlayerEntityStateAttribute.MEDIA_POSITION,

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyseventeentrack.errors import SeventeenTrackError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.seventeentrack import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 ACCOUNT_ID = "1234"
 
@@ -54,6 +53,7 @@ async def test_create_entry(
         CONF_PASSWORD: "edc3eee7330e4fdda04489e3fbc283d0",
         CONF_USERNAME: "someemail@gmail.com",
     }
+    assert result2["result"].unique_id == ACCOUNT_ID
 
 
 @pytest.mark.parametrize(

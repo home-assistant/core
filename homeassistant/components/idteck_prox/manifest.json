@@ -1,6 +1,7 @@
 {
   "domain": "idteck_prox",
   "name": "IDTECK Proximity Reader",
+  "categories": ["security_safety.locks_access"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/idteck_prox",
   "iot_class": "local_push",

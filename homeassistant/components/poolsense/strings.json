@@ -44,5 +44,10 @@
         "name": "pH low"
       }
     }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Invalid authentication"
+    }
   }
 }

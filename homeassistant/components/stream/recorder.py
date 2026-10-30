@@ -73,8 +73,9 @@ class RecorderOutput(StreamOutput):
         output_a = None
 
         last_stream_id = -1
-        # The running duration of processed segments. Note that this is in av.time_base
-        # units which seem to be defined inversely to how stream time_bases are defined
+        # The end of the recording's presentation so far. Note that this is in
+        # av.time_base units which seem to be defined inversely to how stream
+        # time_bases are defined
         running_duration = 0
 
         last_sequence = -math.inf
@@ -110,7 +111,7 @@ class RecorderOutput(StreamOutput):
             # Create output on first segment
             if not output:
                 container_options: dict[str, str] = {
-                    "video_track_timescale": str(int(1 / source_v.time_base)),  # type: ignore[operator]
+                    "video_track_timescale": str(int(1 / source_v.time_base)),
                     "movflags": "frag_keyframe+empty_moov",
                     "min_frag_duration": str(self.stream_settings.min_segment_duration),
                 }
@@ -124,6 +125,8 @@ class RecorderOutput(StreamOutput):
             # Add output streams if necessary
             if not output_v:
                 output_v = output.add_stream_from_template(source_v)
+                if source_v.name == "hevc":
+                    output_v.codec_context.codec_tag = "hvc1"
             if source_a and not output_a:
                 output_a = output.add_stream_from_template(source_a)
 
@@ -133,12 +136,12 @@ class RecorderOutput(StreamOutput):
                 last_stream_id = segment.stream_id
                 pts_adjuster["video"] = int(
                     (running_duration - source.start_time)
-                    / (av.time_base * source_v.time_base)  # type: ignore[operator]
+                    / (av.time_base * source_v.time_base)
                 )
                 if source_a:
                     pts_adjuster["audio"] = int(
                         (running_duration - source.start_time)
-                        / (av.time_base * source_a.time_base)  # type: ignore[operator]
+                        / (av.time_base * source_a.time_base)
                     )
 
             # Remux video
@@ -147,12 +150,19 @@ class RecorderOutput(StreamOutput):
                     continue
                 packet.pts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
                 packet.dts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
+                # With B-frames the last frame in decode order does not end last
+                running_duration = max(
+                    running_duration,
+                    math.ceil(
+                        av.time_base
+                        * (packet.pts + (packet.duration or 0))
+                        * packet.time_base
+                    ),
+                )
                 stream = output_v if packet.stream.type == "video" else output_a
                 assert stream
                 packet.stream = stream
                 output.mux(packet)
-
-            running_duration += source.duration - source.start_time
 
             source.close()
 

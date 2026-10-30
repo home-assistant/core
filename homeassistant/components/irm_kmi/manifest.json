@@ -1,6 +1,7 @@
 {
   "domain": "irm_kmi",
   "name": "IRM KMI Weather Belgium",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@jdejaegh"],
   "config_flow": true,
   "dependencies": ["zone"],

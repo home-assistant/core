@@ -28,7 +28,7 @@ from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
+from .coordinator import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
 
 

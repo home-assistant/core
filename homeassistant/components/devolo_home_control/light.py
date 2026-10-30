@@ -3,13 +3,16 @@
 from typing import Any, override
 
 from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.exceptions import SwitchingProtected
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
+from .const import DOMAIN
 from .entity import DevoloMultiLevelSwitchDeviceEntity
 
 
@@ -69,21 +72,39 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
-            self._multi_level_switch_property.set(
-                round(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
-            )
-        elif self._binary_switch_property is not None:
+            self._set_brightness(round(kwargs[ATTR_BRIGHTNESS] / 255 * 100))
+        else:
             # Turn on the light device to the latest known
             # value. The value is known by the device itself.
-            self._binary_switch_property.set(True)
-        else:
-            # If there is no binary switch attached to the device, turn it on to 100 %.
-            self._multi_level_switch_property.set(100)
+            self._set_switch(True)
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        if self._binary_switch_property is not None:
-            self._binary_switch_property.set(False)
-        else:
-            self._multi_level_switch_property.set(0)
+        self._set_switch(False)
+
+    def _set_brightness(self, value: int) -> None:
+        """Set the brightness to the given value."""
+        if not self._multi_level_switch_property.set(value):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_failed",
+            )
+
+    def _set_switch(self, state: bool) -> None:
+        """Set the switch to the given state."""
+        if self._binary_switch_property is None:
+            # Without a binary switch, fall back to full or zero brightness.
+            self._set_brightness(100 if state else 0)
+            return
+        try:
+            if not self._binary_switch_property.set(state):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_failed",
+                )
+        except SwitchingProtected as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="switch_protected",
+            ) from err

@@ -2,10 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockEntityPlatform
+
 from homeassistant.components.kira import remote as kira
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockEntityPlatform
 
 SERVICE_SEND_COMMAND = "send_command"
 

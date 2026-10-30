@@ -40,7 +40,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 STEP_AUTH_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -183,8 +183,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except SmlightAuthError:
                 return await self.async_step_auth()
-
-        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",

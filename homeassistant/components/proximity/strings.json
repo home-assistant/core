@@ -46,7 +46,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The entity `{entity_id}` has been removed from HA, but is used in proximity {name}. Please remove `{entity_id}` from the list of tracked entities. Related proximity sensor entities were set to unavailable and can be removed.",
+            "description": "The entity `{entity_id}` has been removed from Home Assistant, but is used in proximity {name}. Please remove `{entity_id}` from the list of tracked entities. Related proximity sensor entities were set to unavailable and can be removed.",
             "title": "[%key:component::proximity::issues::tracked_entity_removed::title%]"
           }
         }

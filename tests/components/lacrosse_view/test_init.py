@@ -5,14 +5,13 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from lacrosse_view import HTTPError, LoginError
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.lacrosse_view.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_ENTRY_DATA, TEST_SENSOR
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

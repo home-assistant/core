@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
     }
 )
 

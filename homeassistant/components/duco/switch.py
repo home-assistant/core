@@ -1,6 +1,5 @@
 """Switch platform for the Duco integration."""
 
-import logging
 from typing import Any, override
 
 from duco_connectivity import (
@@ -21,8 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .helpers import remove_stale_node_ids
 
 PARALLEL_UPDATES = 1
 
@@ -52,6 +50,7 @@ async def async_setup_entry(
     @callback
     def _async_add_new_entities() -> None:
         """Add identify switches for newly discovered controllable nodes."""
+        remove_stale_node_ids(coordinator, known_nodes)
         identify_nodes = _discover_identify_nodes(coordinator.data.node_actions)
         new_nodes = [
             node
@@ -101,7 +100,6 @@ class DucoIdentifySwitch(DucoEntity, SwitchEntity):
         try:
             await self.coordinator.async_set_node_identify(self._node_id, identify)
         except DucoRateLimitError as err:
-            _LOGGER.warning("Duco write rate limit exceeded for node %s", self._node_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="rate_limit_exceeded",

@@ -120,7 +120,7 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
                 probatio.Required(
                     CONF_IP_ADDRESS, default=self.discovered_ip_address
                 ): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
             }
         )

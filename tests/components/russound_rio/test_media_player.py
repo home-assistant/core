@@ -6,6 +6,7 @@ from aiorussound.const import FeatureFlag
 from aiorussound.exceptions import CommandError
 from aiorussound.rio.models import PlayStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -41,8 +42,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import mock_state_update, setup_integration
 from .const import ENTITY_ID_ZONE_1
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

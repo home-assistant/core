@@ -15,7 +15,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RejseplanenConfigEntry,
-) -> bool:
+) -> None:
     """Set up Rejseplanen from a config entry."""
     coordinator = RejseplanenDataUpdateCoordinator(hass, config_entry)
 
@@ -28,15 +28,13 @@ async def async_setup_entry(
         config_entry.add_update_listener(_async_update_listener)
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant,
     config_entry: RejseplanenConfigEntry,
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def _async_update_listener(

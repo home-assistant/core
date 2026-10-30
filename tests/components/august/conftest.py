@@ -1,8 +1,10 @@
 """August tests conftest."""
 
+import base64
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from yalexs.manager.ratelimit import _RateLimitChecker
 
 from homeassistant.components.application_credentials import (
@@ -13,8 +15,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture
 
 USER_ID = "a76c25e5-49aa-4c14-cd0c-48a6931e2081"
 CLIENT_ID = "1"
@@ -94,7 +94,13 @@ def load_reauth_jwt_fixture() -> str:
 @pytest.fixture(name="migration_jwt")
 def load_migration_jwt_fixture() -> str:
     """Load migration JWT fixture data (has email for legacy migration)."""
-    return load_fixture("migration_jwt", DOMAIN).strip("\n")
+    token = load_fixture("migration_jwt", DOMAIN).strip()
+    header, payload, signature = token.split(".")
+    signature_bytes = base64.urlsafe_b64decode(signature + "=" * (-len(signature) % 4))
+    canonical_signature = (
+        base64.urlsafe_b64encode(signature_bytes).rstrip(b"=").decode()
+    )
+    return f"{header}.{payload}.{canonical_signature}"
 
 
 @pytest.fixture(name="reauth_jwt_wrong_account")
@@ -151,6 +157,6 @@ def skip_cloud_fixture():
 def mock_setup_entry():
     """Mock setup entry."""
     with patch(
-        "homeassistant.components.august.async_setup_entry", return_value=True
+        "homeassistant.components.august.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

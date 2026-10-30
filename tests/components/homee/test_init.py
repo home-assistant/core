@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from pyHomee import HomeeAuthFailedException, HomeeConnectionFailedException
 from pyHomee.const import AttributeState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homee.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import build_mock_node, setup_integration
 from .conftest import HOMEE_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

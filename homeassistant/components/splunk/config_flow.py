@@ -53,7 +53,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                     probatio.Required(CONF_HOST): str,
                     probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                     probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
@@ -62,27 +62,6 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle import from YAML configuration."""
-        # Single instance integration - manifest prevents duplicates
-        # Validate the imported configuration
-        errors = await self._async_validate_input(import_config)
-
-        if errors:
-            # Map error keys to abort reasons for issue creation
-            error_key = errors.get("base", "unknown")
-            _LOGGER.error("Failed to import Splunk configuration from YAML: %s", errors)
-            return self.async_abort(reason=error_key)
-
-        host = import_config.get(CONF_HOST, DEFAULT_HOST)
-        port = import_config.get(CONF_PORT, DEFAULT_PORT)
-        return self.async_create_entry(
-            title=f"{host}:{port}",
-            data=import_config,
         )
 
     async def async_step_reconfigure(
@@ -106,7 +85,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(
                     {
-                        probatio.Required(CONF_TOKEN): str,
+                        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                         probatio.Required(CONF_HOST): str,
                         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                         probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
@@ -146,7 +125,9 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+            ),
             errors=errors,
         )
 

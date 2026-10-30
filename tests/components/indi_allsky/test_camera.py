@@ -2,8 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aioindiallsky import IndiAllSkyError
+from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import async_get_image
@@ -13,8 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_indi_allsky_client")
@@ -50,7 +49,7 @@ async def test_camera_image_and_update(
     mock_indi_allsky_client.fetch_image.return_value = image_bytes
     await setup_integration(hass, mock_config_entry)
 
-    image = await async_get_image(hass, "camera.indi_allsky")
+    image = await async_get_image(hass, "camera.indi_allsky_latest_capture")
     assert image.content == image_bytes
     assert image.content_type == expected_content_type
 
@@ -66,4 +65,27 @@ async def test_camera_image_fetch_failure(
     mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyError("Fetch error")
 
     with pytest.raises(HomeAssistantError, match="Unable to get image"):
-        await async_get_image(hass, "camera.indi_allsky")
+        await async_get_image(hass, "camera.indi_allsky_latest_capture")
+
+
+async def test_camera_image_fetch_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test camera image fetching auth failure triggers reauthentication."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyAuthError(
+        "Unauthorized"
+    )
+
+    with (
+        patch.object(
+            mock_config_entry, "async_start_reauth"
+        ) as mock_async_start_reauth,
+        pytest.raises(HomeAssistantError, match="Unable to get image"),
+    ):
+        await async_get_image(hass, "camera.indi_allsky_latest_capture")
+
+    mock_async_start_reauth.assert_called_once_with(hass)

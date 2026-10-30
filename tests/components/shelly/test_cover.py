@@ -22,7 +22,8 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER_TILT,
     CoverState,
 )
-from homeassistant.components.shelly.const import RPC_COVER_UPDATE_TIME_SEC
+from homeassistant.components.shelly.const import DOMAIN, RPC_COVER_UPDATE_TIME_SEC
+from homeassistant.components.shelly.services import SERVICE_SET_COVER_POSITION_AND_TILT
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -31,6 +32,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
@@ -226,6 +228,7 @@ async def test_rpc_device_services(
     mock_rpc_device.cover_set_position.assert_called_once_with(0, pos=50)
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
+    assert ATTR_ASSUMED_STATE not in state.attributes
 
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "cover:0", "state", "opening"
@@ -303,18 +306,41 @@ async def test_rpc_device_update(
     assert state.state == CoverState.OPEN
 
 
+@pytest.mark.parametrize(
+    ("device_state", "last_direction", "expected_state"),
+    [
+        ("stopped", "close", CoverState.CLOSED),
+        ("stopped", "open", CoverState.OPEN),
+        # Nothing has moved since the device booted
+        ("stopped", None, STATE_UNKNOWN),
+    ],
+)
 async def test_rpc_device_no_position_control(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    device_state: str,
+    last_direction: str | None,
+    expected_state: str,
 ) -> None:
-    """Test RPC device with no position control."""
+    """Test RPC device with no position control reports its last direction."""
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "cover:0", "pos_control", False
     )
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "state", device_state
+    )
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "last_direction", last_direction
+    )
     await init_integration(hass, 2)
 
-    state = hass.states.get("cover.test_name_test_cover_0")
-    assert state
-    assert state.state == CoverState.OPEN
+    assert (state := hass.states.get("cover.test_name_test_cover_0"))
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    # Stopping mid travel leaves the direction saying more than it knows, so
+    # both buttons stay available
+    assert state.attributes[ATTR_ASSUMED_STATE] is True
 
 
 async def test_rpc_cover_tilt(
@@ -461,3 +487,53 @@ async def test_rpc_not_initialized_update(
     mock_rpc_device.update_cover_status.assert_not_called()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_rpc_cover_set_position_and_tilt(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC cover set position and tilt sends a single command."""
+    entity_id = "cover.test_name_test_cover_0"
+
+    config = deepcopy(mock_rpc_device.config)
+    config["cover:0"]["slat"] = {"enable": True}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["cover:0"]["slat_pos"] = 0
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COVER_POSITION_AND_TILT,
+        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 100, ATTR_TILT_POSITION: 100},
+        blocking=True,
+    )
+
+    mock_rpc_device.cover_set_position.assert_called_once_with(0, pos=100, slat_pos=100)
+
+
+async def test_rpc_cover_set_position_and_tilt_not_supported(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test RPC cover set position and tilt on a cover without tilt."""
+    await init_integration(hass, 3)
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_COVER_POSITION_AND_TILT,
+            {
+                ATTR_ENTITY_ID: "cover.test_name_test_cover_0",
+                ATTR_POSITION: 100,
+                ATTR_TILT_POSITION: 100,
+            },
+            blocking=True,
+        )
+
+    mock_rpc_device.cover_set_position.assert_not_called()

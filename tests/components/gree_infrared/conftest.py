@@ -4,6 +4,15 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID as MOCK_INFRARED_RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.gree_infrared import PLATFORMS
@@ -15,16 +24,6 @@ from homeassistant.components.gree_infrared.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import (
-    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
-    RECEIVER_ENTITY_ID as MOCK_INFRARED_RECEIVER_ENTITY_ID,
-)
-from tests.components.infrared.common import (
-    MockInfraredEmitterEntity,
-    MockInfraredReceiverEntity,
-)
 
 ENTRY_ID = "01JTEST0000000000000000001"
 

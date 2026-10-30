@@ -8,19 +8,24 @@ import pytest
 
 from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MockLocation
 
-from tests.common import MockConfigEntry
+USER_INPUT = {
+    CONF_LOCATION: {
+        CONF_LONGITUDE: 0,
+        CONF_LATITUDE: 0,
+    }
+}
 
 
 @pytest.fixture(name="ipma_setup", autouse=True)
 def ipma_setup_fixture() -> Generator[None]:
     """Patch ipma setup entry."""
-    with patch("homeassistant.components.ipma.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.ipma.async_setup_entry", return_value=None):
         yield
 
 
@@ -33,17 +38,13 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    test_data = {
-        CONF_LONGITUDE: 0,
-        CONF_LATITUDE: 0,
-    }
     with patch(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            test_data,
+            user_input=USER_INPUT,
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -63,17 +64,13 @@ async def test_config_flow_failures(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    test_data = {
-        CONF_LONGITUDE: 0,
-        CONF_LATITUDE: 0,
-    }
     with patch(
         "pyipma.location.Location.get",
         side_effect=IPMAException(),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            test_data,
+            user_input=USER_INPUT,
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -84,7 +81,7 @@ async def test_config_flow_failures(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            test_data,
+            user_input=USER_INPUT,
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -95,22 +92,23 @@ async def test_config_flow_failures(hass: HomeAssistant) -> None:
     }
 
 
-async def test_flow_entry_already_exists(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists.
 
     Test when the form should show when user puts existing location
     in the config gui. Then the form should show with error.
     """
-    test_data = {
-        CONF_NAME: "Home",
-        CONF_LONGITUDE: 0,
-        CONF_LATITUDE: 0,
-    }
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=test_data
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
     )
     await hass.async_block_till_done()
 

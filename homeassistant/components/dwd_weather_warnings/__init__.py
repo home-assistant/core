@@ -9,7 +9,7 @@ from .coordinator import DwdWeatherWarningsConfigEntry, DwdWeatherWarningsCoordi
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: DwdWeatherWarningsConfigEntry
-) -> bool:
+) -> None:
     """Set up a config entry."""
     device_registry = dr.async_get(hass)
     if device_registry.async_get_device_by_identifier(
@@ -22,11 +22,9 @@ async def async_setup_entry(
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: DwdWeatherWarningsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

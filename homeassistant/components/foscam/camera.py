@@ -4,27 +4,26 @@ import asyncio
 from typing import override
 from urllib.parse import quote
 
-import probatio
-
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from .const import (
+    CONF_RTSP_PORT,
+    CONF_STREAM,
+    DIR_BOTTOMLEFT,
+    DIR_BOTTOMRIGHT,
+    DIR_DOWN,
+    DIR_LEFT,
+    DIR_RIGHT,
+    DIR_TOPLEFT,
+    DIR_TOPRIGHT,
+    DIR_UP,
+    LOGGER,
+)
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
 from .entity import FoscamEntity
-
-DIR_UP = "up"
-DIR_DOWN = "down"
-DIR_LEFT = "left"
-DIR_RIGHT = "right"
-
-DIR_TOPLEFT = "top_left"
-DIR_TOPRIGHT = "top_right"
-DIR_BOTTOMLEFT = "bottom_left"
-DIR_BOTTOMRIGHT = "bottom_right"
 
 MOVEMENT_ATTRS = {
     DIR_UP: "ptz_move_up",
@@ -37,11 +36,6 @@ MOVEMENT_ATTRS = {
     DIR_BOTTOMRIGHT: "ptz_move_bottom_right",
 }
 
-DEFAULT_TRAVELTIME = 0.125
-
-ATTR_MOVEMENT = "movement"
-ATTR_TRAVELTIME = "travel_time"
-ATTR_PRESET_NAME = "preset_name"
 
 PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 
@@ -52,36 +46,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Foscam IP camera from a config entry."""
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_PTZ,
-        {
-            probatio.Required(ATTR_MOVEMENT): probatio.In(
-                [
-                    DIR_UP,
-                    DIR_DOWN,
-                    DIR_LEFT,
-                    DIR_RIGHT,
-                    DIR_TOPLEFT,
-                    DIR_TOPRIGHT,
-                    DIR_BOTTOMLEFT,
-                    DIR_BOTTOMRIGHT,
-                ]
-            ),
-            probatio.Optional(
-                ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME
-            ): cv.small_float,
-        },
-        "async_perform_ptz",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_PTZ_PRESET,
-        {
-            probatio.Required(ATTR_PRESET_NAME): cv.string,
-        },
-        "async_perform_ptz_preset",
-    )
 
     coordinator = config_entry.runtime_data
 

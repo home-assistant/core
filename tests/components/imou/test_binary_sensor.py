@@ -6,6 +6,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_STATE, PARAM_STATUS
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -20,8 +25,6 @@ from .const import (
     binary_sensor_mock_devices,
     create_online_device,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR]], indirect=True)

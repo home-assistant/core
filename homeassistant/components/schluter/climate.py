@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -24,7 +25,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
+from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
@@ -84,7 +86,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator, serial_number, api, session_id):
         """Initialize the thermostat."""
@@ -102,7 +104,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self.coordinator.data[self._serial_number].temperature
 
@@ -116,7 +118,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.coordinator.data[self._serial_number].set_point_temp
 
@@ -147,6 +149,8 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         try:
             if target_temp is not None:
                 self._api.set_temperature(self._session_id, serial_number, target_temp)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except RequestException as ex:
-            _LOGGER.error("An error occurred while setting temperature: %s", ex)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_failed",
+            ) from ex

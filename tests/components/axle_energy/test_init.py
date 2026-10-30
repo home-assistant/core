@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock
 from aioaxlevpp import AxleAuthenticationError, AxleConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_unload(
@@ -27,11 +26,11 @@ async def test_unload(
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert hass.states.get("sensor.axle_energy_event_type").state == "unavailable"
-    mock_client.get_event.reset_mock()
+    mock_client.get_status.reset_mock()
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mock_client.get_event.assert_not_called()
+    mock_client.get_status.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -49,7 +48,7 @@ async def test_setup_failure(
     expected: ConfigEntryState,
 ) -> None:
     """Handle authentication and retryable connection failures."""
-    mock_client.get_event.side_effect = error
+    mock_client.get_status.side_effect = error
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

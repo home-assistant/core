@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
@@ -10,6 +11,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     CoverState,
 )
+from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -18,6 +20,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
@@ -78,6 +81,22 @@ async def test_cover(
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(50)
+
+    with (
+        patch(
+            "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set",
+            return_value=False,
+        ),
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: f"{COVER_DOMAIN}.test_test", ATTR_POSITION: 50},
+            blocking=True,
+        )
+    assert error.value.translation_key == "set_failed"
+    assert error.value.translation_domain == DOMAIN
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1

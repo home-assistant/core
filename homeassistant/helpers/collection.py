@@ -489,8 +489,20 @@ class _CollectionLifeCycle[_EntityT: Entity = Entity]:
         # the entity registry event handled by Entity._async_registry_updated
         entities.pop(item_id, None)
 
+    def _get_entity(self, item_id: str) -> CollectionEntity | None:
+        """Return the live entity for an item."""
+        # Changing the entity ID removes and re-adds the entity, which drops it
+        # from self.entities, so look it up through the registry first
+        if entity_id := self.ent_reg.async_get_entity_id(
+            self.domain, self.platform, item_id
+        ):
+            entity = self.entity_component.get_entity(entity_id)
+            return entity if isinstance(entity, CollectionEntity) else None
+
+        return self.entities.get(item_id)
+
     async def _update_entity(self, change_set: CollectionChange) -> None:
-        if entity := self.entities.get(change_set.item_id):
+        if entity := self._get_entity(change_set.item_id):
             if change_set.item_hash:
                 self.ent_reg.async_update_entity_options(
                     entity.entity_id, "collection", {"hash": change_set.item_hash}

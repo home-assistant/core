@@ -1,9 +1,10 @@
 """Tests for the Sonos Media Browser."""
 
 from functools import partial
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -23,8 +24,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockMusicServiceItem, SoCoMockFactory
-
-from tests.typing import WebSocketGenerator
 
 
 def mock_browse_by_idstring(
@@ -267,6 +266,118 @@ async def test_browse_media_root(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"]["children"] == snapshot
+
+
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id", "target", "expected_args", "kwargs"),
+    [
+        pytest.param(
+            "music",
+            "plex://1/2",
+            "homeassistant.components.plex.async_browse_media",
+            ("music", "plex://1/2"),
+            {"platform": "sonos"},
+            id="plex_item",
+        ),
+        pytest.param(
+            "plex",
+            "",
+            "homeassistant.components.plex.async_browse_media",
+            (None, None),
+            {"platform": "sonos"},
+            id="plex_root",
+        ),
+        pytest.param(
+            "spotify://library",
+            "spotify://entry_id",
+            "homeassistant.components.spotify.async_browse_media",
+            ("spotify://library", "spotify://entry_id"),
+            {"can_play_artist": False},
+            id="spotify",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("soco_factory", "async_autosetup_sonos", "soco")
+async def test_browse_media_plex_spotify(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    media_content_type: str,
+    media_content_id: str,
+    target: str,
+    expected_args: tuple[str | None, str | None],
+    kwargs: dict[str, str | bool],
+) -> None:
+    """Test browsing is passed to Plex and Spotify when they are set up."""
+    hass.config.components.update({"plex", "spotify"})
+    result = BrowseMedia(
+        title="Result",
+        media_class=MediaClass.DIRECTORY,
+        media_content_id="result",
+        media_content_type="result",
+        can_play=False,
+        can_expand=True,
+    )
+
+    client = await hass_ws_client()
+    with patch(target, return_value=result) as mock_browse:
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.zone_a",
+                "media_content_id": media_content_id,
+                "media_content_type": media_content_type,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["title"] == "Result"
+    mock_browse.assert_called_once_with(hass, *expected_args, **kwargs)
+
+
+@pytest.mark.usefixtures("soco_factory", "async_autosetup_sonos", "soco")
+async def test_browse_media_root_spotify(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the root includes Spotify when it is set up."""
+    hass.config.components.add("spotify")
+    spotify_item = BrowseMedia(
+        title="Spotify",
+        media_class=MediaClass.APP,
+        media_content_id="spotify://entry_id",
+        media_content_type="spotify://library",
+        can_play=False,
+        can_expand=True,
+    )
+    spotify_root = BrowseMedia(
+        title="Spotify",
+        media_class=MediaClass.APP,
+        media_content_id="spotify://",
+        media_content_type="spotify",
+        can_play=False,
+        can_expand=True,
+        children=[spotify_item],
+    )
+
+    client = await hass_ws_client()
+    with patch(
+        "homeassistant.components.spotify.async_browse_media",
+        return_value=spotify_root,
+    ):
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.zone_a",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert "spotify://entry_id" in [
+        child["media_content_id"] for child in response["result"]["children"]
+    ]
 
 
 async def test_browse_media_library(

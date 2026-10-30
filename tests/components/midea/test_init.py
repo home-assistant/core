@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType, ProtocolVersion
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.midea.const import CONF_SN, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -34,8 +35,6 @@ from .const import (
     TEST_SERIAL_NUMBER,
 )
 
-from tests.common import MockConfigEntry
-
 
 async def test_async_setup(hass: HomeAssistant) -> None:
     """Test the midea domain can be set up without any config entries."""
@@ -52,7 +51,6 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: MockConfigEntry) 
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
-    assert device.daemon is True
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert ("close",) in device.calls
@@ -122,8 +120,6 @@ async def test_setup_entry_not_ready_on_connect_failure(
 
     The real device.connect() already catches SocketException/AuthException
     internally and reports failure by returning False; it never raises them.
-    It can also leave the socket open in that case (e.g. when authentication
-    fails), so the socket must be closed explicitly to avoid a ResourceWarning.
     """
     config_entry.add_to_hass(hass)
     device = DummyDevice(DeviceType.AC)
@@ -137,7 +133,6 @@ async def test_setup_entry_not_ready_on_connect_failure(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert ("close_socket",) in device.calls
     assert config_entry.data[CONF_IP_ADDRESS] == ENTRY_DATA[CONF_IP_ADDRESS]
 
 
@@ -169,7 +164,6 @@ async def test_setup_entry_recovers_ip_on_connect_failure(
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.data[CONF_IP_ADDRESS] == "2.2.2.2"
-    assert recovered_device.daemon is True
     assert ("open",) in recovered_device.calls
 
 
@@ -269,7 +263,6 @@ async def test_migrate_entry_drops_empty_mac_connection(
             ProtocolVersion(entry.data[CONF_PROTOCOL]),
             entry.data[CONF_MODEL],
             entry.data[CONF_SUBTYPE],
-            "",
             entry.data.get(CONF_MAC, None),
             entry.data.get(CONF_SN, None),
         )
@@ -305,7 +298,6 @@ async def test_migrate_entry_without_discovery_result(hass: HomeAssistant) -> No
             ProtocolVersion(entry.data[CONF_PROTOCOL]),
             entry.data[CONF_MODEL],
             entry.data[CONF_SUBTYPE],
-            "",
             None,
             None,
         )

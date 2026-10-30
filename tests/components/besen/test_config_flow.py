@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, Mock
 from besen.exceptions import CannotConnect, InvalidAuth
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.besen.const import DOMAIN
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -20,9 +25,6 @@ from .conftest import (
     FIXTURE_NAME,
     FIXTURE_PIN,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 NEW_PIN = "654321"
 

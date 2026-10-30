@@ -32,7 +32,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FullyKioskConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FullyKioskConfigEntry) -> None:
     """Set up Fully Kiosk Browser from a config entry."""
 
     coordinator = FullyKioskDataUpdateCoordinator(hass, entry)
@@ -43,9 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FullyKioskConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     coordinator.async_update_listeners()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FullyKioskConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FullyKioskConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

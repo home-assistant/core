@@ -1,11 +1,9 @@
 """Platform for Control4 Lights."""
 
 import asyncio
-from datetime import timedelta
 import logging
 from typing import Any, override
 
-from pyControl4.error_handling import C4Exception
 from pyControl4.light import C4Light
 
 from homeassistant.components.light import (
@@ -17,18 +15,15 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE
-from .director_utils import update_variables_for_config_entry
+from .const import CONTROL4_DIMMER_VARS, CONTROL4_ENTITY_TYPE, CONTROL4_NON_DIMMER_VAR
+from .coordinator import Control4DataUpdateCoordinator
 from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 CONTROL4_CATEGORY = "lights"
-CONTROL4_NON_DIMMER_VAR = "LIGHT_STATE"
-CONTROL4_DIMMER_VARS = ["LIGHT_LEVEL", "Brightness Percent"]
 
 
 async def async_setup_entry(
@@ -38,46 +33,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Control4 lights from a config entry."""
     runtime_data = entry.runtime_data
-    _LOGGER.debug("Scan interval = %s", runtime_data.scan_interval)
 
-    async def async_update_data_non_dimmer() -> dict[int, dict[str, Any]]:
-        """Fetch data from Control4 director for non-dimmer lights."""
-        try:
-            return await update_variables_for_config_entry(
-                hass, entry, {CONTROL4_NON_DIMMER_VAR}
-            )
-        except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-    async def async_update_data_dimmer() -> dict[int, dict[str, Any]]:
-        """Fetch data from Control4 director for dimmer lights."""
-        try:
-            return await update_variables_for_config_entry(
-                hass, entry, {*CONTROL4_DIMMER_VARS}
-            )
-        except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-    non_dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
-        hass,
-        _LOGGER,
-        name="light",
-        update_method=async_update_data_non_dimmer,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
-        config_entry=entry,
-    )
-    dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
-        hass,
-        _LOGGER,
-        name="light",
-        update_method=async_update_data_dimmer,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
-        config_entry=entry,
-    )
-
-    # Fetch initial data so we have data when entities subscribe
-    await non_dimmer_coordinator.async_refresh()
-    await dimmer_coordinator.async_refresh()
+    dimmer_coordinator = runtime_data.dimmer_coordinator
+    non_dimmer_coordinator = runtime_data.non_dimmer_coordinator
 
     items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
 
@@ -151,7 +109,7 @@ class Control4Light(Control4Entity, LightEntity):
     def __init__(
         self,
         runtime_data: Control4RuntimeData,
-        coordinator: DataUpdateCoordinator[dict[int, dict[str, Any]]],
+        coordinator: Control4DataUpdateCoordinator,
         name: str,
         idx: int,
         device_name: str | None,

@@ -1,6 +1,7 @@
 {
   "domain": "vallox",
   "name": "Vallox",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@andre-richter", "@slovdahl", "@viiru-", "@yozik04"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vallox",

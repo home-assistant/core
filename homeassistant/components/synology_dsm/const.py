@@ -7,6 +7,7 @@ from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCE
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
     SynologyDSMAPINoDataException,
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginFailedException,
@@ -70,6 +71,7 @@ SERVICES = [
 ]
 
 SYNOLOGY_AUTH_FAILED_EXCEPTIONS = (
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginInvalidException,

@@ -1,9 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: |
-      The integration does not define custom actions.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: No polling.
@@ -12,10 +9,7 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: |
-      The integration does not define custom actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
@@ -50,9 +44,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -76,11 +68,13 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+    status: exempt
+    comment: |
+      The Bluetooth address is the unique ID, and a changed PIN is handled by the reauthentication flow.
   repair-issues:
-    status: todo
-    comment: Split into a follow-up PR after the initial integration lands.
+    status: exempt
+    comment: |
+      A rejected PIN is handled by the reauthentication flow, and Bluetooth outages are retried automatically.
   stale-devices:
     status: exempt
     comment: |

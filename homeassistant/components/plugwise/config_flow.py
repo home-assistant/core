@@ -55,7 +55,7 @@ SMILE_RECONF_SCHEMA = probatio.Schema(
 
 def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> probatio.Schema:
     """Generate base schema for gateways."""
-    schema = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+    schema = probatio.Schema({probatio.Required(probatio.Secret(CONF_PASSWORD)): str})
 
     if not discovery_info:
         schema = schema.extend(

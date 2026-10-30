@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> None:
     """Set up Brother from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[SECTION_ADVANCED_SETTINGS][CONF_PORT]
@@ -61,15 +61,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> None:
     """Migrate an old entry."""
     if entry.version == 1 and entry.minor_version < 2:
         new_data = entry.data.copy()
@@ -84,5 +82,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BrotherConfigEntry) ->
         entry.version,
         entry.minor_version,
     )
-
-    return True

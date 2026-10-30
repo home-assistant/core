@@ -41,7 +41,7 @@ CONF_DESTINATION = "destination"
 _QUERY_SCHEME = probatio.Schema(
     {
         probatio.Required(CONF_MODE): probatio.All(
-            cv.ensure_list, [probatio.In(["bus", "train"])]
+            probatio.EnsureList(), [probatio.In(["bus", "train"])]
         ),
         probatio.Required(CONF_ORIGIN): cv.string,
         probatio.Required(CONF_DESTINATION): cv.string,
@@ -51,7 +51,7 @@ _QUERY_SCHEME = probatio.Schema(
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_API_APP_ID): cv.string,
-        probatio.Required(CONF_API_APP_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_APP_KEY)): cv.string,
         probatio.Required(CONF_QUERIES): [_QUERY_SCHEME],
     }
 )

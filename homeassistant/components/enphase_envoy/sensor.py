@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
-import datetime
+import datetime as dt
 import logging
 from operator import attrgetter
 from typing import TYPE_CHECKING, override
@@ -56,7 +56,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DAILY_ENERGY_UPPER_LIMIT, DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyACBAggregateEntity, EnvoyACBBatteryEntity, EnvoyBaseEntity
 
@@ -72,7 +72,7 @@ PARALLEL_UPDATES = 0
 class EnvoyInverterSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy inverter sensor entity."""
 
-    value_fn: Callable[[EnvoyInverter], datetime.datetime | float]
+    value_fn: Callable[[EnvoyInverter], dt.datetime | float]
 
 
 INVERTER_SENSORS = (
@@ -208,6 +208,7 @@ class EnvoyProductionSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[EnvoySystemProduction], int]
     on_phase: str | None = None
+    upper_limit: int | None = None
 
 
 PRODUCTION_SENSORS = (
@@ -230,6 +231,7 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
+        upper_limit=DAILY_ENERGY_UPPER_LIMIT,
     ),
     EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
@@ -275,6 +277,7 @@ class EnvoyConsumptionSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[EnvoySystemConsumption], int]
     on_phase: str | None = None
+    upper_limit: int | None = None
 
 
 CONSUMPTION_SENSORS = (
@@ -297,6 +300,7 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
+        upper_limit=DAILY_ENERGY_UPPER_LIMIT,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",
@@ -629,7 +633,7 @@ CT_PHASE_SENSORS = {
 class EnvoyEnchargeSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy Encharge sensor entity."""
 
-    value_fn: Callable[[EnvoyEncharge], datetime.datetime | int | float]
+    value_fn: Callable[[EnvoyEncharge], dt.datetime | int | float]
 
 
 @dataclass(frozen=True)
@@ -658,7 +662,24 @@ ENCHARGE_INVENTORY_SENSORS = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda encharge: dt_util.utc_from_timestamp(encharge.last_report_date),
     ),
+    EnvoyEnchargeSensorEntityDescription(
+        key="comm_level_2_4_ghz",
+        translation_key="comm_level_2_4_ghz",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("comm_level_2_4_ghz"),
+    ),
+    EnvoyEnchargeSensorEntityDescription(
+        key="comm_level_sub_ghz",
+        translation_key="comm_level_sub_ghz",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("comm_level_sub_ghz"),
+    ),
 )
+
 ENCHARGE_POWER_SENSORS = (
     EnvoyEnchargePowerSensorEntityDescription(
         key="soc",
@@ -688,7 +709,7 @@ ENCHARGE_POWER_SENSORS = (
 class EnvoyEnpowerSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy Encharge sensor entity."""
 
-    value_fn: Callable[[EnvoyEnpower], datetime.datetime | int | float]
+    value_fn: Callable[[EnvoyEnpower], dt.datetime | int | float]
 
 
 ENPOWER_SENSORS = (
@@ -705,6 +726,22 @@ ENPOWER_SENSORS = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda enpower: dt_util.utc_from_timestamp(enpower.last_report_date),
     ),
+    EnvoyEnpowerSensorEntityDescription(
+        key="comm_level_2_4_ghz",
+        translation_key="comm_level_2_4_ghz",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("comm_level_2_4_ghz"),
+    ),
+    EnvoyEnpowerSensorEntityDescription(
+        key="comm_level_sub_ghz",
+        translation_key="comm_level_sub_ghz",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("comm_level_sub_ghz"),
+    ),
 )
 
 
@@ -712,7 +749,7 @@ ENPOWER_SENSORS = (
 class EnvoyCollarSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy Collar sensor entity."""
 
-    value_fn: Callable[[EnvoyCollar], datetime.datetime | int | float | str]
+    value_fn: Callable[[EnvoyCollar], dt.datetime | int | float | str]
 
 
 # translations don't accept uppercase
@@ -762,7 +799,7 @@ COLLAR_SENSORS = (
 class EnvoyC6CCSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy C6 Combiner controller sensor entity."""
 
-    value_fn: Callable[[EnvoyC6CC], datetime.datetime]
+    value_fn: Callable[[EnvoyC6CC], dt.datetime]
 
 
 C6CC_SENSORS = (
@@ -800,7 +837,6 @@ ENCHARGE_AGGREGATE_SENSORS = (
         translation_key="reserve_soc",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("reserve_state_of_charge"),
     ),
     EnvoyEnchargeAggregateSensorEntityDescription(
@@ -876,7 +912,7 @@ ACB_BATTERY_ENERGY_SENSORS = (
 class EnvoyACBInventorySensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy per-device ACB Battery sensor entity."""
 
-    value_fn: Callable[[EnvoyACB], int | str | datetime.datetime | None]
+    value_fn: Callable[[EnvoyACB], int | str | dt.datetime | None]
 
 
 ACB_INVENTORY_SENSORS = (
@@ -1193,6 +1229,18 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
             serial_number=self.envoy_serial_num,
         )
 
+    def _apply_upper_limit(self, value: int, upper_limit: int | None) -> int | None:
+        """Return None for values above the upper limit."""
+        if upper_limit is not None and value > upper_limit:
+            _LOGGER.debug(
+                "Value discarded as it exceeds the upper limit %s: %s > %s",
+                self.entity_id,
+                value,
+                upper_limit,
+            )
+            return None
+        return value
+
 
 class EnvoyProductionEntity(EnvoySystemSensorEntity):
     """Envoy production entity."""
@@ -1205,7 +1253,10 @@ class EnvoyProductionEntity(EnvoySystemSensorEntity):
         """Return the state of the sensor."""
         if (system_production := self.data.system_production) is None:
             return None
-        return self.entity_description.value_fn(system_production)
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_production),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
@@ -1219,7 +1270,10 @@ class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
         """Return the state of the sensor."""
         if (system_consumption := self.data.system_consumption) is None:
             return None
-        return self.entity_description.value_fn(system_consumption)
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_consumption),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyNetConsumptionEntity(EnvoySystemSensorEntity):
@@ -1258,7 +1312,10 @@ class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        return self.entity_description.value_fn(system_production)
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_production),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
@@ -1283,7 +1340,10 @@ class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
             ]
         ) is None:
             return None
-        return self.entity_description.value_fn(system_consumption)
+        return self._apply_upper_limit(
+            self.entity_description.value_fn(system_consumption),
+            self.entity_description.upper_limit,
+        )
 
 
 class EnvoyNetConsumptionPhaseEntity(EnvoySystemSensorEntity):
@@ -1396,7 +1456,7 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
 
     @property
     @override
-    def native_value(self) -> datetime.datetime | float | None:
+    def native_value(self) -> dt.datetime | float | None:
         """Return the state of the sensor."""
         inverters = self.data.inverters
         assert inverters is not None
@@ -1451,7 +1511,7 @@ class EnvoyEnchargeInventoryEntity(EnvoyEnchargeEntity):
 
     @property
     @override
-    def native_value(self) -> int | float | datetime.datetime | None:
+    def native_value(self) -> int | float | dt.datetime | None:
         """Return the state of the inventory sensors."""
         encharge_inventory = self.data.encharge_inventory
         assert encharge_inventory is not None
@@ -1517,7 +1577,7 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
 
     @property
     @override
-    def native_value(self) -> datetime.datetime | int | float | None:
+    def native_value(self) -> dt.datetime | int | float | None:
         """Return the state of the power sensors."""
         enpower = self.data.enpower
         assert enpower is not None
@@ -1573,7 +1633,7 @@ class EnvoyACBInventoryEntity(EnvoyACBBatteryEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> int | str | datetime.datetime | None:
+    def native_value(self) -> int | str | dt.datetime | None:
         """Return the state of the per-device ACB battery sensors."""
         acb_inventory = self.data.acb_inventory
         if not acb_inventory or self._serial_number not in acb_inventory:
@@ -1626,7 +1686,7 @@ class EnvoyCollarEntity(EnvoySensorBaseEntity):
 
     @property
     @override
-    def native_value(self) -> datetime.datetime | int | float | str:
+    def native_value(self) -> dt.datetime | int | float | str:
         """Return the state of the collar sensors."""
         collar_data = self.data.collar
         assert collar_data is not None
@@ -1664,7 +1724,7 @@ class EnvoyC6CCEntity(EnvoySensorBaseEntity):
 
     @property
     @override
-    def native_value(self) -> datetime.datetime:
+    def native_value(self) -> dt.datetime:
         """Return the state of the c6cc inventory sensors."""
         c6cc_data = self.data.c6cc
         assert c6cc_data is not None

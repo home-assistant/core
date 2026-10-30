@@ -6,6 +6,7 @@ control of RFLink cover devices.
 """
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.cover import CoverState
 from homeassistant.components.rflink.entity import EVENT_BUTTON_PRESSED
@@ -13,8 +14,6 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_CLOSE_COVER, SERVICE_OPE
 from homeassistant.core import CoreState, HomeAssistant, State, callback
 
 from .test_init import mock_rflink
-
-from tests.common import mock_restore_cache
 
 DOMAIN = "cover"
 

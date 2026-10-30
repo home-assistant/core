@@ -10,6 +10,8 @@ from unittest.mock import ANY, Mock, call, patch
 
 import axis as axislib
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import axis
@@ -29,9 +31,6 @@ from .const import (
     MAC,
     NAME,
 )
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 @pytest.mark.parametrize(

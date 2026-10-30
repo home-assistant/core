@@ -143,7 +143,11 @@ rules:
     comment: |
       Integration does not create entities.
   reconfiguration-flow: done
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: |
+      Connection failures are retried via ConfigEntryNotReady and an invalid
+      token starts the reauth flow, so there is nothing for a repair to fix.
   stale-devices:
     status: exempt
     comment: |

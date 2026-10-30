@@ -6,6 +6,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import async_get_image, async_get_stream_source
@@ -23,8 +28,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import create_online_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 TEST_STREAM_URL = "https://example.com/live.m3u8"
 TEST_IMAGE_BYTES = b"fake-image-bytes"
@@ -102,6 +105,38 @@ async def test_no_camera_without_channel(
         entity_registry, mock_config_entry.entry_id
     )
     assert not any(entry.domain == "camera" for entry in entries)
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize("platforms", [[Platform.CAMERA]], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_live_view_hd_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Live view HD is disabled by default; SD stays enabled."""
+    sd_entry = entity_registry.async_get(
+        _camera_entity_id(entity_registry, mock_config_entry, camera_key="camera_sd")
+    )
+    hd_entry = entity_registry.async_get(
+        _camera_entity_id(entity_registry, mock_config_entry, camera_key="camera_hd")
+    )
+    assert sd_entry is not None and not sd_entry.disabled
+    assert hd_entry is not None and hd_entry.disabled
 
 
 @pytest.mark.parametrize(

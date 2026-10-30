@@ -1,13 +1,12 @@
 """Tests for the diagnostics provided by the Novy Cooker Hood integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
@@ -20,8 +19,6 @@ async def test_diagnostics(
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, init_novy_cooker_hood
     )
-    # Exclude the random transmitter registry id from the snapshot.
-    result["config_entry"]["data"].pop("transmitter")
 
     assert result == snapshot(
         exclude=props(

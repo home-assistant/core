@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from homevolt import (
     HomevoltAuthenticationError,
     HomevoltCommandOutcomeUnknownError,
@@ -11,8 +12,14 @@ from homevolt import (
     HomevoltError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.homevolt.const import SCAN_INTERVAL
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -27,8 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "select.homevolt_ems_battery_mode"
 
@@ -84,31 +89,37 @@ async def test_select_option(
         pytest.param(3, id="unsupported"),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_select_unknown_mode(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_homevolt_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
     mode: int | None,
 ) -> None:
     """Test missing and unsupported modes are unknown."""
     mock_homevolt_client.schedule["mode"] = mode
 
-    await init_integration.runtime_data.async_request_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_select_unavailable_without_local_mode(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_homevolt_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test mode changes are unavailable until local mode is enabled."""
     mock_homevolt_client.local_mode_enabled = False
 
-    await init_integration.runtime_data.async_request_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None

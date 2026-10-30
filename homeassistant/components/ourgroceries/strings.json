@@ -6,12 +6,24 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "The OurGroceries password for {username} is no longer valid. Please enter the new password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_login": {
+      "message": "Login to OurGroceries failed because the username or password is incorrect"
     }
   }
 }

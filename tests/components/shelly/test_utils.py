@@ -34,6 +34,7 @@ from homeassistant.components.shelly.utils import (
     get_rpc_channel_name,
     get_rpc_input_triggers,
     get_rpc_sub_device_name,
+    get_version_from_fw_id,
     is_block_momentary_input,
     mac_address_from_name,
 )
@@ -262,6 +263,19 @@ def test_get_release_url(
     result = get_release_url(gen, model, beta)
 
     assert result is expected
+
+
+@pytest.mark.parametrize(
+    ("fw_id", "expected"),
+    [
+        ("20260724-105432/v1.5.0@aa8644cc", "v1.5.0"),
+        ("20241004-125638/main@4b7c4712+", "main"),
+        ("1.11.0", None),
+    ],
+)
+def test_get_version_from_fw_id(fw_id: str, expected: str | None) -> None:
+    """Test get_version_from_fw_id()."""
+    assert get_version_from_fw_id(fw_id) == expected
 
 
 @pytest.mark.parametrize(

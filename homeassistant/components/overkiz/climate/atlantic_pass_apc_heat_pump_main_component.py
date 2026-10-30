@@ -40,7 +40,7 @@ class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     @property

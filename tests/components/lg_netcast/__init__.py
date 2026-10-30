@@ -4,6 +4,7 @@ from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
 from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.lg_netcast import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 FAIL_TO_BIND_IP = "1.2.3.4"
 

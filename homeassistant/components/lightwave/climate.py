@@ -52,7 +52,7 @@ class LightwaveTrv(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 0.5
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, name, device_id, lwlink, serial):
         """Initialize LightwaveTrv entity."""
@@ -69,16 +69,16 @@ class LightwaveTrv(ClimateEntity):
         """Communicate with a Lightwave RTF Proxy to get state."""
         (temp, targ, _, trv_output) = self._lwlink.read_trv_status(self._serial)
         if temp is not None:
-            self._attr_current_temperature = temp
+            self._attr_native_current_temperature = temp
         if targ is not None:
             if self._inhibit == 0:
-                self._attr_target_temperature = targ
+                self._attr_native_target_temperature = targ
                 if targ == 0:
                     # TRV off
-                    self._attr_target_temperature = None
+                    self._attr_native_target_temperature = None
                 if targ >= 40:
                     # Call for heat mode, or TRV in a fixed position
-                    self._attr_target_temperature = None
+                    self._attr_native_target_temperature = None
             else:
                 # Done the job - use proxy next iteration
                 self._inhibit = 0
@@ -90,24 +90,24 @@ class LightwaveTrv(ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Target room temperature."""
         if self._inhibit > 0:
             # If we get an update before the new temp has
             # propagated, the target temp is set back to the
             # old target on the next poll, showing a false
             # reading temporarily.
-            self._attr_target_temperature = self._inhibit
-        return self._attr_target_temperature
+            self._attr_native_target_temperature = self._inhibit
+        return self._attr_native_target_temperature
 
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set TRV target temperature."""
         if ATTR_TEMPERATURE in kwargs:
-            self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
-            self._inhibit = self._attr_target_temperature
+            self._attr_native_target_temperature = kwargs[ATTR_TEMPERATURE]
+            self._inhibit = self._attr_native_target_temperature
         self._lwlink.set_temperature(
-            self._device_id, self._attr_target_temperature, self._attr_name
+            self._device_id, self._attr_native_target_temperature, self._attr_name
         )
 
     @override

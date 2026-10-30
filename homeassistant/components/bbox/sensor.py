@@ -81,7 +81,7 @@ SENSOR_KEYS: list[str] = [desc.key for desc in (*SENSOR_TYPES, *SENSOR_TYPES_UPT
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_MONITORED_VARIABLES): probatio.All(
-            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
+            probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         ),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }

@@ -1,6 +1,6 @@
 """Validate integration type is set for config flow integrations."""
 
-from .model import Config, Integration
+from hassfest.model import Config, Integration
 
 # Integrations with config_flow that are missing integration_type.
 # These need to be fixed; do not add new entries to this list.
@@ -58,7 +58,6 @@ MISSING_INTEGRATION_TYPE = {
     "scrape",
     "shopping_list",
     "sql",
-    "sunweg",
     "systemmonitor",
     "tasmota",
     "traccar",

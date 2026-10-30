@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import IngressPanel
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import (
@@ -18,9 +20,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, async_fire_time_changed
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 

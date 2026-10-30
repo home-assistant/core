@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from aioflo.api import SSO_TOKEN_URL
 from aioflo.errors import RequestError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.flo import async_get_flo_api
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import TEST_PASSWORD, TEST_USER_ID
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
@@ -31,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.flo.async_setup_entry", return_value=True
+        "homeassistant.components.flo.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": TEST_USER_ID, "password": TEST_PASSWORD}
@@ -40,6 +39,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == TEST_USER_ID
         assert result2["data"] == {"username": TEST_USER_ID, "password": TEST_PASSWORD}
+        assert result2["result"].unique_id == TEST_USER_ID
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -66,6 +66,24 @@ async def test_form_cannot_connect(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://api.meetflo.com/api/v1/users/auth",
+        json={
+            "token": "token",
+            "tokenPayload": {"user": {"user_id": TEST_USER_ID}, "timestamp": 0},
+            "tokenExpiration": 86400,
+        },
+    )
+    with patch("homeassistant.components.flo.async_setup_entry", return_value=None):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-username", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_sso_after_legacy_failure(
@@ -103,7 +121,7 @@ async def test_form_sso_after_legacy_failure(
     )
 
     with patch(
-        "homeassistant.components.flo.async_setup_entry", return_value=True
+        "homeassistant.components.flo.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": TEST_USER_ID, "password": TEST_PASSWORD}
@@ -115,6 +133,7 @@ async def test_form_sso_after_legacy_failure(
             "password": TEST_PASSWORD,
             CONF_USE_SSO: True,
         }
+        assert result2["result"].unique_id == TEST_USER_ID
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
 

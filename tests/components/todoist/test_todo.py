@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from todoist_api_python.models import Task
 
 from homeassistant.components.todo import (
@@ -18,13 +19,17 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
+from homeassistant.components.todoist.const import (
+    CONTENT,
+    DOMAIN,
+    PROJECT_NAME,
+    SERVICE_NEW_TASK,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import PROJECT_ID, make_api_due, make_api_response, make_api_task
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -218,6 +223,35 @@ async def test_add_todo_list_item(
         return_response=True,
     )
     assert result == {"todo.name": {"items": [expected_item]}}
+
+
+@pytest.mark.parametrize("tasks", [[]])
+@pytest.mark.usefixtures("setup_integration")
+async def test_new_task_action_refreshes_todo_list(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test the To-do list reflects a task created by the new_task action."""
+    state = hass.states.get("todo.name")
+    assert state
+    assert state.state == "0"
+
+    # Fake API response when state is refreshed after create
+    api.get_tasks.side_effect = make_api_response(
+        [make_api_task(id="task-id-1", content="Soda", completed_at=None)]
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {CONTENT: "Soda", PROJECT_NAME: "Name"},
+        blocking=True,
+    )
+
+    api.add_task.assert_called_once_with("Soda", project_id=PROJECT_ID)
+
+    state = hass.states.get("todo.name")
+    assert state
+    assert state.state == "1"
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,7 @@
 {
   "domain": "point",
   "name": "Minut Point",
+  "categories": ["security_safety.alarm_systems", "sensors"],
   "codeowners": ["@fredrike"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],

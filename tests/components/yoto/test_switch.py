@@ -4,6 +4,7 @@ from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from yoto_api import YotoError
 
@@ -21,8 +22,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import PLAYER_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("setup_credentials")
 

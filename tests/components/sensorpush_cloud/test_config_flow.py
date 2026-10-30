@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sensorpush_ha import SensorPushCloudAuthError
 
 from homeassistant.components.sensorpush_cloud.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import CONF_DATA, CONF_EMAIL
-
-from tests.common import MockConfigEntry
 
 
 async def test_user(

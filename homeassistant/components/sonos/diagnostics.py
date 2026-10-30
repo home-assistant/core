@@ -3,6 +3,7 @@
 import time
 from typing import Any
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import AnyDeviceEntry
@@ -41,6 +42,7 @@ SPEAKER_DIAGNOSTIC_ATTRIBUTES = (
     "_last_activity",
     "_last_event_cache",
 )
+TO_REDACT = {"third_party_media_servers_x"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -62,7 +64,7 @@ async def async_get_config_entry_diagnostics(
                 )
             else:
                 payload[section][key] = value
-    return payload
+    return async_redact_data(payload, TO_REDACT)
 
 
 async def async_get_device_diagnostics(
@@ -79,7 +81,9 @@ async def async_get_device_diagnostics(
     if (speaker := config_entry.runtime_data.discovered.get(uid)) is None:
         return {}
 
-    return await async_generate_speaker_info(hass, config_entry, speaker)
+    return async_redact_data(
+        await async_generate_speaker_info(hass, config_entry, speaker), TO_REDACT
+    )
 
 
 async def async_generate_media_info(

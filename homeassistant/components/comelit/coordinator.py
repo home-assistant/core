@@ -71,8 +71,8 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
         )
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
-            configuration_url=self.api.base_url,
             config_entry_id=entry.entry_id,
+            configuration_url=self.api.base_url,
             identifiers={(DOMAIN, entry.entry_id)},
             model=device,
             name=f"{device} ({self._host})",

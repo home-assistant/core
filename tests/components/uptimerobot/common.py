@@ -4,6 +4,7 @@ from enum import StrEnum
 from typing import Any
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from pyuptimerobot import UptimeRobotApiResponse
 from pyuptimerobot.const import API_PATH_MONITORS
 
@@ -12,8 +13,6 @@ from homeassistant.components.uptimerobot.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_UPTIMEROBOT_API_KEY = "u0242ac120003"
 MOCK_UPTIMEROBOT_API_KEY_READ_ONLY = "ur0242ac120003"

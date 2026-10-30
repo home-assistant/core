@@ -42,7 +42,7 @@ SWITCH_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
         probatio.Optional(CONF_COMMAND_STATE): cv.string,
         probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): probatio.Coerce(
             float
         ),

@@ -134,6 +134,9 @@ SSDP = {
         {
             "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1",
         },
+        {
+            "st": "urn:schemas-frontier-silicon-com:invalid:fsapi:1",
+        },
     ],
     "harman_luxury": [
         {
@@ -214,6 +217,16 @@ SSDP = {
     "lametric": [
         {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
+        },
+    ],
+    "libresync": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "LibreWireless",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "modelDescription": "LibreSyncDMR",
         },
     ],
     "lyngdorf": [

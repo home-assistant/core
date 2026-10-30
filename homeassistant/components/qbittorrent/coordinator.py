@@ -56,12 +56,8 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
     @override
     async def _async_update_data(self) -> SyncMainDataDictionary:
         try:
-            data = await self.hass.async_add_executor_job(self.client.sync_maindata)
-            self._is_alternative_mode_enabled = (
-                await self.hass.async_add_executor_job(
-                    self.client.transfer_speed_limits_mode
-                )
-                == "1"
+            data, speed_limits_mode = await self.hass.async_add_executor_job(
+                self._fetch_data
             )
         except (LoginFailed, Forbidden403Error) as exc:
             raise HomeAssistantError(
@@ -71,7 +67,15 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from exc
+        self._is_alternative_mode_enabled = speed_limits_mode == "1"
         return data
+
+    def _fetch_data(self) -> tuple[SyncMainDataDictionary, str]:
+        """Fetch the main data and the speed limits mode."""
+        return (
+            self.client.sync_maindata(),
+            self.client.transfer_speed_limits_mode(),
+        )
 
     def set_alt_speed_enabled(self, is_enabled: bool) -> None:
         """Set the alternative speed mode."""

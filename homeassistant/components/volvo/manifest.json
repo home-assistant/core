@@ -1,6 +1,7 @@
 {
   "domain": "volvo",
   "name": "Volvo",
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@thomasddn"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

@@ -131,7 +131,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="authorize",
             data_schema=probatio.Schema(
                 {
-                    probatio.Optional(CONF_ACCESS_TOKEN): probatio.All(
+                    probatio.Optional(probatio.Secret(CONF_ACCESS_TOKEN)): probatio.All(
                         str, probatio.Length(max=6)
                     ),
                 }

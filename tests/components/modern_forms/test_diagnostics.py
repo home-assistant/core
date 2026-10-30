@@ -1,15 +1,14 @@
 """Tests for the Modern Forms diagnostics platform."""
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
 from . import init_integration, init_integration_gen4
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(

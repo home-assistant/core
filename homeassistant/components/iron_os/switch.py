@@ -12,9 +12,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IronOSConfigEntry
 from .const import MIN_BOOST_TEMP, MIN_BOOST_TEMP_F
-from .coordinator import IronOSCoordinators
+from .coordinator import IronOSConfigEntry, IronOSCoordinators
 from .entity import IronOSBaseEntity
 
 PARALLEL_UPDATES = 0

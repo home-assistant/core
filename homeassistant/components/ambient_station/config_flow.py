@@ -21,7 +21,10 @@ class AmbientStationFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data_schema = probatio.Schema(
-            {probatio.Required(CONF_API_KEY): str, probatio.Required(CONF_APP_KEY): str}
+            {
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                probatio.Required(CONF_APP_KEY): str,
+            }
         )
 
     async def _show_form(self, errors: dict | None = None) -> ConfigFlowResult:

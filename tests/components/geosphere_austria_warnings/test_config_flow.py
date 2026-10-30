@@ -8,6 +8,7 @@ from pygeosphere_warnings import (
     GeoSphereMunicipalityNotFoundError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_LATITUDE, TEST_LONGITUDE
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_client")
 

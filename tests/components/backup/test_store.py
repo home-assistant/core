@@ -5,14 +5,13 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .common import setup_backup_integration
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -119,6 +118,7 @@ def mock_delay_save() -> Generator[None]:
                     },
                     "last_attempted_automatic_backup": None,
                     "last_completed_automatic_backup": None,
+                    "last_completed_automatic_backup_size": None,
                     "retention": {
                         "copies": None,
                         "days": None,

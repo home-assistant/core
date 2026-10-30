@@ -29,7 +29,7 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> None:
     """Set up Paperless-ngx from a config entry."""
 
     api = await _get_paperless_api(hass, entry)
@@ -53,12 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) -> None:
     """Unload paperless-ngx config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _get_paperless_api(

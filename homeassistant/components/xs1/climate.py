@@ -69,7 +69,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.sensor is None:
             return None
@@ -78,13 +78,13 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
+    def native_temperature_unit(self) -> str:
+        """Return the native unit of measurement used by the device."""
         return self.device.unit()
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the current target temperature."""
         return self.device.new_value()
 

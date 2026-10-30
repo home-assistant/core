@@ -4,8 +4,9 @@ import logging
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyrisco import OperationError
+from pyrisco import OperationError, UnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.risco.const import (
     CONF_COMMUNICATION_DELAY,
@@ -13,10 +14,9 @@ from homeassistant.components.risco.const import (
     DOMAIN,
     TYPE_LOCAL,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -137,3 +137,20 @@ async def test_clock_operation_error_is_downgraded(
         f"{setup_risco_local.data.get(CONF_HOST, 'unknown')})"
     )
     assert expected_warning in caplog.text
+
+
+async def test_local_setup_unauthorized(
+    hass: HomeAssistant, local_config_entry: MockConfigEntry
+) -> None:
+    """Test local setup fails when the panel rejects the PIN."""
+    with patch(
+        "homeassistant.components.risco.RiscoLocal.connect",
+        side_effect=UnauthorizedError,
+    ):
+        await hass.config_entries.async_setup(local_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert local_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        local_config_entry.reason == "Failed to authenticate with the local Risco panel"
+    )

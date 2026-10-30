@@ -71,7 +71,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -> None:
     """Set up a connection to PCHK host from a config entry."""
 
     settings = {
@@ -139,12 +139,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -
     lcn_connection.register_for_events(event_received)
     lcn_connection.register_for_inputs(input_received)
 
-    return True
-
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: LcnConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -190,7 +188,6 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-    return True
 
 
 async def async_migrate_entities(
@@ -216,17 +213,12 @@ async def async_migrate_entities(
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -> None:
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
-    if unload_ok:
-        await config_entry.runtime_data.connection.async_close()
-
-    return unload_ok
+    await config_entry.runtime_data.connection.async_close()
 
 
 def async_host_event_received(

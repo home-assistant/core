@@ -1,6 +1,7 @@
 {
   "domain": "renson",
   "name": "Renson",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@jimmyd-be"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/renson",

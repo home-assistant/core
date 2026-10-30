@@ -74,7 +74,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     to a cooling floor in the summer.
     """
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -160,7 +160,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
 
         # Allow to get the current target temperature for the current preset
@@ -179,7 +179,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
             temperature := self.temperature_device.states.get(

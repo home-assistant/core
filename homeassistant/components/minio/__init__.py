@@ -45,12 +45,12 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_HOST): cv.string,
-                probatio.Required(CONF_PORT): cv.port,
+                probatio.Required(CONF_PORT): probatio.Port(),
                 probatio.Required(CONF_ACCESS_KEY): cv.string,
-                probatio.Required(CONF_SECRET_KEY): cv.string,
+                probatio.Required(probatio.Secret(CONF_SECRET_KEY)): cv.string,
                 probatio.Required(CONF_SECURE): cv.boolean,
                 probatio.Optional(CONF_LISTEN, default=[]): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [
                         probatio.Schema(
                             {
@@ -156,8 +156,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         minio_client.remove_object(bucket, key)
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "put", put_file, schema=BUCKET_KEY_FILE_SCHEMA)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "get", get_file, schema=BUCKET_KEY_FILE_SCHEMA)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "remove", remove_file, schema=BUCKET_KEY_SCHEMA)
 
     return True

@@ -66,7 +66,7 @@ class ElviaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
                 }
             ),
             errors=errors,

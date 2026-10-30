@@ -1,6 +1,10 @@
 {
   "domain": "aprilaire",
   "name": "AprilAire",
+  "categories": [
+    "climate.thermostats_heating",
+    "climate.air_purifiers_humidifiers"
+  ],
   "codeowners": ["@chamberlain2007"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aprilaire",

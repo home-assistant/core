@@ -15,7 +15,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-TESSIE_SCHEMA = probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): str})
+TESSIE_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str}
+)
 DESCRIPTION_PLACEHOLDERS = {
     "name": "Tessie",
     "url": "[my.tessie.com/settings/api](https://my.tessie.com/settings/api)",

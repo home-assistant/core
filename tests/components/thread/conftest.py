@@ -3,11 +3,10 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import thread
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_DATA = {}
 

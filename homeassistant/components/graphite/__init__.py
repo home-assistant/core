@@ -38,7 +38,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
                 probatio.Optional(
                     CONF_PROTOCOL, default=DEFAULT_PROTOCOL
                 ): probatio.Any(PROTOCOL_TCP, PROTOCOL_UDP),

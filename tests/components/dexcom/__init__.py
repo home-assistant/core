@@ -4,12 +4,11 @@ from typing import Any
 from unittest.mock import patch
 
 from pydexcom import GlucoseReading
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.dexcom.const import CONF_SERVER, DOMAIN, SERVER_US
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CONFIG = {
     CONF_USERNAME: "test_username",

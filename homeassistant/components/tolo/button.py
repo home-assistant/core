@@ -46,11 +46,12 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         return (
-            self.coordinator.data.status.lamp_on
+            super().available
+            and self.coordinator.data.status.lamp_on
             and self.coordinator.data.settings.lamp_mode == LampMode.MANUAL
         )
 
     @override
-    def press(self) -> None:
+    async def async_press(self) -> None:
         """Execute action when lamp change color button was pressed."""
-        self.coordinator.client.lamp_change_color()
+        await self._async_send_command(lambda client: client.lamp_change_color())

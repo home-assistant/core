@@ -15,7 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FibaroConfigEntry
+from . import FibaroConfigEntry, FibaroController
 from .entity import FibaroEntity
 
 
@@ -31,18 +31,20 @@ async def async_setup_entry(
     for device in controller.fibaro_devices[Platform.COVER]:
         # Positionable covers report the position over value
         if device.value.has_value:
-            entities.append(PositionableFibaroCover(device))
+            entities.append(PositionableFibaroCover(device, controller))
         else:
-            entities.append(FibaroCover(device))
+            entities.append(FibaroCover(device, controller))
     async_add_entities(entities, True)
 
 
 class PositionableFibaroCover(FibaroEntity, CoverEntity):
     """Representation of a fibaro cover which supports positioning."""
 
-    def __init__(self, fibaro_device: DeviceModel) -> None:
+    def __init__(
+        self, fibaro_device: DeviceModel, controller: FibaroController
+    ) -> None:
         """Initialize the device."""
-        super().__init__(fibaro_device)
+        super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @staticmethod
@@ -115,9 +117,11 @@ class PositionableFibaroCover(FibaroEntity, CoverEntity):
 class FibaroCover(FibaroEntity, CoverEntity):
     """Representation of a fibaro cover which supports only open / close commands."""
 
-    def __init__(self, fibaro_device: DeviceModel) -> None:
+    def __init__(
+        self, fibaro_device: DeviceModel, controller: FibaroController
+    ) -> None:
         """Initialize the device."""
-        super().__init__(fibaro_device)
+        super().__init__(fibaro_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
         self._attr_supported_features = (

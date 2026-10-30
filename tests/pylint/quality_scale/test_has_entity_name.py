@@ -580,7 +580,7 @@ def test_mixin_subclassed_in_same_module_ignored(
 from homeassistant.helpers.entity import Entity
 
 class MyClimateMixin(Entity):
-    _attr_temperature_unit = "C"
+    _attr_native_temperature_unit = "C"
 
 class ActualEntity(MyClimateMixin):
     _attr_has_entity_name = True

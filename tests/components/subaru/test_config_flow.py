@@ -5,13 +5,14 @@ from unittest import mock
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
 
 from homeassistant import config_entries
 from homeassistant.components.subaru import config_flow
 from homeassistant.components.subaru.const import CONF_UPDATE_ENABLED, DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_DEVICE_ID, CONF_PIN
+from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -31,8 +32,6 @@ from .conftest import (
     TEST_PIN,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 ASYNC_SETUP_ENTRY = "homeassistant.components.subaru.async_setup_entry"
 MOCK_2FA_CONTACTS = {
@@ -94,7 +93,7 @@ async def test_user_form_invalid_auth(hass: HomeAssistant, user_form) -> None:
         patch(MOCK_API_CONNECT, return_value=True),
         patch(MOCK_API_DEVICE_REGISTERED, new_callable=PropertyMock, return_value=True),
         patch(MOCK_API_IS_PIN_REQUIRED, return_value=False),
-        patch(ASYNC_SETUP_ENTRY, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -116,7 +115,7 @@ async def test_user_form_pin_not_required(
             MOCK_API_IS_PIN_REQUIRED,
             return_value=False,
         ) as mock_is_pin_required,
-        patch(ASYNC_SETUP_ENTRY, return_value=True) as mock_setup_entry,
+        patch(ASYNC_SETUP_ENTRY, return_value=None) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             two_factor_verify_form["flow_id"],
@@ -166,7 +165,7 @@ async def test_registered_pin_required(hass: HomeAssistant, user_form) -> None:
     with (
         patch(MOCK_API_TEST_PIN, return_value=True),
         patch(MOCK_API_UPDATE_SAVED_PIN, return_value=True),
-        patch(ASYNC_SETUP_ENTRY, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: TEST_PIN}
@@ -182,7 +181,7 @@ async def test_registered_no_pin_required(hass: HomeAssistant, user_form) -> Non
             MOCK_API_DEVICE_REGISTERED, new_callable=PropertyMock
         ) as mock_device_registered,
         patch(MOCK_API_IS_PIN_REQUIRED, return_value=False),
-        patch(ASYNC_SETUP_ENTRY, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
     ):
         mock_device_registered.return_value = True
         result = await hass.config_entries.flow.async_configure(
@@ -214,7 +213,7 @@ async def test_two_factor_request_success(
     with (
         patch(MOCK_API_2FA_VERIFY, return_value=True),
         patch(MOCK_API_IS_PIN_REQUIRED, return_value=False),
-        patch(ASYNC_SETUP_ENTRY, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -267,7 +266,7 @@ async def test_two_factor_verify_success(
     with (
         patch(MOCK_API_TEST_PIN, return_value=True),
         patch(MOCK_API_UPDATE_SAVED_PIN, return_value=True),
-        patch(ASYNC_SETUP_ENTRY, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: TEST_PIN}
@@ -297,7 +296,7 @@ async def test_two_factor_verify_bad_format(
     with (
         patch(MOCK_API_2FA_VERIFY, return_value=True),
         patch(MOCK_API_IS_PIN_REQUIRED, return_value=False),
-        patch(ASYNC_SETUP_ENTRY, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -328,7 +327,7 @@ async def test_two_factor_verify_fail(
     with (
         patch(MOCK_API_2FA_VERIFY, return_value=True),
         patch(MOCK_API_IS_PIN_REQUIRED, return_value=False),
-        patch(ASYNC_SETUP_ENTRY, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -359,7 +358,7 @@ async def test_pin_form_bad_pin_format(hass: HomeAssistant, pin_form) -> None:
     with (
         patch(MOCK_API_TEST_PIN, return_value=True),
         patch(MOCK_API_UPDATE_SAVED_PIN, return_value=True),
-        patch(ASYNC_SETUP_ENTRY, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: TEST_PIN}
@@ -378,7 +377,7 @@ async def test_pin_form_success(hass: HomeAssistant, pin_form) -> None:
             MOCK_API_UPDATE_SAVED_PIN,
             return_value=True,
         ) as mock_update_saved_pin,
-        patch(ASYNC_SETUP_ENTRY, return_value=True) as mock_setup_entry,
+        patch(ASYNC_SETUP_ENTRY, return_value=None) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             pin_form["flow_id"], user_input={CONF_PIN: TEST_PIN}
@@ -429,7 +428,7 @@ async def test_pin_form_incorrect_pin(hass: HomeAssistant, pin_form) -> None:
     with (
         patch(MOCK_API_TEST_PIN, return_value=True),
         patch(MOCK_API_UPDATE_SAVED_PIN, return_value=True),
-        patch(ASYNC_SETUP_ENTRY, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: TEST_PIN}
@@ -452,6 +451,136 @@ async def test_option_flow(hass: HomeAssistant, options_form) -> None:
     assert result["data"] == {
         CONF_UPDATE_ENABLED: False,
     }
+
+
+@pytest.mark.parametrize(
+    "connect_result",
+    [
+        pytest.param(True, id="vehicles"),
+        pytest.param(False, id="no_vehicles"),
+    ],
+)
+async def test_reauth(hass: HomeAssistant, connect_result: bool) -> None:
+    """Test reauth updates the password and keeps the device registration."""
+    entry = MockConfigEntry(domain=DOMAIN, title=TEST_USERNAME, data=TEST_CONFIG)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch(MOCK_API_CONNECT, return_value=connect_result) as mock_connect,
+        patch(MOCK_API_DEVICE_REGISTERED, new_callable=PropertyMock, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_connect.mock_calls) == 1
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == TEST_CONFIG | {CONF_PASSWORD: "new_password"}
+
+
+async def test_reauth_two_factor(hass: HomeAssistant) -> None:
+    """Test reauth goes through 2FA when the device is no longer registered."""
+    entry = MockConfigEntry(domain=DOMAIN, title=TEST_USERNAME, data=TEST_CONFIG)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with (
+        patch(MOCK_API_CONNECT, return_value=True),
+        patch(
+            MOCK_API_DEVICE_REGISTERED, new_callable=PropertyMock, return_value=False
+        ),
+        patch(
+            MOCK_API_2FA_CONTACTS,
+            new_callable=PropertyMock,
+            return_value=MOCK_2FA_CONTACTS,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "two_factor"
+
+    with (
+        patch(MOCK_API_2FA_REQUEST, return_value=True),
+        patch(
+            MOCK_API_2FA_CONTACTS,
+            new_callable=PropertyMock,
+            return_value=MOCK_2FA_CONTACTS,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_CONTACT_METHOD: "email@addr.com"},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "two_factor_validate"
+
+    with (
+        patch(MOCK_API_2FA_VERIFY, return_value=True),
+        patch(MOCK_API_IS_PIN_REQUIRED, return_value=True) as mock_is_pin_required,
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={config_flow.CONF_VALIDATION_CODE: "123456"},
+        )
+        await hass.async_block_till_done()
+
+    # The stored PIN is kept, so the PIN step is skipped
+    mock_is_pin_required.assert_not_called()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == TEST_CONFIG | {CONF_PASSWORD: "new_password"}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            InvalidCredentials("invalidAccount"), "invalid_auth", id="invalid_auth"
+        ),
+        pytest.param(SubaruException(None), "cannot_connect", id="cannot_connect"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
+    """Test reauth handles errors and can recover."""
+    entry = MockConfigEntry(domain=DOMAIN, title=TEST_USERNAME, data=TEST_CONFIG)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(MOCK_API_CONNECT, side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "wrong_password"}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    with (
+        patch(MOCK_API_CONNECT, return_value=True),
+        patch(MOCK_API_DEVICE_REGISTERED, new_callable=PropertyMock, return_value=True),
+        patch(ASYNC_SETUP_ENTRY, return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new_password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == "new_password"
 
 
 @pytest.fixture
@@ -526,6 +655,6 @@ async def options_form(hass: HomeAssistant) -> ConfigFlowResult:
     """Return options form for Subaru config flow."""
     entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG, options=None)
     entry.add_to_hass(hass)
-    with patch(ASYNC_SETUP_ENTRY, return_value=True):
+    with patch(ASYNC_SETUP_ENTRY, return_value=None):
         await async_setup_component(hass, DOMAIN, {})
     return await hass.config_entries.options.async_init(entry.entry_id)

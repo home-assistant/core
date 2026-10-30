@@ -9,6 +9,11 @@ from unittest.mock import AsyncMock, patch
 
 from axis.rtsp import Signal, State
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from yarl import URL
 
 from homeassistant.components.axis.const import DOMAIN
@@ -43,9 +48,6 @@ from .const import (
     VIEW_AREAS_RESPONSE,
 )
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-
 type ConfigEntryFactoryType = Callable[[], Coroutine[Any, Any, MockConfigEntry]]
 type RtspStateType = Callable[[bool], None]
 
@@ -75,7 +77,7 @@ class _RtspClientMock(Protocol):
 def fixture_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.axis.async_setup_entry", return_value=True
+        "homeassistant.components.axis.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

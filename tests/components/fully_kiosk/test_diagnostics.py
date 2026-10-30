@@ -2,6 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_device
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.components.fully_kiosk.diagnostics import (
@@ -10,10 +14,6 @@ from homeassistant.components.fully_kiosk.diagnostics import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_device
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

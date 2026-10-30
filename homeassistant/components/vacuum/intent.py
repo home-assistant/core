@@ -8,13 +8,8 @@ import probatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, config_validation as cv, intent
 
-from . import (
-    DOMAIN,
-    SERVICE_CLEAN_AREA,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_START,
-    VacuumEntityFeature,
-)
+from . import DOMAIN, VacuumEntityFeature
+from .const import VacuumService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +25,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
         intent.ServiceIntentHandler(
             INTENT_VACUUM_START,
             DOMAIN,
-            SERVICE_START,
+            VacuumService.START,
             description="Starts a vacuum",
             required_domains={DOMAIN},
             platforms={DOMAIN},
@@ -42,7 +37,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
         intent.ServiceIntentHandler(
             INTENT_VACUUM_RETURN_TO_BASE,
             DOMAIN,
-            SERVICE_RETURN_TO_BASE,
+            VacuumService.RETURN_TO_BASE,
             description="Returns a vacuum to base",
             required_domains={DOMAIN},
             platforms={DOMAIN},
@@ -158,7 +153,7 @@ class CleanAreaIntentHandler(intent.IntentHandler):
         try:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_CLEAN_AREA,
+                VacuumService.CLEAN_AREA,
                 {
                     "entity_id": entity_ids,
                     "cleaning_area_id": area_ids,
@@ -169,12 +164,12 @@ class CleanAreaIntentHandler(intent.IntentHandler):
         except Exception:
             _LOGGER.exception(
                 "Failed to call %s for areas: %s with vacuums: %s",
-                SERVICE_CLEAN_AREA,
+                VacuumService.CLEAN_AREA,
                 area_ids,
                 entity_ids,
             )
             raise intent.IntentHandleError(
-                f"Failed to call {SERVICE_CLEAN_AREA} for areas: {area_ids}"
+                f"Failed to call {VacuumService.CLEAN_AREA} for areas: {area_ids}"
                 f" with vacuums: {entity_ids}"
             ) from None
 

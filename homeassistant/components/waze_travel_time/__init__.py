@@ -40,7 +40,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Load the saved entities."""
     if SEMAPHORE_KEY not in hass.data:
         hass.data[SEMAPHORE_KEY] = asyncio.Semaphore(1)
@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     client = WazeRouteCalculator(
         region=config_entry.data[CONF_REGION].upper(), client=httpx_client
     )
+    config_entry.async_on_unload(client.close)
 
     coordinator = WazeTravelTimeCoordinator(hass, config_entry, client)
     config_entry.runtime_data = coordinator
@@ -57,15 +58,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate an old config entry."""
 
     if config_entry.version == 1:
@@ -126,5 +125,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.version,
             config_entry.minor_version,
         )
-
-    return True

@@ -9,6 +9,7 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
+    SwitchService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,8 +17,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -30,6 +29,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Switch Group"
@@ -121,7 +121,9 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         self._entity_ids = entity_ids
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
         self.mode = any
         if mode:
@@ -135,7 +137,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
 
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             data,
             blocking=True,
             context=self._context,
@@ -147,7 +149,7 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         data = {ATTR_ENTITY_ID: self._entity_ids}
         await self.hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             data,
             blocking=True,
             context=self._context,

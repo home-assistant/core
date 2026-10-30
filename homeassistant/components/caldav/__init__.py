@@ -1,7 +1,6 @@
 """The caldav component."""
 
 from functools import partial
-import logging
 
 from caldav.davclient import DAVClient
 from caldav.lib.error import AuthorizationError, DAVError
@@ -16,19 +15,21 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
-from .const import TIMEOUT
+from .const import DOMAIN, TIMEOUT
 
 type CalDavConfigEntry = ConfigEntry[DAVClient]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> None:
     """Set up CalDAV from a config entry."""
     client = await hass.async_add_executor_job(
         partial(
@@ -47,8 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
             raise ConfigEntryAuthFailed("Credentials error from CalDAV server") from err
         # AuthorizationError can be raised if the url is incorrect or
         # on some other unexpected server response.
-        _LOGGER.warning("Unexpected CalDAV server response: %s", err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unexpected_response",
+        ) from err
     except caldav_requests.exceptions.Timeout as err:
         raise ConfigEntryNotReady("Timeout connecting to CalDAV server") from err
     except caldav_requests.exceptions.ConnectionError as err:
@@ -60,9 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

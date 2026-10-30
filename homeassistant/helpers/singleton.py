@@ -7,6 +7,7 @@ import inspect
 from typing import Any, Literal, assert_type, cast, overload
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util.async_ import wait_shared_future
 from homeassistant.util.hass_dict import HassKey
 
 type _FuncType[_T] = Callable[[HomeAssistant], _T]
@@ -78,7 +79,7 @@ def singleton[_S, _T, _U](
             obj_or_future = hass.data[data_key]
 
             if isinstance(obj_or_future, asyncio.Future):
-                return cast(_T, await obj_or_future)
+                return cast(_T, await wait_shared_future(obj_or_future))
 
             return cast(_T, obj_or_future)
 

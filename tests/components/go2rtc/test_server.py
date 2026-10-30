@@ -5,7 +5,8 @@ from collections.abc import Generator
 import logging
 from pathlib import Path
 import subprocess
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import Any
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -111,6 +112,24 @@ def assert_server_output_not_logged(
 ) -> None:
     """Check server stdout was logged."""
     _assert_server_output_logged(server_stdout, caplog, loglevel, False)
+
+
+def _watch_spawn(mock_create_subprocess: AsyncMock) -> asyncio.Event:
+    """Return an event that is set when the next go2rtc process is spawned."""
+    spawned = asyncio.Event()
+
+    def _spawn(*args: Any, **kwargs: Any) -> Any:
+        spawned.set()
+        return DEFAULT
+
+    mock_create_subprocess.side_effect = _spawn
+    return spawned
+
+
+async def _wait_for_respawn(spawned: asyncio.Event) -> None:
+    """Wait for the watchdog, which runs outside the tasks Home Assistant tracks."""
+    async with asyncio.timeout(5):
+        await spawned.wait()
 
 
 @pytest.mark.parametrize(
@@ -278,9 +297,9 @@ async def test_log_level_mapping(
     mock_create_subprocess.return_value.wait.side_effect = wait_event
 
     await server.start()
+    spawned = _watch_spawn(mock_create_subprocess)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify go2rtc binary stdout was logged with default level
     for i, entry in enumerate(server_stdout):
@@ -291,8 +310,7 @@ async def test_log_level_mapping(
         ) in caplog.record_tuples
 
     evt.set()
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await _wait_for_respawn(spawned)
 
     assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
@@ -319,16 +337,16 @@ async def test_server_restart_process_exit(
     await server.start()
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
+    spawned = _watch_spawn(mock_create_subprocess)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_create_subprocess.assert_not_awaited()
 
     # Verify go2rtc binary stdout was not yet logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
 
     evt.set()
-    await asyncio.sleep(0.1)
+    await _wait_for_respawn(spawned)
     mock_create_subprocess.assert_awaited_once()
 
     # Verify go2rtc binary stdout was logged with warning level
@@ -352,12 +370,12 @@ async def test_server_restart_process_error(
     await server.start()
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
+    spawned = _watch_spawn(mock_create_subprocess)
 
     # Verify go2rtc binary stdout was not yet logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await _wait_for_respawn(spawned)
     mock_create_subprocess.assert_awaited_once()
 
     # Verify go2rtc binary stdout was logged with warning level
@@ -381,12 +399,12 @@ async def test_server_restart_api_error(
     await server.start()
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
+    spawned = _watch_spawn(mock_create_subprocess)
 
     # Verify go2rtc binary stdout was not yet logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await _wait_for_respawn(spawned)
     mock_create_subprocess.assert_awaited_once()
 
     # Verify go2rtc binary stdout was logged with warning level
@@ -411,12 +429,12 @@ async def test_server_restart_error(
     await server.start()
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
+    spawned = _watch_spawn(mock_create_subprocess)
 
     # Verify go2rtc binary stdout was not yet logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await _wait_for_respawn(spawned)
     mock_create_subprocess.assert_awaited_once()
 
     # Verify go2rtc binary stdout was logged with warning level

@@ -23,6 +23,8 @@ def test_is_private() -> None:
     assert network_util.is_private(ip_address("172.16.12.0"))
     assert network_util.is_private(ip_address("10.5.43.3"))
     assert network_util.is_private(ip_address("fd12:3456:789a:1::1"))
+    assert network_util.is_private(ip_address("fc00::1"))
+    assert not network_util.is_private(ip_address("fe00::1"))
     assert not network_util.is_private(ip_address("127.0.0.1"))
     assert not network_util.is_private(ip_address("::1"))
 
@@ -46,6 +48,7 @@ def test_is_local() -> None:
     assert network_util.is_local(ip_address("192.168.0.1"))
     assert network_util.is_local(ip_address("127.0.0.1"))
     assert network_util.is_local(ip_address("fd12:3456:789a:1::1"))
+    assert network_util.is_local(ip_address("fc12:3456:789a:1::1"))
     assert network_util.is_local(ip_address("fe80::1234:5678:abcd"))
     assert network_util.is_local(ip_address("::ffff:192.168.0.1"))
     assert not network_util.is_local(ip_address("208.5.4.2"))
@@ -102,6 +105,9 @@ def test_is_valid_host() -> None:
     assert not network_util.is_host_valid("example.com:8080")
     assert not network_util.is_host_valid("verylonghostname" * 4)
     assert not network_util.is_host_valid("verydeepdomain." * 18)
+    assert not network_util.is_host_valid("example.com\n")
+    assert not network_util.is_host_valid("1.2.3.4\n")
+    assert not network_util.is_host_valid("example\u0661.com")
 
 
 def test_normalize_url() -> None:
@@ -124,3 +130,12 @@ def test_normalize_url() -> None:
         == "https://example.com/test"
     )
     assert network_util.normalize_url("/test/") == "/test"
+    assert (
+        network_util.normalize_url("https://example.com/?next=/")
+        == "https://example.com/?next=/"
+    )
+    assert (
+        network_util.normalize_url("https://example.com/test/#/")
+        == "https://example.com/test/#/"
+    )
+    assert network_util.normalize_url("https://example.com/?") == "https://example.com"

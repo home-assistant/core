@@ -2,14 +2,14 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import load_json_object_fixture
+
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import add_mock_config
-
-from tests.common import load_json_object_fixture
 
 TEST_NEEDS_UPDATE = load_json_object_fixture("needsUpdate.json", DOMAIN)
 

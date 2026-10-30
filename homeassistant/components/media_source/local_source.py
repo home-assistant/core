@@ -192,7 +192,7 @@ class LocalSource(MediaSource):
     async def async_search_media(
         self, item: MediaSourceItem, query: SearchMediaQuery
     ) -> SearchMedia:
-        """Search media by file name within the local media directories."""
+        """Search media by file or folder name within the local media directories."""
         if item.identifier:
             try:
                 source_dir_id, location = self.async_parse_identifier(item)
@@ -209,7 +209,7 @@ class LocalSource(MediaSource):
     def _search_media(
         self, search_dirs: list[tuple[str, str]], query: SearchMediaQuery
     ) -> SearchMedia:
-        """Search media files by name (runs in the executor)."""
+        """Search media files and folders by name (runs in the executor)."""
         query_str = query.search_query.casefold()
         filter_classes = set(query.media_filter_classes or ())
         results: list[BrowseMedia] = []
@@ -229,7 +229,25 @@ class LocalSource(MediaSource):
                 relative = path.relative_to(base_path)
                 if any(part.startswith(".") for part in relative.parts):
                     continue
-                if query_str not in path.name.casefold() or not path.is_file():
+                if query_str not in path.name.casefold():
+                    continue
+                if path.is_dir():
+                    # A media class filter asks for media, which a folder is not
+                    if not filter_classes:
+                        results.append(
+                            BrowseMediaSource(
+                                domain=self.domain,
+                                identifier=f"{source_dir_id}/{relative}",
+                                media_class=MediaClass.DIRECTORY,
+                                media_content_type="",
+                                title=path.name,
+                                can_play=False,
+                                can_expand=True,
+                                can_search=True,
+                            )
+                        )
+                    continue
+                if not path.is_file():
                     continue
                 mime_type, _ = mimetypes.guess_type(str(path))
                 if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:

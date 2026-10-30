@@ -10,6 +10,7 @@ from unittest.mock import patch
 import probatio
 from pysignalclirestapi.api import SignalCliRestApiError
 import pytest
+import requests
 from requests_mock.mocker import Mocker
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -48,6 +49,38 @@ async def test_signal_messenger_init(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert hass.services.has_service(NOTIFY_DOMAIN, "test")
+
+
+async def test_signal_messenger_init_api_unavailable(
+    hass: HomeAssistant,
+    requests_mock: Mocker,
+    signal_requests_mock_factory: Mocker,
+) -> None:
+    """Test that the service loads and sends once the REST API is available."""
+    requests_mock.get(
+        f"{SIGNAL_BASE_URL}/v1/about", exc=requests.exceptions.ConnectionError
+    )
+    config = {
+        NOTIFY_DOMAIN: {
+            "name": "test",
+            "platform": "signal_messenger",
+            "url": SIGNAL_BASE_URL,
+            "number": NUMBER_FROM,
+            "recipients": NUMBERS_TO,
+        }
+    }
+
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test")
+
+    signal_requests_mock = signal_requests_mock_factory()
+    await hass.services.async_call(
+        NOTIFY_DOMAIN, "test", {"message": MESSAGE}, blocking=True
+    )
+
+    assert_sending_requests(signal_requests_mock)
 
 
 def test_send_message(

@@ -2,6 +2,14 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+)
+
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CLOUD_COVERAGE,
@@ -23,13 +31,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_integration,
-    mock_platform,
-)
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
 
 
@@ -82,12 +83,11 @@ async def create_entity(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.WEATHER]
         )
-        return True
 
     async def async_setup_entry_weather_platform(
         hass: HomeAssistant,

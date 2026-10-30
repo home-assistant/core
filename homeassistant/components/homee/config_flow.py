@@ -33,7 +33,7 @@ AUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -182,7 +182,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -242,7 +242,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_USERNAME, default=self._reauth_username
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={
@@ -289,6 +289,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
+            step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(

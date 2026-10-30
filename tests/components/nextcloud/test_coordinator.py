@@ -11,6 +11,7 @@ from nextcloudmonitor import (
     NextcloudMonitorRequestError,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.nextcloud.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 
 from . import mock_config_entry
 from .const import NC_DATA, VALID_CONFIG
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(

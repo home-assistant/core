@@ -2,6 +2,7 @@
   "domain": "homekit",
   "name": "HomeKit Bridge",
   "after_dependencies": ["camera", "zeroconf"],
+  "categories": ["other_ecosystems"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["ffmpeg", "http", "network"],

@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
 
-from . import DOMAIN
+from .const import DOMAIN
 from .device import async_create_device
 
 

@@ -1,6 +1,7 @@
 {
   "domain": "smarty",
   "name": "Salda Smarty",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@z0mbieprocess", "@marcodutto"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smarty",

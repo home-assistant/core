@@ -82,7 +82,9 @@ def get_user_step_schema(data: Mapping[str, Any]) -> probatio.Schema:
         travel_mode = TRAVEL_MODE_PUBLIC
     return probatio.Schema(
         {
-            probatio.Required(CONF_API_KEY, default=data.get(CONF_API_KEY)): cv.string,
+            probatio.Required(
+                probatio.Secret(CONF_API_KEY), default=data.get(CONF_API_KEY)
+            ): cv.string,
             probatio.Optional(
                 CONF_MODE, default=data.get(CONF_MODE, TRAVEL_MODE_CAR)
             ): probatio.In(TRAVEL_MODES),
@@ -136,6 +138,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="user",
             data_schema=get_user_step_schema(self._get_reconfigure_entry().data),

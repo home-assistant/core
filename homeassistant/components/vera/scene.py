@@ -40,6 +40,9 @@ class VeraScene(Scene):
         self.vera_id = VERA_ID_FORMAT.format(
             slugify(vera_scene.name), vera_scene.scene_id
         )
+        self._attr_unique_id = (
+            f"{controller_data.config_entry.unique_id}_{vera_scene.scene_id}"
+        )
 
     def update(self) -> None:
         """Update the scene status."""

@@ -2,6 +2,7 @@
   "domain": "hardkernel",
   "name": "Hardkernel",
   "after_dependencies": ["hassio"],
+  "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
   "dependencies": ["hardware"],

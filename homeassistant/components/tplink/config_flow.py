@@ -36,7 +36,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -63,7 +63,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 STEP_AUTH_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
 STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
@@ -72,7 +75,7 @@ STEP_CAMERA_AUTH_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_LIVE_VIEW): bool,
         probatio.Optional(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -283,7 +286,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_device
             )
 
-        self._set_confirm_only()
         placeholders = self._async_make_placeholders_from_discovery()
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -793,7 +795,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.async_create_task(
                         self._async_reload_requires_auth_entries(), eager_start=False
                     )
-                    return self.async_abort(reason="reauth_successful")
+                    return self.async_abort(
+                        reason="reauth_successful",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
 
         # Old config entries will not have these values.
         alias = entry_data.get(CONF_ALIAS) or "unknown"
@@ -824,7 +829,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         port = reconfigure_entry.data.get(CONF_PORT)
 
         if user_input is not None:
-            host, port = self._async_get_host_port(host)
+            host, port = self._async_get_host_port(user_input[CONF_HOST])
 
             self.host = host
             credentials = await get_credentials(self.hass)

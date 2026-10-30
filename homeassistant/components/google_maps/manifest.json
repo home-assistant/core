@@ -1,6 +1,7 @@
 {
   "domain": "google_maps",
   "name": "Google Maps",
+  "categories": ["presence_location"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/google_maps",
   "iot_class": "cloud_polling",

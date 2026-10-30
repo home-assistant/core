@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.emoncms.const import DOMAIN
@@ -13,8 +18,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import EMONCMS_FAILURE, get_feed
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_no_feed_selected(

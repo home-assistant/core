@@ -1,5 +1,7 @@
 """Support for FFmpeg."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID
@@ -14,9 +16,14 @@ from .const import (
     SIGNAL_FFMPEG_STOP,
 )
 
-SERVICE_START = "start"
-SERVICE_STOP = "stop"
-SERVICE_RESTART = "restart"
+
+class FFmpegService(StrEnum):
+    """Store keys for FFmpeg services."""
+
+    RESTART = "restart"
+    START = "start"
+    STOP = "stop"
+
 
 SERVICE_FFMPEG_SCHEMA = probatio.Schema(
     {probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids}
@@ -27,9 +34,9 @@ async def _async_service_handle(service: ServiceCall) -> None:
     """Handle service ffmpeg process."""
     entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
 
-    if service.service == SERVICE_START:
+    if service.service == FFmpegService.START:
         async_dispatcher_send(service.hass, SIGNAL_FFMPEG_START, entity_ids)
-    elif service.service == SERVICE_STOP:
+    elif service.service == FFmpegService.STOP:
         async_dispatcher_send(service.hass, SIGNAL_FFMPEG_STOP, entity_ids)
     else:
         async_dispatcher_send(service.hass, SIGNAL_FFMPEG_RESTART, entity_ids)
@@ -40,13 +47,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register FFmpeg services."""
 
     hass.services.async_register(
-        DOMAIN, SERVICE_START, _async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
+        DOMAIN, FFmpegService.START, _async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_STOP, _async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
+        DOMAIN, FFmpegService.STOP, _async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RESTART, _async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
+        DOMAIN,
+        FFmpegService.RESTART,
+        _async_service_handle,
+        schema=SERVICE_FFMPEG_SCHEMA,
     )

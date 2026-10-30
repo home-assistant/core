@@ -14,18 +14,23 @@ from python_dropbox_api import (
 )
 
 from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from . import DropboxConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+METADATA_DOWNLOAD_CONCURRENCY = 8
 
 
 def _suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
@@ -51,14 +56,17 @@ def handle_backup_errors[_R, **P](
         try:
             return await func(self, *args, **kwargs)
         except DropboxFileOrFolderNotFoundException as err:
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupNotFound(
-                f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
+                translation_domain=DOMAIN,
+                translation_key="file_not_found",
+                translation_placeholders={"service": "Dropbox"},
             ) from err
         except DropboxAuthException as err:
             self._entry.async_start_reauth(self._hass)
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise BackupAgentError("Authentication error") from err
+            raise BackupAgentError(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_authentication_failed",
+            ) from err
         except DropboxUnknownException as err:
             _LOGGER.error(
                 "Error during %s: %s",
@@ -66,9 +74,9 @@ def handle_backup_errors[_R, **P](
                 err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
-                f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_operation_failed",
             ) from err
 
     return wrapper
@@ -128,7 +136,24 @@ class DropboxBackupAgent(BackupAgent):
         tar_files = {f.name for f in files if f.name.endswith(".tar")}
         metadata_files = [f for f in files if f.name.endswith(".metadata.json")]
 
-        backups: list[tuple[AgentBackup, str]] = []
+        async def _download_metadata(
+            metadata_name: str, tar_name: str
+        ) -> tuple[AgentBackup, str] | None:
+            metadata_stream = self._api.download_file(f"/{metadata_name}")
+            raw = b"".join([chunk async for chunk in metadata_stream])
+            try:
+                data = json.loads(raw)
+                backup = AgentBackup.from_dict(data)
+            except (json.JSONDecodeError, ValueError, TypeError, KeyError) as err:
+                _LOGGER.warning(
+                    "Skipping invalid metadata file '%s': %s",
+                    metadata_name,
+                    err,
+                )
+                return None
+            return backup, tar_name
+
+        downloads = []
         for metadata_file in metadata_files:
             tar_name = metadata_file.name.removesuffix(".metadata.json") + ".tar"
             if tar_name not in tar_files:
@@ -137,22 +162,12 @@ class DropboxBackupAgent(BackupAgent):
                     metadata_file.name,
                 )
                 continue
+            downloads.append(_download_metadata(metadata_file.name, tar_name))
 
-            metadata_stream = self._api.download_file(f"/{metadata_file.name}")
-            raw = b"".join([chunk async for chunk in metadata_stream])
-            try:
-                data = json.loads(raw)
-                backup = AgentBackup.from_dict(data)
-            except (json.JSONDecodeError, ValueError, TypeError, KeyError) as err:
-                _LOGGER.warning(
-                    "Skipping invalid metadata file '%s': %s",
-                    metadata_file.name,
-                    err,
-                )
-                continue
-            backups.append((backup, tar_name))
-
-        return backups
+        results = await gather_with_limited_concurrency(
+            METADATA_DOWNLOAD_CONCURRENCY, *downloads
+        )
+        return [result for result in results if result is not None]
 
     @handle_backup_errors
     @override
@@ -161,6 +176,7 @@ class DropboxBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
@@ -169,7 +185,13 @@ class DropboxBackupAgent(BackupAgent):
         metadata_path = f"/{metadata_filename}"
 
         file_stream = await open_stream()
-        await self._api.upload_file(backup_path, file_stream)
+        await self._api.upload_file(
+            backup_path,
+            file_stream,
+            progress_callback=lambda bytes_uploaded: on_progress(
+                bytes_uploaded=bytes_uploaded
+            ),
+        )
 
         metadata_stream = _async_string_iterator(json.dumps(backup.as_dict()))
 
@@ -201,8 +223,11 @@ class DropboxBackupAgent(BackupAgent):
             if backup.backup_id == backup_id:
                 return self._api.download_file(f"/{filename}")
 
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )
 
     @handle_backup_errors
     @override
@@ -218,8 +243,11 @@ class DropboxBackupAgent(BackupAgent):
             if backup.backup_id == backup_id:
                 return backup
 
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )
 
     @handle_backup_errors
     @override
@@ -237,5 +265,8 @@ class DropboxBackupAgent(BackupAgent):
                 await self._api.delete_file(f"/{metadata_filename}")
                 return
 
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )
