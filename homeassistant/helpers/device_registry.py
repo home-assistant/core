@@ -2789,24 +2789,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
                 or self._devices.get_entry(identifiers={via_device})
             )
-            if via is None:
-                report_usage(
-                    "calls `device_registry.async_get_or_create` referencing a "
-                    f"non existing `via_device` {via_device}, "
-                    f"with device info: {device_info}",
-                    core_behavior=ReportBehavior.LOG,
-                    breaks_in_ha_version="2025.12.0",
-                )
-                via_device_id = UNDEFINED
-            elif via.id == device.id:
-                # A device can not be its own via device. Ignore the self-reference;
-                # this will raise in HA Core 2027.8.
-                report_usage(
-                    "calls `device_registry.async_get_or_create` with a `via_device` "
-                    "referencing the device itself; the via device is ignored",
-                    core_behavior=ReportBehavior.LOG,
-                    breaks_in_ha_version="2027.8.0",
-                )
+            # An unknown via device or the device itself is ignored
+            if via is None or via.id == device.id:
                 via_device_id = UNDEFINED
             else:
                 via_device_id = via.id

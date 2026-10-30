@@ -40,6 +40,11 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
 
+VIA_DEVICE_DEPRECATION = (
+    "calls `device_registry.async_get_or_create` with a deprecated `via_device` "
+    "parameter"
+)
+
 
 @pytest.fixture(autouse=True)
 def _downgrade_device_registry_deprecation_reports(
@@ -4134,11 +4139,7 @@ async def test_specifying_via_device_create(
         model="light",
         via_device=("hue", "non_existing_123"),
     )
-    assert {
-        "calls `device_registry.async_get_or_create` "
-        "referencing a non existing `via_device` "
-        '("hue","non_existing_123")' in caplog.text
-    }
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 2
     assert light_via_nonexisting_parent_device is not None
     assert light_via_nonexisting_parent_device.via_device_id is None
     nonexisting_parent_device = device_registry.async_get_device(
@@ -4200,11 +4201,7 @@ async def test_specifying_via_device_update(
         name="New light",
         via_device=("hue", "non_existing_abc"),
     )
-    assert {
-        "calls `device_registry.async_get_or_create` "
-        "referencing a non existing `via_device` "
-        '("hue","non_existing_123")' in caplog.text
-    }
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 3
     # Assert the name was updated correctly
     assert light.via_device_id == via.id
     assert light.name == "New light"
@@ -4892,7 +4889,7 @@ async def test_get_or_create_via_device_self_reference_ignored(
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A device referencing itself via the deprecated via_device is ignored and logged."""
+    """A device referencing itself via the deprecated via_device is ignored."""
     config_entry = MockConfigEntry()
     config_entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -4907,10 +4904,8 @@ async def test_get_or_create_via_device_self_reference_ignored(
 
     assert updated.id == device.id
     assert updated.via_device_id is None
-    assert (
-        "calls `device_registry.async_get_or_create` with a `via_device` "
-        "referencing the device itself" in caplog.text
-    )
+    # Only the deprecation of via_device itself is reported
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 1
 
 
 async def test_get_or_create_via_device_id_self_reference_raises(
