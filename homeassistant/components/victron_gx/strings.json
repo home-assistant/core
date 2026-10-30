@@ -450,6 +450,15 @@
           "passthrough": "[%key:component::victron_gx::common::passthrough%]"
         }
       },
+      "alternator_emergency_charge_control": {
+        "name": "Emergency charge control",
+        "state": {
+          "not_possible": "Not possible",
+          "not_started": "Not started",
+          "start": "Starting",
+          "started": "Started"
+        }
+      },
       "battery_bms_mode": {
         "state": {
           "off": "[%key:common::state::off%]",
@@ -619,6 +628,12 @@
       },
       "alternator_dc_voltage": {
         "name": "[%key:component::victron_gx::common::dc_output_voltage%]"
+      },
+      "alternator_emergency_charge_blocked_countdown": {
+        "name": "Emergency charge blocked countdown"
+      },
+      "alternator_emergency_charge_charging_countdown": {
+        "name": "Emergency charge charging countdown"
       },
       "alternator_input_current": {
         "name": "[%key:component::victron_gx::common::input_current%]"

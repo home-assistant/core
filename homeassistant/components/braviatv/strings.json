@@ -75,6 +75,15 @@
     "command_error_offline": {
       "message": "Error sending command to {device}: the TV is turned off"
     },
+    "invalid_media_type": {
+      "message": "Invalid media type {media_type} for {device}. Only app and channel are supported"
+    },
+    "source_not_found": {
+      "message": "The {source_type} \"{query}\" was not found on {device}"
+    },
+    "unsupported_command": {
+      "message": "Unsupported command {command} for {device}"
+    },
     "update_error": {
       "message": "Error updating data for {device}: {error}"
     },

@@ -4,12 +4,14 @@ import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from solaredge_web import EnergyData
+from yarl import URL
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.models import (
@@ -26,9 +28,13 @@ from homeassistant.components.solaredge.const import (
     CONF_SITE_ID,
     DATA_MODULES_COORDINATOR,
     DEFAULT_NAME,
+    DETAILS_UPDATE_DELAY,
     DOMAIN,
+    ENERGY_DETAILS_DELAY,
+    INVENTORY_UPDATE_DELAY,
     OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
+    STORAGE_DATA_UPDATE_DELAY,
 )
 from homeassistant.components.solaredge.coordinator import SolarEdgeModulesCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -141,6 +147,61 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
     assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
+
+
+@pytest.mark.parametrize(
+    ("api_method", "delay"),
+    [
+        pytest.param("get_overview", OVERVIEW_UPDATE_DELAY, id="overview"),
+        pytest.param("get_details", DETAILS_UPDATE_DELAY, id="details"),
+        pytest.param("get_inventory", INVENTORY_UPDATE_DELAY, id="inventory"),
+        pytest.param("get_energy_details", ENERGY_DETAILS_DELAY, id="energy-details"),
+        pytest.param(
+            "get_current_power_flow", POWER_FLOW_UPDATE_DELAY, id="power-flow"
+        ),
+        pytest.param("get_storage_data", STORAGE_DATA_UPDATE_DELAY, id="storage"),
+    ],
+)
+async def test_api_error_does_not_leak_secret(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    solaredge_api: Mock,
+    mock_config_entry: MockConfigEntry,
+    api_method: str,
+    delay: timedelta,
+) -> None:
+    """Test a failed API request does not leak the API key into the log.
+
+    The Monitoring API key is sent as a query parameter, so the URL embedded
+    in a ClientResponseError contains it. Regression test for
+    https://github.com/home-assistant/core/issues/188395 .
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    url = URL(
+        "https://monitoringapi.solaredge.com"
+        f"/equipment/{SITE_ID}/overview.json?api_key={API_KEY}"
+    )
+    request_info = RequestInfo(url, "GET", CIMultiDictProxy(CIMultiDict()), url)
+    setattr(
+        solaredge_api,
+        api_method,
+        AsyncMock(
+            side_effect=ClientResponseError(
+                request_info, (), status=503, message="Service Unavailable"
+            )
+        ),
+    )
+
+    freezer.tick(delay)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error requesting" in caplog.text
+    assert API_KEY not in caplog.text
+    assert "api_key" not in caplog.text
 
 
 async def test_power_flow_null_response(

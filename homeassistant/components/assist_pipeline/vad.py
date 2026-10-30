@@ -148,6 +148,9 @@ class VoiceCommandSegmenter:
 
         if speech_probability is None:
             speech_probability = 0.0
+        elif speech_probability < 0:
+            # microVAD returns -1 until it has enough audio to score.
+            return True
 
         if not self.in_command:
             # Before command
@@ -266,6 +269,9 @@ class VoiceActivityTimeout:
         """
         if speech_probability is None:
             speech_probability = 0.0
+        elif speech_probability < 0:
+            # microVAD returns -1 until it has enough audio to score.
+            return True
 
         if speech_probability > self.speech_threshold:
             # Speech

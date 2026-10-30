@@ -24,10 +24,13 @@ from pytest_homeassistant.common import (
 )
 from pytest_homeassistant.typing import WebSocketGenerator
 
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import (
     CONF_BAUDRATE,
     DOMAIN,
+    HAS_FAULT_LOG,
+    LAST_HANDLED_FAULT,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
@@ -39,6 +42,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
+    FAULT_LOG_REGISTER,
     MOCK_ENTRY_DATA,
     MOCK_HW_VERSION,
     MOCK_HYBRID_MODEL,
@@ -372,7 +376,7 @@ async def test_setup_takes_the_type_from_the_masks(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert len(hass.states.async_all()) == 37
+    assert len(hass.states.async_all()) == 38
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_UNRECOGNIZED_SERIAL}_pv_power_1"
     )
@@ -413,7 +417,7 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     states = hass.states.async_all()
-    assert len(states) == 37
+    assert len(states) == 38
     assert {state.state for state in states} == {STATE_UNAVAILABLE}
     assert "inverter is not answering" in caplog.text
 
@@ -460,7 +464,7 @@ async def test_setup_takes_the_type_once_the_masks_answer(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert len(hass.states.async_all()) == 37
+    assert len(hass.states.async_all()) == 38
 
 
 @pytest.mark.usefixtures("mock_get_unit")
@@ -1073,10 +1077,14 @@ async def test_a_removed_pack_comes_back_without_a_restart(
 @pytest.mark.parametrize(
     ("data", "expected"),
     [
-        pytest.param(MOCK_TCP_INPUT, MOCK_ENTRY_DATA, id="legacy_tcp"),
+        pytest.param(
+            MOCK_TCP_INPUT,
+            {**MOCK_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: None},
+            id="legacy_tcp",
+        ),
         pytest.param(
             MOCK_SERIAL_ENTRY_DATA,
-            MOCK_SERIAL_ENTRY_DATA,
+            {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: None},
             id="reconfigured_while_disabled",
         ),
     ],
@@ -1100,3 +1108,55 @@ async def test_migrate_entry_adds_the_connection_type(
 
     assert entry.minor_version == 2
     assert entry.data == expected
+
+
+@pytest.mark.parametrize(
+    ("stored", "log_error", "expected_stored", "has_event"),
+    [
+        pytest.param({}, None, True, True, id="first_good_setup_stores_it"),
+        pytest.param(
+            {HAS_FAULT_LOG: True},
+            ModbusTimeoutError("stuck"),
+            True,
+            True,
+            id="stored_log_survives_a_timeout",
+        ),
+        pytest.param(
+            {},
+            ModbusTimeoutError("stuck"),
+            None,
+            False,
+            id="unknown_log_timing_out_is_not_stored",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_remembers_the_fault_log(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    stored: dict[str, Any],
+    log_error: ModbusError | None,
+    expected_stored: bool | None,
+    has_event: bool,
+) -> None:
+    """Test a fault log once seen keeps its event through a failed read."""
+    mock_connection.for_unit(1).fail_read(FAULT_LOG_REGISTER, log_error)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data={**MOCK_ENTRY_DATA, **stored},
+        title=MOCK_MODEL,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.data.get(HAS_FAULT_LOG) is expected_stored
+    assert (
+        entity_registry.async_get_entity_id(
+            EVENT_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault"
+        )
+        is not None
+    ) is has_event

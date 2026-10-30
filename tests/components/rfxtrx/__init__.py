@@ -1,3 +1,3 @@
 """Tests for the rfxtrx component."""
 
-ENTRY_VERSION = 2
+ENTRY_VERSION = 3

@@ -48,10 +48,6 @@
         ),
         'dhw_id': '3933910',
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 30, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'next_sp_state': 'Off',
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 6, 30, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
-          'this_sp_state': 'On',
         }),
         'state_status': dict({
           'mode': 'PermanentOverride',
@@ -95,10 +91,6 @@
         ),
         'dhw_id': '3933910',
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 13, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_state': 'Off',
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 12, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_state': 'On',
         }),
         'state_status': dict({
           'mode': 'PermanentOverride',
@@ -146,10 +138,6 @@
         ),
         'dhw_id': '0001005',
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 16, 30, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
-          'next_sp_state': 'On',
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 13, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
-          'this_sp_state': 'Off',
         }),
         'state_status': dict({
           'mode': 'FollowSchedule',

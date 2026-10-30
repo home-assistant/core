@@ -187,6 +187,7 @@ async def test_get_triggers_multiple_buttons(
     [
         ("button_1", "long_press", STATE_ON),
         ("button_2", "press", STATE_ON),
+        ("button_1", "hold_release", STATE_ON),
         ("button_3", "long_press", STATE_UNAVAILABLE),
         ("button", "long_press", STATE_UNAVAILABLE),
         ("button_1", "invalid_press", STATE_UNAVAILABLE),

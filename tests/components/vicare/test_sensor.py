@@ -54,6 +54,7 @@ async def test_all_entities(
         Fixture(
             {"type:fhtChannel"}, "vicare/FHTChannel.json", gateway_id="fht_gateway"
         ),
+        Fixture({"type:boiler"}, "vicare/Vitoligno300C.json"),
     ]
     with (
         patch(

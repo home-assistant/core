@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
+import probatio
 from probatio import to_openapi
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -12,7 +13,14 @@ from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant import llm as ha_llm
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.homeassistant.llm import async_get_exposed_entities
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -25,6 +33,7 @@ from homeassistant.setup import async_setup_component
 ENTITY_ID = "light.kitchen"
 RENDER_TEMPLATE_TOOL = "homeassistant__render_template"
 SEARCH_ACTIONS_TOOL = "homeassistant__search_actions"
+CALL_ACTION_TOOL = "homeassistant__call_action"
 
 
 @pytest.fixture(autouse=True)
@@ -66,6 +75,7 @@ async def test_home_assistant_api_tools(hass: HomeAssistant) -> None:
     assert [tool.name for tool in result.tools] == [
         RENDER_TEMPLATE_TOOL,
         SEARCH_ACTIONS_TOOL,
+        CALL_ACTION_TOOL,
     ]
     assert result.prompt is None
 
@@ -297,6 +307,173 @@ async def test_search_actions_placeholders_and_empty_target(
             ]
         }
     )
+
+
+@pytest.mark.parametrize(
+    ("supports_response", "expected"),
+    [
+        pytest.param(SupportsResponse.NONE, {"success": True}, id="no_response"),
+        pytest.param(
+            SupportsResponse.OPTIONAL, {"response": {"value": 1}}, id="optional"
+        ),
+        pytest.param(SupportsResponse.ONLY, {"response": {"value": 1}}, id="only"),
+    ],
+)
+async def test_call_action(
+    hass: HomeAssistant,
+    supports_response: SupportsResponse,
+    expected: dict[str, Any],
+) -> None:
+    """Test the call action tool calls the action and returns its response."""
+    calls: list[ServiceCall] = []
+
+    def handle(call: ServiceCall) -> ServiceResponse:
+        calls.append(call)
+        return {"value": 1} if call.return_response else None
+
+    hass.services.async_register(
+        "test", "action", handle, supports_response=supports_response
+    )
+    response = await _async_call_tool(
+        hass,
+        CALL_ACTION_TOOL,
+        {
+            "action": "test.action",
+            "target": {"entity_id": ENTITY_ID},
+            "data": {"value": 1},
+        },
+    )
+    assert response == llm.ToolResult(data=expected)
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": [ENTITY_ID], "value": 1}
+
+
+async def test_call_action_template(hass: HomeAssistant) -> None:
+    """Test the call action tool renders templates in the target and data."""
+    calls: list[ServiceCall] = []
+    hass.services.async_register("test", "action", calls.append)
+    response = await _async_call_tool(
+        hass,
+        CALL_ACTION_TOOL,
+        {
+            "action": "test.action",
+            "target": {"entity_id": "{{ 'light.' ~ 'kitchen' }}"},
+            "data": {"value": "{{ 1 + 1 }}", "state": "{{ states('light.kitchen') }}"},
+        },
+    )
+    assert response == llm.ToolResult(data={"success": True})
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": [ENTITY_ID], "value": 2, "state": "on"}
+
+
+@pytest.mark.parametrize(
+    "tool_args",
+    [
+        pytest.param(
+            {"action": "test.action", "data": {"value": "{{ 1 / 0 }}"}},
+            id="template_error",
+        ),
+        pytest.param(
+            {"action": "test.action", "data": {"value": "{{ missing }}"}},
+            id="undefined_variable",
+        ),
+        pytest.param(
+            {"action": "test.action", "target": {"invalid": "value"}},
+            id="invalid_target",
+        ),
+        pytest.param(
+            {"action": "test.action", "data": {"{{ ['a'] }}": "b"}},
+            id="unhashable_key",
+        ),
+    ],
+)
+async def test_call_action_invalid(
+    hass: HomeAssistant, tool_args: dict[str, Any]
+) -> None:
+    """Test the call action tool reports an invalid target or template."""
+    calls: list[ServiceCall] = []
+    hass.services.async_register("test", "action", calls.append)
+    response = await _async_call_tool(hass, CALL_ACTION_TOOL, tool_args)
+    assert response.error is True
+    assert response.data["error"]
+    assert not calls
+
+
+async def test_call_action_template_timeout(hass: HomeAssistant) -> None:
+    """Test the call action tool reports a template that renders too slowly."""
+    calls: list[ServiceCall] = []
+    hass.services.async_register("test", "action", calls.append)
+    with patch(
+        "homeassistant.components.homeassistant.llm.Template.async_render_will_timeout",
+        return_value=True,
+    ):
+        response = await _async_call_tool(
+            hass,
+            CALL_ACTION_TOOL,
+            {"action": "test.action", "data": {"key": {"{{ 'a' }}": "b"}}},
+        )
+    assert response == llm.ToolResult(
+        data={"error": "Template rendering exceeded the maximum time of 3 seconds"},
+        error=True,
+    )
+    assert not calls
+
+
+async def test_call_action_unknown(hass: HomeAssistant) -> None:
+    """Test the call action tool reports an action that does not exist."""
+    response = await _async_call_tool(
+        hass, CALL_ACTION_TOOL, {"action": "test.missing"}
+    )
+    assert response == llm.ToolResult(
+        data={"error": "Action test.missing does not exist."},
+        error=True,
+    )
+
+
+async def test_call_action_removed_while_rendering(hass: HomeAssistant) -> None:
+    """Test the call action tool reports an action removed while templates render."""
+    hass.services.async_register("test", "action", lambda call: None)
+
+    async def remove_action(*args: Any, **kwargs: Any) -> bool:
+        hass.services.async_remove("test", "action")
+        return False
+
+    with patch(
+        "homeassistant.components.homeassistant.llm.Template.async_render_will_timeout",
+        side_effect=remove_action,
+    ):
+        response = await _async_call_tool(
+            hass,
+            CALL_ACTION_TOOL,
+            {"action": "test.action", "data": {"value": "{{ 1 }}"}},
+        )
+    assert response == llm.ToolResult(
+        data={"error": "Action test.action does not exist."}, error=True
+    )
+
+
+async def test_call_action_error(hass: HomeAssistant) -> None:
+    """Test the call action tool reports an error of the action."""
+
+    def handle(call: ServiceCall) -> None:
+        raise ServiceValidationError("Device is offline")
+
+    hass.services.async_register("test", "action", handle)
+    response = await _async_call_tool(hass, CALL_ACTION_TOOL, {"action": "test.action"})
+    assert response == llm.ToolResult(data={"error": "Device is offline"}, error=True)
+
+
+async def test_call_action_invalid_data(hass: HomeAssistant) -> None:
+    """Test the call action tool reports data that the action schema rejects."""
+    hass.services.async_register(
+        "test",
+        "action",
+        lambda call: None,
+        schema=probatio.Schema({probatio.Required("value"): int}),
+    )
+    response = await _async_call_tool(hass, CALL_ACTION_TOOL, {"action": "test.action"})
+    assert response.error is True
+    assert "value" in response.data["error"]
 
 
 async def test_prompt_includes_context(hass: HomeAssistant) -> None:
@@ -651,6 +828,21 @@ async def test_get_live_context_schema(
     """Test that homeassistant__GetLiveContext tool parameters convert to a sane OpenAPI schema."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     tool = next(t for t in result.tools if t.name == "homeassistant__GetLiveContext")
+
+    api = await llm.async_get_api(hass, "assist", _llm_context())
+    schema = to_openapi(tool.parameters, custom_serializer=api.custom_serializer)
+
+    assert schema == snapshot
+
+
+async def test_call_action_schema(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test that homeassistant__call_action parameters convert to an OpenAPI schema."""
+    result = await llm_component.async_get_tools(
+        hass, _llm_context(), llm.LLM_API_HOME_ASSISTANT
+    )
+    tool = next(t for t in result.tools if t.name == CALL_ACTION_TOOL)
 
     api = await llm.async_get_api(hass, "assist", _llm_context())
     schema = to_openapi(tool.parameters, custom_serializer=api.custom_serializer)

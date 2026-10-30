@@ -248,17 +248,6 @@
     }
   },
   "issues": {
-    "deprecated_timeout_parameter": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then select **Submit** to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action originating from `{action_origin}`.",
-            "title": "The `timeout` parameter for {integration_title} is being removed"
-          }
-        }
-      },
-      "title": "The `timeout` parameter for {integration_title} is being removed"
-    },
     "migrate_chat_ids_in_target": {
       "fix_flow": {
         "step": {

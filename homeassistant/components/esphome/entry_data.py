@@ -23,6 +23,7 @@ from aioesphomeapi import (
     DateTimeInfo,
     DeviceCapabilities,
     DeviceInfo,
+    DeviceRelation,
     DeviceWizard,
     EntityInfo,
     EntityState,
@@ -89,6 +90,8 @@ COMPONENT_TYPE_TO_STATE_TYPE: Final[dict[str, type[EntityState]]] = {
 _SENTINEL = object()
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
+
+_SUPPORTED_DEVICE_RELATIONS = {DeviceRelation.VIA, DeviceRelation.CHILD}
 
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
@@ -187,6 +190,9 @@ class RuntimeEntryData:
     available: bool = False
     expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
+    # ESPHome ids of the supported sub devices, and of those that are child devices
+    sub_device_ids: set[int] = field(default_factory=set)
+    child_device_ids: set[int] = field(default_factory=set)
     device_capabilities: DeviceCapabilities | None = None
     device_wizard: DeviceWizard | None = None
     # Identity of the device behind each serial proxy port, keyed by instance index.
@@ -197,6 +203,7 @@ class RuntimeEntryData:
     )
     bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
+    main_device_entry_id: str | None = None
     cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
     disconnect_callbacks: set[CALLBACK_TYPE] = field(default_factory=set)
     state_subscriptions: dict[EntityStateKey, CALLBACK_TYPE] = field(
@@ -234,7 +241,6 @@ class RuntimeEntryData:
         field(default_factory=list)
     )
     assist_satellite_wake_words: dict[int, str] = field(default_factory=dict)
-    device_id_to_name: dict[int, str] = field(default_factory=dict)
     entity_removal_callbacks: dict[EntityInfoKey, list[CALLBACK_TYPE]] = field(
         default_factory=dict
     )
@@ -386,7 +392,11 @@ class RuntimeEntryData:
             list
         )
         ent_reg = er.async_get(hass)
+        unsupported_device_ids: set[int] = set()
         for info in infos:
+            if info.device_id and info.device_id not in self.sub_device_ids:
+                unsupported_device_ids.add(info.device_id)
+                continue
             info_type = type(info)
             if platform := info_types_to_platform.get(info_type):
                 needed_platforms.add(platform)
@@ -408,6 +418,12 @@ class RuntimeEntryData:
                     "Entity type %s is not supported in this version of Home Assistant",
                     info_type,
                 )
+        if unsupported_device_ids:
+            _LOGGER.warning(
+                "The relation of sub devices %s to the main device is not supported "
+                "in this version of Home Assistant, ignoring them and their entities",
+                sorted(unsupported_device_ids),
+            )
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         for type_, callbacks in self.entity_info_callbacks.items():
@@ -510,6 +526,21 @@ class RuntimeEntryData:
         """Return if the device is known to use deep sleep."""
         return bool(self.device_info and self.device_info.has_deep_sleep)
 
+    @callback
+    def _async_set_device_info(self, device_info: DeviceInfo) -> None:
+        """Set the device info and index its supported sub devices."""
+        self.device_info = device_info
+        self.sub_device_ids = {
+            sub_device.device_id
+            for sub_device in device_info.devices
+            if sub_device.relation in _SUPPORTED_DEVICE_RELATIONS
+        }
+        self.child_device_ids = {
+            sub_device.device_id
+            for sub_device in device_info.devices
+            if sub_device.relation is DeviceRelation.CHILD
+        }
+
     async def async_load_from_store(
         self, *, restore_states: bool
     ) -> tuple[list[EntityInfo], list[UserService]]:
@@ -522,7 +553,7 @@ class RuntimeEntryData:
             return [], []
         self._storage_contents = restored.copy()
 
-        self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
+        self._async_set_device_info(DeviceInfo.from_dict(restored.pop("device_info")))
         self.api_version = APIVersion.from_dict(restored.pop("api_version", {}))
         if (
             device_capabilities := restored.pop("device_capabilities", None)
@@ -656,7 +687,7 @@ class RuntimeEntryData:
         if self.bluetooth_device:
             self.bluetooth_device.available = True
 
-        self.device_info = device_info
+        self._async_set_device_info(device_info)
         self.api_version = api_version
         # Reset expected disconnect flag on successful reconnect
         # as it will be flipped to False on unexpected disconnect.

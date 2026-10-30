@@ -1,6 +1,6 @@
 """Support for entities of the Evohome integration."""
 
-from collections.abc import Awaitable, Mapping
+from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
 import logging
@@ -14,17 +14,13 @@ from evohomeasync2.const import (
     ZoneModelType as EvoZoneModelType,
     ZoneType as EvoZoneType,
 )
-from evohomeasync2.typedefs import EvoDhwScheduleDayOfWeekT, EvoZonScheduleDayOfWeekT
 
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
 
 
 def _recurse_and_revert(val: Any, _key: str | None = None) -> Any:
@@ -120,7 +116,6 @@ class EvoChild(EvoEntity):
         self._evo_id = evo_device.id
         self._evo_tcs = evo_device.tcs
 
-        self._schedule: _Schedule | None = None
         self._setpoints: dict[str, Any] = {}
 
     @property
@@ -141,12 +136,13 @@ class EvoChild(EvoEntity):
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
 
-        if not self._schedule:
-            return self._setpoints
+        try:
+            this_sp = self._evo_device.this_switchpoint
+            next_sp = self._evo_device.next_switchpoint
+        except evo.NotFetchedError, evo.InvalidScheduleError:
+            return self._setpoints  # the coordinator has yet to fetch a valid schedule
 
-        if (this_sp := self._evo_device.this_switchpoint) is None or (
-            next_sp := self._evo_device.next_switchpoint
-        ) is None:
+        if this_sp is None or next_sp is None:  # there is no schedule
             return self._setpoints
 
         this_sp_dtm, this_sp_val = this_sp
@@ -163,51 +159,6 @@ class EvoChild(EvoEntity):
 
         return self._setpoints
 
-    async def _update_schedule(
-        self, force_refresh: bool = False, *, raise_on_error: bool = True
-    ) -> None:
-        """Get the latest schedule, if any.
-
-        A GET made for an action (e.g. to find the next switchpoint) fails as the
-        action would, so raise_on_error should be False only for other GETs.
-        """
-
-        async def get_schedule() -> None:
-            # annotated, as mypy can't infer a type from the HotWater | Zone union
-            client_api: Awaitable[_Schedule] = self._evo_device.get_schedule()
-            try:
-                schedule = await self.coordinator.call_client_api(
-                    client_api,
-                    request_refresh=False,
-                    raise_on_error=raise_on_error,
-                )
-            except evo.InvalidScheduleError as err:
-                _LOGGER.warning(
-                    "%s: Unable to retrieve a valid schedule: %s",
-                    self._evo_device,
-                    err,
-                )
-                self._schedule = []
-                return
-
-            if schedule is None:  # the GET failed: keep any schedule we already have
-                return
-
-            self._schedule = schedule
-            _LOGGER.debug("Schedule['%s'] = %s", self.name, schedule)
-
-        if (
-            force_refresh
-            or self._schedule is None
-            or (
-                (until := self._setpoints.get("next_sp_from")) is not None
-                and until < dt_util.utcnow()
-            )
-        ):  # must use self._setpoints, not self.setpoints
-            await get_schedule()
-
-        _ = self.setpoints  # update the setpoints attr
-
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
@@ -219,9 +170,3 @@ class EvoChild(EvoEntity):
         }
 
         super()._handle_coordinator_update()
-
-    @override
-    async def update_attrs(self) -> None:
-        """Update the entity's extra state attrs."""
-        await self._update_schedule(raise_on_error=False)
-        await super().update_attrs()

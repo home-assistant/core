@@ -8,7 +8,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-from .const import LAST_SCANNED_BY_DEVICE_ID, TAG_ID
+from .const import TagEntityStateAttribute
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__package__)
 class TagEntity(Entity):
     """Representation of a Tag entity."""
 
-    _unrecorded_attributes = frozenset({TAG_ID})
+    _unrecorded_attributes = frozenset({TagEntityStateAttribute.TAG_ID})
     _attr_should_poll = False
 
     def __init__(
@@ -68,7 +68,10 @@ class TagEntity(Entity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sun."""
-        return {TAG_ID: self._tag_id, LAST_SCANNED_BY_DEVICE_ID: self._last_device_id}
+        return {
+            TagEntityStateAttribute.TAG_ID: self._tag_id,
+            TagEntityStateAttribute.LAST_SCANNED_BY_DEVICE_ID: self._last_device_id,
+        }
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -317,6 +317,7 @@ class Manifest(TypedDict, total=False):
     quality_scale: str
     iot_class: str
     categories: list[str]
+    connectivity: list[str]
     bluetooth: list[dict[str, int | str]]
     mqtt: list[str]
     lorawan: list[tuple[str, int | str]]
@@ -537,6 +538,7 @@ async def async_get_integration_descriptions(
         metadata = {
             "categories": integration.categories,
             "config_flow": integration.config_flow,
+            "connectivity": integration.connectivity,
             "integration_type": integration.integration_type,
             "iot_class": integration.iot_class,
             "name": integration.name,
@@ -987,6 +989,14 @@ class Integration:
     def categories(self) -> list[str]:
         """Return the integration categories, the primary category first."""
         return self.manifest.get("categories", [])
+
+    @cached_property
+    def connectivity(self) -> list[str]:
+        """Return the protocols used to reach the devices or service.
+
+        Empty means it is not filled in yet, not that nothing is reached.
+        """
+        return self.manifest.get("connectivity", [])
 
     @cached_property
     def integration_type(

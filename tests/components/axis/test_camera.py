@@ -91,9 +91,10 @@ async def test_camera_disabled(hass: HomeAssistant) -> None:
         pytest.param("root", "pass?word", "root:pass%3Fword", id="query"),
         pytest.param("root", "pass word", "root:pass%20word", id="space"),
         pytest.param(
-            "user@:/?#%",
+            # aiohttp digest auth rejects ":" in the username
+            "user@/?#%",
             "pass@:/?#%",
-            "user%40%3A%2F%3F%23%25:pass%40%3A%2F%3F%23%25",
+            "user%40%2F%3F%23%25:pass%40%3A%2F%3F%23%25",
             id="both-components",
         ),
     ],

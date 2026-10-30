@@ -14,6 +14,13 @@ DOMAIN: Final = "scene"
 DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)
 
 
+class SceneEntityStateAttribute(StrEnum):
+    """State attributes for scene entities."""
+
+    ENTITY_ID = "entity_id"
+    ID = "id"
+
+
 class SceneService(StrEnum):
     """Store keys for scene services."""
 
