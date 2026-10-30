@@ -18,6 +18,7 @@ from evohomeasync2.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import NEXT_SP_FROM, THIS_SP_FROM
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -151,9 +152,9 @@ class EvoChild(EvoEntity):
         key = "temp" if isinstance(self._evo_device, evo.Zone) else "state"
 
         self._setpoints = {
-            "this_sp_from": this_sp_dtm,
+            THIS_SP_FROM: this_sp_dtm,
             f"this_sp_{key}": this_sp_val,
-            "next_sp_from": next_sp_dtm,
+            NEXT_SP_FROM: next_sp_dtm,
             f"next_sp_{key}": next_sp_val,
         }
 
