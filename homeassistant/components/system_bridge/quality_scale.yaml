@@ -41,7 +41,11 @@ rules:
   action-exceptions:
     status: todo
     comment: Actions return the failed response instead of raising.
-  config-entry-unloading: done
+  config-entry-unloading:
+    status: todo
+    comment: |
+      The legacy notify service is not removed on unload, so after a reload it
+      keeps using the old coordinator.
   docs-configuration-parameters:
     status: exempt
     comment: The integration has no options flow.
@@ -81,7 +85,11 @@ rules:
     comment: Some errors, such as the coordinator's UpdateFailed, are not translated.
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: done
+  repair-issues:
+    status: todo
+    comment: |
+      The unsupported version issue is not deleted once a supported version is
+      found.
   stale-devices:
     status: exempt
     comment: Each config entry is a single device.
