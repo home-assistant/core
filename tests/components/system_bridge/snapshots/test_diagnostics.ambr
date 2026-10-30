@@ -125,7 +125,7 @@
                 'max_file_size': 1,
                 'max_path_length': 2,
                 'mount_point': '**REDACTED**',
-                'options': 'options',
+                'options': '**REDACTED**',
                 'usage': dict({
                   'free': 3,
                   'percent': 40.2,
@@ -332,9 +332,9 @@
         }),
         'failed_units': list([
           dict({
-            'description': 'Backup',
+            'description': '**REDACTED**',
             'load_state': 'loaded',
-            'name': 'backup.service',
+            'name': '**REDACTED**',
             'result': 'exit-code',
             'scope': 'system',
             'since': 1234,
