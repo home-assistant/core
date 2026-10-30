@@ -144,9 +144,13 @@ class LGDevice(MediaPlayerEntity):
         self._device = soundbar_client.LGSoundbarClient(
             self._host, port=self._port, callback=self.handle_event
         )
-        self._device.get_product_info()
-        self._device.get_mac_info()
-        self.update()
+        try:
+            self._device.get_product_info()
+            self._device.get_mac_info()
+            self.update()
+        except OSError:
+            self._device.close()
+            raise
 
     @override
     async def async_will_remove_from_hass(self) -> None:
