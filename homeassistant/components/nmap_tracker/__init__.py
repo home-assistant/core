@@ -19,7 +19,11 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -211,12 +215,19 @@ class NmapDeviceScanner:
             )
         )
         registry = er.async_get(self._hass)
-        self._known_mac_addresses = {
-            entry.unique_id: entry.original_name
-            for entry in registry.entities.get_entries_for_config_entry_id(
-                self._entry_id
-            )
-        }
+        device_registry = dr.async_get(self._hass)
+        self._known_mac_addresses = {}
+        for entry in registry.entities.get_entries_for_config_entry_id(self._entry_id):
+            # Only set for trackers not added since their device carries the client
+            # name, can be removed in HA Core 2027.5
+            name = entry.original_name
+            if (
+                name is None
+                and entry.device_id
+                and (device := device_registry.async_get(entry.device_id))
+            ):
+                name = device.name
+            self._known_mac_addresses[entry.unique_id] = name
 
     @property
     def signal_device_new(self) -> str:

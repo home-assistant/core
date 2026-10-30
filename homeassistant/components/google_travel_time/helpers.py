@@ -197,7 +197,9 @@ async def async_compute_routes(
     transit_routing_preference: str | None = None,
     departure_time: str | None = None,
     arrival_time: str | None = None,
-    field_mask: str = ("routes.duration,routes.distanceMeters,routes.localizedValues"),
+    field_mask: str = (
+        "routes.duration,routes.staticDuration,routes.distanceMeters,routes.localizedValues"
+    ),
     travel_routing_preference: str | None = None,
 ) -> ComputeRoutesResponse | None:
     """Compute routes using Google Routes API."""

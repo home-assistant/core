@@ -36,6 +36,7 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
     TemplateSelector,
     TextSelector,
     TextSelectorConfig,
@@ -470,6 +471,7 @@ def ollama_config_option_schema(
                             for api in llm.async_get_apis(hass)
                         ],
                         multiple=True,
+                        mode=SelectSelectorMode.LIST,
                     )
                 ),
             }

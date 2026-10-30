@@ -14,6 +14,7 @@ MODULES: Final[list[Module]] = [
     Module.GPUS,
     Module.MEDIA,
     Module.MEMORY,
+    Module.NETWORKS,
     Module.PROCESSES,
     Module.SYSTEM,
 ]

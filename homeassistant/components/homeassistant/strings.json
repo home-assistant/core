@@ -508,6 +508,96 @@
       }
     }
   },
+  "integration_connectivity": {
+    "bluetooth": {
+      "description": "Bluetooth devices, through a Bluetooth adapter or proxy.",
+      "name": "Bluetooth"
+    },
+    "cloud": {
+      "description": "Services on the internet, like a manufacturer's cloud.",
+      "name": "Cloud"
+    },
+    "dali": {
+      "description": "DALI lighting control devices.",
+      "name": "DALI"
+    },
+    "dect": {
+      "description": "DECT ULE devices, like those connected to a FRITZ!Box.",
+      "name": "DECT"
+    },
+    "enocean": {
+      "description": "Battery-free EnOcean radio devices.",
+      "name": "EnOcean"
+    },
+    "esphome": {
+      "description": "Devices running ESPHome, using its native API.",
+      "name": "ESPHome"
+    },
+    "homekit": {
+      "description": "Devices that use Apple's HomeKit protocol, over Wi-Fi, Thread or Bluetooth.",
+      "name": "HomeKit"
+    },
+    "host": {
+      "description": "The machine Home Assistant runs on, like its CPU, disks and files.",
+      "name": "This machine"
+    },
+    "infrared": {
+      "description": "Devices controlled with infrared signals, like TVs and air conditioners.",
+      "name": "Infrared"
+    },
+    "insteon": {
+      "description": "Insteon devices, through an Insteon hub or modem.",
+      "name": "Insteon"
+    },
+    "knx": {
+      "description": "KNX building automation devices.",
+      "name": "KNX"
+    },
+    "lorawan": {
+      "description": "Long-range, low-power sensors on a LoRaWAN network.",
+      "name": "LoRaWAN"
+    },
+    "matter": {
+      "description": "Matter devices, over Thread, Wi-Fi or Ethernet.",
+      "name": "Matter"
+    },
+    "modbus": {
+      "description": "Devices that use Modbus, over a serial line or the network.",
+      "name": "Modbus"
+    },
+    "mqtt": {
+      "description": "Devices and services that talk through an MQTT broker.",
+      "name": "MQTT"
+    },
+    "network": {
+      "description": "Devices and services on your network, using their own or a standard protocol over IP.",
+      "name": "Local network"
+    },
+    "onewire": {
+      "description": "1-Wire sensors, like temperature sensors.",
+      "name": "1-Wire"
+    },
+    "rf": {
+      "description": "Devices controlled with sub-GHz radio signals, like 433 MHz remotes and sensors.",
+      "name": "Radio frequency"
+    },
+    "serial": {
+      "description": "Devices connected with a serial or USB cable.",
+      "name": "Serial"
+    },
+    "x10": {
+      "description": "X10 powerline and radio devices.",
+      "name": "X10"
+    },
+    "zigbee": {
+      "description": "Zigbee devices, through a Zigbee radio or a bridge.",
+      "name": "Zigbee"
+    },
+    "zwave": {
+      "description": "Z-Wave devices, through a Z-Wave radio or a bridge.",
+      "name": "Z-Wave"
+    }
+  },
   "issues": {
     "config_entry_only": {
       "description": "The {domain} integration does not support configuration via YAML file. You may not notice any obvious issues with the integration, but any configuration settings defined in YAML are not actually applied.\n\nTo resolve this:\n\n1. If you've not already done so, [set up the integration]({add_integration}).\n\n2. Remove `{domain}:` from your YAML configuration file.\n\n3. Restart Home Assistant.",

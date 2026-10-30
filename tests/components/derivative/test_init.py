@@ -6,7 +6,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import derivative
-from homeassistant.components.derivative.const import DOMAIN
+from homeassistant.components.derivative.const import (
+    DOMAIN,
+    DerivativeEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -65,7 +68,7 @@ async def test_setup_and_remove_config_entry(
     state = hass.states.get(derivative_entity_id)
     assert state.state == "0.0"
     assert state.attributes["unit_of_measurement"] == "kdog/min"
-    assert state.attributes["source"] == "sensor.input"
+    assert state.attributes[DerivativeEntityStateAttribute.SOURCE] == "sensor.input"
 
     hass.states.async_set(input_sensor_entity_id, 10, {"unit_of_measurement": "dog"})
     hass.states.async_set(input_sensor_entity_id, 11, {"unit_of_measurement": "dog"})
