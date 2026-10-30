@@ -8,6 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from enum import StrEnum
 from functools import partial
 from typing import Literal, cast, override
 
@@ -84,6 +85,14 @@ TELEMETRY_IMMEDIATE_CHANGE = 10.0
 
 # UniFi names the first WAN "WAN", not "WAN1".
 type WanName = Literal["WAN", "WAN2", "WAN3"]
+
+
+class FirewallPolicyScheduleStatus(StrEnum):
+    """Whether a firewall policy currently applies."""
+
+    DISABLED = "disabled"
+    INACTIVE = "inactive"
+    ACTIVE = "active"
 
 
 @callback
@@ -344,18 +353,22 @@ def _device_wan_latency_monitor(
 @callback
 def async_firewall_policy_schedule_status_value_fn(
     hub: UnifiHub, policy: FirewallPolicy
-) -> str | None:
+) -> FirewallPolicyScheduleStatus | None:
     """Calculate whether a firewall policy currently applies.
 
     The schedule follows the controller's clock, not Home Assistant's.
     """
     if not policy.enabled:
-        return "disabled"
+        return FirewallPolicyScheduleStatus.DISABLED
     if policy.raw.get("schedule") is None:
         return None
     if (active := policy.is_active(dt_util.now(hub.time_zone))) is None:
         return None
-    return "active" if active else "inactive"
+    return (
+        FirewallPolicyScheduleStatus.ACTIVE
+        if active
+        else FirewallPolicyScheduleStatus.INACTIVE
+    )
 
 
 def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
@@ -965,7 +978,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         translation_key="firewall_policy_schedule_status",
         device_class=SensorDeviceClass.ENUM,
         entity_registry_enabled_default=False,
-        options=["disabled", "inactive", "active"],
+        options=list(FirewallPolicyScheduleStatus),
         api_handler_fn=lambda api: api.firewall_policies,
         device_info_fn=async_unifi_network_device_info_fn,
         object_fn=lambda api, obj_id: api.firewall_policies[obj_id],

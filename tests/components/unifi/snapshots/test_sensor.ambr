@@ -2528,9 +2528,9 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'disabled',
-        'inactive',
-        'active',
+        <FirewallPolicyScheduleStatus.DISABLED: 'disabled'>,
+        <FirewallPolicyScheduleStatus.INACTIVE: 'inactive'>,
+        <FirewallPolicyScheduleStatus.ACTIVE: 'active'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2569,9 +2569,9 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Network Block streaming schedule status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'disabled',
-        'inactive',
-        'active',
+        <FirewallPolicyScheduleStatus.DISABLED: 'disabled'>,
+        <FirewallPolicyScheduleStatus.INACTIVE: 'inactive'>,
+        <FirewallPolicyScheduleStatus.ACTIVE: 'active'>,
       ]),
     }),
     'context': <ANY>,
