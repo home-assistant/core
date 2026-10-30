@@ -14,7 +14,7 @@ from awesomeversion import AwesomeVersion
 import probatio
 
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -78,7 +78,7 @@ SERVICE_ADD_INGREDIENT_SCHEMA: VolDictType = {
 
 SERVICE_GET_MEALPLAN_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
         probatio.Optional(MealieServiceArgument.START_DATE): cv.date,
         probatio.Optional(MealieServiceArgument.END_DATE): cv.date,
     }
@@ -86,14 +86,14 @@ SERVICE_GET_MEALPLAN_SCHEMA = probatio.Schema(
 
 SERVICE_GET_RECIPE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
         probatio.Required(MealieServiceArgument.RECIPE_ID): str,
     }
 )
 
 SERVICE_GET_RECIPES_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
         probatio.Optional(MealieServiceArgument.SEARCH_TERMS): str,
         probatio.Optional(MealieServiceArgument.RESULT_LIMIT): int,
     }
@@ -102,7 +102,7 @@ SERVICE_GET_RECIPES_SCHEMA = probatio.Schema(
 
 SERVICE_IMPORT_RECIPE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
         probatio.Required(MealieServiceArgument.URL): str,
         probatio.Optional(MealieServiceArgument.INCLUDE_TAGS): bool,
     }
@@ -110,7 +110,7 @@ SERVICE_IMPORT_RECIPE_SCHEMA = probatio.Schema(
 
 SERVICE_SET_RANDOM_MEALPLAN_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
         probatio.Required(MealieServiceArgument.DATE): cv.date,
         probatio.Required(MealieServiceArgument.ENTRY_TYPE): probatio.In(
             [x.lower() for x in MealplanEntryType]
@@ -121,7 +121,7 @@ SERVICE_SET_RANDOM_MEALPLAN_SCHEMA = probatio.Schema(
 SERVICE_SET_MEALPLAN_SCHEMA = probatio.Any(
     probatio.Schema(
         {
-            probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+            probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
             probatio.Required(MealieServiceArgument.DATE): cv.date,
             probatio.Required(MealieServiceArgument.ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
@@ -131,7 +131,7 @@ SERVICE_SET_MEALPLAN_SCHEMA = probatio.Any(
     ),
     probatio.Schema(
         {
-            probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+            probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
             probatio.Required(MealieServiceArgument.DATE): cv.date,
             probatio.Required(MealieServiceArgument.ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
@@ -143,14 +143,14 @@ SERVICE_SET_MEALPLAN_SCHEMA = probatio.Any(
 )
 SERVICE_DELETE_MEALPLAN_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
         probatio.Required(MealieServiceArgument.MEALPLAN_ID): probatio.Any(str, int),
     }
 )
 SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
     probatio.Schema(
         {
-            probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+            probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
             probatio.Required(MealieServiceArgument.MEALPLAN_ID): probatio.Any(
                 str, int
             ),
@@ -163,7 +163,7 @@ SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
     ),
     probatio.Schema(
         {
-            probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+            probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
             probatio.Required(MealieServiceArgument.MEALPLAN_ID): probatio.Any(
                 str, int
             ),
@@ -178,7 +178,7 @@ SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
 )
 SERVICE_PARSE_INGREDIENT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
         probatio.Required(MealieServiceArgument.INGREDIENT): str,
     }
 )
@@ -208,7 +208,7 @@ def _validate_mealplan_type(version: AwesomeVersion, entry_type: str) -> None:
 async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     """Get the mealplan for a specific range."""
     entry: MealieConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     start_date = call.data.get(MealieServiceArgument.START_DATE, dt_util.now().date())
     end_date = call.data.get(MealieServiceArgument.END_DATE, dt_util.now().date())
@@ -231,7 +231,7 @@ async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
 async def _async_get_recipe(call: ServiceCall) -> ServiceResponse:
     """Get a recipe."""
     entry: MealieConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     recipe_id = call.data[MealieServiceArgument.RECIPE_ID]
     client = entry.runtime_data.client
@@ -254,7 +254,7 @@ async def _async_get_recipe(call: ServiceCall) -> ServiceResponse:
 async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
     """Get recipes."""
     entry: MealieConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     search_terms = call.data.get(MealieServiceArgument.SEARCH_TERMS)
     result_limit = call.data.get(MealieServiceArgument.RESULT_LIMIT, 10)
@@ -277,7 +277,7 @@ async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
 async def _async_import_recipe(call: ServiceCall) -> ServiceResponse:
     """Import a recipe."""
     entry: MealieConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     url = call.data[MealieServiceArgument.URL]
     include_tags = call.data.get(MealieServiceArgument.INCLUDE_TAGS, False)
@@ -302,7 +302,7 @@ async def _async_import_recipe(call: ServiceCall) -> ServiceResponse:
 async def _async_set_random_mealplan(call: ServiceCall) -> ServiceResponse:
     """Set a random mealplan."""
     entry: MealieConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     mealplan_date = call.data[MealieServiceArgument.DATE]
     entry_type = MealplanEntryType(call.data[MealieServiceArgument.ENTRY_TYPE])
@@ -325,7 +325,7 @@ async def _async_set_random_mealplan(call: ServiceCall) -> ServiceResponse:
 async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
     """Set a mealplan."""
     entry: MealieConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     mealplan_date = call.data[MealieServiceArgument.DATE]
     entry_type = MealplanEntryType(call.data[MealieServiceArgument.ENTRY_TYPE])
@@ -354,7 +354,7 @@ async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
 async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
     """Delete a mealplan."""
     entry: MealieConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     mealplan_id = int(call.data[MealieServiceArgument.MEALPLAN_ID])
     client = entry.runtime_data.client
@@ -380,7 +380,7 @@ async def _async_delete_mealplan(call: ServiceCall) -> ServiceResponse:
 async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
     """Update a mealplan."""
     entry: MealieConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     mealplan_id = int(call.data[MealieServiceArgument.MEALPLAN_ID])
     mealplan_date = call.data[MealieServiceArgument.DATE]
@@ -417,7 +417,7 @@ async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
 async def _async_parse_ingredient(call: ServiceCall) -> ServiceResponse:
     """Parse an ingredient using the Mealie parser with the match method chosen in options."""
     entry: MealieConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     ingredient = call.data[MealieServiceArgument.INGREDIENT]
     client = entry.runtime_data.client
