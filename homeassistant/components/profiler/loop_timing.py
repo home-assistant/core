@@ -13,6 +13,7 @@ from asyncio import events
 from collections import deque
 from collections.abc import Callable
 from functools import partial
+import logging
 import time
 from types import ModuleType
 from typing import Any
@@ -20,6 +21,8 @@ from typing import Any
 from homeassistant.config_entries import current_entry
 from homeassistant.core import HassJob
 from homeassistant.util import dt as dt_util
+
+_LOGGER = logging.getLogger(__name__)
 
 # asyncio's own idea of a slow callback in debug mode
 DEFAULT_THRESHOLD_MS = 100.0
@@ -34,10 +37,12 @@ _OTHER: _Key = ("other", None, None)
 class _Row:
     """What one owner did on the loop."""
 
-    __slots__ = ("count", "label", "max_at", "max_ns", "total_ns")
+    __slots__ = ("code", "count", "label", "max_at", "max_ns", "total_ns")
 
-    def __init__(self, label: str) -> None:
+    def __init__(self, label: str, code: Any = None) -> None:
         self.label = label
+        # Held so that the id of the code object in the row's key stays valid
+        self.code = code
         self.count = 0
         self.total_ns = 0
         self.max_ns = 0
@@ -70,6 +75,8 @@ class LoopTiming:
         self._slow_seq = 0
         self._original: Callable[[Any], None] | None = None
         self._wrapper: Callable[[Any], None] | None = None
+        # Cleared on stop, so a wrapper left under another one passes through
+        self._active = [False]
         self.errors = 0
         self.started_at = 0.0
 
@@ -81,6 +88,7 @@ class LoopTiming:
         loop = self._loop
         rows = self._rows
         slow = self._slow
+        active = self._active
         threshold = self._threshold_ns
         perf = time.perf_counter_ns
         wall = time.time
@@ -88,7 +96,9 @@ class LoopTiming:
 
         # One function with everything inline: it runs once per callback
         def _run(handle: Any) -> None:
-            if handle._loop is not loop:  # noqa: SLF001
+            # Once stopped, a wrapper that something else wrapped in turn
+            # stays in the chain; it only passes calls on
+            if not active[0] or handle._loop is not loop:  # noqa: SLF001
                 original(handle)
                 return
             row = None
@@ -131,9 +141,13 @@ class LoopTiming:
                 else:
                     cls = owner if isinstance(owner, type) else type(owner)
                 entry = handle._context.get(current_entry)  # noqa: SLF001
-                # C code has no code object; module and qualified name must do
+                # Code objects compare by value, so two alike functions in
+                # different modules would share a row, and hashing one costs
+                # with its size: the id stands for it, and the row holds the
+                # object so the id stays its own. C code has no code object;
+                # module and qualified name must do.
                 key = (
-                    code
+                    id(code)
                     if code is not None
                     else (
                         module or type(func).__module__,
@@ -152,9 +166,18 @@ class LoopTiming:
                             if key is _OTHER
                             else _label(func, code, cls, module)
                         )
-                        row = rows[key] = _Row(label)
-            except Exception:  # noqa: BLE001
+                        row = rows[key] = _Row(label, code)
+            except Exception:
+                # The time still counts, under the row for everything else
                 self.errors += 1
+                key = _OTHER
+                if (row := rows.get(key)) is None:
+                    row = rows[key] = _Row("other callbacks")
+                if self.errors == 1:
+                    _LOGGER.warning(
+                        "Could not attribute a callback of the event loop",
+                        exc_info=True,
+                    )
             start = perf()
             try:
                 original(handle)
@@ -175,14 +198,21 @@ class LoopTiming:
         self._original = original
         self._wrapper = _run
         self.started_at = time.time()
+        self._active[0] = True
         events.Handle._run = _run  # type: ignore[method-assign, assignment]  # noqa: SLF001
 
     def stop(self) -> None:
         """Remove the wrapper, if it is still in place."""
         if self._wrapper is None:
             return
+        self._active[0] = False
         if events.Handle._run is self._wrapper:  # noqa: SLF001
             events.Handle._run = self._original  # type: ignore[method-assign, assignment]  # noqa: SLF001
+        else:
+            _LOGGER.warning(
+                "Something else patched Handle._run after the event loop timing;"
+                " the timing wrapper stays in place and passes calls through"
+            )
         self._wrapper = None
         self._original = None
 

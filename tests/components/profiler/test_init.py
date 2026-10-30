@@ -24,6 +24,7 @@ from homeassistant.components.profiler.const import DOMAIN
 from homeassistant.components.profiler.loop_timing import (
     DEFAULT_THRESHOLD_MS,
     LoopTiming,
+    format_report,
 )
 from homeassistant.components.profiler.services import (
     _LRU_CACHE_WRAPPER_OBJECT,
@@ -550,8 +551,12 @@ async def test_loop_timing_starts_once_and_stops_on_unload(
 
     await hass.services.async_call(DOMAIN, SERVICE_START_LOOP_TIMING, {}, blocking=True)
     assert Handle._run is not original_run
+    caplog.clear()
     await hass.config_entries.async_unload(entry.entry_id)
     assert Handle._run is original_run
+    # What was recorded is not lost with the entry
+    assert "Event loop timing stopped by unload" in caplog.text
+    assert "Event loop callbacks since" in caplog.text
 
 
 async def test_loop_timing_attribution(
@@ -754,3 +759,116 @@ def test_loop_timing_lets_system_exit_through() -> None:
         loop.close()
     assert Handle._run.__qualname__ == "Handle._run"
     assert timing.errors == 0
+
+
+def test_loop_timing_counts_a_callback_it_cannot_attribute(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A callable that breaks when looked at still runs, counted under other callbacks."""
+
+    class Prickly:
+        def __getattr__(self, name: str) -> Any:
+            raise RuntimeError("do not look at me")
+
+        def __call__(self) -> None:
+            ran.append(True)
+
+    ran: list[bool] = []
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
+    timing.start()
+    try:
+        loop.call_soon(Prickly())
+        loop.call_soon(Prickly())
+        loop.call_soon(loop.stop)
+        loop.run_forever()
+    finally:
+        timing.stop()
+        loop.close()
+    assert ran == [True, True]
+    assert timing.errors == 2
+    report = timing.report()
+    other = next(
+        row for row in report["callbacks"] if row["callback"] == "other callbacks"
+    )
+    assert other["count"] == 2
+    assert "Callbacks that could not be attributed: 2" in format_report(report)
+    # The cause is logged once
+    assert caplog.text.count("Could not attribute a callback") == 1
+    assert "do not look at me" in caplog.text
+
+
+def test_loop_timing_caps_the_rows() -> None:
+    """Past the cap, new callbacks share one row instead of growing the table."""
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
+    timing.start()
+    try:
+        with patch("homeassistant.components.profiler.loop_timing.MAX_ROWS", 2):
+            loop.call_soon(partial(zlib.crc32, b"x"))
+            loop.call_soon(partial(binascii.crc32, b"x"))
+            loop.call_soon(int)
+            loop.call_soon(str)
+            loop.call_soon(loop.stop)
+            loop.run_forever()
+    finally:
+        timing.stop()
+        loop.close()
+    rows = {row["callback"]: row["count"] for row in timing.report()["callbacks"]}
+    assert rows["zlib.crc32"] == 1
+    assert rows["binascii.crc32"] == 1
+    # int, str and loop.stop, none of which fit any more
+    assert rows["other callbacks"] == 3
+    assert len(rows) == 3
+
+
+def test_loop_timing_keeps_alike_functions_apart() -> None:
+    """Code objects compare by value, so two alike functions must not share a row."""
+    source = "def cb():\n    return 1\n"
+    first: dict[str, Any] = {"__name__": "first"}
+    second: dict[str, Any] = {"__name__": "second"}
+    exec(compile(source, "/first.py", "exec"), first)  # noqa: S102
+    exec(compile(source, "/second.py", "exec"), second)  # noqa: S102
+    assert first["cb"].__code__ == second["cb"].__code__
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
+    timing.start()
+    try:
+        loop.call_soon(first["cb"])
+        loop.call_soon(second["cb"])
+        loop.call_soon(loop.stop)
+        loop.run_forever()
+    finally:
+        timing.stop()
+        loop.close()
+    rows = {row["callback"]: row["count"] for row in timing.report()["callbacks"]}
+    assert rows["first.cb"] == 1
+    assert rows["second.cb"] == 1
+
+
+def test_loop_timing_left_under_another_wrapper_passes_through(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Stopped under something else's wrapper, the timing records nothing more."""
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
+    original_run = Handle._run
+    timing.start()
+    ours = Handle._run
+
+    def other(handle: Handle) -> None:
+        ours(handle)
+
+    try:
+        Handle._run = other  # type: ignore[method-assign, assignment]
+        timing.stop()
+        assert "Something else patched Handle._run" in caplog.text
+        # Not ours on top: the other wrapper stays, ours only passes calls on
+        assert Handle._run is other
+        loop.call_soon(int)
+        loop.call_soon(loop.stop)
+        loop.run_forever()
+        assert timing.report()["callbacks"] == []
+    finally:
+        Handle._run = original_run  # type: ignore[method-assign]
+        loop.close()

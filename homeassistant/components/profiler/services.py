@@ -274,7 +274,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             raise HomeAssistantError("Event loop timing already started")
         loop_timing = LoopTiming(hass.loop, call.data[CONF_THRESHOLD])
         loop_timing.start()
-        domain_data[LOOP_TIMING] = _async_end_loop_timing
+        domain_data[LOOP_TIMING] = _async_unload_loop_timing
         _LOGGER.critical(
             "Event loop timing started, callbacks over %s ms are kept",
             call.data[CONF_THRESHOLD],
@@ -287,6 +287,16 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             loop_timing.stop()
             loop_timing = None
         domain_data.pop(LOOP_TIMING, None)
+
+    @callback
+    def _async_unload_loop_timing() -> None:
+        """End the timing with the entry; what it recorded goes to the log."""
+        if (ended := loop_timing) is not None:
+            _LOGGER.critical(
+                "Event loop timing stopped by unload\n%s",
+                format_report(_loop_timing_report(ended)),
+            )
+        _async_end_loop_timing()
 
     def _loop_timing_report(timing: LoopTiming) -> dict[str, Any]:
         """Return the report with the integration behind each config entry."""
