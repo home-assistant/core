@@ -23,7 +23,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
+from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME, ENV_SUPERVISOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class HassIOBaseAuth(HomeAssistantView):
         # Unix sockets). The user-ID check still runs to ensure only the
         # Supervisor user can reach this endpoint.
         if not is_supervisor_unix_socket_request(request):
-            hassio_ip = os.environ["SUPERVISOR"].split(":")[0]
+            hassio_ip = os.environ[ENV_SUPERVISOR].split(":")[0]
             assert request.transport
             peername = request.transport.get_extra_info("peername")
             if not peername or ip_address(peername[0]) != ip_address(hassio_ip):

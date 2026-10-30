@@ -16,11 +16,11 @@ from yarl import URL
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.async_ import create_eager_task
 
-from .const import DATA_HASSIO_HOST, X_HASS_SOURCE, X_INGRESS_PATH
+from .const import X_HASS_SOURCE, X_INGRESS_PATH
+from .handler import SupervisorConnection, get_supervisor_connection
 from .http import should_compress
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,11 +52,7 @@ DISABLED_TIMEOUT = ClientTimeout(total=None)
 @callback
 def async_setup_ingress_view(hass: HomeAssistant) -> None:
     """Set up the Hass.io ingress HTTP view."""
-    host = hass.data[DATA_HASSIO_HOST]
-    websession = async_get_clientsession(hass)
-
-    hassio_ingress = HassIOIngress(host, websession)
-    hass.http.register_view(hassio_ingress)
+    hass.http.register_view(HassIOIngress(get_supervisor_connection(hass)))
 
 
 class HassIOIngress(HomeAssistantView):
@@ -66,11 +62,10 @@ class HassIOIngress(HomeAssistantView):
     url = "/api/hassio_ingress/{token}/{path:.*}"
     requires_auth = False
 
-    def __init__(self, host: str, websession: aiohttp.ClientSession) -> None:
+    def __init__(self, connection: SupervisorConnection) -> None:
         """Initialize a Hass.io ingress view."""
-        self._host = host
-        self._websession = websession
-        self._url = URL(f"http://{host}")
+        self._websession = connection.session
+        self._url = connection.base_url
 
     @lru_cache
     def _create_url(self, token: str, path: str) -> URL:

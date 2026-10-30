@@ -1,7 +1,6 @@
 """Provide info to system health."""
 
 from collections.abc import Callable
-import os
 from typing import Any
 
 from homeassistant.components import system_health
@@ -16,9 +15,7 @@ from .coordinator import (
     get_supervisor_info,
 )
 from .exceptions import HassioNotReadyError
-
-SUPERVISOR_PING = "http://{ip_address}/supervisor/ping"
-OBSERVER_URL = "http://{ip_address}:4357"
+from .handler import get_supervisor_connection
 
 
 @callback
@@ -41,7 +38,6 @@ def _get_supervisor_data_if_available(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    ip_address = os.environ["SUPERVISOR"]
     info = _get_supervisor_data_if_available(hass, get_info)
     host_info = _get_supervisor_data_if_available(hass, get_host_info)
     supervisor_info = _get_supervisor_data_if_available(hass, get_supervisor_info)
@@ -102,12 +98,13 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     if (disk_life_time := host_info.get("disk_life_time")) is not None:
         information["disk_life_time"] = f"{disk_life_time:.0f} %"
 
+    connection = get_supervisor_connection(hass)
     # Not using aiohasupervisor for ping call below intentionally. Given system health
     # context, it seems preferable to do this check with minimal dependencies
     information["supervisor_api"] = system_health.async_check_can_reach_url(
         hass,
-        SUPERVISOR_PING.format(ip_address=ip_address),
-        OBSERVER_URL.format(ip_address=ip_address),
+        str(connection.base_url.with_path("/supervisor/ping")),
+        session=connection.session,
     )
     information["version_api"] = system_health.async_check_can_reach_url(
         hass,

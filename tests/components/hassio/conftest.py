@@ -3,21 +3,23 @@
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import replace
 import os
+from pathlib import Path
 import re
+import shutil
+import tempfile
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohasupervisor.models import AddonsStats, AddonState, InstalledAddonComplete
+from aiohttp import web
 from aiohttp.test_utils import TestClient
 import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
+import pytest_socket
 
-from homeassistant.components.hassio.handler import HassIO
+from homeassistant.components.hassio.const import ENV_SUPERVISOR_SOCKET
 from homeassistant.components.http.config import _DEFAULT_CONFIG as HTTP_DEFAULT_CONFIG
 from homeassistant.components.http.const import CONF_SERVER_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from . import SUPERVISOR_TOKEN
 
 
 @pytest.fixture(autouse=True)
@@ -53,6 +55,52 @@ async def hassio_client(
     hassio_stubs: None, hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Return a Hass.io HTTP client."""
+    return await hass_client()
+
+
+@pytest.fixture
+async def supervisor_unix_socket() -> AsyncGenerator[tuple[Path, list[web.Request]]]:
+    """Serve a mock Supervisor API on a Unix socket and record requests to it."""
+    # The default allow list blocks connecting to Unix sockets, reset per test
+    pytest_socket.socket_allow_hosts(["127.0.0.1"], allow_unix_socket=True)
+    requests: list[web.Request] = []
+
+    async def handler(request: web.Request) -> web.Response:
+        requests.append(request)
+        return web.json_response({"result": "ok", "data": {}})
+
+    app = web.Application()
+    app.router.add_route("*", "/{path:.*}", handler)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    # Not tmp_path, it can exceed the sun_path limit (104 bytes on macOS)
+    socket_dir = tempfile.mkdtemp(dir="/tmp")
+    path = Path(socket_dir, "supervisor.sock")
+    await web.UnixSite(runner, str(path)).start()
+    yield path, requests
+    await runner.cleanup()
+    shutil.rmtree(socket_dir)
+
+
+@pytest.fixture
+def hassio_unix_socket_env(
+    supervisor_unix_socket: tuple[Path, list[web.Request]],
+) -> Generator[None]:
+    """Point the hassio integration at the mock Supervisor Unix socket."""
+    with patch.dict(
+        os.environ, {ENV_SUPERVISOR_SOCKET: str(supervisor_unix_socket[0])}
+    ):
+        yield
+
+
+@pytest.fixture
+async def hassio_unix_socket_client(
+    hassio_unix_socket_env: None,
+    hassio_stubs: None,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> TestClient:
+    """Return a Hass.io HTTP client with Supervisor reached over a Unix socket."""
     return await hass_client()
 
 
@@ -113,13 +161,6 @@ def hass_supervisor_ws_client(
             return await hass_ws_client(hass, supervisor_unix_socket=True)
 
     return create_client
-
-
-@pytest.fixture
-async def hassio_handler(hass: HomeAssistant) -> AsyncGenerator[HassIO]:
-    """Create mock hassio handler."""
-    with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
-        yield HassIO(hass.loop, async_get_clientsession(hass), "127.0.0.1")
 
 
 @pytest.fixture
