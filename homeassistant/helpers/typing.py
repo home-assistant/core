@@ -10,7 +10,7 @@ import probatio
 # Use temporary alias to make the switch easier later.
 from typing_extensions import Sentinel as sentinel
 
-from homeassistant.helpers.deprecation import (
+from .deprecation import (
     DeprecatedAlias,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
