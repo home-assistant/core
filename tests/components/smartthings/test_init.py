@@ -1,8 +1,10 @@
 """Tests for the SmartThings component init module."""
 
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pysmartthings import (
     Attribute,
     Capability,
@@ -15,7 +17,12 @@ from pysmartthings import (
     Subscription,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -472,6 +479,60 @@ async def test_error_refreshing_token(
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_refreshing_token_while_loaded(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the token is refreshed when it expires while the entry is loaded."""
+    await setup_integration(hass, mock_config_entry)
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "access_token": "new-access-token",
+            "refresh_token": "new-refresh-token",
+            "expires_in": 86399,
+        },
+    )
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data["token"]["access_token"] == "new-access-token"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(("status", "reauth_flows"), [(500, 0), (400, 1)])
+async def test_error_refreshing_token_while_loaded(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    status: int,
+    reauth_flows: int,
+) -> None:
+    """Test a failed token refresh keeps the entry loaded."""
+    await setup_integration(hass, mock_config_entry)
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token", status=status
+    )
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 1
+    assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.flow.async_progress()) == reauth_flows
 
 
 async def test_missing_token(
