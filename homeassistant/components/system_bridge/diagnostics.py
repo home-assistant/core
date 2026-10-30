@@ -14,13 +14,22 @@ TO_REDACT = {
     CONF_HOST,
     CONF_TOKEN,
     "address",
+    "album_artist",
+    "album_title",
+    "artist",
     "broadcast",
+    "camera_usage",
+    "device",
     "fqdn",
     "hostname",
     "ip_address_4",
     "ip_address_6",
     "mac_address",
+    "microphone_usage",
+    "mount_point",
     "ssid",
+    "subtitle",
+    "thumbnail",
     "title",
     "unique_id",
     "users",
@@ -39,8 +48,19 @@ async def async_get_config_entry_diagnostics(
     if data["networks"] is not None:
         data["networks"].pop("connections")
 
+    listen_task = coordinator.listen_task
+    last_exception = coordinator.last_exception
+
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "last_update_success": coordinator.last_update_success,
+        "connection": {
+            "websocket_connected": coordinator.websocket_client.connected,
+            "listening": listen_task is not None and not listen_task.done(),
+            # The message can contain the host, so only the type is kept
+            "last_exception": (
+                type(last_exception).__name__ if last_exception else None
+            ),
+        },
         "data": async_redact_data(data, TO_REDACT),
     }

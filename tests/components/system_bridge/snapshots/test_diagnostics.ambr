@@ -1,6 +1,11 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'connection': dict({
+      'last_exception': None,
+      'listening': False,
+      'websocket_connected': False,
+    }),
     'data': dict({
       'battery': dict({
         'ac_connected': True,
@@ -115,11 +120,11 @@
             'partitions': list([
               dict({
                 'category': 'primary',
-                'device': 'device',
+                'device': '**REDACTED**',
                 'filesystem_type': 'fstype',
                 'max_file_size': 1,
                 'max_path_length': 2,
-                'mount_point': 'mountpoint',
+                'mount_point': '**REDACTED**',
                 'options': 'options',
                 'usage': dict({
                   'free': 3,
@@ -182,9 +187,9 @@
         }),
       ]),
       'media': dict({
-        'album_artist': 'Album Artist',
-        'album_title': 'Album Title',
-        'artist': 'Artist',
+        'album_artist': '**REDACTED**',
+        'album_title': '**REDACTED**',
+        'artist': '**REDACTED**',
         'duration': 100,
         'is_fast_forward_enabled': True,
         'is_next_enabled': True,
@@ -198,9 +203,9 @@
         'player': 'vlc',
         'players': list([
           dict({
-            'album_artist': 'Album Artist',
-            'album_title': 'Album Title',
-            'artist': 'Artist',
+            'album_artist': '**REDACTED**',
+            'album_title': '**REDACTED**',
+            'artist': '**REDACTED**',
             'duration': 100,
             'id': 'vlc',
             'is_next_enabled': True,
@@ -215,7 +220,7 @@
             'repeat': 'repeat',
             'shuffle': True,
             'status': 'PLAYING',
-            'thumbnail': 'thumbnail',
+            'thumbnail': '**REDACTED**',
             'title': '**REDACTED**',
             'track_number': 1,
             'volume': 50,
@@ -225,8 +230,8 @@
         'repeat': 'repeat',
         'shuffle': True,
         'status': 'status',
-        'subtitle': 'subtitle',
-        'thumbnail': 'thumbnail',
+        'subtitle': '**REDACTED**',
+        'thumbnail': '**REDACTED**',
         'title': '**REDACTED**',
         'track_number': 1,
         'type': 'type',
@@ -314,10 +319,7 @@
       }),
       'system': dict({
         'boot_time': 1234,
-        'camera_usage': list([
-          'camera1',
-          'camera2',
-        ]),
+        'camera_usage': '**REDACTED**',
         'device_info': dict({
           'bios_vendor': 'bios_vendor',
           'bios_version': 'bios_version',
@@ -348,10 +350,7 @@
         'kernel_version': '6.1.0',
         'locked': False,
         'mac_address': '**REDACTED**',
-        'microphone_usage': list([
-          'microphone1',
-          'microphone2',
-        ]),
+        'microphone_usage': '**REDACTED**',
         'package_update_list': list([
           dict({
             'current_version': '6.11.5.arch1-1',
