@@ -548,6 +548,14 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         except AbortFlow as err:
             result = self._abort_flow_result(flow, err)
 
+        # Reject before the result is used, a plain string type would bypass the
+        # handling and filtering of results that compare the type by identity
+        if not isinstance(result["type"], FlowResultType):
+            raise TypeError(
+                f"Flow step {step_id} of {flow.handler} returned result type "
+                f"{result['type']!r}, which is not a FlowResultType"
+            )
+
         if flow.flow_id not in self._progress:
             # The flow was removed during the step, raise UnknownFlow unless
             # the result is an abort.
