@@ -21,6 +21,7 @@ from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -86,7 +87,7 @@ if TYPE_CHECKING:
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _ENVIRONMENT: HassKey[TemplateEnvironment] = HassKey("template.environment")

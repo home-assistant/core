@@ -8,8 +8,8 @@ from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from govee_local_api import GoveeDevice
-from govee_local_api.light_capabilities import ON_OFF_CAPABILITIES
+from govee_local_api import GoveeDevice, GoveeLightCapabilities
+from govee_local_api.light_capabilities import COMMON_FEATURES, ON_OFF_CAPABILITIES
 from govee_local_api.message import DevStatusResponse
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -25,6 +25,8 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
@@ -88,6 +90,35 @@ async def test_light_unknown_device(
     assert light is not None
 
     assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+
+
+@pytest.mark.parametrize(
+    ("temperature_range", "expected_min", "expected_max"),
+    [
+        pytest.param(None, 2000, 9000, id="default_range"),
+        pytest.param((2700, 6500), 2700, 6500, id="device_range"),
+    ],
+)
+async def test_light_color_temperature_range(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    temperature_range: tuple[int, int] | None,
+    expected_min: int,
+    expected_max: int,
+) -> None:
+    """Test the color temperature range comes from the device capabilities."""
+    await setup_light(
+        hass,
+        mock_govee_api,
+        GoveeLightCapabilities(
+            features=COMMON_FEATURES, temperature_range=temperature_range
+        ),
+    )
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == expected_min
+    assert light.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == expected_max
 
 
 async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> None:

@@ -1498,7 +1498,9 @@ class EntityRegistry(BaseRegistry):
         if len(domain) > MAX_LENGTH_STATE_DOMAIN:
             raise MaxLengthExceeded(domain, "domain", MAX_LENGTH_STATE_DOMAIN)
 
-        test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID]
+        # An object ID must not end with an underscore, so strip any left
+        # behind when the entity ID is truncated
+        test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID].rstrip("_")
 
         tries = 1
         while (
