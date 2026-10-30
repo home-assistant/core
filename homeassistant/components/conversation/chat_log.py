@@ -113,16 +113,22 @@ def async_get_chat_log(
         chat_log = ChatLog(hass, session.conversation_id)
         is_new_log = True
         all_chat_logs[session.conversation_id] = chat_log
+
+    chat_log.turn_start = len(chat_log.content)
+    if user_input is not None:
+        user_content = UserContent(content=user_input.text)
+        if is_new_log:
+            chat_log.content.append(user_content)
+        else:
+            chat_log.async_add_user_content(user_content)
+
+    if is_new_log:
         _async_notify_subscribers(
             hass,
             session.conversation_id,
             ChatLogEventType.CREATED,
             {"chat_log": chat_log.as_dict()},
         )
-
-    chat_log.turn_start = len(chat_log.content)
-    if user_input is not None:
-        chat_log.async_add_user_content(UserContent(content=user_input.text))
 
     if chat_log_delta_listener:
         chat_log.delta_listener = chat_log_delta_listener
