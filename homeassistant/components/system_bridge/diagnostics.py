@@ -51,7 +51,7 @@ async def async_get_config_entry_diagnostics(
         data["networks"].pop("connections")
     if data["disks"] is not None:
         # Disks are named after their device path
-        data["disks"] = async_redact_data(data["disks"], {"name"})
+        data["disks"] = async_redact_data(data["disks"], {"name", "options"})
 
     listen_task = coordinator.listen_task
     last_exception = coordinator.last_exception
