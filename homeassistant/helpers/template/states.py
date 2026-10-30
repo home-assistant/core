@@ -158,7 +158,7 @@ class AllStates:
         if rounded is _SENTINEL:
             rounded = with_unit
         if rounded or with_unit:
-            return state.format_state(rounded, with_unit)  # type: ignore[arg-type]
+            return state.format_state(rounded, with_unit)
         return state.state
 
     @override
