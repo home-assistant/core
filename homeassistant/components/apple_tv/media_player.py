@@ -216,6 +216,12 @@ class AppleTvMediaPlayer(
         )
         async_dispatcher_send(self.hass, SIGNAL_GROUP_CHANGED)
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Let the other players drop this player from their group members."""
+        await super().async_will_remove_from_hass()
+        async_dispatcher_send(self.hass, SIGNAL_GROUP_CHANGED)
+
     @callback
     @override
     def async_entity_id_changed(self, old_entity_id: str) -> None:

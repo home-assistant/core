@@ -672,6 +672,19 @@ async def test_unjoin_without_known_group(
 
 
 @pytest.mark.usefixtures("grouped")
+async def test_group_members_drop_disabled_player(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """The leader stops listing a member whose entity is disabled."""
+    entity_registry.async_update_entity(
+        HOMEPOD_ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_GROUP_MEMBERS] == [ENTITY_ID]
+
+
+@pytest.mark.usefixtures("grouped")
 async def test_group_members_follow_rename(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
