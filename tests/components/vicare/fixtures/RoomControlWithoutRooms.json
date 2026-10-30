@@ -1,0 +1,269 @@
+{
+  "data": [
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "activated": {
+          "type": "array",
+          "value": [
+            "supplyChannel0FTDC",
+            "supplyChannel1FTDC",
+            "supplyChannel2FTDC",
+            "supplyChannel3FTDC",
+            "supplyChannel0FTDCUseValveInformation",
+            "supplyChannel2FTDCUseValveInformation",
+            "supplyChannel3FTDCUseValveInformation",
+            "supplyChannel0PumpControl",
+            "supplyChannel2PumpControl",
+            "supplyChannel3PumpControl"
+          ]
+        },
+        "supported": {
+          "type": "array",
+          "value": [
+            "supplyChannel0FTDC",
+            "supplyChannel1FTDC",
+            "supplyChannel2FTDC",
+            "supplyChannel3FTDC",
+            "supplyChannel0FTDCUseValveInformation",
+            "supplyChannel1FTDCUseValveInformation",
+            "supplyChannel2FTDCUseValveInformation",
+            "supplyChannel3FTDCUseValveInformation",
+            "supplyChannel0PumpControl",
+            "supplyChannel1PumpControl",
+            "supplyChannel2PumpControl",
+            "supplyChannel3PumpControl"
+          ]
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel0FTDC",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel0FTDC"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deprecated": {
+        "info": "replaced by rooms.features.supplyChannel0PumpControl",
+        "removalDate": "2025-09-09"
+      },
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel0FTDCUseValveInformation",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel0FTDCUseValveInformation"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel0PumpControl",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel0PumpControl"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel1FTDC",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel1FTDC"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deprecated": {
+        "info": "replaced by rooms.features.supplyChannel1PumpControl",
+        "removalDate": "2025-09-09"
+      },
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel1FTDCUseValveInformation",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel1FTDCUseValveInformation"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel1PumpControl",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel1PumpControl"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel2FTDC",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel2FTDC"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deprecated": {
+        "info": "replaced by rooms.features.supplyChannel2PumpControl",
+        "removalDate": "2025-09-09"
+      },
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel2FTDCUseValveInformation",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel2FTDCUseValveInformation"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel2PumpControl",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel2PumpControl"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel3FTDC",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel3FTDC"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deprecated": {
+        "info": "replaced by rooms.features.supplyChannel3PumpControl",
+        "removalDate": "2025-09-09"
+      },
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel3FTDCUseValveInformation",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel3FTDCUseValveInformation"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "RoomControl-1",
+      "feature": "rooms.features.supplyChannel3PumpControl",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2026-10-28T10:23:47.864Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/RoomControl-1/features/rooms.features.supplyChannel3PumpControl"
+    }
+  ]
+}

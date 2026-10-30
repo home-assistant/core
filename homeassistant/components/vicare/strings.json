@@ -21,6 +21,11 @@
       }
     }
   },
+  "device": {
+    "room": {
+      "name": "Room {room}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "burner": {

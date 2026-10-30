@@ -60,6 +60,7 @@ from .utils import (
     get_condensers,
     get_evaporators,
     get_inverters,
+    get_rooms,
     is_supported,
     normalize_state,
 )
@@ -105,6 +106,22 @@ SUPPLY_TEMPERATURE_SENSOR: ViCareSensorEntityDescription = (
     )
 )
 
+
+ROOM_TEMPERATURE_SENSOR: ViCareSensorEntityDescription = ViCareSensorEntityDescription(
+    key="room_temperature",
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_getter=lambda api: api.getTemperature(),
+)
+
+ROOM_HUMIDITY_SENSOR: ViCareSensorEntityDescription = ViCareSensorEntityDescription(
+    key="room_humidity",
+    device_class=SensorDeviceClass.HUMIDITY,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_getter=lambda api: api.getHumidity(),
+)
 
 GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
@@ -975,13 +992,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         options=["ready", "production"],
         value_getter=lambda api: filter_state(api.getPhotovoltaicStatus()),
     ),
-    ViCareSensorEntityDescription(
-        key="room_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_getter=lambda api: api.getTemperature(),
-    ),
+    ROOM_TEMPERATURE_SENSOR,
     ViCareSensorEntityDescription(
         key="target_temperature",
         translation_key="target_temperature",
@@ -990,13 +1001,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getTargetTemperature(),
     ),
-    ViCareSensorEntityDescription(
-        key="room_humidity",
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_getter=lambda api: api.getHumidity(),
-    ),
+    ROOM_HUMIDITY_SENSOR,
     ViCareSensorEntityDescription(
         key="ventilation_level",
         translation_key="ventilation_level",
@@ -1564,6 +1569,11 @@ INVERTER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
 )
 
+ROOM_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ROOM_TEMPERATURE_SENSOR,
+    ROOM_HUMIDITY_SENSOR,
+)
+
 
 def _build_entities(
     device_list: list[ViCareDevice],
@@ -1606,6 +1616,7 @@ def _build_entities(
             (get_condensers(device.api), CONDENSER_SENSORS),
             (get_evaporators(device.api), EVAPORATOR_SENSORS),
             (get_inverters(device.api), INVERTER_SENSORS),
+            (get_rooms(device.api), ROOM_SENSORS),
         ):
             entities.extend(
                 ViCareSensor(
