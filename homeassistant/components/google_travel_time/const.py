@@ -1,6 +1,7 @@
 """Constants for Google Travel Time."""
 
 from google_maps_routing_api import (
+    RoutingPreference,
     TrafficModel,
     TransitRoutingPreference,
     TransitTravelMode,
@@ -21,6 +22,7 @@ CONF_DEPARTURE_TIME = "departure_time"
 CONF_TRAFFIC_MODEL = "traffic_model"
 CONF_TRANSIT_MODE = "transit_mode"
 CONF_TRANSIT_ROUTING_PREFERENCE = "transit_routing_preference"
+CONF_TRAVEL_ROUTING_PREFERENCE = "travel_routing_preference"
 CONF_TIME_TYPE = "time_type"
 CONF_TIME = "time"
 
@@ -96,6 +98,12 @@ TRANSPORT_TYPES_TO_API_ENUM = {
     "train": TransitTravelMode.TRAIN,
     "tram": TransitTravelMode.LIGHT_RAIL,
     "rail": TransitTravelMode.RAIL,
+}
+TRAVEL_PREFS = ["traffic_aware", "traffic_aware_optimal", "traffic_unaware"]
+TRAVEL_PREFS_TO_API_ENUM = {
+    "traffic_aware_optimal": RoutingPreference.TRAFFIC_AWARE_OPTIMAL,
+    "traffic_aware": RoutingPreference.TRAFFIC_AWARE,
+    "traffic_unaware": RoutingPreference.TRAFFIC_UNAWARE,
 }
 TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
 TRAVEL_MODES_WITHOUT_TRANSIT = ["driving", "walking", "bicycling"]
