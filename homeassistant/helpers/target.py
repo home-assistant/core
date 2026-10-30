@@ -10,7 +10,7 @@ from typing import Any, TypeGuard, override
 
 import probatio
 
-from homeassistant.const import CONF_EXCLUDE, ENTITY_MATCH_NONE, TargetKey
+from homeassistant.const import CONF_EXCLUDE, ENTITY_MATCH_NONE, TargetIdKey
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -72,11 +72,11 @@ class TargetSelection:
 
     def __init__(self, config: ConfigType) -> None:
         """Extract ids from the config."""
-        entity_ids: str | list[str] | None = config.get(TargetKey.ENTITY_ID)
-        device_ids: str | list[str] | None = config.get(TargetKey.DEVICE_ID)
-        area_ids: str | list[str] | None = config.get(TargetKey.AREA_ID)
-        floor_ids: str | list[str] | None = config.get(TargetKey.FLOOR_ID)
-        label_ids: str | list[str] | None = config.get(TargetKey.LABEL_ID)
+        entity_ids: str | list[str] | None = config.get(TargetIdKey.ENTITY_ID)
+        device_ids: str | list[str] | None = config.get(TargetIdKey.DEVICE_ID)
+        area_ids: str | list[str] | None = config.get(TargetIdKey.AREA_ID)
+        floor_ids: str | list[str] | None = config.get(TargetIdKey.FLOOR_ID)
+        label_ids: str | list[str] | None = config.get(TargetIdKey.LABEL_ID)
 
         self.entity_ids = (
             set(probatio.EnsureList()(entity_ids)) if _has_match(entity_ids) else set()

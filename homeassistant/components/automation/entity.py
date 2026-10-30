@@ -15,7 +15,7 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_PATH,
     STATE_ON,
-    TargetKey,
+    TargetIdKey,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -330,12 +330,12 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self._condition is not None:
             for conf in self._condition.config:
                 referenced |= condition_helper.async_extract_targets(
-                    conf, TargetKey.LABEL_ID
+                    conf, TargetIdKey.LABEL_ID
                 )
 
         for conf in self._trigger_config:
             referenced |= set(
-                trigger_helper.async_extract_targets(conf, TargetKey.LABEL_ID)
+                trigger_helper.async_extract_targets(conf, TargetIdKey.LABEL_ID)
             )
         return referenced
 
@@ -348,12 +348,12 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self._condition is not None:
             for conf in self._condition.config:
                 referenced |= condition_helper.async_extract_targets(
-                    conf, TargetKey.FLOOR_ID
+                    conf, TargetIdKey.FLOOR_ID
                 )
 
         for conf in self._trigger_config:
             referenced |= set(
-                trigger_helper.async_extract_targets(conf, TargetKey.FLOOR_ID)
+                trigger_helper.async_extract_targets(conf, TargetIdKey.FLOOR_ID)
             )
         return referenced
 
@@ -366,12 +366,12 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self._condition is not None:
             for conf in self._condition.config:
                 referenced |= condition_helper.async_extract_targets(
-                    conf, TargetKey.AREA_ID
+                    conf, TargetIdKey.AREA_ID
                 )
 
         for conf in self._trigger_config:
             referenced |= set(
-                trigger_helper.async_extract_targets(conf, TargetKey.AREA_ID)
+                trigger_helper.async_extract_targets(conf, TargetIdKey.AREA_ID)
             )
         return referenced
 

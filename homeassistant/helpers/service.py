@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_TARGET,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
-    TargetKey,
+    TargetIdKey,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -301,21 +301,21 @@ def async_prepare_call_from_config(
             else:
                 target.update(template.render_complex(conf, variables))
 
-            if TargetKey.ENTITY_ID in target:
+            if TargetIdKey.ENTITY_ID in target:
                 registry = entity_registry.async_get(hass)
-                entity_ids = cv.comp_entity_ids_or_uuids(target[TargetKey.ENTITY_ID])
+                entity_ids = cv.comp_entity_ids_or_uuids(target[TargetIdKey.ENTITY_ID])
                 if entity_ids not in (ENTITY_MATCH_ALL, ENTITY_MATCH_NONE):
                     entity_ids = entity_registry.async_validate_entity_ids(
                         registry, entity_ids
                     )
-                target[TargetKey.ENTITY_ID] = entity_ids
+                target[TargetIdKey.ENTITY_ID] = entity_ids
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
             ) from ex
         except probatio.Invalid as ex:
             raise HomeAssistantError(
-                f"Template rendered invalid entity IDs: {target[TargetKey.ENTITY_ID]}"
+                f"Template rendered invalid entity IDs: {target[TargetIdKey.ENTITY_ID]}"
             ) from ex
 
         if exclude := target.get(CONF_EXCLUDE):
@@ -343,9 +343,9 @@ def async_prepare_call_from_config(
 
     if CONF_SERVICE_ENTITY_ID in config:
         if target:
-            target[TargetKey.ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
+            target[TargetIdKey.ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
         else:
-            target = {TargetKey.ENTITY_ID: config[CONF_SERVICE_ENTITY_ID]}
+            target = {TargetIdKey.ENTITY_ID: config[CONF_SERVICE_ENTITY_ID]}
 
     return {
         "domain": domain,
@@ -376,7 +376,7 @@ async def async_extract_entities[_EntityT: Entity](
 
     Will convert group entity ids to the entity ids it represents.
     """
-    data_ent_id = service_call.data.get(TargetKey.ENTITY_ID)
+    data_ent_id = service_call.data.get(TargetIdKey.ENTITY_ID)
 
     target_selection = target_helpers.TargetSelection(service_call.data)
 
@@ -712,7 +712,7 @@ async def _resolve_entity_service_call_entities(
                 raise Unauthorized(context=call.context)
             entity_perms = user.permissions.check_entity
 
-    target_all_entities = call.data.get(TargetKey.ENTITY_ID) == ENTITY_MATCH_ALL
+    target_all_entities = call.data.get(TargetIdKey.ENTITY_ID) == ENTITY_MATCH_ALL
 
     if target_all_entities:
         referenced: target_helpers.SelectedEntities | None = None

@@ -483,8 +483,8 @@ class EntityStateAttribute(StrEnum):
     UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
 
-class TargetKey(StrEnum):
-    """Keys of a target, selecting what an action, trigger or condition applies to."""
+class TargetIdKey(StrEnum):
+    """ID keys of the target of an action, trigger or condition."""
 
     ENTITY_ID = "entity_id"
     DEVICE_ID = "device_id"

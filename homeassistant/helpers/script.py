@@ -63,7 +63,7 @@ from homeassistant.const import (
     CONF_WHILE,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_ON,
-    TargetKey,
+    TargetIdKey,
 )
 from homeassistant.core import (
     Context,
@@ -1474,7 +1474,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
 type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
 
-def _referenced_extract_ids(data: Any, key: TargetKey, found: set[str]) -> None:
+def _referenced_extract_ids(data: Any, key: TargetIdKey, found: set[str]) -> None:
     """Extract referenced IDs, including those in an exclude block."""
     # Data may not exist, or be a template
     if not isinstance(data, dict):
@@ -1665,7 +1665,7 @@ class Script:
         """Return a set of referenced labels."""
         referenced_labels: set[str] = set()
         Script._find_referenced_target(
-            TargetKey.LABEL_ID, referenced_labels, self.sequence
+            TargetIdKey.LABEL_ID, referenced_labels, self.sequence
         )
         return referenced_labels
 
@@ -1674,7 +1674,7 @@ class Script:
         """Return a set of referenced fooors."""
         referenced_floors: set[str] = set()
         Script._find_referenced_target(
-            TargetKey.FLOOR_ID, referenced_floors, self.sequence
+            TargetIdKey.FLOOR_ID, referenced_floors, self.sequence
         )
         return referenced_floors
 
@@ -1683,13 +1683,15 @@ class Script:
         """Return a set of referenced areas."""
         referenced_areas: set[str] = set()
         Script._find_referenced_target(
-            TargetKey.AREA_ID, referenced_areas, self.sequence
+            TargetIdKey.AREA_ID, referenced_areas, self.sequence
         )
         return referenced_areas
 
     @staticmethod
     def _find_referenced_target(
-        target: Literal[TargetKey.AREA_ID, TargetKey.FLOOR_ID, TargetKey.LABEL_ID],
+        target: Literal[
+            TargetIdKey.AREA_ID, TargetIdKey.FLOOR_ID, TargetIdKey.LABEL_ID
+        ],
         referenced: set[str],
         sequence: Sequence[dict[str, Any]],
     ) -> None:
@@ -1771,7 +1773,7 @@ class Script:
                     step.get(CONF_SERVICE_DATA),
                     step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
-                    _referenced_extract_ids(data, TargetKey.DEVICE_ID, referenced)
+                    _referenced_extract_ids(data, TargetIdKey.DEVICE_ID, referenced)
 
             elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_devices(step)
@@ -1841,7 +1843,7 @@ class Script:
                     step.get(CONF_SERVICE_DATA),
                     step.get(CONF_SERVICE_DATA_TEMPLATE),
                 ):
-                    _referenced_extract_ids(data, TargetKey.ENTITY_ID, referenced)
+                    _referenced_extract_ids(data, TargetIdKey.ENTITY_ID, referenced)
 
             elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_entities(step)
