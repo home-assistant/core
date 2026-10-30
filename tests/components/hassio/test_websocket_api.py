@@ -345,36 +345,15 @@ async def test_websocket_non_admin_user(
     aioclient_mock: AiohttpClientMocker,
     hass_admin_user: MockUser,
 ) -> None:
-    """Test Supervisor websocket api error."""
+    """Test the Supervisor API tunnel is admin only."""
     hass_admin_user.groups = []
     assert await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
     aioclient_mock.get(
         "http://127.0.0.1/addons/test_addon/info",
-        json={
-            "result": "ok",
-            "data": {
-                "name": "test",
-                "state": "started",
-                "slug": "test_addon",
-                "version": "2.0.0",
-                "ingress_url": "http://127.0.0.1/ingress/test_addon",
-                "options": {"option1": "value1", "option2": "value2"},
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/session",
-        json={"result": "ok", "data": {}},
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/validate_session",
         json={"result": "ok", "data": {}},
     )
 
-    # Should return the fields frontend needs
-    # (name, version, state, slug and ingress_url) but not options,
-    # as user is not admin and options can contain sensitive information
     await websocket_client.send_json(
         {
             WS_ID: 1,
@@ -384,48 +363,8 @@ async def test_websocket_non_admin_user(
         }
     )
     msg = await websocket_client.receive_json()
-    assert msg["result"] == {
-        "name": "test",
-        "state": "started",
-        "slug": "test_addon",
-        "version": "2.0.0",
-        "ingress_url": "http://127.0.0.1/ingress/test_addon",
-    }
-    assert "options" not in msg["result"]
-
-    await websocket_client.send_json(
-        {
-            WS_ID: 2,
-            WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/ingress/session",
-            ATTR_METHOD: "get",
-        }
-    )
-    msg = await websocket_client.receive_json()
-    assert msg["result"] == {}
-
-    await websocket_client.send_json(
-        {
-            WS_ID: 3,
-            WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/ingress/validate_session",
-            ATTR_METHOD: "get",
-        }
-    )
-    msg = await websocket_client.receive_json()
-    assert msg["result"] == {}
-
-    await websocket_client.send_json(
-        {
-            WS_ID: 4,
-            WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/supervisor/info",
-            ATTR_METHOD: "get",
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["error"]["message"] == "Unauthorized"
+    assert msg["error"]["code"] == "unauthorized"
+    assert aioclient_mock.call_count == 0
 
 
 @pytest.fixture(name="ingress_panel_admin")

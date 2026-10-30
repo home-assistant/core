@@ -1,0 +1,781 @@
+# serializer version: 1
+# name: test_entities[sensor.rainbowminer_active_miners-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_active_miners',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active miners',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active miners',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_miners',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_active_miners',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_active_miners-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Active miners',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_active_miners',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_daily_bitcoin_earnings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_daily_bitcoin_earnings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Daily bitcoin earnings',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Daily bitcoin earnings',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_earnings_mbtc',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_daily_earnings_mbtc',
+    'unit_of_measurement': 'mBTC',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_daily_bitcoin_earnings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Daily bitcoin earnings',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'mBTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_daily_bitcoin_earnings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.5',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_daily_earnings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_daily_earnings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Daily earnings',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Daily earnings',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_earnings',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_daily_earnings',
+    'unit_of_measurement': 'EUR',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_daily_earnings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Daily earnings',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_daily_earnings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '82.5',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_estimated_daily_bitcoin_profit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_estimated_daily_bitcoin_profit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Estimated daily bitcoin profit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Estimated daily bitcoin profit',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_daily_profit_mbtc',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_estimated_daily_profit_mbtc',
+    'unit_of_measurement': 'mBTC',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_estimated_daily_bitcoin_profit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Estimated daily bitcoin profit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'mBTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_estimated_daily_bitcoin_profit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_estimated_daily_profit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_estimated_daily_profit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Estimated daily profit',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Estimated daily profit',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_daily_profit',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_estimated_daily_profit',
+    'unit_of_measurement': 'EUR',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_estimated_daily_profit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Estimated daily profit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_estimated_daily_profit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '55.0',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_hourly_bitcoin_earnings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_hourly_bitcoin_earnings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hourly bitcoin earnings',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hourly bitcoin earnings',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hourly_earnings_mbtc',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_hourly_earnings_mbtc',
+    'unit_of_measurement': 'mBTC',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_hourly_bitcoin_earnings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Hourly bitcoin earnings',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'mBTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_hourly_bitcoin_earnings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.06',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_hourly_earnings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_hourly_earnings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hourly earnings',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Hourly earnings',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hourly_earnings',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_hourly_earnings',
+    'unit_of_measurement': 'EUR',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_hourly_earnings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Hourly earnings',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_hourly_earnings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.3',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '350.0',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_total_bitcoin_earnings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_total_bitcoin_earnings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total bitcoin earnings',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total bitcoin earnings',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_earnings_mbtc',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_total_earnings_mbtc',
+    'unit_of_measurement': 'mBTC',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_total_bitcoin_earnings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Total bitcoin earnings',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'mBTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_total_bitcoin_earnings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15.3',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_total_earnings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_total_earnings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Total earnings',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Total earnings',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_earnings',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_total_earnings',
+    'unit_of_measurement': 'EUR',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_total_earnings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Total earnings',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_total_earnings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '841.5',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_unpaid_balance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_unpaid_balance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unpaid balance',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Unpaid balance',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unpaid_balance',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_unpaid_balance',
+    'unit_of_measurement': 'EUR',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_unpaid_balance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Unpaid balance',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_unpaid_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16.5',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_unpaid_bitcoin_balance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_unpaid_bitcoin_balance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unpaid bitcoin balance',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Unpaid bitcoin balance',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unpaid_balance_mbtc',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_unpaid_balance_mbtc',
+    'unit_of_measurement': 'mBTC',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_unpaid_bitcoin_balance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Unpaid bitcoin balance',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'mBTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_unpaid_bitcoin_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-09-12T12:00:00+00:00',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_weekly_bitcoin_earnings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_weekly_bitcoin_earnings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Weekly bitcoin earnings',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Weekly bitcoin earnings',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'weekly_earnings_mbtc',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_weekly_earnings_mbtc',
+    'unit_of_measurement': 'mBTC',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_weekly_bitcoin_earnings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Weekly bitcoin earnings',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'mBTC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_weekly_bitcoin_earnings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.0',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_weekly_earnings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainbowminer', '01M5SW4FE9FGMV9V1T31ZE095V')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainbowminer_weekly_earnings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Weekly earnings',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Weekly earnings',
+    'platform': 'rainbowminer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'weekly_earnings',
+    'unique_id': '01M5SW4FE9FGMV9V1T31ZE095V_weekly_earnings',
+    'unit_of_measurement': 'EUR',
+  })
+# ---
+# name: test_entities[sensor.rainbowminer_weekly_earnings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RainbowMiner Weekly earnings',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainbowminer_weekly_earnings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '495.0',
+  })
+# ---
