@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_get_forecasts
+  dict({
+    'forecasts': list([
+      dict({
+        'price': 3.8238,
+        'price_excl_gst': 3.325,
+        'start_time': '2026-08-24T15:00:00+00:00',
+      }),
+      dict({
+        'price': 1.2604,
+        'price_excl_gst': 1.096,
+        'start_time': '2026-08-24T15:30:00+00:00',
+      }),
+      dict({
+        'price': 0.2289,
+        'price_excl_gst': 0.199,
+        'start_time': '2026-08-24T16:00:00+00:00',
+      }),
+    ]),
+  })
+# ---

@@ -57,6 +57,8 @@ TRUSTED_DEVICES = [
 ]
 
 FEATURES = {
+    "MSG": True,
+    "SND": True,
     "WIP": True,
     "LOC": True,
     "LCK": True,
@@ -71,6 +73,8 @@ LOCATION = {
     "altitude": 5.0,
     "floorLevel": 2,
     "positionType": "GPS",
+    "isOld": False,
+    "isInaccurate": False,
     "timeStamp": LOCATION_TIMESTAMP_MS,
 }
 
@@ -87,6 +91,12 @@ DEVICE = {
     "features": FEATURES,
     "lostModeCapable": True,
     "lowPowerMode": False,
+    "activationLocked": False,
+    "isLocating": False,
+    "locationEnabled": True,
+    "wipeInProgress": False,
+    "remoteWipe": None,
+    "remoteLock": None,
     "lockedTimestamp": None,
     "lostTimestamp": "",
     "wipedTimestamp": None,

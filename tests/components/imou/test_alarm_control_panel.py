@@ -19,6 +19,7 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -60,6 +61,32 @@ def alarm_panel_home_without_disarm_devices() -> list[ImouHaDevice]:
     """Return a device that supports home but not disarm."""
     device = create_online_device("d1", "Gateway", button_keys=())
     device.alarm_control_panel = {**ALARM_PANEL, PARAM_SUPPORTED: ["home"]}
+    return [device]
+
+
+def device_without_alarm_panel() -> list[ImouHaDevice]:
+    """Return a device that has no arming panel."""
+    return [create_online_device("d1", "Gateway", button_keys=())]
+
+
+def alarm_panel_supported_not_a_list_devices() -> list[ImouHaDevice]:
+    """Return a device whose supported modes are not a list."""
+    device = create_online_device("d1", "Gateway", button_keys=())
+    device.alarm_control_panel = {**ALARM_PANEL, PARAM_SUPPORTED: "home"}
+    return [device]
+
+
+def alarm_panel_non_string_state_devices() -> list[ImouHaDevice]:
+    """Return a device whose current mode is not text."""
+    device = create_online_device("d1", "Gateway", button_keys=())
+    device.alarm_control_panel = {**ALARM_PANEL, PARAM_STATE: None}
+    return [device]
+
+
+def alarm_panel_unknown_mode_devices() -> list[ImouHaDevice]:
+    """Return a device reporting a mode the panel does not map."""
+    device = create_online_device("d1", "Gateway", button_keys=())
+    device.alarm_control_panel = {**ALARM_PANEL, PARAM_STATE: "night"}
     return [device]
 
 
@@ -206,6 +233,8 @@ async def test_alarm_state_from_device(
         alarm_panel_without_modes_devices,
         alarm_panel_disarm_only_devices,
         alarm_panel_home_without_disarm_devices,
+        device_without_alarm_panel,
+        alarm_panel_supported_not_a_list_devices,
     ],
     indirect=True,
 )
@@ -213,3 +242,16 @@ async def test_alarm_state_from_device(
 async def test_skips_incomplete_alarm_panel(hass: HomeAssistant) -> None:
     """Devices without disarm and an arm mode do not get an arming entity."""
     assert not hass.states.async_all(ALARM_DOMAIN)
+
+
+@pytest.mark.parametrize("platforms", [[Platform.ALARM_CONTROL_PANEL]], indirect=True)
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [alarm_panel_non_string_state_devices, alarm_panel_unknown_mode_devices],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_unreadable_alarm_mode_is_unknown(hass: HomeAssistant) -> None:
+    """A missing or unmapped mode does not invent an arming state."""
+    entity_id = hass.states.async_all(ALARM_DOMAIN)[0].entity_id
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN

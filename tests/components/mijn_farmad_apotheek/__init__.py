@@ -18,7 +18,7 @@ from homeassistant.components.mijn_farmad_apotheek.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
@@ -42,20 +42,23 @@ API_OTP = "123456"
 API_OTP_2 = "654321"
 
 ENTRY_DATA = {
+    CONF_EMAIL: API_ACCOUNT_EMAIL,
     CONF_ACCESS_TOKEN: API_ACCESS_TOKEN,
     CONF_REFRESH_TOKEN: API_REFRESH_TOKEN,
 }
 
 USER_INPUT = {
-    "email": API_ACCOUNT_EMAIL,
-    "password": "mock-password",
+    CONF_EMAIL: API_ACCOUNT_EMAIL,
+    CONF_PASSWORD: "mock-password",
 }
 
 
-def get_mock_account(apbs: tuple[str, ...] = (API_APB,)) -> FarmadAccount:
+def get_mock_account(
+    apbs: tuple[str, ...] = (API_APB,), *, account_id: str = API_ACCOUNT_ID
+) -> FarmadAccount:
     """Return a Farmad account for the mocked client."""
     return FarmadAccount(
-        id=API_ACCOUNT_ID,
+        id=account_id,
         email=API_ACCOUNT_EMAIL,
         first_name="Test",
         last_name="User",

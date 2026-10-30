@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -32,7 +32,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -60,7 +60,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -88,7 +88,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -111,12 +111,12 @@
       'name_by_user': None,
       'serial_number': 'a1b2c3d4e5f6g7',
       'sw_version': '1.0.0',
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('velbus', '88')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -139,12 +139,12 @@
       'name_by_user': None,
       'serial_number': '12345',
       'sw_version': '1.0.1',
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('velbus', '88')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -167,12 +167,12 @@
       'name_by_user': None,
       'serial_number': 'a1b2c3d4e5f6',
       'sw_version': '1.0.0',
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('velbus', '88')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -195,12 +195,12 @@
       'name_by_user': None,
       'serial_number': 'asdfghjk',
       'sw_version': '3.0.0',
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('velbus', '88')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -223,12 +223,12 @@
       'name_by_user': None,
       'serial_number': 'qwerty1234567',
       'sw_version': '1.1.1',
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('velbus', '88')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -251,12 +251,12 @@
       'name_by_user': None,
       'serial_number': 'a1b2c3d4e5f6',
       'sw_version': '1.0.0',
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('velbus', '88')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -279,12 +279,12 @@
       'name_by_user': None,
       'serial_number': 'a1b2c3d4e5f6',
       'sw_version': '1.0.0',
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('velbus', '88')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -307,12 +307,12 @@
       'name_by_user': None,
       'serial_number': 'qwerty123',
       'sw_version': '1.0.1',
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('velbus', '88')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -335,7 +335,7 @@
       'name_by_user': None,
       'serial_number': '1234',
       'sw_version': '1.0.1',
-      'via_device_id': <ANY>,
+      'via_device_id': <DeviceEntry identifiers=[('velbus', '88')]>,
     }),
   ])
 # ---

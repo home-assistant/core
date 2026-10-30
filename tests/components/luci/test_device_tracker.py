@@ -15,7 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_DEVICE_1, MOCK_DEVICE_2, MOCK_DEVICE_3
 
@@ -33,6 +33,52 @@ async def test_device_tracker_setup(
     await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("hostname", "entity_id", "expected_device_name"),
+    [
+        pytest.param(
+            MOCK_DEVICE_1.hostname,
+            f"{DEVICE_TRACKER_DOMAIN}.device1",
+            MOCK_DEVICE_1.hostname,
+            id="hostname",
+        ),
+        pytest.param(
+            "",
+            f"{DEVICE_TRACKER_DOMAIN}.aa_bb_cc_dd_ee_ff",
+            MOCK_DEVICE_1.mac,
+            id="no_hostname",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    hostname: str,
+    entity_id: str,
+    expected_device_name: str,
+) -> None:
+    """Test the tracker device is named by the hostname, else the MAC address."""
+    mock_luci_client.get_all_connected_devices.return_value = [
+        MOCK_DEVICE_1._replace(hostname=hostname)
+    ]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_DEVICE_1.mac))
+    }
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -90,3 +136,47 @@ async def test_new_device_discovered(
     state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device3")
     assert state is not None
     assert state.state == STATE_HOME
+
+
+@pytest.mark.parametrize(
+    ("new_hostname", "expected_device_name"),
+    [
+        pytest.param("work-laptop", "work-laptop", id="renamed"),
+        # The device keeps its name instead of falling back to the MAC address
+        pytest.param("", "device1", id="hostname_removed"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_hostname_updated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    new_hostname: str,
+    expected_device_name: str,
+) -> None:
+    """Test a hostname change renames the tracker's device."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_luci_client.get_all_connected_devices.return_value = [
+        MOCK_DEVICE_1._replace(hostname=new_hostname),
+        MOCK_DEVICE_2,
+    ]
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device1")
+    assert state is not None
+    assert state.attributes["friendly_name"] == expected_device_name
+
+    registry_entry = entity_registry.async_get(f"{DEVICE_TRACKER_DOMAIN}.device1")
+    assert registry_entry is not None
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name

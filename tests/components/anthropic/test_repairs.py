@@ -3,6 +3,7 @@
 import datetime as dt
 from functools import partial
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from anthropic import (
@@ -26,9 +27,10 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
+    CONF_EFFORT,
     CONF_MAX_TOKENS,
     CONF_THINKING_BUDGET,
-    CONF_THINKING_EFFORT,
+    CONF_THINKING_TYPE,
     CONF_TOOL_SEARCH,
     CONF_WEB_FETCH,
     CONF_WEB_FETCH_MAX_USES,
@@ -111,12 +113,40 @@ def _copy_model_info(model_id: str) -> ModelInfo:
     ).model_copy(deep=True)
 
 
-def _model_info_without_thinking() -> ModelInfo:
+def _model_info_without_thinking(
+    model_id: str = "claude-haiku-4-5",
+) -> ModelInfo:
     """Return metadata for a model without thinking support."""
-    model_info = _copy_model_info("claude-haiku-4-5")
+    model_info = _copy_model_info(model_id)
     assert model_info.capabilities
     model_info.capabilities.thinking.supported = False
     model_info.capabilities.thinking.types.enabled.supported = False
+    return model_info
+
+
+def _model_info_without_xhigh_effort() -> ModelInfo:
+    """Return metadata without the optional xhigh effort capability."""
+    model_info = _copy_model_info("claude-haiku-5-5")
+    assert model_info.capabilities
+    model_info.capabilities.effort.xhigh = None
+    return model_info
+
+
+def _model_info_with_only_between_tools() -> ModelInfo:
+    """Return metadata for a model that only supports between-tools thinking."""
+    model_info = _copy_model_info("claude-sonnet-5-5")
+    if TYPE_CHECKING:
+        assert model_info.capabilities is not None
+    model_info.capabilities.thinking.types.adaptive.supported = False
+    return model_info
+
+
+def _model_info_with_only_high_effort() -> ModelInfo:
+    """Return metadata that supports only high effort."""
+    model_info = _copy_model_info("claude-opus-4-5")
+    assert model_info.capabilities
+    model_info.capabilities.effort.low.supported = False
+    model_info.capabilities.effort.medium.supported = False
     return model_info
 
 
@@ -268,10 +298,12 @@ async def test_repair_flow_iterates_subentries(
         json={CONF_CHAT_MODEL: "claude-sonnet-4-6"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert (
-        _get_subentry(entry_one, "ai_task_data").data[CONF_CHAT_MODEL]
-        == "claude-sonnet-4-6"
-    )
+    assert _get_subentry(entry_one, "ai_task_data").data == {
+        CONF_CHAT_MODEL: "claude-sonnet-4-6",
+        CONF_THINKING_TYPE: "adaptive",
+        CONF_THINKING_BUDGET: 1024,
+        CONF_EFFORT: "low",
+    }
     assert (
         _get_subentry(entry_one, "conversation").data[CONF_CHAT_MODEL]
         == "claude-haiku-4-5"
@@ -327,153 +359,276 @@ async def test_repair_flow_no_deprecated_models(
 
 
 @pytest.mark.parametrize(
-    "cached_model_count",
-    [
-        pytest.param(1, id="listed_model"),
-        pytest.param(0, id="custom_model"),
-    ],
-)
-@pytest.mark.parametrize(
-    "subentry_type",
-    [
-        pytest.param("conversation", id="conversation"),
-        pytest.param("ai_task_data", id="ai_task"),
-    ],
-)
-@pytest.mark.parametrize(
     ("model", "model_info", "model_options", "expected_options"),
     [
         pytest.param(
             "claude-opus-5-5",
             _copy_model_info("claude-opus-5-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {},
+            {CONF_THINKING_TYPE: "disabled"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
             id="opus_5_5",
         ),
         pytest.param(
             "claude-fable-5",
             _copy_model_info("claude-fable-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {},
+            {CONF_THINKING_TYPE: "disabled"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
             id="fable_5",
         ),
         pytest.param(
             "claude-fable-5-1",
             _copy_model_info("claude-fable-5-1"),
-            {CONF_THINKING_EFFORT: "none"},
-            {},
+            {CONF_THINKING_TYPE: "disabled"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
             id="fable_5_1",
         ),
         pytest.param(
             "claude-opus-5-5-20260921",
             _copy_model_info("claude-opus-5-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {},
+            {CONF_THINKING_TYPE: "disabled"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
             id="versioned_opus_5_5",
         ),
         pytest.param(
             "claude-sonnet-5-5",
             _copy_model_info("claude-sonnet-5-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {},
+            {CONF_THINKING_TYPE: "disabled"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
             id="sonnet_5_5",
         ),
         pytest.param(
             "claude-sonnet-5-5-20260928",
             _copy_model_info("claude-sonnet-5-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {},
+            {CONF_THINKING_TYPE: "disabled"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
             id="versioned_sonnet_5_5",
         ),
         pytest.param(
             "claude-haiku-5-5",
             _copy_model_info("claude-haiku-5-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {CONF_THINKING_EFFORT: "none"},
+            {CONF_THINKING_TYPE: "disabled"},
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "low"},
             id="haiku_5_5",
         ),
         pytest.param(
             "claude-haiku-5-5-20261007",
             _copy_model_info("claude-haiku-5-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {CONF_THINKING_EFFORT: "none"},
+            {CONF_THINKING_TYPE: "disabled"},
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "low"},
             id="versioned_haiku_5_5",
         ),
         pytest.param(
             "claude-opus-5-5",
             _copy_model_info("claude-opus-5-5"),
-            {CONF_THINKING_EFFORT: "high"},
-            {CONF_THINKING_EFFORT: "high"},
+            {CONF_EFFORT: "high"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "high"},
             id="adaptive_effort",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "low"},
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "low"},
+            id="effort_with_disabled_thinking",
+        ),
+        pytest.param(
+            "claude-opus-5-5",
+            _model_info_without_thinking("claude-opus-5-5"),
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
+            {CONF_EFFORT: "low"},
+            id="effort_without_thinking_support",
         ),
         pytest.param(
             "claude-opus-4-6",
             _copy_model_info("claude-opus-4-6"),
-            {CONF_THINKING_EFFORT: "none"},
-            {CONF_THINKING_EFFORT: "none"},
+            {CONF_THINKING_TYPE: "disabled"},
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "low",
+            },
             id="optional_thinking",
         ),
         pytest.param(
             "claude-opus-4-6-20260204",
             _copy_model_info("claude-opus-4-6"),
-            {CONF_THINKING_EFFORT: "none"},
-            {CONF_THINKING_EFFORT: "none"},
+            {CONF_THINKING_TYPE: "disabled"},
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "low",
+            },
             id="versioned_optional_thinking",
         ),
         pytest.param(
             "claude-opus-4-5",
             _copy_model_info("claude-opus-4-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {},
-            id="nonadaptive_effort",
+            {CONF_THINKING_TYPE: "disabled"},
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "low",
+            },
+            id="nonadaptive_disabled_thinking",
         ),
         pytest.param(
             "claude-opus-4-5-20251101",
             _copy_model_info("claude-opus-4-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {},
-            id="versioned_nonadaptive_effort",
+            {CONF_THINKING_TYPE: "disabled"},
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "low",
+            },
+            id="versioned_nonadaptive_disabled_thinking",
         ),
         pytest.param(
             "claude-opus-4-5",
             _copy_model_info("claude-opus-4-5"),
-            {CONF_THINKING_EFFORT: "high"},
-            {CONF_THINKING_EFFORT: "high"},
+            {CONF_EFFORT: "high"},
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "high",
+            },
             id="valid_nonadaptive_effort",
         ),
         pytest.param(
             "claude-haiku-4-5",
             _copy_model_info("claude-haiku-4-5"),
-            {CONF_THINKING_EFFORT: "none"},
-            {},
-            id="no_effort_support",
+            {CONF_THINKING_TYPE: "disabled"},
+            {CONF_THINKING_TYPE: "disabled", CONF_THINKING_BUDGET: 1024},
+            id="disabled_thinking_without_effort",
         ),
         pytest.param(
             "claude-haiku-5-5",
             _copy_model_info("claude-haiku-5-5"),
-            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
-            {CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_BUDGET: 4096, CONF_EFFORT: "high"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "high"},
             id="adaptive_removes_manual_budget",
+        ),
+        pytest.param(
+            "claude-opus-4-6",
+            _copy_model_info("claude-opus-4-6"),
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 4096,
+                CONF_EFFORT: "low",
+            },
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 4096,
+                CONF_EFFORT: "low",
+            },
+            id="manual_thinking_on_adaptive_model",
+        ),
+        pytest.param(
+            "claude-opus-4-6",
+            _copy_model_info("claude-opus-4-6"),
+            {CONF_THINKING_TYPE: "adaptive", CONF_THINKING_BUDGET: 4096},
+            {
+                CONF_THINKING_TYPE: "adaptive",
+                CONF_THINKING_BUDGET: 4096,
+                CONF_EFFORT: "low",
+            },
+            id="adaptive_preserves_supported_manual_budget",
+        ),
+        pytest.param(
+            "claude-opus-5-5",
+            _copy_model_info("claude-opus-5-5"),
+            {CONF_THINKING_TYPE: "enabled", CONF_THINKING_BUDGET: 4096},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
+            id="unsupported_manual_thinking",
         ),
         pytest.param(
             "claude-opus-4-5",
             _copy_model_info("claude-opus-4-5"),
-            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
-            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_THINKING_BUDGET: 4096},
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 4096,
+                CONF_EFFORT: "low",
+            },
+            id="unsupported_adaptive_thinking",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _copy_model_info("claude-sonnet-5-5"),
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "low"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "low"},
+            id="between_tools_preserved",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _copy_model_info("claude-sonnet-5-5"),
+            {
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_THINKING_BUDGET: 4096,
+                CONF_EFFORT: "high",
+            },
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_removes_manual_budget",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _copy_model_info("claude-sonnet-5-5"),
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "xhigh"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_xhigh_effort",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _copy_model_info("claude-sonnet-5-5"),
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "max"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_max_effort",
+        ),
+        pytest.param(
+            "custom-model",
+            _copy_model_info("claude-sonnet-5-5").model_copy(
+                update={"id": "custom-model"}
+            ),
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "max"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="custom_between_tools_max_effort",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "low"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
+            id="unsupported_between_tools",
+        ),
+        pytest.param(
+            "claude-sonnet-5-5",
+            _model_info_with_only_between_tools(),
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "max"},
+            {CONF_THINKING_TYPE: "between_tools", CONF_EFFORT: "high"},
+            id="between_tools_only",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_BUDGET: 4096, CONF_EFFORT: "high"},
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 4096,
+                CONF_EFFORT: "high",
+            },
             id="manual_thinking_budget_and_effort",
         ),
         pytest.param(
             "claude-haiku-4-5",
             _copy_model_info("claude-haiku-4-5"),
-            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
-            {CONF_THINKING_BUDGET: 4096},
+            {CONF_THINKING_BUDGET: 4096, CONF_EFFORT: "high"},
+            {CONF_THINKING_TYPE: "enabled", CONF_THINKING_BUDGET: 4096},
             id="manual_thinking_without_effort",
         ),
         pytest.param(
             "claude-haiku-4-5",
             _model_info_without_thinking(),
-            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
-            {},
+            {CONF_THINKING_BUDGET: 4096, CONF_EFFORT: "high"},
+            {CONF_THINKING_TYPE: "disabled"},
             id="unsupported_thinking",
         ),
         pytest.param(
@@ -481,52 +636,256 @@ async def test_repair_flow_no_deprecated_models(
             _copy_model_info("claude-haiku-5-5").model_copy(
                 update={"capabilities": None}, deep=True
             ),
-            {CONF_THINKING_BUDGET: 4096, CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_BUDGET: 4096, CONF_EFFORT: "high"},
             {},
             id="unknown_capabilities",
         ),
         pytest.param(
             "claude-opus-4-5",
             _copy_model_info("claude-opus-4-5"),
-            {CONF_THINKING_EFFORT: "max"},
-            {},
+            {CONF_EFFORT: "max"},
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "high",
+            },
             id="unsupported_max_effort",
         ),
         pytest.param(
             "claude-opus-4-5",
             _copy_model_info("claude-opus-4-5"),
-            {CONF_THINKING_EFFORT: "xhigh"},
-            {},
+            {CONF_EFFORT: "xhigh"},
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "high",
+            },
             id="unsupported_xhigh_effort",
         ),
         pytest.param(
             "claude-opus-5-5",
             _copy_model_info("claude-opus-5-5"),
             {CONF_TOOL_SEARCH: True},
-            {CONF_TOOL_SEARCH: True},
+            {
+                CONF_THINKING_TYPE: "adaptive",
+                CONF_EFFORT: "low",
+                CONF_TOOL_SEARCH: True,
+            },
             id="supported_tool_search",
         ),
         pytest.param(
             "claude-haiku-5-5",
             _copy_model_info("claude-haiku-5-5"),
             {CONF_TOOL_SEARCH: True},
-            {},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
             id="unsupported_tool_search",
         ),
         pytest.param(
             "claude-opus-5-5",
             _copy_model_info("claude-opus-5-5"),
             {},
-            {},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "low"},
             id="unrelated_options",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_BUDGET: 0},
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "low",
+            },
+            id="legacy_disabled_manual_thinking",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_TYPE: "enabled", CONF_THINKING_BUDGET: 0},
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "low",
+            },
+            id="explicit_manual_thinking_budget_minimum",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {CONF_THINKING_TYPE: "enabled", CONF_THINKING_BUDGET: 8192},
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 8191,
+                CONF_EFFORT: "low",
+            },
+            id="manual_thinking_budget_maximum",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_MAX_TOKENS: 1024,
+            },
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_MAX_TOKENS: 1025,
+                CONF_EFFORT: "low",
+            },
+            id="manual_thinking_requires_output_tokens",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 4096,
+                CONF_MAX_TOKENS: 1024,
+            },
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 4096,
+                CONF_MAX_TOKENS: 1024,
+                CONF_EFFORT: "low",
+            },
+            id="disabled_thinking_preserves_unused_budget",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _model_info_without_xhigh_effort(),
+            {CONF_EFFORT: "xhigh"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "high"},
+            id="missing_xhigh_capability",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _model_info_with_only_high_effort(),
+            {CONF_EFFORT: "low"},
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 1024,
+                CONF_EFFORT: "high",
+            },
+            id="no_lower_supported_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 100000,
+                CONF_MAX_TOKENS: 128000,
+                CONF_EFFORT: "max",
+            },
+            {
+                CONF_THINKING_TYPE: "enabled",
+                CONF_THINKING_BUDGET: 63999,
+                CONF_MAX_TOKENS: 64000,
+                CONF_EFFORT: "high",
+            },
+            id="lower_output_limit_with_manual_thinking",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 100000,
+                CONF_MAX_TOKENS: 128000,
+            },
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 63999,
+                CONF_MAX_TOKENS: 64000,
+                CONF_EFFORT: "low",
+            },
+            id="lower_output_limit_with_disabled_thinking",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            _copy_model_info("claude-opus-4-5"),
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 100000,
+            },
+            {
+                CONF_THINKING_TYPE: "disabled",
+                CONF_THINKING_BUDGET: 63999,
+                CONF_EFFORT: "low",
+            },
+            id="lower_budget_limit_preserves_output_tokens",
+        ),
+        pytest.param(
+            "claude-opus-4-6",
+            _copy_model_info("claude-opus-4-6").model_copy(
+                update={"max_tokens": 64000}
+            ),
+            {
+                CONF_THINKING_TYPE: "adaptive",
+                CONF_THINKING_BUDGET: 100000,
+                CONF_MAX_TOKENS: 128000,
+            },
+            {
+                CONF_THINKING_TYPE: "adaptive",
+                CONF_THINKING_BUDGET: 63999,
+                CONF_MAX_TOKENS: 64000,
+                CONF_EFFORT: "low",
+            },
+            id="lower_output_limit_with_adaptive_thinking",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            _copy_model_info("claude-haiku-5-5"),
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "max"},
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "high"},
+            id="haiku_disabled_max_effort",
+        ),
+        pytest.param(
+            "claude-haiku-5-5-20261007",
+            _copy_model_info("claude-haiku-5-5").model_copy(
+                update={"id": "claude-haiku-5-5-20261007"}
+            ),
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "xhigh"},
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "high"},
+            id="versioned_haiku_disabled_xhigh_effort",
+        ),
+        pytest.param(
+            "claude-opus-5",
+            _copy_model_info("claude-opus-5"),
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "xhigh"},
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "high"},
+            id="opus_disabled_xhigh_effort",
+        ),
+        pytest.param(
+            "claude-opus-5-20260720",
+            _copy_model_info("claude-opus-5").model_copy(
+                update={"id": "claude-opus-5-20260720"}
+            ),
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "max"},
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "high"},
+            id="versioned_opus_disabled_max_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-7",
+            _copy_model_info("claude-opus-4-7"),
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "max"},
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "max"},
+            id="opus_4_7_disabled_max_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-8",
+            _copy_model_info("claude-opus-4-8"),
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "xhigh"},
+            {CONF_THINKING_TYPE: "disabled", CONF_EFFORT: "xhigh"},
+            id="opus_4_8_disabled_xhigh_effort",
         ),
     ],
 )
 async def test_repair_flow_model_options(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    cached_model_count: int,
-    subentry_type: str,
     model: str,
     model_info: ModelInfo,
     model_options: dict[str, int | str | bool],
@@ -557,14 +916,14 @@ async def test_repair_flow_model_options(
                     **preserved_options,
                     **model_options,
                 },
-                "subentry_type": subentry_type,
+                "subentry_type": "conversation",
                 "title": "Conversation",
                 "unique_id": None,
             }
         ],
     )
     entry.runtime_data.client.models.list.return_value = AsyncPage(
-        data=[model_info][:cached_model_count], has_more=False
+        data=[model_info], has_more=False
     )
     retrieve = entry.runtime_data.client.models.retrieve = AsyncMock(
         return_value=model_info
@@ -580,15 +939,12 @@ async def test_repair_flow_model_options(
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert _get_subentry(entry, subentry_type).data == {
+    assert _get_subentry(entry, "conversation").data == {
         CONF_CHAT_MODEL: model,
         **preserved_options,
         **expected_options,
     }
-    assert (
-        retrieve.await_args_list
-        == [call(model, timeout=10.0)][: 1 - cached_model_count]
-    )
+    retrieve.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -604,25 +960,37 @@ async def test_repair_flow_model_options(
         pytest.param(
             _model_info_with_server_tools(False, True),
             SERVER_TOOL_OPTIONS,
-            {CONF_THINKING_EFFORT: "high", **WEB_SEARCH_OPTIONS},
+            {
+                CONF_THINKING_TYPE: "adaptive",
+                CONF_EFFORT: "high",
+                **WEB_SEARCH_OPTIONS,
+            },
             id="unsupported_code_execution",
         ),
         pytest.param(
             _model_info_with_server_tools(True, False),
             SERVER_TOOL_OPTIONS,
-            {CONF_THINKING_EFFORT: "high", CONF_CODE_EXECUTION: True},
+            {
+                CONF_THINKING_TYPE: "adaptive",
+                CONF_EFFORT: "high",
+                CONF_CODE_EXECUTION: True,
+            },
             id="unsupported_web_search",
         ),
         pytest.param(
             _model_info_with_server_tools(False, False),
             SERVER_TOOL_OPTIONS,
-            {CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "high"},
             id="unsupported_server_tools",
         ),
         pytest.param(
             _model_info_with_server_tools(True, True),
             SERVER_TOOL_OPTIONS,
-            {CONF_THINKING_EFFORT: "high", **SERVER_TOOL_OPTIONS},
+            {
+                CONF_THINKING_TYPE: "adaptive",
+                CONF_EFFORT: "high",
+                **SERVER_TOOL_OPTIONS,
+            },
             id="supported_server_tools",
         ),
         pytest.param(
@@ -636,7 +1004,7 @@ async def test_repair_flow_model_options(
         pytest.param(
             _model_info_with_server_tools(False, False),
             {CONF_CODE_EXECUTION: False, CONF_WEB_SEARCH: False},
-            {CONF_THINKING_EFFORT: "high"},
+            {CONF_THINKING_TYPE: "adaptive", CONF_EFFORT: "high"},
             id="disabled_unsupported_server_tools",
         ),
     ],
@@ -663,7 +1031,7 @@ async def test_repair_flow_server_tool_options(
             {
                 "data": {
                     CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219",
-                    CONF_THINKING_EFFORT: "high",
+                    CONF_EFFORT: "high",
                     CONF_TOOL_SEARCH: True,
                     **preserved_options,
                     **server_tool_options,
@@ -744,7 +1112,7 @@ async def test_repair_flow_model_lookup_error(
     """Keep the current repair available for retry when model lookup fails."""
     conversation_data = {
         CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219",
-        CONF_THINKING_EFFORT: "none",
+        CONF_THINKING_TYPE: "disabled",
         CONF_MAX_TOKENS: 4096,
     }
     task_data = {CONF_CHAT_MODEL: "claude-3-5-haiku-20241022"}
@@ -826,6 +1194,8 @@ async def test_repair_flow_model_lookup_error(
     assert _get_subentry(entry, "conversation").data == {
         CONF_CHAT_MODEL: "claude-opus-5-5",
         CONF_MAX_TOKENS: 4096,
+        CONF_THINKING_TYPE: "adaptive",
+        CONF_EFFORT: "low",
     }
     assert _get_subentry(entry, "ai_task_data").data == task_data
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
@@ -840,7 +1210,9 @@ async def test_repair_flow_model_lookup_error(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert _get_subentry(entry, "ai_task_data").data == {
-        CONF_CHAT_MODEL: "claude-haiku-4-5"
+        CONF_CHAT_MODEL: "claude-haiku-4-5",
+        CONF_THINKING_TYPE: "enabled",
+        CONF_THINKING_BUDGET: 1024,
     }
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
     assert retrieve.await_count == 3
@@ -928,7 +1300,9 @@ async def test_repair_flow_lifecycle_metadata(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert _get_subentry(entry, "conversation").data == {
-        CONF_CHAT_MODEL: "claude-haiku-5-5"
+        CONF_CHAT_MODEL: "claude-haiku-5-5",
+        CONF_THINKING_TYPE: "adaptive",
+        CONF_EFFORT: "low",
     }
 
 
@@ -1152,7 +1526,9 @@ async def test_repair_flow_sdk_inactive_current_model(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert _get_subentry(entry, "conversation").data == {
-        CONF_CHAT_MODEL: "claude-sonnet-5-5"
+        CONF_CHAT_MODEL: "claude-sonnet-5-5",
+        CONF_THINKING_TYPE: "adaptive",
+        CONF_EFFORT: "low",
     }
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
 
@@ -1279,7 +1655,9 @@ async def test_repair_flow_inactive_custom_model(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert _get_subentry(entry, "conversation").data == {
-        CONF_CHAT_MODEL: "custom-model"
+        CONF_CHAT_MODEL: "custom-model",
+        CONF_THINKING_TYPE: "adaptive",
+        CONF_EFFORT: "low",
     }
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
     assert retrieve.await_args_list == [call("custom-model", timeout=10.0)] * 2

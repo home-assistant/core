@@ -1,20 +1,15 @@
 """Reproduce an Input select state."""
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.components.select import (
-    ATTR_OPTIONS,
-    SelectEntityCapabilityAttribute,
-)
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
+from homeassistant.components.select import SelectEntityCapabilityAttribute
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import DOMAIN, InputSelectService, InputSelectServiceArgument
-
-ATTR_GROUP = [ATTR_OPTION, ATTR_OPTIONS]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,10 +28,9 @@ async def _async_reproduce_state(
         return
 
     # Return if we are already at the right state.
-    if cur_state.state == state.state and all(
-        check_attr_equal(cur_state.attributes, state.attributes, attr)
-        for attr in ATTR_GROUP
-    ):
+    if cur_state.state == state.state and cur_state.attributes.get(
+        SelectEntityCapabilityAttribute.OPTIONS
+    ) == state.attributes.get(SelectEntityCapabilityAttribute.OPTIONS):
         return
 
     # Set service data
@@ -83,8 +77,3 @@ async def async_reproduce_states(
             for state in states
         )
     )
-
-
-def check_attr_equal(attr1: Mapping, attr2: Mapping, attr_str: str) -> bool:
-    """Return true if the given attributes are equal."""
-    return attr1.get(attr_str) == attr2.get(attr_str)

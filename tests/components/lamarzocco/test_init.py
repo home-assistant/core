@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.const import FirmwareType
-from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.exceptions import (
+    AuthFail,
+    PolicyAcceptanceRequired,
+    RequestNotSuccessful,
+)
 from pylamarzocco.models import WebSocketDetails
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -64,6 +68,7 @@ async def test_config_entry_not_ready(
     ("side_effect", "expected_state"),
     [
         (AuthFail(""), ConfigEntryState.SETUP_ERROR),
+        (PolicyAcceptanceRequired(""), ConfigEntryState.SETUP_ERROR),
         (RequestNotSuccessful(""), ConfigEntryState.SETUP_RETRY),
     ],
 )
@@ -83,14 +88,22 @@ async def test_get_settings_errors(
     assert mock_config_entry.state is expected_state
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(AuthFail(""), id="auth_fail"),
+        pytest.param(PolicyAcceptanceRequired(""), id="policy_acceptance_required"),
+    ],
+)
 async def test_invalid_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
+    side_effect: Exception,
 ) -> None:
     """Test auth error during setup."""
     mock_lamarzocco.websocket.connected = False
-    mock_lamarzocco.get_dashboard.side_effect = AuthFail("")
+    mock_lamarzocco.get_dashboard.side_effect = side_effect
     await async_init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

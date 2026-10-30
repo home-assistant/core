@@ -34,12 +34,7 @@ from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MODEL,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_MODEL, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -65,7 +60,6 @@ from .const import (
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     DYNAMIC_COMPONENTS_MAP,
-    FIRMWARE_UNSUPPORTED_ISSUE_ID,
     FW_ID_VERSION_PATTERN,
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
@@ -616,27 +610,6 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
         return GEN2_BETA_RELEASE_URL
 
     return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
-
-
-@callback
-def async_create_issue_unsupported_firmware(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> None:
-    """Create a repair issue if the device runs an unsupported firmware."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
-        is_fixable=False,
-        is_persistent=False,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="unsupported_firmware",
-        translation_placeholders={
-            "device_name": entry.title,
-            "ip_address": entry.data[CONF_HOST],
-        },
-        config_entry_id=entry.entry_id,
-    )
 
 
 def is_rpc_wifi_stations_disabled(

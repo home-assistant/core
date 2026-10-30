@@ -338,6 +338,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DriverSeatBelt(
             callback
         ),
+        device_class=BinarySensorDeviceClass.SAFETY,
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(

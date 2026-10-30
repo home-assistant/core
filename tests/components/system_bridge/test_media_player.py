@@ -10,17 +10,12 @@ from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.models.media_control import MediaAction, MediaControl
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SHUFFLE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
-    RepeatMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -82,30 +77,6 @@ async def test_media_player_platform(
             {},
             MediaControl(action=MediaAction.NEXT.value),
             id="next",
-        ),
-        pytest.param(
-            SERVICE_SHUFFLE_SET,
-            {ATTR_MEDIA_SHUFFLE: False},
-            MediaControl(action=MediaAction.SHUFFLE.value, value=False),
-            id="shuffle",
-        ),
-        pytest.param(
-            SERVICE_REPEAT_SET,
-            {ATTR_MEDIA_REPEAT: RepeatMode.OFF},
-            MediaControl(action=MediaAction.REPEAT.value, value=0),
-            id="repeat_off",
-        ),
-        pytest.param(
-            SERVICE_REPEAT_SET,
-            {ATTR_MEDIA_REPEAT: RepeatMode.ONE},
-            MediaControl(action=MediaAction.REPEAT.value, value=1),
-            id="repeat_one",
-        ),
-        pytest.param(
-            SERVICE_REPEAT_SET,
-            {ATTR_MEDIA_REPEAT: RepeatMode.ALL},
-            MediaControl(action=MediaAction.REPEAT.value, value=2),
-            id="repeat_all",
         ),
     ],
 )

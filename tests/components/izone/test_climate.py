@@ -336,20 +336,34 @@ async def test_control_zone_source_controller_owner(
     assert entity.attributes[ATTR_TEMPERATURE] == 24.0
 
 
+@pytest.mark.parametrize(
+    "zone_ctrl",
+    [
+        pytest.param(99, id="unmatched_index"),
+        pytest.param(None, id="missing_ctrlzone"),
+    ],
+)
 async def test_control_zone_source_unmatched_owner(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
+    zone_ctrl: int | None,
 ) -> None:
-    """Source is omitted when no owner matches."""
+    """Source is omitted when no owner matches; current uses return air."""
+    mock_controller.zone_ctrl = zone_ctrl
     mock_controller.control_setpoint_owner = None
     mock_controller.control_setpoint = None
+    mock_controller.temp_return = 21.0
     await setup_integration(hass, mock_config_entry)
 
     entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
     assert ATTR_CONTROL_ZONE_SOURCE not in entity.attributes
+    assert entity.attributes["control_zone"] == zone_ctrl
+    assert entity.attributes["control_zone_name"] is None
+    assert entity.attributes["control_zone_setpoint"] is None
+    assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
 
 
 async def test_control_zone_source_follows_entity_id_rename(

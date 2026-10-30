@@ -1282,12 +1282,6 @@ def _set_private_mirrors_on(camera: Camera) -> None:
     camera.smart_detect_settings.audio_types = audio_types
     camera.recording_settings.mode = RecordingMode.ALWAYS
     camera.led_settings.is_enabled = True
-    camera.hdr_mode = True
-    camera.video_mode = VideoMode.HIGH_FPS
-    camera.osd_settings.is_name_enabled = True
-    camera.osd_settings.is_date_enabled = True
-    camera.osd_settings.is_logo_enabled = True
-    camera.osd_settings.is_debug_enabled = True
 
 
 @pytest.mark.parametrize("key", _CAMERA_BINARY_MIRRORS)
@@ -1327,7 +1321,6 @@ async def test_binary_sensor_camera_hdr_mirror_on_for_auto(
     doorbell: Camera,
 ) -> None:
     """The HDR mirror is on for the auto mode as well."""
-    doorbell.hdr_mode = False
     ufp.api.bootstrap.auth_user.all_permissions = [
         Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
     ]

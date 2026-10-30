@@ -47,6 +47,23 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("mock_device_code", ["cz_dhto3y4uachr1wll"])
+async def test_meter_channel_child_devices(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test multi-channel meter sensors are grouped in channel child devices."""
+    # The meter datapoints are only provided by a quirk
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 @pytest.mark.parametrize(
     ("mock_device_code", "expected_children", "expected_parent_phase_entities"),
     [
