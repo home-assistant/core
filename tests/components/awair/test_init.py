@@ -10,10 +10,16 @@ from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, frame
+from homeassistant.helpers import device_registry as dr, discovery_flow, frame
 
 from . import setup_awair
 from .const import LOCAL_CONFIG, LOCAL_UNIQUE_ID, ZEROCONF_DISCOVERY
+
+DISCOVERY_KEY = discovery_flow.DiscoveryKey(
+    domain="zeroconf",
+    key=("_http._tcp.local.", "awair12345._http._tcp.local."),
+    version=1,
+)
 
 
 async def test_local_awair_sensors(
@@ -56,13 +62,16 @@ async def test_zeroconf_host_change_reloads_local_entry(
         patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF, "discovery_key": DISCOVERY_KEY},
+            data=ZEROCONF_DISCOVERY,
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured_device"
     assert entry.data[CONF_HOST] == ZEROCONF_DISCOVERY.host
+    assert entry.discovery_keys == {"zeroconf": (DISCOVERY_KEY,)}
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data is not coordinator
     assert mock_query.call_count == 3
