@@ -1,15 +1,18 @@
 """Persistently store issues raised by integrations."""
 
+from collections.abc import Iterable
 import dataclasses
 from datetime import datetime
 from enum import StrEnum
 import functools as ft
-from typing import Any, Literal, TypedDict, cast, override
+import re
+from types import TracebackType
+from typing import Any, Literal, Self, TypedDict, cast, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.const import __version__ as ha_version
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -119,6 +122,121 @@ class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
         return old_data
 
 
+@dataclasses.dataclass(slots=True, eq=False)
+class _RefreshState:
+    """State of an active refresh."""
+
+    scope: frozenset[tuple[str, str]]
+    # Issues in scope not touched since the refresh began, deleted when it finishes
+    untouched: set[tuple[str, str]]
+
+
+def _newest_refresh(
+    refreshes: list[_RefreshState], key: tuple[str, str]
+) -> _RefreshState | None:
+    """Return the newest active refresh which has the issue in its set."""
+    for state in reversed(refreshes):
+        if key in state.scope:
+            return state
+    return None
+
+
+class IssuesRefresh:
+    """Refresh of a set of issues.
+
+    Issues in the set which have not been created, updated, deleted or kept when the
+    refresh is finished are deleted. Issues don't need to be created through the
+    refresh object, any call to async_create_issue counts.
+
+    If refreshes overlap, the newest active refresh which has an issue in its set
+    decides about the issue. When it ends, the decision falls back to the next
+    newest active refresh, which deletes the issue only if it was not created,
+    updated, deleted or kept since that refresh began.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        refreshes: list[_RefreshState],
+        deferred_deletes: set[tuple[str, str]],
+        keys: set[tuple[str, str]],
+    ) -> None:
+        """Initialize the refresh and mark the issues as pending deletion."""
+        self._deferred_deletes = deferred_deletes
+        self._domain = domain
+        self._hass = hass
+        self._refreshes = refreshes
+        self._state = _RefreshState(frozenset(keys), set(keys))
+        refreshes.append(self._state)
+
+    @callback
+    def _async_end(self, candidates: Iterable[tuple[str, str]]) -> None:
+        """End the refresh and delete the candidates it decides about."""
+        if (state := self._state) not in self._refreshes:
+            return
+        newer = self._refreshes[self._refreshes.index(state) + 1 :]
+        to_delete = [
+            key for key in candidates if not any(key in r.scope for r in newer)
+        ]
+        self._refreshes.remove(state)
+        issue_registry = async_get(self._hass)
+        for domain, issue_id in to_delete:
+            issue_registry.async_delete(domain, issue_id)
+
+    @callback
+    @verify_event_loop_thread("issue_registry.IssuesRefresh.async_keep")
+    def async_keep(self, issue_ids: Iterable[str]) -> None:
+        """Keep issues without creating or updating them.
+
+        Issues outside the set of the refresh are ignored.
+        """
+        if (state := self._state) not in self._refreshes:
+            return
+        # Older refreshes don't get to delete an issue a newer one kept
+        self_and_older = self._refreshes[: self._refreshes.index(state) + 1]
+        for issue_id in issue_ids:
+            key = (self._domain, issue_id)
+            if key not in state.scope:
+                continue
+            for other in self_and_older:
+                other.untouched.discard(key)
+            if _newest_refresh(self._refreshes, key) is state:
+                self._deferred_deletes.discard(key)
+
+    @callback
+    @verify_event_loop_thread("issue_registry.IssuesRefresh.async_finish")
+    def async_finish(self) -> None:
+        """Delete issues which were not created, updated, deleted or kept."""
+        self._async_end(self._state.untouched)
+
+    @callback
+    @verify_event_loop_thread("issue_registry.IssuesRefresh.async_cancel")
+    def async_cancel(self) -> None:
+        """Cancel the refresh.
+
+        Only issues whose delete was deferred to the refresh are deleted, other
+        issues are left as they are.
+        """
+        self._async_end(self._deferred_deletes & self._state.scope)
+
+    def __enter__(self) -> Self:
+        """Enter the refresh context."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Finish the refresh, or cancel it if an exception was raised."""
+        if exc_type is None:
+            self.async_finish()
+        else:
+            self.async_cancel()
+
+
 class IssueRegistry(BaseRegistry):
     """Class to hold a registry of issues."""
 
@@ -126,6 +244,11 @@ class IssueRegistry(BaseRegistry):
         """Initialize the issue registry."""
         self.hass = hass
         self.issues: dict[tuple[str, str], IssueEntry] = {}
+        # Active refreshes, oldest first
+        self._refreshes: list[_RefreshState] = []
+        # Issues whose delete was deferred to the newest refresh which has them in
+        # its set, they are all untouched by that refresh
+        self._deferred_deletes: set[tuple[str, str]] = set()
         self._store = IssueRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -140,6 +263,7 @@ class IssueRegistry(BaseRegistry):
         return self.issues.get((domain, issue_id))
 
     @callback
+    @verify_event_loop_thread("issue_registry.async_get_or_create")
     def async_get_or_create(
         self,
         domain: str,
@@ -157,7 +281,6 @@ class IssueRegistry(BaseRegistry):
         translation_placeholders: dict[str, str] | None = None,
     ) -> IssueEntry:
         """Get issue. Create if it doesn't exist."""
-        self.hass.verify_event_loop_thread("issue_registry.async_get_or_create")
         if (
             config_entry_id is not None
             and self.hass.config_entries.async_get_entry(config_entry_id) is None
@@ -165,6 +288,7 @@ class IssueRegistry(BaseRegistry):
             raise HomeAssistantError(
                 f"Can't link issue to unknown config entry {config_entry_id}"
             )
+        self._async_touch((domain, issue_id))
         if (issue := self.async_get_issue(domain, issue_id)) is None:
             issue = IssueEntry(
                 active=True,
@@ -224,10 +348,22 @@ class IssueRegistry(BaseRegistry):
         return issue
 
     @callback
-    def async_delete(self, domain: str, issue_id: str) -> None:
-        """Delete issue."""
-        self.hass.verify_event_loop_thread("issue_registry.async_delete")
-        if self.issues.pop((domain, issue_id), None) is None:
+    @verify_event_loop_thread("issue_registry.async_delete")
+    def async_delete(
+        self, domain: str, issue_id: str, *, defer_to_refresh: bool = False
+    ) -> None:
+        """Delete issue, see async_delete_issue."""
+        key = (domain, issue_id)
+        if (
+            defer_to_refresh
+            and (owner := _newest_refresh(self._refreshes, key)) is not None
+        ):
+            # A create or keep since the refresh began wins, also before this delete
+            if key in owner.untouched:
+                self._deferred_deletes.add(key)
+            return
+        self._async_touch(key)
+        if self.issues.pop(key, None) is None:
             return
 
         self.async_schedule_save()
@@ -239,6 +375,19 @@ class IssueRegistry(BaseRegistry):
                 issue_id=issue_id,
             ),
         )
+
+    @callback
+    @verify_event_loop_thread("issue_registry.async_keep")
+    def async_keep(self, domain: str, issue_id: str) -> None:
+        """Keep an issue in active refreshes, see async_keep_issue."""
+        self._async_touch((domain, issue_id))
+
+    @callback
+    def _async_touch(self, key: tuple[str, str]) -> None:
+        """Take a created, updated or deleted issue out of active refreshes."""
+        for state in self._refreshes:
+            state.untouched.discard(key)
+        self._deferred_deletes.discard(key)
 
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
@@ -278,9 +427,9 @@ class IssueRegistry(BaseRegistry):
         return entry is not None and entry.disabled_by is not None
 
     @callback
+    @verify_event_loop_thread("issue_registry.async_ignore")
     def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
         """Ignore issue."""
-        self.hass.verify_event_loop_thread("issue_registry.async_ignore")
         old = self.issues[(domain, issue_id)]
         dismissed_version = ha_version if ignore else None
         if old.dismissed_version == dismissed_version:
@@ -302,6 +451,42 @@ class IssueRegistry(BaseRegistry):
         )
 
         return issue
+
+    @callback
+    @verify_event_loop_thread("issue_registry.async_refresh_issues")
+    def async_refresh_issues(
+        self,
+        domain: str,
+        *,
+        issue_id_pattern: str | re.Pattern[str] | None = None,
+        issue_ids: Iterable[str] | None = None,
+        config_entry_id: str | None = None,
+    ) -> IssuesRefresh:
+        """Begin a refresh of a set of issues, see the async_refresh_issues helper."""
+        if issue_id_pattern is not None and issue_ids is not None:
+            raise ValueError("At most one of issue_id_pattern and issue_ids is allowed")
+        if issue_ids is not None:
+            candidates = {
+                key
+                for issue_id in issue_ids
+                if (key := (domain, issue_id)) in self.issues
+            }
+        elif issue_id_pattern is None:
+            candidates = {key for key in self.issues if key[0] == domain}
+        else:
+            pattern = re.compile(issue_id_pattern)
+            candidates = {
+                key for key in self.issues if key[0] == domain and pattern.match(key[1])
+            }
+        if config_entry_id is not None:
+            candidates = {
+                key
+                for key in candidates
+                if self.issues[key].config_entry_id == config_entry_id
+            }
+        return IssuesRefresh(
+            self.hass, domain, self._refreshes, self._deferred_deletes, candidates
+        )
 
     @callback
     def make_read_only(self) -> None:
@@ -486,13 +671,20 @@ def create_issue(
 
 
 @callback
-def async_delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
+def async_delete_issue(
+    hass: HomeAssistant, domain: str, issue_id: str, *, defer_to_refresh: bool = False
+) -> None:
     """Delete an issue.
 
     It is not an error to delete an issue that does not exist.
+
+    With defer_to_refresh, an issue in the set of an active refresh is left for that
+    refresh to delete, so it survives if it is created or kept again while the
+    refresh runs. Otherwise it is deleted immediately. This is meant for entities
+    removed during a reload, which may create the issue again.
     """
     issue_registry = async_get(hass)
-    issue_registry.async_delete(domain, issue_id)
+    issue_registry.async_delete(domain, issue_id, defer_to_refresh=defer_to_refresh)
 
 
 def delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
@@ -503,6 +695,49 @@ def delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
     return run_callback_threadsafe(
         hass.loop, async_delete_issue, hass, domain, issue_id
     ).result()
+
+
+@callback
+def async_refresh_issues(
+    hass: HomeAssistant,
+    domain: str,
+    *,
+    issue_id_pattern: str | re.Pattern[str] | None = None,
+    issue_ids: Iterable[str] | None = None,
+    config_entry_id: str | None = None,
+) -> IssuesRefresh:
+    """Begin a refresh of a set of issues.
+
+    When the refresh finishes, issues in the set which were not created, updated,
+    deleted or kept since it began are deleted. Issues which are still valid thus
+    keep user customizations such as the ignore flag.
+
+    The set is selected by issue_id_pattern, a regular expression matched from the
+    start of the issue id, or by issue_ids, and can be narrowed down to the issues
+    linked to config_entry_id. Without issue_id_pattern and issue_ids, the set is
+    all issues of the domain.
+
+    The returned object is a context manager which finishes the refresh on a clean
+    exit and cancels it if an exception is raised.
+    """
+    return async_get(hass).async_refresh_issues(
+        domain,
+        issue_id_pattern=issue_id_pattern,
+        issue_ids=issue_ids,
+        config_entry_id=config_entry_id,
+    )
+
+
+@callback
+def async_keep_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
+    """Keep an issue in all active refreshes without creating or updating it.
+
+    This has the same effect on active refreshes as creating the issue again
+    unchanged, including dropping a deferred delete. It allows code which can't
+    tell whether an issue is still valid to keep it without access to the refresh
+    object. If no active refresh has the issue in its set, nothing happens.
+    """
+    async_get(hass).async_keep(domain, issue_id)
 
 
 @callback

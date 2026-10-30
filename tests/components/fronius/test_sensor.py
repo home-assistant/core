@@ -11,10 +11,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
+    FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -39,11 +40,11 @@ async def test_symo_inverter(
     await setup_fronius_integration(hass)
 
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
-    assert_state("sensor.symo_20_dc_current", 0)
+    assert_state("sensor.symo_20_mppt_1_dc_current", 0)
     assert_state("sensor.symo_20_energy_day", 10828)
     assert_state("sensor.symo_20_total_energy", 44186900)
     assert_state("sensor.symo_20_energy_year", 25507686)
-    assert_state("sensor.symo_20_dc_voltage", 16)
+    assert_state("sensor.symo_20_mppt_1_dc_voltage", 16)
     assert_state("sensor.symo_20_status_message", "startup")
 
     # Second test at daytime when inverter is producing
@@ -53,11 +54,11 @@ async def test_symo_inverter(
     await hass.async_block_till_done()
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 65
     # 4 additional AC entities
-    assert_state("sensor.symo_20_dc_current", 2.19)
+    assert_state("sensor.symo_20_mppt_1_dc_current", 2.19)
     assert_state("sensor.symo_20_energy_day", 1113)
     assert_state("sensor.symo_20_total_energy", 44188000)
     assert_state("sensor.symo_20_energy_year", 25508798)
-    assert_state("sensor.symo_20_dc_voltage", 518)
+    assert_state("sensor.symo_20_mppt_1_dc_voltage", 518)
     assert_state("sensor.symo_20_ac_current", 5.19)
     assert_state("sensor.symo_20_frequency", 49.94)
     assert_state("sensor.symo_20_ac_power", 1190)
@@ -188,6 +189,95 @@ async def test_symo_meter_forged(
     assert_state(
         "sensor.smart_meter_63a_meter_location_description", expected_description
     )
+
+
+@pytest.mark.parametrize(
+    ("fixture_set", "is_logger", "fixture", "keys", "details", "entity_id"),
+    [
+        pytest.param(
+            "symo",
+            True,
+            "symo/GetMeterRealtimeData.json",
+            ["Body", "Data", "0", "Details"],
+            None,
+            "sensor.smart_meter_63a_real_power",
+            id="meter_without_details",
+        ),
+        pytest.param(
+            "symo",
+            True,
+            "symo/GetMeterRealtimeData.json",
+            ["Body", "Data", "0", "Details"],
+            {"Manufacturer": "Fronius", "Model": "Smart Meter 63A"},
+            "sensor.smart_meter_63a_real_power",
+            id="meter_without_serial",
+        ),
+        pytest.param(
+            "gen24_storage",
+            False,
+            "gen24_storage/GetOhmPilotRealtimeData.json",
+            ["Body", "Data", "0", "Details"],
+            None,
+            "sensor.ohmpilot_power",
+            id="ohmpilot_without_details",
+        ),
+        pytest.param(
+            "gen24_storage",
+            False,
+            "gen24_storage/GetStorageRealtimeData.json",
+            ["Body", "Data", "0", "Controller", "Details"],
+            None,
+            "sensor.byd_battery_box_premium_hv_state_of_charge",
+            id="storage_without_details",
+        ),
+    ],
+)
+async def test_device_without_serial(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    fixture_set: str,
+    is_logger: bool,
+    fixture: str,
+    keys: list[str],
+    details: dict[str, str] | None,
+    entity_id: str,
+) -> None:
+    """Test entities are only added once a device reports its serial number."""
+    mock_responses(
+        aioclient_mock,
+        fixture_set=fixture_set,
+        override_data={fixture: [(keys, details)]},
+    )
+    await setup_fronius_integration(hass, is_logger=is_logger)
+    # without a serial number the unique IDs would collide between devices
+    assert hass.states.get(entity_id) is None
+
+    mock_responses(aioclient_mock, fixture_set=fixture_set)
+    freezer.tick(FroniusMeterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is not None
+
+
+async def test_symo_meter_gone(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test meter entities when the meter is no longer reported."""
+    mock_responses(aioclient_mock)
+    await setup_fronius_integration(hass)
+    assert hass.states.get("sensor.smart_meter_63a_real_power").state == "5592.57"
+
+    mock_responses(
+        aioclient_mock,
+        override_data={"symo/GetMeterRealtimeData.json": [(["Body", "Data"], {})]},
+    )
+    freezer.tick(FroniusMeterUpdateCoordinator.default_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.smart_meter_63a_real_power").state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -332,8 +422,25 @@ async def test_gen24_storage(
         (DOMAIN, "12345678"), config_entry.entry_id
     )
     assert inverter_1.manufacturer == "Fronius"
-    assert inverter_1.model == "Gen24"
+    assert inverter_1.model == "GEN24/Tauro/Verto"
     assert inverter_1.name == "Gen24 Storage"
+
+    # one child device per MPPT module of the inverter
+    for mppt_no in (1, 2):
+        mppt = device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"12345678-mppt-{mppt_no}"), config_entry.entry_id
+        )
+        assert mppt
+        assert mppt.parent_device_id == inverter_1.id
+        assert mppt.name == f"MPPT {mppt_no}"
+        assert mppt == snapshot(name=f"mppt_{mppt_no}")
+        for entity_id in (
+            f"sensor.gen24_storage_mppt_{mppt_no}_dc_current",
+            f"sensor.gen24_storage_mppt_{mppt_no}_dc_voltage",
+        ):
+            entity_entry = entity_registry.async_get(entity_id)
+            assert entity_entry
+            assert entity_entry.device_id == mppt.id
 
     meter = device_registry.async_get_device_by_identifier(
         (DOMAIN, "1234567890"), config_entry.entry_id

@@ -788,18 +788,16 @@ class HomeKit:
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
         self._async_purge_old_bridges(dev_reg, identifier, connection)
         accessory_type = type(self.driver.accessory).__name__
-        dev_reg.async_get_or_create_device(
+        dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={
-                    identifier  # type: ignore[arg-type]
-                },  # this needs to be migrated as a 2 item tuple at some point
-                connections={connection},
-                manufacturer=MANUFACTURER,
-                name=accessory_friendly_name(self._entry_title, self.driver.accessory),
-                model=accessory_type,
-                entry_type=dr.DeviceEntryType.SERVICE,
-            ),
+            identifiers={
+                identifier  # type: ignore[arg-type]
+            },  # this needs to be migrated as a 2 item tuple at some point
+            connections={connection},
+            manufacturer=MANUFACTURER,
+            name=accessory_friendly_name(self._entry_title, self.driver.accessory),
+            model=accessory_type,
+            entry_type=dr.DeviceEntryType.SERVICE,
         )
 
     @callback

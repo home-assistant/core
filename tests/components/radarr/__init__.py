@@ -198,7 +198,7 @@ async def setup_integration(
     return entry
 
 
-def patch_async_setup_entry(return_value=True):
+def patch_async_setup_entry(return_value=None):
     """Patch the async entry setup of radarr."""
     return patch(
         "homeassistant.components.radarr.async_setup_entry",

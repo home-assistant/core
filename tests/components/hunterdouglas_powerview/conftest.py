@@ -6,11 +6,20 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 from aiopvapi.resources.shade import ShadePosition
 import pytest
 from pytest_homeassistant.common import (
+    MockConfigEntry,
     load_json_object_fixture,
     load_json_value_fixture,
 )
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
+
+from .const import MOCK_MAC
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mocked config entry."""
+    return MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
 
 
 @pytest.fixture
@@ -18,7 +27,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.hunterdouglas_powerview.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

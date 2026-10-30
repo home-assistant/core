@@ -24,3 +24,11 @@ class SwitchDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(SwitchDeviceClass))
+
+
+class SwitchService(StrEnum):
+    """Store keys for switch services."""
+
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"

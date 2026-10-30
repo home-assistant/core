@@ -1391,7 +1391,7 @@ async def test_async_migrate_entry_discovers_legacy_domain(
 
     with patch(
         "homeassistant.components.izone.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

@@ -31,7 +31,7 @@ async def test_setup_user(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    with patch("homeassistant.components.ibeacon.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.ibeacon.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )

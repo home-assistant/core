@@ -98,7 +98,7 @@ async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str) -> None:
         patch("justnimbus.JustNimbusClient.get_data"),
         patch(
             "homeassistant.components.justnimbus.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

@@ -6,7 +6,6 @@ from pynobo import PynoboConnectionError, nobo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_NAME,
     CONF_IP_ADDRESS,
     CONF_MAC,
     EVENT_HOMEASSISTANT_STOP,
@@ -102,18 +101,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> N
     connections: set[tuple[str, str]] = set()
     if mac := entry.data.get(CONF_MAC):
         connections.add((CONNECTION_NETWORK_MAC, mac))
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, hub.hub_serial)},
-            connections=connections,
-            serial_number=hub.hub_serial,
-            name=hub.hub_info[ATTR_NAME],
-            manufacturer=NOBO_MANUFACTURER,
-            model="Nobø Ecohub",
-            sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
-            hw_version=hub.hub_info[ATTR_HARDWARE_VERSION],
-        ),
+        identifiers={(DOMAIN, hub.hub_serial)},
+        connections=connections,
+        serial_number=hub.hub_serial,
+        name=hub.hub_info["name"],
+        manufacturer=NOBO_MANUFACTURER,
+        model="Nobø Ecohub",
+        sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
+        hw_version=hub.hub_info[ATTR_HARDWARE_VERSION],
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

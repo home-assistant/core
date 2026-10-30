@@ -17,7 +17,7 @@ def mock_setup_entry() -> Generator[MagicMock]:
     """Create a mock for the nextbus component setup."""
     with patch(
         "homeassistant.components.nextbus.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

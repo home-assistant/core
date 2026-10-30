@@ -54,15 +54,13 @@ async def async_setup_entry(
 
     device_registry = dr.async_get(hass)
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, agent_client.unique)},
-            manufacturer="iSpyConnect",
-            name=f"Agent {agent_client.name}",
-            model="Agent DVR",
-            sw_version=agent_client.version,
-        ),
+        identifiers={(DOMAIN, agent_client.unique)},
+        manufacturer="iSpyConnect",
+        name=f"Agent {agent_client.name}",
+        model="Agent DVR",
+        sw_version=agent_client.version,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

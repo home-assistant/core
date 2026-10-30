@@ -237,6 +237,9 @@
       "block_facebook": {
         "name": "Block Facebook"
       },
+      "block_fast_flux_networks": {
+        "name": "Block fast-flux networks"
+      },
       "block_fortnite": {
         "name": "Block Fortnite"
       },
@@ -251,6 +254,9 @@
       },
       "block_hbomax": {
         "name": "Block HBO Max"
+      },
+      "block_high_risk_tlds": {
+        "name": "Block high-risk TLDs"
       },
       "block_hulu": {
         "name": "Block Hulu"
@@ -275,6 +281,9 @@
       },
       "block_netflix": {
         "name": "Block Netflix"
+      },
+      "block_newly_active_domains": {
+        "name": "Block newly active domains"
       },
       "block_nrd": {
         "name": "Block newly registered domains"
@@ -351,6 +360,9 @@
       "block_twitter": {
         "name": "Block X (formerly Twitter)"
       },
+      "block_untrusted_certificates": {
+        "name": "Block untrusted certificates"
+      },
       "block_video_streaming": {
         "name": "Block video streaming"
       },
@@ -386,6 +398,12 @@
       },
       "dga_protection": {
         "name": "Domain generation algorithms protection"
+      },
+      "dns_data_exfiltration_protection": {
+        "name": "DNS data exfiltration protection"
+      },
+      "dns_payload_delivery_protection": {
+        "name": "DNS payload delivery protection"
       },
       "dns_rebinding_protection": {
         "name": "DNS rebinding protection"

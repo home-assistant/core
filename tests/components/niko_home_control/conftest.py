@@ -19,7 +19,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override integration setup."""
     with patch(
         "homeassistant.components.niko_home_control.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

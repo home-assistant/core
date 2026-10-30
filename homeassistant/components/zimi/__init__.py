@@ -45,16 +45,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> None
     entry.runtime_data = api
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, api.mac)},
-            manufacturer=api.brand,
-            name=api.network_name,
-            model="Zimi Cloud Connect",
-            sw_version=api.firmware_version,
-            connections={(CONNECTION_NETWORK_MAC, api.mac)},
-        ),
+        identifiers={(DOMAIN, api.mac)},
+        manufacturer=api.brand,
+        name=api.network_name,
+        model="Zimi Cloud Connect",
+        sw_version=api.firmware_version,
+        connections={(CONNECTION_NETWORK_MAC, api.mac)},
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

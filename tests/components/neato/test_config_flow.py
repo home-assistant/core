@@ -74,7 +74,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.neato.async_setup_entry", return_value=True
+        "homeassistant.components.neato.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -149,7 +149,7 @@ async def test_reauth(
 
     # Update entry
     with patch(
-        "homeassistant.components.neato.async_setup_entry", return_value=True
+        "homeassistant.components.neato.async_setup_entry", return_value=None
     ) as mock_setup:
         result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
         await hass.async_block_till_done()

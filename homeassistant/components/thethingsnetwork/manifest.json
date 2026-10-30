@@ -1,6 +1,6 @@
 {
   "domain": "thethingsnetwork",
-  "name": "The Things Network",
+  "name": "The Things Network (Cloud Storage)",
   "categories": [
     "hubs_protocols.wireless_protocols",
     "diy_makers.web_data_connectors"

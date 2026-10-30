@@ -10,7 +10,7 @@ from pytest_homeassistant.components.diagnostics import (
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fibaro import DOMAIN
+from homeassistant.components.fibaro.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 

@@ -117,6 +117,9 @@
       "reset_side_brush_consumable": {
         "name": "Reset side brush consumable"
       },
+      "resolve_dock_error": {
+        "name": "Resolve dock error"
+      },
       "shutdown": {
         "name": "Shut down"
       },
@@ -750,11 +753,17 @@
     "map_failure": {
       "message": "Something went wrong creating the map"
     },
+    "map_not_found": {
+      "message": "Map not found"
+    },
     "mqtt_unauthorized": {
       "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."
     },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
+    },
+    "no_dock_error_to_resolve": {
+      "message": "There is no dock error to resolve"
     },
     "no_user_agreement": {
       "message": "You have not valid user agreement. Open your Roborock app and accept the agreement."

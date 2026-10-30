@@ -1,6 +1,6 @@
 {
   "domain": "flow_it",
-  "name": "Flow-it",
+  "name": "AriaQ",
   "after_dependencies": ["zeroconf"],
   "categories": ["climate.fans_ventilation"],
   "codeowners": ["@albertogeniola"],

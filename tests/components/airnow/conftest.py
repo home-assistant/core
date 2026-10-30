@@ -12,6 +12,10 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
+TEST_API_KEY = "abc123"
+TEST_LATITUDE = 34.053718
+TEST_LONGITUDE = -118.244842
+
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(
@@ -34,9 +38,9 @@ def config_entry_fixture(
 def config_fixture() -> dict[str, Any]:
     """Define a config entry data fixture."""
     return {
-        CONF_API_KEY: "abc123",
-        CONF_LATITUDE: 34.053718,
-        CONF_LONGITUDE: -118.244842,
+        CONF_API_KEY: TEST_API_KEY,
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
     }
 
 

@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> N
 
     # Register the main device so zone child devices can resolve it as their
     # via_device regardless of platform setup order.
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
         device_info=coordinator.device_info,
     )

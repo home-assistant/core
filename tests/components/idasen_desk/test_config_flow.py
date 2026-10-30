@@ -36,7 +36,7 @@ async def test_user_step_success(hass: HomeAssistant, mock_desk_api: MagicMock) 
     mock_request_active_scan.assert_awaited_once_with(hass)
 
     with patch(
-        "homeassistant.components.idasen_desk.async_setup_entry", return_value=True
+        "homeassistant.components.idasen_desk.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -79,7 +79,7 @@ async def test_user_step_replaces_ignored_device(
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.idasen_desk.async_setup_entry", return_value=True
+        "homeassistant.components.idasen_desk.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -177,7 +177,7 @@ async def test_user_step_cannot_connect(
     mock_desk_api.connect.side_effect = default_connect_side_effect
     with patch(
         "homeassistant.components.idasen_desk.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -211,7 +211,7 @@ async def test_bluetooth_step_success(
 
     with patch(
         "homeassistant.components.idasen_desk.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

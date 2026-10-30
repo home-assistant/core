@@ -52,7 +52,7 @@ FIXTURE_UPLOAD_UUID = "0123456789abcdef0123456789abcdef"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.influxdb.async_setup_entry", return_value=True
+        "homeassistant.components.influxdb.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

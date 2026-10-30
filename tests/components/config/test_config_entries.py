@@ -28,7 +28,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -2307,7 +2307,9 @@ async def test_disable_entry(
             core_ce.ConfigEntryState.SETUP_RETRY,
             id="setup_retry",
         ),
-        pytest.param(None, core_ce.ConfigEntryState.SETUP_ERROR, id="setup_error"),
+        pytest.param(
+            ConfigEntryError, core_ce.ConfigEntryState.SETUP_ERROR, id="setup_error"
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -2320,7 +2322,7 @@ async def test_disable_entry(
 async def test_enable_entry_setup_fails(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    side_effect: type[Exception] | None,
+    side_effect: type[Exception],
     expected_state: core_ce.ConfigEntryState,
     loaded_components: set[str],
 ) -> None:
@@ -2328,7 +2330,7 @@ async def test_enable_entry_setup_fails(
     assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
-    mock_setup_entry = AsyncMock(side_effect=side_effect, return_value=False)
+    mock_setup_entry = AsyncMock(side_effect=side_effect)
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
     entry = MockConfigEntry(domain="comp", disabled_by=core_ce.ConfigEntryDisabler.USER)
@@ -2361,7 +2363,7 @@ async def test_enable_entry_component_setup_fails(
     assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(

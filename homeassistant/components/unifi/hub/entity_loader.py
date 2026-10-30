@@ -8,22 +8,26 @@ import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
 from functools import partial
+import json
 from typing import TYPE_CHECKING, Any
 
+import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
 from homeassistant.core import async_noop, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
-from ..coordinator import UnifiDataUpdateCoordinator
+from ..coordinator import UPDATE_TIMEOUT, UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
+from .connection import ACCOUNT_ERRORS, LOGIN_ERRORS, NOT_READY_ERRORS, REQUEST_TIMEOUT
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -37,11 +41,7 @@ class UnifiEntityLoader:
     def __init__(self, hub: UnifiHub) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
-        self._startup_only_api_updaters = (
-            hub.api.clients_all.update,
-            hub.api.sites.update,
-            hub.api.system_information.update,
-        )
+        self._startup_only_api_updaters = (self._async_update_clients_all,)
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
@@ -89,8 +89,39 @@ class UnifiEntityLoader:
         self.known_objects: set[tuple[str, str]] = set()
         """Tuples of entity description key and object ID of loaded entities."""
 
+    async def async_load_sites(self) -> None:
+        """Load the sites of the console."""
+        try:
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                await self.hub.api.sites.update()
+        except ACCOUNT_ERRORS as err:
+            raise ConfigEntryAuthFailed from err
+        except (
+            TimeoutError,
+            json.JSONDecodeError,
+            aiounifi.AiounifiException,
+        ) as err:
+            raise ConfigEntryNotReady(
+                "UniFi site information is not available"
+            ) from err
+        if not self.hub.api.sites.values():
+            raise ConfigEntryNotReady("UniFi Network has not listed any site yet")
+
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
+        try:
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                await self.hub.api.system_information.update()
+        except ACCOUNT_ERRORS as err:
+            raise ConfigEntryAuthFailed from err
+        except (*NOT_READY_ERRORS, *LOGIN_ERRORS) as err:
+            # A booting console can reject a login for a moment, and the site
+            # list right before was readable
+            raise ConfigEntryNotReady("UniFi Network application is not ready") from err
+        except aiounifi.AiounifiException as err:
+            # The application answers, other data can still be loaded
+            LOGGER.debug("UniFi Network answered system information with: %r", err)
+
         await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),
             self._refresh_data(
@@ -102,6 +133,20 @@ class UnifiEntityLoader:
         )
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
+
+    async def _async_update_clients_all(self) -> None:
+        """Load all known clients to restore inactive ones."""
+        async with asyncio.timeout(UPDATE_TIMEOUT):
+            await self.hub.api.clients_all.update()
+
+    async def async_resync(self) -> None:
+        """Refetch all handler data after a connection is restored."""
+        await asyncio.gather(
+            *(
+                coordinator.async_resync()
+                for coordinator in self._data_coordinators.values()
+            )
+        )
 
     async def _refresh_data(
         self, updaters: Sequence[Callable[[], Coroutine[Any, Any, None]]]

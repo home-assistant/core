@@ -100,17 +100,15 @@ class QbusControllerCoordinator(DataUpdateCoordinator[QbusMqttDevice | None]):
             return
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, self._controller.mac)},
-                identifiers={(DOMAIN, format_mac(self._controller.mac))},
-                manufacturer=MANUFACTURER,
-                model="CTD3.x",
-                name=f"CTD {self._controller.serial_number}",
-                serial_number=self._controller.serial_number,
-                sw_version=self._controller.version,
-            ),
+            connections={(dr.CONNECTION_NETWORK_MAC, self._controller.mac)},
+            identifiers={(DOMAIN, format_mac(self._controller.mac))},
+            manufacturer=MANUFACTURER,
+            model="CTD3.x",
+            name=f"CTD {self._controller.serial_number}",
+            serial_number=self._controller.serial_number,
+            sw_version=self._controller.version,
         )
 
     async def _async_subscribe_to_controller_state(self) -> None:

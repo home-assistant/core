@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the BSB-LAN integration."""
 
-from dataclasses import dataclass, field
+import asyncio
+from dataclasses import dataclass, field, replace
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
@@ -19,7 +20,7 @@ from bsblan import (
 )
 
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -36,7 +37,7 @@ STATE_INCLUDE = [
     "hvac_mode",
     "hvac_action",
 ]
-SENSOR_INCLUDE = ["current_temperature", "outside_temperature", "total_energy"]
+SENSOR_INCLUDE = ["outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
@@ -106,10 +107,18 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             update_interval=SCAN_INTERVAL_FAST,
         )
         self.circuits: list[int] = circuits
+        # Serializes full polls and re-reads after a write, so a poll that
+        # started before a write cannot publish its older values afterwards
+        self._read_lock = asyncio.Lock()
 
     @override
     async def _async_update_data(self) -> BSBLanFastData:
         """Fetch fast-changing data from the BSB-LAN device."""
+        async with self._read_lock:
+            return await self._async_fetch_data()
+
+    async def _async_fetch_data(self) -> BSBLanFastData:
+        """Read every circuit, the sensors and the hot water state."""
         states: dict[int, State] = {}
         host = self.config_entry.data[CONF_HOST]
         try:
@@ -132,7 +141,19 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                             "circuit": str(circuit),
                         },
                     ) from err
-            sensor = await self.client.sensor(include=SENSOR_INCLUDE)
+            try:
+                sensor = await self.client.sensor(include=SENSOR_INCLUDE)
+            except BSBLANAuthError, BSBLANConnectionError:
+                raise
+            except BSBLANMalformedResponseError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="coordinator_sensor_error",
+                    translation_placeholders={"host": host},
+                ) from err
+            except BSBLANError:
+                sensor = self.data.sensor if self.data else Sensor()
+                LOGGER.debug("Sensor data not available on device at %s", host)
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
@@ -164,6 +185,45 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             sensor=sensor,
             dhw=dhw,
         )
+
+    async def async_refresh_circuit(self, circuit: int) -> None:
+        """Re-read a single circuit after a write.
+
+        Much faster than a full refresh, which reads every circuit, the
+        sensors and the hot water state one parameter at a time. If the read
+        fails, the next scheduled refresh catches up.
+        """
+        async with self._read_lock:
+            try:
+                state = await self.client.state(include=STATE_INCLUDE, circuit=circuit)
+            except (BSBLANError, TimeoutError) as err:
+                LOGGER.debug(
+                    "Failed to re-read circuit %d after a write: %s", circuit, err
+                )
+                return
+            self._async_publish(
+                replace(self.data, states={**self.data.states, circuit: state})
+            )
+
+    async def async_refresh_hot_water(self) -> None:
+        """Re-read the hot water state after a write."""
+        async with self._read_lock:
+            try:
+                dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
+            except (BSBLANError, TimeoutError) as err:
+                LOGGER.debug("Failed to re-read hot water state after a write: %s", err)
+                return
+            self._async_publish(replace(self.data, dhw=dhw))
+
+    @callback
+    def _async_publish(self, data: BSBLanFastData) -> None:
+        """Publish partially refreshed data.
+
+        Unlike async_set_updated_data, this keeps the next full poll on
+        schedule, so frequent writes cannot postpone it.
+        """
+        self.data = data
+        self.async_update_listeners()
 
 
 class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):

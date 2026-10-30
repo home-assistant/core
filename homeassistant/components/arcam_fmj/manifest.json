@@ -8,7 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["arcam"],
-  "requirements": ["arcam-fmj==3.0.1"],
+  "requirements": ["arcam-fmj==3.1.1"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",

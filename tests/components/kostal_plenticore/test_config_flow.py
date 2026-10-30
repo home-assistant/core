@@ -45,7 +45,7 @@ def _patch_apiclient_success() -> Generator[None]:
         ) as mock_api_class,
         patch(
             "homeassistant.components.kostal_plenticore.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_api_ctx = MagicMock()
@@ -87,7 +87,7 @@ async def test_form_g1(
 
     with patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         # mock of the context manager instance
         mock_apiclient.login = AsyncMock()
@@ -153,7 +153,7 @@ async def test_form_g2(
 
     with patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         # mock of the context manager instance
         mock_apiclient.login = AsyncMock()
@@ -219,7 +219,7 @@ async def test_form_g2_with_service_code(
 
     with patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         # mock of the context manager instance
         mock_apiclient.login = AsyncMock()
@@ -474,7 +474,7 @@ async def test_reconfigure(
 
     with patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -727,7 +727,7 @@ async def test_reauth(
 
     with patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input

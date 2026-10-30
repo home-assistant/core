@@ -583,7 +583,7 @@ def create_devices(
                 rooms.get(device.device.room_id) if device.device.room_id else None
             )
         created_devices[device.device.device_id] = (
-            device_registry.async_get_or_create_device(
+            device_registry.async_get_or_create_from_info(
                 config_entry_id=entry.entry_id, device_info=device_info
             )
         )

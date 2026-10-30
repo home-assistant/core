@@ -98,6 +98,7 @@ async def test_chat(
     assert [event["event_type"] for event in trace_events] == [
         trace.ConversationTraceEventType.ASYNC_PROCESS,
         trace.ConversationTraceEventType.AGENT_DETAIL,
+        trace.ConversationTraceEventType.TURN_CONTENT,
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
@@ -377,6 +378,7 @@ async def test_function_call(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -461,6 +463,7 @@ async def test_function_exception(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 

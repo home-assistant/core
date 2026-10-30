@@ -71,7 +71,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-def _patch_async_setup_entry(return_value=True):
+def _patch_async_setup_entry(return_value=None):
     return patch(
         "homeassistant.components.nzbget.async_setup_entry",
         return_value=return_value,

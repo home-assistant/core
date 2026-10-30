@@ -23,7 +23,6 @@ from pytest_homeassistant.typing import (
     RecorderInstanceGenerator,
 )
 from sqlalchemy import lambda_stmt, text
-from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import TextClause
@@ -1266,11 +1265,25 @@ def _execute_stmt_lambda_element_failing_once(session: Session) -> Any:
         return util.execute_stmt_lambda_element(session, MagicMock())
 
 
+def _execute_select_failing_once(session: Session) -> Any:
+    """Run a statement through execute_select which fails once."""
+    result = MagicMock()
+    result.all.return_value = ["row"]
+    connection = MagicMock()
+    connection.execute.side_effect = [
+        OperationalError("SELECT", {}, Exception()),
+        result,
+    ]
+    with patch.object(session, "connection", return_value=connection):
+        return util.execute_select(session, MagicMock(), {})
+
+
 QUERIES_FAILING_ONCE = [
     pytest.param(_execute_failing_once, id="execute"),
     pytest.param(
         _execute_stmt_lambda_element_failing_once, id="execute_stmt_lambda_element"
     ),
+    pytest.param(_execute_select_failing_once, id="execute_select"),
 ]
 
 
@@ -1338,9 +1351,6 @@ async def test_execute_stmt_lambda_element(
     hass.states.async_set("sensor.on", "on")
     new_state = hass.states.get("sensor.on")
     await async_wait_recording_done(hass)
-    now = dt_util.utcnow()
-    tomorrow = now + timedelta(days=1)
-    one_week_from_now = now + timedelta(days=7)
     all_calls = 0
 
     class MockExecutor:
@@ -1355,7 +1365,6 @@ async def test_execute_stmt_lambda_element(
             raise SQLAlchemyError
 
     with session_scope(hass=hass) as session:
-        # No time window, we always get a list
         metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
         start_time_ts = dt_util.utcnow().timestamp()
         stmt = lambda_stmt(
@@ -1368,31 +1377,13 @@ async def test_execute_stmt_lambda_element(
         assert rows[0].state == new_state.state
         assert rows[0].metadata_id == metadata_id
 
-        # Time window >= 2 days, we get a ChunkedIteratorResult
-        rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
-        assert isinstance(rows, ChunkedIteratorResult)
-        row = next(rows)
-        assert row.state == new_state.state
-        assert row.metadata_id == metadata_id
-
-        # Time window >= 2 days, we should not get a ChunkedIteratorResult
-        # because orm_rows=False
-        rows = util.execute_stmt_lambda_element(
-            session, stmt, now, one_week_from_now, orm_rows=False
-        )
-        assert not isinstance(rows, ChunkedIteratorResult)
-        row = next(rows)
-        assert row.state == new_state.state
-        assert row.metadata_id == metadata_id
-
-        # Time window < 2 days, we get a list
-        rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+        rows = util.execute_stmt_lambda_element(session, stmt, orm_rows=False)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
         assert rows[0].metadata_id == metadata_id
 
         with patch.object(session, "execute", MockExecutor):
-            rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+            rows = util.execute_stmt_lambda_element(session, stmt)
             assert rows == ["mock_row"]
 
 
@@ -1742,6 +1733,96 @@ def test_retryable_database_job_method(
             "2022-10-01T16:00:00+00:00",
             "2022-10-01T16:01:00+00:00",
             id="offset_change_within_hour",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            # 03:50 +13:45, after the spring-forward from 02:45 +12:45
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            0,
+            "2022-09-24T14:00:00+00:00",
+            "2022-09-24T14:15:00+00:00",
+            id="three_quarter_hour_spring_forward",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            -1,
+            "2022-09-24T13:15:00+00:00",
+            "2022-09-24T14:00:00+00:00",
+            id="three_quarter_hour_spring_forward_previous_hour",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            1,
+            "2022-09-24T14:15:00+00:00",
+            "2022-09-24T15:15:00+00:00",
+            id="three_quarter_hour_spring_forward_next_hour",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            # 02:55 +12:45, after the fall-back from 03:45 +13:45
+            datetime(2022, 4, 2, 14, 10, tzinfo=UTC),
+            0,
+            "2022-04-02T14:00:00+00:00",
+            "2022-04-02T14:15:00+00:00",
+            id="three_quarter_hour_fall_back",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 4, 2, 14, 10, tzinfo=UTC),
+            -1,
+            "2022-04-02T13:15:00+00:00",
+            "2022-04-02T14:00:00+00:00",
+            id="three_quarter_hour_fall_back_previous_hour",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 4, 2, 14, 10, tzinfo=UTC),
+            1,
+            "2022-04-02T14:15:00+00:00",
+            "2022-04-02T15:15:00+00:00",
+            id="three_quarter_hour_fall_back_next_hour",
+        ),
+        pytest.param(
+            "US/Pacific",
+            datetime(2022, 11, 6, 9, 30, tzinfo=UTC),
+            10**6,
+            "2136-12-05T01:00:00+00:00",
+            "2136-12-05T02:00:00+00:00",
+            id="huge_offset",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2022, 10, 1, 15, 45, tzinfo=UTC),
+            100000,
+            "2034-02-26T20:00:00+00:00",
+            "2034-02-26T21:00:00+00:00",
+            id="large_offset_half_hour_dst",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2022, 10, 1, 15, 45, tzinfo=UTC),
+            -100000,
+            "2011-05-06T10:30:00+00:00",
+            "2011-05-06T11:30:00+00:00",
+            id="large_negative_offset_half_hour_dst",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            100000,
+            "2034-02-19T07:15:00+00:00",
+            "2034-02-19T08:15:00+00:00",
+            id="large_offset_three_quarter_hour_dst",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2022, 9, 24, 14, 5, tzinfo=UTC),
+            -100000,
+            "2011-04-29T20:15:00+00:00",
+            "2011-04-29T21:15:00+00:00",
+            id="large_negative_offset_three_quarter_hour_dst",
         ),
     ],
 )

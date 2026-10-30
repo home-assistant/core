@@ -2869,12 +2869,39 @@ async def test_extraction_functions_with_trigger_targets(
                                 "label_id": "combined-label",
                             },
                         },
+                        # Exclude block in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "area_id": "combined-area",
+                                "exclude": {
+                                    "entity_id": "scene.excluded_entity",
+                                    "device_id": "excluded-device",
+                                    "area_id": "excluded-area",
+                                    "floor_id": "excluded-floor",
+                                    "label_id": "excluded-label",
+                                },
+                            },
+                        },
                     ],
                     "conditions": [],
                     "actions": [
                         {
                             "action": "test.script",
                             "data": {"entity_id": "light.action_entity"},
+                        },
+                        {
+                            "action": "test.script",
+                            "target": {
+                                "area_id": "combined-area",
+                                "exclude": {
+                                    "entity_id": "light.action_excluded_entity",
+                                    "device_id": "action-excluded-device",
+                                    "area_id": "action-excluded-area",
+                                    "floor_id": "action-excluded-floor",
+                                    "label_id": "action-excluded-label",
+                                },
+                            },
                         },
                     ],
                 },
@@ -2888,7 +2915,9 @@ async def test_extraction_functions_with_trigger_targets(
         "scene.target_entity_list1",
         "scene.target_entity_list2",
         "scene.combined_entity",
+        "scene.excluded_entity",
         "light.action_entity",
+        "light.action_excluded_entity",
     }
 
     # Test device extraction from trigger targets
@@ -2897,6 +2926,8 @@ async def test_extraction_functions_with_trigger_targets(
         "target-device-1",
         "target-device-2",
         "combined-device",
+        "excluded-device",
+        "action-excluded-device",
     }
 
     # Test area extraction from trigger targets
@@ -2905,6 +2936,8 @@ async def test_extraction_functions_with_trigger_targets(
         "area-target-1",
         "area-target-2",
         "combined-area",
+        "excluded-area",
+        "action-excluded-area",
     }
 
     # Test floor extraction from trigger targets
@@ -2913,6 +2946,8 @@ async def test_extraction_functions_with_trigger_targets(
         "floor-target-1",
         "floor-target-2",
         "combined-floor",
+        "excluded-floor",
+        "action-excluded-floor",
     }
 
     # Test label extraction from trigger targets
@@ -2921,6 +2956,8 @@ async def test_extraction_functions_with_trigger_targets(
         "label-target-1",
         "label-target-2",
         "combined-label",
+        "excluded-label",
+        "action-excluded-label",
     }
 
     # Test automations_with_* functions
@@ -3058,6 +3095,21 @@ async def test_extraction_functions_with_condition_targets(
                             },
                             "options": {"behavior": "any"},
                         },
+                        # Exclude block in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "area_id": "combined-area",
+                                "exclude": {
+                                    "entity_id": "light.excluded_entity",
+                                    "device_id": "excluded-device",
+                                    "area_id": "excluded-area",
+                                    "floor_id": "excluded-floor",
+                                    "label_id": "excluded-label",
+                                },
+                            },
+                            "options": {"behavior": "any"},
+                        },
                     ],
                     "actions": [
                         {
@@ -3077,6 +3129,7 @@ async def test_extraction_functions_with_condition_targets(
         "light.condition_entity_list1",
         "light.condition_entity_list2",
         "light.combined_entity",
+        "light.excluded_entity",
         "light.action_entity",
     }
 
@@ -3086,6 +3139,7 @@ async def test_extraction_functions_with_condition_targets(
         "target-device-1",
         "target-device-2",
         "combined-device",
+        "excluded-device",
     }
 
     # Test area extraction from condition targets
@@ -3094,6 +3148,7 @@ async def test_extraction_functions_with_condition_targets(
         "area-condition-1",
         "area-condition-2",
         "combined-area",
+        "excluded-area",
     }
 
     # Test floor extraction from condition targets
@@ -3102,6 +3157,7 @@ async def test_extraction_functions_with_condition_targets(
         "floor-condition-1",
         "floor-condition-2",
         "combined-floor",
+        "excluded-floor",
     }
 
     # Test label extraction from condition targets
@@ -3110,6 +3166,7 @@ async def test_extraction_functions_with_condition_targets(
         "label-condition-1",
         "label-condition-2",
         "combined-label",
+        "excluded-label",
     }
 
     # Test automations_with_* functions
@@ -4830,6 +4887,150 @@ async def test_unavailable_automation_changed_entity_id(
 
     assert not issue_registry.async_get_issue(
         automation.DOMAIN, "automation.renamed_validation_failed_schema"
+    )
+
+
+BROKEN_AUTOMATION_ISSUE_ID = "automation.bad_automation_validation_failed_schema"
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({CONF_ID: "bad"}, id="single")],
+)
+async def test_reload_keeps_ignored_validation_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    reload_data: dict[str, Any],
+) -> None:
+    """Test an ignored issue survives a reload replacing a still broken automation."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID, True)
+    issue = issue_registry.async_get_issue(
+        automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID
+    )
+    assert issue.dismissed_version is not None
+    old_state = hass.states.get("automation.bad_automation")
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # The changed config makes the reload replace the still broken automation
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            automation.DOMAIN: {
+                "id": "bad",
+                "alias": "bad_automation",
+                "description": "Still broken",
+            }
+        },
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("automation.bad_automation") is not old_state
+    assert events == []
+    assert (
+        issue_registry.async_get_issue(automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID)
+        == issue
+    )
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({CONF_ID: "bad"}, id="single")],
+)
+@pytest.mark.parametrize(
+    "new_config",
+    [
+        pytest.param(
+            {
+                "id": "bad",
+                "alias": "bad_automation",
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": [],
+            },
+            id="fixed",
+        ),
+        pytest.param([], id="removed"),
+    ],
+)
+async def test_reload_deletes_resolved_validation_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    reload_data: dict[str, Any],
+    new_config: dict[str, Any] | list[Any],
+) -> None:
+    """Test the issue is deleted when a broken automation is fixed or removed."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID, True)
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={automation.DOMAIN: new_config},
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID
+    )
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({CONF_ID: "bad"}, id="single")],
+)
+async def test_failed_reload_deletes_issue_of_removed_automation(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    reload_data: dict[str, Any],
+) -> None:
+    """Test the issue of a removed automation is deleted if adding new ones fails."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {automation.DOMAIN: {"id": "bad", "alias": "bad_automation"}},
+    )
+    ir.async_ignore_issue(hass, automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID, True)
+
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={
+                automation.DOMAIN: {
+                    "id": "bad",
+                    "alias": "bad_automation",
+                    "description": "Still broken",
+                }
+            },
+        ),
+        patch(
+            "homeassistant.components.automation.util._create_automation_entities",
+            side_effect=HomeAssistantError("Boom"),
+        ),
+        pytest.raises(HomeAssistantError, match="Boom"),
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN, SERVICE_RELOAD, reload_data, blocking=True
+        )
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        automation.DOMAIN, BROKEN_AUTOMATION_ISSUE_ID
     )
 
 

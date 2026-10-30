@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER, WAN_STATUS
-from .coordinator import UpnpConfigEntry, UpnpDataUpdateCoordinator
+from .coordinator import UpnpConfigEntry
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
@@ -58,14 +58,6 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     """Class for UPnP/IGD binary sensors."""
 
     entity_description: UpnpBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: UpnpDataUpdateCoordinator,
-        entity_description: UpnpBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the base sensor."""
-        super().__init__(coordinator=coordinator, entity_description=entity_description)
 
     @property
     @override

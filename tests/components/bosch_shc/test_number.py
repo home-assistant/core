@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from boschshcpy import SHCRoomThermostat2, SHCWallThermostat
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -19,14 +20,18 @@ from .conftest import (
     shutter_contact2_device,
     smart_plug_compact_device,
     smart_plug_device,
+    thermostat_device,
 )
 
+OFFSET_ENTITY_ID = "number.thermostat_temperature_offset"
 IMPULSE_LENGTH_ENTITY_ID = "number.relay_pulse_length"
 BYPASS_TIMEOUT_ENTITY_ID = "number.shutter_contact_break_function_timeout"
 POWER_THRESHOLD_ENTITY_ID = "number.smart_plug_energy_saving_power_threshold"
 POWER_THRESHOLD_COMPACT_ENTITY_ID = (
     "number.smart_plug_compact_energy_saving_power_threshold"
 )
+LED_BRIGHTNESS_ENTITY_ID = "number.smart_plug_led_brightness"
+LED_BRIGHTNESS_COMPACT_ENTITY_ID = "number.smart_plug_compact_led_brightness"
 ENTER_DURATION_ENTITY_ID = "number.smart_plug_energy_saving_enter_duration"
 ENTER_DURATION_COMPACT_ENTITY_ID = (
     "number.smart_plug_compact_energy_saving_enter_duration"
@@ -335,3 +340,187 @@ async def test_smart_plug_no_enter_duration_support(
 
     assert hass.states.get(ENTER_DURATION_ENTITY_ID) is None
     assert hass.states.get(ENTER_DURATION_COMPACT_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device(offset=1.5)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_offset_value_and_bounds(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The offset and the bounds reported by the device are exposed."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(OFFSET_ENTITY_ID)
+    assert state is not None
+    assert state.state == "1.5"
+    assert state.attributes["min"] == -5.0
+    assert state.attributes["max"] == 5.0
+    assert state.attributes["step"] == 0.5
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {"thermostats": [thermostat_device(offset=1.0, step_size=0.0)]},
+        {"thermostats": [thermostat_device(offset=1.0, step_size=-1.0)]},
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_offset_non_positive_step_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A non-positive device step size falls back to 0.5."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(OFFSET_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["step"] == 0.5
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device(offset=0.0)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_offset_set_value(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setting a value writes it to the thermostat."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.thermostats[0]
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: OFFSET_ENTITY_ID, ATTR_VALUE: -2.5},
+        blocking=True,
+    )
+    assert device.offset == -2.5
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_offset_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No number is created without temperature offset support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(OFFSET_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("device_buckets", "entity_id"),
+    [
+        (
+            {
+                "wallthermostats": [
+                    thermostat_device(offset=1.0, spec=SHCWallThermostat)
+                ]
+            },
+            OFFSET_ENTITY_ID,
+        ),
+        (
+            {
+                "roomthermostats": [
+                    thermostat_device(offset=1.0, spec=SHCRoomThermostat2)
+                ]
+            },
+            OFFSET_ENTITY_ID,
+        ),
+    ],
+    indirect=["device_buckets"],
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_other_thermostat_families_offset(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Wall Thermostat and Room Thermostat II also get the offset number."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1.0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [smart_plug_device(led_brightness=70)],
+            "smart_plugs_compact": [smart_plug_compact_device(led_brightness=20)],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_plug_led_brightness_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The LED brightness of both plug types is exposed."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(LED_BRIGHTNESS_ENTITY_ID)
+    assert state is not None
+    assert state.state == "70"
+    state = hass.states.get(LED_BRIGHTNESS_COMPACT_ENTITY_ID)
+    assert state is not None
+    assert state.state == "20"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smart_plugs": [smart_plug_device(led_brightness=70)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_plug_led_brightness_set_value(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setting a value writes it to the plug."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smart_plugs[0]
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: LED_BRIGHTNESS_ENTITY_ID, ATTR_VALUE: 35},
+        blocking=True,
+    )
+    assert device.led_brightness == 35
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smart_plugs": [smart_plug_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_plug_no_led_brightness_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No entity is created without LED brightness support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(LED_BRIGHTNESS_ENTITY_ID) is None

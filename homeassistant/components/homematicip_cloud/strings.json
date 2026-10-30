@@ -37,6 +37,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "arming_blocked": {
+        "name": "Arming blocked"
+      },
       "chamber_degraded": {
         "name": "Chamber degraded"
       },
@@ -48,6 +51,9 @@
       },
       "raining": {
         "name": "Raining"
+      },
+      "water_alarm": {
+        "name": "Water alarm"
       }
     },
     "event": {
@@ -94,6 +100,9 @@
       "heating": {
         "name": "Heating"
       },
+      "height": {
+        "name": "Height"
+      },
       "smoke_detector_alarm_counter": {
         "name": "Alarm counter"
       },
@@ -121,6 +130,9 @@
       },
       "today_rain": {
         "name": "Today rain"
+      },
+      "water_flow": {
+        "name": "Water flow"
       },
       "window_state": {
         "name": "Window state",

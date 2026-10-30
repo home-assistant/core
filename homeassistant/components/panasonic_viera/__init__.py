@@ -5,15 +5,17 @@ from functools import partial
 import logging
 from typing import Any
 from urllib.error import HTTPError, URLError
+from uuid import UUID
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import probatio
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 
@@ -54,6 +56,23 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+
+
+def mac_from_udn(udn: str) -> str | None:
+    """Return the MAC address a UDN is built from, if any.
+
+    Panasonic TVs use time-based UUIDs (RFC 4122 version 1), whose node field
+    is the MAC address of the device, e.g. uuid:4D454930-0100-1000-8001-D8AFF1123456
+    for a TV whose Ethernet MAC address is D8:AF:F1:12:34:56.
+    """
+    try:
+        uuid = UUID(udn.removeprefix("uuid:"))
+    except ValueError:
+        return None
+    # A node that is not a MAC address has the multicast bit set (RFC 4122 §4.5)
+    if uuid.version != 1 or not uuid.node or uuid.node & (1 << 40):
+        return None
+    return format_mac(f"{uuid.node:012x}")
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -108,6 +127,15 @@ async def async_setup_entry(
             config_entry,
             unique_id=unique_id,
             data={**config, ATTR_DEVICE_INFO: device_info},
+        )
+
+    if (
+        CONF_MAC not in config_entry.data
+        and (device_info := config_entry.data[ATTR_DEVICE_INFO]) is not None
+        and (mac := mac_from_udn(device_info[ATTR_UDN])) is not None
+    ):
+        hass.config_entries.async_update_entry(
+            config_entry, data={**config_entry.data, CONF_MAC: mac}
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

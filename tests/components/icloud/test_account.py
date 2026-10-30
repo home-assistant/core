@@ -1,6 +1,8 @@
 """Tests for the iCloud account."""
 
+from collections.abc import Generator
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -19,6 +21,8 @@ from requests import Response
 
 from homeassistant.components.icloud.account import IcloudAccount
 from homeassistant.components.icloud.const import (
+    ATTR_BATTERY,
+    ATTR_LOW_POWER_MODE,
     ATTR_OWNER_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
@@ -28,13 +32,25 @@ from homeassistant.components.icloud.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 
 from .const import (
     DEVICE,
+    DEVICE_WITH_HALF_A_LOCATION,
+    DEVICE_WITHOUT_BATTERY,
+    DEVICE_WITHOUT_LOCATION,
+    DEVICE_WITHOUT_LOCATION_OR_BATTERY,
+    LOCATION,
     MEMBER_1_FULL_NAME,
     MEMBER_1_PERSON_ID,
     MOCK_CONFIG,
@@ -220,7 +236,10 @@ async def test_setup_success_with_devices(
     )
 
     with patch.object(account, "_schedule_next_fetch"):
-        account.setup()
+        # As the integration does. _determine_interval reaches the state
+        # machine through run_callback_threadsafe, which refuses to run on
+        # the event loop.
+        await hass.async_add_executor_job(account.setup)
 
     assert account.api is not None
     assert account.owner_fullname == "user name"
@@ -235,8 +254,323 @@ async def test_setup_success_with_devices(
 
     # Later updates request a fresh GPS fix on every poll.
     with patch.object(account, "_schedule_next_fetch"):
-        account.update_devices()
+        await hass.async_add_executor_job(account.update_devices)
     assert mock_icloud_service.return_value.devices.refresh_calls == [True]
+
+
+class LiveDevicesContainer:
+    """Devices container that reports whatever payloads the test holds.
+
+    Payloads can be changed, added and removed between polls, the way the
+    devices of an iCloud account change from one poll to the next.
+    """
+
+    def __init__(self, user_info: dict[str, Any], payloads: list[dict]) -> None:
+        """Keep the payloads the container reports."""
+        self.user_info = user_info
+        self._payloads = payloads
+
+    def refresh(self, locate: bool = False) -> None:
+        """Match the FindMyiPhone service interface."""
+
+    def __iter__(self):
+        """Iterate the devices as pyicloud reports them."""
+        return iter([FakeAppleDevice(payload) for payload in self._payloads])
+
+    def __len__(self) -> int:
+        """Return the number of devices."""
+        return len(self._payloads)
+
+    def __getitem__(self, idx):
+        """Return a device by position."""
+        return FakeAppleDevice(self._payloads[idx])
+
+
+@pytest.fixture(name="icloud_devices")
+def mock_icloud_devices_fixture() -> Generator[list[dict[str, Any]]]:
+    """Mock the iCloud service over device payloads a test can change."""
+    payloads: list[dict[str, Any]] = []
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service = service_mock.return_value
+        service.requires_2fa = False
+        service.devices = LiveDevicesContainer(USER_INFO, payloads)
+        yield payloads
+
+
+async def _set_up_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the integration for a config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
+
+
+async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Let the account poll iCloud once more."""
+    freezer.tick(timedelta(minutes=DEFAULT_MAX_INTERVAL + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+def _entities_of_device(hass: HomeAssistant, config_entry: MockConfigEntry) -> set[str]:
+    """Return what the integration offers for the account's devices.
+
+    The tracker platform and the battery sensors each build only what the
+    device reports, so this names which of the two exist.
+    """
+    kinds = set()
+    for entry in er.async_entries_for_config_entry(
+        er.async_get(hass), config_entry.entry_id
+    ):
+        if entry.domain == "device_tracker":
+            kinds.add("tracker")
+        elif entry.unique_id.endswith("_battery"):
+            kinds.add("battery")
+    return kinds
+
+
+@pytest.mark.parametrize(
+    ("device", "expected"),
+    [
+        pytest.param(DEVICE, {"tracker", "battery"}, id="battery_and_location"),
+        pytest.param(DEVICE_WITHOUT_BATTERY, {"tracker"}, id="location_but_no_battery"),
+        pytest.param(
+            DEVICE_WITHOUT_LOCATION, {"battery"}, id="battery_but_no_location"
+        ),
+        pytest.param(DEVICE_WITHOUT_LOCATION_OR_BATTERY, set(), id="neither"),
+        pytest.param(DEVICE_WITH_HALF_A_LOCATION, set(), id="half_a_location_only"),
+    ],
+)
+async def test_a_device_gets_what_it_reports(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+    device: dict[str, Any],
+    expected: set[str],
+) -> None:
+    """Test that a device is offered for each signal it reports, and only those.
+
+    The account feeds both the tracker platform and the battery sensors, and
+    each skips what it cannot use, so a device with only one of the two is
+    still worth having. Filtering on the battery alone dropped a located
+    device that reports none; filtering on the location alone would take the
+    battery sensor away from a device that is not sharing one.
+    """
+    icloud_devices.append(device)
+
+    config_entry = await _set_up_entry(hass)
+
+    assert _entities_of_device(hass, config_entry) == expected
+
+
+async def test_a_device_without_battery_still_reports_its_location(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+) -> None:
+    """Test that a device iCloud reports no battery for gets its coordinates.
+
+    Reading the location used to sit inside the battery block, so letting such
+    a device through on its own would have tracked it with no coordinates.
+    """
+    icloud_devices.append(DEVICE_WITHOUT_BATTERY)
+
+    await _set_up_entry(hass)
+
+    state = hass.states.get("device_tracker.mac_mini")
+    assert state.attributes[ATTR_LATITUDE] == LOCATION["latitude"]
+    assert state.attributes[ATTR_LONGITUDE] == LOCATION["longitude"]
+    assert ATTR_BATTERY not in state.attributes
+    assert hass.states.get("sensor.mac_mini_battery") is None
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        pytest.param({"latitude": 60.2, "longitude": None}, id="one-coordinate"),
+        pytest.param({"latitude": 60.2, "longitude": 24.9}, id="no-accuracy"),
+    ],
+)
+async def test_half_a_location_is_not_tracked(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+    location: dict[str, Any],
+) -> None:
+    """Test that a fix missing anything the tracker reads is never used.
+
+    The tracker and the polling interval read both coordinates and the
+    accuracy, so keeping part of a fix would fail there rather than here. The
+    device is still kept for its battery.
+    """
+    icloud_devices.append(DEVICE | {"location": location})
+
+    await _set_up_entry(hass)
+
+    assert hass.states.get("device_tracker.iphone") is None
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+
+async def test_a_device_gaining_a_battery_gets_its_battery_sensor(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a battery arriving later still creates the battery sensor.
+
+    A device kept for its location alone is added without one, and the sensor
+    platform only builds from the new-device signal, so the battery it starts
+    reporting would otherwise go unnoticed until Home Assistant restarts.
+    """
+    icloud_devices.append(DEVICE_WITHOUT_BATTERY)
+    await _set_up_entry(hass)
+    assert hass.states.get("sensor.mac_mini_battery") is None
+
+    icloud_devices[0] = DEVICE_WITHOUT_BATTERY | {
+        "batteryStatus": "NotCharging",
+        "batteryLevel": 0.4,
+    }
+    await _poll(hass, freezer)
+
+    assert hass.states.get("sensor.mac_mini_battery").state == "40"
+
+
+async def test_devices_appearing_in_one_poll_all_get_their_entities(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the entities of every device that turns up in a poll are built.
+
+    One poll can give a known device a battery and bring another device with
+    it. The platforms are told once the poll has finished adding devices, as
+    they iterate the account's devices while the poll adds them, and what they
+    build then has to cover both.
+    """
+    icloud_devices.append(DEVICE_WITHOUT_BATTERY)
+    await _set_up_entry(hass)
+
+    icloud_devices[0] = DEVICE_WITHOUT_BATTERY | {
+        "batteryStatus": "NotCharging",
+        "batteryLevel": 0.4,
+    }
+    icloud_devices.append(DEVICE | {"id": "device9", "name": "iPad 9"})
+    await _poll(hass, freezer)
+
+    assert hass.states.get("sensor.mac_mini_battery").state == "40"
+    assert hass.states.get("sensor.ipad_9_battery").state == "80"
+    assert hass.states.get("device_tracker.ipad_9") is not None
+
+
+async def test_a_battery_level_that_is_absent_is_not_zero(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a battery iCloud gives no level for is not shown as empty."""
+    icloud_devices.append(DEVICE)
+    await _set_up_entry(hass)
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+
+    icloud_devices[0] = {
+        key: value for key, value in DEVICE.items() if key != "batteryLevel"
+    }
+    await _poll(hass, freezer)
+
+    assert hass.states.get("sensor.iphone_battery").state == STATE_UNKNOWN
+
+
+async def test_a_device_losing_its_battery_stops_reporting_a_level(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a battery iCloud stops reporting is not remembered.
+
+    Keeping a device whose battery disappears - one that has gone to sleep,
+    say - would otherwise leave the level and the low-power flag at whatever
+    they last were, which is what the sensor reads.
+    """
+    icloud_devices.append(DEVICE)
+    await _set_up_entry(hass)
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+    assert hass.states.get("device_tracker.iphone").attributes[ATTR_BATTERY] == 80
+
+    icloud_devices[0] = DEVICE | {"batteryStatus": "Unknown", "batteryLevel": None}
+    await _poll(hass, freezer)
+
+    assert hass.states.get("sensor.iphone_battery").state == STATE_UNKNOWN
+    attributes = hass.states.get("device_tracker.iphone").attributes
+    assert ATTR_BATTERY not in attributes
+    assert ATTR_LOW_POWER_MODE not in attributes
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        pytest.param(None, id="no-location"),
+        pytest.param({"latitude": 60.2, "longitude": None}, id="half-a-location"),
+        pytest.param({"latitude": 60.2}, id="missing-longitude"),
+        pytest.param({"latitude": 60.2, "longitude": 24.9}, id="missing-accuracy"),
+        pytest.param({}, id="empty-location"),
+    ],
+)
+async def test_a_device_that_stops_sharing_its_location_reads_unknown(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+    location: dict[str, Any] | None,
+) -> None:
+    """Test that a location iCloud stops reporting is not kept.
+
+    The tracker would otherwise keep showing the last fix for as long as the
+    device lasts.
+    """
+    icloud_devices.append(DEVICE_WITHOUT_BATTERY)
+    await _set_up_entry(hass)
+    state = hass.states.get("device_tracker.mac_mini")
+    assert state.state != STATE_UNKNOWN
+    assert state.attributes[ATTR_LATITUDE] == LOCATION["latitude"]
+
+    icloud_devices[0] = DEVICE_WITHOUT_BATTERY | {"location": location}
+    await _poll(hass, freezer)
+
+    state = hass.states.get("device_tracker.mac_mini")
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_LATITUDE not in state.attributes
+
+
+async def test_a_tracked_device_is_updated_even_when_it_reports_nothing(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a device already tracked is kept current whatever it reports.
+
+    What decides whether to start tracking a device must not decide whether to
+    keep it up to date. Skipping the update would leave the battery and
+    location it has stopped reporting on show for as long as the device lasts,
+    which is the stale state clearing them was meant to prevent.
+    """
+    icloud_devices.append(DEVICE)
+    await _set_up_entry(hass)
+    assert hass.states.get("sensor.iphone_battery").state == "80"
+    assert hass.states.get("device_tracker.iphone").state != STATE_UNKNOWN
+
+    # The same device now reports neither signal.
+    icloud_devices[0] = DEVICE | {
+        "batteryStatus": "Unknown",
+        "batteryLevel": None,
+        "location": None,
+    }
+    await _poll(hass, freezer)
+
+    assert hass.states.get("sensor.iphone_battery").state == STATE_UNKNOWN
+    state = hass.states.get("device_tracker.iphone")
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_BATTERY not in state.attributes
 
 
 async def test_a_failed_locate_does_not_cost_the_poll(
@@ -358,7 +692,7 @@ async def test_a_poll_with_no_devices_still_schedules_the_next_one(
     schedule.assert_called_once()
 
 
-class FakeAppleDevice:
+class FakeAppleDevice(AppleDevice):
     """A device that reports status through pyicloud's own implementation.
 
     Reusing AppleDevice.status keeps these tests honest about how iCloud data
@@ -372,7 +706,16 @@ class FakeAppleDevice:
 
     def __init__(self, content: dict) -> None:
         """Store the payload iCloud would have returned."""
-        self._content = content
+        super().__init__(
+            content,
+            params={},
+            manager=Mock(is_alive=True),
+            sound_url="",
+            lost_url="",
+            erase_url="",
+            erase_token_url="",
+            message_url="",
+        )
 
     def __getitem__(self, key):
         """Proxy into the raw payload, as AppleDevice does."""
@@ -989,7 +1332,9 @@ async def test_auth_status_on_first_device_refresh_asks_the_user(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
+    # Only the user can clear a rejection, so setup fails as an authentication
+    # failure and Home Assistant starts the reauth flow and stops retrying.
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -1021,7 +1366,7 @@ async def test_rejected_session_on_first_device_refresh_asks_the_user(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -1059,6 +1404,74 @@ async def test_other_api_error_on_first_device_refresh_is_not_a_rejection(
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+
+
+async def test_unreachable_icloud_on_first_device_refresh_retries_the_setup(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+) -> None:
+    """Test that an unreachable iCloud is reported as a connection problem."""
+    service, _ = polling_service
+    type(service).devices = PropertyMock(
+        side_effect=PyiCloudConnectionException(reason="Connection error")
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        config_entry.reason
+        == "An error occurred while connecting to iCloud: Connection error"
+    )
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.parametrize(
+    ("error", "reauth"),
+    [
+        pytest.param(
+            PyiCloudAPIResponseException(
+                "Authentication required", AppleAuthError.LOGIN_TOKEN_EXPIRED
+            ),
+            True,
+            id="auth-status",
+        ),
+        pytest.param(PyiCloudFailedLoginException("rejected"), True, id="failed-login"),
+        pytest.param(
+            PyiCloudAPIResponseException("Service unavailable", 503),
+            False,
+            id="other-status",
+        ),
+    ],
+)
+async def test_devices_rejected_after_the_first_read_are_left_to_the_user(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    error: Exception,
+    reauth: bool,
+) -> None:
+    """Test that a rejection from the closing device update reaches the user.
+
+    The devices were read once to get this far, so this one rarely fails; when
+    it does, the entry still loads and the timer keeps polling.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch.object(IcloudAccount, "update_devices", side_effect=error):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert bool(hass.config_entries.flow.async_progress()) is reauth
+    assert (config_entry.state is ConfigEntryState.LOADED) is reauth
 
 
 async def test_auth_status_on_device_refresh_while_polling_asks_the_user(

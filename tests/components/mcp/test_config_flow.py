@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import httpx2
+from mcp import MCPError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -139,6 +140,7 @@ async def test_form(
             "cannot_connect",
         ),
         (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
+        (MCPError(-32603, "Internal error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -734,6 +736,7 @@ async def test_oauth_discovery_failure(
             "cannot_connect",
         ),
         (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
+        (MCPError(-32603, "Internal error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
@@ -1230,6 +1233,7 @@ async def test_hassio_discovery_already_configured(hass: HomeAssistant) -> None:
             "cannot_connect",
         ),
         (httpx2.HTTPError("Some HTTP error"), "cannot_connect"),
+        (MCPError(-32603, "Internal error"), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )

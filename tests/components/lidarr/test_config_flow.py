@@ -33,7 +33,7 @@ async def _patch_connection(
         text=await async_load_fixture(hass, "system-status.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
-    with patch("homeassistant.components.lidarr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.lidarr.async_setup_entry", return_value=None):
         yield
 
 

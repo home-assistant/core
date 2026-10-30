@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
@@ -34,8 +35,11 @@ async def test_form(hass: HomeAssistant) -> None:
             return_value=TEST_MAC,
         ),
         patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.shutdown"
+        ) as mock_shutdown,
+        patch(
             "homeassistant.components.ialarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -48,17 +52,26 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == TEST_DATA
     assert result2["result"].unique_id == TEST_MAC
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_shutdown.assert_awaited_once()
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("side_effect", [ConnectionError, TimeoutError])
+async def test_form_cannot_connect(
+    hass: HomeAssistant, side_effect: type[Exception]
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
-        side_effect=ConnectionError,
+    with (
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+            side_effect=side_effect,
+        ),
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.shutdown"
+        ) as mock_shutdown,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
@@ -66,6 +79,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+    mock_shutdown.assert_awaited_once()
 
     with (
         patch(
@@ -78,7 +92,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.ialarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -95,9 +109,14 @@ async def test_form_exception(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
-        side_effect=Exception,
+    with (
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+            side_effect=Exception,
+        ),
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.shutdown"
+        ) as mock_shutdown,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
@@ -105,6 +124,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+    mock_shutdown.assert_awaited_once()
 
     with (
         patch(
@@ -117,7 +137,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.ialarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

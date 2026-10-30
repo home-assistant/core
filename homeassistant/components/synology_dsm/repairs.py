@@ -48,6 +48,7 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
         """Handle the first step of a fix flow."""
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders={
                 "docs_url": "https://www.home-assistant.io/integrations/synology_dsm/#backup-location"
@@ -78,6 +79,7 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
             return self.async_abort(reason="no_shares")
 
         return self.async_show_form(
+            step_id="confirm",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(

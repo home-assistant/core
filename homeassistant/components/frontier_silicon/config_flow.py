@@ -167,7 +167,6 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_create_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm", description_placeholders={"name": self._name}
         )

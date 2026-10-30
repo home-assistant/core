@@ -5,6 +5,7 @@ from typing import override
 
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
+from infrared_protocols.codes.edifier.r1380db import EdifierR1380DBCode
 from infrared_protocols.codes.edifier.r1700bt_2017 import EdifierR1700BT2017Code
 from infrared_protocols.codes.edifier.r1700bt_pre_2017 import EdifierR1700BTPre2017Code
 from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
@@ -114,6 +115,33 @@ COMMAND_SET_BUTTONS: dict[
             key="coax",
             translation_key="coax",
             command_code=EdifierR1280DBCode.COAX,
+        ),
+    ),
+    EdifierCommandSet.R1380DB: (
+        EdifierIrButtonEntityDescription(
+            key="bluetooth",
+            translation_key="bluetooth",
+            command_code=EdifierR1380DBCode.BLUETOOTH,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line_1",
+            translation_key="line_1",
+            command_code=EdifierR1380DBCode.LINE_1,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line_2",
+            translation_key="line_2",
+            command_code=EdifierR1380DBCode.LINE_2,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="optical",
+            translation_key="optical",
+            command_code=EdifierR1380DBCode.OPTICAL,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="coax",
+            translation_key="coax",
+            command_code=EdifierR1380DBCode.COAX,
         ),
     ),
     EdifierCommandSet.R2000DB: (

@@ -173,19 +173,17 @@ async def mock_image_config_entry_fixture(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.IMAGE]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload test config entry."""
         await hass.config_entries.async_unload_platforms(config_entry, [Platform.IMAGE])
-        return True
 
     mock_integration(
         hass,

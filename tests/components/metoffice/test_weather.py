@@ -28,8 +28,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import utcnow
 
 from .const import (
-    METOFFICE_CONFIG_KINGSLYNN,
-    METOFFICE_CONFIG_WAVERTREE,
     TEST_COORDINATES_KINGSLYNN,
     TEST_COORDINATES_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
@@ -74,6 +72,7 @@ async def test_site_cannot_connect(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     requests_mock: requests_mock.Mocker,
+    entry: MockConfigEntry,
 ) -> None:
     """Test we handle cannot connect error."""
 
@@ -86,10 +85,6 @@ async def test_site_cannot_connect(
         text="",
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -108,13 +103,10 @@ async def test_site_cannot_update(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     wavertree_data,
+    entry: MockConfigEntry,
 ) -> None:
     """Test we handle cannot connect error."""
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -161,13 +153,10 @@ async def test_one_weather_site_running(
     device_registry: dr.DeviceRegistry,
     requests_mock: requests_mock.Mocker,
     wavertree_data,
+    entry: MockConfigEntry,
 ) -> None:
     """Test the Met Office weather platform."""
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -197,6 +186,8 @@ async def test_two_weather_sites_running(
     device_registry: dr.DeviceRegistry,
     requests_mock: requests_mock.Mocker,
     wavertree_data,
+    entry: MockConfigEntry,
+    entry2: MockConfigEntry,
 ) -> None:
     """Test we handle two different weather sites both running."""
 
@@ -205,10 +196,6 @@ async def test_two_weather_sites_running(
     kingslynn_hourly = json.dumps(mock_json["kingslynn_hourly"])
     kingslynn_daily = json.dumps(mock_json["kingslynn_daily"])
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -222,10 +209,6 @@ async def test_two_weather_sites_running(
         text=kingslynn_daily,
     )
 
-    entry2 = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_KINGSLYNN,
-    )
     entry2.add_to_hass(hass)
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
@@ -265,14 +248,14 @@ async def test_two_weather_sites_running(
 
 @pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_new_config_entry(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor, wavertree_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    no_sensor,
+    wavertree_data,
+    entry: MockConfigEntry,
 ) -> None:
     """Test the expected entities are created."""
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -295,12 +278,10 @@ async def test_forecast_service(
     no_sensor,
     wavertree_data: dict[str, _Matcher],
     service: str,
+    entry: MockConfigEntry,
 ) -> None:
     """Test multiple forecast."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
+
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -342,7 +323,11 @@ async def test_forecast_service(
 
 @pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_legacy_config_entry_is_removed(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor, wavertree_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    no_sensor,
+    wavertree_data,
+    entry: MockConfigEntry,
 ) -> None:
     """Test the expected entities are created."""
     # Pre-create the daily entity
@@ -353,10 +338,6 @@ async def test_legacy_config_entry_is_removed(
         suggested_object_id="met_office_wavertree_daily",
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -375,14 +356,11 @@ async def test_forecast_subscription(
     snapshot: SnapshotAssertion,
     no_sensor,
     wavertree_data: dict[str, _Matcher],
+    entry: MockConfigEntry,
 ) -> None:
     """Test multiple forecast."""
     client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)

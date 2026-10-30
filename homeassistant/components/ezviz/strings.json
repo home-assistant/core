@@ -183,8 +183,12 @@
     "step": {
       "init": {
         "data": {
+          "encryption_password": "Image encryption password",
           "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras",
           "timeout": "Request timeout (seconds)"
+        },
+        "data_description": {
+          "encryption_password": "Password used to decrypt motion pictures when it differs from the camera verification code. Leave empty to use the verification code."
         }
       }
     }

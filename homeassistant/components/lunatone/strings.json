@@ -50,6 +50,15 @@
       }
     },
     "sensor": {
+      "air_humidity": {
+        "name": "Air humidity"
+      },
+      "air_pressure": {
+        "name": "Air pressure"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
       "dali_line_status": {
         "name": "Status",
         "state": {
@@ -58,6 +67,9 @@
           "not_reachable": "Not reachable",
           "ok": "OK"
         }
+      },
+      "eco2": {
+        "name": "Estimated carbon dioxide"
       }
     }
   },

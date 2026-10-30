@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.field_visibility import VISIBLE_SCHEMA
 
 from .const import (
     CONF_AUTHOR,
@@ -25,6 +26,7 @@ from .const import (
     CONF_MIN_VERSION,
     CONF_SOURCE_URL,
     CONF_USE_BLUEPRINT,
+    CONF_VISIBLE,
 )
 
 
@@ -89,6 +91,7 @@ BLUEPRINT_INPUT_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_DESCRIPTION): str,
         probatio.Optional(CONF_DEFAULT): cv.match_all,
         probatio.Optional(CONF_SELECTOR): selector.validate_selector,
+        probatio.Optional(CONF_VISIBLE): VISIBLE_SCHEMA,
     }
 )
 
@@ -98,6 +101,7 @@ BLUEPRINT_INPUT_SECTION_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_ICON): str,
         probatio.Optional(CONF_DESCRIPTION): str,
         probatio.Optional(CONF_COLLAPSED): bool,
+        probatio.Optional(CONF_VISIBLE): VISIBLE_SCHEMA,
         probatio.Required(CONF_INPUT, default=dict): {
             str: probatio.Any(
                 None,

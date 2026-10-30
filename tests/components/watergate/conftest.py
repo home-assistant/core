@@ -1,6 +1,7 @@
 """Fixtures for watergate platform tests."""
 
 from collections.abc import Generator
+from copy import deepcopy
 
 import pytest
 from pytest_homeassistant.common import AsyncMock, MockConfigEntry, patch
@@ -35,22 +36,22 @@ def mock_watergate_client() -> Generator[AsyncMock]:
     ):
         mock_client_instance = mock_client_main.return_value
 
+        # Copy the models per test: webhooks and the switch mutate the coordinator data
+        # in place, so shared instances would leak state between tests.
         # The config flow reads device state v1, the coordinator prefers v2 and falls back
         # to v1 on firmware that does not implement it, so both are mocked.
         mock_client_instance.async_get_device_state = AsyncMock(
-            return_value=DEFAULT_DEVICE_STATE
+            return_value=deepcopy(DEFAULT_DEVICE_STATE)
         )
         mock_client_instance.async_get_device_state_v2 = AsyncMock(
-            return_value=DEFAULT_DEVICE_STATE_V2
+            return_value=deepcopy(DEFAULT_DEVICE_STATE_V2)
         )
         mock_client_instance.async_get_networking = AsyncMock(
-            return_value=DEFAULT_NETWORKING_STATE
+            return_value=deepcopy(DEFAULT_NETWORKING_STATE)
         )
         mock_client_instance.async_get_telemetry_data = AsyncMock(
-            return_value=DEFAULT_TELEMETRY_STATE
+            return_value=deepcopy(DEFAULT_TELEMETRY_STATE)
         )
-        # Build a fresh model per test: the switch mutates auto_shut_off.enabled, so a
-        # shared instance would leak state between tests and create order dependencies.
         mock_client_instance.async_get_auto_shut_off = AsyncMock(
             return_value=AutoShutOffState(True, 1000, 60)
         )

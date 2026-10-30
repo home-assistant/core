@@ -371,7 +371,7 @@ class AppleTVManager(DeviceListener):
                 device_info.connections = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=self.config_entry.entry_id, device_info=device_info
         )
 

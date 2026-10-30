@@ -169,12 +169,11 @@ async def setup_alarm_control_panel_platform_test_entity(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.ALARM_CONTROL_PANEL]
         )
-        return True
 
     mock_integration(
         hass,

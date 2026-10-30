@@ -1,5 +1,6 @@
 """The tests for the notify smtp platform."""
 
+import errno
 import gzip
 from pathlib import Path
 import re
@@ -35,7 +36,7 @@ from homeassistant.components.smtp.const import (
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_RECIPIENT, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -94,11 +95,6 @@ EMAIL_DATA = [
     ),
     (
         "Test msg",
-        {"html": HTML, "images": ["tests/testing_config/notify/test_not_exists.jpg"]},
-        "Content-Type: multipart/related",
-    ),
-    (
-        "Test msg",
         {"html": HTML, "images": ["tests/testing_config/notify/test.pdf"]},
         "Content-Type: multipart/related",
     ),
@@ -111,7 +107,6 @@ EMAIL_DATA = [
     ids=[
         "Tests when sending text message and images.",
         "Tests when sending text message, HTML Template and images.",
-        "Tests when image does not exist at mentioned location.",
         "Tests when image type cannot be detected or is of wrong type.",
     ],
 )
@@ -160,6 +155,36 @@ def test_sending_insecure_files_fails(
     )
     assert exc.value.translation_placeholders["url"]
     assert exc.value.translation_placeholders["file_name"] == "test.jpg"
+
+
+def test_file_not_found(
+    hass: HomeAssistant,
+    message,
+) -> None:
+    """Verify if we cannot send messages when file is not found."""
+    sample_email = "<mock@mock>"
+    message.hass = hass
+    hass.config.allowlist_external_dirs.add(str(Path("tests/testing_config").resolve()))
+    with (
+        patch(
+            "builtins.open",
+            side_effect=FileNotFoundError(
+                errno.ENOENT,
+                "No such file or directory",
+                "tests/testing_config/notify/test.jpg",
+            ),
+        ),
+        patch("email.utils.make_msgid", return_value=sample_email),
+        pytest.raises(ServiceValidationError) as exc,
+    ):
+        _result, _ = message.send_message(
+            "Test msg", data={"images": ["tests/testing_config/notify/test.jpg"]}
+        )
+    assert exc.value.translation_key == "os_read_not_found"
+    assert exc.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc.value.translation_placeholders == {
+        "path": "tests/testing_config/notify/test.jpg"
+    }
 
 
 def test_send_text_message(hass: HomeAssistant, message) -> None:
@@ -652,9 +677,56 @@ async def test_smtp_send_message_media_source_not_supported(
             blocking=True,
         )
     assert err.value.translation_key == "media_source_not_supported"
+
+
+@pytest.mark.usefixtures("smtp", "aiosmtplib")
+async def test_smtp_send_message_os_read_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test sending an email message via smtp.send_message action with attachment read errors."""
+    assert await async_setup_component(hass, "media_source", {})
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with (
+        patch(
+            "pathlib.Path.read_bytes",
+            side_effect=FileNotFoundError(
+                errno.ENOENT, "No such file or directory", "/media/screenshot.jpg"
+            ),
+        ),
+        pytest.raises(
+            ServiceValidationError,
+        ) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+                ATTR_MESSAGE: "Hello World",
+                ATTR_ATTACHMENTS: [
+                    {
+                        ATTR_MEDIA_SOURCE: {
+                            "media_content_id": (
+                                "media-source://media_source/local/screenshot.jpg"
+                            ),
+                            "media_content_type": "image/jpeg",
+                        },
+                        ATTR_FILENAME: "screenshot.jpg",
+                    }
+                ],
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "os_read_not_found"
     assert err.value.translation_placeholders == {
-        "media_content_id": "media-source://xbox/123456789/"
+        "path": str(Path("tests/testing_config/media/screenshot.jpg").resolve())
     }
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
 
 
 @pytest.mark.usefixtures("smtp", "aiosmtplib")

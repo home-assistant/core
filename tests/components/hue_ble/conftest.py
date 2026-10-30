@@ -16,7 +16,7 @@ from . import TEST_DEVICE_MAC, TEST_DEVICE_NAME
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.hue_ble.async_setup_entry", return_value=True
+        "homeassistant.components.hue_ble.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

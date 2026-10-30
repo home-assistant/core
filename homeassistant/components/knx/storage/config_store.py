@@ -25,7 +25,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
-from ..const import DOMAIN, KNX_MODULE_KEY
+from ..const import DOMAIN, KNX_MODULE_KEY, KnxEntityIdentifier
 from ..repairs import (
     async_create_entity_validation_issue,
     async_create_expose_validation_issue,
@@ -351,6 +351,14 @@ class KNXConfigStore:
                 f"Entity not found in {entry.domain}: {entry.unique_id}"
             ) from err
         entity_registry.async_remove(entity_id)
+        # A disabled entity has no entity object to unregister itself. Not guarded
+        # by `entry.disabled`: an entity enabled again stays tracked as disabled
+        # until the config entry is reloaded.
+        self.hass.data[KNX_MODULE_KEY].remove_disabled_entity(
+            KnxEntityIdentifier(
+                platform=entry.domain, unique_id=entry.unique_id, ui=True
+            )
+        )
         await self._store.async_save(self.data)
 
     def get_entity_uids(self) -> set[str]:

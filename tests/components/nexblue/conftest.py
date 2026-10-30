@@ -36,7 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Prevent a config-flow test from setting up the integration."""
-    with patch("homeassistant.components.nexblue.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.nexblue.async_setup_entry", return_value=None):
         yield
 
 

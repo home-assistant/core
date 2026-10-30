@@ -155,6 +155,7 @@ async def test_expose_entity(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {"changed_entity_ids": [entry1.entity_id]}
 
     entry1 = entity_registry.async_get(entry1.entity_id)
     assert entry1.options == {"cloud.alexa": {"should_expose": True}}
@@ -174,6 +175,8 @@ async def test_expose_entity(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    # entry2 was not exposed by default, so stopping to expose it changes nothing
+    assert response["result"] == {"changed_entity_ids": [entry1.entity_id]}
 
     entry1 = entity_registry.async_get(entry1.entity_id)
     assert entry1.options == {
@@ -186,6 +189,20 @@ async def test_expose_entity(
         "cloud.google_assistant": {"should_expose": False},
     }
     assert len(exposed_entities.entities) == 0
+
+    # Setting the same options again changes nothing
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa", "cloud.google_assistant"],
+            "entity_ids": [entry1.entity_id, entry2.entity_id],
+            "should_expose": False,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"changed_entity_ids": []}
 
 
 async def test_expose_entity_unknown(
@@ -212,6 +229,7 @@ async def test_expose_entity_unknown(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {"changed_entity_ids": ["test.test"]}
 
     assert len(exposed_entities.entities) == 1
     assert exposed_entities.entities == {
@@ -230,6 +248,8 @@ async def test_expose_entity_unknown(
 
     response = await ws_client.receive_json()
     assert response["success"]
+    # test.test2 was not exposed by default, so stopping to expose it changes nothing
+    assert response["result"] == {"changed_entity_ids": ["test.test"]}
 
     assert len(exposed_entities.entities) == 2
     assert exposed_entities.entities == {
@@ -246,6 +266,76 @@ async def test_expose_entity_unknown(
             }
         ),
     }
+
+    # Only entities whose exposure changed are returned
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa"],
+            "entity_ids": ["test.test", "test.test3"],
+            "should_expose": True,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"changed_entity_ids": ["test.test", "test.test3"]}
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa"],
+            "entity_ids": ["test.test", "test.test3", "test.test4"],
+            "should_expose": False,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    # test.test4 was not exposed by default, so it is not returned
+    assert response["result"] == {"changed_entity_ids": ["test.test", "test.test3"]}
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("light.test_unique1", id="registry_entity"),
+        pytest.param("light.legacy", id="legacy_entity"),
+    ],
+)
+async def test_expose_entity_default_notifies_listeners(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    entity_id: str,
+) -> None:
+    """Test exposing an entity which is exposed by default notifies listeners."""
+    ws_client = await hass_ws_client(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    entity_registry.async_get_or_create("light", "test", "unique1")
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_expose_new_entities("cloud.alexa", True)
+
+    calls = []
+    async_listen_entity_updates(hass, "cloud.alexa", lambda: calls.append(None))
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa"],
+            "entity_ids": [entity_id],
+            "should_expose": True,
+        }
+    )
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    # The entity was already exposed by default, so its exposure did not change
+    assert response["result"] == {"changed_entity_ids": []}
+    # The setting was stored for the first time, so listeners must still be notified
+    assert len(calls) == 1
 
 
 @pytest.mark.parametrize("expose_new", [True, False])

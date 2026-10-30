@@ -23,6 +23,10 @@ from homeassistant.const import ATTR_MANUFACTURER, CONF_HOST, CONF_NAME, CONF_PO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
+MOCK_USER_INPUT = {
+    CONF_HOST: "0.0.0.0",
+}
+
 MOCK_BASIC_DATA = {
     CONF_HOST: "0.0.0.0",
     CONF_NAME: DEFAULT_NAME,
@@ -40,6 +44,9 @@ MOCK_ENCRYPTION_DATA = {
 }
 
 MOCK_INPUTS = ["TV", "HDMI1", "HDMI2"]
+
+MOCK_MAC = "d8:af:f1:12:34:56"
+MOCK_UDN = "uuid:4D454930-0100-1000-8001-D8AFF1123456"
 
 MOCK_DEVICE_INFO = {
     ATTR_FRIENDLY_NAME: DEFAULT_NAME,

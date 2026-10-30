@@ -12,7 +12,7 @@ from propcache.api import cached_property
 from zha.application.platforms import EntityStateChangedEvent
 from zha.mixins import LogMixin
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -91,6 +91,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         If a device class is set but no translation key,
         the device class name is used.
         """
+        # Group entities take the name of their group device
+        if self.entity_data.is_group_entity:
+            return None
+
         meta = self._zha_state
         if meta.primary:
             self._attr_name = None
@@ -126,15 +130,21 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
+        # Group entities have their own device linked via the coordinator
+        if self.entity_data.is_group_entity:
+            group_proxy = self.entity_data.group_proxy
+            assert group_proxy is not None
+            return group_proxy.device_info
+
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
 
         return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
-            manufacturer=zha_device_info[ATTR_MANUFACTURER],
-            model=zha_device_info[ATTR_MODEL],
-            name=zha_device_info[ATTR_NAME],
+            manufacturer=zha_device_info["manufacturer"],
+            model=zha_device_info["model"],
+            name=zha_device_info["name"],
         )
 
     def _update_capability_attrs(self) -> None:

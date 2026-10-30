@@ -30,6 +30,8 @@ from .const import (
     DATA_INPUT_TEXT,
     DOMAIN,
     SERVICE_SET_VALUE,
+    InputTextService,
+    InputTextServiceArgument,
 )
 from .entity import InputText
 from .services import async_setup_services
@@ -43,9 +45,6 @@ CONF_MAX_VALUE = 100
 MODE_TEXT = "text"
 MODE_PASSWORD = "password"
 
-ATTR_MIN = "min"
-ATTR_MAX = "max"
-ATTR_PATTERN = CONF_PATTERN
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -73,6 +72,8 @@ __all__ = [
     "SERVICE_RELOAD",
     "SERVICE_SET_VALUE",
     "STORAGE_FIELDS",
+    "InputTextService",
+    "InputTextServiceArgument",
 ]
 
 

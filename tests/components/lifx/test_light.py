@@ -1089,7 +1089,7 @@ async def test_kelvin_outside_the_protocol_range_is_rejected(
         await hass.services.async_call(
             DOMAIN,
             "set_state",
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COLOR_TEMP_KELVIN: 1200},
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COLOR_TEMP_KELVIN: 500},
             blocking=True,
         )
 

@@ -1,7 +1,7 @@
 """Select platform for the Alpha Bidet Infrared integration."""
 
-from dataclasses import dataclass
-from typing import override
+from dataclasses import asdict, dataclass
+from typing import Any, override
 
 from infrared_protocols.codes.alpha_bidet.jx2 import AlphaBidetJX2LevelCode
 
@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .const import AlphaBidetModel
 from .entity import AlphaBidetIrEntity
@@ -26,6 +26,18 @@ class AlphaBidetIrSelectEntityDescription(SelectEntityDescription):
     """Describes an Alpha Bidet IR select entity."""
 
     level_code: AlphaBidetJX2LevelCode
+
+
+@dataclass
+class AlphaBidetIrSelectExtraStoredData(ExtraStoredData):
+    """Last level sent, kept even when the entity is unavailable at shutdown."""
+
+    current_option: str | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return asdict(self)
 
 
 MODEL_SELECTS: dict[
@@ -77,9 +89,16 @@ class AlphaBidetIrSelect(AlphaBidetIrEntity, SelectEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore the assumed level, as infrared cannot read it back from the bidet."""
         await super().async_added_to_hass()
-        last_state = await self.async_get_last_state()
-        if last_state is not None and last_state.state in LEVELS:
-            self._attr_current_option = last_state.state
+        if (extra_data := await self.async_get_last_extra_data()) is not None and (
+            option := extra_data.as_dict().get("current_option")
+        ) in LEVELS:
+            self._attr_current_option = option
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> AlphaBidetIrSelectExtraStoredData:
+        """Return the last level sent, to be restored after a restart."""
+        return AlphaBidetIrSelectExtraStoredData(self.current_option)
 
     @override
     async def async_select_option(self, option: str) -> None:

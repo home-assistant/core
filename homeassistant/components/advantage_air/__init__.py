@@ -10,6 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
 from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
+from .helpers import get_system_id
 from .services import async_setup_services
 
 PLATFORMS = [
@@ -53,15 +54,13 @@ async def async_setup_entry(
     # Register the system device so child devices can resolve it as their
     # via_device parent regardless of platform setup order.
     system = coordinator.data["system"]
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, system["rid"])},
-            manufacturer="Advantage Air",
-            model=system["sysType"],
-            name=system["name"],
-            sw_version=system["myAppRev"],
-        ),
+        identifiers={(DOMAIN, get_system_id(system))},
+        manufacturer="Advantage Air",
+        model=system["sysType"],
+        name=system["name"],
+        sw_version=system["myAppRev"],
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

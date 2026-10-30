@@ -1,4 +1,4 @@
-"""Common fixtures for the Flow-it tests."""
+"""Common fixtures for the AriaQ tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -21,7 +21,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_flow_it() -> Generator[AsyncMock]:
+def mock_ariaq() -> Generator[AsyncMock]:
     """Mock FlowItVMCMachine for integration tests."""
     with (
         patch(
@@ -39,7 +39,7 @@ def mock_flow_it() -> Generator[AsyncMock]:
         mock_vmc.refresh_state = AsyncMock()
         mock_vmc.send_command = AsyncMock()
 
-        mock_vmc.get_info.return_value.hostname = "Flow-it Device"
+        mock_vmc.get_info.return_value.hostname = "AriaQ Device"
 
         json_data = load_json_value_fixture("machine_status.json", DOMAIN)
         json_data["name"] = "001122334455"
@@ -56,7 +56,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a mock config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Flow-it Device",
+        title="AriaQ Device",
         unique_id="001122334455",
         data={
             "host": "http://1.1.1.1",

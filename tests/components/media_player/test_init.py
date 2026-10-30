@@ -6,7 +6,7 @@ from unittest.mock import patch
 from aiohttp import hdrs
 import probatio
 import pytest
-from pytest_homeassistant.common import MockEntityPlatform
+from pytest_homeassistant.common import MockEntityPlatform, MockUser
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -25,12 +25,13 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
 )
 from homeassistant.components.media_player.const import (
+    DATA_COMPONENT,
     SERVICE_BROWSE_MEDIA,
     SERVICE_SEARCH_MEDIA,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -569,11 +570,16 @@ async def test_media_browse_service(hass: HomeAssistant) -> None:
 
 
 async def test_media_search(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
 ) -> None:
     """Test browsing media."""
     await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
+
+    player = hass.data[DATA_COMPONENT].get_entity("media_player.search")
+    player.async_set_context(Context(user_id="other-user-id"))
 
     client = await hass_ws_client(hass)
 
@@ -631,6 +637,7 @@ async def test_media_search(
         media_content_id="abcd",
         media_filter_classes={MediaClass.ALBUM},
     )
+    assert player._context.user_id == hass_admin_user.id
 
 
 async def test_media_search_service(hass: HomeAssistant) -> None:
@@ -694,6 +701,20 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     state = hass.states.get("media_player.group")
     assert state.state == STATE_OFF
     assert "group_members" in state.attributes
+
+
+async def test_group_members_without_grouping_support(hass: HomeAssistant) -> None:
+    """Test that group_members are exposed for a player that can not be regrouped."""
+    entity = MediaPlayerEntity()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
+    entity._attr_supported_features = media_player.MediaPlayerEntityFeature(0)
+
+    assert "group_members" not in entity.state_attributes
+
+    entity._attr_group_members = ["media_player.kitchen"]
+
+    assert entity.state_attributes["group_members"] == ["media_player.kitchen"]
 
 
 @pytest.mark.parametrize(

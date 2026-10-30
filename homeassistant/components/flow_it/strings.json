@@ -27,11 +27,11 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Flow-it device.",
+          "host": "The hostname or IP address of the AriaQ device.",
           "password": "The password is available on the physical device LCD display, by interacting with the menu, clicking on the 'settings' icon and then on the 'wifi icon'.",
           "username": "The default username is 'api'."
         },
-        "title": "Configure Flow-it"
+        "title": "Configure AriaQ"
       },
       "zeroconf_confirm": {
         "data": {
@@ -43,7 +43,7 @@
           "username": "[%key:component::flow_it::config::step::user::data_description::username%]"
         },
         "description": "Do you want to set up {name}?",
-        "title": "Discovered Flow-it"
+        "title": "Discovered AriaQ"
       }
     }
   },
@@ -125,10 +125,10 @@
   },
   "exceptions": {
     "auth_failed": {
-      "message": "Authentication failed when communicating with Flow-it VMC"
+      "message": "Authentication failed when communicating with AriaQ VMC"
     },
     "command_failed": {
-      "message": "Failed to send command to Flow-it VMC"
+      "message": "Failed to send command to AriaQ VMC"
     },
     "update_failed": {
       "message": "Error communicating with API"

@@ -91,11 +91,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with (
         patch(
             "homeassistant.components.keyboard_remote.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
         patch(
             "homeassistant.components.keyboard_remote.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield mock

@@ -36,7 +36,7 @@ from homeassistant.components.light import (
     STATE_ON,
     ColorMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockGenericDeviceEntryType
@@ -2061,3 +2061,48 @@ async def test_light_no_color_modes(
         [call(key=1, state=True, color_mode=0, device_id=0)]
     )
     mock_client.light_command.reset_mock()
+
+
+async def test_light_turn_on_before_state_received(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test turning on a light with color modes before its first state arrives."""
+    mock_client.api_version = APIVersion(1, 7)
+    entity_info = [
+        LightInfo(
+            object_id="mylight",
+            key=1,
+            name="my light",
+            supported_color_modes=[
+                LightColorCapability.ON_OFF
+                | LightColorCapability.BRIGHTNESS
+                | LightColorCapability.RGB,
+                LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS,
+            ],
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=[],
+    )
+    state = hass.states.get("light.test_my_light")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_my_light"},
+        blocking=True,
+    )
+    # Without a current state there is no color mode to keep, so the
+    # least complex supported color mode is used.
+    mock_client.light_command.assert_called_once_with(
+        key=1,
+        state=True,
+        color_mode=LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS,
+        device_id=0,
+    )
