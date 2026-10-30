@@ -18,6 +18,16 @@
         "default": "mdi:brightness-6"
       }
     },
+    "select": {
+      "power_profile": {
+        "default": "mdi:speedometer",
+        "state": {
+          "balanced": "mdi:scale-balance",
+          "performance": "mdi:rocket-launch",
+          "power-saver": "mdi:leaf"
+        }
+      }
+    },
     "sensor": {
       "boot_time": {
         "default": "mdi:av-timer"
@@ -148,6 +158,12 @@
         "default": "mdi:monitor",
         "state": {
           "off": "mdi:monitor-off"
+        }
+      },
+      "keep_awake": {
+        "default": "mdi:coffee",
+        "state": {
+          "off": "mdi:coffee-off"
         }
       }
     }

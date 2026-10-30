@@ -13,6 +13,7 @@ from systembridgeconnector.models.fixtures.modules.displays import FIXTURE_DISPL
 from systembridgeconnector.models.modules import Module
 from systembridgeconnector.models.modules.displays import DisplayPowerState
 from systembridgeconnector.models.response import Response
+from systembridgeconnector.models.system_control import KeepAwakeRequest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -20,6 +21,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -29,6 +31,7 @@ from homeassistant.helpers import entity_registry as er
 from . import FIXTURE_REQUEST_ID
 
 ENTITY_ID = "switch.hostname_display_abc123_power"
+KEEP_AWAKE_ENTITY_ID = "switch.hostname_keep_awake"
 
 
 @pytest.fixture(autouse=True)
@@ -132,3 +135,47 @@ async def test_display_power_error(
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service", "enabled"),
+    [
+        pytest.param(SERVICE_TURN_ON, True, id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, False, id="turn_off"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_keep_awake(
+    hass: HomeAssistant,
+    mock_websocket_client: MagicMock,
+    service: str,
+    enabled: bool,
+) -> None:
+    """Test turning keep awake on and off."""
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: KEEP_AWAKE_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_websocket_client.set_keep_awake.assert_awaited_once_with(
+        KeepAwakeRequest(enabled=enabled)
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_keep_awake_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test keep awake is unavailable once the system stops reporting it."""
+    coordinator = mock_config_entry.runtime_data
+
+    await coordinator.async_handle_module(
+        Module.SYSTEM, replace(coordinator.data.system, keep_awake=None)
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(KEEP_AWAKE_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
