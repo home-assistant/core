@@ -618,6 +618,51 @@ async def test_unjoin_player(
 
 @pytest.mark.usefixtures("setup_config_entry", "setup_config_entry_secondary")
 @pytest.mark.parametrize(
+    ("leader", "message"),
+    [
+        pytest.param(
+            PairedPlayer("2.2.2.2", 11000),
+            "Could not reach the Bluesound player: timeout",
+            id="leader_unreachable",
+        ),
+        pytest.param(
+            PairedPlayer("3.3.3.3", 11000),
+            "The group leader 3.3.3.3:11000 is not set up in Home Assistant",
+            id="leader_not_loaded",
+        ),
+    ],
+)
+async def test_unjoin_player_error(
+    hass: HomeAssistant,
+    player_mocks: PlayerMocks,
+    leader: PairedPlayer,
+    message: str,
+) -> None:
+    """Test that a failing unjoin raises HomeAssistantError."""
+    player_mocks.player_data_secondary.player.remove_follower.side_effect = (
+        PlayerUnreachableError("timeout")
+    )
+    updated_sync_status = dataclasses.replace(
+        player_mocks.player_data.sync_status_long_polling_mock.get(),
+        leader=leader,
+    )
+    player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
+
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match=message):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_UNJOIN,
+            {ATTR_ENTITY_ID: "media_player.player_name1111"},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("setup_config_entry", "setup_config_entry_secondary")
+@pytest.mark.parametrize(
     ("service", "service_data", "method"),
     [
         pytest.param(SERVICE_MEDIA_PLAY, {}, "play", id="play"),

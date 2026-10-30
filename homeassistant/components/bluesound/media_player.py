@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -31,11 +31,7 @@ from homeassistant.util import dt as dt_util
 from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
 from .coordinator import BluesoundCoordinator
 from .entity import BluesoundEntity, bluesound_exception_handler
-from .utils import (
-    DISPATCHER_ENTITY_ID_CHANGED_SIGNAL,
-    dispatcher_unjoin_signal,
-    id_to_paired_player,
-)
+from .utils import DISPATCHER_ENTITY_ID_CHANGED_SIGNAL, id_to_paired_player
 
 if TYPE_CHECKING:
     from .coordinator import BluesoundConfigEntry
@@ -112,14 +108,6 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         """Start the polling task."""
         await super().async_added_to_hass()
 
-        assert self._sync_status.id is not None
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                dispatcher_unjoin_signal(self._sync_status.id),
-                self.async_remove_follower,
-            )
-        )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -450,9 +438,14 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         """Remove this player from any group."""
         if self._sync_status.leader is not None:
             leader_id = f"{self._sync_status.leader.ip}:{self._sync_status.leader.port}"
-            async_dispatcher_send(
-                self.hass, dispatcher_unjoin_signal(leader_id), self.host, self.port
-            )
+            leader_player = self._loaded_player(leader_id)
+            if leader_player is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="leader_not_loaded",
+                    translation_placeholders={"leader_id": leader_id},
+                )
+            await leader_player.remove_follower(self.host, self.port)
 
         if self._sync_status.followers is not None:
             await self._player.remove_follower(self.host, self.port)
@@ -562,9 +555,16 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
 
         return result
 
-    async def async_remove_follower(self, host: str, port: int) -> None:
-        """Remove follower to leader."""
-        await self._player.remove_follower(host, port)
+    def _loaded_player(self, player_id: str) -> Player | None:
+        """Return the player of the loaded config entry with this ip:port id."""
+        config_entries: list[BluesoundConfigEntry] = (
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
+        )
+        for config_entry in config_entries:
+            runtime_data = config_entry.runtime_data
+            if runtime_data.coordinator.data.sync_status.id == player_id:
+                return runtime_data.player
+        return None
 
     @override
     @bluesound_exception_handler
