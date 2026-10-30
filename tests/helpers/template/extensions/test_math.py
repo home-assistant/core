@@ -249,10 +249,10 @@ def test_radians_invalid(hass: HomeAssistant) -> None:
 def test_radians_default(hass: HomeAssistant) -> None:
     """Test default argument when converting from degrees to radians."""
 
-    assert render(hass, "{{ 'no_number' | degrees(1) }}") == 1
-    assert render(hass, "{{ 'no_number' | degrees(default=1) }}") == 1
-    assert render(hass, "{{ degrees('no_number', 1) }}") == 1
-    assert render(hass, "{{ degrees('no_number', default=1) }}") == 1
+    assert render(hass, "{{ 'no_number' | radians(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | radians(default=1) }}") == 1
+    assert render(hass, "{{ radians('no_number', 1) }}") == 1
+    assert render(hass, "{{ radians('no_number', default=1) }}") == 1
 
 
 def test_average(hass: HomeAssistant) -> None:
