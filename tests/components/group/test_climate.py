@@ -293,3 +293,27 @@ async def test_turn_on_only_off_members(hass: HomeAssistant) -> None:
     assert hass.states.get(HEATPUMP_ENTITY_ID).state == "heat"
     assert hass.states.get(HVAC_ENTITY_ID).state == "cool"
     assert hass.states.get(ECOBEE_ENTITY_ID).state == "heat_cool"
+
+
+async def test_set_mode_with_member_without_mode_list(hass: HomeAssistant) -> None:
+    """Test setting a mode skips a member reporting no list for that mode."""
+    await _setup_group(hass, [HVAC_ENTITY_ID, MEMBER_ONE], demo=True)
+
+    hass.states.async_set(
+        MEMBER_ONE,
+        "heat",
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+            "fan_modes": None,
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.SET_FAN_MODE,
+        {ATTR_ENTITY_ID: CLIMATE_GROUP, ClimateServiceArgument.FAN_MODE: "on_low"},
+        blocking=True,
+    )
+
+    assert hass.states.get(HVAC_ENTITY_ID).attributes["fan_mode"] == "on_low"

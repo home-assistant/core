@@ -343,7 +343,7 @@ class ClimateGroup(GroupEntity, ClimateEntity):
             entity_id
             for entity_id in entity_ids
             if (state := self.hass.states.get(entity_id)) is not None
-            and mode in state.attributes.get(modes_attr, [])
+            and mode in (state.attributes.get(modes_attr) or [])
         ]
 
     async def _async_call_supported_entities(
