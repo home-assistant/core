@@ -679,10 +679,26 @@ async def test_feature_removal_falls_back_to_disarmed(
     assert "is an invalid value" not in caplog.text
 
 
-async def test_feature_removal_does_not_notify_fallback(
-    hass: HomeAssistant, hk_driver: HomeDriver
+@pytest.mark.parametrize(
+    ("states", "expected_published"),
+    [
+        pytest.param((AlarmControlPanelState.ARMED_AWAY,), [1], id="to_away"),
+        pytest.param((AlarmControlPanelState.DISARMED,), [3], id="to_disarmed"),
+        # Home can't be shown anymore, so nothing is sent until a real disarm
+        pytest.param(
+            (AlarmControlPanelState.ARMED_HOME, AlarmControlPanelState.DISARMED),
+            [3],
+            id="unsupported_then_disarmed",
+        ),
+    ],
+)
+async def test_feature_removal_notifies_only_real_states(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    states: tuple[AlarmControlPanelState, ...],
+    expected_published: list[int],
 ) -> None:
-    """Test controllers only see the real state when the active mode is removed."""
+    """Test controllers only see real states when the active mode is removed."""
     acc = await _async_setup_panel(hass, hk_driver, HOME_AND_AWAY)
     hass.states.async_set(
         PANEL_ENTITY_ID,
@@ -695,16 +711,17 @@ async def test_feature_removal_does_not_notify_fallback(
         patch.object(hk_driver, "async_update_advertisement"),
         patch.object(acc, "publish") as mock_publish,
     ):
-        hass.states.async_set(
-            PANEL_ENTITY_ID,
-            AlarmControlPanelState.ARMED_AWAY,
-            {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
-        )
-        await hass.async_block_till_done()
+        for state in states:
+            hass.states.async_set(
+                PANEL_ENTITY_ID,
+                state,
+                {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
+            )
+            await hass.async_block_till_done()
+        # A repeated update, e.g. an attribute change, must not announce it again
+        acc.async_update_state(hass.states.get(PANEL_ENTITY_ID))
 
-    # The fallback to disarmed must not be sent ahead of away.
-    assert [
-        call.args[0]
-        for call in mock_publish.call_args_list
-        if call.args[1] is acc.char_current_state
-    ] == [1]
+    for char in (acc.char_current_state, acc.char_target_state):
+        assert [
+            call.args[0] for call in mock_publish.call_args_list if call.args[1] is char
+        ] == expected_published

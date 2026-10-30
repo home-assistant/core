@@ -97,6 +97,7 @@ class SecuritySystem(HomeAccessory):
         assert state
         self._alarm_code = self.config.get(ATTR_CODE)
         self._skipped: set[tuple[str, int]] = set()
+        self._unannounced: set[Characteristic] = set()
 
         supported_states = state.attributes.get(
             EntityStateAttribute.SUPPORTED_FEATURES,
@@ -170,8 +171,9 @@ class SecuritySystem(HomeAccessory):
             strict=True,
         ):
             if char.value not in valid_values.values():
-                # Valid before override_properties, silent so only real states notify
+                # Valid before override_properties; announced once a real state lands
                 char.set_value(HK_ALARM_DISARMED, should_notify=False)
+                self._unannounced.add(char)
             char.override_properties(valid_values=valid_values)
         self._skipped.clear()
         self.driver.async_update_accessories_hash()
@@ -184,7 +186,11 @@ class SecuritySystem(HomeAccessory):
         """
         name = char.display_name
         if value in char.properties[PROP_VALID_VALUES].values():
+            if char in self._unannounced and char.value == value:
+                # set_value only notifies changes, and the fallback was silent
+                char.notify()
             char.set_value(value)
+            self._unannounced.discard(char)
             return True
         if (name, value) not in self._skipped:
             self._skipped.add((name, value))
