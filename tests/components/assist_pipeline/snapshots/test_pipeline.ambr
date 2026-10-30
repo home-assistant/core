@@ -996,8 +996,8 @@
         'tts_output': dict({
           'mime_type': 'audio/x-wav',
           'stream_response': True,
-          'token': 'test_token.wav',
-          'url': '/api/tts_proxy/test_token.wav',
+          'token': 'mocked-token.wav',
+          'url': '/api/tts_proxy/mocked-token.wav',
         }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
@@ -1080,8 +1080,8 @@
         'tts_output': dict({
           'mime_type': 'audio/x-wav',
           'stream_response': True,
-          'token': 'test_token.wav',
-          'url': '/api/tts_proxy/test_token.wav',
+          'token': 'mocked-token.wav',
+          'url': '/api/tts_proxy/mocked-token.wav',
         }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
@@ -1167,10 +1167,10 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': 'media-source://tts/-stream-/test_token.wav',
+          'media_id': 'media-source://tts/-stream-/mocked-token.wav',
           'mime_type': 'audio/x-wav',
-          'token': 'test_token.wav',
-          'url': '/api/tts_proxy/test_token.wav',
+          'token': 'mocked-token.wav',
+          'url': '/api/tts_proxy/mocked-token.wav',
         }),
       }),
       'type': <PipelineEventType.TTS_END: 'tts-end'>,
@@ -1191,8 +1191,8 @@
         'tts_output': dict({
           'mime_type': 'audio/x-wav',
           'stream_response': False,
-          'token': 'test_token.wav',
-          'url': '/api/tts_proxy/test_token.wav',
+          'token': 'mocked-token.wav',
+          'url': '/api/tts_proxy/mocked-token.wav',
         }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
@@ -1272,10 +1272,10 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': 'media-source://tts/-stream-/test_token.wav',
+          'media_id': 'media-source://tts/-stream-/mocked-token.wav',
           'mime_type': 'audio/x-wav',
-          'token': 'test_token.wav',
-          'url': '/api/tts_proxy/test_token.wav',
+          'token': 'mocked-token.wav',
+          'url': '/api/tts_proxy/mocked-token.wav',
         }),
       }),
       'type': <PipelineEventType.TTS_END: 'tts-end'>,
@@ -1296,8 +1296,8 @@
         'tts_output': dict({
           'mime_type': 'audio/x-wav',
           'stream_response': True,
-          'token': 'test_token.wav',
-          'url': '/api/tts_proxy/test_token.wav',
+          'token': 'mocked-token.wav',
+          'url': '/api/tts_proxy/mocked-token.wav',
         }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
@@ -1361,10 +1361,10 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': 'media-source://tts/-stream-/test_token.wav',
+          'media_id': 'media-source://tts/-stream-/mocked-token.wav',
           'mime_type': 'audio/x-wav',
-          'token': 'test_token.wav',
-          'url': '/api/tts_proxy/test_token.wav',
+          'token': 'mocked-token.wav',
+          'url': '/api/tts_proxy/mocked-token.wav',
         }),
       }),
       'type': <PipelineEventType.TTS_END: 'tts-end'>,

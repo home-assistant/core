@@ -1,7 +1,7 @@
 """Websocket tests for Voice Assistant integration."""
 
 from collections.abc import AsyncGenerator, Generator
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 import io
 from pathlib import Path
 from typing import Any
@@ -2696,10 +2696,25 @@ async def test_pipeline_error_before_tts_does_not_leak_result_stream(
     assert len(hass.data[tts.DATA_TTS_MANAGER].token_to_stream) == 0
 
 
+def _stt_metadata() -> stt.SpeechMetadata:
+    """Return the metadata of spoken audio from a satellite."""
+    return stt.SpeechMetadata(
+        language="",
+        format=stt.AudioFormats.WAV,
+        codec=stt.AudioCodecs.PCM,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+
+
 def _stt_to_intent_input(
     hass: HomeAssistant,
     session: chat_session.ChatSession,
     pipeline: assist_pipeline.Pipeline,
+    *,
+    end_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.INTENT,
+    event_callback: assist_pipeline.PipelineEventCallback = lambda event: None,
 ) -> assist_pipeline.pipeline.PipelineInput:
     """Return input for a pipeline that runs from speech-to-text to intent."""
 
@@ -2709,22 +2724,15 @@ def _stt_to_intent_input(
 
     return assist_pipeline.pipeline.PipelineInput(
         session=session,
-        stt_metadata=stt.SpeechMetadata(
-            language="",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
+        stt_metadata=_stt_metadata(),
         stt_stream=audio_data(),
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
             pipeline=pipeline,
             start_stage=assist_pipeline.PipelineStage.STT,
-            end_stage=assist_pipeline.PipelineStage.INTENT,
-            event_callback=lambda event: None,
+            end_stage=end_stage,
+            event_callback=event_callback,
             audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
         ),
     )
@@ -2820,16 +2828,6 @@ async def test_stt_prepares_recognition_language(
     mock_load_intents.assert_called_once_with("en")
 
 
-_STT_METADATA = stt.SpeechMetadata(
-    language="",
-    format=stt.AudioFormats.WAV,
-    codec=stt.AudioCodecs.PCM,
-    bit_rate=stt.AudioBitRates.BITRATE_16,
-    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-    channel=stt.AudioChannels.CHANNEL_MONO,
-)
-
-
 async def _audio_agent_input() -> AsyncGenerator[bytes]:
     """Yield the spoken audio of the user."""
     yield make_10ms_chunk(b"part1")
@@ -2923,19 +2921,16 @@ async def test_pipeline_audio_agent(
 
     events: list[assist_pipeline.PipelineEvent] = []
 
-    with patch(
-        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
-    ):
-        await assist_pipeline.async_pipeline_from_audio_stream(
-            hass,
-            context=Context(),
-            event_callback=events.append,
-            stt_metadata=_STT_METADATA,
-            stt_stream=_audio_agent_input(),
-            pipeline_id=AUDIO_AGENT_ID,
-            tts_audio_output="wav",
-            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-        )
+    await assist_pipeline.async_pipeline_from_audio_stream(
+        hass,
+        context=Context(),
+        event_callback=events.append,
+        stt_metadata=_stt_metadata(),
+        stt_stream=_audio_agent_input(),
+        pipeline_id=AUDIO_AGENT_ID,
+        tts_audio_output="wav",
+        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+    )
 
     assert process_events(events) == snapshot
     assert mock_audio_agent.received_audio == [
@@ -2951,12 +2946,11 @@ async def test_pipeline_audio_agent_response_audio(
     """Test the spoken response of the agent is played by the satellite."""
     events: list[assist_pipeline.PipelineEvent] = []
 
-    # Voice activity detection ends the audio for the agent like for STT
     await assist_pipeline.async_pipeline_from_audio_stream(
         hass,
         context=Context(),
         event_callback=events.append,
-        stt_metadata=_STT_METADATA,
+        stt_metadata=_stt_metadata(),
         stt_stream=_audio_agent_input(),
         pipeline_id=AUDIO_AGENT_ID,
         tts_audio_output="wav",
@@ -3001,11 +2995,8 @@ async def test_pipeline_audio_agent_text_input(
         ),
     )
 
-    with patch(
-        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
-    ):
-        await pipeline_input.validate()
-        await pipeline_input.execute()
+    await pipeline_input.validate()
+    await pipeline_input.execute()
 
     assert process_events(events) == snapshot
     assert not mock_audio_agent.received_audio
@@ -3017,7 +3008,7 @@ async def test_pipeline_audio_agent_text_input(
         pytest.param(
             assist_pipeline.PipelineStage.STT,
             assist_pipeline.PipelineStage.STT,
-            {"stt_metadata": _STT_METADATA, "stt_stream": _audio_agent_input()},
+            {"stt_metadata": _stt_metadata(), "stt_stream": _audio_agent_input()},
             "the pipeline does not support speech-to-text",
             id="speech_to_text_only",
         ),
@@ -3069,19 +3060,12 @@ async def test_pipeline_audio_agent_transcript_only(
 ) -> None:
     """Test a transcript only uses the default STT engine, like for ask_question."""
     events: list[assist_pipeline.PipelineEvent] = []
-    pipeline_input = assist_pipeline.pipeline.PipelineInput(
-        stt_metadata=_STT_METADATA,
-        stt_stream=_audio_agent_input(),
-        session=mock_chat_session,
-        run=assist_pipeline.pipeline.PipelineRun(
-            hass,
-            context=Context(),
-            pipeline=async_get_pipeline(hass, AUDIO_AGENT_ID),
-            start_stage=assist_pipeline.PipelineStage.STT,
-            end_stage=assist_pipeline.PipelineStage.STT,
-            event_callback=events.append,
-            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-        ),
+    pipeline_input = _stt_to_intent_input(
+        hass,
+        mock_chat_session,
+        async_get_pipeline(hass, AUDIO_AGENT_ID),
+        end_stage=assist_pipeline.PipelineStage.STT,
+        event_callback=events.append,
     )
 
     await pipeline_input.validate()
@@ -3149,7 +3133,7 @@ async def test_pipeline_audio_agent_vad_ends_audio(
             hass,
             context=Context(),
             event_callback=events.append,
-            stt_metadata=_STT_METADATA,
+            stt_metadata=_stt_metadata(),
             stt_stream=satellite_audio(),
             pipeline_id=AUDIO_AGENT_ID,
             tts_audio_output="wav",
@@ -3180,19 +3164,8 @@ async def test_pipeline_audio_agent_skips_local_handling(
 ) -> None:
     """Test the agent handles text when only it can speak the response."""
     events: list[assist_pipeline.PipelineEvent] = []
-    pipeline = Pipeline(
-        conversation_engine=AUDIO_AGENT_ID,
-        conversation_language="en",
-        language="en",
-        name="Audio output",
-        stt_engine=None,
-        stt_language=None,
-        tts_engine=None,
-        tts_language=None,
-        tts_voice=None,
-        wake_word_entity=None,
-        wake_word_id=None,
-        prefer_local_intents=True,
+    pipeline = replace(
+        async_get_pipeline(hass, AUDIO_AGENT_ID), prefer_local_intents=True
     )
     local_response = intent.IntentResponse("en")
     local_response.async_set_speech("Handled locally")
@@ -3242,19 +3215,11 @@ async def test_pipeline_audio_agent_reply_without_chat_log(
 ) -> None:
     """Test the speech of an audio agent that adds no transcript is its reply."""
     events: list[assist_pipeline.PipelineEvent] = []
-    pipeline_input = assist_pipeline.pipeline.PipelineInput(
-        stt_metadata=_STT_METADATA,
-        stt_stream=_audio_agent_input(),
-        session=mock_chat_session,
-        run=assist_pipeline.pipeline.PipelineRun(
-            hass,
-            context=Context(),
-            pipeline=async_get_pipeline(hass, AUDIO_AGENT_ID),
-            start_stage=assist_pipeline.PipelineStage.STT,
-            end_stage=assist_pipeline.PipelineStage.INTENT,
-            event_callback=events.append,
-            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-        ),
+    pipeline_input = _stt_to_intent_input(
+        hass,
+        mock_chat_session,
+        async_get_pipeline(hass, AUDIO_AGENT_ID),
+        event_callback=events.append,
     )
     await pipeline_input.validate()
 

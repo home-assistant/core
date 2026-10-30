@@ -110,15 +110,16 @@ async def async_converse(
     if agent is None:
         raise ValueError(f"Agent {agent_id} not found")
 
-    if audio is not None and not (
-        isinstance(agent, ConversationEntity)
-        and (agent.supported_features or 0) & ConversationEntityFeature.AUDIO_INPUT
-    ):
+    features = ConversationEntityFeature(0)
+    if isinstance(agent, ConversationEntity):
+        features = ConversationEntityFeature(agent.supported_features or 0)
+
+    if audio is not None and ConversationEntityFeature.AUDIO_INPUT not in features:
         raise ValueError(f"Agent {agent_id} does not support audio input")
 
-    if audio_output is not None and not (
-        isinstance(agent, ConversationEntity)
-        and (agent.supported_features or 0) & ConversationEntityFeature.AUDIO_OUTPUT
+    if (
+        audio_output is not None
+        and ConversationEntityFeature.AUDIO_OUTPUT not in features
     ):
         raise ValueError(f"Agent {agent_id} does not support audio output")
 

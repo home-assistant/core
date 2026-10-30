@@ -5,7 +5,7 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components import conversation, stt, tts, websocket_api
+from homeassistant.components import conversation, tts, websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.collection import (
     CollectionError,
@@ -19,7 +19,13 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType, VolDictType
 from homeassistant.util import language as language_util, ulid as ulid_util
 
-from . import error as _error, models as _models, run as _run, runtime as _runtime
+from . import (
+    default_pipeline as _default_pipeline,
+    error as _error,
+    models as _models,
+    run as _run,
+    runtime as _runtime,
+)
 from .const import DOMAIN
 
 PipelineError = _error.PipelineError
@@ -100,7 +106,6 @@ def _async_resolve_default_pipeline_settings(
     """
     conversation_language = "en"
     pipeline_language = "en"
-    stt_engine = None
     stt_language = None
     tts_engine = None
     tts_language = None
@@ -121,29 +126,12 @@ def _async_resolve_default_pipeline_settings(
         pipeline_language = hass.config.language
         conversation_language = conversation_languages[0]
 
-    if stt_engine_id is None:
-        stt_engine_id = stt.async_default_engine(hass)
-
-    if stt_engine_id is not None:
-        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
-        if stt_engine is None:
-            stt_engine_id = None
-
-    if stt_engine:
-        stt_languages = language_util.matches(
-            pipeline_language,
-            stt_engine.supported_languages,
-            country=hass.config.country,
-        )
-        if stt_languages:
-            stt_language = stt_languages[0]
-        else:
-            _LOGGER.debug(
-                "Speech-to-text engine '%s' does not support language '%s'",
-                stt_engine_id,
-                pipeline_language,
-            )
-            stt_engine_id = None
+    if stt_settings := _default_pipeline.async_resolve_stt_engine_language(
+        hass, pipeline_language, stt_engine_id
+    ):
+        stt_engine_id, stt_language = stt_settings
+    else:
+        stt_engine_id = None
 
     if tts_engine_id is None:
         tts_engine_id = tts.async_default_engine(hass)
