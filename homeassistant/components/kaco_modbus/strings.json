@@ -15,7 +15,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address%]"
+          "unit_id": "[%key:component::kaco_modbus::config::step::user::data::unit_id%]"
         },
         "data_description": {
           "host": "[%key:component::kaco_modbus::config::step::user::data_description::host%]",
@@ -28,7 +28,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address%]"
+          "unit_id": "Unit ID"
         },
         "data_description": {
           "host": "The inverter's hostname or IP address.",

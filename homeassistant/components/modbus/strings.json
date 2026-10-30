@@ -2,8 +2,6 @@
   "common": {
     "baud_rate": "Baud rate",
     "baud_rate_description": "Match the baud rate configured on the device.",
-    "modbus_address": "Modbus address",
-    "modbus_address_description": "The device's Modbus address on this connection.",
     "modbus_tcp": "Modbus TCP",
     "serial_port": "Serial port",
     "serial_port_description": "Select a local serial port or a port shared over the network by a serial proxy.",

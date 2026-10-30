@@ -19,7 +19,7 @@
       },
       "modbus_tcp": {
         "data": {
-          "address": "[%key:component::modbus::common::modbus_address%]",
+          "address": "Modbus address",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {

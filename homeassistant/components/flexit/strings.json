@@ -14,38 +14,38 @@
           "device": "[%key:component::modbus::common::serial_port%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit": "[%key:component::modbus::common::modbus_address%]"
+          "unit": "Unit ID"
         },
         "data_description": {
           "baudrate": "[%key:component::modbus::common::baud_rate_description%]",
           "device": "[%key:component::modbus::common::serial_port_description%]",
           "host": "[%key:component::flexit::config::step::tcp::data_description::host%]",
           "port": "[%key:component::modbus::common::tcp_port_description%]",
-          "unit": "[%key:component::modbus::common::modbus_address_description%]"
+          "unit": "[%key:component::flexit::config::step::tcp::data_description::unit%]"
         }
       },
       "serial": {
         "data": {
           "baudrate": "[%key:component::modbus::common::baud_rate%]",
           "device": "[%key:component::modbus::common::serial_port%]",
-          "unit": "[%key:component::modbus::common::modbus_address%]"
+          "unit": "Unit ID"
         },
         "data_description": {
           "baudrate": "[%key:component::modbus::common::baud_rate_description%]",
           "device": "[%key:component::modbus::common::serial_port_description%]",
-          "unit": "[%key:component::modbus::common::modbus_address_description%]"
+          "unit": "The Modbus unit ID of your Flexit AC unit."
         }
       },
       "tcp": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit": "[%key:component::modbus::common::modbus_address%]"
+          "unit": "Unit ID"
         },
         "data_description": {
           "host": "The hostname or IP address of your Flexit CI66 Modbus bridge.",
           "port": "[%key:component::modbus::common::tcp_port_description%]",
-          "unit": "[%key:component::modbus::common::modbus_address_description%]"
+          "unit": "The Modbus unit ID of your Flexit AC unit."
         }
       },
       "user": {

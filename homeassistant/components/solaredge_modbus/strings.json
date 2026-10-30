@@ -32,7 +32,7 @@
         "sections": {
           "more_options": {
             "data": {
-              "unit_id": "[%key:component::modbus::common::modbus_address%]"
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data::unit_id%]"
             },
             "data_description": {
               "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data_description::unit_id%]"
@@ -54,7 +54,7 @@
         "sections": {
           "more_options": {
             "data": {
-              "unit_id": "[%key:component::modbus::common::modbus_address%]"
+              "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data::unit_id%]"
             },
             "data_description": {
               "unit_id": "[%key:component::solaredge_modbus::config::step::tcp::sections::more_options::data_description::unit_id%]"
@@ -76,7 +76,7 @@
         "sections": {
           "more_options": {
             "data": {
-              "unit_id": "[%key:component::modbus::common::modbus_address%]"
+              "unit_id": "Device ID"
             },
             "data_description": {
               "unit_id": "The Modbus device ID of the inverter, as configured on the inverter itself. The SolarEdge default is 1."

@@ -21,12 +21,12 @@
         "data": {
           "baudrate": "[%key:component::modbus::common::baud_rate%]",
           "device": "[%key:component::modbus::common::serial_port%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address%]"
+          "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
         },
         "data_description": {
           "baudrate": "[%key:component::sofar::config::step::serial::data_description::baudrate%]",
           "device": "[%key:component::modbus::common::serial_port_description%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address_description%]"
+          "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
         },
         "description": "Reach this inverter over a serial port wired to its RS485 terminals."
       },
@@ -34,12 +34,12 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address%]"
+          "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
         },
         "data_description": {
           "host": "[%key:component::modbus::common::tcp_host_description%]",
           "port": "[%key:component::modbus::common::tcp_port_description%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address_description%]"
+          "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
         },
         "description": "Reach this inverter over the network, either directly or through a Modbus TCP bridge."
       },
@@ -47,12 +47,12 @@
         "data": {
           "baudrate": "[%key:component::modbus::common::baud_rate%]",
           "device": "[%key:component::modbus::common::serial_port%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address%]"
+          "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
         },
         "data_description": {
           "baudrate": "The speed of the RS485 bus, as set on the inverter. The Sofar default is 9600.",
           "device": "[%key:component::modbus::common::serial_port_description%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address_description%]"
+          "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
         },
         "description": "Set up an inverter wired to a serial port over RS485. The inverter model and register map are detected automatically from its serial number."
       },
@@ -60,12 +60,12 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address%]"
+          "unit_id": "Modbus unit ID"
         },
         "data_description": {
           "host": "[%key:component::modbus::common::tcp_host_description%]",
           "port": "[%key:component::modbus::common::tcp_port_description%]",
-          "unit_id": "[%key:component::modbus::common::modbus_address_description%]"
+          "unit_id": "The inverter's Modbus unit ID, also called its Modbus device address."
         },
         "description": "Set up an inverter reached over the network, either directly or through a Modbus TCP bridge. The inverter model and register map are detected automatically from its serial number."
       },

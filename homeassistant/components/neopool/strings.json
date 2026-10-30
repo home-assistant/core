@@ -29,7 +29,7 @@
         "sections": {
           "more_options": {
             "data": {
-              "unit_id": "[%key:component::modbus::common::modbus_address%]"
+              "unit_id": "[%key:component::neopool::config::step::tcp::sections::more_options::data::unit_id%]"
             },
             "data_description": {
               "unit_id": "[%key:component::neopool::config::step::tcp::sections::more_options::data_description::unit_id%]"
@@ -52,7 +52,7 @@
         "sections": {
           "more_options": {
             "data": {
-              "unit_id": "[%key:component::modbus::common::modbus_address%]"
+              "unit_id": "[%key:component::neopool::config::step::tcp::sections::more_options::data::unit_id%]"
             },
             "data_description": {
               "unit_id": "[%key:component::neopool::config::step::tcp::sections::more_options::data_description::unit_id%]"
@@ -77,7 +77,7 @@
         "sections": {
           "more_options": {
             "data": {
-              "unit_id": "[%key:component::modbus::common::modbus_address%]"
+              "unit_id": "Unit ID"
             },
             "data_description": {
               "unit_id": "Modbus device address (1-247). Identifies the specific device on a shared bus. Most direct-connected devices use 1. Gateways may route requests to different addresses."
