@@ -415,6 +415,34 @@ async def test_reauth_flow_reloads_not_loaded_entry(
     mock_reload.assert_called_once_with(config_entry.entry_id)
 
 
+async def test_reauth_flow_reloads_loaded_entry_with_unchanged_data(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """Verify reauth flow reloads a loaded entry when its data is unchanged."""
+    config_entry = config_entry_setup
+    data = dict(config_entry.data)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: data[CONF_HOST],
+                CONF_USERNAME: data[CONF_USERNAME],
+                CONF_PASSWORD: data[CONF_PASSWORD],
+                CONF_PORT: data[CONF_PORT],
+                CONF_VERIFY_SSL: data[CONF_VERIFY_SSL],
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_reload.assert_called_once_with(config_entry.entry_id)
+    assert config_entry.data == data
+
+
 @pytest.mark.parametrize(
     "site_payload",
     [

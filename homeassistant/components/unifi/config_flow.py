@@ -189,7 +189,11 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 ) and unique_id in sites:
                     config_data[CONF_SITE_ID] = sites[unique_id].name
                     if config_entry.state is ConfigEntryState.LOADED:
-                        # The update listener reloads a loaded entry
+                        # The update listener reloads a loaded entry on data changes
+                        if config_data.items() <= config_entry.data.items():
+                            self.hass.config_entries.async_schedule_reload(
+                                config_entry.entry_id
+                            )
                         return self.async_update_and_abort(
                             config_entry, data_updates=config_data
                         )

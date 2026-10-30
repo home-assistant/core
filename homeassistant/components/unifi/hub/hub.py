@@ -186,6 +186,8 @@ class UnifiHub:
         """Reload when the data changed, otherwise apply updated options."""
         hub = config_entry.runtime_data
         if config_entry.data != hub.entry_data:
+            # Updates arriving before the reload replaces the hub are handled
+            hub.entry_data = config_entry.data
             hass.config_entries.async_schedule_reload(config_entry.entry_id)
             return
         hub.config = UnifiConfig.from_config_entry(config_entry)
