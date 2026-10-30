@@ -140,7 +140,7 @@ class UnifiHub:
         """Use the time zone from the controller's system information."""
         self.time_zone = None
         if (sysinfo := next(iter(self.api.system_information.values()), None)) and (
-            time_zone := sysinfo.raw.get("timezone")
+            time_zone := sysinfo.timezone
         ):
             # Anything that isn't a loadable zone name falls back to
             # Home Assistant's time zone.
