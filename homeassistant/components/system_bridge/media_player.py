@@ -213,6 +213,8 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @property
     def _picked_player(self) -> MediaPlayer | None:
         """Return the picked player, or None to follow the backend's pick."""
+        if self._picked_player_id is None:
+            return None
         return next(
             (
                 player
@@ -221,6 +223,14 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             ),
             None,
         )
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Go back to the backend's pick once the picked player can't be used."""
+        if not self._can_pick_player or self._picked_player is None:
+            self._picked_player_id = None
+        super()._handle_coordinator_update()
 
     @property
     def _media(self) -> Media | MediaPlayer:

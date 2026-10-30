@@ -16,6 +16,8 @@ from systembridgeconnector.models.fixtures.modules.media import FIXTURE_MEDIA
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgeconnector.models.media_control import MediaAction, MediaControl
 from systembridgeconnector.models.modules import Module
+from systembridgeconnector.models.modules.media import Media
+from systembridgeconnector.models.modules.system import System
 from systembridgeconnector.models.response import Response
 
 from homeassistant.components.media_player import (
@@ -321,6 +323,52 @@ async def test_media_player_source(
     assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_INPUT_SOURCE] == "Automatic"
     assert state.attributes[ATTR_MEDIA_TITLE] == FIXTURE_MEDIA.title
+
+
+@pytest.mark.parametrize(
+    ("module", "gone"),
+    [
+        pytest.param(
+            Module.MEDIA,
+            replace(FIXTURE_MEDIA, players=FIXTURE_MEDIA.players[:1]),
+            id="player_closed",
+        ),
+        pytest.param(
+            Module.SYSTEM,
+            replace(FIXTURE_SYSTEM, version="5.22.1"),
+            id="no_player_details",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_media_player_source_cleared(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    module: Module,
+    gone: Media | System,
+) -> None:
+    """Test the pick goes back to automatic, and stays there, once it can't be used."""
+    coordinator = mock_config_entry.runtime_data
+    system = coordinator.data.system
+    spotify = replace(FIXTURE_MEDIA.players[0], id="spotify", name="Spotify")
+    media = replace(FIXTURE_MEDIA, players=[FIXTURE_MEDIA.players[0], spotify])
+    await coordinator.async_handle_module(Module.MEDIA, media)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "Spotify"},
+        blocking=True,
+    )
+
+    await coordinator.async_handle_module(module, gone)
+    await hass.async_block_till_done()
+    await coordinator.async_handle_module(Module.SYSTEM, system)
+    await coordinator.async_handle_module(Module.MEDIA, media)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Automatic"
 
 
 @pytest.mark.usefixtures("init_integration")
