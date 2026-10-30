@@ -52,7 +52,7 @@ async def async_setup_entry(
     ]
 
     if (
-        coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER)
+        coordinator.device.primary_mode == MyPVDeviceMainMode.HOT_WATER
         and coordinator.device.current_temperature is None
     ):
         entities.append(
