@@ -90,8 +90,13 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
             await self.device.refresh_state()
         except LifxError as err:
             self._missed_polls += 1
-            # Before the first read there is no last state to keep showing
-            if self.data is not None and self._missed_polls < MAX_MISSED_POLLS:
+            # Before the first read there is no last state to keep showing, and
+            # returning it would bring back a light that is already unavailable
+            if (
+                self.data is not None
+                and self.last_update_success
+                and self._missed_polls < MAX_MISSED_POLLS
+            ):
                 LOGGER.debug(
                     "%s missed %s of %s polls: %s",
                     self.name,

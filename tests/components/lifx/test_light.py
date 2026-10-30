@@ -2011,6 +2011,31 @@ async def test_light_recovers_after_being_unavailable(hass: HomeAssistant) -> No
     assert state.state == STATE_ON
 
 
+async def test_unavailable_light_only_recovers_by_answering(
+    hass: HomeAssistant,
+) -> None:
+    """Test a missed poll does not bring back a light that went unavailable."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+
+    device.refresh_state.side_effect = OSError("network down")
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = LifxError("offline")
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+
+
 @pytest.mark.parametrize(
     "data",
     [{ATTR_INFRARED: 256}, {ATTR_ZONES: [-1]}],
