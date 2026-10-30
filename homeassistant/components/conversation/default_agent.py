@@ -35,6 +35,7 @@ from home_assistant_intents import (
     get_languages,
 )
 import probatio
+from typing_extensions import Sentinel as sentinel
 import yaml
 
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -107,7 +108,7 @@ _DEVICE_REGISTRY_UPDATE_FIELDS = [
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
 
-ERROR_SENTINEL = object()
+ERROR_SENTINEL = sentinel("ERROR_SENTINEL")
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -250,7 +251,7 @@ class DefaultAgent(ConversationEntity):
         """Initialize the default agent."""
         self.hass = hass
 
-        self._lang_intents: dict[str, LanguageIntents | object] = {}
+        self._lang_intents: dict[str, LanguageIntents | ERROR_SENTINEL] = {}
         self._load_intents_lock = asyncio.Lock()
 
         # Intents from common conversation config

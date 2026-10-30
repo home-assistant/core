@@ -4,6 +4,7 @@ import math
 from typing import TYPE_CHECKING, Any
 
 import jinja2.filters
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.helpers.template.helpers import forgiving_boolean, raise_no_default
 
@@ -12,7 +13,7 @@ from .base import BaseTemplateExtension, TemplateFunction
 if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class TypeCastExtension(BaseTemplateExtension):
