@@ -1,51 +1,4 @@
 {
-  "auth": {
-    "enabled": true
-  },
-  "extras": {
-    "https": {
-      "daemon": "kvmd-certmgr",
-      "description": "Manage HTTPS Certificates and Certificate Authority",
-      "enabled": true,
-      "icon": "extras/https/ssl.svg",
-      "name": "HTTPS / SSL",
-      "path": "extras/https",
-      "place": 25,
-      "started": true
-    },
-    "ipmi": {
-      "daemon": "kvmd-ipmi",
-      "description": "Show IPMI information",
-      "enabled": false,
-      "icon": "share/svg/ipmi.svg",
-      "name": "IPMI",
-      "path": "ipmi",
-      "place": 21,
-      "port": 623,
-      "started": false
-    },
-    "vnc": {
-      "daemon": "kvmd-vnc",
-      "description": "Show VNC information",
-      "enabled": true,
-      "icon": "share/svg/vnc.svg",
-      "name": "VNC",
-      "path": "vnc",
-      "place": 20,
-      "port": 5900,
-      "started": true
-    },
-    "webterm": {
-      "daemon": "kvmd-webterm",
-      "description": "Open terminal in a web browser",
-      "enabled": true,
-      "icon": "extras/webterm/terminal.svg",
-      "name": "Terminal",
-      "path": "extras/webterm/ttyd",
-      "place": 10,
-      "started": true
-    }
-  },
   "fan": {
     "monitored": true,
     "state": {
@@ -115,9 +68,6 @@
       "host": "pikvm"
     }
   },
-  "node": {
-    "host": "pikvm"
-  },
   "system": {
     "kernel": {
       "machine": "armv7l",
@@ -127,29 +77,6 @@
     },
     "kvmd": {
       "version": "4.219"
-    },
-    "streamer": {
-      "app": "ustreamer",
-      "features": {
-        "WITH_GPIO": true,
-        "WITH_JANUS": true,
-        "WITH_PDEATHSIG": true,
-        "WITH_PTHREAD_NP": true,
-        "WITH_PYTHON": true,
-        "WITH_SETPROCTITLE": true,
-        "WITH_SYSTEMD": true,
-        "WITH_V4P": true
-      },
-      "version": "6.67"
     }
-  },
-  "uptime": {
-    "parts": {
-      "days": 22,
-      "hours": 2,
-      "minutes": 31,
-      "seconds": 52
-    },
-    "total": 1909912
   }
 }

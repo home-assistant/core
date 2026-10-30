@@ -7,12 +7,12 @@ from typing import Any, override
 from pikvm_aio import PiKVMAuthenticationError, PiKVMClient, PiKVMDeviceInfo, PiKVMError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.ssl import get_default_no_verify_context
+from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import CONF_TOTP, DOMAIN, LOGGER
 
@@ -20,20 +20,18 @@ type PiKVMConfigEntry = ConfigEntry[PiKVMDataUpdateCoordinator]
 
 
 def create_client(hass: HomeAssistant, data: Mapping[str, Any]) -> PiKVMClient:
-    """Create a PiKVM API client.
-
-    PiKVM ships a self-signed certificate without IP subject alternative names,
-    so TLS is used for transport encryption only and the certificate is not verified.
-    Raises PiKVMAuthenticationError if the TOTP secret is not valid base32.
-    """
+    """Create a PiKVM API client from config entry data."""
+    # Stock PiKVM certificates are self-signed, so verification is opt-in.
+    verify_ssl = data.get(CONF_VERIFY_SSL, False)
     return PiKVMClient(
         host=data[CONF_HOST],
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
         totp_secret=data.get(CONF_TOTP) or None,
-        session=async_get_clientsession(hass, verify_ssl=False),
-        verify_ssl=False,
-        ssl_context=get_default_no_verify_context(),
+        session=async_get_clientsession(hass, verify_ssl=verify_ssl),
+        ssl_context=(
+            get_default_context() if verify_ssl else get_default_no_verify_context()
+        ),
     )
 
 
@@ -71,5 +69,4 @@ class PiKVMDataUpdateCoordinator(DataUpdateCoordinator[PiKVMDeviceInfo]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": str(err)},
             ) from err

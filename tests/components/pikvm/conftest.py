@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.pikvm.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
 SERIAL = "0000000012345678"
@@ -24,6 +24,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "192.168.1.50",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "secret",
+            CONF_VERIFY_SSL: False,
         },
         unique_id=SERIAL,
     )
@@ -54,14 +55,19 @@ async def device_info(
 
 
 @pytest.fixture
-def mock_pikvm_client(device_info: PiKVMDeviceInfo) -> Generator[MagicMock]:
-    """Return a mocked PiKVM client."""
+def mock_pikvm_client_class(device_info: PiKVMDeviceInfo) -> Generator[MagicMock]:
+    """Return the mocked PiKVM client class."""
     with patch(
         "homeassistant.components.pikvm.coordinator.PiKVMClient", autospec=True
     ) as mock_class:
-        client = mock_class.return_value
-        client.get_info.return_value = device_info
-        yield client
+        mock_class.return_value.get_info.return_value = device_info
+        yield mock_class
+
+
+@pytest.fixture
+def mock_pikvm_client(mock_pikvm_client_class: MagicMock) -> MagicMock:
+    """Return the mocked PiKVM client."""
+    return mock_pikvm_client_class.return_value
 
 
 @pytest.fixture

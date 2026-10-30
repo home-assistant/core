@@ -6,12 +6,18 @@ from freezegun.api import FrozenDateTimeFactory
 from pikvm_aio import PiKVMAuthenticationError, PiKVMConnectionError, PiKVMDeviceError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.pikvm.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from .conftest import SERIAL
 
 CPU_TEMPERATURE_ENTITY_ID = "sensor.pikvm_cpu_temperature"
+CPU_TEMPERATURE = "52.582"
 
 
 async def test_load_unload(
@@ -55,6 +61,18 @@ async def test_setup_errors(
     assert mock_config_entry.state is expected_state
 
 
+async def test_device_info(
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the PiKVM device is registered with its hardware details."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), init_integration.entry_id
+    )
+    assert device == snapshot
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_entities_unavailable_on_update_error(
     hass: HomeAssistant,
@@ -62,7 +80,7 @@ async def test_entities_unavailable_on_update_error(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities become unavailable when polling fails, then recover."""
-    assert hass.states.get(CPU_TEMPERATURE_ENTITY_ID).state == "52.582"
+    assert hass.states.get(CPU_TEMPERATURE_ENTITY_ID).state == CPU_TEMPERATURE
 
     mock_pikvm_client.get_info.side_effect = PiKVMConnectionError
     freezer.tick(30)
@@ -76,4 +94,4 @@ async def test_entities_unavailable_on_update_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(CPU_TEMPERATURE_ENTITY_ID).state == "52.582"
+    assert hass.states.get(CPU_TEMPERATURE_ENTITY_ID).state == CPU_TEMPERATURE
