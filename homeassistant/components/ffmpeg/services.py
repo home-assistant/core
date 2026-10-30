@@ -4,7 +4,7 @@ from enum import StrEnum
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -26,13 +26,13 @@ class FFmpegService(StrEnum):
 
 
 SERVICE_FFMPEG_SCHEMA = probatio.Schema(
-    {probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids}
+    {probatio.Optional(CommonServiceArgument.ENTITY_ID): cv.entity_ids}
 )
 
 
 async def _async_service_handle(service: ServiceCall) -> None:
     """Handle service ffmpeg process."""
-    entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
+    entity_ids: list[str] | None = service.data.get(CommonServiceArgument.ENTITY_ID)
 
     if service.service == FFmpegService.START:
         async_dispatcher_send(service.hass, SIGNAL_FFMPEG_START, entity_ids)
