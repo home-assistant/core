@@ -698,6 +698,34 @@ async def test_coordinator_fetch_home_info_auth_error(
         await coordinator._async_setup()
 
 
+async def test_coordinator_setup_homes_auth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test _async_setup raises ConfigEntryAuthFailed on homes auth error."""
+    config_entry = MagicMock(spec=ConfigEntry)
+    config_entry.entry_id = "test-entry"
+
+    mock_api_client = MagicMock()
+    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
+    mock_api_client.cloud_client = mock_cloud_wrapper
+    mock_api_client.initialize = AsyncMock()
+    mock_cloud_wrapper.async_get_homes = AsyncMock(
+        side_effect=HeimanAuthError("Auth failed")
+    )
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=MagicMock(),
+        api_client=mock_api_client,
+        config_entry=config_entry,
+    )
+
+    coordinator.data = HeimanData()
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._async_setup()
+
+
 async def test_coordinator_fetch_home_info_config_entry_auth_failed(
     hass: HomeAssistant,
 ) -> None:

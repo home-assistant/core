@@ -101,6 +101,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         try:
             self.homes = await cloud_wrapper.async_get_homes()
+        except HeimanAuthError as err:
+            raise ConfigEntryAuthFailed from err
         except (HeimanConnectionError, HeimanApiError) as err:
             raise UpdateFailed(f"Connection error fetching homes: {err}") from err
 
