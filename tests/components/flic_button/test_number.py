@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import TWIST_ADDRESS, setup_integration
 
 SLOT_1_ENTITY_ID = "number.flic_twist_t12345_slot_1"
 SLOT_3_ENTITY_ID = "number.flic_twist_t12345_slot_3"
@@ -58,8 +58,7 @@ async def setup_twist(
 )
 @pytest.mark.parametrize("device_type", [DeviceType.TWIST])
 @pytest.mark.parametrize(
-    "push_twist_mode",
-    [PushTwistMode.DEFAULT, PushTwistMode.CONTINUOUS, PushTwistMode.SELECTOR],
+    "push_twist_mode", [PushTwistMode.DEFAULT, PushTwistMode.SELECTOR]
 )
 async def test_number_entities(
     hass: HomeAssistant,
@@ -72,6 +71,83 @@ async def test_number_entities(
     await setup_twist(hass, mock_config_entry, push_twist_mode)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+POSITION_KEYS = {"twist_position", "push_twist_position"}
+SLOT_KEYS = {f"slot_{number}" for number in range(1, 13)}
+
+
+def _registered_keys(
+    entity_registry: er.EntityRegistry, config_entry: MockConfigEntry
+) -> set[str]:
+    """Return the keys of the number entities registered for the entry."""
+    return {
+        entry.unique_id.removeprefix(f"{TWIST_ADDRESS}-")
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+    }
+
+
+@pytest.mark.usefixtures(
+    "mock_flic_client",
+    "mock_no_ble_device_from_address",
+    "mock_bluetooth_register_callback",
+)
+@pytest.mark.parametrize("device_type", [DeviceType.TWIST])
+@pytest.mark.parametrize(
+    ("from_mode", "from_keys", "to_mode", "to_keys"),
+    [
+        pytest.param(
+            PushTwistMode.SELECTOR,
+            SLOT_KEYS,
+            PushTwistMode.DEFAULT,
+            POSITION_KEYS,
+            id="selector_to_default",
+        ),
+        pytest.param(
+            PushTwistMode.DEFAULT,
+            POSITION_KEYS,
+            PushTwistMode.SELECTOR,
+            SLOT_KEYS,
+            id="default_to_selector",
+        ),
+        pytest.param(
+            PushTwistMode.DEFAULT,
+            POSITION_KEYS,
+            PushTwistMode.CONTINUOUS,
+            set(),
+            id="default_to_continuous",
+        ),
+        pytest.param(
+            PushTwistMode.CONTINUOUS,
+            set(),
+            PushTwistMode.DEFAULT,
+            POSITION_KEYS,
+            id="continuous_to_default",
+        ),
+    ],
+)
+async def test_push_twist_mode_change_replaces_numbers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    from_mode: PushTwistMode,
+    from_keys: set[str],
+    to_mode: PushTwistMode,
+    to_keys: set[str],
+) -> None:
+    """Test only the numbers of the current push twist mode are registered."""
+    await setup_twist(hass, mock_config_entry, from_mode)
+    assert _registered_keys(entity_registry, mock_config_entry) == from_keys
+
+    # Changing the options reloads the entry
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_PUSH_TWIST_MODE: to_mode}
+    )
+    await hass.async_block_till_done()
+
+    assert _registered_keys(entity_registry, mock_config_entry) == to_keys
 
 
 @pytest.mark.usefixtures(
