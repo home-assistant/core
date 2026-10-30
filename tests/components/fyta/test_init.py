@@ -9,6 +9,7 @@ from fyta_cli.fyta_exceptions import (
     FytaPasswordError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_platform
 from .const import ACCESS_TOKEN, EXPIRATION, EXPIRATION_OLD, PASSWORD, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload(

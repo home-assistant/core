@@ -119,7 +119,7 @@ class CollectionExtension(BaseTemplateExtension):
         else:
             items = list(args)
 
-        if seed:
+        if seed is not None:
             r = random.Random(seed)
             r.shuffle(items)
         else:

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from pizone import ControllerCommandError, ControllerEndpoint, UnpairedBridgeError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.izone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .conftest import async_load_yaml_exclude, create_mock_controller
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(
@@ -42,13 +41,13 @@ async def test_setup_and_unload(
     mock_discovery_service.close.assert_awaited()
 
 
-async def test_setup_heals_legacy_domain_unique_id(
+async def test_migrate_heals_legacy_domain_unique_id(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
     mock_controller: Mock,
 ) -> None:
-    """Legacy unique_id=DOMAIN binds the sole discovered endpoint and loads."""
+    """Migrate binds unique_id=DOMAIN to the sole discovered endpoint and loads."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=DOMAIN,
@@ -65,13 +64,15 @@ async def test_setup_heals_legacy_domain_unique_id(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 2
+    assert entry.minor_version == 2
     assert entry.unique_id == "000000001"
     assert entry.data[CONF_HOST] == "192.0.2.1"
     assert entry.title == "iZone 000000001"
     mock_discovery_service.create_controller.assert_awaited_once()
 
 
-async def test_setup_heals_legacy_domain_unique_id_keeps_custom_title(
+async def test_migrate_heals_legacy_domain_unique_id_keeps_custom_title(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
@@ -98,7 +99,7 @@ async def test_setup_heals_legacy_domain_unique_id_keeps_custom_title(
     assert entry.title == "Living Room AC"
 
 
-async def test_setup_legacy_domain_unique_id_filters_yaml_excluded(
+async def test_migrate_legacy_domain_unique_id_filters_yaml_excluded(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
@@ -129,7 +130,7 @@ async def test_setup_legacy_domain_unique_id_filters_yaml_excluded(
     assert entry.data[CONF_HOST] == "192.0.2.1"
 
 
-async def test_setup_legacy_domain_unique_id_filters_already_configured(
+async def test_migrate_legacy_domain_unique_id_filters_already_configured(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
@@ -141,6 +142,7 @@ async def test_setup_legacy_domain_unique_id_filters_already_configured(
         unique_id="000000002",
         data={CONF_HOST: "192.0.2.2"},
         version=2,
+        minor_version=2,
     )
     configured.add_to_hass(hass)
     entry = MockConfigEntry(
@@ -166,13 +168,13 @@ async def test_setup_legacy_domain_unique_id_filters_already_configured(
     assert entry.data[CONF_HOST] == "192.0.2.1"
 
 
-async def test_migrate_then_heals_legacy_domain_unique_id(
+async def test_migrate_v1_legacy_domain_unique_id(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
     mock_controller: Mock,
 ) -> None:
-    """v1 migrate clears data, then setup heal rebinds UID and CONF_HOST."""
+    """v1 migrate discovers and writes UID + CONF_HOST (no blank-data step)."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
@@ -189,13 +191,43 @@ async def test_migrate_then_heals_legacy_domain_unique_id(
     await hass.async_block_till_done()
 
     assert entry.version == 2
+    assert entry.minor_version == 2
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id == "000000001"
     assert entry.data == {CONF_HOST: "192.0.2.1"}
     assert entry.title == "iZone 000000001"
 
 
-async def test_setup_legacy_domain_unique_id_no_eligible_retries(
+async def test_migrate_complete_v2_1_bumps_minor_without_discovery(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+) -> None:
+    """Complete v2.1 entry (real UID + host) only bumps minor_version; no discover."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={CONF_HOST: "192.0.2.1"},
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 2
+    assert entry.minor_version == 2
+    assert entry.unique_id == "000000001"
+    assert entry.data == {CONF_HOST: "192.0.2.1"}
+    mock_discovery_service.discover_all.assert_not_called()
+    mock_discovery_service.discover_by_uid.assert_not_called()
+    mock_discovery_service.create_controller.assert_awaited_once()
+
+
+async def test_migrate_legacy_domain_unique_id_no_eligible_retries(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
@@ -213,14 +245,18 @@ async def test_setup_legacy_domain_unique_id_no_eligible_retries(
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.version == 2
+    assert entry.minor_version == 1
+    assert entry.unique_id == DOMAIN
+    assert entry.data == {}
 
 
-async def test_setup_legacy_domain_unique_id_multiple_eligible_fails(
+async def test_migrate_legacy_domain_unique_id_multiple_eligible_fails(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
 ) -> None:
-    """Legacy unique_id=DOMAIN with multiple eligible endpoints is SETUP_ERROR."""
+    """Legacy unique_id=DOMAIN with multiple eligible endpoints is MIGRATION_ERROR."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=DOMAIN,
@@ -237,16 +273,18 @@ async def test_setup_legacy_domain_unique_id_multiple_eligible_fails(
     )
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.version == 2
+    assert entry.minor_version == 1
 
 
-async def test_setup_heals_missing_host_via_discover_endpoint(
+async def test_migrate_heals_missing_host_via_discover_endpoint(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
     mock_controller: Mock,
 ) -> None:
-    """Real UID with empty data recovers CONF_HOST via discover_by_uid."""
+    """Real UID with empty data recovers CONF_HOST via discover_by_uid in migrate."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
@@ -262,11 +300,12 @@ async def test_setup_heals_missing_host_via_discover_endpoint(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
     assert entry.data[CONF_HOST] == "192.0.2.1"
     mock_discovery_service.create_controller.assert_awaited_once()
 
 
-async def test_setup_missing_host_not_found_retries(
+async def test_migrate_missing_host_not_found_retries(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
@@ -283,14 +322,25 @@ async def test_setup_missing_host_not_found_retries(
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.minor_version == 1
+    assert entry.error_reason_translation_key == "controller_not_found"
+    assert entry.error_reason_translation_placeholders == {"uid": "000000001"}
     mock_discovery_service.create_controller.assert_not_awaited()
 
 
-async def test_setup_legacy_domain_unique_id_discovery_oserror_retries(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(OSError("bind failed"), id="oserror"),
+        pytest.param(RuntimeError("discovery already exists"), id="runtimeerror"),
+    ],
+)
+async def test_migrate_legacy_domain_unique_id_discovery_error_retries(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
+    side_effect: Exception,
 ) -> None:
-    """OSError while discovering for legacy DOMAIN unique_id leaves SETUP_RETRY."""
+    """Discovery startup errors for legacy DOMAIN unique_id leave SETUP_RETRY."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=DOMAIN,
@@ -302,18 +352,28 @@ async def test_setup_legacy_domain_unique_id_discovery_oserror_retries(
 
     with patch(
         "homeassistant.components.izone.async_discover_all_endpoints",
-        new=AsyncMock(side_effect=OSError("bind failed")),
+        new=AsyncMock(side_effect=side_effect),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.minor_version == 1
+    assert entry.error_reason_translation_key == "discovery_failed_legacy"
 
 
-async def test_setup_missing_host_discover_oserror_retries(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(OSError("bind failed"), id="oserror"),
+        pytest.param(RuntimeError("discovery already exists"), id="runtimeerror"),
+    ],
+)
+async def test_migrate_missing_host_discover_error_retries(
     hass: HomeAssistant,
     mock_create_discovery: AsyncMock,
+    side_effect: Exception,
 ) -> None:
-    """OSError while resolving host for a real UID leaves SETUP_RETRY."""
+    """Discovery startup errors while resolving host leave SETUP_RETRY."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="000000001",
@@ -324,19 +384,39 @@ async def test_setup_missing_host_discover_oserror_retries(
 
     with patch(
         "homeassistant.components.izone.async_discover_endpoint",
-        new=AsyncMock(side_effect=OSError("bind failed")),
+        new=AsyncMock(side_effect=side_effect),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.minor_version == 1
+    assert entry.error_reason_translation_key == "discovery_failed_host"
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
+    ("side_effect", "expected_state", "translation_key", "placeholders"),
     [
-        (ConnectionError("offline"), ConfigEntryState.SETUP_RETRY),
-        (UnpairedBridgeError("unpaired"), ConfigEntryState.SETUP_ERROR),
-        (ControllerCommandError("rejected"), ConfigEntryState.SETUP_ERROR),
+        pytest.param(
+            ConnectionError("offline"),
+            ConfigEntryState.SETUP_RETRY,
+            "cannot_connect",
+            {"host": "192.0.2.1"},
+            id="connection-error",
+        ),
+        pytest.param(
+            UnpairedBridgeError("unpaired"),
+            ConfigEntryState.SETUP_ERROR,
+            "bridge_unpaired",
+            None,
+            id="unpaired-bridge",
+        ),
+        pytest.param(
+            ControllerCommandError("rejected"),
+            ConfigEntryState.SETUP_ERROR,
+            "setup_rejected",
+            {"host": "192.0.2.1"},
+            id="command-rejected",
+        ),
     ],
 )
 async def test_setup_create_controller_errors(
@@ -346,6 +426,8 @@ async def test_setup_create_controller_errors(
     mock_discovery_service: Mock,
     side_effect: Exception,
     expected_state: ConfigEntryState,
+    translation_key: str,
+    placeholders: dict[str, str] | None,
 ) -> None:
     """create_controller failures map to retry vs error entry states."""
     mock_config_entry.add_to_hass(hass)
@@ -353,6 +435,8 @@ async def test_setup_create_controller_errors(
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is expected_state
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert mock_config_entry.error_reason_translation_placeholders == placeholders
 
 
 async def test_setup_discovery_bind_failure_retries(
@@ -375,17 +459,26 @@ async def test_setup_discovery_bind_failure_retries(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "discovery_start_failed"
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(ConnectionError("gone"), id="connection-error"),
+        pytest.param(ControllerCommandError("rejected"), id="command-rejected"),
+    ],
+)
 async def test_setup_first_refresh_failure_closes_controller(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
+    side_effect: Exception,
 ) -> None:
     """A failed first refresh closes the controller and retries setup."""
     mock_config_entry.add_to_hass(hass)
-    mock_controller.refresh_all = AsyncMock(side_effect=ConnectionError("gone"))
+    mock_controller.refresh_all = AsyncMock(side_effect=side_effect)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -483,6 +576,7 @@ async def test_last_unload_stops_shared_discovery(
         data={CONF_HOST: "192.0.2.1"},
         entry_id="entry_1",
         version=2,
+        minor_version=2,
     )
     second = MockConfigEntry(
         domain=DOMAIN,
@@ -490,6 +584,7 @@ async def test_last_unload_stops_shared_discovery(
         data={CONF_HOST: "192.0.2.2"},
         entry_id="entry_2",
         version=2,
+        minor_version=2,
     )
     first_controller = create_mock_controller("000000001", "192.0.2.1")
     second_controller = create_mock_controller("000000002", "192.0.2.2")

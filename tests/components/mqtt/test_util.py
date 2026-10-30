@@ -9,6 +9,8 @@ import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.const import DOMAIN
@@ -18,9 +20,6 @@ from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_canceling_debouncer_on_shutdown(
@@ -73,7 +72,7 @@ async def test_canceling_debouncer_normal(
 
     debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
     debouncer.async_schedule()
-    await asyncio.sleep(0.01)
+    async_fire_time_changed(hass)
     assert debouncer._task is not None
     await debouncer.async_cleanup()
     assert debouncer._task is None
@@ -90,7 +89,7 @@ async def test_canceling_debouncer_throws(
 
     debouncer = EnsureJobAfterCooldown(0.0, _async_myjob)
     debouncer.async_schedule()
-    await asyncio.sleep(0.01)
+    async_fire_time_changed(hass)
     assert debouncer._task is not None
     # let debouncer._task fail by mocking it
     with patch.object(debouncer, "_task") as task:

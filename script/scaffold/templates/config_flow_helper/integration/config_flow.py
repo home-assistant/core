@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ENTITY_ID
@@ -16,17 +16,17 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .const import DOMAIN
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+        probatio.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required("name"): selector.TextSelector(),
+        probatio.Required("name"): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 

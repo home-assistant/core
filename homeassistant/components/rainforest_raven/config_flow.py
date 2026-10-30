@@ -6,7 +6,7 @@ from typing import Any, override
 from aioraven.data import MeterType
 from aioraven.device import RAVEnConnectionError
 from aioraven.serial import RAVEnSerialDevice
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -84,9 +84,9 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_MAC): SelectSelector(
+                probatio.Required(CONF_MAC): SelectSelector(
                     SelectSelectorConfig(
                         options=sorted(self._meter_macs),
                         mode=SelectSelectorMode.DROPDOWN,
@@ -153,5 +153,7 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_meters()
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list(port_map))})
+        schema = probatio.Schema(
+            {probatio.Required(CONF_DEVICE): probatio.In(list(port_map))}
+        )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

@@ -2,6 +2,12 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homee.const import DOMAIN
@@ -10,13 +16,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import build_mock_node, setup_integration
 from .conftest import HOMEE_ID
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def setup_mock_homee(
@@ -58,8 +57,8 @@ async def test_diagnostics_device(
     """Test diagnostics for a device."""
     await setup_mock_homee(hass, mock_homee, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{HOMEE_ID}-1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{HOMEE_ID}-1"), mock_config_entry.entry_id
     )
     assert device_entry is not None
     result = await get_diagnostics_for_device(
@@ -83,8 +82,8 @@ async def test_diagnostics_homee_device(
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{HOMEE_ID}")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{HOMEE_ID}"), mock_config_entry.entry_id
     )
     assert device_entry is not None
     result = await get_diagnostics_for_device(

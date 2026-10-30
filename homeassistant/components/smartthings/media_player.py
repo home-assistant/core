@@ -70,6 +70,22 @@ REPEAT_MODE_TO_HA = {
 
 HA_REPEAT_MODE_TO_SMARTTHINGS = {v: k for k, v in REPEAT_MODE_TO_HA.items()}
 
+NETWORK_AUDIO_VENDOR_IDS = ["VD-NetworkAudio-002S"]
+
+SOUND_MODE_TO_HA = {
+    "standard": "standard",
+    "surround": "surround",
+    "game": "game",
+    "adaptive sound": "adaptive_sound",
+}
+
+HA_TO_SOUND_MODE = {v: k for k, v in SOUND_MODE_TO_HA.items()}
+
+TV_SOUND_MODE_TO_HA = {
+    "Standard": "standard",
+    "Amplify": "amplify",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -104,6 +120,8 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 Capability.AUDIO_MUTE,
                 Capability.AUDIO_TRACK_DATA,
                 Capability.AUDIO_VOLUME,
+                Capability.CUSTOM_SOUND_MODE,
+                Capability.EXECUTE,
                 Capability.MEDIA_INPUT_SOURCE,
                 Capability.MEDIA_PLAYBACK,
                 Capability.MEDIA_PLAYBACK_REPEAT,
@@ -119,6 +137,9 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             or device.device.components[MAIN].manufacturer_category,
         )
         self._source_to_smartthings_id: dict[str, str] = {}
+
+        if self._supports_samsung_network_audio_sound_mode():
+            self._attr_sound_mode_list = list(SOUND_MODE_TO_HA.values())
 
     @override
     def _update_attr(self) -> None:
@@ -157,6 +178,27 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             )
         return None
 
+    def _supports_samsung_network_audio_sound_mode(self) -> bool:
+        """Return True if the device is a Samsung network audio soundbar."""
+        ocf = self.device.device.ocf
+        return ocf is not None and ocf.vendor_id in NETWORK_AUDIO_VENDOR_IDS
+
+    def _supports_tv_sound_mode(self) -> bool:
+        """Return True if the device reports its sound mode through custom.soundmode."""
+        return (
+            self.supports_capability(Capability.CUSTOM_SOUND_MODE)
+            and not self._supports_samsung_network_audio_sound_mode()
+        )
+
+    def _tv_sound_modes(self) -> list[str]:
+        """Return the raw sound modes the TV supports."""
+        return (
+            self.get_attribute_value(
+                Capability.CUSTOM_SOUND_MODE, Attribute.SUPPORTED_SOUND_MODES
+            )
+            or []
+        )
+
     def _determine_features(self) -> MediaPlayerEntityFeature:
         flags = (
             MediaPlayerEntityFeature.VOLUME_SET
@@ -189,6 +231,11 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             flags |= MediaPlayerEntityFeature.SHUFFLE_SET
         if self.supports_capability(Capability.MEDIA_PLAYBACK_REPEAT):
             flags |= MediaPlayerEntityFeature.REPEAT_SET
+        if (
+            self._supports_samsung_network_audio_sound_mode()
+            or self._supports_tv_sound_mode()
+        ):
+            flags |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         return flags
 
     @override
@@ -315,6 +362,53 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.SET_PLAYBACK_REPEAT_MODE,
             argument=HA_REPEAT_MODE_TO_SMARTTHINGS[repeat],
         )
+
+    @override
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Select sound mode."""
+        if self._supports_tv_sound_mode():
+            raw = next(
+                mode
+                for mode in self._tv_sound_modes()
+                if TV_SOUND_MODE_TO_HA.get(mode, mode) == sound_mode
+            )
+            await self.execute_device_command(
+                Capability.CUSTOM_SOUND_MODE,
+                Command.SET_SOUND_MODE,
+                argument=raw,
+            )
+            return
+        await self.execute_device_command(
+            Capability.EXECUTE,
+            Command.EXECUTE,
+            argument=[
+                "/sec/networkaudio/soundmode",
+                {"x.com.samsung.networkaudio.soundmode": HA_TO_SOUND_MODE[sound_mode]},
+            ],
+        )
+        self._attr_sound_mode = sound_mode
+        self.async_write_ha_state()
+
+    @property
+    @override
+    def sound_mode_list(self) -> list[str] | None:
+        """Return the available sound modes."""
+        if self._supports_tv_sound_mode():
+            return [
+                TV_SOUND_MODE_TO_HA.get(mode, mode) for mode in self._tv_sound_modes()
+            ]
+        return super().sound_mode_list
+
+    @property
+    @override
+    def sound_mode(self) -> str | None:
+        """Return the current sound mode."""
+        if self._supports_tv_sound_mode():
+            mode = self.get_attribute_value(
+                Capability.CUSTOM_SOUND_MODE, Attribute.SOUND_MODE
+            )
+            return TV_SOUND_MODE_TO_HA.get(mode, mode) if mode is not None else None
+        return super().sound_mode
 
     @property
     @override

@@ -1,6 +1,7 @@
 """Tests for switch platform."""
 
 from flux_led.const import MODE_MUSIC
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
@@ -32,8 +33,6 @@ from . import (
     async_mock_device_turn_off,
     async_mock_device_turn_on,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_switch_on_off(hass: HomeAssistant) -> None:

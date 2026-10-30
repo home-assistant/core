@@ -1,16 +1,28 @@
 """Test the Met integration init."""
 
+from typing import Any
+from unittest.mock import patch
+
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.met.const import (
+    CONF_TRACK_HOME,
     DEFAULT_HOME_LATITUDE,
     DEFAULT_HOME_LONGITUDE,
     DOMAIN,
+    HOME_LOCATION_NAME,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
 
@@ -29,9 +41,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert not hass.data.get(DOMAIN)
 
 
-async def test_fail_default_home_entry(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_fail_default_home_entry(hass: HomeAssistant) -> None:
     """Test abort setup of default home location."""
     await async_process_ha_core_config(
         hass,
@@ -46,34 +56,60 @@ async def test_fail_default_home_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
-    assert (
-        "Skip setting up met.no integration; No Home location has been set"
-        in caplog.text
-    )
+    assert entry.reason == "No home location has been set"
 
 
-async def test_removing_incorrect_devices(
+@pytest.mark.parametrize(
+    ("data", "title", "expected_data", "expected_title"),
+    [
+        pytest.param(
+            {
+                CONF_NAME: "test",
+                CONF_LATITUDE: 0,
+                CONF_LONGITUDE: 1.0,
+                CONF_ELEVATION: 1.0,
+            },
+            "Somewhere",
+            {
+                CONF_LOCATION: {CONF_LATITUDE: 0, CONF_LONGITUDE: 1.0},
+                CONF_ELEVATION: 1.0,
+            },
+            "Somewhere",
+            id="name_removed_title_kept",
+        ),
+        pytest.param(
+            {CONF_TRACK_HOME: True},
+            HOME_LOCATION_NAME,
+            {CONF_TRACK_HOME: True},
+            HOME_LOCATION_NAME,
+            id="track_home_without_name",
+        ),
+    ],
+)
+async def test_migrate_entry(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    caplog: pytest.LogCaptureFixture,
-    mock_weather,
+    data: dict[str, Any],
+    title: str,
+    expected_data: dict[str, Any],
+    expected_title: str,
 ) -> None:
-    """Test we remove incorrect devices."""
-    entry = await init_integration(hass)
-
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        name="Forecast_legacy",
-        entry_type=dr.DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN,)},
-        manufacturer="Met.no",
-        model="Forecast",
-        configuration_url="https://www.met.no/en",
+    """Test migrating a config entry to the version without a name in data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        title=title,
+        minor_version=1,
     )
+    with patch(
+        "homeassistant.components.met.coordinator.metno.MetWeatherData.fetching_data",
+        return_value=True,
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_reload(entry.entry_id)
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    assert not device_registry.async_get_device(identifiers={(DOMAIN,)})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
-    assert "Removing improper device Forecast_legacy" in caplog.text
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 2
+    assert entry.minor_version == 1
+    assert entry.data == expected_data
+    assert entry.title == expected_title

@@ -1,5 +1,6 @@
 """Tests for Victron GX MQTT select entities."""
 
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -8,8 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import MOCK_INSTALLATION_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_victron_select(
@@ -44,8 +43,8 @@ async def test_victron_select(
     assert state.attributes["options"] == ["manual", "auto", "scheduled_charge"]
 
     # Verify device info was registered correctly
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_evcharger_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_evcharger_0"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"

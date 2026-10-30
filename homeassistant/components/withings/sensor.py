@@ -235,12 +235,14 @@ MEASUREMENT_SENSORS: dict[
         key="vascular_age",
         measurement_type=MeasurementType.VASCULAR_AGE,
         translation_key="vascular_age",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     MeasurementType.VISCERAL_FAT: WithingsMeasurementSensorEntityDescription(
         key="visceral_fat",
         measurement_type=MeasurementType.VISCERAL_FAT,
         translation_key="visceral_fat_index",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: (
@@ -249,6 +251,7 @@ MEASUREMENT_SENSORS: dict[
             measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
             translation_key="electrodermal_activity_feet",
             native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
         )
     ),
@@ -258,6 +261,7 @@ MEASUREMENT_SENSORS: dict[
             measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
             translation_key="electrodermal_activity_left_foot",
             native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
         )
     ),
@@ -267,6 +271,7 @@ MEASUREMENT_SENSORS: dict[
             measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
             translation_key="electrodermal_activity_right_foot",
             native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
         )
     ),
@@ -861,7 +866,7 @@ async def async_setup_entry(
                         )
                     )
                     and config_entry.state is ConfigEntryState.LOADED
-                    for device in device_registry.devices.get_entries(
+                    for device in device_registry.async_get_devices(
                         identifiers={(DOMAIN, device_id)}
                     )
                 ):
@@ -875,16 +880,10 @@ async def async_setup_entry(
         if old_devices:
             device_registry = dr.async_get(hass)
             for device_id in old_devices:
-                # Several config entries can share this identifier, each owning its own
-                # device registry entry, so only remove this entry's own device.
-                for device in device_registry.devices.get_entries(
-                    identifiers={(DOMAIN, device_id)}
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device_id), entry.entry_id
                 ):
-                    if device.config_entry_id == entry.entry_id:
-                        device_registry.async_update_device(
-                            device.id, remove_config_entry_id=entry.entry_id
-                        )
-                        break
+                    device_registry.async_remove_device(device.id)
                 current_devices.remove(device_id)
 
     device_coordinator.async_add_listener(_async_device_listener)

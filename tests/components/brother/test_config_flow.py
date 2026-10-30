@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from brother import SnmpError, UnsupportedModelError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.brother.const import (
     CONF_COMMUNITY,
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_HOST: "127.0.0.1",
@@ -149,7 +148,15 @@ async def test_unsupported_model_error(
     """Test unsupported printer model error."""
     mock_brother.create.side_effect = UnsupportedModelError("error")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -165,7 +172,15 @@ async def test_device_exists_abort(
     await init_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
     )
 
     assert result["type"] is FlowResultType.ABORT

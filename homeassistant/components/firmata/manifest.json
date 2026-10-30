@@ -1,6 +1,7 @@
 {
   "domain": "firmata",
   "name": "Firmata",
+  "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@DaAwesomeP"],
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/firmata",

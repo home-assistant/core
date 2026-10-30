@@ -50,7 +50,7 @@ class HannaDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_parameters(self) -> list[dict[str, Any]]:
         """Get all parameters from the sensor data."""
-        return self.api_client.parameters
+        return self.data.get("messages", {}).get("parameters", [])
 
     def get_parameter_value(self, key: str) -> Any:
         """Get the value for a specific parameter."""

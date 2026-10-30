@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.labs import (
     EVENT_LABS_UPDATED,
@@ -20,8 +21,6 @@ from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 
 from . import assert_stored_labs_data
-
-from tests.common import async_capture_events
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:

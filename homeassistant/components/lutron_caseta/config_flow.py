@@ -6,9 +6,9 @@ import os
 import ssl
 from typing import Any, override
 
+import probatio
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ENTRY_DEFAULT_TITLE = "Caséta bridge"
 
-DATA_SCHEMA_USER = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA_USER = probatio.Schema({probatio.Required(CONF_HOST): str})
 TLS_ASSET_TEMPLATE = "lutron_caseta-{}-{}.pem"
 
 

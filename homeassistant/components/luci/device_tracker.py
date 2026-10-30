@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
@@ -20,8 +20,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -35,11 +36,11 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -103,11 +104,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for OpenWrt (luci) component."""
     coordinator = entry.runtime_data
+    tracked: set[str] = set()
 
-    async_add_entities(
-        LuciScannerEntity(coordinator, mac, device)
-        for mac, device in coordinator.data.items()
-    )
+    @callback
+    def _async_add_new_devices() -> None:
+        """Add entities for devices seen for the first time."""
+        if new_macs := coordinator.data.keys() - tracked:
+            tracked.update(new_macs)
+            async_add_entities(
+                LuciScannerEntity(coordinator, mac, coordinator.data[mac])
+                for mac in new_macs
+            )
+
+    _async_add_new_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
 
 
 class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
@@ -128,7 +138,10 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
         self._attr_mac_address = mac
         self._attr_hostname = device.hostname
         self._attr_ip_address = device.ip
-        self._attr_name = device.hostname or mac
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            name=device.hostname or mac,
+        )
 
     @property
     @override
@@ -150,5 +163,12 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
             device = self.coordinator.data[self._mac]
             self._attr_hostname = device.hostname
             self._attr_ip_address = device.ip
-            self._attr_name = device.hostname or self._mac
+            if (
+                device.hostname
+                and (device_entry := self.device_entry)
+                and device_entry.name != device.hostname
+            ):
+                dr.async_get(self.hass).async_update_device(
+                    device_entry.id, name=device.hostname
+                )
         super()._handle_coordinator_update()

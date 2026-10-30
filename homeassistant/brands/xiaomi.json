@@ -6,6 +6,7 @@
     "xiaomi_ble",
     "xiaomi_miio",
     "xiaomi_tv",
+    "xiaomi_weather",
     "xiaomi"
   ]
 }

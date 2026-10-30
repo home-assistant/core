@@ -7,6 +7,7 @@ import sys
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import load_fixture, load_json_object_fixture
 
 from homeassistant.components.zwave_js.scripts.convert_device_diagnostics_to_fixture import (
     extract_fixture_data,
@@ -14,8 +15,6 @@ from homeassistant.components.zwave_js.scripts.convert_device_diagnostics_to_fix
     load_file,
     main,
 )
-
-from tests.common import load_fixture
 
 
 def _minify(text: str) -> str:
@@ -25,7 +24,7 @@ def _minify(text: str) -> str:
 
 def test_fixture_functions() -> None:
     """Test functions related to the fixture."""
-    diagnostics_data = json.loads(load_fixture("zwave_js/device_diagnostics.json"))
+    diagnostics_data = load_json_object_fixture("zwave_js/device_diagnostics.json")
     state = extract_fixture_data(copy.deepcopy(diagnostics_data))
     assert isinstance(state["values"], list)
     assert (
@@ -54,7 +53,7 @@ def test_load_file() -> None:
     """Test load file."""
     assert load_file(
         Path(__file__).parents[1] / "fixtures" / "device_diagnostics.json"
-    ) == json.loads(load_fixture("zwave_js/device_diagnostics.json"))
+    ) == load_json_object_fixture("zwave_js/device_diagnostics.json")
 
 
 def test_main(capfd: pytest.CaptureFixture[str]) -> None:

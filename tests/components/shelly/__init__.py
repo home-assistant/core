@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -35,8 +36,6 @@ from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_MAC = "123456789ABC"
 
@@ -182,10 +181,13 @@ def register_sub_device(
     device_registry: DeviceRegistry, config_entry: ConfigEntry, unique_id: str
 ) -> DeviceEntry:
     """Register Shelly sub-device."""
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_MAC), config_entry.entry_id
+    )
     return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
-        via_device=(DOMAIN, MOCK_MAC),
+        via_device_id=main_device.id if main_device else None,
     )
 
 

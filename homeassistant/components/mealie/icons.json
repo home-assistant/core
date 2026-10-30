@@ -24,6 +24,12 @@
     }
   },
   "services": {
+    "add_ingredient": {
+      "service": "mdi:basket-plus"
+    },
+    "delete_mealplan": {
+      "service": "mdi:food-off"
+    },
     "get_mealplan": {
       "service": "mdi:food"
     },
@@ -39,11 +45,17 @@
     "import_recipe": {
       "service": "mdi:map-search"
     },
+    "parse_ingredient": {
+      "service": "mdi:food-apple"
+    },
     "set_mealplan": {
       "service": "mdi:food"
     },
     "set_random_mealplan": {
       "service": "mdi:dice-multiple"
+    },
+    "update_mealplan": {
+      "service": "mdi:food"
     }
   }
 }

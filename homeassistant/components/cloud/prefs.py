@@ -55,8 +55,8 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 4
 
-ALEXA_SETTINGS_VERSION = 3
-GOOGLE_SETTINGS_VERSION = 3
+ALEXA_SETTINGS_VERSION = 4
+GOOGLE_SETTINGS_VERSION = 4
 
 
 class CloudPreferencesStore(Store):
@@ -175,12 +175,12 @@ class CloudPreferences:
         google_connected: bool | UndefinedType = UNDEFINED,
         google_enabled: bool | UndefinedType = UNDEFINED,
         google_report_state: bool | UndefinedType = UNDEFINED,
-        google_secure_devices_pin: str | None | UndefinedType = UNDEFINED,
+        google_secure_devices_pin: str | UndefinedType | None = UNDEFINED,
         google_settings_version: int | UndefinedType = UNDEFINED,
         remote_allow_remote_enable: bool | UndefinedType = UNDEFINED,
-        remote_domain: str | None | UndefinedType = UNDEFINED,
+        remote_domain: str | UndefinedType | None = UNDEFINED,
         onboarded_items: list[str] | UndefinedType = UNDEFINED,
-        onboarding_postponed_until: str | None | UndefinedType = UNDEFINED,
+        onboarding_postponed_until: str | UndefinedType | None = UNDEFINED,
         remote_enabled: bool | UndefinedType = UNDEFINED,
         tts_default_voice: tuple[str, str] | UndefinedType = UNDEFINED,
     ) -> None:

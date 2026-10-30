@@ -6,7 +6,6 @@
       "addon_install_failed": "Failed to install the Matter Server app.",
       "addon_start_failed": "Failed to start the Matter Server app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_matter_addon": "Discovered app is not the official Matter Server app.",
       "reconfiguration_successful": "Successfully reconfigured the Matter integration."
@@ -155,6 +154,11 @@
         "name": "Temporary mute"
       }
     },
+    "camera": {
+      "camera": {
+        "name": "[%key:component::camera::title%]"
+      }
+    },
     "climate": {
       "thermostat": {
         "name": "Thermostat",
@@ -176,7 +180,6 @@
     },
     "event": {
       "button": {
-        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -250,6 +253,9 @@
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
       },
+      "music_sync_sensitivity": {
+        "name": "Music sync sensitivity"
+      },
       "occupied_setback": {
         "name": "Occupied setback"
       },
@@ -265,6 +271,9 @@
       "on_transition_time": {
         "name": "On transition time"
       },
+      "power_on_color_temperature": {
+        "name": "Power-on color temperature"
+      },
       "power_on_level": {
         "name": "Power-on level"
       },
@@ -274,6 +283,9 @@
       "sensitivity_level": {
         "name": "Sensitivity"
       },
+      "slat_rotation_time": {
+        "name": "Slat rotation time"
+      },
       "speaker_setpoint": {
         "name": "Volume"
       },
@@ -282,6 +294,12 @@
       },
       "temperature_setpoint": {
         "name": "Temperature setpoint"
+      },
+      "travel_time_down": {
+        "name": "Travel time down"
+      },
+      "travel_time_up": {
+        "name": "Travel time up"
       },
       "user_code_temporary_disable_time": {
         "name": "User code temporary disable time"
@@ -294,6 +312,13 @@
       }
     },
     "select": {
+      "blind_type": {
+        "name": "Blind type",
+        "state": {
+          "roller_shutter": "Roller shutter",
+          "venetian_blind": "Venetian blind"
+        }
+      },
       "clean_mode": {
         "name": "Clean mode"
       },
@@ -334,6 +359,15 @@
       "mode": {
         "name": "Mode"
       },
+      "music_sync_effect": {
+        "name": "Music sync effect",
+        "state": {
+          "dash": "Dash",
+          "flash": "Flash",
+          "pulse": "Pulse",
+          "stretch": "Stretch"
+        }
+      },
       "power_level": {
         "name": "Power level (W)"
       },
@@ -345,6 +379,9 @@
           "minimum": "Minimum",
           "normal": "[%key:common::state::normal%]"
         }
+      },
+      "selected_chime": {
+        "name": "Chime sound"
       },
       "sensitivity_level": {
         "name": "Sensitivity",
@@ -363,11 +400,32 @@
           "toggle": "[%key:common::action::toggle%]"
         }
       },
+      "switch_connection_mode": {
+        "name": "Connection mode",
+        "state": {
+          "directly_connected": "Directly connected",
+          "matter_only": "Matter only"
+        }
+      },
+      "switch_type": {
+        "name": "Switch type",
+        "state": {
+          "button": "Button",
+          "switch": "Switch"
+        }
+      },
       "temperature_display_mode": {
         "name": "Temperature display mode"
       },
       "temperature_level": {
         "name": "Temperature level"
+      },
+      "travel_time_mode": {
+        "name": "Travel time mode",
+        "state": {
+          "automatic": "Automatic",
+          "manual": "Manual"
+        }
       },
       "water_heater_mode": {
         "name": "Water heater mode"
@@ -606,6 +664,20 @@
       "rms_voltage": {
         "name": "Effective voltage"
       },
+      "setpoint_change_amount": {
+        "name": "Setpoint change amount"
+      },
+      "setpoint_change_source": {
+        "name": "Setpoint change source",
+        "state": {
+          "external": "External",
+          "manual": "Manual",
+          "schedule": "Schedule"
+        }
+      },
+      "setpoint_change_timestamp": {
+        "name": "Last setpoint change"
+      },
       "switch_current_position": {
         "name": "Current switch position"
       },
@@ -643,14 +715,8 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "valve_position": {
         "name": "Valve position"
-      },
-      "voltage": {
-        "name": "Voltage"
       },
       "wifi_rssi": {
         "name": "Wi-Fi RSSI"
@@ -665,11 +731,23 @@
       }
     },
     "switch": {
+      "audible_alarm_enabled": {
+        "name": "Audible alarm enabled"
+      },
       "child_lock": {
         "name": "Child lock"
       },
+      "display": {
+        "name": "Display"
+      },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "music_sync": {
+        "name": "Music sync"
+      },
+      "one_touch_locking": {
+        "name": "One-touch locking"
       },
       "power": {
         "name": "Power"
@@ -677,11 +755,17 @@
       "privacy_mode_button": {
         "name": "Privacy mode button"
       },
+      "reverse_motor_direction": {
+        "name": "Reverse motor direction"
+      },
       "speaker_mute": {
         "name": "Mute"
       },
       "switch": {
         "name": "[%key:component::switch::title%]"
+      },
+      "visual_alarm_enabled": {
+        "name": "Visual alarm enabled"
       }
     },
     "vacuum": {
@@ -709,6 +793,15 @@
     },
     "addon_not_running": {
       "message": "The Matter Server app is not running yet."
+    },
+    "addon_stop_failed": {
+      "message": "Failed to stop the Matter Server app."
+    },
+    "bitmap_write_failed": {
+      "message": "Failed to change {name}: the device returned status {status}."
+    },
+    "bitmap_write_not_supported": {
+      "message": "The device does not support changing {name}."
     },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."

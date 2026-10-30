@@ -5,7 +5,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_device_info": "Unable to retrieve device information",
       "no_serial_number": "No serial number found on the device",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_device": "The provided device does not match the configured device"
     },
     "error": {

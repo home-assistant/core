@@ -5,8 +5,14 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import ANY, MagicMock, PropertyMock, call, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockEntity,
+    MockEntityPlatform,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.hdmi_cec import (
     DOMAIN,
@@ -31,13 +37,6 @@ from homeassistant.util.dt import utcnow
 
 from . import assert_key_press_release
 from .conftest import HDMINetworkCreator
-
-from tests.common import (
-    MockEntity,
-    MockEntityPlatform,
-    async_capture_events,
-    async_fire_time_changed,
-)
 
 
 @pytest.fixture(name="mock_tcp_adapter")
@@ -301,7 +300,7 @@ async def test_service_update_devices(
                     "While the code allows for an empty string"
                     " the schema doesn't allow it"
                 ),
-                raises=vol.MultipleInvalid,
+                raises=probatio.MultipleInvalid,
             ),
         ),
     ],
@@ -394,7 +393,7 @@ async def test_service_volume_release(
                     " pass an empty string, but the schema"
                     " does not allow this"
                 ),
-                raises=vol.MultipleInvalid,
+                raises=probatio.MultipleInvalid,
             ),
         ),
     ],
@@ -452,7 +451,7 @@ async def test_service_volume_mute(
                     "`att` only accepts a int or a HEX value,"
                     " it seems good to allow for raw data here."
                 ),
-                raises=vol.MultipleInvalid,
+                raises=probatio.MultipleInvalid,
             ),
         ),
         pytest.param(
@@ -480,7 +479,7 @@ async def test_service_volume_mute(
                     " passthrough a list, the call schema does"
                     " not allow it."
                 ),
-                raises=(vol.MultipleInvalid, TypeError),
+                raises=(probatio.MultipleInvalid, TypeError),
             ),
         ),
     ],

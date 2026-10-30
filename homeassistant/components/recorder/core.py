@@ -20,6 +20,7 @@ from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
@@ -34,6 +35,7 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
+    State,
     callback,
 )
 from homeassistant.helpers.event import (
@@ -41,7 +43,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
-from homeassistant.helpers.recorder import DATA_RECORDER
+from homeassistant.helpers.recorder import DATA_RECORDER, session_scope
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -112,7 +114,6 @@ from .util import (
     end_incomplete_runs,
     is_second_sunday,
     move_away_broken_database,
-    session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
     write_lock_db_sqlite,
@@ -124,7 +125,7 @@ _LOGGER = logging.getLogger(__name__)
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
 
-SHUTDOWN_TASK = object()
+SHUTDOWN_TASK = sentinel("SHUTDOWN_TASK")
 
 COMMIT_TASK = CommitTask()
 KEEP_ALIVE_TASK = KeepAliveTask()
@@ -171,7 +172,9 @@ class Recorder(threading.Thread):
         self.auto_repack = auto_repack
         self.keep_days = keep_days
         self.is_running: bool = False
-        self._hass_started: asyncio.Future[object] = hass.loop.create_future()
+        self._hass_started: asyncio.Future[SHUTDOWN_TASK | None] = (
+            hass.loop.create_future()
+        )
         self.commit_interval = commit_interval
         self._queue: queue.SimpleQueue[RecorderTask | Event] = queue.SimpleQueue()
         self.db_url = uri
@@ -199,6 +202,7 @@ class Recorder(threading.Thread):
         self.schema_version = 0
         self._commits_without_expire = 0
         self._event_session_has_pending_writes = False
+        self._processed_startup_batch = False
 
         self.recorder_runs_manager = RecorderRunsManager()
         self.states_manager = StatesManager()
@@ -218,6 +222,10 @@ class Recorder(threading.Thread):
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
 
         self._event_listener: CALLBACK_TYPE | None = None
+        # State changes put in the queue before the recorder is ready, by entity.
+        # None once the recorder is ready.
+        self._queued_states: dict[str, list[State | None]] | None = {}
+        self._queued_states_listener: CALLBACK_TYPE | None = None
         self._queue_watcher: CALLBACK_TYPE | None = None
         self._keep_alive_listener: CALLBACK_TYPE | None = None
         self._commit_listener: CALLBACK_TYPE | None = None
@@ -319,6 +327,23 @@ class Recorder(threading.Thread):
             MATCH_ALL,
             _event_listener,
         )
+        if EVENT_STATE_CHANGED not in exclude_event_types:
+            if TYPE_CHECKING:
+                assert self._queued_states is not None
+            queued_states = self._queued_states
+
+            @callback
+            def _queued_state_listener(event: Event[EventStateChangedData]) -> None:
+                """Index the state changes the event listener queued."""
+                entity_id = event.data["entity_id"]
+                if entity_filter is None or entity_filter(entity_id):
+                    queued_states.setdefault(entity_id, []).append(
+                        event.data["new_state"]
+                    )
+
+            self._queued_states_listener = self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED, _queued_state_listener
+            )
         self._queue_watcher = async_track_time_interval(
             self.hass,
             self._async_check_queue,
@@ -394,6 +419,36 @@ class Recorder(threading.Thread):
         if self._event_listener:
             self._event_listener()
             self._event_listener = None
+        # Later changes are not queued, so they are missing from the index too
+        if self._queued_states_listener:
+            self._queued_states_listener()
+            self._queued_states_listener = None
+
+    @callback
+    def _async_drop_queued_states(self) -> None:
+        """Stop indexing queued state changes and drop the index."""
+        if self._queued_states_listener:
+            self._queued_states_listener()
+            self._queued_states_listener = None
+        self._queued_states = None
+
+    @callback
+    def async_get_queued_states(
+        self, entity_ids: Iterable[str]
+    ) -> dict[str, list[State | None]] | None:
+        """Return the state changes queued for `entity_ids`, oldest first.
+
+        Until the recorder is ready it does not process its queue, so these are
+        not in the database yet. Returns None if and only if the recorder is
+        ready; wait for `async_get_commit_future` instead then.
+        """
+        if (queued_states := self._queued_states) is None:
+            return None
+        return {
+            entity_id: list(states)
+            for entity_id in entity_ids
+            if (states := queued_states.get(entity_id))
+        }
 
     @callback
     def _async_stop_listeners(self) -> None:
@@ -497,6 +552,8 @@ class Recorder(threading.Thread):
         Called after all migration steps are finished.
         """
         self._async_setup_periodic_tasks()
+        # From here on, callers flush the queue instead of reading the index
+        self._async_drop_queued_states()
         self.async_recorder_ready.set()
 
     @callback
@@ -555,10 +612,23 @@ class Recorder(threading.Thread):
 
     @callback
     def async_clear_statistics(
-        self, statistic_ids: list[str], *, on_done: Callable[[], None] | None = None
+        self,
+        statistic_ids: list[str],
+        *,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        on_done: Callable[[], None] | None = None,
     ) -> None:
-        """Clear statistics for a list of statistic_ids."""
-        self.queue_task(ClearStatisticsTask(on_done, statistic_ids))
+        """Clear statistics for a list of statistic_ids.
+
+        With a time range, only the statistics which overlap the range are cleared.
+        """
+        # A one-sided range would otherwise clear the complete statistics.
+        if (start_time is None) != (end_time is None):
+            raise ValueError("start_time and end_time must be provided together")
+        self.queue_task(
+            ClearStatisticsTask(on_done, statistic_ids, start_time, end_time)
+        )
 
     @callback
     def async_update_statistics_metadata(
@@ -566,8 +636,8 @@ class Recorder(threading.Thread):
         statistic_id: str,
         *,
         new_statistic_id: str | UndefinedType = UNDEFINED,
-        new_unit_class: str | None | UndefinedType = UNDEFINED,
-        new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+        new_unit_class: str | UndefinedType | None = UNDEFINED,
+        new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
@@ -831,6 +901,7 @@ class Recorder(threading.Thread):
         self._pre_process_startup_events(startup_task_or_events)
         for task in startup_task_or_events:
             self._guarded_process_one_task_or_event_or_recover(task)
+        self._processed_startup_batch = True
 
         # Clear startup tasks since this thread runs forever
         # and we don't want to hold them in memory
@@ -1306,7 +1377,11 @@ class Recorder(threading.Thread):
 
         Returns None if nothing is pending.
         """
-        if self._queue.empty() and not self._event_session_has_pending_writes:
+        if (
+            self._queue.empty()
+            and not self._event_session_has_pending_writes
+            and self._processed_startup_batch
+        ):
             return None
         future: asyncio.Future[None] = self.hass.loop.create_future()
         self.queue_task(SynchronizeTask(future))
@@ -1381,10 +1456,16 @@ class Recorder(threading.Thread):
         self, dbapi_connection: DBAPIConnection, connection_record: Any
     ) -> None:
         """Dbapi specific connection settings."""
-        assert self.engine is not None
+        if (engine := self.engine) is None:
+            # _close_connection disposes the engine and drops our reference to it, but
+            # dispose() only empties the pool: the engine stays usable, so anything
+            # still holding a reference to it can check out a fresh DBAPI connection
+            # and get here. There is no longer an engine of ours to configure it for.
+            _LOGGER.debug("Ignoring connection setup for a closed database connection")
+            return
         if database_engine := setup_connection_for_dialect(
             self,
-            self.engine.dialect.name,
+            engine.dialect.name,
             dbapi_connection,
             not self._completed_first_database_setup,
         ):

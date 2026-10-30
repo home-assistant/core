@@ -1,6 +1,6 @@
 """Support for the Roku media player."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -13,7 +13,7 @@ ATTR_KEYWORD = "keyword"
 
 SERVICE_SEARCH = "search"
 
-SEARCH_SCHEMA: VolDictType = {vol.Required(ATTR_KEYWORD): str}
+SEARCH_SCHEMA: VolDictType = {probatio.Required(ATTR_KEYWORD): str}
 
 
 @callback

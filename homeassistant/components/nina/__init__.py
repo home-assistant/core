@@ -8,13 +8,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    _LOGGER,
     ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTER_CORONA,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
     DOMAIN,
+    LOGGER,
     NO_MATCH_REGEX,
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
@@ -24,7 +24,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> None:
     """Set up platform from a ConfigEntry."""
     coordinator = NINADataUpdateCoordinator(hass, entry)
 
@@ -34,8 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up services."""
@@ -43,18 +41,18 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> None:
     """Migrate the config to the new format."""
 
     version = entry.version
     minor_version = entry.minor_version
 
-    _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
+    LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
     new_data: dict[str, Any] = {**entry.data, CONF_FILTERS: {}}
 
@@ -90,5 +88,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bo
             data=new_data,
             minor_version=3,
         )
-
-    return True

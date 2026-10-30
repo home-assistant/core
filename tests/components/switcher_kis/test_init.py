@@ -5,6 +5,8 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.switcher_kis.const import DOMAIN, MAX_UPDATE_INTERVAL_SEC
 from homeassistant.config_entries import ConfigEntryState
@@ -26,9 +28,6 @@ from .consts import (
     DUMMY_TOKEN as TOKEN,
     DUMMY_USERNAME as USERNAME,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_update_fail(
@@ -211,23 +210,32 @@ async def test_remove_device(
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 3
 
     # Try to remove a live device - fails
-    device = device_registry.async_get_device(identifiers={(DOMAIN, live_device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, live_device_id), entry_id
+    )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert not response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 3
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, live_device_id)})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, live_device_id), entry_id
+        )
         is not None
     )
 
     # Try to remove a dead device - succeeds
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dead_device_id)})
-    response = await client.remove_device(device.id, entry_id)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dead_device_id), entry_id
+    )
+    response = await client.remove_device(device.id)
     assert response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, dead_device_id)}) is None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, dead_device_id), entry_id
+        )
+        is None
     )
 
 
@@ -266,21 +274,30 @@ async def test_remove_device_token_needed(
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
 
     # Try to remove a live device - fails
-    device = device_registry.async_get_device(identifiers={(DOMAIN, live_device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, live_device_id), entry_id
+    )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert not response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, live_device_id)})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, live_device_id), entry_id
+        )
         is not None
     )
 
     # Try to remove a dead device - succeeds
-    device = device_registry.async_get_device(identifiers={(DOMAIN, dead_device_id)})
-    response = await client.remove_device(device.id, entry_id)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, dead_device_id), entry_id
+    )
+    response = await client.remove_device(device.id)
     assert response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, dead_device_id)}) is None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, dead_device_id), entry_id
+        )
+        is None
     )

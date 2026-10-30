@@ -4,7 +4,7 @@ import logging
 from typing import override
 
 from pmsensor import serial_pm as pm
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -23,9 +23,9 @@ CONF_SERIAL_DEVICE = "serial_device"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BRAND): cv.string,
-        vol.Required(CONF_SERIAL_DEVICE): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_BRAND): cv.string,
+        probatio.Required(CONF_SERIAL_DEVICE): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
@@ -94,7 +94,7 @@ class ParticulateMatterSensor(SensorEntity):
     @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return UnitOfDensity
+        return UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
 
     def update(self) -> None:
         """Read from sensor and update the state."""

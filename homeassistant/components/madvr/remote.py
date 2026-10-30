@@ -6,8 +6,10 @@ from typing import Any, override
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import MadVRConfigEntry, MadVRCoordinator
 from .entity import MadVREntity
 
@@ -54,9 +56,11 @@ class MadvrRemote(MadVREntity, RemoteEntity):
         _LOGGER.debug("Turning off")
         try:
             await self.madvr_client.power_off()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except (ConnectionError, NotImplementedError) as err:
-            _LOGGER.error("Failed to turn off device %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="power_off_failed",
+            ) from err
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -65,9 +69,11 @@ class MadvrRemote(MadVREntity, RemoteEntity):
 
         try:
             await self.madvr_client.power_on(mac=self.coordinator.mac)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except (ConnectionError, NotImplementedError) as err:
-            _LOGGER.error("Failed to turn on device %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="power_on_failed",
+            ) from err
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
@@ -75,6 +81,9 @@ class MadvrRemote(MadVREntity, RemoteEntity):
         _LOGGER.debug("adding command %s", command)
         try:
             await self.madvr_client.add_command_to_queue(command)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except (ConnectionError, NotImplementedError) as err:
-            _LOGGER.error("Failed to send command %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_command_failed",
+                translation_placeholders={"command": ", ".join(command)},
+            ) from err

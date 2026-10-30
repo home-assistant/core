@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.nzbget.const import CONF_MORE_OPTIONS, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -14,8 +16,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
     CONF_HOST: "10.10.10.30",
@@ -31,7 +31,6 @@ ENTRY_OPTIONS = {CONF_SCAN_INTERVAL: 5}
 
 USER_INPUT = {
     CONF_HOST: "10.10.10.30",
-    CONF_NAME: "NZBGet",
     CONF_PASSWORD: "",
     CONF_PORT: 6789,
     CONF_SSL: False,
@@ -72,7 +71,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-def _patch_async_setup_entry(return_value=True):
+def _patch_async_setup_entry(return_value=None):
     return patch(
         "homeassistant.components.nzbget.async_setup_entry",
         return_value=return_value,

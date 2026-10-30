@@ -8,7 +8,7 @@ from skyboxremote import VALID_KEYS, RemoteControl
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -67,8 +67,10 @@ class SkyRemote(RemoteEntity):
                 )
         try:
             self._remote.send_keys(command)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError as err:
-            _LOGGER.error("Invalid command: %s. Error: %s", command, err)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_command",
+                translation_placeholders={"command": ", ".join(command)},
+            ) from err
         _LOGGER.debug("Successfully sent command %s", command)

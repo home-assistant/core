@@ -1,6 +1,7 @@
 {
   "domain": "litejet",
   "name": "LiteJet",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": ["@joncar"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/litejet",

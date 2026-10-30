@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -45,8 +46,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_aeon_smart_switch_6_state(
@@ -139,6 +138,17 @@ async def test_inovelli_lzw36(
     assert state
 
 
+async def test_leviton_vrf01(
+    hass: HomeAssistant, client, leviton_vrf01, integration
+) -> None:
+    """Test Leviton VRF01 multilevel switch is discovered as a fan, not a light."""
+    node = leviton_vrf01
+    assert node.device_class.specific.label == "Multilevel Scene Switch"
+
+    assert hass.states.get("fan.fan")
+    assert not hass.states.get("light.fan")
+
+
 async def test_vision_security_zl7432(
     hass: HomeAssistant, client, vision_security_zl7432, integration
 ) -> None:
@@ -216,35 +226,43 @@ async def test_merten_507801(
     assert state
 
 
-async def test_shelly_001p10_disabled_entities(
+async def test_shelly_001p10_suppressed_endpoint(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     client,
-    shelly_qnsh_001P10_shutter,
-    integration,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
 ) -> None:
-    """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
-    entity_ids = [
-        "cover.wave_shutter_2",
-    ]
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state is None
-        entry = entity_registry.async_get(entity_id)
-        assert entry
-        assert entry.disabled
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    """Test that Shelly 001P10 endpoint 2 is suppressed (no entity created at all).
 
-        # Test enabling entity
-        updated_entry = entity_registry.async_update_entity(
-            entry.entity_id, disabled_by=None
+    Endpoint 2 covers the same shutter as endpoint 1 and has no practical function.
+    The discovery schema suppresses it completely so it doesn't produce even a
+    disabled entity, and endpoint 1 therefore has no collision partner, so the
+    shutter cover stays on the main node device rather than on a child device.
+    """
+    node = shelly_qnsh_001P10_shutter
+
+    # Endpoint 2 is suppressed, so the node exposes exactly one cover entity (endpoint 1)
+    # and no second, disabled or hidden, endpoint-2 cover.
+    cover_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, integration.entry_id
         )
-        assert updated_entry != entry
-        assert updated_entry.disabled is False
+        if entry.domain == Platform.COVER
+    ]
+    assert [entry.entity_id for entry in cover_entries] == ["cover.wave_shutter"]
+    assert hass.states.get("cover.wave_shutter")
 
-    # Test if the main entity from endpoint 1 was created.
-    state = hass.states.get("cover.wave_shutter")
-    assert state
+    # With no collision partner, the shutter cover stays on the main node device rather
+    # than on an endpoint child device.
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert node_device is not None
+    assert not dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert cover_entries[0].device_id == node_device.id
 
 
 async def test_merten_507801_disabled_enitites(
@@ -683,8 +701,9 @@ async def test_fibaro_fgms001_unknown_firmware_setup(
     """
     assert integration.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, fibaro_fgms001_unknown_firmware)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, fibaro_fgms001_unknown_firmware),
+        integration.entry_id,
     )
     assert device is not None
 
@@ -717,8 +736,8 @@ async def test_fibaro_fgms001_v2_8_motion_discovery(
     or be misclassified, so we assert that exactly one binary_sensor entity
     with device_class=motion is created and no light entity exists.
     """
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, fibaro_fgms001_v2_8)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, fibaro_fgms001_v2_8), integration.entry_id
     )
     assert device is not None
 

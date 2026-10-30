@@ -207,3 +207,56 @@ async def async_setup_entry(hass, entry):
 
     with assert_no_messages(linter):
         walk_checker(linter, registration_checker, root_node)
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry):
+    async_setup_services(hass)
+""",
+            id="bare_name",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry):
+    services.async_setup_services(hass)
+""",
+            id="attribute_form",
+        ),
+    ],
+)
+def test_async_setup_services_flagged(
+    linter: UnittestLinter,
+    registration_checker: ServiceRegistrationChecker,
+    code: str,
+) -> None:
+    """Test that calling async_setup_services in async_setup_entry is flagged."""
+    root_node = astroid.parse(code, "homeassistant.components.test_integration")
+    walk_checker(linter, registration_checker, root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-service-registered-in-setup-entry"
+
+
+def test_async_setup_services_in_async_setup(
+    linter: UnittestLinter,
+    registration_checker: ServiceRegistrationChecker,
+) -> None:
+    """Test that calling async_setup_services in async_setup is fine."""
+    root_node = astroid.parse(
+        """
+async def async_setup(hass, config):
+    async_setup_services(hass)
+
+async def async_setup_entry(hass, entry):
+    pass
+""",
+        "homeassistant.components.test_integration",
+    )
+
+    with assert_no_messages(linter):
+        walk_checker(linter, registration_checker, root_node)

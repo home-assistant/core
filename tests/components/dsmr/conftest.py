@@ -106,7 +106,7 @@ def dsmr_connection_send_validate_fixture() -> Generator[
                     EQUIPMENT_IDENTIFIER_GAS, [{"value": "123456789", "unit": ""}]
                 ),
             }
-        if args[1] == "5L":
+        if args[1] in ("5L", "MSn"):
             protocol.telegram = {
                 LUXEMBOURG_EQUIPMENT_IDENTIFIER: CosemObject(
                     LUXEMBOURG_EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
@@ -121,7 +121,7 @@ def dsmr_connection_send_validate_fixture() -> Generator[
                     LUXEMBOURG_EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
                 ),
             }
-        if args[1] == "5S":
+        if args[1] in ("5S", "SAGEMCOM_T210_D_R"):
             protocol.telegram = {
                 P1_MESSAGE_TIMESTAMP: CosemObject(
                     P1_MESSAGE_TIMESTAMP, [{"value": "12345678", "unit": ""}]

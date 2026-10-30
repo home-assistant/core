@@ -8,6 +8,16 @@
         "default": "mdi:power"
       }
     },
+    "select": {
+      "poe_out": {
+        "default": "mdi:power-plug",
+        "state": {
+          "auto_on": "mdi:power-plug",
+          "forced_on": "mdi:power-plug-outline",
+          "off": "mdi:power-plug-off"
+        }
+      }
+    },
     "sensor": {
       "cpu_load": {
         "default": "mdi:chip"
@@ -17,6 +27,14 @@
       },
       "memory_usage": {
         "default": "mdi:memory"
+      }
+    },
+    "switch": {
+      "ether": {
+        "default": "mdi:lan"
+      },
+      "wlan": {
+        "default": "mdi:wifi"
       }
     }
   }

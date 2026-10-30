@@ -3,6 +3,7 @@
 from datetime import datetime
 import logging
 import time
+from typing import Any
 
 from ibeacon_ble import (
     APPLE_MFR_ID,
@@ -16,7 +17,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -112,7 +113,7 @@ class IBeaconCoordinator:
     """Set up the iBeacon Coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, registry: DeviceRegistry
+        self, hass: HomeAssistant, entry: ConfigEntry, registry: dr.DeviceRegistry
     ) -> None:
         """Initialize the Coordinator."""
         self.hass = hass
@@ -165,6 +166,56 @@ class IBeaconCoordinator:
             device_id in self._last_ibeacon_advertisement_by_unique_id
             or device_id in self._last_seen_by_group_id
         )
+
+    @callback
+    def async_get_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostics without beacon identifiers or addresses."""
+        return {
+            "ignored_address_count": len(self._ignore_addresses),
+            "ignored_uuid_count": len(self._ignore_uuids),
+            "allowed_nameless_uuid_count": len(self._allow_nameless_uuids),
+            "ignored_nameless_address_count": len(
+                {
+                    address
+                    for addresses in self._ignored_nameless_by_uuid.values()
+                    for address in addresses
+                }
+            ),
+            "fixed_mac_beacon_count": len(
+                self._last_ibeacon_advertisement_by_unique_id
+            ),
+            "random_mac_group_count": len(self._group_ids_random_macs),
+            "unavailable_random_mac_group_count": len(self._unavailable_group_ids),
+            "pending_transient_count": len(self._transient_seen_count),
+            "source_count": len(
+                {
+                    advertisement.source
+                    for advertisement in (
+                        self._last_ibeacon_advertisement_by_unique_id.values()
+                    )
+                }
+                | {
+                    service_info.source
+                    for service_info in self._last_seen_by_group_id.values()
+                }
+            ),
+            "fixed_mac_beacons": [
+                {
+                    "power": advertisement.power,
+                    "rssi": advertisement.rssi,
+                    "distance": advertisement.distance,
+                    "transient": advertisement.transient,
+                    "vendor": advertisement.vendor,
+                }
+                for advertisement in (
+                    self._last_ibeacon_advertisement_by_unique_id.values()
+                )
+            ],
+            "random_mac_groups_seen": [
+                {"rssi": service_info.rssi}
+                for service_info in self._last_seen_by_group_id.values()
+            ],
+        }
 
     @callback
     def _async_handle_unavailable(
@@ -508,8 +559,8 @@ class IBeaconCoordinator:
     @callback
     def _async_restore_from_registry(self) -> None:
         """Restore the state of the Coordinator from the device registry."""
-        for device in self._dev_reg.devices.get_devices_for_config_entry_id(
-            self._entry.entry_id
+        for device in dr.async_entries_for_config_entry(
+            self._dev_reg, self._entry.entry_id
         ):
             if not (identifier := next(iter(device.identifiers), None)):
                 continue

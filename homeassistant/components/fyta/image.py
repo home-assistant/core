@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 import logging
 from typing import Final, override
 
@@ -17,6 +16,7 @@ from homeassistant.components.image import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import FytaConfigEntry, FytaCoordinator
 from .entity import FytaPlantEntity
@@ -119,5 +119,5 @@ class FytaPlantImageEntity(FytaPlantEntity, ImageEntity):
 
         if url != self._attr_image_url:
             self._cached_image = None
-            self._attr_image_last_updated = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+            self._attr_image_last_updated = dt_util.utcnow()
         return url

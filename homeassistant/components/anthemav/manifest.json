@@ -1,6 +1,7 @@
 {
   "domain": "anthemav",
   "name": "Anthem A/V Receivers",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@hyralex"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/anthemav",

@@ -1,10 +1,10 @@
 """Tests for the permissions module."""
 
+from pytest_homeassistant.common import MockUser
+
 from homeassistant.auth.permissions import filter_entity_ids_by_permission
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockUser
 
 
 async def test_filter_entity_ids_by_permission_admin(hass: HomeAssistant) -> None:

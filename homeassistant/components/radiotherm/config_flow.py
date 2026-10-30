@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 from urllib.error import URLError
 
+import probatio
 from radiotherm.validate import RadiothermTstatError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -73,7 +73,6 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: ip_address},
             )
 
-        self._set_confirm_only()
         placeholders = {
             "name": init_data.name,
             "host": ip_address,
@@ -112,6 +111,6 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )

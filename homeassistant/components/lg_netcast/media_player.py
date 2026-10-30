@@ -1,7 +1,7 @@
 """Support for LG TV running on NetCast 3 or 4."""
 
 from collections import Counter
-from datetime import datetime
+import time
 from typing import TYPE_CHECKING, Any, override
 
 from pylgnetcast import LG_COMMAND, LgNetCastError
@@ -223,9 +223,7 @@ class LgTVDevice(MediaPlayerEntity):
     @override
     def media_image_url(self):
         """URL for obtaining a screen capture."""
-        return (
-            f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"  # pylint: disable=home-assistant-enforce-naive-now
-        )
+        return f"{self._client.url}data?target=screen_image&_={time.time()}"
 
     @override
     def turn_off(self) -> None:

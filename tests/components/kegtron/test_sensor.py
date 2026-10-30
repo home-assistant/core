@@ -1,5 +1,8 @@
 """Test the Kegtron sensors."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+
 from homeassistant.components.kegtron.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
@@ -10,9 +13,6 @@ from . import (
     KEGTRON_KT200_PORT_1_SERVICE_INFO,
     KEGTRON_KT200_PORT_2_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_sensors_kt100(hass: HomeAssistant) -> None:

@@ -1,0 +1,48 @@
+{
+  "entity": {
+    "button": {
+      "eq": {
+        "default": "mdi:equalizer"
+      },
+      "mode": {
+        "default": "mdi:playlist-music"
+      },
+      "num_0": {
+        "default": "mdi:numeric-0"
+      },
+      "num_1": {
+        "default": "mdi:numeric-1"
+      },
+      "num_2": {
+        "default": "mdi:numeric-2"
+      },
+      "num_3": {
+        "default": "mdi:numeric-3"
+      },
+      "num_4": {
+        "default": "mdi:numeric-4"
+      },
+      "num_5": {
+        "default": "mdi:numeric-5"
+      },
+      "num_6": {
+        "default": "mdi:numeric-6"
+      },
+      "num_7": {
+        "default": "mdi:numeric-7"
+      },
+      "num_8": {
+        "default": "mdi:numeric-8"
+      },
+      "num_9": {
+        "default": "mdi:numeric-9"
+      },
+      "repeat": {
+        "default": "mdi:repeat"
+      },
+      "scan": {
+        "default": "mdi:motion-play"
+      }
+    }
+  }
+}

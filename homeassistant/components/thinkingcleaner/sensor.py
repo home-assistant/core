@@ -2,8 +2,8 @@
 
 from datetime import timedelta
 
+import probatio
 from pythinkingcleaner import Discovery, ThinkingCleaner
-import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.sensor import (
@@ -64,7 +64,9 @@ STATES = {
     "st_unknown": "Unknown state",
 }
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {probatio.Optional(CONF_HOST): cv.string}
+)
 
 
 def setup_platform(

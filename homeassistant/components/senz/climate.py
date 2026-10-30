@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from httpx import RequestError
+from httpx2 import RequestError
 from pysenz import MODE_AUTO, Thermostat
 
 from homeassistant.components.climate import (
@@ -37,7 +37,7 @@ async def async_setup_entry(
 class SENZClimate(CoordinatorEntity[SENZDataUpdateCoordinator], ClimateEntity):
     """Representation of a SENZ climate entity."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_TENTHS
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -71,13 +71,13 @@ class SENZClimate(CoordinatorEntity[SENZDataUpdateCoordinator], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self._thermostat.current_temperatue
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._thermostat.setpoint_temperature
 

@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -10,8 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
-
-from tests.common import snapshot_platform
+from .conftest import MockConfigEntryFactory
 
 
 async def test_button_entities_created(
@@ -27,7 +27,9 @@ async def test_button_entities_created(
 
 
 async def test_button_press(
-    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_config_entry: MockConfigEntryFactory,
 ) -> None:
     """Test Mikrotik button entities press."""
     await setup_mikrotik_entry(

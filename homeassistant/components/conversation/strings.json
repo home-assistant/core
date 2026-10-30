@@ -4,6 +4,14 @@
       "done": "Done"
     }
   },
+  "exceptions": {
+    "no_response": {
+      "message": "Unable to get response."
+    },
+    "process_failed": {
+      "message": "Error processing {text}: {error}"
+    }
+  },
   "services": {
     "process": {
       "description": "Sends text to a conversation agent for processing.",

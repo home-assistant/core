@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import labs, websocket_api
 from homeassistant.components.hassio import HassioNotReadyError
@@ -41,15 +41,15 @@ __all__ = [
 
 CONF_SNAPSHOTS_URL = "snapshots_url"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_SNAPSHOTS_URL): vol.Any(str, None),
+                probatio.Optional(CONF_SNAPSHOTS_URL): probatio.Any(str, None),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 DATA_COMPONENT: HassKey[Analytics] = HassKey(DOMAIN)
@@ -83,7 +83,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Analytics from a config entry."""
     snapshots_url = hass.data[_DATA_SNAPSHOTS_URL]
     analytics = Analytics(hass, snapshots_url)
@@ -118,12 +118,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_at_started(hass, start_schedule)
 
     hass.data[DATA_COMPONENT] = analytics
-    return True
 
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "analytics"})
+@websocket_api.websocket_command({probatio.Required("type"): "analytics"})
 def websocket_analytics(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
@@ -142,8 +141,8 @@ def websocket_analytics(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "analytics/preferences",
-        vol.Required("preferences", default={}): PREFERENCE_SCHEMA,
+        probatio.Required("type"): "analytics/preferences",
+        probatio.Required("preferences", default={}): PREFERENCE_SCHEMA,
     }
 )
 @websocket_api.async_response

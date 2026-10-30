@@ -4,6 +4,8 @@ from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -22,9 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
-from tests.typing import MqttMockHAClient
 
 _CURRENT_TEMPERATURE = 21.5
 _SET_TEMPERATURE = 20.5

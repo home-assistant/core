@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_format_tool
+  dict({
+    'function': dict({
+      'description': 'Test tool',
+      'name': 'test',
+      'parameters': dict({
+        'additionalProperties': False,
+        'properties': dict({
+          'count': dict({
+            'type': 'integer',
+          }),
+          'value': dict({
+            'anyOf': list([
+              dict({
+                'type': 'string',
+              }),
+              dict({
+                'type': 'null',
+              }),
+            ]),
+          }),
+        }),
+        'required': list([
+          'value',
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'type': 'function',
+  })
+# ---

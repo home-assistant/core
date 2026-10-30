@@ -1,6 +1,7 @@
 {
   "domain": "telegram_bot",
   "name": "Telegram bot",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@hanwg"],
   "config_flow": true,
   "dependencies": ["http"],

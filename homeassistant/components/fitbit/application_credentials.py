@@ -16,11 +16,12 @@ from homeassistant.components.application_credentials import (
     AuthorizationServer,
     ClientCredential,
 )
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from .exceptions import FitbitApiException, FitbitAuthException
 
 _LOGGER = logging.getLogger(__name__)

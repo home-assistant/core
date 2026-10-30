@@ -1,10 +1,12 @@
 """Tests for the Lutron Caseta integration."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_TRANSITION,
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -216,6 +218,62 @@ async def test_white_mode_turn_on_remembers_brightness(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_white_mode_turn_on_sends_level(
+    hass: HomeAssistant,
+) -> None:
+    """Test white mode enables warm dim and sends the requested level."""
+    mock_entry = await async_setup_integration(hass, MockBridgeWithColorLight)
+
+    entity_id = "light.kitchen_kitchen_spectrum_light"
+    bridge = mock_entry.runtime_data.bridge
+
+    with patch.object(
+        bridge, "set_warm_dim", wraps=bridge.set_warm_dim
+    ) as mock_set_warm_dim:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_WHITE: 100},
+            target={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # to_lutron_level(100) == round(100 * 100 / 255) == 39
+    mock_set_warm_dim.assert_called_once_with("904", True, value=39)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # to_hass_level(39) == (39 * 255) // 100 == 99
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 99
+
+
+async def test_white_mode_turn_on_with_transition(
+    hass: HomeAssistant,
+) -> None:
+    """Test white mode passes the transition through as fade time."""
+    mock_entry = await async_setup_integration(hass, MockBridgeWithColorLight)
+
+    entity_id = "light.kitchen_kitchen_spectrum_light"
+    bridge = mock_entry.runtime_data.bridge
+
+    with patch.object(
+        bridge, "set_warm_dim", wraps=bridge.set_warm_dim
+    ) as mock_set_warm_dim:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_WHITE: 255, ATTR_TRANSITION: 2},
+            target={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_set_warm_dim.assert_called_once_with(
+        "904", True, value=100, fade_time=timedelta(seconds=2)
+    )
 
 
 async def test_async_update_syncs_previous_brightness(

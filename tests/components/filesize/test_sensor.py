@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.filesize.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import TEST_FILE_NAME, async_create_file
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -90,8 +89,8 @@ async def test_valid_path(
     assert state
     assert state.state == "0.0"
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device.name == mock_config_entry.title
 

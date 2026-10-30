@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LlamaCppConfigEntry
-from .const import DOMAIN
+from .const import CONF_STREAMING, DOMAIN
 from .entity import LlamaCppBaseLLMEntity
 
 
@@ -36,6 +36,7 @@ class LlamaCppConversationEntity(
     def __init__(self, entry: ConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
         super().__init__(entry, subentry)
+        self._attr_supports_streaming = bool(entry.data.get(CONF_STREAMING, False))
         if self.subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL

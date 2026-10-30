@@ -5,6 +5,7 @@ from unittest.mock import ANY, MagicMock
 from pysmlight import Info
 from pysmlight.models import BleFeatures
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.smlight.bluetooth import get_ble_scanner_mode
@@ -12,8 +13,6 @@ from homeassistant.components.smlight.const import CONF_BLE_SCANNER_MODE, BLESca
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_ultima_client")

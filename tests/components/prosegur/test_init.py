@@ -3,10 +3,9 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.core import HomeAssistant
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(

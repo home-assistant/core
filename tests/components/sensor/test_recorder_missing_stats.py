@@ -6,6 +6,12 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
+from pytest_homeassistant.components.recorder.common import (
+    async_wait_recording_done,
+    do_adhoc_statistics,
+)
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.history import get_significant_states
@@ -19,13 +25,6 @@ from homeassistant.core import CoreState
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_test_home_assistant
-from tests.components.recorder.common import (
-    async_wait_recording_done,
-    do_adhoc_statistics,
-)
-from tests.typing import RecorderInstanceContextManager
 
 POWER_SENSOR_ATTRIBUTES = {
     "device_class": "energy",

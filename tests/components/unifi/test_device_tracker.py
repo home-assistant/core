@@ -9,12 +9,18 @@ from aiounifi.models.event import EventKey
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
+    CONF_IGNORE_LOCAL_MAC,
     CONF_IGNORE_WIRED_BUG,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -33,8 +39,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 WIRED_CLIENT_1 = {
     "hostname": "wd_client_1",
@@ -71,6 +75,24 @@ UNSEEN_CLIENT = {
     "mac": "00:00:00:00:00:04",
 }
 
+LOCAL_MAC_CLIENT = {
+    "essid": "ssid",
+    "hostname": "local_mac_client",
+    "ip": "10.0.0.5",
+    "is_wired": False,
+    "last_seen": 1562600145,
+    "mac": "02:00:00:00:00:01",  # U/L bit set in first octet -> locally administered
+}
+
+# Wired locally-administered MAC (e.g. a Docker container) - not a randomized Wi-Fi MAC
+WIRED_LOCAL_MAC_CLIENT = {
+    "hostname": "wired_local_mac_client",
+    "ip": "10.0.0.6",
+    "is_wired": True,
+    "last_seen": 1562600145,
+    "mac": "02:00:00:00:00:02",
+}
+
 SWITCH_1 = {
     "board_rev": 3,
     "device_id": "mock-id-1",
@@ -96,7 +118,7 @@ SWITCH_1 = {
     "site_payload",
     [[{"desc": "Site name", "name": "site_id", "role": "not admin", "_id": "1"}]],
 )
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_and_device_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -110,10 +132,105 @@ async def test_entity_and_device_data(
 
 
 @pytest.mark.parametrize(
+    ("client_payload", "expected_name", "expected_manufacturer"),
+    [
+        pytest.param(
+            [WIRELESS_CLIENT_1 | {"name": "Phone", "oui": "Apple"}],
+            "Phone",
+            "Apple",
+            id="name",
+        ),
+        pytest.param([WIRELESS_CLIENT_1], "ws_client_1", "", id="hostname"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_client_tracker_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    expected_name: str,
+    expected_manufacturer: str,
+) -> None:
+    """Verify the client tracker describes its device like the client sensors."""
+    with patch("homeassistant.components.unifi.PLATFORMS", [Platform.DEVICE_TRACKER]):
+        config_entry = await config_entry_factory()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, WIRELESS_CLIENT_1["mac"]), config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == expected_name
+    assert device.manufacturer == expected_manufacturer
+    (entity,) = er.async_entries_for_device(entity_registry, device.id)
+    assert entity.original_name is None
+    assert hass.states.get(entity.entity_id).name == expected_name
+
+
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1]])
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
+async def test_enabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Verify only UniFi devices, not clients, are tracked by default."""
+    await config_entry_factory()
+
+    client_entry = entity_registry.async_get("device_tracker.ws_client_1")
+    assert client_entry is not None
+    assert client_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    device_entry = entity_registry.async_get("device_tracker.switch_1")
+    assert device_entry is not None
+    assert device_entry.disabled_by is None
+    assert hass.states.get("device_tracker.switch_1") is not None
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "expected_entity_id", "expected_name"),
+    [
+        pytest.param([SWITCH_1], "device_tracker.switch_1", "Switch 1", id="name"),
+        pytest.param(
+            [{k: v for k, v in SWITCH_1.items() if k != "name"}],
+            "device_tracker.us16p150",
+            "US16P150",
+            id="no_name",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    expected_entity_id: str,
+    expected_name: str,
+) -> None:
+    """Verify the device scanner is the main feature of the UniFi device.
+
+    A UniFi device without a name is named by its model.
+    """
+    with patch("homeassistant.components.unifi.PLATFORMS", [Platform.DEVICE_TRACKER]):
+        config_entry = await config_entry_factory()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, SWITCH_1["mac"]), config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == expected_name
+    assert device.manufacturer == "Ubiquiti Networks"
+    assert device.model == "US16P150"
+    (entity,) = er.async_entries_for_device(entity_registry, device.id)
+    assert entity.entity_id == expected_entity_id
+    assert hass.states.get(expected_entity_id).name == expected_name
+
+
+@pytest.mark.parametrize(
     "client_payload", [[WIRELESS_CLIENT_1, WIRED_BUG_CLIENT, UNSEEN_CLIENT]]
 )
 @pytest.mark.parametrize("known_wireless_clients", [[WIRED_BUG_CLIENT["mac"]]])
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_client_state_update(
     hass: HomeAssistant,
     mock_websocket_message: WebsocketMessageMock,
@@ -165,7 +282,7 @@ async def test_client_state_update(
 
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1]])
 @pytest.mark.usefixtures("config_entry_setup")
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_client_state_from_event_source(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -238,7 +355,7 @@ async def test_client_state_from_event_source(
 
 
 @pytest.mark.parametrize("device_payload", [[SWITCH_1]])
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("state", "interval", "expected"),
     [
@@ -291,7 +408,7 @@ async def test_tracked_device_state_change(
 
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1, WIRED_CLIENT_1]])
 @pytest.mark.usefixtures("config_entry_setup")
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_clients(
     hass: HomeAssistant,
     mock_websocket_message: WebsocketMessageMock,
@@ -314,7 +431,7 @@ async def test_remove_clients(
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1]])
 @pytest.mark.parametrize("device_payload", [[SWITCH_1]])
 @pytest.mark.usefixtures("config_entry_setup")
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hub_state_change(
     hass: HomeAssistant,
     mock_websocket_state: WebsocketStateManager,
@@ -335,7 +452,7 @@ async def test_hub_state_change(
     assert hass.states.get("device_tracker.switch_1").state == STATE_HOME
 
 
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_option_ssid_filter(
     hass: HomeAssistant,
     mock_websocket_message,
@@ -439,7 +556,7 @@ async def test_option_ssid_filter(
     assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
 
 
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wireless_client_go_wired_issue(
     hass: HomeAssistant,
     mock_websocket_message,
@@ -500,7 +617,7 @@ async def test_wireless_client_go_wired_issue(
 
 
 @pytest.mark.parametrize("config_entry_options", [{CONF_IGNORE_WIRED_BUG: True}])
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_option_ignore_wired_bug(
     hass: HomeAssistant,
     mock_websocket_message,
@@ -554,6 +671,60 @@ async def test_option_ignore_wired_bug(
     assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
 
 
+@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_WIRED_CLIENTS: True}])
+@pytest.mark.parametrize(
+    "client_payload", [[WIRELESS_CLIENT_1, LOCAL_MAC_CLIENT, WIRED_LOCAL_MAC_CLIENT]]
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_option_ignore_local_mac(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Test the option only ignores Wi-Fi clients with locally-administered MACs."""
+    # Register device entries so the locally-administered MAC trackers are enabled by default
+    for client in (LOCAL_MAC_CLIENT, WIRED_LOCAL_MAC_CLIENT):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, client["mac"])},
+        )
+    await config_entry_factory()
+
+    # Default: the universal, the Wi-Fi private-MAC and the wired private-MAC clients
+    # are all tracked
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
+    assert hass.states.get("device_tracker.ws_client_1")
+    assert hass.states.get("device_tracker.local_mac_client")
+    assert hass.states.get("device_tracker.wired_local_mac_client")
+
+    # Enable the option: only the Wi-Fi private-MAC client is dropped; the wired one stays
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={CONF_TRACK_WIRED_CLIENTS: True, CONF_IGNORE_LOCAL_MAC: True},
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert hass.states.get("device_tracker.ws_client_1")
+    assert not hass.states.get("device_tracker.local_mac_client")
+    assert hass.states.get("device_tracker.wired_local_mac_client")
+
+    # The allowlist takes precedence over the ignore option
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            CONF_TRACK_WIRED_CLIENTS: True,
+            CONF_IGNORE_LOCAL_MAC: True,
+            CONF_CLIENT_SOURCE: [LOCAL_MAC_CLIENT["mac"]],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
+    assert hass.states.get("device_tracker.local_mac_client")
+
+
 @pytest.mark.parametrize(
     "config_entry_options", [{CONF_BLOCK_CLIENT: ["00:00:00:00:00:03"]}]
 )
@@ -577,7 +748,7 @@ async def test_option_ignore_wired_bug(
         ]
     ],
 )
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_restoring_client(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -666,24 +837,24 @@ async def test_pruning_stale_restored_clients(
     # Recently seen client is restored with its tracker and device intact
     assert hass.states.get("device_tracker.recent")
     assert entity_registry.async_get(entries[recent["mac"]].entity_id)
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, recent["mac"])}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, recent["mac"]), config_entry.entry_id
     )
 
     # Stale client is pruned together with its device
     assert not hass.states.get("device_tracker.stale")
     assert entity_registry.async_get(entries[stale["mac"]].entity_id) is None
     assert (
-        device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, stale["mac"])}
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, stale["mac"]), config_entry.entry_id
         )
         is None
     )
 
     # Client absent from clients_all is left untouched, never pruned on missing data
     assert entity_registry.async_get(entries[absent_mac].entity_id)
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, absent_mac)}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, absent_mac), config_entry.entry_id
     )
 
 
@@ -729,7 +900,7 @@ async def test_pruning_stale_restored_clients(
 )
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1, WIRED_CLIENT_1]])
 @pytest.mark.parametrize("device_payload", [[SWITCH_1]])
-@pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_config_entry_options_track(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,

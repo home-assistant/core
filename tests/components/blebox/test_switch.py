@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import ConfigEntryState
@@ -28,8 +29,6 @@ from .conftest import (
     setup_product_mock,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(name="switchbox")
 def switchbox_fixture():
@@ -48,6 +47,7 @@ def switchbox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My switch box")
     type(product).model = PropertyMock(return_value="switchBox")
+    type(product).product = PropertyMock(return_value="switchBox")
     return (feature, "switch.my_switch_box")
 
 
@@ -162,6 +162,7 @@ def switchbox_d_fixture():
 
     type(product).name = PropertyMock(return_value="My relays")
     type(product).model = PropertyMock(return_value="switchBoxD")
+    type(product).product = PropertyMock(return_value="switchBoxD")
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
     type(product).unique_id = PropertyMock(return_value="abcd0123ef5678")
@@ -333,6 +334,7 @@ async def test_switchbox_with_name(hass: HomeAssistant) -> None:
     product = feature.product
     type(product).name = PropertyMock(return_value="My switch box")
     type(product).model = PropertyMock(return_value="switchBoxD")
+    type(product).product = PropertyMock(return_value="switchBoxD")
 
     await async_setup_entity(hass, "switch.my_switch_box_garden_lights")
     state = hass.states.get("switch.my_switch_box_garden_lights")

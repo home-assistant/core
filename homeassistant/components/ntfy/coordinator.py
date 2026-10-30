@@ -15,10 +15,13 @@ from aiontfy.exceptions import (
     NtfyUnauthorizedAuthenticationError,
 )
 from aiontfy.update import LatestRelease, UpdateChecker, UpdateCheckerError
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -55,6 +58,17 @@ class BaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
 
         self.ntfy = ntfy
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info of the ntfy account service device."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="ntfy LLC",
+            model="ntfy",
+            configuration_url=URL(self.config_entry.data[CONF_URL]) / "app",
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+        )
 
     @abstractmethod
     async def async_update_data(self) -> _DataT:

@@ -2,13 +2,15 @@
 
 import asyncio
 from functools import partial
+import re
 from typing import Any, override
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import create_rfxtrx_dsmr_reader
 from dsmr_parser.objects import DSMRObject
-import voluptuous as vol
+import probatio
+from serialx import SerialException
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -16,13 +18,14 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_PORT, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import (
     CONF_DSMR_VERSION,
+    CONF_ENCRYPTION_KEY,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -30,24 +33,36 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     DSMR_VERSIONS,
+    DSMR_VERSIONS_WITHOUT_EQUIPMENT_ID,
+    ENCRYPTED_DSMR_VERSIONS,
     LOGGER,
     RFXTRX_DSMR_PROTOCOL,
 )
+
+ENCRYPTION_KEY_PATTERN = re.compile(r"[0-9a-fA-F]{32}")
 
 
 class DSMRConnection:
     """Test the connection to DSMR and receive telegram to read serial ids."""
 
-    def __init__(self, port: str, dsmr_version: str, protocol: str) -> None:
+    def __init__(
+        self,
+        port: str,
+        dsmr_version: str,
+        protocol: str,
+        encryption_key: str = "",
+    ) -> None:
         """Initialize."""
         self._port = port
         self._dsmr_version = dsmr_version
         self._protocol = protocol
+        self._encryption_key = encryption_key
+        self._decryption_failed = False
         self._telegram: dict[str, DSMRObject] = {}
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5B":
             self._equipment_identifier = obis_ref.BELGIUM_EQUIPMENT_IDENTIFIER
-        if dsmr_version in ("5L", "5EONHU"):
+        if dsmr_version in ("5L", "5EONHU", "MSn"):
             self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
         if dsmr_version == "Q3D":
             self._equipment_identifier = obis_ref.Q3D_EQUIPMENT_IDENTIFIER
@@ -75,13 +90,24 @@ class DSMRConnection:
             if self._equipment_identifier in telegram:
                 self._telegram = telegram
                 transport.close()
-            # Swedish meters have no equipment identifier
-            if self._dsmr_version == "5S" and obis_ref.P1_MESSAGE_TIMESTAMP in telegram:
+            # Meters without an equipment identifier fall back to the timestamp
+            if (
+                self._dsmr_version in DSMR_VERSIONS_WITHOUT_EQUIPMENT_ID
+                and obis_ref.P1_MESSAGE_TIMESTAMP in telegram
+            ):
                 self._telegram = telegram
                 transport.close()
 
+        # Only the standard DSMR reader supports encryption. authentication_key=
+        # None decrypts without verifying the GCM authentication tag; the
+        # telegram CRC still catches transmission errors (but not tampering).
+        key_kwargs: dict[str, Any] = {}
         if self._protocol == DSMR_PROTOCOL:
             create_reader = create_dsmr_reader
+            key_kwargs = {
+                "encryption_key": self._encryption_key,
+                "authentication_key": None,
+            }
         else:
             create_reader = create_rfxtrx_dsmr_reader
         reader_factory = partial(
@@ -90,11 +116,12 @@ class DSMRConnection:
             self._dsmr_version,
             update_telegram,
             loop=hass.loop,
+            **key_kwargs,
         )
 
         try:
             transport, protocol = await reader_factory()
-        except OSError:
+        except OSError, SerialException:
             LOGGER.exception("Error connecting to DSMR")
             return False
 
@@ -108,7 +135,14 @@ class DSMRConnection:
                 # result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()
+            # A wrong key closes the transport with a DecryptionError
+            if getattr(protocol, "decryption_error", None) is not None:
+                self._decryption_failed = True
         return True
+
+    def decryption_failed(self) -> bool:
+        """Return whether decryption failed (wrong key)."""
+        return self._decryption_failed
 
 
 async def _validate_dsmr_connection(
@@ -119,16 +153,23 @@ async def _validate_dsmr_connection(
         data[CONF_PORT],
         data[CONF_DSMR_VERSION],
         protocol,
+        data.get(CONF_ENCRYPTION_KEY, ""),
     )
 
     if not await conn.validate_connect(hass):
         raise CannotConnect
 
+    if conn.decryption_failed():
+        raise InvalidKey
+
     equipment_identifier = conn.equipment_identifier()
     equipment_identifier_gas = conn.equipment_identifier_gas()
 
     # Check only for equipment identifier in case no gas meter is connected
-    if equipment_identifier is None and data[CONF_DSMR_VERSION] != "5S":
+    if (
+        equipment_identifier is None
+        and data[CONF_DSMR_VERSION] not in DSMR_VERSIONS_WITHOUT_EQUIPMENT_ID
+    ):
         raise CannotCommunicate
 
     return {
@@ -141,6 +182,9 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DSMR."""
 
     VERSION = 1
+
+    _pending_data: dict[str, Any]
+    _pending_title: str
 
     @staticmethod
     @callback
@@ -163,14 +207,19 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
         """
         errors: dict[str, str] = {}
         if user_input is not None:
+            if user_input[CONF_DSMR_VERSION] in ENCRYPTED_DSMR_VERSIONS:
+                self._pending_data = user_input
+                self._pending_title = user_input[CONF_PORT]
+                return await self.async_step_encryption_key()
+
             data = await self.async_validate_dsmr(user_input, errors)
             if not errors:
                 return self.async_create_entry(title=data[CONF_PORT], data=data)
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_PORT): SerialPortSelector(),
-                vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
+                probatio.Required(CONF_PORT): SerialPortSelector(),
+                probatio.Required(CONF_DSMR_VERSION): probatio.In(DSMR_VERSIONS),
             }
         )
         return self.async_show_form(
@@ -179,30 +228,106 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_encryption_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for the encryption key of an encrypted meter."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            # DLMS uses an AES-128 key: 32 hex characters. Reject malformed keys
+            # here so the user gets immediate feedback instead of a timeout.
+            if ENCRYPTION_KEY_PATTERN.fullmatch(user_input[CONF_ENCRYPTION_KEY]):
+                data = await self.async_validate_dsmr(
+                    {**self._pending_data, **user_input}, errors
+                )
+                if not errors:
+                    return self.async_create_entry(title=self._pending_title, data=data)
+            else:
+                errors["base"] = "invalid_key"
+
+        return self.async_show_form(
+            step_id="encryption_key",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection to the meter."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        encrypted = entry.data[CONF_DSMR_VERSION] in ENCRYPTED_DSMR_VERSIONS
+
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_PORT: user_input[CONF_PORT]})
+            if encrypted and not ENCRYPTION_KEY_PATTERN.fullmatch(
+                user_input[CONF_ENCRYPTION_KEY]
+            ):
+                errors["base"] = "invalid_key"
+            else:
+                data = await self._async_validate_connection(
+                    {**entry.data, **user_input}, errors
+                )
+                if not errors:
+                    await self.async_set_unique_id(data[CONF_SERIAL_ID])
+                    self._abort_if_unique_id_mismatch()
+                    # The port now holds the full address; sensor.py would
+                    # otherwise prefix it with the legacy host.
+                    data.pop(CONF_HOST, None)
+                    return self.async_update_and_abort(entry, data=data)
+
+        suggested_port = entry.data[CONF_PORT]
+        if CONF_HOST in entry.data:
+            suggested_port = f"socket://{entry.data[CONF_HOST]}:{suggested_port}"
+        fields: dict[probatio.Marker, Any] = {
+            probatio.Required(CONF_PORT): SerialPortSelector()
+        }
+        if encrypted:
+            fields[probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY))] = str
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(fields),
+                {CONF_PORT: user_input[CONF_PORT] if user_input else suggested_port},
+            ),
+            errors=errors,
+        )
+
     async def async_validate_dsmr(
         self, input_data: dict[str, Any], errors: dict[str, str]
     ) -> dict[str, Any]:
         """Validate dsmr connection and create data."""
-        data = input_data
+        data = await self._async_validate_connection(input_data, errors)
+        if not errors and data[CONF_SERIAL_ID]:
+            await self.async_set_unique_id(data[CONF_SERIAL_ID])
+            self._abort_if_unique_id_configured()
+        return data
 
+    async def _async_validate_connection(
+        self, data: dict[str, Any], errors: dict[str, str]
+    ) -> dict[str, Any]:
+        """Connect to the meter and return the data including serial ids."""
         try:
             try:
                 protocol = DSMR_PROTOCOL
                 info = await _validate_dsmr_connection(self.hass, data, protocol)
             except CannotCommunicate:
+                # Encrypted meters don't support the RFXtrx fallback
+                if data[CONF_DSMR_VERSION] in ENCRYPTED_DSMR_VERSIONS:
+                    raise
                 protocol = RFXTRX_DSMR_PROTOCOL
                 info = await _validate_dsmr_connection(self.hass, data, protocol)
-
-            data = {**data, **info, CONF_PROTOCOL: protocol}
-
-            if info[CONF_SERIAL_ID]:
-                await self.async_set_unique_id(info[CONF_SERIAL_ID])
-                self._abort_if_unique_id_configured()
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except CannotCommunicate:
             errors["base"] = "cannot_communicate"
-
+        except InvalidKey:
+            errors["base"] = "invalid_key"
+        else:
+            return {**data, **info, CONF_PROTOCOL: protocol}
         return data
 
 
@@ -218,14 +343,14 @@ class DSMROptionFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TIME_BETWEEN_UPDATE,
                         default=self.config_entry.options.get(
                             CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
                 }
             ),
         )
@@ -236,4 +361,8 @@ class CannotConnect(HomeAssistantError):
 
 
 class CannotCommunicate(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    """Error to indicate we cannot communicate with the device."""
+
+
+class InvalidKey(HomeAssistantError):
+    """Error to indicate the decryption key is invalid."""

@@ -13,4 +13,5 @@ TEST_STATS = KarakeepStats(
 
 TEST_VERSION = "0.32.0"
 TEST_TOKEN = "test-token"
+NEW_TOKEN = "new-test-token"
 TEST_URL = "https://karakeep.example.com"

@@ -1,6 +1,7 @@
 {
   "domain": "watergate",
   "name": "Watergate",
+  "categories": ["water.meters_leak_detection"],
   "codeowners": ["@adam-the-hero"],
   "config_flow": true,
   "dependencies": ["http", "webhook"],
@@ -8,5 +9,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": ["watergate-local-api==2025.1.0"]
+  "requirements": ["watergate-local-api==2026.2.2"]
 }

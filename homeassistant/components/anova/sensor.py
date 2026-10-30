@@ -33,6 +33,7 @@ SENSOR_DESCRIPTIONS: list[AnovaSensorEntityDescription] = [
         key="cook_time",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         translation_key="cook_time",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.cook_time,
@@ -62,6 +63,7 @@ SENSOR_DESCRIPTIONS: list[AnovaSensorEntityDescription] = [
     AnovaSensorEntityDescription(
         key="cook_time_remaining",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         translation_key="cook_time_remaining",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.cook_time_remaining,

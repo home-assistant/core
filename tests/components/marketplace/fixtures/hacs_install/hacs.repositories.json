@@ -1,0 +1,119 @@
+{
+  "version": "6",
+  "minor_version": 1,
+  "key": "hacs.repositories",
+  "data": {
+    "1296266": {
+      "repository_manifest": {
+        "name": "Proxy manifest",
+        "filename": "example.jinja"
+      },
+      "full_name": "hacs-test-org/theme-basic",
+      "category": "theme",
+      "description": "This your first repo!",
+      "last_updated": "2011-01-26T19:06:43Z",
+      "stargazers_count": 80,
+      "topics": ["octocat", "atom", "electron", "api"],
+      "default_branch": "main",
+      "installed_commit": "7fd1a60",
+      "installed": true,
+      "last_commit": "7fd1a60",
+      "last_version": "1.0.0",
+      "published_tags": ["1.0.0"],
+      "releases": true,
+      "version_installed": "1.0.0",
+      "last_fetched": 1551193359.0
+    },
+    "1296262": {
+      "repository_manifest": {},
+      "full_name": "hacs-test-org/python_script-basic",
+      "category": "python_script",
+      "description": "This your first repo!",
+      "etag_repository": "321",
+      "last_updated": "2020-01-20T09:34:52Z",
+      "last_fetched": 0.0
+    },
+    "1296265": {
+      "repository_manifest": {},
+      "full_name": "hacs-test-org/appdaemon-basic",
+      "category": "appdaemon",
+      "description": "This your first repo!",
+      "etag_repository": "321",
+      "last_updated": "2020-01-20T09:34:52Z",
+      "last_fetched": 0.0
+    },
+    "1296267": {
+      "repository_manifest": {
+        "name": "Proxy manifest"
+      },
+      "full_name": "hacs-test-org/plugin-basic",
+      "category": "plugin",
+      "description": "This your first repo!",
+      "last_updated": "2011-01-26T19:06:43Z",
+      "stargazers_count": 80,
+      "topics": ["octocat", "atom", "electron", "api"],
+      "default_branch": "main",
+      "installed_commit": "7fd1a60",
+      "installed": true,
+      "last_commit": "7fd1a60",
+      "last_version": "1.0.0",
+      "published_tags": ["1.0.0"],
+      "releases": true,
+      "version_installed": "1.0.0",
+      "last_fetched": 1551193359.0
+    },
+    "1296268": {
+      "repository_manifest": {},
+      "full_name": "hacs-test-org/template-basic",
+      "category": "template",
+      "description": "This your first repo!",
+      "etag_repository": "321",
+      "last_updated": "2020-01-20T09:34:52Z",
+      "last_fetched": 0.0
+    },
+    "172733314": {
+      "repository_manifest": {
+        "name": "HACS"
+      },
+      "full_name": "hacs/integration",
+      "category": "integration",
+      "description": "HACS gives you a powerful UI to handle downloads of all your custom needs.",
+      "domain": "hacs",
+      "last_updated": "2023-11-18T21:22:03Z",
+      "stargazers_count": 4065,
+      "topics": ["community", "package-manager"],
+      "default_branch": "main",
+      "installed": true,
+      "manifest_name": "HACS",
+      "open_issues": 2,
+      "releases": true,
+      "version_installed": "0.0.0",
+      "last_fetched": 1551193359.0
+    },
+    "1296269": {
+      "repository_manifest": {
+        "name": "Proxy manifest"
+      },
+      "full_name": "hacs-test-org/integration-basic",
+      "category": "integration",
+      "description": "This your first repo!",
+      "domain": "example",
+      "downloads": 42,
+      "last_updated": "2011-01-26T19:06:43Z",
+      "stargazers_count": 80,
+      "topics": ["octocat", "atom", "electron", "api"],
+      "config_flow": true,
+      "default_branch": "main",
+      "installed_commit": "7fd1a60",
+      "installed": true,
+      "last_commit": "7fd1a60",
+      "last_version": "1.0.0",
+      "manifest_name": "Proxy manifest",
+      "prerelease": "3.0.0",
+      "published_tags": ["1.0.0"],
+      "releases": true,
+      "version_installed": "1.0.0",
+      "last_fetched": 1551193359.0
+    }
+  }
+}

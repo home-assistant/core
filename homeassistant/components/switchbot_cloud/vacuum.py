@@ -122,10 +122,15 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         if self.coordinator.data is None:
             return
 
-        self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
+        # Webhook payloads may omit keys not part of the reported change.
+        if (online_status := self.coordinator.data.get("onlineStatus")) is not None:
+            self._attr_available = online_status == "online"
 
-        switchbot_state = str(self.coordinator.data.get("workingStatus"))
-        self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
+        if (working_status := self.coordinator.data.get("workingStatus")) is not None:
+            self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(
+                str(working_status)
+            )
+
         if self._attr_fan_speed is None:
             self._attr_fan_speed = VACUUM_FAN_SPEED_QUIET
 

@@ -1,11 +1,11 @@
 """Provide common tests tools for conversation."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import conversation
 from homeassistant.core import HomeAssistant
 
 from . import MockAgent
-
-from tests.common import MockConfigEntry
 
 
 def mock_conversation_agent_fixture_helper(hass: HomeAssistant) -> MockAgent:

@@ -17,9 +17,8 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ToGrillConfigEntry
 from .const import CONF_PROBE_COUNT, MAX_PROBE_COUNT
-from .coordinator import ToGrillCoordinator
+from .coordinator import ToGrillConfigEntry, ToGrillCoordinator
 from .entity import ToGrillEntity
 
 PARALLEL_UPDATES = 0

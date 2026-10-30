@@ -66,26 +66,28 @@ class MyUplinkSelect(MyUplinkEntity, SelectEntity):
         self._attr_name = device_point.parameter_name
 
         self._attr_options = [x["text"].capitalize() for x in device_point.enum_values]
+        # enum values are numeric strings, with decimals on some devices ("0.3"),
+        # so match them as numbers and keep the raw string to write back
         self.options_map = {
-            str(int(x["value"])): x["text"].capitalize()
-            for x in device_point.enum_values
+            float(x["value"]): x["text"].capitalize() for x in device_point.enum_values
         }
-        self.options_rev = {value: key for key, value in self.options_map.items()}
+        self.options_rev = {
+            x["text"].capitalize(): x["value"] for x in device_point.enum_values
+        }
 
     @property
     @override
     def current_option(self) -> str | None:
         """Retrieve currently selected option."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        value = int(cast(int, device_point.value_t))
-        return self.options_map.get(str(value))
+        return self.options_map.get(float(cast(float, device_point.value_t)))
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Set the current option."""
         try:
             await self.coordinator.api.async_set_device_points(
-                self.device_id, data={self.point_id: str(self.options_rev[option])}
+                self.device_id, data={self.point_id: self.options_rev[option]}
             )
         except ClientError as err:
             raise HomeAssistantError(

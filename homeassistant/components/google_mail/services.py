@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from googleapiclient.http import HttpRequest
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
@@ -28,17 +28,17 @@ if TYPE_CHECKING:
 
 SERVICE_SET_VACATION = "set_vacation"
 
-SERVICE_VACATION_SCHEMA = vol.All(
+SERVICE_VACATION_SCHEMA = probatio.All(
     cv.make_entity_service_schema(
         {
-            vol.Required(ATTR_ENABLED, default=True): cv.boolean,
-            vol.Optional(ATTR_TITLE): cv.string,
-            vol.Required(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_PLAIN_TEXT, default=True): cv.boolean,
-            vol.Optional(ATTR_RESTRICT_CONTACTS): cv.boolean,
-            vol.Optional(ATTR_RESTRICT_DOMAIN): cv.boolean,
-            vol.Optional(ATTR_START): cv.date,
-            vol.Optional(ATTR_END): cv.date,
+            probatio.Required(ATTR_ENABLED, default=True): cv.boolean,
+            probatio.Optional(ATTR_TITLE): cv.string,
+            probatio.Required(ATTR_MESSAGE): cv.string,
+            probatio.Optional(ATTR_PLAIN_TEXT, default=True): cv.boolean,
+            probatio.Optional(ATTR_RESTRICT_CONTACTS): cv.boolean,
+            probatio.Optional(ATTR_RESTRICT_DOMAIN): cv.boolean,
+            probatio.Optional(ATTR_START): cv.date,
+            probatio.Optional(ATTR_END): cv.date,
         },
     )
 )

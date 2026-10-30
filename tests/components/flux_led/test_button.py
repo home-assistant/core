@@ -1,5 +1,7 @@
 """Tests for button platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import flux_led
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.flux_led.const import DOMAIN
@@ -18,8 +20,6 @@ from . import (
     _patch_discovery,
     _patch_wifibulb,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_button_reboot(hass: HomeAssistant) -> None:

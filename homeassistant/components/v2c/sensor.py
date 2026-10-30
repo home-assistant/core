@@ -155,6 +155,7 @@ async def async_setup_entry(
         if description.key == "voltage_installation" and not deprecate_entity(
             hass=hass,
             entity_registry=entity_registry,
+            config_entry_id=config_entry.entry_id,
             platform_domain=Platform.SENSOR,
             entity_unique_id=f"{config_entry.entry_id}_{description.key}",
             issue_id=f"deprecated_sensor_{config_entry.entry_id}_{description.key}",

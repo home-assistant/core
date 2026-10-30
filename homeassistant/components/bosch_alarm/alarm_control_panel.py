@@ -26,9 +26,11 @@ async def async_setup_entry(
 
     async_add_entities(
         AreaAlarmControlPanel(
+            hass,
             panel,
             area_id,
             config_entry.unique_id or config_entry.entry_id,
+            config_entry.entry_id,
         )
         for area_id in panel.areas
     )
@@ -48,9 +50,18 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
     _attr_code_arm_required = False
     _attr_name = None
 
-    def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        panel: Panel,
+        area_id: int,
+        unique_id: str,
+        config_entry_id: str,
+    ) -> None:
         """Initialise a Bosch Alarm control panel entity."""
-        super().__init__(panel, area_id, unique_id, True, False, True)
+        super().__init__(
+            hass, panel, area_id, unique_id, config_entry_id, True, False, True
+        )
         self._attr_unique_id = self._area_unique_id
 
     @property

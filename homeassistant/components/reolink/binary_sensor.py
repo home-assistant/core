@@ -156,6 +156,14 @@ BINARY_PUSH_SENSORS = (
         value=lambda api, ch: api.ai_detected(ch, "cry"),
         supported=lambda api, ch: api.ai_supported(ch, "cry"),
     ),
+    ReolinkBinarySensorEntityDescription(
+        key="tamper",
+        translation_key="tamper",
+        cmd_id=[33],
+        device_class=BinarySensorDeviceClass.TAMPER,
+        value=lambda api, ch: api.baichuan.tamper_state(ch),
+        supported=lambda api, ch: api.supported(ch, "tamper"),
+    ),
 )
 
 BINARY_SENSORS = (
@@ -324,7 +332,7 @@ async def async_setup_entry(
     api = reolink_data.host.api
 
     entities: list[BinarySensorEntity] = []
-    for channel in api.channels:
+    for channel in api.stream_channels:
         entities.extend(
             ReolinkPushBinarySensorEntity(reolink_data, channel, entity_description)
             for entity_description in BINARY_PUSH_SENSORS

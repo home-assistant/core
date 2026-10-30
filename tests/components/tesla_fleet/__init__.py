@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.application_credentials import (
@@ -14,8 +15,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def setup_platform(

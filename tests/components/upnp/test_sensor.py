@@ -1,16 +1,15 @@
 """Tests for UPnP/IGD sensor."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from async_upnp_client.profiles.igd import IgdDevice, IgdState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.upnp.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -53,7 +52,7 @@ async def test_upnp_sensors(
     # Second poll.
     mock_igd_device: IgdDevice = mock_config_entry.igd_device
     mock_igd_device.async_get_traffic_and_status_data.return_value = IgdState(
-        timestamp=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        timestamp=dt_util.naive_now(),
         bytes_received=10240,
         bytes_sent=20480,
         packets_received=30,

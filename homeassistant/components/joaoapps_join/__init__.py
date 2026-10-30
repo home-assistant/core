@@ -2,6 +2,7 @@
 
 import logging
 
+import probatio
 from pyjoin import (
     get_devices,
     ring_device,
@@ -11,7 +12,6 @@ from pyjoin import (
     send_url,
     set_wallpaper,
 )
-import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -25,22 +25,22 @@ DOMAIN = "joaoapps_join"
 CONF_DEVICE_IDS = "device_ids"
 CONF_DEVICE_NAMES = "device_names"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            cv.ensure_list,
+        DOMAIN: probatio.All(
+            probatio.EnsureList(),
             [
                 {
-                    vol.Required(CONF_API_KEY): cv.string,
-                    vol.Optional(CONF_DEVICE_ID): cv.string,
-                    vol.Optional(CONF_DEVICE_IDS): cv.string,
-                    vol.Optional(CONF_DEVICE_NAMES): cv.string,
-                    vol.Optional(CONF_NAME): cv.string,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+                    probatio.Optional(CONF_DEVICE_ID): cv.string,
+                    probatio.Optional(CONF_DEVICE_IDS): cv.string,
+                    probatio.Optional(CONF_DEVICE_NAMES): cv.string,
+                    probatio.Optional(CONF_NAME): cv.string,
                 }
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -107,11 +107,18 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             api_key=api_key,
         )
 
+    # Cannot be moved: action names come from the configuration
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}ring", ring_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}set_wallpaper", set_wallpaper_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}send_sms", send_sms_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}send_file", send_file_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}send_url", send_url_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}send_tasker", send_tasker_service)
 
 

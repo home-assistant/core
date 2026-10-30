@@ -1,6 +1,7 @@
 {
   "domain": "epion",
   "name": "Epion",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@lhgravendeel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/epion",

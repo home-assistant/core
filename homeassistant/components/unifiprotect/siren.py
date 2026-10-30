@@ -1,8 +1,7 @@
 """UniFi Protect siren platform (Public API)."""
 
-from datetime import datetime
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from uiprotect.data import PublicDeviceModel, Siren, SirenDuration
 
@@ -10,18 +9,17 @@ from homeassistant.components.siren import (
     ATTR_DURATION,
     ATTR_VOLUME_LEVEL,
     SirenEntity,
+    SirenEntityDescription,
     SirenEntityFeature,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
-from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
-from .data import ProtectData, UFPConfigEntry
+from .const import DOMAIN
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
+from .entity import ProtectDeviceEntity
 from .utils import async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,6 +38,17 @@ async def async_setup_entry(
     """Set up UniFi Protect siren entities from a config entry."""
     data: ProtectData = entry.runtime_data
 
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        # A siren has no private counterpart, so the adopt path never offers
+        # one; it arrives through the public add signal in both modes.
+        if isinstance(device, Siren):
+            async_add_entities([ProtectSiren(data, device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+
     api = data.api
     if not api.has_public_bootstrap:
         return
@@ -49,123 +58,38 @@ async def async_setup_entry(
     )
 
 
-class ProtectSiren(SirenEntity):
+_SIREN_DESCRIPTION = SirenEntityDescription(key="siren")
+
+
+class ProtectSiren(ProtectDeviceEntity, SirenEntity):
     """Siren entity for a UniFi Protect siren device (Public API)."""
 
-    _attr_has_entity_name = True
-    _attr_attribution = DEFAULT_ATTRIBUTION
     _attr_name = None  # device name is the entity name
-    _attr_should_poll = False
     _attr_supported_features = (
         SirenEntityFeature.TURN_ON
         | SirenEntityFeature.TURN_OFF
         | SirenEntityFeature.DURATION
         | SirenEntityFeature.VOLUME_SET
     )
+    _state_attrs = ("_attr_available", "_attr_is_on")
+    _ufp_uses_public = True
 
     def __init__(self, data: ProtectData, siren: Siren) -> None:
         """Initialise the siren entity."""
-        self.data = data
-        self._siren_id = siren.id
-        self._attr_unique_id = f"{siren.mac}_siren"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
-        nvr = data.api.bootstrap.nvr
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, siren.mac)},
-            identifiers={(DOMAIN, siren.mac)},
-            manufacturer=DEFAULT_BRAND,
-            name=siren.name,
-            model="Siren",
-            via_device=(DOMAIN, nvr.mac),
-        )
-        self._siren_mac = siren.mac
-        self._cancel_scheduled_off: CALLBACK_TYPE | None = None
-        self._update_from_siren(siren)
+        # The description key keeps the legacy ``{mac}_siren`` unique ID.
+        super().__init__(data, siren, _SIREN_DESCRIPTION)
 
     @property
     def _siren(self) -> Siren | None:
-        api = self.data.api
-        if not api.has_public_bootstrap:
-            return None
-        return api.public_bootstrap.sirens.get(self._siren_id)
+        return cast(Siren | None, self.data.async_get_public_device(self.device))
 
     @callback
-    def _update_from_siren(self, siren: Siren) -> None:
-        """Refresh cached attributes from the siren object."""
-        self._attr_available = self.data.last_public_update_success
-        self._attr_is_on = siren.is_active
-
-    @callback
-    def _async_updated(self, _obj: PublicDeviceModel | None) -> None:
-        """Handle a public devices WS update for this siren.
-
-        The state is always re-read from the public bootstrap: the library
-        merges WS updates into it before dispatching, and ``None`` carries no
-        object to read.
-        """
-        # Cancel any previous auto-off timer before scheduling a new one.
-        self._cancel_off_timer()
-
-        prev_state = (self._attr_available, self._attr_is_on)
-
-        if (siren := self._siren) is None:
-            # Gone from the bootstrap (delete event): mark unavailable and off.
-            self._attr_available = False
-            self._attr_is_on = False
-        else:
-            self._update_from_siren(siren)
-
-            # The server never emits a WS message when a timed run expires, so
-            # we must schedule our own callback.  Both activated_at and
-            # duration are in milliseconds in the WS payload.
-            status = siren.siren_status
-            if (
-                status.is_active
-                and status.activated_at is not None
-                and status.duration is not None
-            ):
-                delay = (
-                    status.activated_at + status.duration
-                ) / 1000 - dt_util.utcnow().timestamp()
-                if delay <= 0:
-                    # Already expired (e.g. stale bootstrap after a reconnect):
-                    # override the is_active=True from the payload immediately
-                    # so we never briefly write ON into the state machine.
-                    self._attr_is_on = False
-                else:
-                    self._cancel_scheduled_off = async_call_later(
-                        self.hass, delay, self._async_scheduled_off
-                    )
-
-        if (self._attr_available, self._attr_is_on) != prev_state:
-            self.async_write_ha_state()
-
-    @callback
-    def _async_scheduled_off(self, _now: datetime) -> None:
-        """Timed siren run has expired — push state to OFF."""
-        self._cancel_scheduled_off = None
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public WS updates dispatched by ProtectData."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.data.async_subscribe_public(self._siren_mac, self._async_updated)
-        )
-        self.async_on_remove(self._cancel_off_timer)
-        # Refresh from the bootstrap: a WS update or delete that landed between
-        # entity construction and this subscription would otherwise be missed,
-        # and an already-active timed run needs its auto-off timer scheduled so
-        # a siren that was running when HA started does not remain stuck ON.
-        self._async_updated(None)
-
-    @callback
-    def _cancel_off_timer(self) -> None:
-        """Cancel the pending auto-off timer if any."""
-        if self._cancel_scheduled_off is not None:
-            self._cancel_scheduled_off()
-            self._cancel_scheduled_off = None
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        # A siren gone from the bootstrap (delete event) reads as off.
+        siren = cast(Siren | None, self._ufp_public_obj)
+        self._attr_is_on = siren is not None and siren.is_active
 
     @async_ufp_instance_command
     @override
@@ -220,7 +144,6 @@ class ProtectSiren(SirenEntity):
             )
         await siren.stop()
         # The server does not emit a WS event after a manual stop, so we set
-        # the state optimistically and cancel any pending auto-off timer.
-        self._cancel_off_timer()
+        # the state optimistically.
         self._attr_is_on = False
         self.async_write_ha_state()

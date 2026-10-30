@@ -1,0 +1,138 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'coordinator': dict({
+      'account_count': 3,
+      'accounts': list([
+        dict({
+          'available_fields': list([
+            'balance',
+            'id',
+            'name',
+            'owners',
+            'type',
+          ]),
+          'balance_fields': list([
+            'balance',
+            'currency',
+            'spend_today',
+            'total_balance',
+          ]),
+          'currency': 'GBP',
+          'owner_count': 1,
+          'transfer_allowed_by_integration': True,
+          'type': 'uk_retail',
+        }),
+        dict({
+          'available_fields': list([
+            'balance',
+            'id',
+            'name',
+            'owners',
+            'type',
+          ]),
+          'balance_fields': list([
+            'balance',
+            'currency',
+            'spend_today',
+            'total_balance',
+          ]),
+          'currency': 'EUR',
+          'owner_count': 1,
+          'transfer_allowed_by_integration': False,
+          'type': 'uk_monzo_flex',
+        }),
+        dict({
+          'available_fields': list([
+            'balance',
+            'id',
+            'name',
+            'owners',
+            'type',
+          ]),
+          'balance_fields': list([
+            'balance',
+            'currency',
+            'spend_today',
+            'total_balance',
+          ]),
+          'currency': 'GBP',
+          'owner_count': 2,
+          'transfer_allowed_by_integration': True,
+          'type': 'uk_retail_joint',
+        }),
+      ]),
+      'last_exception_type': None,
+      'last_update_success': True,
+      'pot_count': 2,
+      'pots': list([
+        dict({
+          'available_fields': list([
+            'balance',
+            'currency',
+            'current_account_id',
+            'id',
+            'name',
+            'style',
+            'type',
+          ]),
+          'currency': 'USD',
+          'linked_account_present': True,
+          'style': 'savings',
+          'type': 'instant_access',
+        }),
+        dict({
+          'available_fields': list([
+            'balance',
+            'currency',
+            'current_account_id',
+            'id',
+            'name',
+            'style',
+            'type',
+          ]),
+          'currency': 'USD',
+          'linked_account_present': False,
+          'style': 'savings',
+          'type': 'instant_access',
+        }),
+      ]),
+      'update_interval_seconds': 60.0,
+    }),
+    'entry': dict({
+      'data': dict({
+        'auth_implementation': 'monzo',
+        'cloudhook_url': '**REDACTED**',
+        'profile': '**REDACTED**',
+        'token': '**REDACTED**',
+        'webhook_id': '**REDACTED**',
+        'webhook_url': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'monzo',
+      'entry_id': '**REDACTED**',
+      'minor_version': 3,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'webhook': dict({
+      'active': True,
+      'has_persisted_webhook_url': True,
+      'has_registered_webhook_url': True,
+      'known_account_count': 3,
+      'retry_scheduled': False,
+      'retrying': False,
+      'uses_cloudhook': False,
+    }),
+  })
+# ---

@@ -5,13 +5,16 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    extract_stack_to_frame,
+    mock_integration,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
 from homeassistant.loader import async_get_integration
-
-from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
 
 async def test_extract_frame_integration(
@@ -39,9 +42,7 @@ async def test_get_integration_logger(
 @pytest.mark.usefixtures("enable_custom_integrations", "hass")
 async def test_extract_frame_resolve_module() -> None:
     """Test extracting the current frame from integration context."""
-    from custom_components.test_integration_frame import (  # noqa: PLC0415
-        call_get_integration_frame,
-    )
+    from custom_components.test_integration_frame import call_get_integration_frame  # noqa: PLC0415
 
     integration_frame = call_get_integration_frame()
 
@@ -57,9 +58,7 @@ async def test_extract_frame_resolve_module() -> None:
 @pytest.mark.usefixtures("enable_custom_integrations", "hass")
 async def test_get_integration_logger_resolve_module() -> None:
     """Test getting the logger from integration context."""
-    from custom_components.test_integration_frame import (  # noqa: PLC0415
-        call_get_integration_logger,
-    )
+    from custom_components.test_integration_frame import call_get_integration_logger  # noqa: PLC0415
 
     logger = call_get_integration_logger(__name__)
 

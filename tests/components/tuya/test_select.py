@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
@@ -19,8 +20,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -150,3 +149,40 @@ async def test_select_invalid_option(
             blocking=True,
         )
     assert exc.value.translation_key == "not_valid_option"
+
+
+@pytest.mark.parametrize("mock_device_code", ["hwsb_ircs2n82vgrozoew"])
+async def test_hwsb_select_with_quirk(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HWSB outdoor equipment select with quirk applied."""
+    mock_device.status["mode"] = "MI"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    entity_id = "select.inverflow_mode"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "MI"
+    assert state.attributes["options"] == ["MI", "AI", "backwash"]
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.translation_key == "pump_mode"
+    assert entry.entity_category is None
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_OPTION: "AI",
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": "mode", "value": "AI"}]
+    )

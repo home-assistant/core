@@ -70,7 +70,7 @@ async def async_setup_entry(
             for description in SWITCHES
         )
 
-    _add_new_locks(coordinator.data.locks)
+    _add_new_locks(coordinator.data)
     coordinator.new_locks_callbacks.append(_add_new_locks)
 
 

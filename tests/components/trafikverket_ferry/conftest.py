@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket.models import FerryStopModel
 
 from homeassistant.components.trafikverket_ferry.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import ENTRY_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="load_int")

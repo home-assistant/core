@@ -11,3 +11,12 @@ def restore_logging_class():
     klass = logging.getLoggerClass()
     yield
     logging.setLoggerClass(klass)
+
+
+@pytest.fixture(autouse=True)
+def restore_root_logger_level():
+    """Restore the root logger level, which the tests change."""
+    root = logging.getLogger()
+    level = root.level
+    yield
+    root.setLevel(level)

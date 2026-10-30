@@ -37,12 +37,17 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
 CONF_GATEWAY_ID: Final = "gateway_id"
-DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
+CONF_REFRESH_TOKEN: Final = "refresh_token"
+CONF_SITE_OID: Final = "site_oid"
+DEFAULT_SERVER: Final = Server.SOMFY
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_LOCAL: Final = timedelta(seconds=5)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
+# fetch_events allows 1 call per second, and refresh timing jitters, so leave margin.
+UPDATE_INTERVAL_EXECUTION: Final = timedelta(seconds=2)
+RATE_LIMIT_RETRY_AFTER: Final = timedelta(minutes=1)
 
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,

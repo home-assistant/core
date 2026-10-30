@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Mapping
 import logging
-from time import time
+from time import time as time_now
 from typing import Any, Literal
 
 import aiohttp
@@ -182,14 +182,13 @@ class ReolinkHost:
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="password_too_long",
                     translation_placeholders={"name": self._config_entry.title},
+                    config_entry_id=self._config_entry.entry_id,
                 )
 
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise PasswordIncompatible(
-                "Reolink password contains incompatible special character or "
-                "is too long, please change the password to only contain characters: "
-                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS} "
-                "and not be longer than 31 characters"
+                translation_domain=DOMAIN,
+                translation_key="password_incompatible",
+                translation_placeholders={"special_chars": ALLOWED_SPECIAL_CHARS},
             )
 
         store: Store[str] | None = None
@@ -206,14 +205,19 @@ class ReolinkHost:
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise ReolinkSetupException("Could not get mac address")
+            raise ReolinkSetupException(
+                translation_domain=DOMAIN,
+                translation_key="no_mac_address",
+            )
 
         if not self._api.is_admin:
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise UserNotAdmin(
-                f"User '{self._api.username}' has authorization level "
-                f"'{self._api.user_level}', only admin users can change camera settings"
+                translation_domain=DOMAIN,
+                translation_key="user_not_admin",
+                translation_placeholders={
+                    "username": self._api.username,
+                    "userlevel": self._api.user_level,
+                },
             )
 
         self.privacy_mode = self._api.baichuan.privacy_mode()
@@ -499,7 +503,7 @@ class ReolinkHost:
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
         wake: dict[int, bool] = {}
-        now = time()
+        now = time_now()
         for channel in self._api.stream_channels:
             # wake the battery cameras for a complete update
             if not self._api.supported(channel, "battery"):

@@ -4,13 +4,13 @@ from datetime import timedelta
 from http import HTTPStatus
 import io
 
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 
 async def test_bad_posting(

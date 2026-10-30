@@ -284,7 +284,9 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @override
     def source_list(self) -> list[str] | None:
         """Return a list of source devices."""
-        return [device.name for device in self.devices.data]
+        # Spotify returns the devices in no particular order. Sort them so an
+        # unchanged set of devices does not read as a capability change.
+        return sorted(device.name for device in self.devices.data)
 
     @property
     @override

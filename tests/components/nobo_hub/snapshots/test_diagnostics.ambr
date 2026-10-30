@@ -44,6 +44,7 @@
     'zones': dict({
       '1': dict({
         'name': 'Living room',
+        'override_allowed': '1',
         'temp_comfort_c': '21',
         'temp_eco_c': '17',
         'week_profile_id': '0',

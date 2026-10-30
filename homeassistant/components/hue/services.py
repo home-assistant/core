@@ -4,21 +4,42 @@ import asyncio
 import logging
 
 from aiohue import HueBridgeV1, HueBridgeV2
-import voluptuous as vol
+import probatio
 
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.service import (
+    async_register_platform_entity_service,
+    verify_domain_control,
+)
+from homeassistant.helpers.typing import VolDictType
 
 from .bridge import HueBridge, HueConfigEntry
 from .const import (
+    ATTR_BRIGHTNESS,
     ATTR_DYNAMIC,
     ATTR_GROUP_NAME,
     ATTR_SCENE_NAME,
+    ATTR_SPEED,
     ATTR_TRANSITION,
     DOMAIN,
+    SERVICE_ACTIVATE_SCENE,
     SERVICE_HUE_ACTIVATE_SCENE,
 )
+
+ACTIVATE_SCENE_SCHEMA: VolDictType = {
+    probatio.Optional(ATTR_DYNAMIC): probatio.Coerce(bool),
+    probatio.Optional(ATTR_SPEED): probatio.All(
+        probatio.Coerce(int), probatio.Percentage()
+    ),
+    probatio.Optional(ATTR_TRANSITION): probatio.All(
+        probatio.Coerce(float), probatio.Range(min=0, max=3600)
+    ),
+    probatio.Optional(ATTR_BRIGHTNESS): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=255)
+    ),
+}
 
 LOGGER = logging.getLogger(__name__)
 
@@ -63,14 +84,22 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_HUE_ACTIVATE_SCENE,
         verify_domain_control(DOMAIN)(hue_activate_scene),
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_GROUP_NAME): cv.string,
-                vol.Required(ATTR_SCENE_NAME): cv.string,
-                vol.Optional(ATTR_TRANSITION): cv.positive_int,
-                vol.Optional(ATTR_DYNAMIC): cv.boolean,
+                probatio.Required(ATTR_GROUP_NAME): cv.string,
+                probatio.Required(ATTR_SCENE_NAME): cv.string,
+                probatio.Optional(ATTR_TRANSITION): cv.positive_int,
+                probatio.Optional(ATTR_DYNAMIC): cv.boolean,
             }
         ),
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_ACTIVATE_SCENE,
+        entity_domain=SCENE_DOMAIN,
+        func="_async_activate",
+        schema=ACTIVATE_SCENE_SCHEMA,
     )
 
 

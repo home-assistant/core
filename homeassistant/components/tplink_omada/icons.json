@@ -31,6 +31,9 @@
   "services": {
     "reconnect_client": {
       "service": "mdi:sync"
+    },
+    "set_client_name": {
+      "service": "mdi:rename-box"
     }
   }
 }

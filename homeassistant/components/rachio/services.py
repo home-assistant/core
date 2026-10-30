@@ -2,8 +2,9 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -12,6 +13,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     service,
 )
+from homeassistant.helpers.service import async_register_platform_entity_service
 
 from .const import (
     DOMAIN,
@@ -19,7 +21,9 @@ from .const import (
     MODEL_GENERATION_1,
     SERVICE_PAUSE_WATERING,
     SERVICE_RESUME_WATERING,
+    SERVICE_SET_ZONE_MOISTURE,
     SERVICE_START_MULTIPLE_ZONES,
+    SERVICE_START_WATERING,
     SERVICE_STOP_WATERING,
 )
 from .device import RachioConfigEntry
@@ -28,25 +32,26 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICES = "devices"
 ATTR_DURATION = "duration"
+ATTR_PERCENT = "percent"
 ATTR_SORT_ORDER = "sortOrder"
 
-PAUSE_SERVICE_SCHEMA = vol.Schema(
+PAUSE_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_DEVICES): cv.string,
-        vol.Optional(ATTR_DURATION, default=60): cv.positive_int,
+        probatio.Optional(ATTR_DEVICES): cv.string,
+        probatio.Optional(ATTR_DURATION, default=60): cv.positive_int,
     }
 )
 
-RESUME_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
+RESUME_SERVICE_SCHEMA = probatio.Schema({probatio.Optional(ATTR_DEVICES): cv.string})
 
-START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
+START_MULTIPLE_ZONES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_DURATION): cv.ensure_list_csv,
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(ATTR_DURATION): cv.ensure_list_csv,
     }
 )
 
-STOP_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICES): cv.string})
+STOP_SERVICE_SCHEMA = probatio.Schema({probatio.Optional(ATTR_DEVICES): cv.string})
 
 
 def _stop_water(call: ServiceCall) -> None:
@@ -132,4 +137,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_START_MULTIPLE_ZONES,
         _start_multiple,
         schema=START_MULTIPLE_ZONES_SCHEMA,
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_START_WATERING,
+        entity_domain=SWITCH_DOMAIN,
+        func="turn_on",
+        schema={probatio.Optional(ATTR_DURATION): cv.positive_int},
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_ZONE_MOISTURE,
+        entity_domain=SWITCH_DOMAIN,
+        func="set_moisture_percent",
+        schema={probatio.Required(ATTR_PERCENT): cv.positive_int},
     )

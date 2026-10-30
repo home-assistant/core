@@ -1,12 +1,11 @@
 """Tests for the Tankerkoening integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("setup_integration")

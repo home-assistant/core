@@ -28,7 +28,9 @@ async def async_setup_entry(
 
     api = config_entry.runtime_data
 
-    async_add_entities([ZimiFan(device, api) for device in api.fans])
+    async_add_entities(
+        ZimiFan(hass, device, api, config_entry.entry_id) for device in api.fans
+    )
 
 
 class ZimiFan(ZimiEntity, FanEntity):

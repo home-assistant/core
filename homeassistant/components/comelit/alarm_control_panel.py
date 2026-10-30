@@ -1,6 +1,5 @@
 """Support for Comelit VEDO system."""
 
-import logging
 from typing import TYPE_CHECKING, cast, override
 
 from aiocomelit.api import ComelitVedoAreaObject
@@ -16,12 +15,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import LOGGER
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 AWAY = "away"
 DISABLE = "disable"
@@ -120,7 +118,7 @@ class ComelitAlarmEntity(
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the alarm."""
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "Area %s status is: %s. Armed is %s",
             self._area.name,
             self._area.human_status,

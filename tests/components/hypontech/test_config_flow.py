@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 
 from hyponcloud import KNOWN_OEMS, AuthenticationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hypontech.config_flow import OEM_OPTIONS
 from homeassistant.components.hypontech.const import CONF_OEM, DEFAULT_OEM, DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 NEXEN_OEM = 4
 TEST_ACCOUNT_ID = "2123456789123456789"

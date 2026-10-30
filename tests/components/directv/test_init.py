@@ -1,11 +1,11 @@
 """Tests for the DirecTV integration."""
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_config_entry_not_ready(

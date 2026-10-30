@@ -2,16 +2,19 @@
 
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.models import Event
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     HVACAction,
@@ -30,8 +33,6 @@ from .helpers import (
     device_state_changed_event,
     device_unavailable_event,
 )
-
-from tests.common import snapshot_platform
 
 # io:HeatingValveIOComponent
 VALVE = FixtureDevice(
@@ -69,12 +70,19 @@ THERMOSTAT_HEATING = FixtureDevice(
     "io://1234-5678-5010/386310#1",
     "climate.study_thermostat",
 )
+# io:AtlanticHeatRecoveryVentilationIOComponent without io:VentilationModeState value
+HEAT_RECOVERY_VENTILATION = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe.json",
+    "io://1234-5678-6508/2840629#1",
+    "climate.ventilation",
+)
 
 SNAPSHOT_FIXTURES = [
     VALVE,
     COZYTOUCH,
     YUTAKI_ZONE_1,
     THERMOSTAT_HEATING,
+    HEAT_RECOVERY_VENTILATION,
 ]
 
 
@@ -316,6 +324,98 @@ async def test_electrical_heater_adjustable_target_temperature(
     assert state.attributes[ATTR_TEMPERATURE] == 21.0
 
 
+@pytest.mark.parametrize(
+    ("device_states", "expected_hvac_action"),
+    [
+        pytest.param(
+            [
+                {
+                    "name": OverkizState.IO_CURRENT_WORKING_RATE,
+                    "type": 2,
+                    "value": 51.0,
+                },
+                {
+                    "name": OverkizState.CORE_REGULATION_MODE,
+                    "type": 3,
+                    "value": "standby",
+                },
+            ],
+            HVACAction.HEATING,
+            id="working_rate_heating",
+        ),
+        pytest.param(
+            [
+                {
+                    "name": OverkizState.IO_CURRENT_WORKING_RATE,
+                    "type": 2,
+                    "value": 0.0,
+                },
+            ],
+            HVACAction.IDLE,
+            id="working_rate_idle",
+        ),
+        pytest.param(
+            [
+                {
+                    "name": OverkizState.IO_CURRENT_WORKING_RATE,
+                    "type": 2,
+                    "value": 51.0,
+                },
+                {
+                    "name": OverkizState.CORE_OPERATING_MODE,
+                    "type": 3,
+                    "value": "standby",
+                },
+            ],
+            HVACAction.OFF,
+            id="working_rate_hvac_mode_off",
+        ),
+        pytest.param(
+            [
+                {
+                    "name": OverkizState.IO_CURRENT_WORKING_RATE,
+                    "type": 0,
+                    "value": None,
+                },
+                {
+                    "name": OverkizState.CORE_REGULATION_MODE,
+                    "type": 3,
+                    "value": "increase",
+                },
+            ],
+            HVACAction.HEATING,
+            id="regulation_mode_fallback",
+        ),
+    ],
+)
+async def test_electrical_heater_adjustable_hvac_action(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    device_states: list[dict[str, Any]],
+    expected_hvac_action: HVACAction,
+) -> None:
+    """Test hvac_action prefers the working rate over the regulation mode."""
+    await setup_overkiz_integration(fixture=ELECTRICAL_HEATER_ADJUSTABLE.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ELECTRICAL_HEATER_ADJUSTABLE.device_url,
+                device_states=device_states,
+            )
+        ],
+    )
+
+    state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_HVAC_ACTION] == expected_hvac_action
+
+
 async def test_hitachi_air_to_water_heating_zone_2(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
@@ -389,4 +489,28 @@ async def test_thermostat_heating_set_preset_mode(
         device_url=THERMOSTAT_HEATING.device_url,
         command_name="setDerogation",
         parameters=parameters,
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param("set_fan_mode", {ATTR_FAN_MODE: "bypass_boost"}, id="fan_mode"),
+        pytest.param("set_preset_mode", {ATTR_PRESET_MODE: "prog"}, id="preset_mode"),
+    ],
+)
+async def test_heat_recovery_ventilation_without_ventilation_mode(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    service: str,
+    service_data: dict[str, str],
+) -> None:
+    """Test setting modes does not fail without an io:VentilationModeState value."""
+    await setup_overkiz_integration(fixture=HEAT_RECOVERY_VENTILATION.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        service,
+        {"entity_id": HEAT_RECOVERY_VENTILATION.entity_id, **service_data},
+        blocking=True,
     )
