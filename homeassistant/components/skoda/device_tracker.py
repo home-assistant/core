@@ -3,6 +3,7 @@
 from typing import override
 
 from skoda_public_api.models.enums import VehicleCapability
+from skoda_public_api.models.parking_position import GPRCoordinates
 
 from homeassistant.components.device_tracker import (
     TrackerEntity,
@@ -43,21 +44,22 @@ class SkodaDeviceTracker(SkodaEntity, TrackerEntity):
         super().__init__(coordinator, coordinator.vin)
 
     @property
+    def _gps_coordinates(self) -> GPRCoordinates | None:
+        """Return the GPS coordinates of the parked vehicle."""
+        if parking_position := self.open_api_vehicle.parking_position:
+            return parking_position.gps_coordinates
+        return None
+
+    @property
     @override
     def latitude(self) -> float | None:
         """Return the latitude of the parked vehicle."""
-        if (
-            parking_position := self.open_api_vehicle.parking_position
-        ) and parking_position.gps_coordinates:
-            return parking_position.gps_coordinates.latitude
-        return None
+        coordinates = self._gps_coordinates
+        return coordinates.latitude if coordinates else None
 
     @property
     @override
     def longitude(self) -> float | None:
         """Return the longitude of the parked vehicle."""
-        if (
-            parking_position := self.open_api_vehicle.parking_position
-        ) and parking_position.gps_coordinates:
-            return parking_position.gps_coordinates.longitude
-        return None
+        coordinates = self._gps_coordinates
+        return coordinates.longitude if coordinates else None
