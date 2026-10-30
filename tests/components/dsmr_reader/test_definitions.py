@@ -1,6 +1,7 @@
 """Test the DSMR Reader definitions."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
 
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.components.dsmr_reader.definitions import (
@@ -9,8 +10,6 @@ from homeassistant.components.dsmr_reader.definitions import (
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 
 @pytest.mark.parametrize(

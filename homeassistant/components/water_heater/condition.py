@@ -2,16 +2,10 @@
 
 from typing import TYPE_CHECKING, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_OPTIONS,
-    STATE_OFF,
-    UnitOfTemperature,
-)
+from homeassistant.const import CONF_OPTIONS, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
@@ -23,16 +17,16 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN
+from .const import DOMAIN, WaterHeaterStateAttribute
 
 ATTR_OPERATION_MODE = "operation_mode"
 
 
 _OPERATION_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(ATTR_OPERATION_MODE): vol.All(
-                cv.ensure_list, vol.Length(min=1), [str]
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(ATTR_OPERATION_MODE): probatio.All(
+                probatio.EnsureList(), probatio.NonEmpty(), [str]
             ),
         },
     }
@@ -73,7 +67,9 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
     """Condition for water heater target temperature."""
 
     _base_unit = UnitOfTemperature.CELSIUS
-    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
+    _domain_specs = {
+        DOMAIN: DomainSpec(value_source=WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+    }
     _unit_converter = TemperatureConverter
 
     @override
@@ -81,7 +77,8 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
         """Skip water heater entities that do not expose a target temperature."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_TEMPERATURE) is not None
+            and state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+            is not None
         )
 
     @override

@@ -16,8 +16,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
-from .coordinator import TPLinkDataUpdateCoordinator
+from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
     TPLinkModuleEntityDescription,
@@ -94,7 +93,6 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
 
     _attr_supported_features = (
         VacuumEntityFeature.STATE
-        | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.START
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
@@ -151,12 +149,6 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the device."""
         await self._speaker_module.locate()
-
-    @property
-    @override
-    def battery_level(self) -> int | None:
-        """Return battery level."""
-        return self._vacuum_module.battery
 
     @override
     def _async_update_attrs(self) -> bool:

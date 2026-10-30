@@ -2,8 +2,8 @@
 # name: test_bbw_dose_mode[Linea Mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LM012345 Brew by weight dose mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LM012345 Brew by weight dose mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'continuous',
         'dose1',
         'dose2',
@@ -24,16 +24,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'continuous',
         'dose1',
         'dose2',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'LM012345')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -63,8 +63,8 @@
 # name: test_pre_brew_infusion_select[GS3 AV]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Prebrew/-infusion mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Prebrew/-infusion mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
@@ -85,16 +85,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -124,8 +124,8 @@
 # name: test_pre_brew_infusion_select[Linea Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MR012345 Prebrew/-infusion mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MR012345 Prebrew/-infusion mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
@@ -146,16 +146,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'MR012345')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -185,8 +185,8 @@
 # name: test_pre_brew_infusion_select[Linea Mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LM012345 Prebrew/-infusion mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LM012345 Prebrew/-infusion mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
@@ -207,16 +207,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'LM012345')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -246,8 +246,8 @@
 # name: test_smart_standby_mode
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Smart standby mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Smart standby mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'power_on',
         'last_brewing',
       ]),
@@ -267,15 +267,15 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'power_on',
         'last_brewing',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -305,8 +305,8 @@
 # name: test_steam_boiler_level[Linea Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MR012345 Steam level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MR012345 Steam level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '2',
         '3',
@@ -327,16 +327,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '2',
         '3',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'MR012345')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,

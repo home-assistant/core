@@ -1,10 +1,22 @@
 {
   "config": {
     "error": {
+      "api_key_id_used": "You entered the API key ID. Enter the API key itself, which starts with `sk_` and is only shown when the key is created or rotated.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::elevenlabs::config::step::user::data_description::api_key%]"
+        },
+        "description": "The ElevenLabs API key is no longer valid. Please enter a new API key.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -31,14 +43,14 @@
     "step": {
       "init": {
         "data": {
-          "configure_voice": "Configure advanced voice settings",
+          "configure_voice": "Configure voice settings",
           "model": "Model",
           "stt_auto_language": "Auto-detect language",
           "stt_model": "Speech-to-text model",
           "voice": "Voice"
         },
         "data_description": {
-          "configure_voice": "Configure advanced voice settings. Find more information in the ElevenLabs documentation.",
+          "configure_voice": "Configure voice settings. Find more information in the ElevenLabs documentation.",
           "model": "ElevenLabs model to use. Please note that not all models support all languages equally well.",
           "stt_auto_language": "Automatically detect the spoken language for speech-to-text.",
           "stt_model": "Speech-to-text model to use.",

@@ -44,6 +44,20 @@
       }
     }
   },
+  "exceptions": {
+    "connection_error": {
+      "message": "Could not reach Home Assistant Analytics while fetching {endpoint}: {error}"
+    },
+    "integration_list_fetch_failed": {
+      "message": "Could not fetch the integration list from Home Assistant"
+    },
+    "not_modified_without_data": {
+      "message": "Home Assistant Analytics reported no changes for {endpoint}, but no previous data is available"
+    },
+    "unexpected_response": {
+      "message": "Unexpected response from Home Assistant Analytics for {endpoint}"
+    }
+  },
   "options": {
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"

@@ -43,6 +43,9 @@
       "cook_time": {
         "default": "mdi:microwave"
       },
+      "music_sync_sensitivity": {
+        "default": "mdi:microphone-settings"
+      },
       "speaker_setpoint": {
         "default": "mdi:speaker"
       }
@@ -154,6 +157,9 @@
       }
     },
     "switch": {
+      "audible_alarm_enabled": {
+        "default": "mdi:bullhorn"
+      },
       "child_lock": {
         "default": "mdi:lock",
         "state": {
@@ -164,6 +170,15 @@
       "evse_charging_switch": {
         "default": "mdi:ev-station"
       },
+      "music_sync": {
+        "default": "mdi:music",
+        "state": {
+          "off": "mdi:music-off"
+        }
+      },
+      "one_touch_locking": {
+        "default": "mdi:gesture-tap-button"
+      },
       "privacy_mode_button": {
         "default": "mdi:shield-lock"
       },
@@ -173,6 +188,9 @@
           "off": "mdi:volume-high",
           "on": "mdi:volume-mute"
         }
+      },
+      "visual_alarm_enabled": {
+        "default": "mdi:alarm-light"
       }
     }
   },

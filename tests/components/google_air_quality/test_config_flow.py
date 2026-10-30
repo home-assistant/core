@@ -7,6 +7,7 @@ from google_air_quality_api.exceptions import (
     InvalidCustomLAQIConfigurationError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.google_air_quality.const import (
     CONF_ENABLE_CUSTOM_LAQI,
@@ -27,8 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 def _assert_create_entry_result(
@@ -368,6 +367,18 @@ async def test_subentry_flow_location_already_configured(
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert len(entry.subentries) == 1
 
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_subentry_flow_location_name_already_configured(
     hass: HomeAssistant,
@@ -402,6 +413,18 @@ async def test_subentry_flow_location_name_already_configured(
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert len(entry.subentries) == 1
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_subentry_flow_entry_not_loaded(

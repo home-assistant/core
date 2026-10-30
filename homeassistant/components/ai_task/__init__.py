@@ -1,44 +1,45 @@
 """Integration to offer AI tasks to Home Assistant."""
 
 import logging
-from typing import Any
 
-import voluptuous as vol
-
+from homeassistant.components.media_source import local_source
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DESCRIPTION, CONF_SELECTOR
-from homeassistant.core import (
-    HassJobType,
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.helpers import config_validation as cv, selector, storage
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import config_validation as cv, storage
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import (
-    ATTR_ATTACHMENTS,
-    ATTR_INSTRUCTIONS,
-    ATTR_REQUIRED,
-    ATTR_STRUCTURE,
-    ATTR_TASK_NAME,
     DATA_COMPONENT,
     DATA_PREFERENCES,
     DOMAIN,
-    SERVICE_GENERATE_DATA,
-    SERVICE_GENERATE_IMAGE,
     AITaskEntityFeature,
+    AITaskService,
+    AITaskServiceArgument,
 )
 from .entity import AITaskEntity
+from .evaluation import (
+    ChoiceAnswer,
+    ChoiceQuestion,
+    EvaluationAnswer,
+    EvaluationQuestion,
+    EvaluationTask,
+    EvaluationTaskResult,
+    NoulAnswer,
+    NoulQuestion,
+    ScoreAnswer,
+    ScoreQuestion,
+)
 from .http import async_setup as async_setup_http
+from .media_source import async_get_media_source
+from .services import async_setup_services
 from .task import (
     GenDataTask,
     GenDataTaskResult,
     GenImageTask,
     GenImageTaskResult,
+    async_evaluate,
     async_generate_data,
     async_generate_image,
 )
@@ -47,120 +48,92 @@ __all__ = [
     "DOMAIN",
     "AITaskEntity",
     "AITaskEntityFeature",
+    "AITaskService",
+    "AITaskServiceArgument",
+    "ChoiceAnswer",
+    "ChoiceQuestion",
+    "EvaluationAnswer",
+    "EvaluationQuestion",
+    "EvaluationTask",
+    "EvaluationTaskResult",
     "GenDataTask",
     "GenDataTaskResult",
     "GenImageTask",
     "GenImageTaskResult",
+    "NoulAnswer",
+    "NoulQuestion",
+    "ScoreAnswer",
+    "ScoreQuestion",
+    "async_evaluate",
     "async_generate_data",
     "async_generate_image",
+    "async_is_automatic_evaluation_enabled",
 ]
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-STRUCTURE_FIELD_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DESCRIPTION): str,
-        vol.Optional(ATTR_REQUIRED): bool,
-        vol.Required(CONF_SELECTOR): selector.validate_selector,
-    }
-)
-
-
-def _validate_structure_fields(value: dict[str, Any]) -> vol.Schema:
-    """Validate the structure fields as a voluptuous Schema."""
-    if not isinstance(value, dict):
-        raise vol.Invalid("Structure must be a dictionary")
-    fields = {}
-    for k, v in value.items():
-        field_class = vol.Required if v.get(ATTR_REQUIRED, False) else vol.Optional
-        fields[field_class(k, description=v.get(CONF_DESCRIPTION))] = selector.selector(
-            v[CONF_SELECTOR]
-        )
-    return vol.Schema(fields, extra=vol.PREVENT_EXTRA)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the process service."""
+    """Set up AI Task."""
     entity_component = EntityComponent[AITaskEntity](_LOGGER, DOMAIN, hass)
     hass.data[DATA_COMPONENT] = entity_component
     hass.data[DATA_PREFERENCES] = AITaskPreferences(hass)
     await hass.data[DATA_PREFERENCES].async_load()
     async_setup_http(hass)
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GENERATE_DATA,
-        async_service_generate_data,
-        schema=vol.Schema(
-            {
-                vol.Required(ATTR_TASK_NAME): cv.string,
-                vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-                vol.Required(ATTR_INSTRUCTIONS): cv.string,
-                vol.Optional(ATTR_STRUCTURE): vol.All(
-                    vol.Schema({str: STRUCTURE_FIELD_SCHEMA}),
-                    _validate_structure_fields,
-                ),
-                vol.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
-                    {"accept": ["*/*"], "multiple": True}
-                ),
-            }
-        ),
-        supports_response=SupportsResponse.ONLY,
-        job_type=HassJobType.Coroutinefunction,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GENERATE_IMAGE,
-        async_service_generate_image,
-        schema=vol.Schema(
-            {
-                vol.Required(ATTR_TASK_NAME): cv.string,
-                vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-                vol.Required(ATTR_INSTRUCTIONS): cv.string,
-                vol.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
-                    {"accept": ["*/*"], "multiple": True}
-                ),
-            }
-        ),
-        supports_response=SupportsResponse.ONLY,
-        job_type=HassJobType.Coroutinefunction,
-    )
+    if hass.config.media_dirs:
+        source = await async_get_media_source(hass)
+        hass.http.register_view(local_source.LocalMediaView(hass, source))
+    async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-async def async_service_generate_data(call: ServiceCall) -> ServiceResponse:
-    """Run the data task service."""
-    result = await async_generate_data(hass=call.hass, **call.data)
-    return result.as_dict()
+@callback
+def async_is_automatic_evaluation_enabled(hass: HomeAssistant) -> bool:
+    """Return whether the user allows automatic use of the default decision model.
 
-
-async def async_service_generate_image(call: ServiceCall) -> ServiceResponse:
-    """Run the image task service."""
-    return await async_generate_image(hass=call.hass, **call.data)
+    Returns False if AI Task has not been set up. This only checks the user's
+    preference, not whether a default decision entity is available.
+    """
+    if (preferences := hass.data.get(DATA_PREFERENCES)) is None:
+        return False
+    return preferences.allow_automatic_evaluation
 
 
 class AITaskPreferences:
     """AI Task preferences."""
 
-    KEYS = ("gen_data_entity_id", "gen_image_entity_id")
+    KEYS = (
+        "gen_data_entity_id",
+        "gen_image_entity_id",
+        "evaluate_entity_id",
+        "allow_automatic_evaluation",
+    )
 
+    allow_automatic_evaluation: bool = False
+    evaluate_entity_id: str | None = None
     gen_data_entity_id: str | None = None
     gen_image_entity_id: str | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the preferences."""
-        self._store: storage.Store[dict[str, str | None]] = storage.Store(
+        self._store: storage.Store[dict[str, str | bool | None]] = storage.Store(
             hass, 1, DOMAIN
         )
 
@@ -170,18 +143,22 @@ class AITaskPreferences:
         if data is None:
             return
         for key in self.KEYS:
-            setattr(self, key, data.get(key))
+            setattr(self, key, data.get(key, getattr(self, key)))
 
     @callback
     def async_set_preferences(
         self,
         *,
-        gen_data_entity_id: str | None | UndefinedType = UNDEFINED,
-        gen_image_entity_id: str | None | UndefinedType = UNDEFINED,
+        allow_automatic_evaluation: bool | UndefinedType = UNDEFINED,
+        evaluate_entity_id: str | UndefinedType | None = UNDEFINED,
+        gen_data_entity_id: str | UndefinedType | None = UNDEFINED,
+        gen_image_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> None:
         """Set the preferences."""
         changed = False
         for key, value in (
+            ("allow_automatic_evaluation", allow_automatic_evaluation),
+            ("evaluate_entity_id", evaluate_entity_id),
             ("gen_data_entity_id", gen_data_entity_id),
             ("gen_image_entity_id", gen_image_entity_id),
         ):
@@ -196,6 +173,6 @@ class AITaskPreferences:
         self._store.async_delay_save(self.as_dict, 10)
 
     @callback
-    def as_dict(self) -> dict[str, str | None]:
+    def as_dict(self) -> dict[str, str | bool | None]:
         """Get the current preferences."""
         return {key: getattr(self, key) for key in self.KEYS}

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000014-MatterNodeDevice'), ('matter', 'serial_serial_20')]>,
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
@@ -39,9 +39,9 @@
 # name: test_locks[aqara_u200][lock.aqara_smart_lock_u200-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': 'Unknown',
-      'friendly_name': 'Aqara Smart Lock U200',
-      'supported_features': <LockEntityFeature: 0>,
+      <LockEntityStateAttribute.CHANGED_BY: 'changed_by'>: 'Unknown',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Lock U200',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.aqara_smart_lock_u200',
@@ -59,9 +59,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000010-MatterNodeDevice'), ('matter', 'serial_serial_16')]>,
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
@@ -91,9 +91,9 @@
 # name: test_locks[mock_door_lock][lock.mock_door_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': 'Unknown',
-      'friendly_name': 'Mock Door Lock',
-      'supported_features': <LockEntityFeature: 0>,
+      <LockEntityStateAttribute.CHANGED_BY: 'changed_by'>: 'Unknown',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.mock_door_lock',
@@ -111,9 +111,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000000F-MatterNodeDevice'), ('matter', 'serial_serial_15')]>,
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
@@ -143,9 +143,9 @@
 # name: test_locks[mock_door_lock_with_unbolt][lock.mock_door_lock_with_unbolt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': 'Unknown',
-      'friendly_name': 'Mock Door Lock with unbolt',
-      'supported_features': <LockEntityFeature: 1>,
+      <LockEntityStateAttribute.CHANGED_BY: 'changed_by'>: 'Unknown',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.mock_door_lock_with_unbolt',
@@ -163,9 +163,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000097-MatterNodeDevice'), ('matter', 'serial_serial_151')]>,
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
@@ -195,9 +195,9 @@
 # name: test_locks[mock_lock][lock.mock_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': 'Unknown',
-      'friendly_name': 'Mock Lock',
-      'supported_features': <LockEntityFeature: 1>,
+      <LockEntityStateAttribute.CHANGED_BY: 'changed_by'>: 'Unknown',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.mock_lock',
@@ -215,9 +215,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000002A-MatterNodeDevice'), ('matter', 'serial_serial_42')]>,
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
@@ -247,9 +247,9 @@
 # name: test_locks[secuyou_smart_lock][lock.secuyou_smart_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': 'Unknown',
-      'friendly_name': 'Secuyou Smart Lock',
-      'supported_features': <LockEntityFeature: 0>,
+      <LockEntityStateAttribute.CHANGED_BY: 'changed_by'>: 'Unknown',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Secuyou Smart Lock',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.secuyou_smart_lock',

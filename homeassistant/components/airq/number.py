@@ -8,12 +8,13 @@ from typing import override
 from aioairq.core import AirQ
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirQConfigEntry, AirQCoordinator
+from . import AirQConfigEntry
+from .coordinator import AirQCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ AIRQ_LED_BRIGHTNESS = AirQBrightnessDescription(
     native_min_value=0.0,
     native_max_value=100.0,
     native_step=1.0,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     value=lambda data: data["brightness"],
     set_value=lambda device, value: device.set_current_brightness(value),
 )

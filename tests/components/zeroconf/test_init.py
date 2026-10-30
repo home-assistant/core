@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 from zeroconf import (
     BadTypeInNameException,
     InterfaceChoice,
@@ -28,8 +29,6 @@ from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -1430,7 +1429,7 @@ async def test_zeroconf_removed(hass: HomeAssistant) -> None:
         patch.object(
             hass.config_entries.flow,
             "async_progress_by_init_data_type",
-            return_value=[{"flow_id": "mock_flow_id"}],
+            return_value=[{"flow_id": "mock_flow_id", "context": {}}],
         ) as mock_async_progress_by_init_data_type,
         patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
         patch.object(

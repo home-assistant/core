@@ -35,11 +35,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
-from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import DynamicCurrentTempClimateDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
-from .models import ZwaveJSConfigEntry
+from .models import ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -271,8 +270,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement the entity reports temperatures in."""
         if (
             self._unit_value
             and self._unit_value.metadata.unit
@@ -322,13 +321,13 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return get_value_of_zwave_value(self._current_temp)
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (
             self._current_mode and self._current_mode.value is None
@@ -343,7 +342,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if (
             self._current_mode and self._current_mode.value is None
@@ -358,7 +357,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if (
             self._current_mode and self._current_mode.value is None
@@ -439,12 +438,14 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
             if temp.metadata.min:
                 min_temp = temp.metadata.min
-                base_unit = self.temperature_unit
+                base_unit = self.native_temperature_unit
         # In case of any error, we fallback to the default
         except IndexError, ValueError, TypeError:
             pass
 
-        return TemperatureConverter.convert(min_temp, base_unit, self.temperature_unit)
+        return TemperatureConverter.convert(
+            min_temp, base_unit, self.native_temperature_unit
+        )
 
     @property
     @override
@@ -456,12 +457,14 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
             if temp.metadata.max:
                 max_temp = temp.metadata.max
-                base_unit = self.temperature_unit
+                base_unit = self.native_temperature_unit
         # In case of any error, we fallback to the default
         except IndexError, ValueError, TypeError:
             pass
 
-        return TemperatureConverter.convert(max_temp, base_unit, self.temperature_unit)
+        return TemperatureConverter.convert(
+            max_temp, base_unit, self.native_temperature_unit
+        )
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -557,7 +560,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # and cool to mirror previous behavior. If none of those are available, set it
         # to the first available mode that is not off.
         try:
-            hvac_mode = next(
+            hvac_mode: HVACMode = next(
                 mode
                 for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL)
                 if mode in self._hvac_modes
@@ -600,10 +603,10 @@ class DynamicCurrentTempClimate(ZWaveClimate):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         assert self.info.platform_data
         val = get_value_of_zwave_value(
             self.data_template.current_temperature_value(self.info.platform_data)
         )
-        return val if val is not None else super().current_temperature
+        return val if val is not None else super().native_current_temperature

@@ -6,12 +6,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -41,9 +41,9 @@
 # name: test_all_entities[sensor.drnykterstein_antichess_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Antichess games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Antichess games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_antichess_games',
@@ -60,12 +60,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -95,8 +95,8 @@
 # name: test_all_entities[sensor.drnykterstein_antichess_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Antichess rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Antichess rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_antichess_rating',
@@ -113,12 +113,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -148,9 +148,9 @@
 # name: test_all_entities[sensor.drnykterstein_atomic_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Atomic games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Atomic games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_atomic_games',
@@ -167,12 +167,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -202,8 +202,8 @@
 # name: test_all_entities[sensor.drnykterstein_atomic_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Atomic rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Atomic rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_atomic_rating',
@@ -220,12 +220,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -255,9 +255,9 @@
 # name: test_all_entities[sensor.drnykterstein_blitz_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Blitz games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Blitz games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_blitz_games',
@@ -274,12 +274,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -309,8 +309,8 @@
 # name: test_all_entities[sensor.drnykterstein_blitz_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Blitz rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Blitz rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_blitz_rating',
@@ -327,12 +327,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -362,9 +362,9 @@
 # name: test_all_entities[sensor.drnykterstein_bullet_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Bullet games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Bullet games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_bullet_games',
@@ -381,12 +381,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -416,8 +416,8 @@
 # name: test_all_entities[sensor.drnykterstein_bullet_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Bullet rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Bullet rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_bullet_rating',
@@ -434,12 +434,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -469,9 +469,9 @@
 # name: test_all_entities[sensor.drnykterstein_chess960_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Chess960 games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Chess960 games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_chess960_games',
@@ -488,12 +488,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -523,8 +523,8 @@
 # name: test_all_entities[sensor.drnykterstein_chess960_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Chess960 rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Chess960 rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_chess960_rating',
@@ -541,12 +541,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -576,9 +576,9 @@
 # name: test_all_entities[sensor.drnykterstein_classical_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Classical games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Classical games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_classical_games',
@@ -595,12 +595,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -630,8 +630,8 @@
 # name: test_all_entities[sensor.drnykterstein_classical_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Classical rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Classical rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_classical_rating',
@@ -648,12 +648,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -683,9 +683,9 @@
 # name: test_all_entities[sensor.drnykterstein_correspondence_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Correspondence games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Correspondence games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_correspondence_games',
@@ -702,12 +702,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -737,8 +737,8 @@
 # name: test_all_entities[sensor.drnykterstein_correspondence_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Correspondence rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Correspondence rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_correspondence_rating',
@@ -755,12 +755,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -790,9 +790,9 @@
 # name: test_all_entities[sensor.drnykterstein_crazyhouse_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Crazyhouse games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Crazyhouse games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_crazyhouse_games',
@@ -809,12 +809,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -844,8 +844,8 @@
 # name: test_all_entities[sensor.drnykterstein_crazyhouse_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Crazyhouse rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Crazyhouse rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_crazyhouse_rating',
@@ -862,12 +862,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -897,9 +897,9 @@
 # name: test_all_entities[sensor.drnykterstein_horde_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Horde games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Horde games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_horde_games',
@@ -916,12 +916,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -951,8 +951,8 @@
 # name: test_all_entities[sensor.drnykterstein_horde_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Horde rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Horde rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_horde_rating',
@@ -969,12 +969,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1004,9 +1004,9 @@
 # name: test_all_entities[sensor.drnykterstein_king_of_the_hill_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein King of the Hill games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein King of the Hill games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_king_of_the_hill_games',
@@ -1023,12 +1023,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1058,8 +1058,8 @@
 # name: test_all_entities[sensor.drnykterstein_king_of_the_hill_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein King of the Hill rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein King of the Hill rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_king_of_the_hill_rating',
@@ -1076,12 +1076,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1111,9 +1111,9 @@
 # name: test_all_entities[sensor.drnykterstein_puzzle_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Puzzle games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Puzzle games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_puzzle_games',
@@ -1130,12 +1130,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1165,8 +1165,8 @@
 # name: test_all_entities[sensor.drnykterstein_puzzle_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Puzzle rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Puzzle rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_puzzle_rating',
@@ -1183,12 +1183,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1218,9 +1218,9 @@
 # name: test_all_entities[sensor.drnykterstein_racing_kings_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Racing Kings games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Racing Kings games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_racing_kings_games',
@@ -1237,12 +1237,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1272,8 +1272,8 @@
 # name: test_all_entities[sensor.drnykterstein_racing_kings_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Racing Kings rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Racing Kings rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_racing_kings_rating',
@@ -1290,12 +1290,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1325,9 +1325,9 @@
 # name: test_all_entities[sensor.drnykterstein_rapid_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Rapid games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Rapid games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_rapid_games',
@@ -1344,12 +1344,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1379,8 +1379,8 @@
 # name: test_all_entities[sensor.drnykterstein_rapid_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Rapid rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Rapid rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_rapid_rating',
@@ -1397,12 +1397,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1432,9 +1432,9 @@
 # name: test_all_entities[sensor.drnykterstein_three_check_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Three-check games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Three-check games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_three_check_games',
@@ -1451,12 +1451,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1486,8 +1486,8 @@
 # name: test_all_entities[sensor.drnykterstein_three_check_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Three-check rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein Three-check rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_three_check_rating',
@@ -1504,12 +1504,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1539,9 +1539,9 @@
 # name: test_all_entities[sensor.drnykterstein_ultrabullet_games-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein UltraBullet games',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein UltraBullet games',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'games',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_ultrabullet_games',
@@ -1558,12 +1558,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lichess', 'drnykterstein')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -1593,8 +1593,8 @@
 # name: test_all_entities[sensor.drnykterstein_ultrabullet_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein UltraBullet rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DrNykterstein UltraBullet rating',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.drnykterstein_ultrabullet_rating',

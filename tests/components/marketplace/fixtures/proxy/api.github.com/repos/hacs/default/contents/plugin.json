@@ -1,0 +1,18 @@
+{
+  "type": "file",
+  "encoding": "base64",
+  "size": 5362,
+  "name": "plugin",
+  "path": "plugin",
+  "content": "WyJoYWNzLXRlc3Qtb3JnL3BsdWdpbi1iYXNpYyJd",
+  "sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
+  "url": "https://api.github.com/repos/hacs/default/contents/plugin",
+  "git_url": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+  "html_url": "https://github.com/hacs/default/blob/main/plugin",
+  "download_url": "https://raw.githubusercontent.com/hacs/default/main/plugin",
+  "_links": {
+    "git": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+    "self": "https://api.github.com/repos/hacs/default/contents/plugin",
+    "html": "https://github.com/hacs/default/blob/main/plugin"
+  }
+}

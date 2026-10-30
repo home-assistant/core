@@ -1,0 +1,11 @@
+{
+  "result": null,
+  "uiText": null,
+  "destination": null,
+  "userInfo": null,
+  "opId": "1111111111111111111111",
+  "status": {
+    "errorCode": "ErrorCallingWNS",
+    "errorMessage": "Send command failed"
+  }
+}

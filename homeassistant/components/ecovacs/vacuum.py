@@ -8,6 +8,7 @@ from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
 from deebot_client.events import (
     CachedMapInfoEvent,
+    CleanCountEvent,
     FanSpeedEvent,
     RoomsEvent,
     StateEvent,
@@ -237,6 +238,7 @@ class EcovacsVacuum(
 
         self._room_event: RoomsEvent | None = None
         self._maps: dict[str, Map] = {}
+        self._clean_count = 1
 
         if fan_speed := self._capability.fan_speed:
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
@@ -265,6 +267,13 @@ class EcovacsVacuum(
                 self.async_write_ha_state()
 
             self._subscribe(self._capability.fan_speed.event, on_fan_speed)
+
+        if clean_count := self._capability.clean.count:
+
+            async def on_clean_count(event: CleanCountEvent) -> None:
+                self._clean_count = event.count
+
+            self._subscribe(clean_count.event, on_clean_count)
 
         if map_caps := self._capability.map:
 
@@ -524,7 +533,7 @@ class EcovacsVacuum(
             self._capability.clean.action.area(
                 CleanMode.SPOT_AREA,
                 valid_room_ids,
-                1,
+                self._clean_count,
             )
         )
 

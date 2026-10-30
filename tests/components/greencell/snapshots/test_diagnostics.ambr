@@ -1,0 +1,28 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'access': dict({
+      'can_execute': True,
+      'disabled': False,
+    }),
+    'current': dict({
+      'l1': 2000,
+      'l2': 2500,
+      'l3': 3000,
+    }),
+    'entry_data': dict({
+      'serial_number': '**REDACTED**',
+    }),
+    'power': dict({
+      'value': 1500.5,
+    }),
+    'state': dict({
+      'value': 'CHARGING',
+    }),
+    'voltage': dict({
+      'l1': 230.0,
+      'l2': 229.7,
+      'l3': 232.5,
+    }),
+  })
+# ---

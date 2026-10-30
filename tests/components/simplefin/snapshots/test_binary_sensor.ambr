@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('simplefin', 'ACT-4k5l6m7n-8o9p-1q2r-3s4t')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,9 +39,9 @@
 # name: test_all_entities[binary_sensor.investments_dr_evil_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Investments Dr Evil Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments Dr Evil Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.investments_dr_evil_possible_error',
@@ -59,9 +59,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('simplefin', 'ACT-1k2l3m4n-5o6p-7q8r-9s0t')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -91,9 +91,9 @@
 # name: test_all_entities[binary_sensor.investments_my_checking_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Investments My Checking Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments My Checking Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.investments_my_checking_possible_error',
@@ -111,9 +111,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('simplefin', 'ACT-5k6l7m8n-9o0p-1q2r-3s4t')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -143,9 +143,9 @@
 # name: test_all_entities[binary_sensor.investments_nerdcorp_series_b_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Investments NerdCorp Series B Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments NerdCorp Series B Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.investments_nerdcorp_series_b_possible_error',
@@ -163,9 +163,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('simplefin', 'ACT-7a8b9c0d-1e2f-3g4h-5i6j')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -195,9 +195,9 @@
 # name: test_all_entities[binary_sensor.mythical_randomsavings_castle_mortgage_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Mythical RandomSavings Castle Mortgage Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mythical RandomSavings Castle Mortgage Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mythical_randomsavings_castle_mortgage_possible_error',
@@ -215,9 +215,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('simplefin', 'ACT-6a7b8c9d-0e1f-2g3h-4i5j')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -247,9 +247,9 @@
 # name: test_all_entities[binary_sensor.mythical_randomsavings_unicorn_pot_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Mythical RandomSavings Unicorn Pot Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mythical RandomSavings Unicorn Pot Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mythical_randomsavings_unicorn_pot_possible_error',
@@ -267,9 +267,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('simplefin', 'ACT-3a4b5c6d-7e8f-9g0h-1i2j')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -299,9 +299,9 @@
 # name: test_all_entities[binary_sensor.random_bank_costco_anywhere_visa_r_card_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'Random Bank Costco Anywhere Visa® Card Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Random Bank Costco Anywhere Visa® Card Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.random_bank_costco_anywhere_visa_r_card_possible_error',
@@ -319,9 +319,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('simplefin', 'ACT-2a3b4c5d-6e7f-8g9h-0i1j')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -351,9 +351,9 @@
 # name: test_all_entities[binary_sensor.the_bank_of_go_prime_savings_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'The Bank of Go PRIME SAVINGS Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'The Bank of Go PRIME SAVINGS Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.the_bank_of_go_prime_savings_possible_error',
@@ -371,9 +371,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('simplefin', 'ACT-1a2b3c4d-5e6f-7g8h-9i0j')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -403,9 +403,9 @@
 # name: test_all_entities[binary_sensor.the_bank_of_go_the_bank_possible_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'problem',
-      'friendly_name': 'The Bank of Go The Bank Possible error',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'The Bank of Go The Bank Possible error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.the_bank_of_go_the_bank_possible_error',

@@ -15,12 +15,11 @@ from pylitterbot import (
 from pylitterbot.exceptions import InvalidCommandException
 from pylitterbot.robot.litterrobot4 import HopperStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.core import HomeAssistant
 
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 ROBOT_DATA = load_json_object_fixture("litter_robot_3_data.json", DOMAIN)
 ROBOT_4_DATA = load_json_object_fixture("litter_robot_4_data.json", DOMAIN)
@@ -51,6 +50,7 @@ def create_mock_robot(
         robot.change_filter = AsyncMock(side_effect=side_effect)
         robot.set_night_light_brightness = AsyncMock(side_effect=side_effect)
         robot.set_night_light_mode = AsyncMock(side_effect=side_effect)
+        robot.set_night_light_settings = AsyncMock(side_effect=side_effect)
         robot.set_panel_brightness = AsyncMock(side_effect=side_effect)
     elif v4:
         robot = LitterRobot4(data={**ROBOT_4_DATA, **robot_data}, account=account)
@@ -151,6 +151,23 @@ def mock_account_with_litterhopper() -> MagicMock:
     return create_mock_account(
         robot_data={"hopperStatus": HopperStatus.ENABLED, "isHopperRemoved": False},
         v4=True,
+    )
+
+
+@pytest.fixture
+def mock_account_with_litterhopper_5() -> MagicMock:
+    """Mock account with LitterHopper attached to Litter-Robot 5."""
+    return create_mock_account(
+        robot_data={
+            "state": {
+                **ROBOT_5_DATA["state"],
+                "hopperStatusIndicator": {
+                    "title": "Litter low",
+                    "value": HopperStatus.LITTER_LOW.value,
+                },
+            }
+        },
+        v5=True,
     )
 
 

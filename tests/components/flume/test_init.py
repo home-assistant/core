@@ -4,16 +4,16 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests_mock.mocker import Mocker
 
 from homeassistant import config_entries
 from homeassistant.components.flume.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import USER_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -110,7 +110,10 @@ async def test_list_notifications_service_config_entry_errors(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ValueError, match="Config entry not loaded"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Config entry test-username for integration flume is not loaded",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "list_notifications",
@@ -122,7 +125,10 @@ async def test_list_notifications_service_config_entry_errors(
             return_response=True,
         )
 
-    with pytest.raises(ValueError, match="Invalid config entry: does-not-exist"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Integration flume config entry with ID does-not-exist was not found",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "list_notifications",

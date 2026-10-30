@@ -37,7 +37,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     nexia_home = coordinator.nexia_home
     entities: list[SwitchEntity] = []
-    room_iq_zones: dict[int, NexiaRoomIQHarmonizer] = {}
+    room_iq_zones: dict[str | int, NexiaRoomIQHarmonizer] = {}
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         if thermostat.has_emergency_heat():
@@ -68,8 +68,7 @@ class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone
     ) -> None:
         """Initialize the hold mode switch."""
-        zone_id = zone.zone_id
-        super().__init__(coordinator, zone, zone_id)
+        super().__init__(coordinator, zone, str(zone.zone_id))
 
     @property
     @override
@@ -103,7 +102,7 @@ class NexiaRoomIQSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         coordinator: NexiaDataUpdateCoordinator,
         zone: NexiaThermostatZone,
         sensor: NexiaSensor,
-        room_iq_zones: dict[int, NexiaRoomIQHarmonizer],
+        room_iq_zones: dict[str | int, NexiaRoomIQHarmonizer],
     ) -> None:
         """Initialize the RoomIQ sensor switch."""
         super().__init__(coordinator, zone, f"{sensor.id}_room_iq_sensor")

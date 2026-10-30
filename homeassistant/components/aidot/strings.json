@@ -1,13 +1,23 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unique_id_mismatch": "The credentials belong to a different AiDot account. Please log in with the account that was originally set up."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::aidot::config::step::user::data_description::password%]"
+        },
+        "description": "The AiDot login for {username} is no longer valid. Please enter your password to log in again."
+      },
       "user": {
         "data": {
           "country_code": "Country",
@@ -20,6 +30,11 @@
           "username": "Account logged in through AiDot app"
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
     }
   }
 }

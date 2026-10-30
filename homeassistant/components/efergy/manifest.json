@@ -1,6 +1,7 @@
 {
   "domain": "efergy",
   "name": "Efergy",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/efergy",

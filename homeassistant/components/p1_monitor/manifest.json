@@ -1,6 +1,7 @@
 {
   "domain": "p1_monitor",
   "name": "P1 Monitor",
+  "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/p1_monitor",

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -44,9 +44,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -76,7 +76,7 @@
 # name: test_auto_on_off_switches[state.auto_on_off_Os2OswX]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Auto on/off (Os2OswX)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Auto on/off (Os2OswX)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs012345_auto_on_off_os2oswx',
@@ -89,7 +89,7 @@
 # name: test_auto_on_off_switches[state.auto_on_off_aXFz5bJ]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Auto on/off (aXFz5bJ)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Auto on/off (aXFz5bJ)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs012345_auto_on_off_axfz5bj',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -139,8 +139,8 @@
 # name: test_switches[switch.gs012345-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://lion.lamarzocco.io/img/thing-model/detail/gs3av/gs3av-1.png',
-      'friendly_name': 'GS012345',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://lion.lamarzocco.io/img/thing-model/detail/gs3av/gs3av-1.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs012345',
@@ -158,9 +158,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -190,7 +190,7 @@
 # name: test_switches[switch.gs012345_auto_on_off_axfz5bj-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Auto on/off (aXFz5bJ)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Auto on/off (aXFz5bJ)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs012345_auto_on_off_axfz5bj',
@@ -208,9 +208,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -240,7 +240,7 @@
 # name: test_switches[switch.gs012345_auto_on_off_os2oswx-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Auto on/off (Os2OswX)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Auto on/off (Os2OswX)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs012345_auto_on_off_os2oswx',
@@ -258,9 +258,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -290,7 +290,7 @@
 # name: test_switches[switch.gs012345_smart_standby_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Smart standby enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Smart standby enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs012345_smart_standby_enabled',
@@ -308,9 +308,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -340,7 +340,7 @@
 # name: test_switches[switch.gs012345_steam_boiler-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Steam boiler',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Steam boiler',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs012345_steam_boiler',

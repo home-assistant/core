@@ -4,7 +4,8 @@ from collections import defaultdict
 from typing import Any
 from unittest.mock import patch
 
-from serial import SerialException
+from pytest_homeassistant.common import MockConfigEntry
+from serialx import SerialException
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -33,8 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {CONF_PORT: "fake port", CONF_SOURCES: {"1": "one", "3": "three"}}
 MOCK_OPTIONS = {CONF_SOURCES: {"2": "two", "4": "four"}}

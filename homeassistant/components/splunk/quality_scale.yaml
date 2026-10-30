@@ -18,9 +18,15 @@ rules:
     status: exempt
     comment: |
       Integration does not provide custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -137,7 +143,11 @@ rules:
     comment: |
       Integration does not create entities.
   reconfiguration-flow: done
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: |
+      Connection failures are retried via ConfigEntryNotReady and an invalid
+      token starts the reauth flow, so there is nothing for a repair to fix.
   stale-devices:
     status: exempt
     comment: |

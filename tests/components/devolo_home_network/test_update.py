@@ -4,6 +4,7 @@ from devolo_plc_api.device_api import UPDATE_NOT_AVAILABLE, UpdateFirmwareCheck
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import (
@@ -20,8 +21,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import configure_integration
 from .const import FIRMWARE_UPDATE_AVAILABLE
 from .mock import MockDevice
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
@@ -83,8 +82,8 @@ async def test_update_firmware(
     assert state is not None
     assert state.state == STATE_OFF
 
-    device_info = device_registry.async_get_device(
-        {(DOMAIN, mock_device.serial_number)}
+    device_info = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.serial_number), entry.entry_id
     )
     assert device_info is not None
     assert device_info.sw_version == mock_device.firmware_version

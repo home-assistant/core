@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Concatenate, Literal
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.exceptions import (
     CannotAuthenticate,
     CannotConnect,
@@ -13,6 +13,7 @@ from aiocomelit.exceptions import (
 )
 from aiohttp import ClientSession, CookieJar
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -22,7 +23,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
-from .const import _LOGGER, DOMAIN, ObjectClassType
+from .const import DOMAIN, LOGGER, ObjectClassType
 from .coordinator import ComelitBaseCoordinator
 from .entity import ComelitBridgeBaseEntity
 
@@ -35,7 +36,7 @@ async def async_client_session(hass: HomeAssistant) -> ClientSession:
 
 
 def load_api_data(
-    device: ComelitSerialBridgeObject,
+    device: ComelitDeviceObject,
     domain: Literal["climate", "humidifier"],
 ) -> list[Any]:
     """Load data from the API."""
@@ -46,14 +47,14 @@ def load_api_data(
     # CLIMATE has a 2 item tuple:
     # - first  for Clima
     # - second for Humidifier
-    return device.val[0] if domain == "climate" else device.val[1]
+    return device.val[0] if domain == CLIMATE_DOMAIN else device.val[1]
 
 
 async def cleanup_stale_entity(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     entry_unique_id: str,
-    device: ComelitSerialBridgeObject,
+    device: ComelitDeviceObject,
 ) -> None:
     """Cleanup stale entity."""
     entity_reg: er.EntityRegistry = er.async_get(hass)
@@ -63,32 +64,27 @@ async def cleanup_stale_entity(
     for entry in er.async_entries_for_config_entry(entity_reg, config_entry.entry_id):
         if entry.unique_id == entry_unique_id:
             entry_name = entry.name or entry.original_name
-            _LOGGER.info("Removing entity: %s [%s]", entry.entity_id, entry_name)
+            LOGGER.info("Removing entity: %s [%s]", entry.entity_id, entry_name)
             entity_reg.async_remove(entry.entity_id)
             identifiers.append(f"{config_entry.entry_id}-{device.type}-{device.index}")
 
     if len(identifiers) > 0:
-        _async_remove_state_config_entry_from_devices(hass, identifiers, config_entry)
+        _async_remove_stale_devices(hass, identifiers, config_entry)
 
 
-def _async_remove_state_config_entry_from_devices(
+def _async_remove_stale_devices(
     hass: HomeAssistant, identifiers: list[str], config_entry: ConfigEntry
 ) -> None:
-    """Remove config entry from device."""
+    """Remove stale devices."""
 
     device_registry = dr.async_get(hass)
     for identifier in identifiers:
-        device = device_registry.async_get_device(identifiers={(DOMAIN, identifier)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, identifier), config_entry.entry_id
+        )
         if device:
-            _LOGGER.info(
-                "Removing config entry %s from device %s",
-                config_entry.title,
-                device.name,
-            )
-            device_registry.async_update_device(
-                device_id=device.id,
-                remove_config_entry_id=config_entry.entry_id,
-            )
+            LOGGER.info("Removing device %s", device.name)
+            device_registry.async_remove_device(device.id)
 
 
 def bridge_api_call[_T: ComelitBridgeBaseEntity, **_P](

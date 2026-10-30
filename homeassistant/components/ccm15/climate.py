@@ -11,14 +11,13 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    PRECISION_WHOLE,
     SWING_OFF,
     SWING_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -94,7 +93,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement reported by the device."""
         if (data := self.data) is not None and not data.is_celsius:
             return UnitOfTemperature.FAHRENHEIT
@@ -102,7 +101,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> int | None:
+    def native_current_temperature(self) -> int | None:
         """Return current temperature."""
         if (data := self.data) is not None:
             return data.temperature
@@ -110,7 +109,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> int | None:
+    def native_target_temperature(self) -> int | None:
         """Return target temperature."""
         if (data := self.data) is not None:
             return data.temperature_setpoint
@@ -146,7 +145,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @override
     def available(self) -> bool:
         """Return the availability of the entity."""
-        return self.data is not None
+        return super().available and self.data is not None
 
     @property
     @override
@@ -160,25 +159,32 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            data = self.data
+            assert data is not None
             await self.coordinator.async_set_temperature(
-                self._ac_index, self.data, temperature, kwargs.get(ATTR_HVAC_MODE)
+                self._ac_index, data, temperature, kwargs.get(ATTR_HVAC_MODE)
             )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
-        await self.coordinator.async_set_hvac_mode(self._ac_index, self.data, hvac_mode)
+        data = self.data
+        assert data is not None
+        await self.coordinator.async_set_hvac_mode(self._ac_index, data, hvac_mode)
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
-        await self.coordinator.async_set_fan_mode(self._ac_index, self.data, fan_mode)
+        data = self.data
+        assert data is not None
+        await self.coordinator.async_set_fan_mode(self._ac_index, data, fan_mode)
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode."""
-        await self.coordinator.async_set_swing_mode(
-            self._ac_index, self.data, swing_mode
-        )
+        data = self.data
+        assert data is not None
+        await self.coordinator.async_set_swing_mode(self._ac_index, data, swing_mode)
 
     @override
     async def async_turn_off(self) -> None:

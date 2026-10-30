@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nordpool', 'SE3')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,7 +39,7 @@
 # name: test_binary_sensor_off[load_platforms0][binary_sensor.nord_pool_se3_tomorrow_price_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Tomorrow price available',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Tomorrow price available',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nord_pool_se3_tomorrow_price_available',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nordpool', 'SE4')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -89,7 +89,7 @@
 # name: test_binary_sensor_off[load_platforms0][binary_sensor.nord_pool_se4_tomorrow_price_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Tomorrow price available',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Tomorrow price available',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nord_pool_se4_tomorrow_price_available',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nordpool', 'SE3')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -139,7 +139,7 @@
 # name: test_binary_sensor_on[load_platforms0][binary_sensor.nord_pool_se3_tomorrow_price_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE3 Tomorrow price available',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE3 Tomorrow price available',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nord_pool_se3_tomorrow_price_available',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nordpool', 'SE4')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -189,7 +189,7 @@
 # name: test_binary_sensor_on[load_platforms0][binary_sensor.nord_pool_se4_tomorrow_price_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nord Pool SE4 Tomorrow price available',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nord Pool SE4 Tomorrow price available',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nord_pool_se4_tomorrow_price_available',

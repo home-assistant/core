@@ -3,6 +3,7 @@
 from typing import Any, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+from pyoverkiz.models import Command
 
 from homeassistant.components.water_heater import (
     STATE_HIGH_DEMAND,
@@ -35,7 +36,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     _attr_max_temp = 70.0
     _attr_precision = PRECISION_WHOLE
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -44,7 +45,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.device.states.get(OverkizState.CORE_DHW_TEMPERATURE)
 
@@ -55,7 +56,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         target_temperature = self.device.states.get(
             OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE
@@ -98,13 +99,22 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
             )
             return
 
-        # Turn water heater on, when off
+        commands: list[Command] = []
+
+        # Start the water heater ('run') when off
         if self.current_operation == OverkizCommandParam.OFF:
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_CONTROL_DHW, OverkizCommandParam.ON
+            commands.append(
+                Command(
+                    name=OverkizCommand.SET_CONTROL_DHW,
+                    parameters=[OverkizCommandParam.RUN],
+                )
             )
 
-        # Change operation mode
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_DHW_MODE, OPERATION_MODE_TO_OVERKIZ[operation_mode]
+        commands.append(
+            Command(
+                name=OverkizCommand.SET_DHW_MODE,
+                parameters=[OPERATION_MODE_TO_OVERKIZ[operation_mode]],
+            )
         )
+
+        await self.executor.async_execute_commands(commands)

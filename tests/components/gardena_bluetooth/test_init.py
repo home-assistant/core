@@ -13,6 +13,8 @@ from gardena_bluetooth.const import (
 )
 from habluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gardena_bluetooth import DeviceUnavailable
@@ -30,9 +32,6 @@ from . import (
     get_config_entry,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info
-
 
 @pytest.mark.parametrize(
     ("service_info", "char_values"),
@@ -40,14 +39,14 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         pytest.param(
             WATER_TIMER_SERVICE_INFO,
             {
-                Battery.battery_level.uuid: Battery.battery_level.encode(100),
-                DeviceInformation.model_number.uuid: (
+                Battery.battery_level.unique_id: Battery.battery_level.encode(100),
+                DeviceInformation.model_number.unique_id: (
                     DeviceInformation.model_number.encode("Model Number TBD")
                 ),
-                DeviceInformation.firmware_version.uuid: (
+                DeviceInformation.firmware_version.unique_id: (
                     DeviceInformation.firmware_version.encode("1.2.3")
                 ),
-                DeviceConfiguration.custom_device_name.uuid: (
+                DeviceConfiguration.custom_device_name.unique_id: (
                     DeviceConfiguration.custom_device_name.encode("My timer")
                 ),
             },
@@ -56,16 +55,16 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         pytest.param(
             AQUA_CONTOUR_SERVICE_INFO,
             {
-                AquaContourBattery.battery_level.uuid: (
+                AquaContourBattery.battery_level.unique_id: (
                     AquaContourBattery.battery_level.encode(100)
                 ),
-                DeviceInformation.model_number.uuid: (
+                DeviceInformation.model_number.unique_id: (
                     DeviceInformation.model_number.encode("Aqua Contour")
                 ),
-                DeviceInformation.firmware_version.uuid: (
+                DeviceInformation.firmware_version.unique_id: (
                     DeviceInformation.firmware_version.encode("2.0.0")
                 ),
-                AquaContour.custom_device_name.uuid: (
+                AquaContour.custom_device_name.unique_id: (
                     AquaContour.custom_device_name.encode("My contour")
                 ),
             },
@@ -90,8 +89,8 @@ async def test_setup(
     mock_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_entry.entry_id) is True
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, service_info.address)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, service_info.address), mock_entry.entry_id
     )
     assert device == snapshot
 
@@ -103,7 +102,9 @@ async def test_migrate_config_entry_product_type(
 ) -> None:
     """Test migration: product type resolved immediately from existing advertisement."""
 
-    mock_read_char_raw[Battery.battery_level.uuid] = Battery.battery_level.encode(100)
+    mock_read_char_raw[Battery.battery_level.unique_id] = Battery.battery_level.encode(
+        100
+    )
 
     inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
 
@@ -127,7 +128,9 @@ async def test_migrate_config_entry_product_type_delayed(
 ) -> None:
     """Test migration: product type discovered via active scan after a delay."""
 
-    mock_read_char_raw[Battery.battery_level.uuid] = Battery.battery_level.encode(100)
+    mock_read_char_raw[Battery.battery_level.unique_id] = Battery.battery_level.encode(
+        100
+    )
 
     legacy_entry = MockConfigEntry(
         domain=DOMAIN,

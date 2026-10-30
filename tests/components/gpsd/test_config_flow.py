@@ -19,6 +19,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
     with patch("socket.socket") as mock_socket:
         mock_connect = mock_socket.return_value.connect
@@ -43,11 +45,18 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection to host error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
     with patch("socket.socket", side_effect=OSError):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "nonexistent.local", CONF_PORT: 1234},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "nonexistent.local", CONF_PORT: 1234},
         )
 
         assert result["type"] is FlowResultType.ABORT

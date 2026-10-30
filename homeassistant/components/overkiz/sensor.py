@@ -15,13 +15,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -55,7 +54,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_BATTERY_LEVEL,
         name="Battery level",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -329,7 +328,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: round(cast(float, value), 2),
         device_class=SensorDeviceClass.HUMIDITY,
         # core:MeasuredValueType = core:RelativeValueInPercentage
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # TemperatureSensor/TemperatureSensor
@@ -369,7 +368,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CO_CONCENTRATION,
         name="CO concentration",
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # AirSensor/CO2Sensor
@@ -377,7 +376,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CO2_CONCENTRATION,
         name="CO2 concentration",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # SunSensor/SunEnergySensor
@@ -449,6 +448,11 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=["dead", "low_battery", "maintenance_required", "no_defect"],
     ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_ERROR_CODE,
+        name="Error code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizSensorDescription(
         key=OverkizState.IO_HEAT_PUMP_OPERATING_TIME,
@@ -489,7 +493,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_TARGET_CLOSURE,
         name="Target closure",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_registry_enabled_default=False,
     ),
     # ThreeWayWindowHandle/WindowHandle
@@ -537,6 +541,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
+
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -587,15 +594,8 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
-        if (
-            state is None
-            or state.value is None
-            # It seems that in some cases we return `None` if state.value is falsy.
-            # This is probably incorrect and should be fixed in a follow up PR.
-            # To ensure measurement sensors do not get an `unknown` state on
-            # a falsy value (e.g. 0 or 0.0) we also check the state_class.
-            or (self.state_class != SensorStateClass.MEASUREMENT and not state.value)
-        ):
+        # Empty strings are not valid enum options, but 0 is a valid value
+        if state is None or state.value is None or state.value == "":
             return None
 
         # Transform the value with a lambda function
@@ -611,15 +611,11 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
     @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if (
-            not (default_unit := self.entity_description.native_unit_of_measurement)
-            or not (state := self.device.states.get(self.entity_description.key))
-            or not state.value
-        ):
+        if not (default_unit := self.entity_description.native_unit_of_measurement):
             return default_unit
 
         attrs = self.device.attributes
-        if (unit := attrs.get(f"{state.name}MeasuredValueType")) and (
+        if (unit := attrs.get(f"{self.entity_description.key}MeasuredValueType")) and (
             unit_value := unit.value_as_str
         ):
             return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)

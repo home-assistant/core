@@ -1,64 +1,45 @@
 """Websocket handler for UniFi Network integration."""
 
 import asyncio
-from datetime import datetime, timedelta
 
 import aiohttp
 import aiounifi
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.core import callback
 
 from ..const import LOGGER
-
-RETRY_TIMER = 15
-CHECK_WEBSOCKET_INTERVAL = timedelta(minutes=1)
+from .connection import UnifiConnectionManager
 
 
 class UnifiWebsocket:
     """Manages a single UniFi Network instance."""
 
-    def __init__(
-        self, hass: HomeAssistant, api: aiounifi.Controller, signal: str
-    ) -> None:
+    def __init__(self, connection: UnifiConnectionManager) -> None:
         """Initialize the system."""
-        self.hass = hass
-        self.api = api
-        self.signal = signal
+        self.connection = connection
+        self.hass = connection.hass
+        self.api = connection.api
 
-        self.ws_task: asyncio.Task | None = None
-        self._cancel_websocket_check: CALLBACK_TYPE | None = None
-
-        self.available = True
+        self.ws_task: asyncio.Task[None] | None = None
+        self.running = False
 
     @callback
     def start(self) -> None:
         """Start websocket handler."""
-        self._cancel_websocket_check = async_track_time_interval(
-            self.hass, self._async_watch_websocket, CHECK_WEBSOCKET_INTERVAL
-        )
+        self.running = True
         self.start_websocket()
 
     @callback
     def stop(self) -> None:
         """Stop websocket handler."""
-        if self._cancel_websocket_check:
-            self._cancel_websocket_check()
-            self._cancel_websocket_check = None
-
+        self.running = False
         if self.ws_task is not None:
             self.ws_task.cancel()
 
     async def stop_and_wait(self) -> None:
         """Stop websocket handler and await tasks."""
-        if self._cancel_websocket_check:
-            self._cancel_websocket_check()
-            self._cancel_websocket_check = None
-
+        self.stop()
         if self.ws_task is not None:
-            self.stop()
-
             _, pending = await asyncio.wait([self.ws_task], timeout=10)
 
             if pending:
@@ -71,57 +52,21 @@ class UnifiWebsocket:
     @callback
     def start_websocket(self) -> None:
         """Start up connection to websocket."""
+        if self.ws_task is not None and not self.ws_task.done():
+            return
 
         async def _websocket_runner() -> None:
             """Start websocket."""
             try:
                 await self.api.start_websocket()
-            except aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError:
-                LOGGER.error("Websocket setup failed")
-            except aiounifi.WebsocketError:
-                LOGGER.error("Websocket disconnected")
+            except (
+                aiohttp.ClientConnectorError,
+                aiohttp.WSServerHandshakeError,
+            ) as err:
+                LOGGER.debug("Websocket setup failed: %s", err)
+            except aiounifi.WebsocketError as err:
+                LOGGER.debug("Websocket disconnected: %s", err)
 
-            self.available = False
-            async_dispatcher_send(self.hass, self.signal)
-            self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
-
-        if not self.available:
-            self.available = True
-            async_dispatcher_send(self.hass, self.signal)
+            self.connection.report_failure()
 
         self.ws_task = self.hass.loop.create_task(_websocket_runner())
-
-    @callback
-    def reconnect(self, log: bool = False) -> None:
-        """Prepare to reconnect UniFi session."""
-
-        async def _reconnect() -> None:
-            """Try to reconnect UniFi Network session."""
-            try:
-                async with asyncio.timeout(5):
-                    await self.api.login()
-
-            except (
-                TimeoutError,
-                aiounifi.BadGateway,
-                aiounifi.ServiceUnavailable,
-                aiounifi.AiounifiException,
-            ) as exc:
-                LOGGER.debug("Schedule reconnect to UniFi Network '%s'", exc)
-                self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
-
-            else:
-                self.start_websocket()
-
-        if log:
-            LOGGER.info("Will try to reconnect to UniFi Network")
-
-        self.hass.loop.create_task(_reconnect())
-
-    @callback
-    def _async_watch_websocket(self, now: datetime) -> None:
-        """Watch timestamp for last received websocket message."""
-        LOGGER.debug(
-            "Last received websocket timestamp: %s",
-            self.api.connectivity.ws_message_received,
-        )

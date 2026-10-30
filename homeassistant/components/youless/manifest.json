@@ -1,6 +1,7 @@
 {
   "domain": "youless",
   "name": "YouLess",
+  "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@gjong"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/youless",

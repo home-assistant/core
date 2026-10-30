@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 type AxisConfigEntry = ConfigEntry[AxisHub]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: AxisConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: AxisConfigEntry) -> None:
     """Set up the Axis integration."""
     try:
         api = await get_axis_api(hass, config_entry.data)
@@ -38,15 +38,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: AxisConfigEntry) 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload Axis device config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -55,5 +53,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         hass.config_entries.async_update_entry(config_entry, version=3)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
-
-    return True

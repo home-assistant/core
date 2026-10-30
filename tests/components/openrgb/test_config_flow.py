@@ -1,17 +1,17 @@
 """Tests for the OpenRGB config flow."""
 
+import errno
 import socket
 
 from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openrgb.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
@@ -51,6 +51,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         (OpenRGBDisconnected, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
         (socket.gaierror, "cannot_connect"),
+        (OSError(errno.EHOSTUNREACH, "Host is unreachable"), "cannot_connect"),
         (SDKVersionError, "cannot_connect"),
         (RuntimeError("Test error"), "unknown"),
     ],
@@ -186,6 +187,7 @@ async def test_reconfigure_flow(
         (OpenRGBDisconnected, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
         (socket.gaierror, "cannot_connect"),
+        (OSError(errno.EHOSTUNREACH, "Host is unreachable"), "cannot_connect"),
         (SDKVersionError, "cannot_connect"),
         (RuntimeError("Test error"), "unknown"),
     ],

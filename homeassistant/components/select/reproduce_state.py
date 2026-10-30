@@ -5,10 +5,15 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from .const import ATTR_OPTIONS, DOMAIN
+from .const import (
+    DOMAIN,
+    SelectEntityCapabilityAttribute,
+    SelectService,
+    SelectServiceArgument,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +30,9 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    if state.state not in cur_state.attributes.get(ATTR_OPTIONS, []):
+    if state.state not in cur_state.attributes.get(
+        SelectEntityCapabilityAttribute.OPTIONS, []
+    ):
         _LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
@@ -37,8 +44,8 @@ async def _async_reproduce_state(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: state.state},
+        SelectService.SELECT_OPTION,
+        {ATTR_ENTITY_ID: state.entity_id, SelectServiceArgument.OPTION: state.state},
         context=context,
         blocking=True,
     )

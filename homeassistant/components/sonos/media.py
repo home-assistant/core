@@ -1,6 +1,6 @@
 """Support for media metadata handling."""
 
-import datetime
+import datetime as dt
 from typing import Any
 
 from soco.core import (
@@ -73,7 +73,7 @@ class SonosMedia:
         self.uri: str | None = None
 
         self.position: int | None = None
-        self.position_updated_at: datetime.datetime | None = None
+        self.position_updated_at: dt.datetime | None = None
 
     def clear(self) -> None:
         """Clear basic media info."""

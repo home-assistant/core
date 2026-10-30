@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'iks13mcaiyie3rryjb2oc')]>,
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -39,8 +39,8 @@
 # name: test_platform_setup_and_discovery[siren.aqi_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AQI Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AQI Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.aqi_siren',
@@ -58,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'svjjuwykgijjedurps')]>,
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
@@ -90,8 +90,8 @@
 # name: test_platform_setup_and_discovery[siren.burocam_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bürocam Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bürocam Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.burocam_siren',
@@ -109,9 +109,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'fjdyw5ld2f5f5ddsps')]>,
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
@@ -141,8 +141,8 @@
 # name: test_platform_setup_and_discovery[siren.c9_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'C9 Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C9 Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.c9_siren',
@@ -160,9 +160,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'xihygtyd0d1faknkps')]>,
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
@@ -192,8 +192,8 @@
 # name: test_platform_setup_and_discovery[siren.security_camera_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Security Camera Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Security Camera Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.security_camera_siren',
@@ -211,9 +211,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'kjr0pqg7eunn4vlujbgs')]>,
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
@@ -243,8 +243,8 @@
 # name: test_platform_setup_and_discovery[siren.siren_veranda-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Siren veranda ',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Siren veranda ',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.siren_veranda',

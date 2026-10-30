@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
+from python_qube_heatpump import StatusCode
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -31,20 +33,11 @@ if TYPE_CHECKING:
     from . import QubeConfigEntry
     from .coordinator import QubeCoordinator
 
-# Status code to state mapping
-STATUS_MAP: dict[int, str] = {
-    1: "standby",
-    2: "alarm",
-    6: "keyboard_off",
-    8: "compressor_startup",
-    9: "compressor_shutdown",
-    14: "standby",
-    15: "cooling",
-    16: "heating",
-    17: "start_fail",
-    18: "standby",
-    22: "heating_dhw",
-}
+# The library combines the status code with the anti-legionella request into
+# one status; anti-legionella takes precedence over everything except an alarm.
+STATUS_OPTIONS: list[str] = [
+    status.value for status in StatusCode if status is not StatusCode.UNKNOWN
+]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,11 +48,11 @@ class QubeSensorEntityDescription(SensorEntityDescription):
 
 
 def _status_value(data: QubeData) -> StateType:
-    """Return status string from status code."""
-    code = data.state.status_code
-    if code is None:
+    """Return the heat pump status."""
+    status = data.state.status
+    if status is None or status is StatusCode.UNKNOWN:
         return None
-    return STATUS_MAP.get(code)
+    return str(status.value)
 
 
 SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
@@ -226,17 +219,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         key="status_heatpump",
         translation_key="status_heatpump",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "standby",
-            "alarm",
-            "keyboard_off",
-            "compressor_startup",
-            "compressor_shutdown",
-            "cooling",
-            "heating",
-            "start_fail",
-            "heating_dhw",
-        ],
+        options=STATUS_OPTIONS,
         value_fn=_status_value,
     ),
 )
@@ -248,7 +231,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Qube sensors."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     async_add_entities(
         QubeSensor(coordinator, entry, description) for description in SENSOR_TYPES

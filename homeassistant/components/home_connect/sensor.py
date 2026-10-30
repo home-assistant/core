@@ -1,7 +1,8 @@
 """Provides a sensor for Home Connect."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import cast, override
 
@@ -13,9 +14,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfVolume
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util, slugify
 
 from .common import setup_home_connect_entry
@@ -46,6 +48,7 @@ class HomeConnectSensorEntityDescription(
     default_value: str | None = None
     appliance_types: tuple[str, ...] | None = None
     fetch_unit: bool = False
+    value_fn: Callable[[str | float], StateType | datetime] | None = None
 
 
 BSH_PROGRAM_SENSORS = (
@@ -53,6 +56,9 @@ BSH_PROGRAM_SENSORS = (
         key=EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_key="program_finish_time",
+        value_fn=lambda remaining: (
+            dt_util.utcnow() + timedelta(seconds=cast(float, remaining))
+        ),
         appliance_types=(
             "CoffeeMaker",
             "CookProcessor",
@@ -66,8 +72,17 @@ BSH_PROGRAM_SENSORS = (
         ),
     ),
     HomeConnectSensorEntityDescription(
+        key=EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        translation_key="program_running_time",
+        # Limit state changes to one per minute
+        value_fn=lambda elapsed: round(cast(float, elapsed) / 60),
+        appliance_types=("Hood", "Oven"),
+    ),
+    HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key="program_progress",
         appliance_types=APPLIANCES_WITH_PROGRAMS,
     ),
@@ -158,6 +173,7 @@ SENSORS = (
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_BATTERY_LEVEL,
         device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_VIDEO_CAMERA_STATE,
@@ -225,7 +241,23 @@ EVENT_SENSORS = (
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="alarm_clock_elapsed",
-        appliance_types=("Oven", "Cooktop"),
+        appliance_types=("Oven", "Cooktop", "Hob"),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.BSH_COMMON_EVENT_FAVORITE_001_EXTERNAL_TRIGGER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="favorite_short_press",
+        appliance_types=("Hood", "Cooktop", "Hob"),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.BSH_COMMON_EVENT_FAVORITE_002_EXTERNAL_TRIGGER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="favorite_long_press",
+        appliance_types=("Hood", "Cooktop", "Hob"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.COOKING_OVEN_EVENT_PREHEAT_FINISHED,
@@ -233,7 +265,7 @@ EVENT_SENSORS = (
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="preheat_finished",
-        appliance_types=("Oven", "Cooktop"),
+        appliance_types=("Oven", "Cooktop", "Hob"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.COOKING_OVEN_EVENT_REGULAR_PREHEAT_FINISHED,
@@ -252,6 +284,46 @@ EVENT_SENSORS = (
         appliance_types=("Dryer",),
     ),
     HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_MACHINE_CARE_AND_FILTER_CLEANING_REMINDER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="machine_care_and_filter_cleaning_reminder",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_MACHINE_CARE_AND_LOW_MAINTENANCE_FILTER_CLEANING_REMINDER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="machine_care_and_low_maintenance_filter_cleaning_reminder",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_MACHINE_CARE_REMINDER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="machine_care_reminder",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_PROGRAM_BLOCKED_SALT_LACK,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="program_blocked_salt_lack",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_LACK,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="salt_lack",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
         key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
@@ -260,11 +332,27 @@ EVENT_SENSORS = (
         appliance_types=("Dishwasher",),
     ),
     HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_RINSE_AID_LACK,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="rinse_aid_lack",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
         key=EventKey.DISHCARE_DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="rinse_aid_nearly_empty",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_SMART_FILTER_CLEANING_REMINDER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="smart_filter_cleaning_reminder",
         appliance_types=("Dishwasher",),
     ),
     HomeConnectSensorEntityDescription(
@@ -554,6 +642,15 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
     entity_description: HomeConnectSensorEntityDescription
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the sensor has its required unit."""
+        return super().available and (
+            not self.entity_description.fetch_unit
+            or self.native_unit_of_measurement is not None
+        )
+
     @override
     def update_native_value(self) -> None:
         """Set the value of the sensor."""
@@ -565,11 +662,10 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         if status is None:
             self._attr_native_value = None
             return
+        if self.entity_description.value_fn:
+            self._attr_native_value = self.entity_description.value_fn(status)
+            return
         match self.device_class:
-            case SensorDeviceClass.TIMESTAMP:
-                self._attr_native_value = dt_util.utcnow() + timedelta(
-                    seconds=cast(float, status)
-                )
             case SensorDeviceClass.ENUM:
                 # Value comes back as an enum, we only really care about the
                 # last part, so split it off
@@ -647,8 +743,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     def update_native_value(self) -> None:
         """Update the program sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
-        if event:
-            self._update_native_value(event.value)
+        self._update_native_value(event.value if event else None)
 
 
 class HomeConnectEventSensor(HomeConnectSensor):

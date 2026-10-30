@@ -1,6 +1,6 @@
 """Lannouncer platform for notify component."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
 from homeassistant.core import HomeAssistant
@@ -9,7 +9,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DOMAIN = "lannouncer"
 
-PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA)
 
 
 async def async_get_service(

@@ -12,12 +12,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SIGNAL_ZONE_CHANGED, NessAlarmConfigEntry, ZoneChangedData
+from . import NessAlarmConfigEntry, ZoneChangedData
 from .const import (
     CONF_ZONE_NAME,
     CONF_ZONE_NUMBER,
     DEFAULT_ZONE_TYPE,
     DOMAIN,
+    SIGNAL_ZONE_CHANGED,
     SUBENTRY_TYPE_ZONE,
 )
 

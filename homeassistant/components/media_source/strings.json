@@ -4,10 +4,16 @@
   },
   "exceptions": {
     "browse_media_failed": {
-      "message": "Failed to browse media with content id {media_content_id}: {error}"
+      "message": "Failed to browse media with content ID {media_content_id}: {error}"
     },
     "resolve_media_failed": {
-      "message": "Failed to resolve media with content id {media_content_id}: {error}"
+      "message": "Failed to resolve media with content ID {media_content_id}: {error}"
+    },
+    "search_media_failed": {
+      "message": "Failed to search media with content ID {media_content_id}: {error}"
+    },
+    "search_not_supported": {
+      "message": "Search is not supported for media with content ID {media_content_id}"
     },
     "unknown_media_source": {
       "message": "Unknown media source: {domain}"

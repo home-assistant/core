@@ -15,11 +15,21 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_FIRMWARE_INTERVAL, SCAN_INTERVAL
+from .const import (
+    ATTR_MANUFACTURER,
+    DOMAIN,
+    LOGGER,
+    SCAN_FIRMWARE_INTERVAL,
+    SCAN_INTERVAL,
+)
 
 
 @dataclass(kw_only=True)
@@ -50,6 +60,17 @@ class SmFwData:
 type SmConfigEntry = ConfigEntry[SmlightData]
 
 
+def base_device_info(info: Info, host: str) -> DeviceInfo:
+    """Return device registry information."""
+    return DeviceInfo(
+        configuration_url=f"http://{host}",
+        connections={(CONNECTION_NETWORK_MAC, str(info.MAC))},
+        manufacturer=ATTR_MANUFACTURER,
+        model=info.model,
+        sw_version=f"core: {info.sw_version} / zigbee: {info.zb_version}",
+    )
+
+
 class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base Coordinator for SMLIGHT."""
 
@@ -74,25 +95,25 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     @override
     async def _async_setup(self) -> None:
         """Authenticate if needed during initial setup."""
-        if await self.client.check_auth_needed():
+        try:
             if (
                 CONF_USERNAME in self.config_entry.data
                 and CONF_PASSWORD in self.config_entry.data
             ):
-                try:
-                    await self.client.authenticate(
-                        self.config_entry.data[CONF_USERNAME],
-                        self.config_entry.data[CONF_PASSWORD],
-                    )
-                except SmlightAuthError as err:
-                    raise ConfigEntryAuthFailed from err
-            else:
-                # Auth required but no credentials available
+                await self.client.authenticate(
+                    self.config_entry.data[CONF_USERNAME],
+                    self.config_entry.data[CONF_PASSWORD],
+                )
+            elif await self.client.check_auth_needed():
                 raise ConfigEntryAuthFailed
 
-        info = await self.client.get_info()
+            info = await self.client.get_info()
+        except SmlightAuthError as err:
+            raise ConfigEntryAuthFailed from err
+
         self.unique_id = format_mac(info.MAC)
         self.legacy_api = info.legacy_api
+
         if info.legacy_api == 2:
             ir.async_create_issue(
                 self.hass,
@@ -133,7 +154,11 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             return await command(*args, **kwargs)
         except SmlightAuthError as err:
-            raise ConfigEntryAuthFailed from err
+            self.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except SmlightConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

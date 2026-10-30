@@ -1,0 +1,8 @@
+{
+  "model": "S2102",
+  "f_port": 2,
+  "payload": "010310a8490400059d",
+  "expected": {
+    "illuminance": 281.0
+  }
+}

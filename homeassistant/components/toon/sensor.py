@@ -78,10 +78,11 @@ class ToonSensor(ToonEntity, SensorEntity):
         self.entity_description = description
         super().__init__(coordinator)
 
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = (
             # This unique ID is a bit ugly and contains unneeded information.
             # It is here for legacy / backward compatible reasons.
-            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_sensor_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_sensor_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         )
 
     @property

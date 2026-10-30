@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('kiosker', 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_all_entities[binary_sensor.kiosker_a98be1ce_blackout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kiosker_a98be1ce_blackout',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('kiosker', 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_all_entities[binary_sensor.kiosker_a98be1ce_blackout_dismissible-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout dismissible',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout dismissible',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kiosker_a98be1ce_blackout_dismissible',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('kiosker', 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -139,8 +139,8 @@
 # name: test_all_entities[binary_sensor.kiosker_a98be1ce_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Kiosker A98BE1CE Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kiosker_a98be1ce_charging',
@@ -158,9 +158,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('kiosker', 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -190,7 +190,7 @@
 # name: test_all_entities[binary_sensor.kiosker_a98be1ce_screensaver-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Screensaver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Screensaver',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kiosker_a98be1ce_screensaver',

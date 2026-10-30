@@ -1,6 +1,7 @@
 {
   "domain": "flexit_bacnet",
   "name": "Flexit Nordic (BACnet)",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@lellky", "@piotrbulinski"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flexit_bacnet",

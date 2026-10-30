@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     UnitOfPrecipitationDepth,
@@ -52,7 +53,7 @@ async def async_setup_entry(
     if entity_id := entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
-        _calculate_unique_id(config_entry.data, True),
+        _calculate_unique_id(config_entry.data[CONF_LOCATION], True),
     ):
         entity_registry.async_remove(entity_id)
 
@@ -87,7 +88,7 @@ class MetEireannWeather(SingleCoordinatorWeatherEntity[MetEireannUpdateCoordinat
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
-        self._attr_unique_id = _calculate_unique_id(config, False)
+        self._attr_unique_id = _calculate_unique_id(config[CONF_LOCATION], False)
         self._config = config
         if (name := self._config.get(CONF_NAME)) is not None:
             self._attr_name = name

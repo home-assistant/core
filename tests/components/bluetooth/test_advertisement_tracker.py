@@ -6,6 +6,15 @@ import time
 # pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    FakeScanner,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source,
+    inject_advertisement_with_time_and_source_connectable,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components.bluetooth import (
     async_get_learned_advertising_interval,
@@ -19,17 +28,6 @@ from homeassistant.components.bluetooth.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
-
-from . import (
-    FakeScanner,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement_with_time_and_source,
-    inject_advertisement_with_time_and_source_connectable,
-    patch_bluetooth_time,
-)
-
-from tests.common import async_fire_time_changed
 
 ONE_HOUR_SECONDS = 3600
 

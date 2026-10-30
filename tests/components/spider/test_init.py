@@ -1,5 +1,7 @@
 """Tests for the Spider integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.spider import DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -8,8 +10,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 async def test_spider_repair_issue(

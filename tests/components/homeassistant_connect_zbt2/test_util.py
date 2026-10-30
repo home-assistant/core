@@ -1,12 +1,12 @@
 """Test Connect ZBT-2 utilities."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
 from homeassistant.components.homeassistant_connect_zbt2.util import (
     get_usb_service_info,
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 CONNECT_ZBT2_CONFIG_ENTRY = MockConfigEntry(
     domain=DOMAIN,

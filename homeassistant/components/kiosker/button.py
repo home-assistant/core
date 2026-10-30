@@ -11,7 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KioskerConfigEntry
+from .coordinator import KioskerConfigEntry
 from .entity import KioskerEntity
 
 PARALLEL_UPDATES = 1

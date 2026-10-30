@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
@@ -39,8 +38,8 @@ async def test_device(
     """Test the device information."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66")}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device == snapshot

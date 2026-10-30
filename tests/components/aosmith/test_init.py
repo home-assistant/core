@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from py_aosmith import AOSmithUnknownException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.aosmith.const import (
     DOMAIN,
@@ -16,8 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import build_device_fixture
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_config_entry_setup(init_integration: MockConfigEntry) -> None:

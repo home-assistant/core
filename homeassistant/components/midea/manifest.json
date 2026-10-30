@@ -1,0 +1,22 @@
+{
+  "domain": "midea",
+  "name": "Midea",
+  "categories": [
+    "climate.heat_pumps_air_conditioning",
+    "appliances_cleaning",
+    "climate.water_heaters"
+  ],
+  "codeowners": ["@chemelli74", "@rokam"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/midea",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["midealocal"],
+  "quality_scale": "platinum",
+  "requirements": ["midea-local==15.0.0"]
+}

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('marantz_infrared', '01JTEST0000000000000000000')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_entities[button.marantz_pm6006_integrated_amplifier_loudness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Marantz PM6006 Integrated Amplifier Loudness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz PM6006 Integrated Amplifier Loudness',
     }),
     'context': <ANY>,
     'entity_id': 'button.marantz_pm6006_integrated_amplifier_loudness',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('marantz_infrared', '01JTEST0000000000000000000')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_entities[button.marantz_pm6006_integrated_amplifier_source_direct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Marantz PM6006 Integrated Amplifier Source direct',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz PM6006 Integrated Amplifier Source direct',
     }),
     'context': <ANY>,
     'entity_id': 'button.marantz_pm6006_integrated_amplifier_source_direct',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('marantz_infrared', '01JTEST0000000000000000000')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_entities[button.marantz_pm6006_integrated_amplifier_speaker_a_b-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Marantz PM6006 Integrated Amplifier Speaker A/B',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Marantz PM6006 Integrated Amplifier Speaker A/B',
     }),
     'context': <ANY>,
     'entity_id': 'button.marantz_pm6006_integrated_amplifier_speaker_a_b',

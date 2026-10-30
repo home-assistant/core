@@ -1,12 +1,12 @@
 # serializer version: 1
-# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.heating_circuit_1_patterilammitys_operation_mode-entry]
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -16,13 +16,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -45,11 +45,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.heating_circuit_1_patterilammitys_operation_mode-state]
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -59,7 +59,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -73,16 +73,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -112,8 +112,8 @@
 # name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -134,16 +134,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'stop',
         'run',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -173,8 +173,8 @@
 # name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_pump_summer_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Pump summer stop',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Pump summer stop',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'stop',
         'run',
@@ -188,14 +188,14 @@
     'state': 'auto',
   })
 # ---
-# name: test_entities[select-no_room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-entry]
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -205,13 +205,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -234,11 +234,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-no_room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-state]
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -248,21 +248,21 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'automatic',
   })
 # ---
-# name: test_entities[select-no_room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-entry]
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -272,13 +272,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -301,11 +301,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-no_room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-state]
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -315,7 +315,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -329,16 +329,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -368,8 +368,8 @@
 # name: test_entities[select-no_room_sensors][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -390,16 +390,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -429,8 +429,8 @@
 # name: test_entities[select-relay_temp_difference][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -451,16 +451,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -490,8 +490,8 @@
 # name: test_entities[select-relay_temp_difference][select.ouman_eh_800_relay_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay control',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Relay control',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -512,16 +512,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -551,8 +551,8 @@
 # name: test_entities[select-relay_temperature][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -573,16 +573,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -612,8 +612,8 @@
 # name: test_entities[select-relay_temperature][select.ouman_eh_800_relay_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay control',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Relay control',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -634,16 +634,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -673,8 +673,8 @@
 # name: test_entities[select-relay_time_program][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -695,16 +695,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -734,8 +734,8 @@
 # name: test_entities[select-relay_time_program][select.ouman_eh_800_relay_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay control',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Relay control',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -756,16 +756,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -795,8 +795,8 @@
 # name: test_entities[select-relay_valve_position][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -817,16 +817,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -856,8 +856,8 @@
 # name: test_entities[select-relay_valve_position][select.ouman_eh_800_relay_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay control',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Relay control',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -871,14 +871,14 @@
     'state': 'auto',
   })
 # ---
-# name: test_entities[select-room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-entry]
+# name: test_entities[select-room_sensors][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -888,13 +888,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -917,11 +917,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-state]
+# name: test_entities[select-room_sensors][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -931,21 +931,21 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'automatic',
   })
 # ---
-# name: test_entities[select-room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-entry]
+# name: test_entities[select-room_sensors][select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -955,13 +955,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -984,11 +984,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-state]
+# name: test_entities[select-room_sensors][select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -998,7 +998,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1012,16 +1012,16 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -1051,8 +1051,8 @@
 # name: test_entities[select-room_sensors][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',

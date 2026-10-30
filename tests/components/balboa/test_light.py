@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from pybalboa import SpaControl
 from pybalboa.enums import OffOnState, UnknownState
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
@@ -13,7 +14,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import client_update, init_integration
 
-from tests.common import snapshot_platform
 from tests.components.light import common
 
 ENTITY_LIGHT = "light.fakespa_light"

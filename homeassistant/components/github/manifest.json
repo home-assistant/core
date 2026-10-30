@@ -1,6 +1,7 @@
 {
   "domain": "github",
   "name": "GitHub",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@timmo001", "@ludeeus"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/github",

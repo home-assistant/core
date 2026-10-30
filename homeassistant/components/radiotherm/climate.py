@@ -108,7 +108,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     """Representation of a Radio Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_precision = PRECISION_HALVES
     _attr_name = None
 
@@ -152,7 +152,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             self._attr_current_humidity = self.data.humidity
             self._attr_preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
         # Map thermostat values into various STATE_ flags.
-        self._attr_current_temperature = data["temp"]
+        self._attr_native_current_temperature = data["temp"]
         self._attr_fan_mode = CODE_TO_FAN_MODE[data["fmode"]]
         self._attr_extra_state_attributes = {
             ATTR_FAN_ACTION: CODE_TO_FAN_STATE[data["fstate"]]
@@ -163,17 +163,17 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         else:
             self._attr_hvac_action = CODE_TO_TEMP_STATE[data["tstate"]]
         if self.hvac_mode == HVACMode.COOL:
-            self._attr_target_temperature = data["t_cool"]
+            self._attr_native_target_temperature = data["t_cool"]
         elif self.hvac_mode == HVACMode.HEAT:
-            self._attr_target_temperature = data["t_heat"]
+            self._attr_native_target_temperature = data["t_heat"]
         elif self.hvac_mode == HVACMode.AUTO:
             # This doesn't really work - tstate is only set if the HVAC is
             # active. If it's idle, we don't know what to do with the target
             # temperature.
             if self.hvac_action == HVACAction.COOLING:
-                self._attr_target_temperature = data["t_cool"]
+                self._attr_native_target_temperature = data["t_cool"]
             elif self.hvac_action == HVACAction.HEATING:
-                self._attr_target_temperature = data["t_heat"]
+                self._attr_native_target_temperature = data["t_heat"]
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -181,7 +181,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.hass.async_add_executor_job(self._set_temperature, temperature)
-        self._attr_target_temperature = temperature
+        self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
@@ -212,9 +212,9 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             self.device.tmode = TEMP_MODE_TO_CODE[hvac_mode]
         # Setting t_cool or t_heat automatically changes tmode.
         elif hvac_mode == HVACMode.COOL:
-            self.device.t_cool = self.target_temperature
+            self.device.t_cool = self.native_target_temperature
         elif hvac_mode == HVACMode.HEAT:
-            self.device.t_heat = self.target_temperature
+            self.device.t_heat = self.native_target_temperature
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:

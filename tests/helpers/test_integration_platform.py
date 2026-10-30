@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration, mock_platform
 
 from homeassistant import loader
 from homeassistant.const import EVENT_COMPONENT_LOADED
@@ -17,8 +18,6 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.setup import ATTR_COMPONENT
-
-from tests.common import MockModule, mock_integration, mock_platform
 
 
 async def test_process_integration_platforms_with_wait(hass: HomeAssistant) -> None:
@@ -470,4 +469,26 @@ async def test_lazy_integration_platforms_concurrent(hass: HomeAssistant) -> Non
 
     assert results == [loaded_platform, loaded_platform]
     # The platform was imported and processed exactly once.
+    assert processed == ["loaded"]
+
+
+async def test_lazy_integration_platforms_async_process(hass: HomeAssistant) -> None:
+    """Test a coroutine process callback is awaited and its result cached."""
+    loaded_platform = Mock()
+    mock_platform(hass, "loaded.platform_to_check", loaded_platform)
+    hass.config.components.add("loaded")
+
+    processed: list[str] = []
+
+    async def _process_platform(hass: HomeAssistant, domain: str, platform: Any) -> Any:
+        processed.append(domain)
+        return platform
+
+    platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
+
+    assert await platforms.async_get_platform("loaded") is loaded_platform
+    assert processed == ["loaded"]
+
+    # The awaited result is cached, so a subsequent request does not reprocess.
+    assert await platforms.async_get_platform("loaded") is loaded_platform
     assert processed == ["loaded"]

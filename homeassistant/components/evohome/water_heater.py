@@ -5,8 +5,12 @@ import logging
 from typing import Any, override
 
 import evohomeasync2 as evo
-from evohomeasync2.const import SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS
-from evohomeasync2.schemas.const import DhwState as EvoDhwState, ZoneMode as EvoZoneMode
+from evohomeasync2.const import (
+    SZ_STATE_STATUS,
+    SZ_TEMPERATURE_STATUS,
+    DhwState as EvoDhwState,
+    ZoneMode as EvoZoneMode,
+)
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -24,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import EVOHOME_DATA
+from .const import EVOHOME_DATA, NEXT_SP_FROM
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild
 
@@ -74,7 +78,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     _evo_device: evo.HotWater
     _evo_id_attr = "dhw_id"
@@ -102,8 +106,8 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         if duration is None:
             until = None  # indefinitely, aka permanent override
         elif duration.total_seconds() == 0:
-            await self._update_schedule()
-            until = self.setpoints.get("next_sp_from")
+            await self.coordinator.async_ensure_schedule(self._evo_device)
+            until = self.setpoints.get(NEXT_SP_FROM)
         else:
             until = dt_util.now() + duration
 
@@ -141,8 +145,8 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         if operation_mode == STATE_AUTO:
             await self.coordinator.call_client_api(self._evo_device.reset())
         else:
-            await self._update_schedule()
-            until = self.setpoints.get("next_sp_from")
+            await self.coordinator.async_ensure_schedule(self._evo_device)
+            until = self.setpoints.get(NEXT_SP_FROM)
             until = dt_util.as_utc(until) if until else None
 
             if operation_mode == STATE_ON:

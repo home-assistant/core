@@ -1,17 +1,15 @@
 """Common fixtures for the Homevolt tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homevolt import DeviceMetadata, Sensor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.homevolt.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 DEVICE_IDENTIFIER = "ems_40580137858664"
 
@@ -20,7 +18,7 @@ DEVICE_IDENTIFIER = "ems_40580137858664"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.homevolt.async_setup_entry", return_value=True
+        "homeassistant.components.homevolt.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -60,7 +58,7 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         client.unique_id = "40580137858664"
 
         # Load sensor data from fixture and convert to Sensor objects
-        sensors_data = json.loads(load_fixture("sensors.json", DOMAIN))
+        sensors_data = load_json_object_fixture("sensors.json", DOMAIN)
         client.sensors = {
             key: Sensor(
                 value=value,
@@ -71,7 +69,7 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         }
 
         # Load device metadata from fixture and convert to DeviceMetadata objects
-        metadata_data = json.loads(load_fixture("device_metadata.json", DOMAIN))
+        metadata_data = load_json_object_fixture("device_metadata.json", DOMAIN)
         client.device_metadata = {
             key: DeviceMetadata(
                 name=metadata["name"],
@@ -81,12 +79,26 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         }
 
         # Load schedule data from fixture
-        client.current_schedule = json.loads(load_fixture("schedule.json", DOMAIN))
+        client.current_schedule = load_json_object_fixture("schedule.json", DOMAIN)
+        schedule_entry = client.current_schedule["schedule"][0]
+        schedule_params = schedule_entry["params"]
+        client.schedule = {
+            "mode": schedule_entry["type"],
+            "setpoint": schedule_params["setpoint"],
+            "max_charge": schedule_params["max_charge"],
+            "max_discharge": schedule_params["max_discharge"],
+            "min_soc": schedule_entry["min"],
+            "max_soc": schedule_entry["max"],
+            "grid_import_limit": schedule_params["import_limit"],
+            "grid_export_limit": schedule_params["export_limit"],
+        }
 
         # Switch (local mode) support
-        client.local_mode_enabled = False
+        client.local_mode_enabled = client.current_schedule["local_mode"]
+        client.writable_battery_parameters = frozenset()
         client.enable_local_mode = AsyncMock()
         client.disable_local_mode = AsyncMock()
+        client.set_battery_parameters = AsyncMock()
 
         yield client
 

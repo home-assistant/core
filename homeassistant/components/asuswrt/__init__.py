@@ -11,7 +11,7 @@ PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 type AsusWrtConfigEntry = ConfigEntry[AsusWrtRouter]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> None:
     """Set up AsusWrt platform."""
 
     router = AsusWrtRouter(hass, entry)
@@ -31,16 +31,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        router = entry.runtime_data
-        await router.close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    router = entry.runtime_data
+    await router.close()
 
 
 async def update_listener(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> None:

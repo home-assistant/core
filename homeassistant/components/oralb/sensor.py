@@ -3,13 +3,7 @@
 from typing import override
 
 from oralb_ble import OralBSensor, SensorUpdate
-from oralb_ble.parser import (
-    IO_SERIES_MODES,
-    PRESSURE,
-    SECTOR_MAP,
-    SMART_SERIES_MODES,
-    STATES,
-)
+from oralb_ble.parser import IO_SERIES_MODES, PRESSURE, SMART_SERIES_MODES, STATES
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
@@ -46,7 +40,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key=OralBSensor.SECTOR,
         translation_key="sector",
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[v.replace(" ", "_") for v in set(SECTOR_MAP.values()) | {"no_sector"}],
+        options=["no_sector", *(f"sector_{sector}" for sector in range(1, 8))],
         device_class=SensorDeviceClass.ENUM,
     ),
     OralBSensor.NUMBER_OF_SECTORS: SensorEntityDescription(

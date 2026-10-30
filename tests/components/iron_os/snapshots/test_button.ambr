@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry connections=[('bluetooth', 'c0:ff:ee:c0:ff:ee')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -39,7 +39,7 @@
 # name: test_button_platform[button.pinecil_restore_default_settings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Restore default settings',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Restore default settings',
     }),
     'context': <ANY>,
     'entity_id': 'button.pinecil_restore_default_settings',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry connections=[('bluetooth', 'c0:ff:ee:c0:ff:ee')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -89,7 +89,7 @@
 # name: test_button_platform[button.pinecil_save_settings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Save settings',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Save settings',
     }),
     'context': <ANY>,
     'entity_id': 'button.pinecil_save_settings',

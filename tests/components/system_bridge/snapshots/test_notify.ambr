@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
     'disabled_by': None,
     'domain': 'notify',
     'entity_category': None,
@@ -32,15 +32,15 @@
     'suggested_object_id': None,
     'supported_features': <NotifyEntityFeature: 1>,
     'translation_key': None,
-    'unique_id': 'hostname',
+    'unique_id': 'uuid',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_notify_platform[notify.hostname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'hostname',
-      'supported_features': <NotifyEntityFeature: 1>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <NotifyEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'notify.hostname',

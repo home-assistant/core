@@ -126,6 +126,33 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.reading.get_current_power(),
     ),
+    IOmeterEntityDescription(
+        key="power_phase_1",
+        translation_key="power_three_phase",
+        translation_placeholders={"phase_number": "1"},
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.reading.get_power_phase_L1(),
+    ),
+    IOmeterEntityDescription(
+        key="power_phase_2",
+        translation_key="power_three_phase",
+        translation_placeholders={"phase_number": "2"},
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.reading.get_power_phase_L2(),
+    ),
+    IOmeterEntityDescription(
+        key="power_phase_3",
+        translation_key="power_three_phase",
+        translation_placeholders={"phase_number": "3"},
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.reading.get_power_phase_L3(),
+    ),
 ]
 
 

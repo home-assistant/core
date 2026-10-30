@@ -3,9 +3,9 @@
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 import pymystrom
 from pymystrom.exceptions import MyStromConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -17,12 +17,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "myStrom Device"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_HOST): str,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -84,7 +84,6 @@ class MyStromConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._host},
             )
 
-        self._set_confirm_only()
         if TYPE_CHECKING:
             assert self._host is not None
         return self.async_show_form(

@@ -2,9 +2,10 @@
 
 from unittest.mock import AsyncMock
 
-import httpx
+import httpx2
 from openai import AuthenticationError, BadRequestError, OpenAIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ovhcloud_ai_endpoints.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unload(
@@ -37,9 +36,9 @@ async def test_setup_unload(
         (
             AuthenticationError(
                 message="invalid key",
-                response=httpx.Response(
+                response=httpx2.Response(
                     status_code=401,
-                    request=httpx.Request(method="POST", url="https://example.com"),
+                    request=httpx2.Request(method="POST", url="https://example.com"),
                 ),
                 body=None,
             ),
@@ -48,9 +47,9 @@ async def test_setup_unload(
         (
             BadRequestError(
                 message="invalid parameter",
-                response=httpx.Response(
+                response=httpx2.Response(
                     status_code=400,
-                    request=httpx.Request(method="POST", url="https://example.com"),
+                    request=httpx2.Request(method="POST", url="https://example.com"),
                 ),
                 body=None,
             ),
@@ -107,8 +106,8 @@ async def test_new_subentry_creates_entity_and_device(
     assert entities[0].domain == "conversation"
     assert entities[0].unique_id == subentry.subentry_id
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, subentry.subentry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry.subentry_id), entry.entry_id
     )
     assert device is not None
     assert device.name == "Meta-Llama-3_3-70B-Instruct"

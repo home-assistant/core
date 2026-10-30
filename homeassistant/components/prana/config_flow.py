@@ -6,7 +6,7 @@ from typing import Any, override
 from prana_local_api_client.exceptions import PranaApiCommunicationError
 from prana_local_api_client.models.prana_device_info import PranaDeviceInfo
 from prana_local_api_client.prana_local_api_client import PranaLocalApiClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -16,9 +16,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -47,7 +47,6 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         except PranaApiCommunicationError:
             return self.async_abort(reason="invalid_device_or_unreachable")
 
-        self._set_confirm_only()
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:
@@ -94,6 +93,9 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate that a Prana device is reachable and valid."""
         client = PranaLocalApiClient(host=self._host, port=80)
         device_info = await client.get_device_info()
+
+        if device_info is None:
+            raise PranaApiCommunicationError("Device returned no data")
 
         if not device_info.isValid:
             raise ValueError("invalid_device")

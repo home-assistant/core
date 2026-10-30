@@ -2,14 +2,14 @@
 # name: test_setup_config_entry
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'template_device_tracker',
-      'gps_accuracy': 10.0,
-      'in_zones': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'template_device_tracker',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10.0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      'latitude': 10.0,
-      'longitude': 40.0,
-      'source_type': <SourceType.GPS: 'gps'>,
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      <EntityStateAttribute.LATITUDE: 'latitude'>: 10.0,
+      <EntityStateAttribute.LONGITUDE: 'longitude'>: 40.0,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.template_device_tracker',

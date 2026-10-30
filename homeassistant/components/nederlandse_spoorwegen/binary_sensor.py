@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -109,6 +109,7 @@ class NSBinarySensor(CoordinatorEntity[NSDataUpdateCoordinator], BinarySensorEnt
             name=coordinator.name,
             manufacturer=INTEGRATION_TITLE,
             model=ROUTE_MODEL,
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property

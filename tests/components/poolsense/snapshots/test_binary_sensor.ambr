@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('poolsense', 'test@test.com')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -39,9 +39,9 @@
 # name: test_all_entities[binary_sensor.test_test_com_chlorine_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'PoolSense Data',
-      'device_class': 'problem',
-      'friendly_name': 'test@test.com Chlorine status',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'PoolSense Data',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test@test.com Chlorine status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_test_com_chlorine_status',
@@ -59,9 +59,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('poolsense', 'test@test.com')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -91,9 +91,9 @@
 # name: test_all_entities[binary_sensor.test_test_com_ph_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'PoolSense Data',
-      'device_class': 'problem',
-      'friendly_name': 'test@test.com pH status',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'PoolSense Data',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test@test.com pH status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_test_com_ph_status',

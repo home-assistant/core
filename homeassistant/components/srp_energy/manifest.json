@@ -1,6 +1,7 @@
 {
   "domain": "srp_energy",
   "name": "SRP Energy",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@briglx", "@ammmze"],
   "config_flow": true,
   "dependencies": ["recorder"],

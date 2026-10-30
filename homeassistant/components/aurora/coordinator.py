@@ -1,4 +1,4 @@
-"""The aurora component."""
+"""The Aurora integration."""
 
 from datetime import timedelta
 import logging

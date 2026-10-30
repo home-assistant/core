@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('cookidoo', 'sub_uuid')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_all_entities[button.cookidoo_clear_shopping_list_and_additional_purchases-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cookidoo Clear shopping list and additional purchases',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cookidoo Clear shopping list and additional purchases',
     }),
     'context': <ANY>,
     'entity_id': 'button.cookidoo_clear_shopping_list_and_additional_purchases',

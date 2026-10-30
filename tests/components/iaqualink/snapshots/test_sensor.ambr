@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('iaqualink', 'SN00001_ph')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_setup[sensor.ph-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ph',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ph',

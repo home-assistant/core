@@ -1,5 +1,7 @@
 """Tests for the sensors provided by the Luftdaten integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.luftdaten.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -11,15 +13,13 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
+    UnitOfDensity,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_luftdaten_sensors(
@@ -55,7 +55,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Humidity"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfRatio.PERCENTAGE
     assert ATTR_ICON not in state.attributes
 
     entry = entity_registry.async_get("sensor.sensor_12345_pressure")
@@ -101,7 +101,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     )
     assert ATTR_ICON not in state.attributes
 
@@ -118,7 +118,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        == UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     )
     assert ATTR_ICON not in state.attributes
 

@@ -1,12 +1,30 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import AlarmControlPanelEntity
 
 DOMAIN: Final = "alarm_control_panel"
+DATA_COMPONENT: HassKey[EntityComponent[AlarmControlPanelEntity]] = HassKey(DOMAIN)
 
 ATTR_CHANGED_BY: Final = "changed_by"
 ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
+
+CONF_DEFAULT_CODE = "default_code"
+
+
+class AlarmControlPanelEntityStateAttribute(StrEnum):
+    """State attributes for alarm control panel entities."""
+
+    CODE_FORMAT = "code_format"
+    CHANGED_BY = "changed_by"
+    CODE_ARM_REQUIRED = "code_arm_required"
 
 
 class AlarmControlPanelState(StrEnum):
@@ -49,3 +67,21 @@ CONDITION_ARMED_AWAY: Final = "is_armed_away"
 CONDITION_ARMED_NIGHT: Final = "is_armed_night"
 CONDITION_ARMED_VACATION: Final = "is_armed_vacation"
 CONDITION_ARMED_CUSTOM_BYPASS: Final = "is_armed_custom_bypass"
+
+
+class AlarmControlPanelService(StrEnum):
+    """Store keys for alarm control panel services."""
+
+    ARM_AWAY = "alarm_arm_away"
+    ARM_CUSTOM_BYPASS = "alarm_arm_custom_bypass"
+    ARM_HOME = "alarm_arm_home"
+    ARM_NIGHT = "alarm_arm_night"
+    ARM_VACATION = "alarm_arm_vacation"
+    DISARM = "alarm_disarm"
+    TRIGGER = "alarm_trigger"
+
+
+class AlarmControlPanelServiceArgument(StrEnum):
+    """Store keys for alarm control panel service arguments."""
+
+    CODE = "code"

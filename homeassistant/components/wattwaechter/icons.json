@@ -10,6 +10,12 @@
       "export_total": {
         "default": "mdi:meter-electric-outline"
       },
+      "gas_flow_rate": {
+        "default": "mdi:meter-gas-outline"
+      },
+      "gas_power": {
+        "default": "mdi:fire"
+      },
       "import_tariff_1": {
         "default": "mdi:meter-electric"
       },
@@ -18,6 +24,12 @@
       },
       "import_total": {
         "default": "mdi:meter-electric"
+      },
+      "ssid": {
+        "default": "mdi:access-point"
+      },
+      "water_flow_rate": {
+        "default": "mdi:water-pump"
       }
     }
   }

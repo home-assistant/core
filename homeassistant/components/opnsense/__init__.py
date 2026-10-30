@@ -11,7 +11,7 @@ from aiopnsense import (
     OPNsenseTimeoutError,
     OPNsenseUnknownFirmware,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
@@ -24,21 +24,21 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_URL): cv.url,
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_API_SECRET): cv.string,
-                vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
-                vol.Optional(CONF_TRACKER_INTERFACES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Required(CONF_URL): cv.url,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_SECRET)): cv.string,
+                probatio.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
+                probatio.Optional(CONF_TRACKER_INTERFACES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
@@ -65,7 +65,7 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: OPNsenseConfigEntry
-) -> bool:
+) -> None:
     """Set up the OPNsense component from a config entry."""
     url = config_entry.data[CONF_URL]
     session = async_get_clientsession(
@@ -154,11 +154,10 @@ async def async_setup_entry(
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: OPNsenseConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

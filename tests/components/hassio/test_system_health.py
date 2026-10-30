@@ -25,6 +25,8 @@ from aiohasupervisor.models import (
 )
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.hassio.const import (
     DATA_ADDONS_LIST,
@@ -38,9 +40,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures(
@@ -102,6 +101,7 @@ async def test_hassio_system_health(
     )
     hass.data[DATA_OS_INFO] = OSInfo(
         version="5.9",
+        version_pending=None,
         version_latest="5.9",
         update_available=False,
         board="odroid-n2",
@@ -293,6 +293,7 @@ async def test_hassio_system_health_with_issues(
     )
     hass.data[DATA_OS_INFO] = OSInfo(
         version=None,
+        version_pending=None,
         version_latest=None,
         update_available=False,
         board=None,

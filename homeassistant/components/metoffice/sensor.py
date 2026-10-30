@@ -5,7 +5,6 @@ from typing import Any, override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -15,6 +14,7 @@ from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
     UV_INDEX,
+    EntityCategory,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,

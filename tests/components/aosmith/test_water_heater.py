@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from py_aosmith.models import OperationMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
@@ -20,12 +21,10 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, Platform
+from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +58,7 @@ async def test_state_away_mode_unsupported(
     """Test away mode unsupported if water heater lacks vacation mode."""
     state = hass.states.get("water_heater.basement_my_water_heater")
     assert (
-        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
         == WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
     )

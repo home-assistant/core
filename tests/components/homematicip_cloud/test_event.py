@@ -1,10 +1,16 @@
 """Tests for the HomematicIP Cloud event."""
 
+from unittest.mock import patch
+
 from homematicip.base.channel_event import ChannelEvent
+from homematicip.base.functionalChannels import FunctionalChannel
 import pytest
 
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from .helper import HomeFactory, get_and_check_entity_basics
 
@@ -143,3 +149,69 @@ async def test_wrc6_button_ignores_repeating_long(
     state_after_long = hass.states.get(entity_id)
     assert state_after_long.state == state_after_short.state
     assert state_after_long.attributes["event_type"] == "short_release"
+
+
+DOORBELL_ENTITY_ID = "event.dsdpcb_klingel_doorbell"
+
+
+def _door_bell_event(channel: FunctionalChannel) -> ChannelEvent:
+    """Return a door bell channel event for the channel."""
+    return ChannelEvent(
+        channelEventType="DOOR_BELL_SENSOR_EVENT",
+        channelIndex=channel.index,
+        deviceId=channel.device.id,
+    )
+
+
+async def test_door_bell_event_after_entity_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test a removed event entity no longer handles channel events."""
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["dsdpcb_klingel"]
+    )
+    channel = mock_hap.hmip_device_by_entity_id[DOORBELL_ENTITY_ID].functionalChannels[
+        1
+    ]
+    entity = hass.data[DATA_INSTANCES][EVENT_DOMAIN].get_entity(DOORBELL_ENTITY_ID)
+
+    entity_registry.async_remove(DOORBELL_ENTITY_ID)
+    await hass.async_block_till_done()
+
+    with patch.object(entity, "_trigger_event") as mock_trigger_event:
+        channel.fire_channel_event(_door_bell_event(channel))
+        await hass.async_block_till_done()
+
+    mock_trigger_event.assert_not_called()
+
+
+async def test_door_bell_event_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test a renamed event entity handles each channel event once."""
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["dsdpcb_klingel"]
+    )
+    channel = mock_hap.hmip_device_by_entity_id[DOORBELL_ENTITY_ID].functionalChannels[
+        1
+    ]
+    entity = hass.data[DATA_INSTANCES][EVENT_DOMAIN].get_entity(DOORBELL_ENTITY_ID)
+    handler_count = len(channel._on_channel_event_handler)
+
+    # Changing the entity_id removes and re-adds the same entity object.
+    entity_registry.async_update_entity(
+        DOORBELL_ENTITY_ID, new_entity_id="event.renamed_doorbell"
+    )
+    await hass.async_block_till_done()
+
+    assert len(channel._on_channel_event_handler) == handler_count
+
+    with patch.object(entity, "_trigger_event") as mock_trigger_event:
+        channel.fire_channel_event(_door_bell_event(channel))
+        await hass.async_block_till_done()
+
+    mock_trigger_event.assert_called_once_with(event_type="ring")

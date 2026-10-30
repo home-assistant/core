@@ -63,6 +63,9 @@
       'show_media': None,
       'show_media_replies': None,
       'show_featured': None,
+      'feature_approval': None,
+      'invalid_handle': None,
+      'state': None,
       'moved_to_account': None,
     }),
   })

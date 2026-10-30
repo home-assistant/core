@@ -11,7 +11,7 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
 )
 
-from .const import ATTR_NEXT_EVENT, DOMAIN
+from .const import DOMAIN, ScheduleEntityStateAttribute
 
 
 class ScheduleBackToBackTrigger(EntityTransitionTriggerBase):
@@ -24,8 +24,10 @@ class ScheduleBackToBackTrigger(EntityTransitionTriggerBase):
     @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the origin matches and the next event changed."""
-        from_next_event = from_state.attributes.get(ATTR_NEXT_EVENT)
-        to_next_event = to_state.attributes.get(ATTR_NEXT_EVENT)
+        from_next_event = from_state.attributes.get(
+            ScheduleEntityStateAttribute.NEXT_EVENT
+        )
+        to_next_event = to_state.attributes.get(ScheduleEntityStateAttribute.NEXT_EVENT)
 
         return (
             from_state.state in self._from_states and from_next_event != to_next_event

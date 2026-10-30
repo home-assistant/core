@@ -3,8 +3,9 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -55,8 +56,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION, _make_key
 from homeassistant.setup import async_setup_component
 
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
-
 TEST_ENTITY_ID = "media_player.walkman"
 
 
@@ -91,7 +90,7 @@ async def test_source_select(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "dvd"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -165,7 +164,7 @@ async def test_volume_services(hass: HomeAssistant) -> None:
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 1.0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_SET,
@@ -208,7 +207,7 @@ async def test_volume_services(hass: HomeAssistant) -> None:
 
     assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is False
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_MUTE,
@@ -412,7 +411,7 @@ async def test_play_media(hass: HomeAssistant) -> None:
     )
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is not None
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -459,7 +458,7 @@ async def test_seek(hass: HomeAssistant, mock_media_seek) -> None:
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & MediaPlayerEntityFeature.SEEK
     assert not mock_media_seek.called
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_SEEK,
@@ -615,3 +614,31 @@ async def test_browse(
     assert msg["result"]["title"] == "media"
     assert msg["result"]["media_class"] == "directory"
     assert len(msg["result"]["children"])
+
+
+async def test_search(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the media player search delegates to media source."""
+    entity = "media_player.browse"
+
+    await async_setup_component(hass, "media_source", {"media_source": {}})
+    assert await async_setup_component(
+        hass, MP_DOMAIN, {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/search_media",
+            "entity_id": entity,
+            "search_query": "test",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert [item["title"] for item in msg["result"]["result"]] == ["test.mp3"]

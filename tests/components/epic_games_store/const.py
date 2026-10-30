@@ -1,8 +1,8 @@
 """Test constants."""
 
-from homeassistant.components.epic_games_store.const import DOMAIN
+from pytest_homeassistant.common import load_json_object_fixture
 
-from tests.common import load_json_object_fixture
+from homeassistant.components.epic_games_store.const import DOMAIN
 
 MOCK_LANGUAGE = "fr"
 MOCK_COUNTRY = "FR"

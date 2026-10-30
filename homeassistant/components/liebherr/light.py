@@ -1,5 +1,6 @@
 """Light platform for Liebherr integration."""
 
+from dataclasses import replace
 import math
 from typing import TYPE_CHECKING, Any, override
 
@@ -69,7 +70,8 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
     ) -> None:
         """Initialize the presentation light entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.device_id}_presentation_light"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"{coordinator.device_id}_presentation_light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     def _light_control(self) -> PresentationLightControl | None:
@@ -122,15 +124,22 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
             self.coordinator.client.set_presentation_light(
                 device_id=self.coordinator.device_id,
                 target=target,
-            )
+            ),
+            control,
+            lambda control: replace(control, value=target),
         )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
+        control = self._light_control
+        if TYPE_CHECKING:
+            assert control is not None
         await self._async_send_command(
             self.coordinator.client.set_presentation_light(
                 device_id=self.coordinator.device_id,
                 target=0,
-            )
+            ),
+            control,
+            lambda control: replace(control, value=0),
         )

@@ -5,11 +5,14 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from pythonxbox.api.provider.achievements.models import AchievementResponse
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.gameclips.models import GameclipsResponse
 from pythonxbox.api.provider.people.models import PeopleResponse
 from pythonxbox.api.provider.screenshots.models import ScreenshotResponse
 from pythonxbox.api.provider.smartglass.models import (
+    CommandResponse,
     InstalledPackagesList,
     SmartglassConsoleList,
     SmartglassConsoleStatus,
@@ -25,8 +28,6 @@ from homeassistant.components.xbox.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -153,6 +154,22 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.smartglass.get_installed_apps.return_value = InstalledPackagesList(
             **load_json_object_fixture("smartglass_installed_applications.json", DOMAIN)
         )
+        command_response = CommandResponse(
+            **load_json_object_fixture("smartglass_command_response.json", DOMAIN)
+        )
+        client.smartglass.wake_up.return_value = command_response
+        client.smartglass.turn_off.return_value = command_response
+        client.smartglass.reboot.return_value = command_response
+        client.smartglass.mute.return_value = command_response
+        client.smartglass.unmute.return_value = command_response
+        client.smartglass.play.return_value = command_response
+        client.smartglass.pause.return_value = command_response
+        client.smartglass.previous.return_value = command_response
+        client.smartglass.next.return_value = command_response
+        client.smartglass.go_home.return_value = command_response
+        client.smartglass.go_back.return_value = command_response
+        client.smartglass.show_guide_tab.return_value = command_response
+        client.smartglass.show_tv_guide.return_value = command_response
 
         client.catalog = AsyncMock()
         client.catalog.get_product_from_alternate_id.return_value = CatalogResponse(
@@ -174,9 +191,23 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.titlehub.get_title_info.return_value = TitleHubResponse(
             **load_json_object_fixture("titlehub_titleinfo.json", DOMAIN)
         )
+
+        def get_title_info_by_xuid(xuid: str, _: str) -> TitleHubResponse:
+            return TitleHubResponse(
+                **load_json_object_fixture(f"titlehub_titleinfo_{xuid}.json", DOMAIN)
+            )
+
+        client.titlehub.get_title_info_by_xuid.side_effect = get_title_info_by_xuid
         client.titlehub.get_title_history.return_value = TitleHubResponse(
             **load_json_object_fixture("titlehub_titlehistory.json", DOMAIN)
         )
+        client.achievements = AsyncMock()
+        client.achievements.get_achievements_xboxone_gameprogress.return_value = (
+            AchievementResponse(
+                **load_json_object_fixture("achievements_gameprogress.json", DOMAIN)
+            )
+        )
+
         client.gameclips = AsyncMock()
         client.gameclips.get_recent_clips_by_xuid.return_value = GameclipsResponse(
             **load_json_object_fixture("gameclips_recent_xuid.json", DOMAIN)

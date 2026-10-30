@@ -1,6 +1,7 @@
 ignore: |
   tests/fixtures/core/config/yaml_errors/
   .github/workflows/*.lock.yml
+  tests/e2e/pnpm-lock.yaml
 rules:
   braces:
     level: error

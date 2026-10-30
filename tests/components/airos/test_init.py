@@ -9,6 +9,7 @@ from airos.exceptions import (
     AirOSKeyDataMissingError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airos.const import (
     CONF_LEGACY_SSL,
@@ -36,8 +37,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
-
 MOCK_CONFIG_V1 = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "ubnt",
@@ -55,6 +54,26 @@ MOCK_CONFIG_PLAIN = {
 }
 
 MOCK_CONFIG_V1_2 = {
+    CONF_HOST: "1.1.1.1",
+    CONF_USERNAME: "ubnt",
+    CONF_PASSWORD: "test-password",
+    "advanced_settings": {
+        CONF_SSL: DEFAULT_SSL,
+        CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+    },
+}
+
+MOCK_CONFIG_V2_1 = {
+    CONF_HOST: "1.1.1.1",
+    CONF_USERNAME: "ubnt",
+    CONF_PASSWORD: "test-password",
+    "advanced_settings": {
+        CONF_SSL: DEFAULT_SSL,
+        CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+    },
+}
+
+MOCK_CONFIG_V3_1 = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "ubnt",
     CONF_PASSWORD: "test-password",
@@ -104,7 +123,7 @@ async def test_setup_entry_without_ssl(
         data=MOCK_CONFIG_PLAIN,
         entry_id="1",
         unique_id="airos_device",
-        version=1,
+        version=2,
         minor_version=2,
     )
     entry.add_to_hass(hass)
@@ -146,9 +165,9 @@ async def test_ssl_migrate_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 2
+    assert entry.version == 3
     assert entry.minor_version == 1
-    assert entry.data == MOCK_CONFIG_V1_2
+    assert entry.data == MOCK_CONFIG_V3_1
 
 
 @pytest.mark.parametrize(
@@ -161,6 +180,7 @@ async def test_ssl_migrate_entry(
 async def test_uid_migrate_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     sensor_domain: str,
     sensor_name: str,
     mock_id: str,
@@ -168,7 +188,6 @@ async def test_uid_migrate_entry(
     mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test migrate entry unique id."""
-    entity_registry = er.async_get(hass)
 
     MOCK_MAC = dr.format_mac("01:23:45:67:89:AB")
     MOCK_ID = "device_id_12345"
@@ -209,13 +228,39 @@ async def test_uid_migrate_entry(
     updated_entity_entry = entity_registry.async_get(original_entity_id)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 2
+    assert entry.version == 3
     assert entry.minor_version == 1
     assert (
         entity_registry.async_get_entity_id(sensor_domain, DOMAIN, old_unique_id)
         is None
     )
     assert updated_entity_entry.unique_id == new_unique_id
+
+
+async def test_migrate_additional_settings(
+    hass: HomeAssistant,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
+) -> None:
+    """Test rename advanced_settings."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=MOCK_CONFIG_V2_1,
+        entry_id="1",
+        unique_id="airos_device",
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 3
+    assert entry.minor_version == 1
+    assert entry.data == MOCK_CONFIG_V3_1
 
 
 async def test_migrate_future_return(
@@ -230,7 +275,7 @@ async def test_migrate_future_return(
         data=MOCK_CONFIG_V1_2,
         entry_id="1",
         unique_id="airos_device",
-        version=3,
+        version=4,
     )
     entry.add_to_hass(hass)
 
@@ -308,7 +353,7 @@ async def test_setup_entry_with_legacy_ssl(
         domain=DOMAIN,
         title="NanoStation",
         unique_id="01:23:45:67:89:AB",
-        data={**MOCK_CONFIG_V1_2, CONF_LEGACY_SSL: True},
+        data={**MOCK_CONFIG_V3_1, CONF_LEGACY_SSL: True},
     )
     legacy_entry.add_to_hass(hass)
 
@@ -338,9 +383,9 @@ async def test_setup_entry_with_legacy_ssl(
         mock_build_legacy_context.assert_called_once_with(verify_ssl=DEFAULT_VERIFY_SSL)
 
         mock_airos_class.assert_called_once_with(
-            host=MOCK_CONFIG_V1_2[CONF_HOST],
-            username=MOCK_CONFIG_V1_2[CONF_USERNAME],
-            password=MOCK_CONFIG_V1_2[CONF_PASSWORD],
+            host=MOCK_CONFIG_V3_1[CONF_HOST],
+            username=MOCK_CONFIG_V3_1[CONF_USERNAME],
+            password=MOCK_CONFIG_V3_1[CONF_PASSWORD],
             session=legacy_session,
             use_ssl=DEFAULT_SSL,
         )
@@ -370,7 +415,7 @@ async def test_setup_entry_with_legacy_ssl_fails_firmware_detect(
         domain=DOMAIN,
         title="NanoStation",
         unique_id="01:23:45:67:89:AB",
-        data={**MOCK_CONFIG_V1_2, CONF_LEGACY_SSL: True},
+        data={**MOCK_CONFIG_V3_1, CONF_LEGACY_SSL: True},
     )
     legacy_entry.add_to_hass(hass)
 

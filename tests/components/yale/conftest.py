@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from yalexs.manager.ratelimit import _RateLimitChecker
 
 from homeassistant.components.yale.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .mocks import mock_client_credentials, mock_config_entry
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="mock_discovery", autouse=True)

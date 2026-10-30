@@ -167,31 +167,15 @@
       "description": "Starts or resumes a vacuum cleaner's cleaning task.",
       "name": "Start vacuum cleaner"
     },
-    "start_pause": {
-      "description": "Starts, pauses, or resumes a vacuum cleaner's cleaning task.",
-      "name": "Start/pause vacuum cleaner"
-    },
     "stop": {
       "description": "Stops a vacuum cleaner's current task.",
       "name": "Stop vacuum cleaner"
-    },
-    "toggle": {
-      "description": "Toggles a vacuum cleaner on/off.",
-      "name": "Toggle vacuum cleaner"
-    },
-    "turn_off": {
-      "description": "Turns off a vacuum cleaner.",
-      "name": "Turn off vacuum cleaner"
-    },
-    "turn_on": {
-      "description": "Turns on a vacuum cleaner.",
-      "name": "Turn on vacuum cleaner"
     }
   },
   "title": "Vacuum",
   "triggers": {
     "errored": {
-      "description": "Triggers after one or more vacuums encounter an error.",
+      "description": "Triggers when one or more vacuum cleaners encounter an error.",
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
@@ -200,10 +184,10 @@
           "name": "[%key:component::vacuum::common::trigger_for_name%]"
         }
       },
-      "name": "Vacuum encountered an error"
+      "name": "Vacuum cleaner encountered an error"
     },
     "paused_cleaning": {
-      "description": "Triggers after one or more vacuums pause cleaning.",
+      "description": "Triggers when one or more vacuum cleaners pause cleaning.",
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
@@ -215,7 +199,7 @@
       "name": "Vacuum cleaner paused cleaning"
     },
     "returned_to_dock": {
-      "description": "Triggers after one or more vacuums have returned to dock.",
+      "description": "Triggers when one or more vacuum cleaners have returned to dock.",
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
@@ -224,10 +208,10 @@
           "name": "[%key:component::vacuum::common::trigger_for_name%]"
         }
       },
-      "name": "Vacuum returned to dock"
+      "name": "Vacuum cleaner returned to dock"
     },
     "started_cleaning": {
-      "description": "Triggers after one or more vacuums start cleaning.",
+      "description": "Triggers when one or more vacuum cleaners start cleaning.",
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
@@ -239,7 +223,7 @@
       "name": "Vacuum cleaner started cleaning"
     },
     "started_returning": {
-      "description": "Triggers after one or more vacuums start returning to dock.",
+      "description": "Triggers when one or more vacuum cleaners start returning to dock.",
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"

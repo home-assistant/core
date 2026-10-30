@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     UV_INDEX,
@@ -99,7 +100,7 @@ WEBSOCKET_WIND_SENSORS: tuple[
         device_class=SensorDeviceClass.WIND_DIRECTION,
         translation_key="wind_direction",
         value_fn=lambda data: data.wind_direction_degrees,
-        native_unit_of_measurement="°",
+        native_unit_of_measurement=DEGREE,
     ),
 )
 

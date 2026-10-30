@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.const import (
     UnitOfLength,
@@ -22,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .coordinator import AqvifyConfigEntry
 from .entity import AqvifyAggrEntity, AqvifyEntity
@@ -46,8 +46,8 @@ class AqvifySensorAggrEntityDescription(SensorEntityDescription):
 
 ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
     AqvifySensorEntityDescription(
-        key="meter_value",
-        translation_key="meter_value",
+        key="level_from_sensor",
+        translation_key="level_from_sensor",
         native_unit_of_measurement=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
@@ -55,8 +55,8 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         value_fn=lambda value: value.meter_value,
     ),
     AqvifySensorEntityDescription(
-        key="water_level",
-        translation_key="water_level",
+        key="level_from_top",
+        translation_key="level_from_top",
         native_unit_of_measurement=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
@@ -64,8 +64,8 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         value_fn=lambda value: value.water_level,
     ),
     AqvifySensorEntityDescription(
-        key="stored_volume",
-        translation_key="stored_volume",
+        key="available_volume",
+        translation_key="available_volume",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_STORAGE,

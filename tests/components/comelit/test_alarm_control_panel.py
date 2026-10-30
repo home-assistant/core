@@ -6,6 +6,7 @@ from aiocomelit.api import ComelitVedoAreaObject
 from aiocomelit.const import ALARM_AREA, ALARM_ZONE, AlarmAreaState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.alarm_control_panel import (
     ATTR_CODE,
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .const import VEDO_PIN, ZONE0
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "alarm_control_panel.area0"
 

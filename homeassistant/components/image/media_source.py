@@ -5,14 +5,16 @@ from typing import cast, override
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
     BrowseMediaSource,
+    MediaImage,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, State
 
+from . import _async_get_image
 from .const import DATA_COMPONENT, DOMAIN
 
 
@@ -44,6 +46,17 @@ class ImageMediaSource(MediaSource):
         )
 
     @override
+    async def async_get_media_image(self, item: MediaSourceItem) -> MediaImage:
+        """Return the current image of the entity."""
+        image = self.hass.data[DATA_COMPONENT].get_entity(item.identifier)
+
+        if not image:
+            raise Unresolvable(f"Could not resolve media item: {item.identifier}")
+
+        snapshot = await _async_get_image(image, timeout=10)
+        return MediaImage(snapshot.content, snapshot.content_type)
+
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
@@ -59,7 +72,7 @@ class ImageMediaSource(MediaSource):
                 media_class=MediaClass.VIDEO,
                 media_content_type=image.content_type,
                 title=cast(State, self.hass.states.get(image.entity_id)).attributes.get(
-                    ATTR_FRIENDLY_NAME, image.name
+                    EntityStateAttribute.FRIENDLY_NAME, image.name
                 ),
                 thumbnail=f"/api/image_proxy/{image.entity_id}",
                 can_play=True,

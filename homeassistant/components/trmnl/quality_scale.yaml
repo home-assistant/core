@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: Entities of this integration do not explicitly subscribe to events.
@@ -45,9 +51,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Uses the cloud API
-  discovery:
-    status: exempt
-    comment: Can't be discovered
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

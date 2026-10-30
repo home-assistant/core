@@ -40,10 +40,13 @@
     dict({
       'agent_id': 'mock-agent-id',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'Test Result',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
-      'tool_result': 'Test Result',
     }),
   ])
 # ---
@@ -105,10 +108,13 @@
     dict({
       'agent_id': 'mock-agent-id',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'Test Param 1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
-      'tool_result': 'Test Param 1',
     }),
   ])
 # ---
@@ -135,10 +141,13 @@
     dict({
       'agent_id': 'mock-agent-id',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'Test Param 1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
-      'tool_result': 'Test Param 1',
     }),
   ])
 # ---
@@ -165,10 +174,13 @@
     dict({
       'agent_id': 'mock-agent-id',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'Test Param 1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
-      'tool_result': 'Test Param 1',
     }),
     dict({
       'agent_id': 'mock-agent-id',
@@ -212,18 +224,24 @@
     dict({
       'agent_id': 'mock-agent-id',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'Test Param 1',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id',
       'tool_name': 'test_tool',
-      'tool_result': 'Test Param 1',
     }),
     dict({
       'agent_id': 'mock-agent-id',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'Test Param 2',
+        'error': False,
+      }),
       'role': 'tool_result',
       'tool_call_id': 'mock-tool-call-id-2',
       'tool_name': 'test_tool',
-      'tool_result': 'Test Param 2',
     }),
   ])
 # ---

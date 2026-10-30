@@ -2,6 +2,11 @@
   "domain": "nest",
   "name": "Google Nest",
   "after_dependencies": ["media_source"],
+  "categories": [
+    "climate.thermostats_heating",
+    "security_safety.cameras",
+    "security_safety.doorbells_intercoms"
+  ],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["ffmpeg", "http", "application_credentials"],
@@ -20,5 +25,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["google_nest_sdm"],
-  "requirements": ["google-nest-sdm==9.1.2"]
+  "requirements": ["google-nest-sdm==9.2.1"]
 }

@@ -1,10 +1,11 @@
 {
   "domain": "nad",
   "name": "NAD",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/nad",
   "iot_class": "local_polling",
   "loggers": ["nad_receiver"],
   "quality_scale": "legacy",
-  "requirements": ["nad-receiver==0.3.0"]
+  "requirements": ["nad-receiver==0.4.0"]
 }

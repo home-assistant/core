@@ -4,6 +4,8 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import DOMAIN
@@ -12,7 +14,7 @@ from homeassistant.components.switchbot.services import (
     async_setup_services,
 )
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
@@ -21,9 +23,6 @@ from . import (
     KEYPAD_VISION_PRO_INFO,
     SMART_THERMOSTAT_RADIATOR_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
@@ -53,7 +52,7 @@ async def test_add_password_service(
         add_password=mocked_instance,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         device_entry = dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
@@ -87,7 +86,7 @@ async def test_device_not_found(
         update=AsyncMock(return_value=None),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(ServiceValidationError) as err:
             await hass.services.async_call(
@@ -100,8 +99,8 @@ async def test_device_not_found(
                 blocking=True,
             )
 
-        assert err.value.translation_domain == DOMAIN
-        assert err.value.translation_key == "invalid_device_id"
+        assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+        assert err.value.translation_key == "service_device_not_found"
         assert err.value.translation_placeholders == {"device_id": "nonexistent_device"}
 
 
@@ -121,7 +120,7 @@ async def test_device_not_belonging(
         update=AsyncMock(return_value=None),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     other_entry = MockConfigEntry(domain="not_switchbot", data={}, title="Other")
     other_entry.add_to_hass(hass)
 
@@ -142,9 +141,12 @@ async def test_device_not_belonging(
             blocking=True,
         )
 
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "device_not_belonging"
-    assert err.value.translation_placeholders == {"device_id": device_entry.id}
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_device_wrong_domain"
+    assert err.value.translation_placeholders == {
+        "device_name": "Other device",
+        "domain": DOMAIN,
+    }
 
 
 async def test_device_entry_not_loaded(
@@ -163,7 +165,7 @@ async def test_device_entry_not_loaded(
         update=AsyncMock(return_value=None),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     second_entry = mock_entry_encrypted_factory(sensor_type="keypad_vision")
     second_entry.add_to_hass(hass)
 
@@ -184,9 +186,12 @@ async def test_device_entry_not_loaded(
             blocking=True,
         )
 
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "device_entry_not_loaded"
-    assert err.value.translation_placeholders == {"device_id": device_entry.id}
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+    assert err.value.translation_placeholders == {
+        "domain": DOMAIN,
+        "entry_title": second_entry.title,
+    }
 
 
 async def test_service_unsupported_device(
@@ -205,7 +210,7 @@ async def test_service_unsupported_device(
         update=AsyncMock(return_value=None),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     device_entry = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
 
@@ -245,6 +250,6 @@ async def test_device_without_config_entry_id(
             blocking=True,
         )
 
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "invalid_device_id"
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_device_not_found"
     assert err.value.translation_placeholders == {"device_id": "abc"}

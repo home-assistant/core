@@ -11,7 +11,7 @@ from airthings_ble import (
 )
 from bleak import BleakError
 from habluetooth import BluetoothServiceInfoBleak
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -138,7 +138,6 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={DEVICE_MODEL: self._discovered_device.device.model.value},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -221,9 +220,9 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(titles),
+                    probatio.Required(CONF_ADDRESS): probatio.In(titles),
                 },
             ),
         )

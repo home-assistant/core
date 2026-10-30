@@ -3,6 +3,8 @@
 from unittest import mock
 from unittest.mock import patch
 
+from pytest_homeassistant.common import EVENT_STATE_CHANGED, MockConfigEntry
+
 from homeassistant.components.datadog.const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -15,8 +17,6 @@ from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_
 from homeassistant.core import HomeAssistant
 
 from .common import MOCK_DATA, MOCK_OPTIONS, create_mock_state
-
-from tests.common import EVENT_STATE_CHANGED, MockConfigEntry
 
 
 async def test_invalid_config(hass: HomeAssistant) -> None:

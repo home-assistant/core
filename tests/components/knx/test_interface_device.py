@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.telegram import IndividualAddress
 
@@ -13,9 +15,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_diagnostic_entities(
@@ -124,14 +123,14 @@ async def test_remove_interface_device(
     assert await async_setup_component(hass, "config", {})
     await knx.setup_integration()
     client = await hass_ws_client(hass)
-    knx_devices = device_registry.devices.get_devices_for_config_entry_id(
-        knx.mock_config_entry.entry_id
+    knx_devices = dr.async_entries_for_config_entry(
+        device_registry, knx.mock_config_entry.entry_id
     )
     assert len(knx_devices) == 1
     assert knx_devices[0].name == "KNX Interface"
     device_id = knx_devices[0].id
     # interface device can't be removed
-    res = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
+    res = await client.remove_device(device_id)
     assert not res["success"]
     assert (
         res["error"]["message"]

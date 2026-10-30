@@ -3,17 +3,17 @@
 from typing import override
 
 from homeassistant.components.climate import (
-    ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
     DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityStateAttribute,
 )
 from homeassistant.components.humidifier import (
-    ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
+    HumidifierEntityStateAttribute,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.weather import (
-    ATTR_WEATHER_HUMIDITY,
     DOMAIN as WEATHER_DOMAIN,
+    WeatherEntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
@@ -26,16 +26,16 @@ from homeassistant.helpers.trigger import (
 
 HUMIDITY_DOMAIN_SPECS: dict[str, DomainSpec] = {
     CLIMATE_DOMAIN: DomainSpec(
-        value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
+        value_source=ClimateEntityStateAttribute.CURRENT_HUMIDITY,
     ),
     HUMIDIFIER_DOMAIN: DomainSpec(
-        value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+        value_source=HumidifierEntityStateAttribute.CURRENT_HUMIDITY,
     ),
     SENSOR_DOMAIN: DomainSpec(
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     WEATHER_DOMAIN: DomainSpec(
-        value_source=ATTR_WEATHER_HUMIDITY,
+        value_source=WeatherEntityStateAttribute.HUMIDITY,
     ),
 }
 

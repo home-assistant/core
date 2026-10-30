@@ -6,6 +6,12 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from nyt_games import NYTGamesError, WordleStats
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nyt_games.const import DOMAIN
@@ -14,13 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -42,17 +41,19 @@ async def test_updating_exception(
     mock_nyt_games_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling an exception during update."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_nyt_games_client.get_latest_stats.side_effect = NYTGamesError
+    mock_nyt_games_client.get_latest_stats.side_effect = NYTGamesError("Boom")
 
     freezer.tick(timedelta(minutes=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wordle_played").state == STATE_UNAVAILABLE
+    assert "An error occurred while fetching data from NYT Games: Boom" in caplog.text
 
     mock_nyt_games_client.get_latest_stats.side_effect = None
 

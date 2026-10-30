@@ -14,9 +14,15 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -43,11 +49,8 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      This integration is a cloud service and thus does not support discovery.
-  discovery:
-    status: exempt
-    comment: |
-      This integration is a cloud service and thus does not support discovery.
+      This integration is a cloud service and doesn't use the discovered network info.
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -68,9 +71,7 @@ rules:
     comment: |
       Time remaining sensor still has hardcoded icon.
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: No known use cases for repair issues or flows, yet
+  repair-issues: done
   stale-devices: todo
 
   # Platinum

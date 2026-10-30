@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('fumis', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,7 +39,7 @@
 # name: test_buttons[button][button.clou_duo_sync_clock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clou Duo Sync clock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clou Duo Sync clock',
     }),
     'context': <ANY>,
     'entity_id': 'button.clou_duo_sync_clock',

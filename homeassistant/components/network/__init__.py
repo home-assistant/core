@@ -21,11 +21,27 @@ from .const import (
     SIGNAL_NETWORK_ADAPTERS_CHANGED,
 )
 from .models import Adapter
-from .network import DATA_NETWORK, Network, async_get_loaded_network, async_get_network
+from .network import Network, async_get_loaded_network, async_get_network
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+    "MDNS_TARGET_IP",
+    "SIGNAL_NETWORK_ADAPTERS_CHANGED",
+    "Adapter",
+    "async_get_adapters",
+    "async_get_announce_addresses",
+    "async_get_enabled_source_ips",
+    "async_get_enabled_source_ips_from_adapters",
+    "async_get_ipv4_broadcast_addresses",
+    "async_get_loaded_adapters",
+    "async_get_source_ip",
+    "async_only_default_interface_enabled",
+    "async_reload_adapters",
+]
 
 
 def _check_docker_without_host_networking() -> bool:
@@ -55,9 +71,8 @@ def async_get_loaded_adapters(hass: HomeAssistant) -> list[Adapter]:
 
 async def async_reload_adapters(hass: HomeAssistant) -> None:
     """Reload the network adapters and notify listeners if they changed."""
-    if DATA_NETWORK not in hass.data:
-        return
-    if await async_get_loaded_network(hass).async_reload():
+    network = await async_get_network(hass)
+    if await network.async_reload_adapters():
         async_dispatcher_send(hass, SIGNAL_NETWORK_ADAPTERS_CHANGED)
 
 

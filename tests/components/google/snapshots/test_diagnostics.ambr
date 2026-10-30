@@ -8,12 +8,14 @@
           dict({
             'attendees': '**REDACTED**',
             'attendees_omitted': False,
+            'color_id': None,
             'description': '**REDACTED**',
             'end': dict({
               'date': None,
               'date_time': '2023-03-13T12:30:00-07:00',
               'timezone': None,
             }),
+            'event_label_id': None,
             'event_type': 'default',
             'ical_uuid': '**REDACTED**',
             'id': '**REDACTED**',
@@ -40,12 +42,14 @@
           dict({
             'attendees': '**REDACTED**',
             'attendees_omitted': False,
+            'color_id': None,
             'description': '**REDACTED**',
             'end': dict({
               'date': '2022-10-09',
               'date_time': None,
               'timezone': None,
             }),
+            'event_label_id': None,
             'event_type': 'default',
             'ical_uuid': '**REDACTED**',
             'id': '**REDACTED**',

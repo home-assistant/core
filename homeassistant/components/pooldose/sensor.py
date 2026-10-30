@@ -11,16 +11,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     EntityCategory,
     UnitOfElectricPotential,
+    UnitOfRatio,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PooldoseConfigEntry
 from .const import UNIT_MAPPING
+from .coordinator import PooldoseConfigEntry
 from .entity import PooldoseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
     PooldoseSensorEntityDescription(
         key="cl",
         translation_key="cl",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     PooldoseSensorEntityDescription(
         key="flow_rate",

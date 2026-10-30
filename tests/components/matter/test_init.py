@@ -5,7 +5,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import PartialBackupOptions
+from aiohasupervisor.models import InterfaceMethod, PartialBackupOptions
 from matter_server.client.exceptions import (
     CannotConnect,
     NotConnected,
@@ -14,11 +14,16 @@ from matter_server.client.exceptions import (
 )
 from matter_server.common.errors import MatterError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_component
+from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.components.matter import _derive_ble_proxy_url
+from homeassistant.components.matter import (
+    _derive_ble_proxy_url,
+    get_matter_device_info,
+)
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -33,9 +38,6 @@ from .common import (
     load_and_parse_node_fixture,
     setup_integration_with_node_fixture,
 )
-
-from tests.common import MockConfigEntry, mock_component
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="connect_timeout")
@@ -131,6 +133,129 @@ async def test_entry_setup_unload(
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+
+
+OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID = (
+    "00000000000004D2-0000000000000021-MatterNodeDevice-1-EveTemperatureOffset-513-16"
+)
+NEW_TEMPERATURE_OFFSET_UNIQUE_ID = (
+    "00000000000004D2-0000000000000021-MatterNodeDevice-1-TemperatureOffset-513-16"
+)
+
+
+async def test_migrate_eve_temperature_offset_unique_id(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test legacy EveTemperatureOffset entities are migrated to TemperatureOffset."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}, minor_version=1
+    )
+    entry.add_to_hass(hass)
+
+    stale_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    migrated_entity = entity_registry.async_get(stale_entity.entity_id)
+    assert migrated_entity
+    assert migrated_entity.unique_id == NEW_TEMPERATURE_OFFSET_UNIQUE_ID
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.NUMBER, DOMAIN, OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID
+        )
+        is None
+    )
+    state = hass.states.get(stale_entity.entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_migrate_eve_temperature_offset_unique_id_conflict(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration replaces a stale generic TemperatureOffset entity."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}, minor_version=1
+    )
+    entry.add_to_hass(hass)
+
+    stale_generic_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        NEW_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="stale_generic_temperature_offset",
+    )
+    eve_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    assert entity_registry.async_get(stale_generic_entity.entity_id) is None
+    migrated_entity = entity_registry.async_get(eve_entity.entity_id)
+    assert migrated_entity
+    assert migrated_entity.unique_id == NEW_TEMPERATURE_OFFSET_UNIQUE_ID
+    state = hass.states.get(eve_entity.entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_migrate_eve_temperature_offset_skipped_on_current_version(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entries already at minor version 2 keep their unique IDs on setup."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}, minor_version=2
+    )
+    entry.add_to_hass(hass)
+
+    eve_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    eve_entry = entity_registry.async_get(eve_entity.entity_id)
+    assert eve_entry
+    assert eve_entry.unique_id == OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID
 
 
 async def test_home_assistant_stop(
@@ -293,11 +418,13 @@ async def test_raise_addon_task_in_progress(
 ) -> None:
     """Test raise ConfigEntryNotReady if an add-on task is in progress."""
     install_event = asyncio.Event()
+    install_started = asyncio.Event()
 
     install_addon_original_side_effect = install_addon.side_effect
 
     async def install_addon_side_effect(slug: str) -> None:
         """Mock install add-on."""
+        install_started.set()
         await install_event.wait()
         await install_addon_original_side_effect(slug)
 
@@ -314,7 +441,7 @@ async def test_raise_addon_task_in_progress(
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
-    await asyncio.sleep(0.05)
+    await install_started.wait()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 1
@@ -322,9 +449,9 @@ async def test_raise_addon_task_in_progress(
 
     # Check that we only call install add-on once if a task is in progress.
     await hass.config_entries.async_reload(entry.entry_id)
-    await asyncio.sleep(0.05)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_ready"
     assert install_addon.call_count == 1
     assert start_addon.call_count == 0
 
@@ -357,6 +484,7 @@ async def test_start_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_running"
     assert addon_info.call_count == 1
     assert install_addon.call_count == 0
     assert start_addon.call_count == 1
@@ -384,6 +512,7 @@ async def test_install_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_installed"
     assert addon_store_info.call_count == 2
     assert install_addon.call_count == 1
     assert install_addon.call_args == call("core_matter_server")
@@ -547,11 +676,206 @@ async def test_issue_registry_invalid_version(
     assert not issue_registry.async_get_issue(DOMAIN, issue_raised)
 
 
+def _mock_network_interface(
+    *, enabled: bool, connected: bool, ipv6_method: InterfaceMethod | None
+) -> MagicMock:
+    """Build a mock Supervisor network interface."""
+    interface = MagicMock()
+    interface.enabled = enabled
+    interface.connected = connected
+    interface.ipv6 = None if ipv6_method is None else MagicMock(method=ipv6_method)
+    return interface
+
+
 @pytest.mark.parametrize(
-    ("stop_addon_side_effect", "entry_state"),
+    ("interfaces", "issue_expected"),
     [
-        (None, ConfigEntryState.NOT_LOADED),
-        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ],
+            True,
+            id="ipv6_disabled",
+        ),
+        pytest.param(
+            [_mock_network_interface(enabled=True, connected=True, ipv6_method=None)],
+            True,
+            id="no_ipv6_config",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
+                )
+            ],
+            False,
+            id="ipv6_auto",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.STATIC
+                )
+            ],
+            False,
+            id="ipv6_static",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                ),
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
+                ),
+            ],
+            False,
+            id="ipv6_enabled_on_secondary_interface",
+        ),
+        pytest.param(
+            [
+                _mock_network_interface(
+                    enabled=True, connected=False, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ],
+            False,
+            id="no_connected_interface",
+        ),
+    ],
+)
+async def test_ipv6_disabled_repair(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    interfaces: list[MagicMock],
+    issue_expected: bool,
+) -> None:
+    """Test repair issue when IPv6 is disabled in Supervisor network settings."""
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(
+        return_value=MagicMock(interfaces=interfaces)
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+    assert (issue is not None) is issue_expected
+
+
+async def test_ipv6_repair_not_raised_without_supervisor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the IPv6 repair is skipped when not running on Supervisor."""
+    with patch(
+        "homeassistant.components.matter.get_supervisor_client"
+    ) as get_supervisor_client:
+        entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    get_supervisor_client.assert_not_called()
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
+async def test_ipv6_repair_supervisor_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the IPv6 repair handles Supervisor errors gracefully."""
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(side_effect=SupervisorError("boom"))
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
+async def test_ipv6_repair_resolves_on_reload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the IPv6 repair is removed once IPv6 is enabled again."""
+    supervisor_client = MagicMock()
+    supervisor_client.network.info = AsyncMock(
+        return_value=MagicMock(
+            interfaces=[
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.DISABLED
+                )
+            ]
+        )
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.matter.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.matter.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+        supervisor_client.network.info.return_value = MagicMock(
+            interfaces=[
+                _mock_network_interface(
+                    enabled=True, connected=True, ipv6_method=InterfaceMethod.AUTO
+                )
+            ]
+        )
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "ipv6_disabled")
+
+
+@pytest.mark.parametrize(
+    ("stop_addon_side_effect", "entry_state", "entry_reason"),
+    [
+        (None, ConfigEntryState.NOT_LOADED, None),
+        (
+            SupervisorError("Boom"),
+            ConfigEntryState.FAILED_UNLOAD,
+            "Failed to stop the Matter Server app",
+        ),
     ],
 )
 async def test_stop_addon(
@@ -563,6 +887,7 @@ async def test_stop_addon(
     stop_addon: AsyncMock,
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
+    entry_reason: str | None,
 ) -> None:
     """Test stop the Matter add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
@@ -589,6 +914,7 @@ async def test_stop_addon(
     await hass.async_block_till_done()
 
     assert entry.state is entry_state
+    assert entry.reason == entry_reason
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
 
@@ -732,7 +1058,7 @@ async def test_remove_config_entry_device(
     assert hass.states.get(entity_id)
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
     await hass.async_block_till_done()
 
@@ -759,11 +1085,71 @@ async def test_remove_config_entry_device_no_node(
     )
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry.id)
+
+
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that removing an unexpected child device is rejected."""
+    assert await async_setup_component(hass, "config", {})
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, "test_parent_device")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)
+
+
+async def test_get_matter_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test Matter device info follows the loaded state of the integration."""
+    node = await setup_integration_with_node_fixture(
+        hass, "device_diagnostics", matter_client
+    )
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    device_entry = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )[0]
+    expected_device_info = {
+        "unique_id": node.device_info.uniqueID,
+        "vendor_id": hex(node.device_info.vendorID),
+        "product_id": hex(node.device_info.productID),
+    }
+
+    assert get_matter_device_info(hass, device_entry.id) == expected_device_info
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert get_matter_device_info(hass, device_entry.id) is None
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert get_matter_device_info(hass, device_entry.id) == expected_device_info
 
 
 @pytest.mark.parametrize(

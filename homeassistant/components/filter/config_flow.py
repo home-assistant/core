@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
@@ -86,13 +86,13 @@ async def validate_options(
     return user_input
 
 
-DATA_SCHEMA_SETUP = vol.Schema(
+DATA_SCHEMA_SETUP = probatio.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Required(CONF_ENTITY_ID): EntitySelector(
+        probatio.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        probatio.Required(CONF_ENTITY_ID): EntitySelector(
             EntitySelectorConfig(domain=[SENSOR_DOMAIN])
         ),
-        vol.Required(CONF_FILTER_NAME): SelectSelector(
+        probatio.Required(CONF_FILTER_NAME): SelectSelector(
             SelectSelectorConfig(
                 options=FILTERS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -103,8 +103,10 @@ DATA_SCHEMA_SETUP = vol.Schema(
 )
 
 BASE_OPTIONS_SCHEMA = {
-    vol.Optional(CONF_ENTITY_ID): EntitySelector(EntitySelectorConfig(read_only=True)),
-    vol.Optional(CONF_FILTER_NAME): SelectSelector(
+    probatio.Optional(CONF_ENTITY_ID): EntitySelector(
+        EntitySelectorConfig(read_only=True)
+    ),
+    probatio.Optional(CONF_FILTER_NAME): SelectSelector(
         SelectSelectorConfig(
             options=FILTERS,
             mode=SelectSelectorMode.DROPDOWN,
@@ -112,32 +114,34 @@ BASE_OPTIONS_SCHEMA = {
             read_only=True,
         )
     ),
-    vol.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
+    probatio.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
     ),
 }
 
-OUTLIER_SCHEMA = vol.Schema(
+OUTLIER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
         ): NumberSelector(
             NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
         ),
-        vol.Optional(CONF_FILTER_RADIUS, default=DEFAULT_FILTER_RADIUS): NumberSelector(
+        probatio.Optional(
+            CONF_FILTER_RADIUS, default=DEFAULT_FILTER_RADIUS
+        ): NumberSelector(
             NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
         ),
     }
 ).extend(BASE_OPTIONS_SCHEMA)
 
-LOWPASS_SCHEMA = vol.Schema(
+LOWPASS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
         ): NumberSelector(
             NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_FILTER_TIME_CONSTANT, default=DEFAULT_FILTER_TIME_CONSTANT
         ): NumberSelector(
             NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
@@ -145,35 +149,35 @@ LOWPASS_SCHEMA = vol.Schema(
     }
 ).extend(BASE_OPTIONS_SCHEMA)
 
-RANGE_SCHEMA = vol.Schema(
+RANGE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_FILTER_LOWER_BOUND): NumberSelector(
+        probatio.Optional(CONF_FILTER_LOWER_BOUND): NumberSelector(
             NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
         ),
-        vol.Optional(CONF_FILTER_UPPER_BOUND): NumberSelector(
+        probatio.Optional(CONF_FILTER_UPPER_BOUND): NumberSelector(
             NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
         ),
     }
 ).extend(BASE_OPTIONS_SCHEMA)
 
-TIME_SMA_SCHEMA = vol.Schema(
+TIME_SMA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_TIME_SMA_TYPE, default=TIME_SMA_LAST): SelectSelector(
+        probatio.Optional(CONF_TIME_SMA_TYPE, default=TIME_SMA_LAST): SelectSelector(
             SelectSelectorConfig(
                 options=[TIME_SMA_LAST],
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_TIME_SMA_TYPE,
             )
         ),
-        vol.Required(CONF_FILTER_WINDOW_SIZE): DurationSelector(
+        probatio.Required(CONF_FILTER_WINDOW_SIZE): DurationSelector(
             DurationSelectorConfig(enable_day=False, allow_negative=False)
         ),
     }
 ).extend(BASE_OPTIONS_SCHEMA)
 
-THROTTLE_SCHEMA = vol.Schema(
+THROTTLE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE
         ): NumberSelector(
             NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
@@ -181,9 +185,9 @@ THROTTLE_SCHEMA = vol.Schema(
     }
 ).extend(BASE_OPTIONS_SCHEMA)
 
-TIME_THROTTLE_SCHEMA = vol.Schema(
+TIME_THROTTLE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_FILTER_WINDOW_SIZE): DurationSelector(
+        probatio.Required(CONF_FILTER_WINDOW_SIZE): DurationSelector(
             DurationSelectorConfig(enable_day=False, allow_negative=False)
         ),
     }

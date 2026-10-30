@@ -12,10 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -41,16 +40,19 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZhaFan(FanEntity, ZHAEntity):
+class ZhaFan(FanEntity, ZHASupportedFeaturesEntity):
     """Representation of a ZHA fan."""
 
     _attr_translation_key: str = "fan"
 
-    def __init__(self, entity_data: EntityData) -> None:
-        """Initialize the ZHA fan."""
-        super().__init__(entity_data)
+    @staticmethod
+    @functools.cache
+    @override
+    def _convert_supported_features(
+        zha_features: ZHAFanEntityFeature,
+    ) -> FanEntityFeature:
+        """Convert ZHA fan features to HA fan features."""
         features = FanEntityFeature(0)
-        zha_features: ZHAFanEntityFeature = self.entity_data.entity.supported_features
 
         if ZHAFanEntityFeature.DIRECTION in zha_features:
             features |= FanEntityFeature.DIRECTION
@@ -65,35 +67,35 @@ class ZhaFan(FanEntity, ZHAEntity):
         if ZHAFanEntityFeature.TURN_OFF in zha_features:
             features |= FanEntityFeature.TURN_OFF
 
-        self._attr_supported_features = features
+        return features
 
     @property
     @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        return self.entity_data.entity.preset_mode
+        return self._zha_state.preset_mode
 
     @property
     @override
     def preset_modes(self) -> list[str]:
         """Return the available preset modes."""
-        return self.entity_data.entity.preset_modes
+        return self._zha_state.preset_modes
 
     @property
     def default_on_percentage(self) -> int:
         """Return the default on percentage."""
-        return self.entity_data.entity.default_on_percentage
+        return self._zha_state.default_on_percentage
 
     @property
     def speed_range(self) -> tuple[int, int]:
         """Return the range of speeds the fan supports. Off is not included."""
-        return self.entity_data.entity.speed_range
+        return self._zha_state.speed_range
 
     @property
     @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return self.entity_data.entity.speed_count
+        return self._zha_state.speed_count
 
     @convert_zha_error_to_ha_error()
     @override
@@ -134,4 +136,4 @@ class ZhaFan(FanEntity, ZHAEntity):
     @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        return self.entity_data.entity.percentage
+        return self._zha_state.percentage

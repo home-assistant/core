@@ -1,0 +1,13 @@
+{
+  "domain": "vitesy",
+  "name": "Vitesy",
+  "categories": ["climate.air_purifiers_humidifiers"],
+  "codeowners": ["@chemelli74"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/vitesy",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiovitesy"],
+  "quality_scale": "bronze",
+  "requirements": ["aiovitesy==1.4.4"]
+}

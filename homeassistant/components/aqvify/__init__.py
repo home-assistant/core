@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> None:
     """Set up Aqvify from a config entry."""
 
     api_client = AqvifyAPI(
@@ -36,9 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> None:
     """Unload Aqvify config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

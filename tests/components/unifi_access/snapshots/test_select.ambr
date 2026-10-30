@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'keep_lock',
         'keep_unlock',
         'custom',
@@ -14,9 +14,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('unifi_access', 'door-002')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -46,8 +46,8 @@
 # name: test_select_entities[select.back_door_lock_rule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Back Door Lock rule',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Lock rule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'keep_lock',
         'keep_unlock',
         'custom',
@@ -69,7 +69,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'keep_lock',
         'keep_unlock',
         'custom',
@@ -77,9 +77,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('unifi_access', 'door-001')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
@@ -109,8 +109,8 @@
 # name: test_select_entities[select.front_door_lock_rule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Front Door Lock rule',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Lock rule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'keep_lock',
         'keep_unlock',
         'custom',

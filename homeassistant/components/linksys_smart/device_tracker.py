@@ -4,8 +4,8 @@ from http import HTTPStatus
 import logging
 from typing import override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -22,7 +22,7 @@ DEFAULT_TIMEOUT = 10
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string}
+    {probatio.Required(CONF_HOST): cv.string}
 )
 
 

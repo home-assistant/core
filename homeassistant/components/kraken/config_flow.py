@@ -3,15 +3,14 @@
 from typing import Any, override
 
 import krakenex
+import probatio
 from pykrakenapi.pykrakenapi import KrakenAPI
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_TRACKED_ASSET_PAIRS, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
 from .coordinator import KrakenConfigEntry
 from .utils import get_tradable_asset_pairs
 
@@ -76,18 +75,12 @@ class KrakenOptionsFlowHandler(OptionsFlow):
         )
 
         options = {
-            # Polling interval is user-configurable, which is no longer allowed
-            # pylint: disable-next=home-assistant-config-flow-polling-field
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): int,
-            vol.Optional(
+            probatio.Optional(
                 CONF_TRACKED_ASSET_PAIRS,
                 default=tracked_asset_pairs,
             ): cv.multi_select(tradable_asset_pairs_for_multi_select),
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=probatio.Schema(options)
+        )

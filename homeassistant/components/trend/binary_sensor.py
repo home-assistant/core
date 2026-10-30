@@ -7,7 +7,7 @@ import math
 from typing import Any, override
 
 import numpy as np
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -18,7 +18,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -32,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -45,11 +45,6 @@ from homeassistant.util.dt import utcnow
 
 from . import PLATFORMS
 from .const import (
-    ATTR_GRADIENT,
-    ATTR_INVERT,
-    ATTR_MIN_GRADIENT,
-    ATTR_SAMPLE_COUNT,
-    ATTR_SAMPLE_DURATION,
     CONF_INVERT,
     CONF_MAX_SAMPLES,
     CONF_MIN_GRADIENT,
@@ -60,6 +55,7 @@ from .const import (
     DEFAULT_MIN_SAMPLES,
     DEFAULT_SAMPLE_DURATION,
     DOMAIN,
+    TrendEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,30 +67,32 @@ def _validate_min_max(data: dict[str, Any]) -> dict[str, Any]:
         and CONF_MAX_SAMPLES in data
         and data[CONF_MAX_SAMPLES] < data[CONF_MIN_SAMPLES]
     ):
-        raise vol.Invalid("min_samples must be smaller than or equal to max_samples")
+        raise probatio.Invalid(
+            "min_samples must be smaller than or equal to max_samples"
+        )
     return data
 
 
-SENSOR_SCHEMA = vol.All(
-    vol.Schema(
+SENSOR_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Optional(CONF_ATTRIBUTE): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_INVERT, default=False): cv.boolean,
-            vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
-            vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
-            vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
-            vol.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+            probatio.Optional(CONF_ATTRIBUTE): cv.string,
+            probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            probatio.Optional(CONF_FRIENDLY_NAME): cv.string,
+            probatio.Optional(CONF_INVERT, default=False): cv.boolean,
+            probatio.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
+            probatio.Optional(CONF_MIN_GRADIENT, default=0.0): probatio.Coerce(float),
+            probatio.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
+            probatio.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
     _validate_min_max,
 )
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
+    {probatio.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
 )
 
 
@@ -111,7 +109,6 @@ async def async_setup_platform(
     for sensor_name, sensor_config in config[CONF_SENSORS].items():
         entities.append(
             SensorTrend(
-                hass,
                 name=sensor_config.get(CONF_FRIENDLY_NAME, sensor_name),
                 entity_id=sensor_config[CONF_ENTITY_ID],
                 attribute=sensor_config.get(CONF_ATTRIBUTE),
@@ -141,7 +138,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             SensorTrend(
-                hass,
                 name=entry.title,
                 entity_id=entry.options[CONF_ENTITY_ID],
                 attribute=entry.options.get(CONF_ATTRIBUTE),
@@ -153,6 +149,7 @@ async def async_setup_entry(
                 min_samples=entry.options.get(CONF_MIN_SAMPLES, DEFAULT_MIN_SAMPLES),
                 max_samples=entry.options.get(CONF_MAX_SAMPLES, DEFAULT_MAX_SAMPLES),
                 unique_id=entry.entry_id,
+                device=async_entity_id_to_device(hass, entry.options[CONF_ENTITY_ID]),
             )
         ]
     )
@@ -167,7 +164,6 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         name: str,
         entity_id: str,
@@ -180,6 +176,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         unique_id: str | None = None,
         device_class: BinarySensorDeviceClass | None = None,
         sensor_entity_id: str | None = None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._entity_id = entity_id
@@ -193,10 +190,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self._attr_name = name
         self._attr_device_class = device_class
         self._attr_unique_id = unique_id
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            entity_id,
-        )
+        self.device_entry = device
 
         if sensor_entity_id:
             self.entity_id = sensor_entity_id
@@ -206,12 +200,12 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ENTITY_ID: self._entity_id,
-            ATTR_GRADIENT: self._gradient,
-            ATTR_INVERT: self._invert,
-            ATTR_MIN_GRADIENT: self._min_gradient,
-            ATTR_SAMPLE_COUNT: len(self.samples),
-            ATTR_SAMPLE_DURATION: self._sample_duration,
+            TrendEntityStateAttribute.ENTITY_ID: self._entity_id,
+            TrendEntityStateAttribute.GRADIENT: self._gradient,
+            TrendEntityStateAttribute.INVERT: self._invert,
+            TrendEntityStateAttribute.MIN_GRADIENT: self._min_gradient,
+            TrendEntityStateAttribute.SAMPLE_COUNT: len(self.samples),
+            TrendEntityStateAttribute.SAMPLE_DURATION: self._sample_duration,
         }
 
     @override

@@ -9,15 +9,15 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     EntityCategory,
     UnitOfElectricPotential,
+    UnitOfRatio,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PooldoseConfigEntry
+from .coordinator import PooldoseConfigEntry
 from .entity import PooldoseEntity
 
 if TYPE_CHECKING:
@@ -46,7 +46,7 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
         key="cl_target",
         translation_key="cl_target",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     NumberEntityDescription(
         key="ofa_ph_lower",
@@ -78,13 +78,13 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
         key="ofa_cl_lower",
         translation_key="ofa_cl_lower",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     NumberEntityDescription(
         key="ofa_cl_upper",
         translation_key="ofa_cl_upper",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     NumberEntityDescription(
         key="time_off_ph_dosing",

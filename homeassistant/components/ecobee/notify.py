@@ -30,8 +30,9 @@ class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
     def __init__(self, data: EcobeeData, thermostat_index: int) -> None:
         """Initialize the thermostat."""
         super().__init__(data, thermostat_index)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = (
-            f"{self.thermostat['identifier']}_notify_{thermostat_index}"
+            f"{self.thermostat['identifier']}_notify_{thermostat_index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         )
 
     @override

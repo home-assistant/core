@@ -37,10 +37,10 @@ def async_describe_events(
         event: Event,
     ) -> dict[str, str]:
         """Describe Z-Wave JS notification event."""
-        device = dev_reg.devices[event.data[ATTR_DEVICE_ID]]
-        # Z-Wave JS devices always have a name
-        device_name = device.name_by_user or device.name
-        assert device_name
+        device = dev_reg.async_get(
+            event.data[ATTR_DEVICE_ID], include_child_devices=False
+        )
+        device_name = (device.name_by_user or device.name or "") if device else ""
 
         command_class = event.data[ATTR_COMMAND_CLASS]
         command_class_name = event.data[ATTR_COMMAND_CLASS_NAME]
@@ -84,10 +84,10 @@ def async_describe_events(
         event: Event,
     ) -> dict[str, str]:
         """Describe Z-Wave JS value notification event."""
-        device = dev_reg.devices[event.data[ATTR_DEVICE_ID]]
-        # Z-Wave JS devices always have a name
-        device_name = device.name_by_user or device.name
-        assert device_name
+        device = dev_reg.async_get(
+            event.data[ATTR_DEVICE_ID], include_child_devices=False
+        )
+        device_name = (device.name_by_user or device.name or "") if device else ""
 
         command_class = event.data[ATTR_COMMAND_CLASS_NAME]
         label = event.data[ATTR_LABEL]

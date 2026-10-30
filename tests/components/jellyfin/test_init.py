@@ -2,6 +2,9 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -11,9 +14,6 @@ from homeassistant.setup import async_setup_component
 
 from . import async_load_json_fixture
 from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_config_entry_not_ready(
@@ -119,23 +119,20 @@ async def test_device_remove_devices(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                "DEVICE-UUID",
-            )
-        },
+    device_entry = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            "DEVICE-UUID",
+        ),
+        mock_config_entry.entry_id,
     )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, mock_config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     old_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "OLD-DEVICE-UUID")},
     )
-    response = await client.remove_device(
-        old_device_entry.id, mock_config_entry.entry_id
-    )
+    response = await client.remove_device(old_device_entry.id)
     assert response["success"]

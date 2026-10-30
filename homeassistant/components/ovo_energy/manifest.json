@@ -1,6 +1,7 @@
 {
   "domain": "ovo_energy",
   "name": "OVO Energy",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@timmo001"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ovo_energy",

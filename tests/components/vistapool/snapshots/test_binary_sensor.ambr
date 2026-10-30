@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -39,8 +39,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_backwash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Backwash',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Backwash',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_backwash',
@@ -58,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -90,7 +90,7 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_chlorine_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Chlorine module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Chlorine module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_chlorine_module',
@@ -108,9 +108,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -140,8 +140,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_chlorine_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Chlorine pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Chlorine pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_chlorine_pump',
@@ -159,9 +159,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -191,7 +191,7 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_conductivity_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Conductivity module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Conductivity module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_conductivity_module',
@@ -209,9 +209,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -241,8 +241,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_dosing_tank-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'My Pool Dosing tank',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Dosing tank',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_dosing_tank',
@@ -260,9 +260,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -292,8 +292,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_electrolysis_low-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'My Pool Electrolysis low',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Electrolysis low',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_electrolysis_low',
@@ -311,9 +311,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -343,8 +343,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_filtration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Filtration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_filtration',
@@ -362,9 +362,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -394,8 +394,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Heating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Heating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_heating',
@@ -413,9 +413,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -445,8 +445,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_hidro_cover_reduction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Hidro cover reduction',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Hidro cover reduction',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_hidro_cover_reduction',
@@ -464,9 +464,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -496,8 +496,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_hidro_fl2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'My Pool Hidro FL2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Hidro FL2',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_hidro_fl2',
@@ -515,9 +515,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -547,8 +547,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_hidro_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'My Pool Hidro flow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Hidro flow',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_hidro_flow',
@@ -566,9 +566,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -598,7 +598,7 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_hidro_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Hidro module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Hidro module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_hidro_module',
@@ -616,9 +616,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -648,7 +648,7 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_io_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool IO module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool IO module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_io_module',
@@ -666,9 +666,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -698,8 +698,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_ph_acid_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool pH acid pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool pH acid pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_ph_acid_pump',
@@ -717,9 +717,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -749,8 +749,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_ph_base_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool pH base pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool pH base pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_ph_base_pump',
@@ -768,9 +768,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -800,7 +800,7 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_ph_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool pH module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool pH module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_ph_module',
@@ -818,9 +818,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -850,8 +850,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_ph_pump_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'My Pool pH pump alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool pH pump alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_ph_pump_alarm',
@@ -869,9 +869,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -901,7 +901,7 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_redox_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Redox module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Redox module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_redox_module',
@@ -919,9 +919,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -951,8 +951,8 @@
 # name: test_all_entities[all_modules_enabled][binary_sensor.my_pool_redox_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Redox pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Redox pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_redox_pump',
@@ -970,9 +970,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1002,8 +1002,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_backwash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Backwash',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Backwash',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_backwash',
@@ -1021,9 +1021,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1053,7 +1053,7 @@
 # name: test_all_entities[default][binary_sensor.my_pool_chlorine_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Chlorine module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Chlorine module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_chlorine_module',
@@ -1071,9 +1071,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1103,7 +1103,7 @@
 # name: test_all_entities[default][binary_sensor.my_pool_conductivity_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Conductivity module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Conductivity module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_conductivity_module',
@@ -1121,9 +1121,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1153,8 +1153,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_dosing_tank-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'My Pool Dosing tank',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Dosing tank',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_dosing_tank',
@@ -1172,9 +1172,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1204,8 +1204,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_electrolysis_low-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'My Pool Electrolysis low',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Electrolysis low',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_electrolysis_low',
@@ -1223,9 +1223,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1255,8 +1255,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_filtration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Filtration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_filtration',
@@ -1274,9 +1274,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1306,8 +1306,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Heating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Heating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_heating',
@@ -1325,9 +1325,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1357,8 +1357,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_hidro_cover_reduction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Hidro cover reduction',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Hidro cover reduction',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_hidro_cover_reduction',
@@ -1376,9 +1376,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1408,8 +1408,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_hidro_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'My Pool Hidro flow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Hidro flow',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_hidro_flow',
@@ -1427,9 +1427,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1459,7 +1459,7 @@
 # name: test_all_entities[default][binary_sensor.my_pool_hidro_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Hidro module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Hidro module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_hidro_module',
@@ -1477,9 +1477,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1509,7 +1509,7 @@
 # name: test_all_entities[default][binary_sensor.my_pool_io_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool IO module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool IO module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_io_module',
@@ -1527,9 +1527,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1559,8 +1559,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_ph_acid_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool pH acid pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool pH acid pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_ph_acid_pump',
@@ -1578,9 +1578,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1610,8 +1610,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_ph_base_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool pH base pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool pH base pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_ph_base_pump',
@@ -1629,9 +1629,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1661,7 +1661,7 @@
 # name: test_all_entities[default][binary_sensor.my_pool_ph_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool pH module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool pH module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_ph_module',
@@ -1679,9 +1679,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1711,8 +1711,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_ph_pump_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'My Pool pH pump alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool pH pump alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_ph_pump_alarm',
@@ -1730,9 +1730,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1762,7 +1762,7 @@
 # name: test_all_entities[default][binary_sensor.my_pool_redox_module-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Redox module',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Redox module',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_redox_module',
@@ -1780,9 +1780,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('vistapool', 'ABCDEF1234567890')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -1812,8 +1812,8 @@
 # name: test_all_entities[default][binary_sensor.my_pool_redox_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'My Pool Redox pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Redox pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_pool_redox_pump',

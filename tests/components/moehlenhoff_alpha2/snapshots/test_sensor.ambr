@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -39,8 +39,8 @@
 # name: test_sensors[sensor.buro_heat_control_1_valve_opening-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Büro heat control 1 valve opening',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Büro heat control 1 valve opening',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.buro_heat_control_1_valve_opening',

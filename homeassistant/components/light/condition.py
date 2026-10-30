@@ -11,11 +11,10 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 
-from . import ATTR_BRIGHTNESS
-from .const import DOMAIN
+from .const import DOMAIN, LightEntityStateAttribute
 
 BRIGHTNESS_DOMAIN_SPECS: dict[str, DomainSpec] = {
-    DOMAIN: DomainSpec(value_source=ATTR_BRIGHTNESS),
+    DOMAIN: DomainSpec(value_source=LightEntityStateAttribute.BRIGHTNESS),
 }
 
 

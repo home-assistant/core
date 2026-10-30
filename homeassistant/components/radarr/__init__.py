@@ -36,7 +36,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> None:
     """Set up Radarr from a config entry."""
     host_configuration = PyArrHostConfiguration(
         api_token=entry.data[CONF_API_KEY],
@@ -71,9 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> bo
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

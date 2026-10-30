@@ -1,0 +1,6 @@
+{
+  "domain": "onida_infrared",
+  "name": "Onida Infrared",
+  "integration_type": "virtual",
+  "supported_by": "gree_infrared"
+}

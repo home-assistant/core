@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('husqvarna_automower', 'c7233734-b219-4287-a173-08e3643f89f0')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_button_snapshot[button.garden_test_mower_1_confirm_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Confirm error',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Confirm error',
     }),
     'context': <ANY>,
     'entity_id': 'button.garden_test_mower_1_confirm_error',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('husqvarna_automower', 'c7233734-b219-4287-a173-08e3643f89f0')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_button_snapshot[button.garden_test_mower_1_reset_cutting_blade_usage_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Reset cutting blade usage time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Reset cutting blade usage time',
     }),
     'context': <ANY>,
     'entity_id': 'button.garden_test_mower_1_reset_cutting_blade_usage_time',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('husqvarna_automower', 'c7233734-b219-4287-a173-08e3643f89f0')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_button_snapshot[button.garden_test_mower_1_sync_clock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Sync clock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Sync clock',
     }),
     'context': <ANY>,
     'entity_id': 'button.garden_test_mower_1_sync_clock',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('husqvarna_automower', '1234')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -189,7 +189,7 @@
 # name: test_button_snapshot[button.garden_test_mower_2_sync_clock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 2 Sync clock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Sync clock',
     }),
     'context': <ANY>,
     'entity_id': 'button.garden_test_mower_2_sync_clock',

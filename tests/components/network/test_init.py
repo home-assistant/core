@@ -5,7 +5,9 @@ from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+import ifaddr
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import network
@@ -26,8 +28,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from . import LOOPBACK_IPADDR, NO_LOOPBACK_IPADDR
-
-from tests.typing import WebSocketGenerator
 
 
 def _mock_cond_socket(sockname):
@@ -612,7 +612,7 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=[],
     ):
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
         with pytest.raises(HomeAssistantError):
             await network.async_get_source_ip(hass, MDNS_TARGET_IP)
@@ -705,7 +705,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 
 
 @pytest.mark.usefixtures("mock_socket_loopback")
-async def test_async_reload_adapters(hass: HomeAssistant) -> None:
+async def test_async_reload_adapters_signals_changes(hass: HomeAssistant) -> None:
     """Test reloading adapters dispatches a signal only when they change."""
     with patch(
         "homeassistant.components.network.network.async_load_adapters",
@@ -817,9 +817,13 @@ async def test_websocket_network_url(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the network/url websocket command."""
-    assert await async_setup_component(hass, DOMAIN, {})
+    with patch(
+        "homeassistant.components.network.util.async_get_source_ip",
+        return_value="10.10.10.10",
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
 
-    client = await hass_ws_client(hass)
+        client = await hass_ws_client(hass)
 
     with (
         patch(
@@ -895,3 +899,35 @@ async def test_repair_docker_host_network_without_host_networking(
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, "docker_host_network"))
     assert issue == snapshot
+
+
+@pytest.mark.usefixtures("mock_socket_no_loopback")
+async def test_async_reload_adapters(hass: HomeAssistant) -> None:
+    """Test reloading the adapters."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    assert len(await network.async_get_adapters(hass)) == 4
+
+    mock_eth1 = Mock(spec=ifaddr.Adapter)
+    mock_eth1.nice_name = "eth1"
+    mock_eth1.ips = [ifaddr.IP(NO_LOOPBACK_IPADDR, 23, "eth1")]
+    mock_eth1.index = 2
+
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=[mock_eth1],
+    ):
+        await network.async_reload_adapters(hass)
+
+    assert await network.async_get_adapters(hass) == [
+        {
+            "index": 2,
+            "auto": True,
+            "default": True,
+            "enabled": True,
+            "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
+            "ipv6": [],
+            "name": "eth1",
+        }
+    ]

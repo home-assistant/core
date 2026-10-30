@@ -1,9 +1,10 @@
 """Test entity functions for Home Assistant templates."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import render
 
 
@@ -57,13 +58,46 @@ def test_entity_name(
     assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
         "Temperature"
     )
-
-    # Strips device name prefix
-    entity_registry.async_update_entity(
-        entry2.entity_id, name="My Device Custom Sensor"
+    assert (
+        render(hass, f"{{{{ entity_name('{entry2.entity_id}', fallback=True) }}}}")
+        == "Temperature"
     )
-    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
-        "Custom Sensor"
+
+    # The main entity of a device has no name of its own
+    entry3 = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique_3",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+    assert render(hass, f"{{{{ entity_name('{entry3.entity_id}') }}}}") == ""
+    assert (
+        render(hass, f"{{{{ entity_name('{entry3.entity_id}', fallback=True) }}}}")
+        == "My Device"
+    )
+    assert (
+        render(hass, f"{{{{ '{entry3.entity_id}' | entity_name(fallback=True) }}}}")
+        == "My Device"
+    )
+
+    device_registry.async_update_device(device_entry.id, name_by_user="User Device")
+    assert (
+        render(hass, f"{{{{ entity_name('{entry3.entity_id}', fallback=True) }}}}")
+        == "User Device"
+    )
+
+    entity_registry.async_update_entity(entry3.entity_id, name="")
+    assert (
+        render(hass, f"{{{{ entity_name('{entry3.entity_id}', fallback=True) }}}}")
+        == "User Device"
+    )
+
+    entity_registry.async_update_entity(entry3.entity_id, name="Own Name")
+    assert (
+        render(hass, f"{{{{ entity_name('{entry3.entity_id}', fallback=True) }}}}")
+        == "Own Name"
     )
 
 

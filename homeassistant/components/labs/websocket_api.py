@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.backup import async_get_manager
@@ -27,7 +27,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "labs/list"})
+@websocket_api.websocket_command({probatio.Required("type"): "labs/list"})
 def websocket_list_preview_features(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -52,11 +52,11 @@ def websocket_list_preview_features(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "labs/update",
-        vol.Required("domain"): str,
-        vol.Required("preview_feature"): str,
-        vol.Required("enabled"): bool,
-        vol.Optional("create_backup", default=False): bool,
+        probatio.Required("type"): "labs/update",
+        probatio.Required("domain"): str,
+        probatio.Required("preview_feature"): str,
+        probatio.Required("enabled"): bool,
+        probatio.Optional("create_backup", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -103,9 +103,9 @@ async def websocket_update_preview_feature(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "labs/subscribe",
-        vol.Required("domain"): str,
-        vol.Required("preview_feature"): str,
+        probatio.Required("type"): "labs/subscribe",
+        probatio.Required("domain"): str,
+        probatio.Required("preview_feature"): str,
     }
 )
 @websocket_api.async_response

@@ -4,6 +4,8 @@ import logging
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.history_stats.const import (
@@ -20,9 +22,6 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_form(
@@ -62,7 +61,7 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["version"] == 1
+    assert result["version"] == 2
     assert result["options"] == {
         CONF_NAME: DEFAULT_NAME,
         CONF_ENTITY_ID: "binary_sensor.test_monitored",
@@ -174,7 +173,7 @@ async def test_validation_options(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["version"] == 1
+    assert result["version"] == 2
     assert result["options"] == {
         CONF_NAME: DEFAULT_NAME,
         CONF_ENTITY_ID: "binary_sensor.test_monitored",

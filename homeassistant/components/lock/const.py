@@ -1,8 +1,27 @@
 """Constants for the lock entity platform."""
 
-from enum import StrEnum
+from enum import IntFlag, StrEnum
+from typing import TYPE_CHECKING, Final
 
-DOMAIN = "lock"
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import LockEntity
+
+DOMAIN: Final = "lock"
+DATA_COMPONENT: HassKey[EntityComponent[LockEntity]] = HassKey(DOMAIN)
+
+ATTR_CHANGED_BY = "changed_by"
+CONF_DEFAULT_CODE = "default_code"
+
+
+class LockEntityStateAttribute(StrEnum):
+    """State attributes for lock entities."""
+
+    CHANGED_BY = "changed_by"
+    CODE_FORMAT = "code_format"
 
 
 class LockState(StrEnum):
@@ -15,3 +34,23 @@ class LockState(StrEnum):
     UNLOCKING = "unlocking"
     LOCKED = "locked"
     UNLOCKED = "unlocked"
+
+
+class LockEntityFeature(IntFlag):
+    """Supported features of the lock entity."""
+
+    OPEN = 1
+
+
+class LockService(StrEnum):
+    """Store keys for lock services."""
+
+    LOCK = "lock"
+    OPEN = "open"
+    UNLOCK = "unlock"
+
+
+class LockServiceArgument(StrEnum):
+    """Store keys for lock service arguments."""
+
+    CODE = "code"

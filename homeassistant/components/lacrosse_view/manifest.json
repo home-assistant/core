@@ -1,6 +1,7 @@
 {
   "domain": "lacrosse_view",
   "name": "LaCrosse View",
+  "categories": ["sensors.temperature_humidity"],
   "codeowners": ["@IceBotYT"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lacrosse_view",

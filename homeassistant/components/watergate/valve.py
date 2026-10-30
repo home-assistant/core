@@ -1,17 +1,20 @@
 """Support for Watergate Valve."""
 
-from typing import override
+from typing import Any, override
 
-from homeassistant.components.sensor import Any, HomeAssistant
+from watergate_local_api import WatergateApiException
+
 from homeassistant.components.valve import (
     ValveDeviceClass,
     ValveEntity,
     ValveEntityFeature,
     ValveState,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 from .entity import WatergateEntity
 
@@ -81,14 +84,26 @@ class SonicValve(WatergateEntity, ValveEntity):
     @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve."""
-        await self._api_client.async_set_valve_state(ValveState.OPEN)
+        try:
+            await self._api_client.async_set_valve_state(ValveState.OPEN)
+        except WatergateApiException as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="valve_action_failed",
+            ) from exc
         self._valve_state = ValveState.OPENING
         self.async_write_ha_state()
 
     @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the valve."""
-        await self._api_client.async_set_valve_state(ValveState.CLOSED)
+        try:
+            await self._api_client.async_set_valve_state(ValveState.CLOSED)
+        except WatergateApiException as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="valve_action_failed",
+            ) from exc
         self._valve_state = ValveState.CLOSING
         self.async_write_ha_state()
 

@@ -7,6 +7,7 @@ from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 from pydaikin.exceptions import DaikinException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.daikin import update_unique_id
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .test_config_flow import HOST, MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -85,11 +84,18 @@ async def test_duplicate_removal(
         await hass.async_block_till_done()
 
         assert (
-            device_registry.async_get_device({}, {(KEY_MAC, MAC)}).name
+            device_registry.async_get_device_by_connection(
+                (KEY_MAC, MAC), config_entry.entry_id
+            ).name
             == "DaikinAP00000"
         )
 
-        assert device_registry.async_get_device({}, {(KEY_MAC, HOST)}).name is None
+        assert (
+            device_registry.async_get_device_by_connection(
+                (KEY_MAC, HOST), config_entry.entry_id
+            ).name
+            is None
+        )
 
         assert entity_registry.async_get("climate.daikin_127_0_0_1").unique_id == HOST
         assert entity_registry.async_get("switch.zone_1").unique_id.startswith(HOST)
@@ -103,7 +109,10 @@ async def test_duplicate_removal(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device({}, {(KEY_MAC, MAC)}).name == "DaikinAP00000"
+        device_registry.async_get_device_by_connection(
+            (KEY_MAC, MAC), config_entry.entry_id
+        ).name
+        == "DaikinAP00000"
     )
 
     assert entity_registry.async_get("climate.daikinap00000") is None
@@ -136,7 +145,12 @@ async def test_unique_id_migrate(
 
     assert config_entry.unique_id == HOST
 
-    assert device_registry.async_get_device(connections={(KEY_MAC, HOST)}).name is None
+    assert (
+        device_registry.async_get_device_by_connection(
+            (KEY_MAC, HOST), config_entry.entry_id
+        ).name
+        is None
+    )
 
     entity = entity_registry.async_get("climate.daikin_127_0_0_1")
     assert entity.unique_id == HOST
@@ -155,7 +169,9 @@ async def test_unique_id_migrate(
     assert config_entry.unique_id == MAC
 
     assert (
-        device_registry.async_get_device(connections={(KEY_MAC, MAC)}).name
+        device_registry.async_get_device_by_connection(
+            (KEY_MAC, MAC), config_entry.entry_id
+        ).name
         == "DaikinAP00000"
     )
 
