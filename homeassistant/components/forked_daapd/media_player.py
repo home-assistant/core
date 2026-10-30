@@ -124,7 +124,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, api, output, entry_id, master: ForkedDaapdMaster):
+    def __init__(self, api, output, entry_id, master: ForkedDaapdMaster) -> None:
         """Initialize the ForkedDaapd Zone."""
         self._api = api
         self._output = output
@@ -144,6 +144,18 @@ class ForkedDaapdZone(MediaPlayerEntity):
                 self._async_update_output_callback,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_MASTER.format(self._entry_id),
+                self._async_update_group_callback,
+            )
+        )
+
+    @callback
+    def _async_update_group_callback(self, available: bool) -> None:
+        """Refresh group membership after new outputs have been registered."""
+        self.async_write_ha_state()
 
     @callback
     def _async_update_output_callback(self, outputs, _event=None):
@@ -234,7 +246,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
             if self.volume_level == 0:
                 return
             self._last_volume = self.volume_level  # store volume level to restore later
-            target_volume = 0
+            target_volume = 0.0
         else:
             target_volume = self._last_volume  # restore volume level
         await self.async_set_volume_level(volume=target_volume)
