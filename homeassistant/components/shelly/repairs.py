@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from .const import (
+    API_WS_URL,
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLE_SCANNER_MIN_FIRMWARE,
     CONF_BLE_SCANNER_MODE,
@@ -44,7 +45,6 @@ from .utils import (
     get_device_entry_gen,
     get_rpc_key_id,
     get_rpc_key_instances,
-    get_rpc_ws_url,
 )
 
 if TYPE_CHECKING:
@@ -188,7 +188,7 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
     if (
         (ws_config := device.config.get("ws"))
         and ws_config["enable"]
-        and ws_config["server"] == get_rpc_ws_url(hass)
+        and (ws_config["server"] or "").endswith(API_WS_URL)
     ):
         ir.async_create_issue(
             hass,

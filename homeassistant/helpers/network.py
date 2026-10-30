@@ -1,6 +1,5 @@
 """Network helpers."""
 
-from collections.abc import Callable
 from contextlib import suppress
 from ipaddress import ip_address
 import logging
@@ -82,22 +81,21 @@ def is_hass_url(hass: HomeAssistant, url: str) -> bool:
             )
         )
 
-    def cloud_url() -> str | None:
+    def cloud_urls() -> list[str]:
         try:
-            return _get_cloud_url(hass)
+            return _get_cloud_urls(hass)
         except NoURLAvailableError:
-            return None
+            return []
 
-    potential_base_factory: Callable[[], str | None]
-    for potential_base_factory in (
-        lambda: hass.config.internal_url,
-        lambda: hass.config.external_url,
-        cloud_url,
-        host_ip,
-        lambda: get_supervisor_network_url(hass, allow_ssl=True),
-    ):
-        potential_base = potential_base_factory()
+    potential_bases: list[str | None] = [
+        hass.config.internal_url,
+        hass.config.external_url,
+        *cloud_urls(),
+        host_ip(),
+        get_supervisor_network_url(hass, allow_ssl=True),
+    ]
 
+    for potential_base in potential_bases:
         if potential_base is None:
             continue
 
@@ -348,20 +346,23 @@ def _get_external_url(
     raise NoURLAvailableError
 
 
+def _get_cloud_urls(hass: HomeAssistant) -> list[str]:
+    """Get the Home Assistant Cloud URLs of this instance, custom domains first."""
+    if "cloud" not in hass.config.components:
+        raise NoURLAvailableError
+
+    # Local import to avoid circular dependencies
+    from homeassistant.components.cloud import CloudNotAvailable, async_remote_ui_urls  # noqa: PLC0415
+
+    try:
+        return async_remote_ui_urls(hass)
+    except CloudNotAvailable as err:
+        raise NoURLAvailableError from err
+
+
 def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -> str:
     """Get external Home Assistant Cloud URL of this instance."""
-    if "cloud" in hass.config.components:
-        # Local import to avoid circular dependencies
-        from homeassistant.components.cloud import (  # noqa: PLC0415
-            CloudNotAvailable,
-            async_remote_ui_url,
-        )
-
-        try:
-            cloud_url = yarl.URL(async_remote_ui_url(hass))
-        except CloudNotAvailable as err:
-            raise NoURLAvailableError from err
-
+    for cloud_url in map(yarl.URL, _get_cloud_urls(hass)):
         if not require_current_request or _match_request_host_port(cloud_url):
             return normalize_url(str(cloud_url))
 

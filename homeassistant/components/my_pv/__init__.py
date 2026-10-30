@@ -17,6 +17,7 @@ from .coordinator import MyPVConfigEntry, MyPVCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
