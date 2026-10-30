@@ -2316,7 +2316,7 @@ pyfirefly==0.1.17
 pyfireservicerota==0.0.49
 
 # homeassistant.components.flic_button
-pyflic-ble==0.2.5
+pyflic-ble==0.2.6
 
 # homeassistant.components.flic
 pyflic==2.0.4
