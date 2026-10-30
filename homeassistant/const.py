@@ -483,6 +483,16 @@ class EntityStateAttribute(StrEnum):
     UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
 
+class TargetKey(StrEnum):
+    """Keys of a target, selecting what an action, trigger or condition applies to."""
+
+    ENTITY_ID = "entity_id"
+    DEVICE_ID = "device_id"
+    AREA_ID = "area_id"
+    FLOOR_ID = "floor_id"
+    LABEL_ID = "label_id"
+
+
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
 class UnitOfApparentPower(StrEnum):
