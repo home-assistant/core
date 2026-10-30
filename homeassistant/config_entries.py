@@ -3364,9 +3364,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
         ):
             # Existing config entry present, and the
             # entry data just changed
-            if entry.update_listeners:
-                raise ValueError("Cannot update and reload entry with update listeners")
             should_reload = True
+            if entry.update_listeners:
+                report_usage(
+                    "has an update listener and should use it for scheduling a reload",
+                    core_integration_behavior=ReportBehavior.ERROR,
+                    custom_integration_behavior=ReportBehavior.LOG,
+                    integration_domain=self.handler,
+                )
         elif (
             self.source in DISCOVERY_SOURCES
             and entry.state is ConfigEntryState.SETUP_RETRY
@@ -3786,7 +3791,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
         if reload_even_if_entry_is_unchanged or result:
             if entry.update_listeners:
-                raise ValueError("Cannot update and reload entry with update listeners")
+                report_usage(
+                    "has an update listener and should use it for scheduling a reload",
+                    core_integration_behavior=ReportBehavior.ERROR,
+                    custom_integration_behavior=ReportBehavior.LOG,
+                    integration_domain=self.handler,
+                )
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         translation_domain: str | None = None
         if reason is UNDEFINED:
