@@ -458,6 +458,13 @@ async def grouped(
             id="grouped",
         ),
         pytest.param(
+            [ATV_OUTPUT, HOMEPOD_OUTPUT],
+            [HOMEPOD_OUTPUT],
+            [ENTITY_ID, HOMEPOD_ENTITY_ID],
+            [ENTITY_ID, HOMEPOD_ENTITY_ID],
+            id="member_reports_itself",
+        ),
+        pytest.param(
             [HOMEPOD_OUTPUT],
             [],
             [ENTITY_ID, HOMEPOD_ENTITY_ID],

@@ -444,8 +444,11 @@ class AppleTvMediaPlayer(
         ):
             players = _grouping_players(self.hass)
             leader: tuple[AppleTvMediaPlayer, AppleTV] = (self, atv)
-            # A group member reports no output devices, only its leader knows the group
-            if not atv.audio.output_devices:
+            # A member lists no output devices or only itself, its leader has the group
+            if all(
+                device.identifier == output_device_id
+                for device in atv.audio.output_devices
+            ):
                 leader = _find_leader(players, output_device_id) or leader
             leader_player, leader_atv = leader
             self._attr_group_members = [
