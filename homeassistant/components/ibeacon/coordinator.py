@@ -3,6 +3,7 @@
 from datetime import datetime
 import logging
 import time
+from typing import Any
 
 from ibeacon_ble import (
     APPLE_MFR_ID,
@@ -165,6 +166,56 @@ class IBeaconCoordinator:
             device_id in self._last_ibeacon_advertisement_by_unique_id
             or device_id in self._last_seen_by_group_id
         )
+
+    @callback
+    def async_get_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostics without beacon identifiers or addresses."""
+        return {
+            "ignored_address_count": len(self._ignore_addresses),
+            "ignored_uuid_count": len(self._ignore_uuids),
+            "allowed_nameless_uuid_count": len(self._allow_nameless_uuids),
+            "ignored_nameless_address_count": len(
+                {
+                    address
+                    for addresses in self._ignored_nameless_by_uuid.values()
+                    for address in addresses
+                }
+            ),
+            "fixed_mac_beacon_count": len(
+                self._last_ibeacon_advertisement_by_unique_id
+            ),
+            "random_mac_group_count": len(self._group_ids_random_macs),
+            "unavailable_random_mac_group_count": len(self._unavailable_group_ids),
+            "pending_transient_count": len(self._transient_seen_count),
+            "source_count": len(
+                {
+                    advertisement.source
+                    for advertisement in (
+                        self._last_ibeacon_advertisement_by_unique_id.values()
+                    )
+                }
+                | {
+                    service_info.source
+                    for service_info in self._last_seen_by_group_id.values()
+                }
+            ),
+            "fixed_mac_beacons": [
+                {
+                    "power": advertisement.power,
+                    "rssi": advertisement.rssi,
+                    "distance": advertisement.distance,
+                    "transient": advertisement.transient,
+                    "vendor": advertisement.vendor,
+                }
+                for advertisement in (
+                    self._last_ibeacon_advertisement_by_unique_id.values()
+                )
+            ],
+            "random_mac_groups_seen": [
+                {"rssi": service_info.rssi}
+                for service_info in self._last_seen_by_group_id.values()
+            ],
+        }
 
     @callback
     def _async_handle_unavailable(

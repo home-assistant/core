@@ -320,6 +320,27 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     return f"https://{remote_domain}"
 
 
+@callback
+def async_remote_ui_urls(hass: HomeAssistant) -> list[str]:
+    """Get the remote UI URLs, custom domains first.
+
+    Custom domains are the user facing URLs. The instance domain always
+    works and comes last.
+    """
+    instance_url = async_remote_ui_url(hass)
+    remote = hass.data[DATA_CLOUD].remote
+
+    # A custom domain that failed validation stays in the alias list but is
+    # left out of the certificate, so only the certificate tells which ones work
+    served: set[str] = set()
+    if (certificate := remote.certificate) is not None:
+        served = {certificate.common_name, *(certificate.alternative_names or [])}
+
+    return [f"https://{alias}" for alias in remote.alias or [] if alias in served] + [
+        instance_url
+    ]
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
     log_handler = hass.data[DATA_CLOUD_LOG_HANDLER] = await _setup_log_handler(hass)

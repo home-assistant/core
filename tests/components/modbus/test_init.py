@@ -29,11 +29,6 @@ from pytest_homeassistant.common import async_fire_time_changed, get_fixture_pat
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_SLAVE,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -76,14 +71,15 @@ from homeassistant.components.modbus.const import (
     DOMAIN,
     RTUOVERTCP,
     SERIAL,
-    SERVICE_STOP,
-    SERVICE_WRITE_COIL,
-    SERVICE_WRITE_REGISTER,
     TCP,
     UDP,
     DataType,
 )
 from homeassistant.components.modbus.schemas import CONFIG_SCHEMA
+from homeassistant.components.modbus.services import (
+    ModbusService,
+    ModbusServiceArgument,
+)
 from homeassistant.components.modbus.validators import (
     check_config,
     duplicate_fan_mode_validator,
@@ -98,7 +94,6 @@ from homeassistant.components.modbus.validators import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_STATE,
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COUNT,
@@ -116,7 +111,6 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -944,27 +938,27 @@ SERVICE = "service"
     "do_write",
     [
         {
-            DATA: ATTR_VALUE,
+            DATA: ModbusServiceArgument.VALUE,
             VALUE: 15,
-            SERVICE: SERVICE_WRITE_REGISTER,
+            SERVICE: ModbusService.WRITE_REGISTER,
             FUNC: CALL_TYPE_WRITE_REGISTER,
         },
         {
-            DATA: ATTR_VALUE,
+            DATA: ModbusServiceArgument.VALUE,
             VALUE: [1, 2, 3],
-            SERVICE: SERVICE_WRITE_REGISTER,
+            SERVICE: ModbusService.WRITE_REGISTER,
             FUNC: CALL_TYPE_WRITE_REGISTERS,
         },
         {
-            DATA: ATTR_STATE,
+            DATA: ModbusServiceArgument.STATE,
             VALUE: False,
-            SERVICE: SERVICE_WRITE_COIL,
+            SERVICE: ModbusService.WRITE_COIL,
             FUNC: CALL_TYPE_WRITE_COIL,
         },
         {
-            DATA: ATTR_STATE,
+            DATA: ModbusServiceArgument.STATE,
             VALUE: [True, False, True],
-            SERVICE: SERVICE_WRITE_COIL,
+            SERVICE: ModbusService.WRITE_COIL,
             FUNC: CALL_TYPE_WRITE_COILS,
         },
     ],
@@ -980,8 +974,8 @@ SERVICE = "service"
 @pytest.mark.parametrize(
     "do_slave",
     [
-        ATTR_SLAVE,
-        ATTR_UNIT,
+        ModbusServiceArgument.SLAVE,
+        ModbusServiceArgument.UNIT,
     ],
 )
 async def test_pb_service_write(
@@ -1009,9 +1003,9 @@ async def test_pb_service_write(
     }
 
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
+        ModbusServiceArgument.HUB: TEST_MODBUS_NAME,
         do_slave: 17,
-        ATTR_ADDRESS: 16,
+        ModbusServiceArgument.ADDRESS: 16,
         do_write[DATA]: do_write[VALUE],
     }
     mock_modbus_with_pymodbus.reset_mock()
@@ -1020,7 +1014,9 @@ async def test_pb_service_write(
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
+    assert func_name[do_write[FUNC]].call_args.args == (
+        data[ModbusServiceArgument.ADDRESS],
+    )
     assert func_name[do_write[FUNC]].call_args.kwargs == {
         DEVICE_ID: 17,
         value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
@@ -1371,7 +1367,10 @@ async def _fire_first_connect_timer(hass: HomeAssistant) -> None:
 async def _stop_hub(hass: HomeAssistant) -> None:
     """Stop the hub, which also releases every wait for its connection."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP, {ATTR_HUB: TEST_MODBUS_NAME}, blocking=True
+        DOMAIN,
+        ModbusService.STOP,
+        {ModbusServiceArgument.HUB: TEST_MODBUS_NAME},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -1550,19 +1549,21 @@ async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
 
     await mock_modbus.reset()
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
+        ModbusServiceArgument.HUB: TEST_MODBUS_NAME,
     }
-    await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
+    await hass.services.async_call(DOMAIN, ModbusService.STOP, data, blocking=True)
     await hass.async_block_till_done()
     assert mock_modbus.close.called
 
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_SLAVE: 17,
-        ATTR_ADDRESS: 16,
-        ATTR_STATE: True,
+        ModbusServiceArgument.HUB: TEST_MODBUS_NAME,
+        ModbusServiceArgument.SLAVE: 17,
+        ModbusServiceArgument.ADDRESS: 16,
+        ModbusServiceArgument.STATE: True,
     }
-    await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, ModbusService.WRITE_COIL, data, blocking=True
+    )
 
 
 @pytest.mark.parametrize("do_config", [{}])
@@ -1583,7 +1584,7 @@ async def test_integration_reload(
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ModbusService.RELOAD,
             {},
             blocking=True,
         )
@@ -1599,7 +1600,7 @@ async def test_integration_reload(
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ModbusService.RELOAD,
             {},
             blocking=True,
         )
@@ -1615,7 +1616,7 @@ async def test_integration_reload(
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ModbusService.RELOAD,
             {},
             blocking=True,
         )
@@ -1641,7 +1642,7 @@ async def test_integration_reload_failed(
         mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
         mock.patch.object(mock_modbus, "connect", side_effect=ModbusException("error")),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ModbusService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     assert "Modbus reloading" in caplog.text
@@ -1661,7 +1662,7 @@ async def test_integration_setup_failed(
         hass.data[DOMAIN][TEST_MODBUS_NAME].async_setup = mock.AsyncMock(
             return_value=False
         )
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ModbusService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
 
@@ -1758,15 +1759,15 @@ async def test_check_default_slave(
     "do_write",
     [
         {
-            DATA: ATTR_VALUE,
+            DATA: ModbusServiceArgument.VALUE,
             VALUE: 15,
-            SERVICE: SERVICE_WRITE_REGISTER,
+            SERVICE: ModbusService.WRITE_REGISTER,
             FUNC: CALL_TYPE_WRITE_REGISTER,
         },
         {
-            DATA: ATTR_STATE,
+            DATA: ModbusServiceArgument.STATE,
             VALUE: False,
-            SERVICE: SERVICE_WRITE_COIL,
+            SERVICE: ModbusService.WRITE_COIL,
             FUNC: CALL_TYPE_WRITE_COIL,
         },
     ],
@@ -1799,8 +1800,8 @@ async def test_pb_service_write_no_slave(
     }
 
     data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_ADDRESS: 16,
+        ModbusServiceArgument.HUB: TEST_MODBUS_NAME,
+        ModbusServiceArgument.ADDRESS: 16,
         do_write[DATA]: do_write[VALUE],
     }
     mock_modbus_with_pymodbus.reset_mock()
@@ -1809,7 +1810,9 @@ async def test_pb_service_write_no_slave(
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
+    assert func_name[do_write[FUNC]].call_args.args == (
+        data[ModbusServiceArgument.ADDRESS],
+    )
     assert func_name[do_write[FUNC]].call_args.kwargs == {
         DEVICE_ID: 1,
         value_arg_name[do_write[FUNC]]: data[do_write[DATA]],

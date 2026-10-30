@@ -1,8 +1,9 @@
 """The Seafile integration."""
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
+from .const import DATA_BACKUP_AGENT_LISTENERS
 from .coordinator import SeafileConfigEntry, SeafileDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -18,6 +19,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SeafileConfigEntry) -> N
 
     # Adding or removing a library subentry reloads the entry.
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    @callback
+    def _async_notify_backup_listeners() -> None:
+        for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+            listener()
+
+    entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SeafileConfigEntry) -> None:
