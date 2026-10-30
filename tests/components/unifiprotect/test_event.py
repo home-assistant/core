@@ -2436,7 +2436,7 @@ async def test_doorbell_ring_dedup_across_dispatches(
     assert len(events) == 1
 
 
-def test_detection_event_types_have_translations() -> None:
+def test_event_types_have_translations() -> None:
     """Every detection and sensor event type has a strings.json state label.
 
     Guards against a uiprotect enum addition slugging into ``event_types`` (and
@@ -2882,11 +2882,10 @@ async def test_sensor_adopted_before_public_mirror(
     entity_registry: EntityRegistry,
     ufp: MockUFPFixture,
     sensor: Sensor,
-    fixed_now: datetime,
     capabilities: set[SensorFeatureCapability],
     expected: set[str],
 ) -> None:
-    """A sensor adopted before its public object stays unavailable until it arrives.
+    """A sensor adopted before its public object is unavailable until it arrives.
 
     Entities the flags rule out are removed on the next setup.
     """
@@ -3096,10 +3095,10 @@ async def test_sensor_alarm_late_type(
 
 
 @pytest.mark.parametrize(
-    ("started_type", "started_closed"),
+    "started_update",
     [
-        pytest.param(SensorAlarmType.SMOKE, True, id="born_closed"),
-        pytest.param(None, False, id="type_on_end"),
+        pytest.param({}, id="born_closed"),
+        pytest.param({"alarm_type": None, "end": None}, id="type_on_end"),
     ],
 )
 async def test_sensor_alarm_first_seen_ended(
@@ -3108,8 +3107,7 @@ async def test_sensor_alarm_first_seen_ended(
     ufp: MockUFPFixture,
     sensor: Sensor,
     fixed_now: datetime,
-    started_type: SensorAlarmType | None,
-    started_closed: bool,
+    started_update: dict[str, Any],
 ) -> None:
     """An alarm still fires once when its type or start arrives with the end."""
     setup_public_sensor(ufp, capabilities=_SMOKE)
@@ -3125,20 +3123,15 @@ async def test_sensor_alarm_first_seen_ended(
     unsub = async_track_state_change_event(hass, entity_id, _capture)
     # uiprotect dispatches an event that opens and closes at once as STARTED
     # and ENDED, both carrying the end.
-    event = _sensor_event(
+    ended = _sensor_event(
         sensor,
         EventType.SENSOR_ALARM,
         fixed_now - timedelta(seconds=5),
-        alarm_type=started_type,
-        end=fixed_now if started_closed else None,
+        alarm_type=SensorAlarmType.SMOKE,
+        end=fixed_now,
     )
-    ufp.events_msg(event, EventChange.STARTED)
-    ufp.events_msg(
-        event.model_copy(
-            update={"alarm_type": SensorAlarmType.SMOKE, "end": fixed_now}
-        ),
-        EventChange.ENDED,
-    )
+    ufp.events_msg(ended.model_copy(update=started_update), EventChange.STARTED)
+    ufp.events_msg(ended, EventChange.ENDED)
     await hass.async_block_till_done()
     unsub()
 
