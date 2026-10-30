@@ -49,6 +49,8 @@ async def async_get_config_entry_diagnostics(
     data.pop("processes")
     if data["networks"] is not None:
         data["networks"].pop("connections")
+        # Interface names such as enx001122aabbcc can hold the MAC address
+        data["networks"] = async_redact_data(data["networks"], {"name"})
     if data["disks"] is not None:
         # Disks are named after their device path, and mount options can hold paths
         data["disks"] = async_redact_data(data["disks"], {"name", "options"})

@@ -297,7 +297,7 @@
               'packets_recv': 14,
               'packets_sent': 13,
             }),
-            'name': 'name',
+            'name': '**REDACTED**',
             'stats': dict({
               'duplex': 'duplex',
               'flags': list([
