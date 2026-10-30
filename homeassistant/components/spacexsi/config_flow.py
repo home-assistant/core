@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import probatio
 from spacexai_subscription_client import (
@@ -70,7 +70,8 @@ class SpaceXSIConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_device_connection_error()
 
         if self._login_task is None:
-            assert self._client is not None
+            if TYPE_CHECKING:
+                assert self._client is not None
             self._login_task = self.hass.async_create_background_task(
                 self._client.async_poll_device_token(self._device),
                 "SpaceXSI device authorization",
@@ -136,7 +137,8 @@ class SpaceXSIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Validate the OAuth account after device approval."""
-        assert self._token is not None
+        if TYPE_CHECKING:
+            assert self._token is not None
         try:
             await self._async_validate_account()
         except AuthenticationError:
@@ -156,7 +158,8 @@ class SpaceXSIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure the initial conversation agent."""
-        assert self._token is not None
+        if TYPE_CHECKING:
+            assert self._token is not None
         if user_input is not None:
             if not user_input.get(CONF_LLM_HASS_API):
                 user_input.pop(CONF_LLM_HASS_API, None)
@@ -252,8 +255,9 @@ class SpaceXSIConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_account(self) -> None:
         """Validate account identity and load available models."""
-        assert self._token is not None
-        assert self._client is not None
+        if TYPE_CHECKING:
+            assert self._token is not None
+            assert self._client is not None
         access_token = self._token["access_token"]
         account = await self._client.async_get_account(access_token)
         await self.async_set_unique_id(account.subject)
