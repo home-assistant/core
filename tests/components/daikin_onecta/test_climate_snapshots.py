@@ -133,10 +133,13 @@ async def test_fan_mode_changes_with_hvac_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {"entity_id": "climate.sala_room_temperature", "hvac_mode": HVACMode.COOL},
+        {
+            "entity_id": "climate.sala_climatecontrol_room_temperature",
+            "hvac_mode": HVACMode.COOL,
+        },
         blocking=True,
     )
-    state = hass.states.get("climate.sala_room_temperature")
+    state = hass.states.get("climate.sala_climatecontrol_room_temperature")
     assert state is not None
     assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_FAN_MODE] == "3"
@@ -144,10 +147,13 @@ async def test_fan_mode_changes_with_hvac_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {"entity_id": "climate.sala_room_temperature", "hvac_mode": HVACMode.DRY},
+        {
+            "entity_id": "climate.sala_climatecontrol_room_temperature",
+            "hvac_mode": HVACMode.DRY,
+        },
         blocking=True,
     )
-    state = hass.states.get("climate.sala_room_temperature")
+    state = hass.states.get("climate.sala_climatecontrol_room_temperature")
     assert state is not None
     assert state.state == HVACMode.DRY
     assert state.attributes[ATTR_FAN_MODE] == "auto"

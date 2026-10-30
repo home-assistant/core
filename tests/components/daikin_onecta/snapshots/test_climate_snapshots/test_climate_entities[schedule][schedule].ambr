@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[schedule][schedule]
   dict({
-    'climate.master_room_temperature': dict({
+    'climate.master_climatecontrol_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -33,11 +33,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000115')]>,
+        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000115climateControl')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.master_room_temperature',
+        'entity_id': 'climate.master_climatecontrol_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -69,7 +69,7 @@
             '2',
             '3',
           ]),
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -91,7 +91,7 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.master_room_temperature',
+        'entity_id': 'climate.master_climatecontrol_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

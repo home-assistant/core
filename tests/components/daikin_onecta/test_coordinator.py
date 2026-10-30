@@ -137,6 +137,7 @@ async def test_device_registry_refreshes_without_climate_entity(
     assert entry is not None
     assert entry.name == "New name"
     assert entry.model_id == "New model"
+    assert gateway.ha_device_id == entry.id
 
 
 @pytest.mark.parametrize(
