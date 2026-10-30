@@ -1,7 +1,7 @@
 """Tests for HomematicIP Cloud binary sensor."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homematicip.base.enums import (
     BinaryBehaviorType,
@@ -46,6 +46,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
@@ -167,6 +168,73 @@ async def test_hmip_home_cloud_connection_sensor(
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
+
+
+async def test_hmip_arming_blocked_sensor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the arming blocked sensor of the access point."""
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=[], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+
+async def test_hmip_arming_blocked_sensor_follows_arming(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test the arming blocked sensor follows the replies of the alarm panel."""
+    entity_id = "binary_sensor.home_arming_blocked"
+    alarm_entity_id = "alarm_control_panel.hmip_alarm_control_panel"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_groups=["EXTERNAL", "INTERNAL"]
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    home = mock_hap.home
+    home.set_security_zones_activation_async.return_value = Mock(
+        success=False,
+        json={
+            "channelActivationProblems": {"3014F7110000000000000005:1": ["WINDOW_OPEN"]}
+        },
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_arm_away",
+            {"entity_id": alarm_entity_id},
+            blocking=True,
+        )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    home.set_security_zones_activation_async.return_value = Mock(success=False, json={})
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_arm_away",
+            {"entity_id": alarm_entity_id},
+            blocking=True,
+        )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    home.set_security_zones_activation_async.return_value = Mock(success=True, json={})
+    await hass.services.async_call(
+        "alarm_control_panel",
+        "alarm_disarm",
+        {"entity_id": alarm_entity_id},
+        blocking=True,
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_hmip_acceleration_sensor(

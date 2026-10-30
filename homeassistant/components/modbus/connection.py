@@ -1,8 +1,10 @@
 """Hand out Modbus units over connections shared between integrations."""
 
+import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
+from functools import partial
 import logging
 from typing import Any
 
@@ -16,7 +18,8 @@ from modbus_connection import (
 from modbus_connection.tmodbus import ModbusConnection
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.hass_dict import HassKey
 
@@ -82,6 +85,25 @@ class ModbusConnectionInfo:
     """The unit ids each config entry holds, keyed by entry id."""
 
 
+async def _async_close_all(hass: HomeAssistant, event: Event) -> None:
+    """Close every shared connection when Home Assistant stops."""
+    connections = hass.data.get(DATA_MODBUS_CONNECTIONS, {})
+    shared_connections = list(connections.values())
+    # Drop them first, so a hold released later does not close one twice.
+    connections.clear()
+    results = await asyncio.gather(
+        *(shared.connection.close() for shared in shared_connections),
+        return_exceptions=True,
+    )
+    for shared, result in zip(shared_connections, results, strict=True):
+        if isinstance(result, Exception):
+            _LOGGER.error(
+                "Error closing the Modbus connection to %s",
+                shared.params.endpoint,
+                exc_info=result,
+            )
+
+
 @callback
 def _async_acquire(
     hass: HomeAssistant,
@@ -100,7 +122,11 @@ def _async_acquire(
     """
     params = _canonical(params)
     endpoint = params.endpoint
-    connections = hass.data.setdefault(DATA_MODBUS_CONNECTIONS, {})
+    if (connections := hass.data.get(DATA_MODBUS_CONNECTIONS)) is None:
+        connections = hass.data[DATA_MODBUS_CONNECTIONS] = {}
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, partial(_async_close_all, hass)
+        )
     if (shared := connections.get(endpoint)) is None:
         shared = connections[endpoint] = _SharedConnection(
             params, ModbusConnection(params)

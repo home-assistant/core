@@ -12,7 +12,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.control4.const import SCAN_INTERVAL
+from homeassistant.components.control4.coordinator import SCAN_INTERVAL
 from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -30,7 +30,7 @@ def platforms() -> list[Platform]:
     return [Platform.MEDIA_PLAYER]
 
 
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director", "mock_update_variables")
+@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director", "mock_room_variables")
 async def test_media_player_with_and_without_sources(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -266,7 +266,7 @@ async def test_media_player_turn_on_ignores_restored_unknown_source(
     mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(100)
 
 
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director", "mock_update_variables")
+@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director", "mock_room_variables")
 async def test_media_player_turn_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

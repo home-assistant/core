@@ -46,6 +46,11 @@
         "name": "Media"
       }
     },
+    "number": {
+      "display_brightness": {
+        "name": "Display {display_id} brightness"
+      }
+    },
     "sensor": {
       "amount_memory_used": {
         "name": "Amount of memory used"
@@ -217,6 +222,11 @@
       "version_latest": {
         "name": "Latest version"
       }
+    },
+    "switch": {
+      "display_power": {
+        "name": "Display {display_id} power"
+      }
     }
   },
   "exceptions": {
@@ -225,6 +235,9 @@
     },
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
+    },
+    "display_control_failed": {
+      "message": "Failed to control display {display_id}: {error}"
     },
     "no_data_received": {
       "message": "No data received from {host}"

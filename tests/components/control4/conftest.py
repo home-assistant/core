@@ -15,6 +15,8 @@ from pytest_homeassistant.common import (
 from homeassistant.components.control4.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 
+from . import mock_director_variables
+
 MOCK_HOST = "192.168.1.100"
 MOCK_USERNAME = "test-username"
 MOCK_PASSWORD = "test-password"
@@ -109,48 +111,31 @@ def mock_c4_director() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_c4_director_audio_room() -> Generator[MagicMock]:
+def mock_c4_director_audio_room(mock_c4_director: MagicMock) -> MagicMock:
     """Mock a Director whose only experience for room 1 is a listen one."""
-    all_items = cast(
-        "list[dict[str, Any]]",
-        copy.deepcopy(load_json_array_fixture("director_all_items.json", DOMAIN)),
-    )
-    ui_config = cast(
-        "dict[str, Any]",
-        copy.deepcopy(load_json_object_fixture("ui_configuration.json", DOMAIN)),
-    )
+    ui_config = mock_c4_director.get_ui_configuration.return_value
     ui_config["experiences"][0]["type"] = "listen"
-    yield from _director_mock(all_items, ui_config)
+    return mock_c4_director
 
 
 @pytest.fixture
-def mock_c4_director_duplicate_source_names() -> Generator[MagicMock]:
+def mock_c4_director_duplicate_source_names(mock_c4_director: MagicMock) -> MagicMock:
     """Mock a Director where room 1 has two video sources named alike."""
-    all_items = cast(
-        "list[dict[str, Any]]",
-        copy.deepcopy(load_json_array_fixture("director_all_items.json", DOMAIN)),
-    )
-    all_items.append({"id": 101, "name": "TV"})
-    ui_config = cast(
-        "dict[str, Any]",
-        copy.deepcopy(load_json_object_fixture("ui_configuration.json", DOMAIN)),
-    )
+    mock_c4_director.get_all_item_info.return_value.append({"id": 101, "name": "TV"})
+    ui_config = mock_c4_director.get_ui_configuration.return_value
     ui_config["experiences"][0]["sources"]["source"].append({"id": 101})
-    yield from _director_mock(all_items, ui_config)
+    return mock_c4_director
 
 
 @pytest.fixture
-def mock_c4_director_audio_first_mixed_sources() -> Generator[MagicMock]:
+def mock_c4_director_audio_first_mixed_sources(
+    mock_c4_director: MagicMock,
+) -> MagicMock:
     """Mock a Director whose room 1 lists an audio source before a video one."""
-    all_items = cast(
-        "list[dict[str, Any]]",
-        copy.deepcopy(load_json_array_fixture("director_all_items.json", DOMAIN)),
+    mock_c4_director.get_all_item_info.return_value.append(
+        {"id": 200, "name": "Speakers"}
     )
-    all_items.append({"id": 200, "name": "Speakers"})
-    ui_config = cast(
-        "dict[str, Any]",
-        copy.deepcopy(load_json_object_fixture("ui_configuration.json", DOMAIN)),
-    )
+    ui_config = mock_c4_director.get_ui_configuration.return_value
     # A listen experience ahead of the watch experience, so the audio source
     # (200) is the first one discovered for the room and the video source (100)
     # the second.
@@ -158,15 +143,15 @@ def mock_c4_director_audio_first_mixed_sources() -> Generator[MagicMock]:
         0,
         {"room_id": 1, "type": "listen", "sources": {"source": [{"id": 200}]}},
     )
-    yield from _director_mock(all_items, ui_config)
+    return mock_c4_director
 
 
 @pytest.fixture
-def mock_update_variables() -> Generator[AsyncMock]:
-    """Mock the update_variables_for_config_entry function."""
-
-    async def _mock_update_variables(*args, **kwargs):
-        return {
+def mock_room_variables(mock_c4_director: MagicMock) -> None:
+    """Mock the room variables reported by the director."""
+    mock_director_variables(
+        mock_c4_director,
+        {
             1: {
                 "POWER_STATE": True,
                 "CURRENT_VOLUME": 50,
@@ -177,17 +162,12 @@ def mock_update_variables() -> Generator[AsyncMock]:
                 "PAUSED": False,
                 "STOPPED": False,
             }
-        }
-
-    with patch(
-        "homeassistant.components.control4.media_player.update_variables_for_config_entry",
-        new=_mock_update_variables,
-    ) as mock_update:
-        yield mock_update
+        },
+    )
 
 
 @pytest.fixture
-def mock_room_off_variables() -> dict:
+def mock_room_off_variables() -> dict[int, dict[str, Any]]:
     """Mock room variable data for a room that is switched off."""
     return {
         1: {
@@ -205,18 +185,10 @@ def mock_room_off_variables() -> dict:
 
 @pytest.fixture
 def mock_room_off_update_variables(
-    mock_room_off_variables: dict,
-) -> Generator[AsyncMock]:
-    """Mock update_variables for a room that is switched off."""
-
-    async def _mock_update_variables(*args, **kwargs):
-        return mock_room_off_variables
-
-    with patch(
-        "homeassistant.components.control4.media_player.update_variables_for_config_entry",
-        new=_mock_update_variables,
-    ) as mock_update:
-        yield mock_update
+    mock_c4_director: MagicMock, mock_room_off_variables: dict[int, dict[str, Any]]
+) -> None:
+    """Mock the variables the director reports for a room that is switched off."""
+    mock_director_variables(mock_c4_director, mock_room_off_variables)
 
 
 @pytest.fixture
@@ -244,7 +216,7 @@ def mock_c4_room() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_climate_variables() -> dict:
+def mock_climate_variables() -> dict[int, dict[str, Any]]:
     """Mock climate variable data for default thermostat state."""
     return {
         123: {
@@ -263,18 +235,10 @@ def mock_climate_variables() -> dict:
 
 @pytest.fixture
 def mock_climate_update_variables(
-    mock_climate_variables: dict,
-) -> Generator[AsyncMock]:
-    """Mock update_variables for climate platform."""
-
-    async def _mock_update_variables(*args, **kwargs):
-        return mock_climate_variables
-
-    with patch(
-        "homeassistant.components.control4.climate.update_variables_for_config_entry",
-        new=_mock_update_variables,
-    ) as mock_update:
-        yield mock_update
+    mock_c4_director: MagicMock, mock_climate_variables: dict[int, dict[str, Any]]
+) -> None:
+    """Mock the climate variables reported by the director."""
+    mock_director_variables(mock_c4_director, mock_climate_variables)
 
 
 @pytest.fixture
