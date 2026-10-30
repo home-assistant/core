@@ -1,4 +1,4 @@
-"""Handler for Supervisor."""
+"""Handler for Hass.io."""
 
 from dataclasses import dataclass
 from http import HTTPStatus
@@ -16,6 +16,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import (
     MAXIMUM_HEADER_SIZE,
+    SERVER_SOFTWARE,
+    HassClientResponse,
     async_get_clientsession,
 )
 from homeassistant.helpers.json import json_dumps
@@ -34,7 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-KEY_PASSTHROUGH_SUPERVISOR_CLIENT: HassKey[HassIO] = HassKey(DOMAIN)
+KEY_SUPERVISOR_PASSTHROUGH_CLIENT: HassKey[HassIO] = HassKey(DOMAIN)
 KEY_SUPERVISOR_CLIENT: HassKey[SupervisorClient] = HassKey("supervisor_client")
 KEY_SUPERVISOR_CONNECTION: HassKey[SupervisorConnection] = HassKey(
     "hassio_supervisor_connection"
@@ -68,10 +70,10 @@ class SupervisorConnection:
 
 
 class HassIO:
-    """Small API wrapper for Supervisor."""
+    """Small API wrapper for Hass.io."""
 
     def __init__(self, connection: SupervisorConnection) -> None:
-        """Initialize Supervisor API wrapper."""
+        """Initialize Hass.io API."""
         self._connection = connection
 
     async def send_command(
@@ -86,7 +88,7 @@ class HassIO:
         range_header: str | None = None,
         source: str = "core.handler",
     ) -> Any:
-        """Send API command to Supervisor.
+        """Send API command to Hass.io.
 
         This method is a coroutine.
         """
@@ -155,6 +157,8 @@ def _async_create_supervisor_socket_session(
     session = aiohttp.ClientSession(
         connector=aiohttp.UnixConnector(path=str(unix_socket)),
         json_serialize=json_dumps,
+        response_class=HassClientResponse,
+        headers={aiohttp.hdrs.USER_AGENT: SERVER_SOFTWARE},
         # Every response comes from host "localhost", so a real cookie jar would
         # replay cookies set through ingress to all apps, users and Supervisor
         cookie_jar=aiohttp.DummyCookieJar(),
@@ -184,8 +188,8 @@ def get_supervisor_connection(hass: HomeAssistant) -> SupervisorConnection:
     )
 
 
-@singleton(KEY_PASSTHROUGH_SUPERVISOR_CLIENT)
-def get_passthrough_supervisor_client(hass: HomeAssistant) -> HassIO:
+@singleton(KEY_SUPERVISOR_PASSTHROUGH_CLIENT)
+def get_supervisor_passthrough_client(hass: HomeAssistant) -> HassIO:
     """Return the handler for the Supervisor API passthrough."""
     return HassIO(get_supervisor_connection(hass))
 

@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.llm import LLM_API_HOME_ASSISTANT, LLMContext
 
 from .const import DATA_ADDONS_LIST, DOMAIN
-from .handler import HassioAPIError, get_passthrough_supervisor_client
+from .handler import HassioAPIError, get_supervisor_passthrough_client
 
 APP_SOURCE_PREFIX = "app:"
 
@@ -75,7 +75,7 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
         else:
             command = f"/{source}/logs"
 
-        supervisor = get_passthrough_supervisor_client(hass)
+        supervisor = get_supervisor_passthrough_client(hass)
         try:
             text: str = await supervisor.send_command(
                 command,

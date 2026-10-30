@@ -1,13 +1,11 @@
 """Provide info to system health."""
 
 from collections.abc import Callable
-import os
 from typing import Any
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .const import ENV_SUPERVISOR
 from .coordinator import (
     get_addons_list,
     get_host_info,
@@ -18,8 +16,6 @@ from .coordinator import (
 )
 from .exceptions import HassioNotReadyError
 from .handler import get_supervisor_connection
-
-OBSERVER_URL = "http://{ip_address}:4357"
 
 
 @callback
@@ -42,7 +38,6 @@ def _get_supervisor_data_if_available(
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    ip_address = os.environ[ENV_SUPERVISOR]
     info = _get_supervisor_data_if_available(hass, get_info)
     host_info = _get_supervisor_data_if_available(hass, get_host_info)
     supervisor_info = _get_supervisor_data_if_available(hass, get_supervisor_info)
@@ -109,7 +104,6 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     information["supervisor_api"] = system_health.async_check_can_reach_url(
         hass,
         str(connection.base_url.with_path("/supervisor/ping")),
-        OBSERVER_URL.format(ip_address=ip_address),
         session=connection.session,
     )
     information["version_api"] = system_health.async_check_can_reach_url(

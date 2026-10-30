@@ -109,9 +109,9 @@ from .exceptions import HassioNotReadyError
 from .handler import (
     HassioAPIError,
     async_update_diagnostics,
-    get_passthrough_supervisor_client,
     get_supervisor_client,
     get_supervisor_connection,
+    get_supervisor_passthrough_client,
 )
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -359,7 +359,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _async_read_core_log() -> list[str]:
         """Return the end of the log of Home Assistant since it started."""
-        supervisor = get_passthrough_supervisor_client(hass)
+        supervisor = get_supervisor_passthrough_client(hass)
         try:
             text: str = await supervisor.send_command(
                 "/core/logs/latest",

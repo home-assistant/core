@@ -18,13 +18,17 @@ from homeassistant.components.hassio.handler import (
     HassIO,
     HassioAPIError,
     SupervisorConnection,
-    get_passthrough_supervisor_client,
     get_supervisor_client,
     get_supervisor_connection,
+    get_supervisor_passthrough_client,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    SERVER_SOFTWARE,
+    HassClientResponse,
+    async_get_clientsession,
+)
 
 from . import SUPERVISOR_TOKEN
 
@@ -137,7 +141,7 @@ async def test_supervisor_client_source_header(
     ("client_call", "source"),
     [
         pytest.param(
-            lambda hass: get_passthrough_supervisor_client(hass).send_command(
+            lambda hass: get_supervisor_passthrough_client(hass).send_command(
                 "/supervisor/ping", "get"
             ),
             "core.handler",
@@ -169,6 +173,9 @@ async def test_unix_socket(
     assert session.connector.path == str(path)
     # Every app is "localhost" over the socket, cookies must not be shared
     assert isinstance(session.cookie_jar, DummyCookieJar)
+    # Same JSON parsing as the shared Home Assistant session
+    assert session._response_class is HassClientResponse
+    assert session.headers[hdrs.USER_AGENT] == SERVER_SOFTWARE
     assert len(requests) == 1
     assert requests[0].path == "/supervisor/ping"
     assert requests[0].host == "localhost"
@@ -249,7 +256,7 @@ async def test_send_command_text_error(
 @pytest.mark.usefixtures("hassio_stubs")
 async def test_send_command_invalid_command(hass: HomeAssistant) -> None:
     """Test send command fails when command is invalid."""
-    hassio = get_passthrough_supervisor_client(hass)
+    hassio = get_supervisor_passthrough_client(hass)
     with pytest.raises(HassioAPIError):
         # absolute path
         await hassio.send_command("/test/../bad")

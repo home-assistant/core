@@ -45,8 +45,8 @@ from .coordinator import get_addons_list
 from .exceptions import HassioNotReadyError
 from .handler import (
     HassioAPIError,
-    get_passthrough_supervisor_client,
     get_supervisor_client,
+    get_supervisor_passthrough_client,
 )
 from .update_helper import update_addon, update_core
 
@@ -124,7 +124,7 @@ async def websocket_supervisor_api(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Websocket handler to call Supervisor API."""
-    supervisor = get_passthrough_supervisor_client(hass)
+    supervisor = get_supervisor_passthrough_client(hass)
 
     command = msg[ATTR_ENDPOINT]
     payload = msg.get(ATTR_DATA, {})
