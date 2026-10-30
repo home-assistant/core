@@ -6,7 +6,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_PROFILER, DOMAIN
-from .services import LOG_INTERVAL_SUB, async_setup_services
+from .services import LOG_INTERVAL_SUB, LOOP_TIMING, async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -25,3 +25,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     if LOG_INTERVAL_SUB in hass.data[DATA_PROFILER]:
         hass.data[DATA_PROFILER][LOG_INTERVAL_SUB]()
+    if LOOP_TIMING in hass.data[DATA_PROFILER]:
+        hass.data[DATA_PROFILER][LOOP_TIMING]()
