@@ -86,12 +86,7 @@ class ModbusConnectionInfo:
 
 
 async def _async_close_all(hass: HomeAssistant, event: Event) -> None:
-    """Close every shared connection when Home Assistant stops.
-
-    Config entries are not unloaded on shutdown, so their holds are never
-    released. A device that takes one client at a time can then keep a stale
-    session and refuse the next start.
-    """
+    """Close every shared connection when Home Assistant stops."""
     connections = hass.data.get(DATA_MODBUS_CONNECTIONS, {})
     shared_connections = list(connections.values())
     # Drop them first, so a hold released later does not close one twice.
