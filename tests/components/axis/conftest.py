@@ -16,7 +16,7 @@ from pytest_homeassistant.test_util.aiohttp import (
 )
 from yarl import URL
 
-from homeassistant.components.axis.const import DOMAIN
+from homeassistant.components.axis.const import CONF_COMPANION, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -118,6 +118,7 @@ def fixture_config_entry_data() -> MappingProxyType[str, Any]:
         CONF_PORT: 80,
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
+        CONF_COMPANION: False,
     }
 
 

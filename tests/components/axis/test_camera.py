@@ -8,20 +8,26 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
-from homeassistant.components.axis.const import CONF_STREAM_PROFILE, CONF_VIDEO_SOURCE
+from homeassistant.components.axis.const import (
+    CONF_COMPANION,
+    CONF_STREAM_PROFILE,
+    CONF_VIDEO_SOURCE,
+)
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType
-from .const import (
-    API_DISCOVERY_BASIC_DEVICE_INFO,
-    BASIC_DEVICE_INFO_RESPONSE,
-    BRAND_RESPONSE,
-    MAC,
-    NAME,
-)
+from .const import DEFAULT_HOST, MAC, MODEL, NAME
 
 
 @pytest.fixture(autouse=True)
@@ -85,32 +91,18 @@ async def test_camera_disabled(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0
 
 
-COMPANION_FULL_NAME = "AXIS Companion Cube L Network Camera"
-
-
 @pytest.mark.parametrize(
-    ("api_discovery_items", "basic_device_info_payload", "param_brand_payload"),
+    "config_entry_data",
     [
-        pytest.param(
-            API_DISCOVERY_BASIC_DEVICE_INFO,
-            {
-                **BASIC_DEVICE_INFO_RESPONSE,
-                "data": {
-                    "propertyList": {
-                        **BASIC_DEVICE_INFO_RESPONSE["data"]["propertyList"],
-                        "ProdFullName": COMPANION_FULL_NAME,
-                    }
-                },
-            },
-            BRAND_RESPONSE,
-            id="basic_device_info",
-        ),
-        pytest.param(
-            {},
-            BASIC_DEVICE_INFO_RESPONSE,
-            BRAND_RESPONSE.replace("AXIS M1065-LW Network Camera", COMPANION_FULL_NAME),
-            id="param_cgi",
-        ),
+        {
+            CONF_HOST: DEFAULT_HOST,
+            CONF_USERNAME: "root",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+            CONF_MODEL: MODEL,
+            CONF_NAME: NAME,
+            CONF_COMPANION: True,
+        }
     ],
 )
 async def test_camera_companion(
