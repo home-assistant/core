@@ -572,7 +572,10 @@ class BackupSchedule:
         self._unschedule_next(manager)
         now = dt_util.now()
         if (cron_event := self.cron_event) is None:
-            seed_time = manager.config.data.last_completed_automatic_backup or now
+            # The stored timestamp has a fixed UTC offset, which does not follow DST
+            seed_time = dt_util.as_local(
+                manager.config.data.last_completed_automatic_backup or now
+            )
             cron_event = self.cron_event = CronSim(cron_pattern, seed_time)
         next_time = next(cron_event)
 
@@ -801,7 +804,7 @@ def check_unavailable_agents(hass: HomeAssistant, manager: BackupManager) -> Non
             missing_agent_ids,
         )
 
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_",
