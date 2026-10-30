@@ -1586,6 +1586,13 @@ async def test_matrix_color_preserves_tile_brightness(
 
 
 @pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(LifxError("device unreachable"), id="library-error"),
+        pytest.param(OSError("network down"), id="unexpected-error"),
+    ],
+)
+@pytest.mark.parametrize(
     ("factory", "method"),
     [
         pytest.param(
@@ -1595,13 +1602,16 @@ async def test_matrix_color_preserves_tile_brightness(
     ],
 )
 async def test_partial_write_is_refused_when_the_state_cannot_be_read(
-    hass: HomeAssistant, factory: Callable[[], MockDevice], method: str
+    hass: HomeAssistant,
+    factory: Callable[[], MockDevice],
+    method: str,
+    error: Exception,
 ) -> None:
     """Test a partial write is not merged over the state of a failed read."""
     device = factory()
     device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
-    device.refresh_state.side_effect = LifxError("device unreachable")
+    device.refresh_state.side_effect = error
 
     with pytest.raises(HomeAssistantError, match="could not be read"):
         await hass.services.async_call(
