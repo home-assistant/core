@@ -2,6 +2,7 @@
 
 import asyncio
 from asyncio.events import Handle
+import binascii
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import logging
@@ -11,6 +12,7 @@ import socket
 import time
 from typing import Any
 from unittest.mock import patch
+import zlib
 
 from freezegun.api import FrozenDateTimeFactory
 from lru import LRU
@@ -642,6 +644,9 @@ async def test_loop_timing_attribution(
         (f"{here}.later", entry.entry_id),
         (f"{here}.SlowCoordinator._handle_refresh_interval", entry.entry_id),
     } <= slow
+    assert [row["seq"] for row in report["slow"]] == list(
+        range(1, len(report["slow"]) + 1)
+    )
 
     caplog.clear()
     await hass.services.async_call(DOMAIN, SERVICE_DUMP_LOOP_TIMING, {}, blocking=True)
@@ -692,6 +697,42 @@ async def test_loop_timing_keeps_other_loops_and_exceptions_alone(
     )
     assert f"{here}.fail" in labels
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+def test_loop_timing_tells_c_functions_apart() -> None:
+    """Two C functions with the same name but different modules get their own rows."""
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
+    timing.start()
+    try:
+        loop.call_soon(partial(zlib.crc32, b"x"))
+        loop.call_soon(partial(binascii.crc32, b"x"))
+        loop.call_soon(loop.stop)
+        loop.run_forever()
+    finally:
+        timing.stop()
+        loop.close()
+    labels = {row["callback"] for row in timing.report()["callbacks"]}
+    assert {"zlib.crc32", "binascii.crc32"} <= labels
+
+
+def test_loop_timing_numbers_slow_callbacks_past_the_limit() -> None:
+    """Sequence numbers keep counting after the slow list drops old entries."""
+    loop = asyncio.new_event_loop()
+    timing = LoopTiming(loop, 0)
+    timing.start()
+    try:
+        for _ in range(150):
+            loop.call_soon(int)
+        loop.call_soon(loop.stop)
+        loop.run_forever()
+    finally:
+        timing.stop()
+        loop.close()
+    seqs = [row["seq"] for row in timing.report()["slow"]]
+    assert len(seqs) == 100
+    assert seqs == list(range(seqs[0], seqs[0] + 100))
+    assert seqs[-1] >= 151
 
 
 def test_loop_timing_lets_system_exit_through() -> None:

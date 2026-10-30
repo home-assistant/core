@@ -63,9 +63,11 @@ class LoopTiming:
         self._loop = loop
         self._threshold_ns = int(threshold_ms * 1_000_000)
         self._rows: dict[_Key, _Row] = {}
-        self._slow: deque[tuple[float, int, str, str | None]] = deque(
+        # Numbered, so a reader can tell new entries from ones it has seen
+        self._slow: deque[tuple[int, float, int, str, str | None]] = deque(
             maxlen=MAX_SLOW_CALLBACKS
         )
+        self._slow_seq = 0
         self._original: Callable[[Any], None] | None = None
         self._wrapper: Callable[[Any], None] | None = None
         self.errors = 0
@@ -129,11 +131,14 @@ class LoopTiming:
                 else:
                     cls = owner if isinstance(owner, type) else type(owner)
                 entry = handle._context.get(current_entry)  # noqa: SLF001
-                # C code has no code object; its qualified name must do
+                # C code has no code object; module and qualified name must do
                 key = (
                     code
                     if code is not None
-                    else getattr(func, "__qualname__", type(func).__qualname__),
+                    else (
+                        module or type(func).__module__,
+                        getattr(func, "__qualname__", type(func).__qualname__),
+                    ),
                     cls,
                     entry.entry_id if entry is not None else None,
                 )
@@ -162,7 +167,10 @@ class LoopTiming:
                         row.max_ns = elapsed
                         row.max_at = wall()
                     if elapsed >= threshold:
-                        slow.append((wall(), elapsed, row.label, key[2]))
+                        self._slow_seq += 1
+                        slow.append(
+                            (self._slow_seq, wall(), elapsed, row.label, key[2])
+                        )
 
         self._original = original
         self._wrapper = _run
@@ -200,12 +208,13 @@ class LoopTiming:
             ],
             "slow": [
                 {
+                    "seq": seq,
                     "at": dt_util.utc_from_timestamp(at).isoformat(),
                     "ms": round(elapsed / 1_000_000, 1),
                     "callback": label,
                     "config_entry": entry,
                 }
-                for at, elapsed, label, entry in self._slow
+                for seq, at, elapsed, label, entry in self._slow
             ],
         }
 
