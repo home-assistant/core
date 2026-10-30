@@ -2,20 +2,24 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Any
 
 import probatio
 
 from homeassistant import exceptions
+
+# The names marked with noqa are kept for custom integrations,
+# and should be deprecated in favour of NumericStateTriggerArgument
 from homeassistant.const import (
-    CONF_ABOVE,
-    CONF_ATTRIBUTE,
-    CONF_BELOW,
-    CONF_ENTITY_ID,
-    CONF_FOR,
-    CONF_PLATFORM,
-    CONF_VALUE_TEMPLATE,
+    CONF_ABOVE,  # noqa: F401
+    CONF_ATTRIBUTE,  # noqa: F401
+    CONF_BELOW,  # noqa: F401
+    CONF_ENTITY_ID,  # noqa: F401
+    CONF_FOR,  # noqa: F401
+    CONF_PLATFORM,  # noqa: F401
+    CONF_VALUE_TEMPLATE,  # noqa: F401
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -40,10 +44,22 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 
+class NumericStateTriggerArgument(StrEnum):
+    """Store keys for numeric state trigger arguments."""
+
+    ABOVE = "above"
+    ATTRIBUTE = "attribute"
+    BELOW = "below"
+    ENTITY_ID = "entity_id"
+    FOR = "for"
+    PLATFORM = "platform"
+    VALUE_TEMPLATE = "value_template"
+
+
 def validate_above_below[_T: dict[str, Any]](value: _T) -> _T:
     """Validate that above and below can co-exist."""
-    above = value.get(CONF_ABOVE)
-    below = value.get(CONF_BELOW)
+    above = value.get(NumericStateTriggerArgument.ABOVE)
+    below = value.get(NumericStateTriggerArgument.BELOW)
 
     if above is None or below is None:
         return value
@@ -65,16 +81,26 @@ def validate_above_below[_T: dict[str, Any]](value: _T) -> _T:
 _TRIGGER_SCHEMA = probatio.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
-            probatio.Required(CONF_PLATFORM): "numeric_state",
-            probatio.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
-            probatio.Optional(CONF_BELOW): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
-            probatio.Optional(CONF_ABOVE): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
-            probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
-            probatio.Optional(CONF_FOR): cv.positive_time_period_template,
-            probatio.Optional(CONF_ATTRIBUTE): cv.match_all,
+            probatio.Required(NumericStateTriggerArgument.PLATFORM): "numeric_state",
+            probatio.Required(
+                NumericStateTriggerArgument.ENTITY_ID
+            ): cv.entity_ids_or_uuids,
+            probatio.Optional(
+                NumericStateTriggerArgument.BELOW
+            ): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
+            probatio.Optional(
+                NumericStateTriggerArgument.ABOVE
+            ): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
+            probatio.Optional(NumericStateTriggerArgument.VALUE_TEMPLATE): cv.template,
+            probatio.Optional(
+                NumericStateTriggerArgument.FOR
+            ): cv.positive_time_period_template,
+            probatio.Optional(NumericStateTriggerArgument.ATTRIBUTE): cv.match_all,
         }
     ),
-    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(
+        NumericStateTriggerArgument.BELOW, NumericStateTriggerArgument.ABOVE
+    ),
     validate_above_below,
 )
 
@@ -87,8 +113,8 @@ async def async_validate_trigger_config(
     """Validate trigger config."""
     config = _TRIGGER_SCHEMA(config)
     registry = er.async_get(hass)
-    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
-        registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
+    config[NumericStateTriggerArgument.ENTITY_ID] = er.async_validate_entity_ids(
+        registry, cv.entity_ids_or_uuids(config[NumericStateTriggerArgument.ENTITY_ID])
     )
     return config
 
@@ -102,15 +128,15 @@ async def async_attach_trigger(
     platform_type: str = "numeric_state",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    entity_ids: list[str] = config[CONF_ENTITY_ID]
-    below = config.get(CONF_BELOW)
-    above = config.get(CONF_ABOVE)
-    time_delta = config.get(CONF_FOR)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
+    entity_ids: list[str] = config[NumericStateTriggerArgument.ENTITY_ID]
+    below = config.get(NumericStateTriggerArgument.BELOW)
+    above = config.get(NumericStateTriggerArgument.ABOVE)
+    time_delta = config.get(NumericStateTriggerArgument.FOR)
+    value_template = config.get(NumericStateTriggerArgument.VALUE_TEMPLATE)
     unsub_track_same: dict[str, Callable[[], None]] = {}
     armed_entities: set[str] = set()
     period: dict[str, timedelta] = {}
-    attribute = config.get(CONF_ATTRIBUTE)
+    attribute = config.get(NumericStateTriggerArgument.ATTRIBUTE)
     job = HassJob(action, f"numeric state trigger {trigger_info}")
 
     trigger_data = trigger_info["trigger_data"]

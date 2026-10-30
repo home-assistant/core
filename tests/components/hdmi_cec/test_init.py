@@ -7,6 +7,12 @@ from unittest.mock import ANY, MagicMock, PropertyMock, call, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockEntity,
+    MockEntityPlatform,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.hdmi_cec import (
     DOMAIN,
@@ -31,13 +37,6 @@ from homeassistant.util.dt import utcnow
 
 from . import assert_key_press_release
 from .conftest import HDMINetworkCreator
-
-from tests.common import (
-    MockEntity,
-    MockEntityPlatform,
-    async_capture_events,
-    async_fire_time_changed,
-)
 
 
 @pytest.fixture(name="mock_tcp_adapter")

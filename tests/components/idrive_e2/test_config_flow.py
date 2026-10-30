@@ -7,6 +7,7 @@ from botocore.exceptions import EndpointConnectionError
 from idrive_e2 import CannotConnect, InvalidAuth
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.idrive_e2 import ClientError
 from homeassistant.components.idrive_e2.config_flow import CONF_ACCESS_KEY_ID
@@ -22,8 +23,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectSelector
 
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -4,13 +4,12 @@ from unittest.mock import call, patch
 
 from probatio import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dynalite import const as dynalite
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_empty_config(hass: HomeAssistant) -> None:

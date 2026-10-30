@@ -20,6 +20,7 @@ from kasa.smart.modules import Speaker
 from kasa.smart.modules.alarm import Alarm
 from kasa.smart.modules.clean import AreaUnit, Clean, ErrorCode, Status
 from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -41,8 +42,6 @@ from .const import (
     MAC_ADDRESS,
     MODEL,
 )
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])  # noqa: PYI024
 

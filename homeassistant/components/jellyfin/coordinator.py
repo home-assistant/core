@@ -61,6 +61,8 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
             for session in sessions
             if session["DeviceId"] != self.client_device_id
             and session["Client"] != USER_APP_NAME
+            # Tools like Jellystat report sessions as the server itself
+            and session["DeviceId"] != self.server_id
         }
 
         self.device_ids = {session["DeviceId"] for session in sessions_by_id.values()}

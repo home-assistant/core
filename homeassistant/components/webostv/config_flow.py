@@ -22,8 +22,8 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from . import WebOsTvConfigEntry
 from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
+from .coordinator import WebOsTvConfigEntry
 from .helpers import get_sources
 
 DATA_SCHEMA = probatio.Schema(

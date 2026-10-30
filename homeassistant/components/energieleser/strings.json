@@ -84,9 +84,6 @@
       "water_flow_rate": {
         "name": "Water flow rate"
       },
-      "water_flow_rate_m3": {
-        "name": "Volume flow rate"
-      },
       "water_today_consumption": {
         "name": "Water today"
       }

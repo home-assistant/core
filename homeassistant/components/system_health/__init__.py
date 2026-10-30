@@ -32,6 +32,13 @@ DATA_SYSTEM_HEALTH_PLATFORMS: HassKey[
     LazyIntegrationPlatforms[SystemHealthRegistration]
 ] = HassKey("system_health_platforms")
 
+__all__ = [
+    "DOMAIN",
+    "SystemHealthRegistration",
+    "async_check_can_reach_url",
+    "get_info",
+]
+
 
 class SystemHealthProtocol(Protocol):
     """Define the format of system_health platforms."""

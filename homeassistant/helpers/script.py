@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCLUDE,
     CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
@@ -564,7 +565,7 @@ class _ScriptRun:
                     enabled = self._action[CONF_ENABLED]
                     if isinstance(enabled, Template):
                         try:
-                            enabled = enabled.async_render(limited=True)
+                            enabled = enabled.async_render(self._variables)
                         except exceptions.TemplateError as ex:
                             self._handle_exception(
                                 trace_element,
@@ -803,7 +804,11 @@ class _ScriptRun:
         self._script.last_action = self._action.get(
             CONF_ALIAS, self._action[CONF_CONDITION]
         )
-        cond = await self._async_get_condition(self._action)
+        # The enabled option was already rendered with the run variables when
+        # this step started, don't let the condition render it again.
+        cond = await self._async_get_condition(
+            {key: value for key, value in self._action.items() if key != CONF_ENABLED}
+        )
         try:
             trace_element = trace_stack_top(trace_stack_cv)
             if trace_element:
@@ -1472,10 +1477,12 @@ type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
-    """Extract referenced IDs."""
+    """Extract referenced IDs, including those in an exclude block."""
     # Data may not exist, or be a template
     if not isinstance(data, dict):
         return
+
+    _referenced_extract_ids(data.get(CONF_EXCLUDE), key, found)
 
     item_ids = data.get(key)
 

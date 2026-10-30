@@ -1,15 +1,15 @@
 """Support for Actions on Google Assistant Smart Home Control."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     CONF_ALIASES,
     CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
@@ -26,13 +26,10 @@ from .const import (  # noqa: F401
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
-    EVENT_QUERY_RECEIVED,
     SOURCE_CLOUD,
 )
 from .http import GoogleAssistantView, GoogleConfig
 from .services import async_setup_services
-
-from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
 
@@ -57,6 +54,12 @@ GOOGLE_SERVICE_ACCOUNT = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+__all__ = [
+    "CONF_ROOM_HINT",
+    "DOMAIN",
+    "SOURCE_CLOUD",
+]
+
 
 def _check_report_state(data):
     if data[CONF_REPORT_STATE] and CONF_SERVICE_ACCOUNT not in data:
@@ -78,7 +81,7 @@ GOOGLE_ASSISTANT_SCHEMA = probatio.All(
             ): probatio.EnsureList(),
             probatio.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
             # str on purpose, makes sure it is configured correctly.
-            probatio.Optional(CONF_SECURE_DEVICES_PIN): str,
+            probatio.Optional(probatio.Secret(CONF_SECURE_DEVICES_PIN)): str,
             probatio.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             probatio.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
             # deprecated configuration options
@@ -102,11 +105,9 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     if DOMAIN not in yaml_config:
         return True
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CONFIG] = yaml_config[DOMAIN]
+    hass.data[DATA_CONFIG] = yaml_config[DOMAIN]
 
-    if CONF_SERVICE_ACCOUNT in yaml_config[DOMAIN]:
-        async_setup_services(hass)
+    async_setup_services(hass)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -119,16 +120,19 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Set up from a config entry."""
 
-    config: ConfigType = {**hass.data[DOMAIN][DATA_CONFIG]}
+    config: ConfigType = hass.data[DATA_CONFIG].copy()
 
     if entry.source == SOURCE_IMPORT:
         # if project was changed, remove entry a new will be setup
         if config[CONF_PROJECT_ID] != entry.data[CONF_PROJECT_ID]:
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="project_id_changed",
+            )
 
     config.update(entry.data)
 
@@ -149,9 +153,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
 
     hass.http.register_view(GoogleAssistantView(google_config))
 
-    if google_config.should_report_state:
-        google_config.async_enable_report_state()
+    google_config.async_update_report_state()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True

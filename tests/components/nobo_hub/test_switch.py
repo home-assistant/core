@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from pynobo import PynoboError, nobo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nobo_hub.const import DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import entity_unique_ids, fire_hub_update
 from .conftest import SERIAL
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 SWITCH_ENTITY = "switch.living_room_living_room_disable_global_overrides"
 

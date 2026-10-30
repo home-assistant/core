@@ -1,6 +1,5 @@
 """Support for Plaato devices."""
 
-from datetime import timedelta
 import logging
 
 from aiohttp import web
@@ -24,7 +23,6 @@ from pyplaato.plaato import (
 from homeassistant.components import webhook
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
     UnitOfTemperature,
@@ -38,7 +36,6 @@ from .const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     CONF_USE_WEBHOOK,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
 )
@@ -75,7 +72,7 @@ WEBHOOK_SCHEMA = probatio.Schema(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> None:
     """Configure based on config entry."""
     if entry.data[CONF_USE_WEBHOOK]:
         async_setup_webhook(hass, entry)
@@ -87,8 +84,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if entry.options.get(platform, True)]
     )
-
-    return True
 
 
 @callback
@@ -116,14 +111,7 @@ async def async_setup_coordinator(
     auth_token = entry.data[CONF_TOKEN]
     device_type = entry.data[CONF_DEVICE_TYPE]
 
-    if entry.options.get(CONF_SCAN_INTERVAL):
-        update_interval = timedelta(minutes=entry.options[CONF_SCAN_INTERVAL])
-    else:
-        update_interval = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
-
-    coordinator = PlaatoCoordinator(
-        hass, entry, auth_token, device_type, update_interval
-    )
+    coordinator = PlaatoCoordinator(hass, entry, auth_token, device_type)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = PlaatoData(
@@ -138,27 +126,28 @@ async def async_setup_coordinator(
             coordinator.platforms.append(platform)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PlaatoConfigEntry) -> None:
     """Unload a config entry."""
     if entry.data[CONF_USE_WEBHOOK]:
-        return await async_unload_webhook(hass, entry)
+        await async_unload_webhook(hass, entry)
+        return
 
-    return await async_unload_coordinator(hass, entry)
+    await async_unload_coordinator(hass, entry)
 
 
-async def async_unload_webhook(hass: HomeAssistant, entry: PlaatoConfigEntry) -> bool:
+async def async_unload_webhook(hass: HomeAssistant, entry: PlaatoConfigEntry) -> None:
     """Unload webhook based entry."""
     if entry.data[CONF_WEBHOOK_ID] is not None:
         webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_unload_coordinator(
     hass: HomeAssistant, entry: PlaatoConfigEntry
-) -> bool:
+) -> None:
     """Unload auth token based entry."""
     coordinator = entry.runtime_data.coordinator
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, coordinator.platforms if coordinator else PLATFORMS
     )
 

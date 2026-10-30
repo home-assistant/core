@@ -57,10 +57,7 @@ rules:
     status: done
     comment: |
       available property.
-  action-exceptions:
-    status: exempt
-    comment: |
-      No custom actions are defined.
+  action-exceptions: done
   reauthentication-flow: todo
   parallel-updates:
     status: todo

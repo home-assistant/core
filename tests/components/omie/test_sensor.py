@@ -7,13 +7,12 @@ import aiohttp
 from freezegun import freeze_time
 from pyomie.model import OMIEResults
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import spot_price_fetcher
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @freeze_time("2024-01-15T14:01:00Z")

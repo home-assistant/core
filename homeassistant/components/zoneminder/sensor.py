@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +107,7 @@ class ZMSensorMonitors(SensorEntity):
 
     def update(self) -> None:
         """Update the sensor."""
+        self._monitor.update_monitor()
         if not (state := self._monitor.function):
             self._attr_native_value = None
         else:

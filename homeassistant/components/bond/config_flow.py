@@ -1,5 +1,6 @@
 """Config flow for Bond integration."""
 
+from collections.abc import Mapping
 import contextlib
 from http import HTTPStatus
 import logging
@@ -240,6 +241,40 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new access token."""
+        errors = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                bond_id, _ = await _validate_input(
+                    self.hass, {**reauth_entry.data, **user_input}
+                )
+            except InputValidationError as error:
+                errors["base"] = error.base
+            else:
+                if reauth_entry.unique_id and bond_id != reauth_entry.unique_id:
+                    return self.async_abort(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    reauth_entry, unique_id=bond_id, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=DISCOVERY_SCHEMA,
+            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            errors=errors,
         )
 
 

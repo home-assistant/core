@@ -81,7 +81,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 probatio.Required(CONF_PATH): cv.string,
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     hass.services.async_register(
@@ -94,7 +94,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 probatio.Required(CONF_COMMAND): probatio.In(POWER_COMMAND_MAP),
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     hass.services.async_register(
@@ -107,7 +107,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 probatio.Required(CONF_URL): cv.string,
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     hass.services.async_register(
@@ -120,7 +120,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 probatio.Required(CONF_KEY): cv.string,
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
         description_placeholders={
             "syntax_keys_documentation_url": "https://robotjs.dev/docs/syntax#keys"
         },
@@ -136,7 +136,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 probatio.Required(CONF_TEXT): cv.string,
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
 

@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 from pytraccar import ApiClient, SubscriptionStatus
 
 from homeassistant.components.traccar_server.const import (
@@ -19,12 +24,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
 )
 
 

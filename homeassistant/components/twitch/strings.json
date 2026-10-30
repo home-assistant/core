@@ -56,5 +56,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "user_not_found": {
+      "message": "The logged-in Twitch user could not be found"
+    }
   }
 }

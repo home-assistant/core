@@ -5,6 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
@@ -19,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 HA_PLUGWISE_SMILE_ASYNC_UPDATE = (
     "homeassistant.components.plugwise.coordinator.Smile.async_update"

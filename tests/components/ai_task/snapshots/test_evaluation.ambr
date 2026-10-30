@@ -1,0 +1,169 @@
+# serializer version: 1
+# name: test_evaluate[array]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[false]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[object]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[text]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[zero]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_invalid_questions[empty-choice-description]
+  "length of value must be at least 1 at 'q.criteria.yes'"
+# ---
+# name: test_invalid_questions[empty-id]
+  "length of value must be at least 1 at '['']'"
+# ---
+# name: test_invalid_questions[empty-instructions]
+  "length of value must be at least 1 at 'q.instructions'"
+# ---
+# name: test_invalid_questions[empty-score-description]
+  "length of value must be at least 1 at 'q.criteria[0]'"
+# ---
+# name: test_invalid_questions[empty]
+  'length of value must be at least 1'
+# ---
+# name: test_invalid_questions[extra-field]
+  "not a valid option at 'q.criteria'"
+# ---
+# name: test_invalid_questions[missing-instructions]
+  "required key not provided at 'q.instructions'"
+# ---
+# name: test_invalid_questions[missing-type]
+  "expected type to be one of ['noul', 'choice', 'score'] at 'q.type'"
+# ---
+# name: test_invalid_questions[one-choice]
+  "length of value must be at least 2 at 'q.criteria'"
+# ---
+# name: test_invalid_questions[one-level]
+  "length of value must be at least 2 at 'q.criteria'"
+# ---
+# name: test_invalid_questions[unknown-type]
+  "expected type to be one of ['noul', 'choice', 'score'] at 'q.type'"
+# ---

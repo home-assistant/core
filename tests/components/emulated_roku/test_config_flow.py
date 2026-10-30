@@ -4,20 +4,19 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.emulated_roku import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.emulated_roku.async_setup_entry", return_value=True
+        "homeassistant.components.emulated_roku.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

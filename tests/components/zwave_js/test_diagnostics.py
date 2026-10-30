@@ -5,6 +5,12 @@ from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
@@ -19,17 +25,11 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
     get_value_id_from_unique_id,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import PROPERTY_ULTRAVIOLET
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
@@ -270,3 +270,34 @@ async def test_device_diagnostics_secret_value(
     diagnostics_node_state = cast(dict[str, Any], diagnostics_data["state"])
     test_value = _find_ultraviolet_val(diagnostics_node_state)
     assert test_value["value"] == REDACTED
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_device_diagnostics_includes_child_device_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    climate_heatit_z_trm3,
+    integration,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test device diagnostics includes entities on endpoint child devices.
+
+    When a node has labeled, colliding endpoints, those entities live on endpoint child
+    devices. They must still appear in the node device's diagnostics dump.
+    """
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_heatit_z_trm3), integration.entry_id
+    )
+    assert node_device
+
+    diagnostics_data = await get_diagnostics_for_device(
+        hass, hass_client, integration, node_device
+    )
+
+    diagnostics_entities = cast(list[dict[str, Any]], diagnostics_data["entities"])
+    entity_ids = [e["entity_id"] for e in diagnostics_entities]
+    # The air temperature sensors living on endpoint child devices appear in the dump.
+    assert "sensor.floor_thermostat_room_sensor_air_temperature" in entity_ids
+    assert "sensor.floor_thermostat_external_sensor_air_temperature" in entity_ids
+    assert "sensor.floor_thermostat_floor_sensor_air_temperature" in entity_ids

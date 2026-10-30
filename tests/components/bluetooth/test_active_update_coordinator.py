@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 from bleak.exc import BleakError
 import pytest
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
@@ -22,8 +23,6 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
-
-from . import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
 

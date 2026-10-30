@@ -22,6 +22,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -90,18 +91,17 @@ class SinchNotificationService(BaseNotificationService):
                 _LOGGER.debug(
                     'Successfully sent SMS to "%s" (batch_id: %s)', target, batch_id
                 )
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except ErrorResponseException as ex:
-            _LOGGER.error(
-                "Caught ErrorResponseException. Response code: %s (%s)",
-                ex.error_code,
-                ex,
-            )
-        except NotFoundException as ex:
-            _LOGGER.error("Caught NotFoundException (request URL: %s)", ex.url)
         except UnauthorizedException as ex:
-            _LOGGER.error(
-                "Caught UnauthorizedException (service plan: %s)", ex.service_plan_id
-            )
-        except UnexpectedResponseException as ex:
-            _LOGGER.error("Caught UnexpectedResponseException: %s", ex)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unauthorized",
+            ) from ex
+        except (
+            ErrorResponseException,
+            NotFoundException,
+            UnexpectedResponseException,
+        ) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+            ) from ex

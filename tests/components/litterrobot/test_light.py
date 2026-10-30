@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from pylitterbot.exceptions import InvalidCommandException
 from pylitterbot.robot.litterrobot4 import NightLightMode
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -20,8 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import create_mock_account, setup_integration
-
-from tests.common import snapshot_platform
 
 NIGHT_LIGHT_ENTITY_ID = "light.test_night_light"
 

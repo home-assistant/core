@@ -4,7 +4,7 @@ import itertools
 import logging
 
 from pylitterbot import Account
-from pylitterbot.exceptions import LitterRobotException
+from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -13,6 +13,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import AnyDeviceEntry
@@ -46,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: LitterRobotConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -62,9 +63,14 @@ async def async_migrate_entry(
                 password=entry.data[CONF_PASSWORD],
             )
             user_id = account.user_id
-        except LitterRobotException:
-            _LOGGER.debug("Could not connect to set unique_id during migration")
-            return False
+        except LitterRobotLoginException as ex:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="invalid_credentials"
+            ) from ex
+        except LitterRobotException as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="migration_cannot_connect"
+            ) from ex
         finally:
             await account.disconnect()
 
@@ -82,10 +88,9 @@ async def async_migrate_entry(
         entry.version,
         entry.minor_version,
     )
-    return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> None:
     """Set up Litter-Robot from a config entry."""
     coordinator = LitterRobotDataUpdateCoordinator(hass, entry)
 
@@ -101,15 +106,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: LitterRobotConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     await entry.runtime_data.account.disconnect()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

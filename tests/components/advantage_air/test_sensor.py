@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.components.advantage_air.sensor import (
     ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
@@ -13,8 +15,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import add_mock_config
-
-from tests.common import async_fire_time_changed
 
 
 async def test_sensor_platform(

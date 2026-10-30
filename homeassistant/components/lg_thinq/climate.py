@@ -119,7 +119,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_preset_modes = [PRESET_NONE]
         self._attr_preset_mode = PRESET_NONE
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
         )
 
@@ -184,7 +184,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self._attr_preset_mode = PRESET_NONE
 
         self._attr_current_humidity = self.data.humidity
-        self._attr_current_temperature = self.data.current_temp
+        self._attr_native_current_temperature = self.data.current_temp
 
         # Update min, max and step.
         if self.data.max is not None:
@@ -195,12 +195,12 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self._attr_target_temperature_step = self.data.step
 
         # Update target temperatures.
-        self._attr_target_temperature = self.data.target_temp
-        self._attr_target_temperature_high = self.data.target_temp_high
-        self._attr_target_temperature_low = self.data.target_temp_low
+        self._attr_native_target_temperature = self.data.target_temp
+        self._attr_native_target_temperature_high = self.data.target_temp_high
+        self._attr_native_target_temperature_low = self.data.target_temp_low
 
         # Update unit.
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
         )
 
@@ -208,12 +208,12 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             "[%s:%s] update status: c:%s, t:%s, l:%s, h:%s, hvac:%s, unit:%s, step:%s",
             self.coordinator.device_name,
             self.property_id,
-            self.current_temperature,
-            self.target_temperature,
-            self.target_temperature_low,
-            self.target_temperature_high,
+            self.native_current_temperature,
+            self.native_target_temperature,
+            self.native_target_temperature_low,
+            self.native_target_temperature_high,
             self.hvac_mode,
-            self.temperature_unit,
+            self.native_temperature_unit,
             self.target_temperature_step,
         )
 
@@ -353,7 +353,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         if temperature := kwargs.get(ATTR_TEMPERATURE):
             if self.data.step >= 1:
                 temperature = int(temperature)
-            if temperature != self.target_temperature:
+            if temperature != self.native_target_temperature:
                 await self.async_call_api(
                     self.coordinator.api.async_set_target_temperature(
                         self.property_id,

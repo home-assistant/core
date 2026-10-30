@@ -281,7 +281,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=existing_data.get(CONF_USERNAME, ""),
                     ): str,
                     probatio.Optional(
-                        CONF_PASSWORD,
+                        probatio.Secret(CONF_PASSWORD),
                         default="",
                     ): str,
                     probatio.Required(

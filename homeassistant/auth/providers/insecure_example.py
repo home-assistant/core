@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
 from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, MfaLoginFlow
 
 USER_SCHEMA = probatio.Schema(
     {
@@ -96,7 +96,7 @@ class ExampleAuthProvider(AuthProvider):
         return UserMeta(name=name, is_active=True)
 
 
-class ExampleLoginFlow(LoginFlow[ExampleAuthProvider]):
+class ExampleLoginFlow(MfaLoginFlow[ExampleAuthProvider]):
     """Handler for the login flow."""
 
     @override

@@ -8,13 +8,6 @@ from typing import TYPE_CHECKING, override
 
 from aiohttp import ClientError
 
-from homeassistant.const import (
-    ATTR_HW_VERSION,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    ATTR_SW_VERSION,
-)
 from homeassistant.core import CALLBACK_TYPE, HassJob, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -84,25 +77,25 @@ class BondEntity(Entity):
             configuration_url=f"http://{self._hub.host}",
         )
         if self.name is not None:
-            device_info[ATTR_NAME] = self._device.name
+            device_info.name = self._device.name
         if self._hub.bond_id is not None:
             config_entry = self.platform.config_entry
             if TYPE_CHECKING:
                 assert config_entry
-            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
                 self.hass,
                 (DOMAIN, self._hub.bond_id),
                 config_entry_id=config_entry.entry_id,
             )
         if self._device.location is not None:
-            device_info[ATTR_SUGGESTED_AREA] = self._device.location
+            device_info.suggested_area = self._device.location
         if not self._hub.is_bridge:
             if self._hub.model is not None:
-                device_info[ATTR_MODEL] = self._hub.model
+                device_info.model = self._hub.model
             if self._hub.fw_ver is not None:
-                device_info[ATTR_SW_VERSION] = self._hub.fw_ver
+                device_info.sw_version = self._hub.fw_ver
             if self._hub.mcu_ver is not None:
-                device_info[ATTR_HW_VERSION] = self._hub.mcu_ver
+                device_info.hw_version = self._hub.mcu_ver
         else:
             model_data = []
             if self._device.branding_profile:
@@ -110,7 +103,7 @@ class BondEntity(Entity):
             if self._device.template:
                 model_data.append(self._device.template)
             if model_data:
-                device_info[ATTR_MODEL] = " ".join(model_data)
+                device_info.model = " ".join(model_data)
 
         return device_info
 

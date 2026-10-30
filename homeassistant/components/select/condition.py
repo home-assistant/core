@@ -21,7 +21,7 @@ IS_OPTION_SELECTED_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(CONF_OPTION): probatio.All(
-                probatio.EnsureList(), probatio.Length(min=1), [str]
+                probatio.EnsureList(), probatio.NonEmpty(), [str]
             ),
         },
     }

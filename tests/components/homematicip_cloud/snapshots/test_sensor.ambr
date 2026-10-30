@@ -1,0 +1,124 @@
+# serializer version: 1
+# name: test_hmip_motion_detector_switch_outdoor_illuminance[sensor.bewegungsmelder_haustur_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F711000000000SMO230A')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bewegungsmelder_haustur_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Illuminance',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3014F711000000000SMO230A_1_illuminance',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_hmip_motion_detector_switch_outdoor_illuminance[sensor.bewegungsmelder_haustur_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bewegungsmelder Haustür Illuminance',
+      'id': '3014F711000000000SMO230A',
+      'is_group': False,
+      'model_type': 'HmIP-SMO230-A',
+      'rssi_device': -70,
+      'rssi_peer': -81,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bewegungsmelder_haustur_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3158.0',
+  })
+# ---
+# name: test_hmip_water_supply_stop_water_flow[sensor.wasserstopp_water_flow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000000WSS')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wasserstopp_water_flow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water flow',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_icon': None,
+    'original_name': 'Water flow',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_flow',
+    'unique_id': '3014F7110000000000000WSS_1_water_flow',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+  })
+# ---
+# name: test_hmip_water_supply_stop_water_flow[sensor.wasserstopp_water_flow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wasserstopp Water flow',
+      'id': '3014F7110000000000000WSS',
+      'is_group': False,
+      'model_type': 'HmIP-WSS-GB',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wasserstopp_water_flow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---

@@ -37,6 +37,12 @@ SIRENS: dict[DeviceCategory, tuple[TuyaSirenEntityDescription, ...]] = {
             translation_key="siren",
         ),
     ),
+    DeviceCategory.DGHSXJ: (
+        TuyaSirenEntityDescription(
+            key=DPCode.SIREN_SWITCH,
+            translation_key="siren",
+        ),
+    ),
     DeviceCategory.DGNBJ: (
         TuyaSirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
@@ -56,9 +62,6 @@ SIRENS: dict[DeviceCategory, tuple[TuyaSirenEntityDescription, ...]] = {
         ),
     ),
 }
-
-# Smart Camera - Low power consumption camera (duplicate of `sp`)
-SIRENS[DeviceCategory.DGHSXJ] = SIRENS[DeviceCategory.SP]
 
 
 async def async_setup_entry(

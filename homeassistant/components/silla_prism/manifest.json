@@ -1,6 +1,7 @@
 {
   "domain": "silla_prism",
   "name": "Silla Prism",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@ebaschiera"],
   "config_flow": true,
   "dependencies": ["mqtt"],

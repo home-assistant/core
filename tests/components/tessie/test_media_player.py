@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tessie.coordinator import TESSIE_SYNC_INTERVAL
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-
-from tests.common import async_fire_time_changed
 
 WAIT = timedelta(seconds=TESSIE_SYNC_INTERVAL)
 

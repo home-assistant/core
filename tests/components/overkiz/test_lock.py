@@ -7,6 +7,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import (
@@ -26,8 +27,6 @@ from .helpers import (
     device_state_changed_event,
     device_unavailable_event,
 )
-
-from tests.common import snapshot_platform
 
 DOOR_LOCK = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",

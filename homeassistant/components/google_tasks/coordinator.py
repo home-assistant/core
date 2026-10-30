@@ -1,7 +1,7 @@
 """Coordinator for fetching data from Google Tasks API."""
 
 import asyncio
-import datetime
+import datetime as dt
 import logging
 from typing import Any, Final, override
 
@@ -13,7 +13,7 @@ from .api import AsyncConfigEntryAuth
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL: Final = datetime.timedelta(minutes=30)
+UPDATE_INTERVAL: Final = dt.timedelta(minutes=30)
 TIMEOUT = 10
 
 type GoogleTasksConfigEntry = ConfigEntry[list[TaskUpdateCoordinator]]

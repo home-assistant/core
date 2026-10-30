@@ -35,7 +35,7 @@ DEFAULT_SSL = False
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_NVR): cv.string,
-        probatio.Required(CONF_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_KEY)): cv.string,
         probatio.Optional(
             probatio.Secret(CONF_PASSWORD), default=DEFAULT_PASSWORD
         ): cv.string,

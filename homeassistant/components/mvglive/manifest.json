@@ -1,6 +1,7 @@
 {
   "domain": "mvglive",
   "name": "MVG",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/mvglive",
   "iot_class": "cloud_polling",

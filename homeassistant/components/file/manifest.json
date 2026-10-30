@@ -1,6 +1,7 @@
 {
   "domain": "file",
   "name": "File",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@fabaff"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/file",

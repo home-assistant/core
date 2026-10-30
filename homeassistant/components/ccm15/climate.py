@@ -11,14 +11,13 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    PRECISION_WHOLE,
     SWING_OFF,
     SWING_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -94,7 +93,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement reported by the device."""
         if (data := self.data) is not None and not data.is_celsius:
             return UnitOfTemperature.FAHRENHEIT
@@ -102,7 +101,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> int | None:
+    def native_current_temperature(self) -> int | None:
         """Return current temperature."""
         if (data := self.data) is not None:
             return data.temperature
@@ -110,7 +109,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> int | None:
+    def native_target_temperature(self) -> int | None:
         """Return target temperature."""
         if (data := self.data) is not None:
             return data.temperature_setpoint
@@ -146,7 +145,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @override
     def available(self) -> bool:
         """Return the availability of the entity."""
-        return self.data is not None
+        return super().available and self.data is not None
 
     @property
     @override

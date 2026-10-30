@@ -2,18 +2,19 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tractive.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
 
-
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -25,7 +26,12 @@ async def test_binary_sensor(
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.BINARY_SENSOR]):
         await init_integration(hass, mock_config_entry)
 
-        mock_tractive_client.send_hardware_event(mock_config_entry)
+        mock_tractive_client.set_tracker_status(
+            battery_level=88,
+            tracker_state="operational",
+            power_saving=True,
+            battery_charging=True,
+        )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -53,3 +59,20 @@ async def test_binary_sensor_device_assignment(
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.device_id == tracker_device.id
+
+
+async def test_binary_sensor_unknown(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the binary sensor is unknown when the value is missing."""
+    with patch("homeassistant.components.tractive.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    mock_tractive_client.set_tracker_status(battery_charging=None)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.tracker_device_id_123_charging")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

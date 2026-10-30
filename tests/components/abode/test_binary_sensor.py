@@ -1,5 +1,6 @@
 """Tests for the Abode binary sensor device."""
 
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -7,8 +8,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-
-from tests.common import snapshot_platform
 
 
 async def test_all_entities(

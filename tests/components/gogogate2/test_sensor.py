@@ -16,6 +16,7 @@ from ismartgate.common import (
     Outputs,
     Wifi,
 )
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.gogogate2.const import DEVICE_TYPE_ISMARTGATE, DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
@@ -32,8 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _mocked_gogogate_sensor_response(battery_level: int, temperature: float):

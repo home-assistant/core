@@ -7,7 +7,11 @@ from typing import Any, override
 from aiowithings import AuthScope
 
 from homeassistant.components.webhook import async_generate_id
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -53,11 +57,22 @@ class WithingsFlowHandler(
             )
         return await self.async_step_user()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration by re-running the OAuth flow."""
+        return await self.async_step_user()
+
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         user_id = str(data[CONF_TOKEN]["userid"])
         await self.async_set_unique_id(user_id)
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates=data
+            )
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
 

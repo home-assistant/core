@@ -5,15 +5,12 @@ import functools as ft
 import math
 from typing import Any, override
 
-import probatio
 from pywemo import DesiredHumidity, FanMode, Humidifier
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -21,7 +18,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import async_wemo_dispatcher_connect
-from .const import SERVICE_RESET_FILTER_LIFE, SERVICE_SET_HUMIDITY
+from .const import ATTR_TARGET_HUMIDITY
 from .coordinator import DeviceCoordinator
 from .entity import WemoBinaryStateEntity
 
@@ -29,19 +26,12 @@ SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
 
 ATTR_CURRENT_HUMIDITY = "current_humidity"
-ATTR_TARGET_HUMIDITY = "target_humidity"
 ATTR_FAN_MODE = "fan_mode"
 ATTR_FILTER_LIFE = "filter_life"
 ATTR_FILTER_EXPIRED = "filter_expired"
 ATTR_WATER_LEVEL = "water_level"
 
 SPEED_RANGE = (FanMode.Minimum, FanMode.Maximum)  # off is not included
-
-SET_HUMIDITY_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_TARGET_HUMIDITY): probatio.All(
-        probatio.Coerce(float), probatio.Range(min=0, max=100)
-    ),
-}
 
 
 async def async_setup_entry(
@@ -56,20 +46,6 @@ async def async_setup_entry(
         async_add_entities([WemoHumidifier(coordinator)])
 
     await async_wemo_dispatcher_connect(hass, _discovered_wemo)
-
-    platform = entity_platform.async_get_current_platform()
-
-    # This will call WemoHumidifier.async_set_humidity(target_humidity=VALUE)
-    platform.async_register_entity_service(
-        SERVICE_SET_HUMIDITY,
-        SET_HUMIDITY_SCHEMA,
-        WemoHumidifier.async_set_humidity.__name__,
-    )
-
-    # This will call WemoHumidifier.async_reset_filter_life()
-    platform.async_register_entity_service(
-        SERVICE_RESET_FILTER_LIFE, None, WemoHumidifier.async_reset_filter_life.__name__
-    )
 
 
 class WemoHumidifier(WemoBinaryStateEntity, FanEntity):

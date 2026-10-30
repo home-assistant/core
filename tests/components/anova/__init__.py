@@ -3,13 +3,12 @@
 from unittest.mock import patch
 
 from anova_wifi import APCUpdate, APCUpdateBinary, APCUpdateSensor
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DEVICE_UNIQUE_ID = "abc123def"
 

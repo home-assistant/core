@@ -5,7 +5,7 @@ import logging
 from typing import Any
 from urllib import parse
 
-from httpx import AsyncClient, HTTPError, HTTPStatusError
+from httpx2 import AsyncClient, HTTPError, HTTPStatusError
 import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback

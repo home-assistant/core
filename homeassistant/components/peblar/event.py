@@ -58,12 +58,28 @@ class PeblarAuthorizationEventEntity(
     was watching, and dating it now would put the wrong time on it.
     """
 
+    _has_bearings: bool = False
     _session_number: int | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Take note of the session already running, without reporting it."""
+        """Take note of where the charger is, without reporting it."""
         await super().async_added_to_hass()
+        self._take_bearings()
+
+    @callback
+    def _take_bearings(self) -> None:
+        """Note the session the charger is on, and report nothing for it.
+
+        A read that only lands after this entity started says nothing about
+        when its session began, so the first one to come back is a starting
+        point rather than news. Reading nothing is different: the charger
+        answered and had nothing to report, and whatever comes next is new.
+        """
+        if not self.coordinator.last_update_success:
+            return
+
+        self._has_bearings = True
         if (authorization := self.coordinator.data) is not None:
             self._session_number = authorization.session_number
 
@@ -72,7 +88,9 @@ class PeblarAuthorizationEventEntity(
     def _handle_coordinator_update(self) -> None:
         """Report a session that was not there the last time we looked."""
         authorization = self.coordinator.data
-        if (
+        if not self._has_bearings:
+            self._take_bearings()
+        elif (
             authorization is not None
             and authorization.session_number != self._session_number
         ):

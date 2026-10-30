@@ -6,6 +6,7 @@ from typing import override
 from aiomelcloudhome import ATAUnit, ATWUnit
 from yarl import URL
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -35,6 +36,7 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._unit_id = unit.id
+        self._unit: _UnitT = unit
         self._attr_unique_id = f"{unit.id}_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unit.id)},
@@ -55,10 +57,18 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
         """Return if the entity is available."""
         return super().available and self._unit_id in self._units_dict()
 
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Keep the last known unit state while the unit is missing."""
+        if (unit := self._units_dict().get(self._unit_id)) is not None:
+            self._unit = unit
+        super()._handle_coordinator_update()
+
     @property
     def unit(self) -> _UnitT:
-        """Return the current unit state from coordinator data."""
-        return self._units_dict()[self._unit_id]
+        """Return the latest known unit state."""
+        return self._unit
 
 
 class MelCloudHomeATAUnitEntity(MelCloudHomeUnitEntity[ATAUnit]):

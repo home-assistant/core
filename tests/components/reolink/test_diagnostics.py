@@ -3,14 +3,13 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from reolink_aio.api import Chime
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")

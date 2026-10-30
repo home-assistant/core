@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiortm import AioRTMError, AuthError
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.remember_the_milk.config_flow import TOKEN_TIMEOUT_SEC
@@ -27,8 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import CREATE_ENTRY_DATA, PROFILE, TOKEN_RESPONSE
-
-from tests.common import MockConfigEntry
 
 SUBENTRY_ID = "test-subentry-id"
 LIST_ID = 99

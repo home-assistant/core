@@ -1,6 +1,7 @@
 {
   "domain": "iaqualink",
   "name": "Jandy iAquaLink",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@flz"],
   "config_flow": true,
   "dhcp": [{ "hostname": "iaqualink-*" }],

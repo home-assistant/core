@@ -1,6 +1,7 @@
 {
   "domain": "iperf3",
   "name": "Iperf3",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@rohankapoorcom"],
   "documentation": "https://www.home-assistant.io/integrations/iperf3",
   "iot_class": "local_polling",

@@ -7,11 +7,10 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from peblar import PeblarConnectionError, PeblarSessionStatus, SessionState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True),

@@ -4,6 +4,7 @@ import contextlib
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+from homematicip.async_home import AsyncHome
 from homematicip.base.functionalChannels import FunctionalChannel
 from homematicip.device import BaseDevice
 from homematicip.group import Group
@@ -15,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .hap import AsyncHome, HomematicipHAP
+from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,6 +178,14 @@ class HomematicipGenericEntity(Entity):
         self.async_on_remove(
             lambda: self._device.remove_callback(self._async_device_removed)
         )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move the service lookup entry to the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._hap.hmip_device_by_entity_id.pop(old_entity_id, None)
+        self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
 
     @callback
     def _async_device_changed(self, *args, **kwargs) -> None:

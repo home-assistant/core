@@ -5,6 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiosyncthing.exceptions import SyncthingError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.syncthing.const import (
@@ -21,13 +27,6 @@ from homeassistant.helpers import dispatcher, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import FOLDER_ID, SERVER_ID, SERVER_ID_SHORT_HA
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 async def test_sensor_platform_setup(

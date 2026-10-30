@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> None:
     """Set up NRGkick from a config entry."""
     api = NRGkickAPI(
         host=entry.data[CONF_HOST],
@@ -34,9 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> b
     # Set up platforms.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

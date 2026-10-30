@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
-
-from tests.common import snapshot_platform
 
 
 @freeze_time("2026-01-01T12:00:00+00:00")

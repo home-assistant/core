@@ -57,7 +57,7 @@ class IntelliClimaConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if devices.num_devices == 0:
+                if not devices.ecocomfort2_devices:
                     errors["base"] = "no_devices"
                 else:
                     return self.async_create_entry(

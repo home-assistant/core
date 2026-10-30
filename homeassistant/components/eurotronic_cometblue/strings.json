@@ -48,8 +48,44 @@
     }
   },
   "exceptions": {
+    "cannot_adjust_during_holiday": {
+      "message": "Cannot adjust TRV remotely, manually disable holiday mode on TRV first"
+    },
+    "cannot_get_device_info": {
+      "message": "Failed to get device info from {address}"
+    },
+    "command_failed": {
+      "message": "Error sending command to {name}: {error}"
+    },
     "device_not_found": {
       "message": "Could not find Comet Blue device with address {address}: {reason}"
+    },
+    "display_only_preset": {
+      "message": "Unable to set preset {preset_mode}, display only."
+    },
+    "holiday_start_not_future": {
+      "message": "Start date (rounded up to the next hour) must be in the future"
+    },
+    "incorrect_pin": {
+      "message": "Failed to read battery level, likely due to an incorrect PIN"
+    },
+    "invalid_command_payload": {
+      "message": "Invalid payload {payload} for {name}: {error}"
+    },
+    "invalid_half_precision": {
+      "message": "value {value} is not a half precision float, remainder is {remainder}"
+    },
+    "invalid_schedule_time_range": {
+      "message": "Invalid time range {index}, {start} is after {end}"
+    },
+    "missing_schedule_times": {
+      "message": "Missing from/to in entry"
+    },
+    "overlapping_schedule_times": {
+      "message": "Overlapping times found in schedule, {start} is earlier than previous entry {previous_end} ends"
+    },
+    "update_failed": {
+      "message": "An unexpected error occurred while communicating with the TRV: {error}"
     }
   },
   "services": {

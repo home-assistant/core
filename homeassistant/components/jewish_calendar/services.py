@@ -1,6 +1,6 @@
 """Services for Jewish Calendar."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import get_args
 
@@ -65,9 +65,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             if ATTR_DATE in call.data
             else is_after_sunset(hass)
         )
-        hebrew_date = HebrewDate.from_gdate(
-            date + datetime.timedelta(days=int(after_sunset))
-        )
+        hebrew_date = HebrewDate.from_gdate(date + dt.timedelta(days=int(after_sunset)))
         nusach = Nusach[call.data[ATTR_NUSACH].upper()]
         set_language(call.data[CONF_LANGUAGE])
         omer = Omer(date=hebrew_date, nusach=nusach)

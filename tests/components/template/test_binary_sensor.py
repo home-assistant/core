@@ -8,6 +8,14 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, setup
@@ -44,15 +52,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
-from tests.typing import WebSocketGenerator
 
 _BEER_TRIGGER_VALUE_TEMPLATE = (
     "{% if trigger.event.data.beer < 0 %}"

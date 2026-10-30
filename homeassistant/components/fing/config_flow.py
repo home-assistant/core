@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from fing_agent_api import FingAgent
-import httpx
+import httpx2
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -48,17 +48,17 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 devices_response = await fing_api.get_devices()
 
-                with suppress(httpx.ConnectError):
+                with suppress(httpx2.ConnectError):
                     # The suppression is needed because the
                     # get_agent_info method isn't available
                     # for desktop agents
                     agent_info_response = await fing_api.get_agent_info()
 
-            except httpx.NetworkError as _:
+            except httpx2.NetworkError as _:
                 errors["base"] = "cannot_connect"
-            except httpx.TimeoutException as _:
+            except httpx2.TimeoutException as _:
                 errors["base"] = "timeout_connect"
-            except httpx.HTTPStatusError as exception:
+            except httpx2.HTTPStatusError as exception:
                 description_placeholders["message"] = (
                     f"{exception.response.status_code}"
                     f" - {exception.response.reason_phrase}"
@@ -67,12 +67,12 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_api_key"
                 else:
                     errors["base"] = "http_status_error"
-            except httpx.InvalidURL as _:
+            except httpx2.InvalidURL as _:
                 errors["base"] = "url_error"
             except (
-                httpx.HTTPError,
-                httpx.CookieConflict,
-                httpx.StreamError,
+                httpx2.HTTPError,
+                httpx2.CookieConflict,
+                httpx2.StreamError,
             ) as ex:
                 _LOGGER.error("Unexpected exception: %s", ex)
                 errors["base"] = "unknown"

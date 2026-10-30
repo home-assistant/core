@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from monzopy import Webhook
 from monzopy.monzopy import UserAccount
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -17,8 +18,6 @@ from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

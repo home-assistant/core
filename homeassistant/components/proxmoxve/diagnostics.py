@@ -7,8 +7,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import ProxmoxConfigEntry
 from .const import CONF_TOKEN_SECRET, CONF_USER
+from .coordinator import ProxmoxConfigEntry
 
 TO_REDACT = [CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_TOKEN_SECRET, CONF_USER]
 

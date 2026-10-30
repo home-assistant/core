@@ -1,14 +1,5 @@
 """Base entity for the NUT integration."""
 
-from dataclasses import asdict
-from typing import cast
-
-from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
-    ATTR_SW_VERSION,
-)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -16,13 +7,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import PyNUTData
 from .const import DOMAIN
 from .coordinator import NutCoordinator
-
-NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
-    "manufacturer": ATTR_MANUFACTURER,
-    "model": ATTR_MODEL,
-    "firmware": ATTR_SW_VERSION,
-    "serial": ATTR_SERIAL_NUMBER,
-}
 
 
 class NUTBaseEntity(CoordinatorEntity[NutCoordinator]):
@@ -44,20 +28,17 @@ class NUTBaseEntity(CoordinatorEntity[NutCoordinator]):
         self._attr_unique_id = f"{unique_id}_{entity_description.key}"
 
         self.pynut_data = data
-        self._attr_device_info = DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=self.pynut_data.device_name,
         )
-        self._attr_device_info.update(_get_nut_device_info(data))
-
-
-def _get_nut_device_info(data: PyNUTData) -> DeviceInfo:
-    """Return a DeviceInfo object filled with NUT device info."""
-    nut_dev_infos = asdict(data.device_info)
-    nut_infos = {
-        info_key: nut_dev_infos[nut_key]
-        for nut_key, info_key in NUT_DEV_INFO_TO_DEV_INFO.items()
-        if nut_dev_infos[nut_key] is not None
-    }
-
-    return cast(DeviceInfo, nut_infos)
+        nut_device_info = data.device_info
+        if nut_device_info.manufacturer is not None:
+            device_info.manufacturer = nut_device_info.manufacturer
+        if nut_device_info.model is not None:
+            device_info.model = nut_device_info.model
+        if nut_device_info.firmware is not None:
+            device_info.sw_version = nut_device_info.firmware
+        if nut_device_info.serial is not None:
+            device_info.serial_number = nut_device_info.serial
+        self._attr_device_info = device_info

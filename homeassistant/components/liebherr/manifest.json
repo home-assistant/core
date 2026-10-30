@@ -1,6 +1,7 @@
 {
   "domain": "liebherr",
   "name": "Liebherr",
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@mettolen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/liebherr",

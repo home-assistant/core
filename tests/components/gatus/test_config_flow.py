@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock
 
 from gatus_api import GatusAuthError, GatusClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.gatus.const import DOMAIN
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_gatus_client")

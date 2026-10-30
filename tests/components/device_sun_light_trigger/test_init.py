@@ -6,6 +6,10 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    setup_test_component_platform,
+)
 
 from homeassistant.components import (
     device_sun_light_trigger,
@@ -28,7 +32,6 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, setup_test_component_platform
 from tests.components.device_tracker.common import MockScanner
 from tests.components.light.common import MockLight
 

@@ -3,13 +3,12 @@
 from collections.abc import Callable
 
 import pytest
+from pytest_homeassistant.common import QualityScaleStatus
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import Unauthorized, UnknownUser
 
 from . import conftest as components_conftest
-
-from tests.common import QualityScaleStatus
 
 
 @pytest.mark.parametrize(

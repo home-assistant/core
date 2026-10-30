@@ -17,6 +17,24 @@ prune_images:
       selector:
         boolean: {}
 
+prune_build_cache:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: portainer
+          model: Endpoint
+    all:
+      required: false
+      default: true
+      selector:
+        boolean:
+    until:
+      required: false
+      selector:
+        duration:
+
 recreate_container:
   fields:
     container_device_id:

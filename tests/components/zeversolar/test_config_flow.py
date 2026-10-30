@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zeversolar.exceptions import (
     ZeverSolarHTTPError,
     ZeverSolarHTTPNotFound,
@@ -14,8 +15,6 @@ from homeassistant.components.zeversolar.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_zeversolar_client: MagicMock) -> None:
@@ -118,7 +117,7 @@ async def _set_up_zeversolar(
     mock_client.get_data.return_value.serial_number = "test_serial"
     with patch(
         "homeassistant.components.zeversolar.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=flow_id,

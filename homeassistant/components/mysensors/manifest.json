@@ -2,6 +2,7 @@
   "domain": "mysensors",
   "name": "MySensors",
   "after_dependencies": ["mqtt"],
+  "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@MartinHjelmare", "@functionpointer"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mysensors",

@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 from aioairzone.const import RAW_HVAC, RAW_VERSION, RAW_WEBSERVER
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -15,9 +17,6 @@ from .util import (
     HVAC_WEBSERVER_MOCK,
     async_init_integration,
 )
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(

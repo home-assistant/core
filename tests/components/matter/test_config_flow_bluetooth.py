@@ -8,6 +8,13 @@ from unittest.mock import MagicMock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 from matter_server.common.errors import NodeCommissionFailed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
+)
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.matter.const import DOMAIN
@@ -26,14 +33,6 @@ from .common import (
     RAW_COMMISSIONABLE,
     RAW_OTHER,
     matter_ble_service_info,
-)
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    _get_manager,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement_with_time_and_source_connectable,
 )
 
 ROTATED_ADDRESS = "AA:BB:CC:DD:EE:F1"

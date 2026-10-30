@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import core as ha
@@ -21,8 +22,6 @@ from .mocks import (
     _mock_doorsense_enabled_yale_lock_detail,
     _mock_lock_from_fixture,
 )
-
-from tests.common import mock_restore_cache_with_extra_data
 
 
 async def test_create_doorbell(hass: HomeAssistant) -> None:

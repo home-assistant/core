@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from pybalboa import SpaControl
 from pybalboa.enums import HeatMode, OffLowMediumHighState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -32,7 +33,6 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import client_update, init_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.climate import common
 
 HVAC_SETTINGS = [

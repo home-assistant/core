@@ -1,5 +1,7 @@
 """The tests for elkm1 logbook."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.elkm1.const import (
     ATTR_KEY,
     ATTR_KEY_NAME,
@@ -14,7 +16,6 @@ from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery, _patch_elk
 
-from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 

@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import aioeagle
 from eagle100 import Eagle as Eagle100Reader
@@ -17,6 +18,8 @@ from .const import (
     CONF_CLOUD_ID,
     CONF_HARDWARE_ADDRESS,
     CONF_INSTALL_CODE,
+    SUMMATION_DELIVERED,
+    SUMMATION_RECEIVED,
     TYPE_EAGLE_100,
 )
 from .data import UPDATE_100_ERRORS
@@ -24,6 +27,23 @@ from .data import UPDATE_100_ERRORS
 type RainforestEagleConfigEntry = ConfigEntry[EagleDataCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
+
+# Summations are 48-bit Wh counters, reported here in kWh; some meters
+# occasionally send a value at the top of that range instead of the reading.
+INVALID_SUMMATION_KWH = (2**48 - 2**32) / 1000
+
+
+def _discard_invalid_summations(data: dict[str, Any]) -> dict[str, Any]:
+    """Replace summation values that cannot be real readings with None."""
+    for key in (SUMMATION_DELIVERED, SUMMATION_RECEIVED):
+        try:
+            value = float(data[key])
+        except KeyError, TypeError, ValueError:
+            continue
+        if value >= INVALID_SUMMATION_KWH:
+            _LOGGER.warning("Ignoring invalid %s from meter: %s", key, data[key])
+            data[key] = None
+    return data
 
 
 class EagleDataCoordinator(DataUpdateCoordinator):
@@ -96,7 +116,9 @@ class EagleDataCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("Lost connection with electricity meter")
 
         _LOGGER.debug("API data: %s", data)
-        return {var["Name"]: var["Value"] for var in data.values()}
+        return _discard_invalid_summations(
+            {var["Name"]: var["Value"] for var in data.values()}
+        )
 
     async def _async_update_data_100(self):
         """Get the latest data from the Eagle-100 device."""
@@ -106,7 +128,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed from error
 
         _LOGGER.debug("API data: %s", data)
-        return data
+        return _discard_invalid_summations(data)
 
     def _fetch_data_100(self):
         """Fetch and return the four sensor values in a dict."""

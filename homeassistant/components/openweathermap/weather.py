@@ -14,9 +14,8 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,8 +46,6 @@ from .const import (
 )
 from .coordinator import OWMUpdateCoordinator
 
-SERVICE_GET_MINUTE_FORECAST = "get_minute_forecast"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -66,14 +63,6 @@ async def async_setup_entry(
         owm_weather = OpenWeatherMapWeather(unique_id, mode, weather_coordinator)
 
         async_add_entities([owm_weather], False)
-
-        platform = entity_platform.async_get_current_platform()
-        platform.async_register_entity_service(
-            name=SERVICE_GET_MINUTE_FORECAST,
-            schema=None,
-            func="async_get_minute_forecast",
-            supports_response=SupportsResponse.ONLY,
-        )
 
 
 class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]):

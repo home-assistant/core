@@ -122,7 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> None:
     """Set up Scrape from a config entry."""
 
     config: dict[str, Any] = dict(entry.options)
@@ -147,10 +147,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version == 1:
@@ -285,12 +283,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                 )
         hass.config_entries.async_update_entry(entry, options=new_options, version=3)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> None:
     """Unload Scrape config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: ScrapeConfigEntry) -> None:

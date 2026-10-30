@@ -1,6 +1,7 @@
 {
   "domain": "imgw_pib",
   "name": "IMGW-PIB",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@bieniu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/imgw_pib",

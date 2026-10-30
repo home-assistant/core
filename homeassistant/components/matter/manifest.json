@@ -7,6 +7,7 @@
       "service_data_uuid": "0000fff6-0000-1000-8000-00805f9b34fb"
     }
   ],
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/matter"],
   "config_flow": true,
   "dependencies": ["websocket_api"],
@@ -15,7 +16,7 @@
   "iot_class": "local_push",
   "requirements": [
     "bluetooth-data-tools==1.29.24",
-    "matter-python-client==1.4.0",
+    "matter-python-client==1.5.5",
     "matter-ble-proxy==0.7.1"
   ],
   "zeroconf": ["_matter._tcp.local.", "_matterc._udp.local."]

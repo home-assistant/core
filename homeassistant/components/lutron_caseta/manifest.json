@@ -1,6 +1,11 @@
 {
   "domain": "lutron_caseta",
   "name": "Lutron Cas\u00e9ta",
+  "categories": [
+    "lighting.lighting_systems",
+    "plugs_switches",
+    "blinds_curtains"
+  ],
   "codeowners": ["@swails", "@danaues", "@eclair4151"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
@@ -10,7 +15,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pylutron_caseta"],
-  "requirements": ["pylutron-caseta==0.29.0"],
+  "requirements": ["pylutron-caseta==0.30.1"],
   "zeroconf": [
     {
       "properties": {
@@ -33,6 +38,12 @@
     {
       "properties": {
         "SYSTYPE": "ra2select*"
+      },
+      "type": "_lutron._tcp.local."
+    },
+    {
+      "properties": {
+        "SYSTYPE": "athena*"
       },
       "type": "_lutron._tcp.local."
     }

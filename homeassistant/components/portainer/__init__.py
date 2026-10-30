@@ -1,13 +1,20 @@
 """The Portainer integration."""
 
+from collections import defaultdict
 from datetime import timedelta
 import logging
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from pyportainer import Portainer, PortainerImageWatcher
-from pyportainer.exceptions import PortainerError
+from pyportainer.exceptions import (
+    PortainerAuthenticationError,
+    PortainerConnectionError,
+    PortainerError,
+    PortainerTimeoutError,
+)
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_API_TOKEN,
@@ -18,16 +25,21 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.device_registry import AnyDeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
-from .const import API_MAX_RETRIES, DOMAIN
-from .coordinator import PortainerCoordinator, PortainerDockerDiskSpaceCoordinator
+from .const import API_MAX_RETRIES, DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
+from .coordinator import (
+    PortainerCoordinator,
+    PortainerDockerDiskSpaceCoordinator,
+    PortainerSystemVersionCoordinator,
+)
 from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
@@ -46,7 +58,14 @@ type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: PortainerConfigEntry
+) -> None:
+    """Reload the entry when it, or one of its environment subentries, changes."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> None:
     """Set up Portainer from a config entry."""
 
     session = async_create_clientsession(
@@ -79,18 +98,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     )
     coordinator.docker_disk_space = docker_disk_space_coordinator
 
-    async def _defer_docker_disk_space_refresh(_: HomeAssistant) -> None:
+    system_version_coordinator = PortainerSystemVersionCoordinator(hass, entry, client)
+    coordinator.system_version = system_version_coordinator
+
+    async def _defer_initial_refreshes(_: HomeAssistant) -> None:
         """Defer the first refresh until Home Assistant has started."""
         hass.async_create_task(
             docker_disk_space_coordinator.async_refresh(),
             "portainer_docker_disk_space_initial_refresh",
         )
+        hass.async_create_task(
+            system_version_coordinator.async_refresh(),
+            "portainer_system_version_initial_refresh",
+        )
 
-    # On lower-end hardware, the DF endpoint can take long
-    # Do not block the setup, but defer the first refresh until HA is fully started
-    entry.async_on_unload(async_at_started(hass, _defer_docker_disk_space_refresh))
+    # On lower-end hardware, the DF endpoint can take long, and the version check
+    # waits for GitHub. Do not block the setup, but defer both until HA has started
+    entry.async_on_unload(async_at_started(hass, _defer_initial_refreshes))
 
     entry.runtime_data = coordinator
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     # Register the endpoint and stack devices up front so that container, stack and
     # volume entities can deterministically resolve them as their via device when
@@ -140,8 +168,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_event_listeners)
     )
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Portainer integration."""
@@ -149,12 +175,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version < 2:
@@ -231,9 +257,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         )
         try:
             system_status = await client.portainer_system_status()
-        except PortainerError:
-            _LOGGER.exception("Failed to fetch instance ID during migration")
-            return False
+        except PortainerAuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except PortainerConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except PortainerTimeoutError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+        except PortainerError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="instance_id_failed",
+            ) from err
 
         hass.config_entries.async_update_entry(
             entry=entry,
@@ -241,7 +284,73 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
             version=5,
         )
 
-    return True
+    if entry.minor_version < 2:
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
+        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+        devices_by_endpoint_id: dict[str, list[DeviceEntry]] = defaultdict(list)
+        for device in devices:
+            for domain, identifier in device.identifiers:
+                if domain != DOMAIN:
+                    continue
+                candidate = (
+                    identifier.removeprefix(f"{entry.entry_id}_")
+                    .removeprefix("endpoint_")
+                    .split("_", 1)[0]
+                )
+                if candidate.isdigit():
+                    devices_by_endpoint_id[candidate].append(device)
+                    break
+
+        for endpoint_id, endpoint_devices in devices_by_endpoint_id.items():
+            endpoint_device = next(
+                device for device in endpoint_devices if device.via_device_id is None
+            )
+            subentry = ConfigSubentry(
+                subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                title=endpoint_device.name or f"Endpoint {endpoint_id}",
+                unique_id=endpoint_id,
+                data=MappingProxyType({}),
+            )
+            hass.config_entries.async_add_subentry(entry, subentry)
+
+            for device in endpoint_devices:
+                # Re-point entities before moving the device: the entity registry
+                # deletes any entity whose stored config_subentry_id doesn't
+                # already match the device's new one when it's re-parented
+                for reg_entry in er.async_entries_for_device(
+                    entity_registry, device.id, include_disabled_entities=True
+                ):
+                    endpoint_prefix = f"{entry.entry_id}_{endpoint_id}_"
+                    if device.model == "Container" and not (
+                        reg_entry.unique_id.startswith(endpoint_prefix)
+                    ):
+                        # Older container unique IDs didn't include the endpoint
+                        # ID, so identically named containers on different
+                        # environments collided on the same entity. Entities
+                        # already migrated by the v3->v4 step are endpoint-scoped
+                        # and must be left as-is to avoid double-prefixing.
+                        entity_registry.async_update_entity(
+                            reg_entry.entity_id,
+                            config_subentry_id=subentry.subentry_id,
+                            new_unique_id=(
+                                f"{endpoint_prefix}{reg_entry.unique_id.removeprefix(f'{entry.entry_id}_')}"
+                            ),
+                        )
+                    else:
+                        entity_registry.async_update_entity(
+                            reg_entry.entity_id,
+                            config_subentry_id=subentry.subentry_id,
+                        )
+                device_registry.async_update_device(
+                    device.id,
+                    new_config_entry_id=entry.entry_id,
+                    new_config_subentry_id=subentry.subentry_id,
+                )
+
+        hass.config_entries.async_update_entry(entry=entry, minor_version=2)
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_remove_config_entry_device(

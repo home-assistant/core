@@ -19,9 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KioskerConfigEntry
 from .const import REFRESH_DELAY
-from .coordinator import KioskerData
+from .coordinator import KioskerConfigEntry, KioskerData
 from .entity import KioskerEntity
 
 PARALLEL_UPDATES = 0

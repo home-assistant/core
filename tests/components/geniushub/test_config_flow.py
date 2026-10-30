@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientConnectionError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geniushub import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -205,6 +204,7 @@ async def test_full_cloud_flow(
             CONF_TOKEN: "abcdef",
         },
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Genius hub"
     assert result["data"] == {

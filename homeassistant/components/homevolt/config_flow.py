@@ -197,7 +197,6 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors=errors,
                     description_placeholders={"host": self._host},
                 )
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="zeroconf_confirm",
                 description_placeholders={"host": self._host},

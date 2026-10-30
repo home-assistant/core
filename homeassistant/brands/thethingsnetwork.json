@@ -1,0 +1,5 @@
+{
+  "domain": "thethingsnetwork",
+  "name": "The Things Network",
+  "integrations": ["thethingsnetwork_lorawan", "thethingsnetwork"]
+}

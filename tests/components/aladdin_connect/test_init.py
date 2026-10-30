@@ -7,6 +7,7 @@ from aiohttp import ClientConnectionError, RequestInfo
 from aiohttp.client_exceptions import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.aladdin_connect import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -22,8 +23,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_oauth_implementation_not_available(

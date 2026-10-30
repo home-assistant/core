@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -11,9 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_UID, mock_responses, setup_fronius_integration
-
-from tests.common import snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

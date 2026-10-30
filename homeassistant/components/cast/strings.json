@@ -21,6 +21,9 @@
   "exceptions": {
     "app_not_supported": {
       "message": "App {app_name} is not supported"
+    },
+    "not_loaded": {
+      "message": "Google Cast is not loaded."
     }
   },
   "options": {

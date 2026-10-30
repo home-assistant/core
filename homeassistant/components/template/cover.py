@@ -7,11 +7,13 @@ import probatio
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as COVER_DOMAIN,
     ENTITY_ID_FORMAT,
     CoverEntity,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
     CoverState,
@@ -27,8 +29,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
 from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -49,6 +52,7 @@ CLOSED_STATE = "closed"
 CLOSING_STATE = "closing"
 
 CONF_POSITION = "position"
+CONF_SUPPORTED_SPEEDS = "supported_speeds"
 CONF_TILT = "tilt"
 OPEN_ACTION = "open_cover"
 CLOSE_ACTION = "close_cover"
@@ -91,12 +95,16 @@ COVER_COMMON_SCHEMA = probatio.Schema(
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
-    attributes=CoverEntityStateAttribute, device_class=True
+    attributes=(CoverEntityCapabilityAttribute, CoverEntityStateAttribute),
+    device_class=True,
 )
 
 COVER_YAML_SCHEMA = probatio.All(
     probatio.Schema(
         {
+            probatio.Optional(CONF_SUPPORTED_SPEEDS): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
         }
     )
@@ -231,11 +239,14 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             "_attr_current_cover_tilt_position",
             tcv.number(self, CONF_TILT, 0, 100),
         )
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-
-        self._tilt_optimistic = (
-            config.get(CONF_TILT_OPTIMISTIC) or CONF_TILT not in self._templates
+        self.add_assumed_attribute(
+            "_attr_current_cover_tilt_position",
+            CONF_TILT,
+            TILT_ACTION,
+            optimistic_option=CONF_TILT_OPTIMISTIC,
         )
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_supported_speeds = config.get(CONF_SUPPORTED_SPEEDS) or None
 
         # The config requires (open and close scripts) or a set position script,
         # therefore the base supported features will always include them.
@@ -252,6 +263,8 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
+        if self._attr_supported_speeds:
+            self._attr_supported_features |= CoverEntityFeature.SPEED
 
     @property
     @override
@@ -280,15 +293,25 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             self._attr_is_opening = False
             self._attr_is_closing = False
 
+    def _speed_variables(self, kwargs: dict[str, Any]) -> dict[str, Any]:
+        """Return the speed script variable if speeds are configured."""
+        # Without speeds, a variable named speed from the config is kept
+        if not self._attr_supported_speeds:
+            return {}
+        return {"speed": kwargs.get(ATTR_SPEED)}
+
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
+        speed_variables = self._speed_variables(kwargs)
         if open_script := self._action_scripts.get(OPEN_ACTION):
-            await self.async_run_script(open_script, context=self._context)
+            await self.async_run_script(
+                open_script, run_variables=speed_variables, context=self._context
+            )
         elif position_script := self._action_scripts.get(POSITION_ACTION):
             await self.async_run_script(
                 position_script,
-                run_variables={"position": 100},
+                run_variables={"position": 100, **speed_variables},
                 context=self._context,
             )
         if self._attr_assumed_state:
@@ -298,12 +321,15 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
+        speed_variables = self._speed_variables(kwargs)
         if close_script := self._action_scripts.get(CLOSE_ACTION):
-            await self.async_run_script(close_script, context=self._context)
+            await self.async_run_script(
+                close_script, run_variables=speed_variables, context=self._context
+            )
         elif position_script := self._action_scripts.get(POSITION_ACTION):
             await self.async_run_script(
                 position_script,
-                run_variables={"position": 0},
+                run_variables={"position": 0, **speed_variables},
                 context=self._context,
             )
         if self._attr_assumed_state:
@@ -319,50 +345,37 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
-        self._attr_current_cover_position = kwargs[ATTR_POSITION]
+        position = kwargs[ATTR_POSITION]
         await self.async_run_script(
             self._action_scripts[POSITION_ACTION],
-            run_variables={"position": self._attr_current_cover_position},
+            run_variables={"position": position, **self._speed_variables(kwargs)},
             context=self._context,
         )
         if self._attr_assumed_state:
+            self._attr_current_cover_position = position
             self.async_write_ha_state()
+
+    async def _set_tilt_position(self, position: int) -> None:
+        if script := self._action_scripts.get(TILT_ACTION):
+            await self.async_run_script(
+                script, run_variables={"tilt": position}, context=self._context
+            )
+        self.write_assumed_attribute(CONF_TILT, position)
 
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover open."""
-        self._attr_current_cover_tilt_position = 100
-        await self.async_run_script(
-            self._action_scripts[TILT_ACTION],
-            run_variables={"tilt": self._attr_current_cover_tilt_position},
-            context=self._context,
-        )
-        if self._tilt_optimistic:
-            self.async_write_ha_state()
+        await self._set_tilt_position(100)
 
     @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
-        self._attr_current_cover_tilt_position = 0
-        await self.async_run_script(
-            self._action_scripts[TILT_ACTION],
-            run_variables={"tilt": self._attr_current_cover_tilt_position},
-            context=self._context,
-        )
-        if self._tilt_optimistic:
-            self.async_write_ha_state()
+        await self._set_tilt_position(0)
 
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
-        await self.async_run_script(
-            self._action_scripts[TILT_ACTION],
-            run_variables={"tilt": self._attr_current_cover_tilt_position},
-            context=self._context,
-        )
-        if self._tilt_optimistic:
-            self.async_write_ha_state()
+        await self._set_tilt_position(kwargs[ATTR_TILT_POSITION])
 
     @property
     @override

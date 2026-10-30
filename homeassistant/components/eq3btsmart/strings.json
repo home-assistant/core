@@ -65,6 +65,12 @@
   "exceptions": {
     "device_not_found": {
       "message": "[{mac_address}] Device could not be found: {reason}"
+    },
+    "set_hvac_mode_failed": {
+      "message": "Failed to set the HVAC mode."
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set the target temperature."
     }
   }
 }

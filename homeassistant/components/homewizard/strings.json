@@ -146,9 +146,6 @@
       "unique_meter_id": {
         "name": "Smart meter identifier"
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "voltage_sag_phase_count": {
         "name": "Voltage sags detected phase {phase}"
       },

@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class SensorData:
     """Sensor data."""
 
-    addresses: dict[str, list[snicaddr]]
+    addresses: dict[str, list[snicaddr]] | None
     battery: sbattery | None
     boot_time: datetime
     cpu_percent: float | None

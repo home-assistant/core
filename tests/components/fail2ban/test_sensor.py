@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock, mock_open, patch
 
+from pytest_homeassistant.common import assert_setup_component
+
 from homeassistant.components.fail2ban.sensor import (
     STATE_ALL_BANS,
     STATE_CURRENT_BANS,
@@ -10,8 +12,6 @@ from homeassistant.components.fail2ban.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
 
 
 def fake_log(log_key):
