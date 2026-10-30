@@ -1974,6 +1974,9 @@ phone-modem==0.1.1
 # homeassistant.components.remote_rpi_gpio
 pigpio==1.78
 
+# homeassistant.components.pikvm
+pikvm-aio==0.1.5
+
 # homeassistant.components.plex
 plexauth==0.0.6
 

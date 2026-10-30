@@ -1,0 +1,155 @@
+{
+  "auth": {
+    "enabled": true
+  },
+  "extras": {
+    "https": {
+      "daemon": "kvmd-certmgr",
+      "description": "Manage HTTPS Certificates and Certificate Authority",
+      "enabled": true,
+      "icon": "extras/https/ssl.svg",
+      "name": "HTTPS / SSL",
+      "path": "extras/https",
+      "place": 25,
+      "started": true
+    },
+    "ipmi": {
+      "daemon": "kvmd-ipmi",
+      "description": "Show IPMI information",
+      "enabled": false,
+      "icon": "share/svg/ipmi.svg",
+      "name": "IPMI",
+      "path": "ipmi",
+      "place": 21,
+      "port": 623,
+      "started": false
+    },
+    "vnc": {
+      "daemon": "kvmd-vnc",
+      "description": "Show VNC information",
+      "enabled": true,
+      "icon": "share/svg/vnc.svg",
+      "name": "VNC",
+      "path": "vnc",
+      "place": 20,
+      "port": 5900,
+      "started": true
+    },
+    "webterm": {
+      "daemon": "kvmd-webterm",
+      "description": "Open terminal in a web browser",
+      "enabled": true,
+      "icon": "extras/webterm/terminal.svg",
+      "name": "Terminal",
+      "path": "extras/webterm/ttyd",
+      "place": 10,
+      "started": true
+    }
+  },
+  "fan": {
+    "monitored": true,
+    "state": {
+      "fan": {
+        "last_fail_ts": -1.0,
+        "ok": true,
+        "pwm": 394,
+        "speed": 38.45
+      },
+      "hall": {
+        "available": false,
+        "rpm": 0
+      },
+      "service": {
+        "now_ts": 1909931.89
+      },
+      "temp": {
+        "fixed": 53.07,
+        "real": 53.56
+      }
+    }
+  },
+  "hw": {
+    "health": {
+      "cpu": {
+        "percent": 9
+      },
+      "mem": {
+        "available": 5241798656,
+        "percent": 36.2,
+        "total": 8222351360
+      },
+      "temp": {
+        "cpu": 52.582
+      },
+      "throttling": {
+        "ignore_past": false,
+        "parsed_flags": {
+          "freq_capped": {
+            "now": false,
+            "past": false
+          },
+          "throttled": {
+            "now": false,
+            "past": false
+          },
+          "undervoltage": {
+            "now": false,
+            "past": false
+          }
+        },
+        "raw_flags": 0
+      }
+    },
+    "platform": {
+      "base": "Raspberry Pi 4 Model B Rev 1.4",
+      "board": "rpi4",
+      "model": "v3",
+      "serial": "0000000012345678",
+      "type": "rpi",
+      "video": "hdmi"
+    }
+  },
+  "meta": {
+    "kvm": {},
+    "server": {
+      "host": "pikvm"
+    }
+  },
+  "node": {
+    "host": "pikvm"
+  },
+  "system": {
+    "kernel": {
+      "machine": "armv7l",
+      "release": "6.12.105-2-rpi",
+      "system": "Linux",
+      "version": "#1 SMP Thu Sep 10 18:01:16 UTC 2026"
+    },
+    "kvmd": {
+      "version": "4.219"
+    },
+    "streamer": {
+      "app": "ustreamer",
+      "features": {
+        "WITH_GPIO": true,
+        "WITH_JANUS": true,
+        "WITH_PDEATHSIG": true,
+        "WITH_PTHREAD_NP": true,
+        "WITH_PYTHON": true,
+        "WITH_SETPROCTITLE": true,
+        "WITH_SYSTEMD": true,
+        "WITH_V4P": true
+      },
+      "version": "6.67"
+    }
+  },
+  "uptime": {
+    "parts": {
+      "days": 22,
+      "hours": 2,
+      "minutes": 31,
+      "seconds": 52
+    },
+    "total": 1909912
+  }
+}
