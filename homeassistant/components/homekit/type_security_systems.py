@@ -171,8 +171,8 @@ class SecuritySystem(HomeAccessory):
             strict=True,
         ):
             if char.value not in valid_values.values():
-                # Disarmed is always valid; pyhap logs an error otherwise
-                char.set_value(HK_ALARM_DISARMED)
+                # Valid before override_properties, silent so only real states notify
+                char.set_value(HK_ALARM_DISARMED, should_notify=False)
             char.override_properties(valid_values=valid_values)
         self._skipped.clear()
         self.driver.async_update_accessories_hash()

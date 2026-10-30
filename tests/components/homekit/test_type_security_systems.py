@@ -664,3 +664,34 @@ async def test_feature_removal_falls_back_to_disarmed(
     # Once before home was added, and again after it was removed.
     assert caplog.text.count("Skipping unsupported SecuritySystemCurrentState") == 2
     assert "is an invalid value" not in caplog.text
+
+
+async def test_feature_removal_does_not_notify_fallback(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test controllers only see the real state when the active mode is removed."""
+    acc = await _async_setup_panel(hass, hk_driver, HOME_AND_AWAY)
+    hass.states.async_set(
+        PANEL_ENTITY_ID,
+        AlarmControlPanelState.ARMED_HOME,
+        {"supported_features": HOME_AND_AWAY},
+    )
+    await hass.async_block_till_done()
+
+    with (
+        patch.object(hk_driver, "async_update_advertisement"),
+        patch.object(acc, "publish") as mock_publish,
+    ):
+        hass.states.async_set(
+            PANEL_ENTITY_ID,
+            AlarmControlPanelState.ARMED_AWAY,
+            {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
+        )
+        await hass.async_block_till_done()
+
+    # The fallback to disarmed must not be sent ahead of away.
+    assert [
+        call.args[0]
+        for call in mock_publish.call_args_list
+        if call.args[1] is acc.char_current_state
+    ] == [1]
