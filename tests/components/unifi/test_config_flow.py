@@ -367,23 +367,52 @@ async def test_reauth_flow_update_configuration(
         "name": config_entry.title,
     }
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "new_name",
-            CONF_PASSWORD: "new_pass",
-            CONF_PORT: 1234,
-            CONF_VERIFY_SSL: True,
-        },
-    )
-    await hass.async_block_till_done()
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "new_name",
+                CONF_PASSWORD: "new_pass",
+                CONF_PORT: 1234,
+                CONF_VERIFY_SSL: True,
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    mock_reload.assert_called_once_with(config_entry.entry_id)
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
     assert config_entry.data[CONF_USERNAME] == "new_name"
     assert config_entry.data[CONF_PASSWORD] == "new_pass"
+
+
+async def test_reauth_flow_reloads_not_loaded_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_requests: Callable[[str, str], None],
+) -> None:
+    """Verify reauth flow reloads an entry that is not loaded."""
+    mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "new_name",
+                CONF_PASSWORD: "new_pass",
+                CONF_PORT: 1234,
+                CONF_VERIFY_SSL: True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_reload.assert_called_once_with(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -434,20 +463,22 @@ async def test_reconfigure_flow_update_configuration(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "new_name",
-            CONF_PASSWORD: "new_pass",
-            CONF_PORT: 1234,
-            CONF_VERIFY_SSL: True,
-        },
-    )
-    await hass.async_block_till_done()
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "new_name",
+                CONF_PASSWORD: "new_pass",
+                CONF_PORT: 1234,
+                CONF_VERIFY_SSL: True,
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    mock_reload.assert_called_once_with(config_entry.entry_id)
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
     assert config_entry.data[CONF_USERNAME] == "new_name"
     assert config_entry.data[CONF_PASSWORD] == "new_pass"
