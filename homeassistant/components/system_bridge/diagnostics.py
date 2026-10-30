@@ -51,6 +51,9 @@ async def async_get_config_entry_diagnostics(
         data["networks"].pop("connections")
         # Interface names such as enx001122aabbcc can hold the MAC address
         data["networks"] = async_redact_data(data["networks"], {"name"})
+    if data["battery"] is not None:
+        # Bluetooth battery names such as hid-AA:BB:CC:DD:EE:FF-battery hold the MAC
+        data["battery"] = async_redact_data(data["battery"], {"name"})
     if data["disks"] is not None:
         # Disks are named after their device path, and mount options can hold paths
         data["disks"] = async_redact_data(data["disks"], {"name", "options"})

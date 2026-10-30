@@ -12,7 +12,7 @@
         'batteries': list([
           dict({
             'model': 'model',
-            'name': 'BAT0',
+            'name': '**REDACTED**',
             'percentage': 98.4,
             'power': 25.5,
             'scope': 'system',
@@ -22,7 +22,7 @@
           }),
           dict({
             'model': 'mouse',
-            'name': 'hidpp_battery_1',
+            'name': '**REDACTED**',
             'percentage': 96,
             'power': None,
             'scope': 'device',
