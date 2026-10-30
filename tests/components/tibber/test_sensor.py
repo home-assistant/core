@@ -63,6 +63,12 @@ async def test_realtime_error_recovery(
     assert state.state == STATE_UNAVAILABLE
     assert caplog.messages.count("Realtime measurement failed") == 1
 
+    on_update({"data": {"liveMeasurement": {"voltagePhase1": 230}}})
+    await hass.async_block_till_done()
+    state = hass.states.get(RT_POWER_ENTITY_ID)
+    assert state is not None
+    assert state.state == "200"
+
 
 async def test_price_sensor_state_unit_and_attributes(
     recorder_mock: Recorder,
