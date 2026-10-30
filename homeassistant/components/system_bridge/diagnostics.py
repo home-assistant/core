@@ -20,6 +20,7 @@ TO_REDACT = {
     "broadcast",
     "camera_usage",
     "device",
+    "discovery_keys",
     "fqdn",
     "hostname",
     "ip_address_4",
@@ -27,6 +28,7 @@ TO_REDACT = {
     "mac_address",
     "microphone_usage",
     "mount_point",
+    "ptp",
     "ssid",
     "subtitle",
     "thumbnail",
@@ -47,6 +49,9 @@ async def async_get_config_entry_diagnostics(
     data.pop("processes")
     if data["networks"] is not None:
         data["networks"].pop("connections")
+    if data["disks"] is not None:
+        # Disks are named after their device path
+        data["disks"] = async_redact_data(data["disks"], {"name"})
 
     listen_task = coordinator.listen_task
     last_exception = coordinator.last_exception

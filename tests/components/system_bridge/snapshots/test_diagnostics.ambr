@@ -116,7 +116,7 @@
               'write_count': 4,
               'write_time': 6,
             }),
-            'name': 'name',
+            'name': '**REDACTED**',
             'partitions': list([
               dict({
                 'category': 'primary',
@@ -282,7 +282,7 @@
                 'broadcast': '**REDACTED**',
                 'family': None,
                 'netmask': 'netmask',
-                'ptp': 'ptp',
+                'ptp': '**REDACTED**',
               }),
             ]),
             'io': dict({
@@ -386,8 +386,7 @@
         'token': '**REDACTED**',
       }),
       'disabled_by': None,
-      'discovery_keys': dict({
-      }),
+      'discovery_keys': '**REDACTED**',
       'domain': 'system_bridge',
       'minor_version': 3,
       'options': dict({
