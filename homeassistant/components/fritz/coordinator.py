@@ -298,11 +298,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             LOGGER.debug("register entity %s for updates", key)
             self._entity_update_functions[key] = update_fn
             if self.fritz_status:
-                self.data["entity_states"][
-                    key
-                ] = await self.hass.async_add_executor_job(
-                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
-                )
+                try:
+                    self.data["entity_states"][
+                        key
+                    ] = await self.hass.async_add_executor_job(
+                        update_fn,
+                        self.fritz_status,
+                        self.data["entity_states"].get(key),
+                    )
+                except FRITZ_EXCEPTIONS:
+                    # The entity is not added, so it would never unregister
+                    unregister_entity_updates()
+                    raise
         return unregister_entity_updates
 
     async def async_register_wifi_network(self, index: int) -> Callable[[], None]:
@@ -948,6 +955,24 @@ class AvmWrapper(FritzBoxTools):
 
         return bool(await self.hass.async_add_executor_job(wrap_external_ipv6))
 
+    async def async_addon_infos_supported(self) -> bool:
+        """Check if the WAN interface provides transmission rate and traffic data."""
+
+        def wrap_transmission_rate() -> tuple[int, int]:
+            return self.fritz_status.transmission_rate  # type: ignore[no-any-return]
+
+        if not self.device_is_router:
+            return False
+
+        try:
+            await self.hass.async_add_executor_job(wrap_transmission_rate)
+        except FritzConnectionException:
+            LOGGER.debug(
+                "Transmission rate and traffic data not supported by the device"
+            )
+            return False
+        return True
+
     async def async_get_connection_info(self) -> ConnectionInfo:
         """Return ConnectionInfo data."""
 
@@ -957,6 +982,7 @@ class AvmWrapper(FritzBoxTools):
             mesh_role=self.mesh_role,
             wan_enabled=self.device_is_router,
             ipv6_active=await self.async_ipv6_active(),
+            addon_infos_supported=await self.async_addon_infos_supported(),
         )
         LOGGER.debug(
             "ConnectionInfo for FritzBox %s: %s",
