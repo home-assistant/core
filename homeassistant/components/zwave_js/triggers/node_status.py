@@ -50,17 +50,15 @@ _OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
 
 
 def _validate_status_filter(options: dict[str, Any]) -> dict[str, Any]:
-    """Validate the group behaviors get a status filter to count.
+    """Validate the group behaviors get a to status to count.
 
     The first and all behaviors count the nodes whose status satisfies the
-    trigger, so without a filter every node counts and the group is vacuous.
+    trigger. Without to, any status outside from would count, and sleeping
+    nodes are never alive, so a mixed network would miscount.
     """
-    if options[ATTR_BEHAVIOR] != BEHAVIOR_EACH and not (
-        options.get(CONF_FROM) or options.get(CONF_TO)
-    ):
+    if options[ATTR_BEHAVIOR] != BEHAVIOR_EACH and not options.get(CONF_TO):
         raise probatio.Invalid(
-            f"{ATTR_BEHAVIOR} {options[ATTR_BEHAVIOR]} requires "
-            f"{CONF_FROM} or {CONF_TO}"
+            f"{ATTR_BEHAVIOR} {options[ATTR_BEHAVIOR]} requires {CONF_TO}"
         )
     return options
 

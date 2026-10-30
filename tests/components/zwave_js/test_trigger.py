@@ -48,6 +48,8 @@ from homeassistant.util import dt as dt_util
 
 from .common import COMMAND_CLASS_MARKERS, SCHLAGE_BE469_LOCK_ENTITY
 
+LOCK_BATTERY_SENSOR = "sensor.touchscreen_deadbolt_battery_level"
+
 
 async def test_zwave_js_value_updated(
     hass: HomeAssistant,
@@ -2560,10 +2562,11 @@ async def test_node_status_trigger_ignores_other_entities(
         get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
-    assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
+    # A sensor passes the domain filter, so only the unique ID check excludes it
+    assert hass.states.get(LOCK_BATTERY_SENSOR)
     await _setup_node_status_automation(hass, device.id)
 
-    hass.states.async_set(SCHLAGE_BE469_LOCK_ENTITY, "unlocked")
+    hass.states.async_set(LOCK_BATTERY_SENSOR, "5")
     await hass.async_block_till_done()
 
     assert len(service_calls) == 0
@@ -2594,6 +2597,10 @@ async def test_node_status_trigger_invalid_status(
 
 
 @pytest.mark.parametrize("behavior", ["first", "all"])
+@pytest.mark.parametrize(
+    "status_filter",
+    [pytest.param({}, id="no_filter"), pytest.param({"from": ["alive"]}, id="from")],
+)
 async def test_node_status_trigger_group_behavior_needs_status(
     hass: HomeAssistant,
     client: MagicMock,
@@ -2601,8 +2608,9 @@ async def test_node_status_trigger_group_behavior_needs_status(
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     behavior: str,
+    status_filter: dict[str, list[str]],
 ) -> None:
-    """Test the group behaviors are rejected without a status filter to count."""
+    """Test the group behaviors are rejected without a to status to count."""
     device = device_registry.async_get_device_by_identifier(
         get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
@@ -2613,7 +2621,11 @@ async def test_node_status_trigger_group_behavior_needs_status(
             [
                 {
                     "platform": f"{DOMAIN}.node_status",
-                    "options": {"device_id": device.id, "behavior": behavior},
+                    "options": {
+                        "device_id": device.id,
+                        "behavior": behavior,
+                        **status_filter,
+                    },
                 }
             ],
         )

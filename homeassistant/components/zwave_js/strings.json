@@ -1177,11 +1177,11 @@
           "name": "[%key:component::zwave_js::common::trigger_for_name%]"
         },
         "from": {
-          "description": "Only trigger when the previous status is one of these. The first and all behaviors require From or To.",
+          "description": "Only trigger when the previous status is one of these. With To empty, triggers when the node leaves these statuses.",
           "name": "From"
         },
         "to": {
-          "description": "Only trigger when the new status is one of these. The first and all behaviors require From or To.",
+          "description": "Only trigger when the new status is one of these. Required by the first and all behaviors.",
           "name": "To"
         }
       },
