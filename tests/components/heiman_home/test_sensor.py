@@ -139,7 +139,6 @@ async def test_sensor_entity_creation(
     assert len(added_entities) == 1
     sensor = added_entities[0]
     assert sensor.unique_id == "device-1_temperature"
-    assert sensor.name == "Temperature"
 
 
 async def test_sensor_entity_available_property(hass: HomeAssistant) -> None:

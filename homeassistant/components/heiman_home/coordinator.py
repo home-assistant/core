@@ -2,7 +2,7 @@
 
 import contextlib
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -23,7 +23,6 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .api import HeimanApiClient
 from .const import CONF_HOME_ID, CONF_USER_ID
@@ -45,7 +44,6 @@ class HeimanData:
     user_info: HeimanUser | None = None
     home_info: HeimanHome | None = None
     devices: dict[str, HeimanDevice] = field(default_factory=dict)
-    last_update: datetime | None = None
     errors: dict[str, str] = field(default_factory=dict)
 
 
@@ -81,6 +79,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         self.api_client = api_client
         self.config_entry = config_entry
+        self.home_id: str = config_entry.data[CONF_HOME_ID]
         self.data = HeimanData()
         self.mqtt_client: HeimanMqttClient | None = None
         self.oauth_session = oauth_session
@@ -95,12 +94,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         # Ensure client is initialized
         await self.api_client.initialize()
 
-        # Get home ID
-        home_id = self.config_entry.data.get(CONF_HOME_ID)
-        if not home_id:
-            msg = "Home ID not found in config entry"
-            raise UpdateFailed(msg)
-
         # Clear errors at the start of update, then repopulate as we go
         self.data.errors.clear()
 
@@ -108,10 +101,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         await self._fetch_user_and_home_info()
 
         # Get and process devices
-        await self._fetch_and_process_devices(home_id)
-
-        # Update last update time
-        self.data.last_update = dt_util.utcnow()
+        await self._fetch_and_process_devices(self.home_id)
 
         return self.data
 
@@ -138,14 +128,13 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             try:
                 homes = await cloud_wrapper.async_get_homes()
                 if homes:
-                    home_id = self.config_entry.data.get(CONF_HOME_ID)
                     home_info = next(
-                        (h for h in homes if h.home_id == home_id),
+                        (h for h in homes if h.home_id == self.home_id),
                         None,
                     )
                     if home_info is None:
                         raise UpdateFailed(
-                            f"Configured home_id '{home_id}' was not found in the account"
+                            f"Configured home_id '{self.home_id}' was not found in the account"
                         )
                     self.data.home_info = home_info
             except HeimanAuthError as err:
@@ -259,7 +248,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         # Try to get from config entry token data first
         token_data = self.config_entry.data.get(CONF_TOKEN)
-        if token_data and isinstance(token_data, dict):
+        if token_data:
             access_token = token_data.get("access_token")
 
         # Fallback: try to get from OAuth2 session if not in config

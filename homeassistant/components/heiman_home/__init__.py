@@ -97,11 +97,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
     if not unload_ok:
         return False
 
-    # runtime_data may not exist if setup failed before it was assigned
-    coordinator = getattr(entry, "runtime_data", None)
-    if coordinator is None:
-        # Setup failed before coordinator was created, nothing to clean up
-        return True
+    coordinator = entry.runtime_data
 
     # Disconnect MQTT client (may not be initialized if setup failed early)
     if coordinator.mqtt_client is not None:

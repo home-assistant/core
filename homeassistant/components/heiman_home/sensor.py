@@ -5,7 +5,6 @@ from typing import override
 
 from heimanconnect import DeviceProperty, HeimanDevice
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -26,6 +25,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import HeimanConfigEntry
 from .const import DOMAIN
 from .coordinator import HeimanDataUpdateCoordinator
 
@@ -35,56 +35,48 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="humidity",
-        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="battery",
-        translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltage",
-        translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="power",
-        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="energy",
-        translation_key="energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="co_concentration",
-        translation_key="co_concentration",
         device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="signal_strength",
-        translation_key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -94,7 +86,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: HeimanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Heiman sensors based on a config entry."""
@@ -195,9 +187,6 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         # Get property object
         prop = device.properties.get(property_identifier)
 
-        # Set name
-        self._attr_name = prop.name if prop else property_identifier
-
         # Get device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
@@ -262,7 +251,6 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                     config = None
 
         if config and matched_key:
-            self._attr_translation_key = config.translation_key
             if config.device_class:
                 self._attr_device_class = config.device_class
             self._attr_native_unit_of_measurement = config.native_unit_of_measurement

@@ -23,27 +23,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
-async def test_coordinator_async_update_data_no_home_id(hass: HomeAssistant) -> None:
-    """Test _async_update_data raises UpdateFailed when home_id missing."""
-    config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {}  # No CONF_HOME_ID
-    config_entry.entry_id = "test-entry"
-
-    mock_api_client = MagicMock()
-    mock_api_client.initialize = AsyncMock()
-
-    coordinator = HeimanDataUpdateCoordinator(
-        hass=hass,
-        logger=MagicMock(),
-        api_client=mock_api_client,
-        config_entry=config_entry,
-    )
-
-    # Should raise UpdateFailed
-    with pytest.raises(UpdateFailed, match="Home ID not found"):
-        await coordinator._async_update_data()
-
-
 async def test_coordinator_fetch_user_info_connection_error(
     hass: HomeAssistant,
 ) -> None:
@@ -699,7 +678,6 @@ async def test_coordinator_async_update_data_success(hass: HomeAssistant) -> Non
     # Verify data was updated
     assert result.user_info is not None
     assert result.home_info is not None
-    assert result.last_update is not None
     assert "device-1" in result.devices
 
 

@@ -49,7 +49,6 @@ async def test_coordinator_get_device(hass: HomeAssistant) -> None:
         user_info=None,
         home_info=None,
         errors={},
-        last_update=None,
     )
 
     # Test getting existing device
@@ -106,7 +105,6 @@ async def test_coordinator_get_devices_by_type(hass: HomeAssistant) -> None:
         user_info=None,
         home_info=None,
         errors={},
-        last_update=None,
     )
 
     # Test get_devices_by_type
@@ -145,7 +143,6 @@ async def test_coordinator_mqtt_init_no_token(hass: HomeAssistant) -> None:
         user_info=None,
         home_info=None,
         errors={},
-        last_update=None,
     )
 
     # Mock OAuth2 session that raises exception
@@ -192,7 +189,6 @@ async def test_coordinator_mqtt_init_no_user_display_name(hass: HomeAssistant) -
         user_info=None,  # No user info
         home_info=None,
         errors={},
-        last_update=None,
     )
 
     # Mock OAuth2 session
@@ -249,7 +245,6 @@ async def test_coordinator_mqtt_init_cloud_client_exception(
         user_info=None,
         home_info=None,
         errors={},
-        last_update=None,
     )
 
     # Mock OAuth2 session
@@ -318,7 +313,6 @@ async def test_coordinator_read_device_properties_with_returned_properties(
         user_info=None,
         home_info=None,
         errors={},
-        last_update=None,
     )
 
     # Mock MQTT client that returns properties
@@ -365,7 +359,6 @@ async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> N
         user_info=None,
         home_info=None,
         errors={},
-        last_update=None,
     )
 
     # Mock OAuth2 session
@@ -415,7 +408,6 @@ async def test_coordinator_mqtt_init_already_initialized(hass: HomeAssistant) ->
         user_info=None,
         home_info=None,
         errors={},
-        last_update=None,
     )
 
     # Set mqtt_client to simulate already initialized
@@ -453,7 +445,6 @@ async def test_coordinator_mqtt_init_token_none_after_validation(
         user_info=None,
         home_info=None,
         errors={},
-        last_update=None,
     )
 
     # Mock OAuth2 session with token=None after validation
