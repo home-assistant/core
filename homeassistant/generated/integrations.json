@@ -5271,7 +5271,9 @@
       "name": "Imou",
       "integration_type": "hub",
       "categories": [
-        "security_safety.cameras"
+        "security_safety.cameras",
+        "security_safety.alarm_systems",
+        "plugs_switches"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
