@@ -517,8 +517,34 @@ async def test_join_players(hass: HomeAssistant, mock_api_object: Mock) -> None:
     )
 
 
-async def test_join_players_unknown_entity(
+async def test_join_players_from_zone(
     hass: HomeAssistant, mock_api_object: Mock
+) -> None:
+    """Test joining from an output also enables the targeted output."""
+    await _service_call(
+        hass,
+        TEST_ZONE_ENTITY_NAMES[2],
+        SERVICE_JOIN,
+        {ATTR_GROUP_MEMBERS: [TEST_ZONE_ENTITY_NAMES[0]]},
+    )
+    mock_api_object.change_output.assert_any_call(
+        SAMPLE_OUTPUTS_ON[2]["id"], selected=True
+    )
+    mock_api_object.change_output.assert_any_call(
+        SAMPLE_OUTPUTS_ON[0]["id"], selected=True
+    )
+    assert mock_api_object.change_output.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(TEST_MASTER_ENTITY_NAME, id="master"),
+        pytest.param(TEST_ZONE_ENTITY_NAMES[2], id="output"),
+    ],
+)
+async def test_join_players_unknown_entity(
+    hass: HomeAssistant, mock_api_object: Mock, entity_id: str
 ) -> None:
     """Test joining an unknown entity raises."""
     with pytest.raises(
@@ -526,7 +552,7 @@ async def test_join_players_unknown_entity(
     ):
         await _service_call(
             hass,
-            TEST_MASTER_ENTITY_NAME,
+            entity_id,
             SERVICE_JOIN,
             {ATTR_GROUP_MEMBERS: ["media_player.nonexistent"]},
         )
@@ -576,10 +602,62 @@ async def test_unjoin_players(hass: HomeAssistant, mock_api_object: Mock) -> Non
     mock_api_object.set_enabled_outputs.assert_called_once_with([])
 
 
+@pytest.mark.parametrize(
+    "output_index",
+    [pytest.param(0, id="selected"), pytest.param(2, id="unselected")],
+)
+async def test_unjoin_output(
+    hass: HomeAssistant, mock_api_object: Mock, output_index: int
+) -> None:
+    """Test unjoining an output only disables that output."""
+    await _service_call(hass, TEST_ZONE_ENTITY_NAMES[output_index], SERVICE_UNJOIN)
+    mock_api_object.change_output.assert_called_once_with(
+        SAMPLE_OUTPUTS_ON[output_index]["id"], selected=False
+    )
+    mock_api_object.set_enabled_outputs.assert_not_called()
+
+
+async def test_unjoin_output_group_update(
+    hass: HomeAssistant,
+    mock_api_object: Mock,
+    get_request_return_values: dict[str, Any],
+) -> None:
+    """Test group membership follows output updates after unjoining."""
+    await _service_call(hass, TEST_ZONE_ENTITY_NAMES[0], SERVICE_UNJOIN)
+    get_request_return_values["outputs"] = [
+        SAMPLE_OUTPUTS_UNSELECTED[0],
+        SAMPLE_OUTPUTS_ON[1],
+        SAMPLE_OUTPUTS_ON[2],
+    ]
+    updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
+    await updater_update(["outputs"])
+    await hass.async_block_till_done()
+
+    expected_group = [TEST_MASTER_ENTITY_NAME, TEST_ZONE_ENTITY_NAMES[1]]
+    assert (
+        hass.states.get(TEST_MASTER_ENTITY_NAME).attributes[ATTR_GROUP_MEMBERS]
+        == expected_group
+    )
+    assert (
+        hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).attributes[ATTR_GROUP_MEMBERS] == []
+    )
+    assert (
+        hass.states.get(TEST_ZONE_ENTITY_NAMES[1]).attributes[ATTR_GROUP_MEMBERS]
+        == expected_group
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(TEST_MASTER_ENTITY_NAME, id="master"),
+        pytest.param(TEST_ZONE_ENTITY_NAMES[0], id="output"),
+    ],
+)
 @pytest.mark.usefixtures("mock_api_object")
-def test_group_members(hass: HomeAssistant) -> None:
+def test_group_members(hass: HomeAssistant, entity_id: str) -> None:
     """Test group_members lists the master and all selected outputs."""
-    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    state = hass.states.get(entity_id)
     assert state.attributes[ATTR_GROUP_MEMBERS] == [
         TEST_MASTER_ENTITY_NAME,
         TEST_ZONE_ENTITY_NAMES[0],
