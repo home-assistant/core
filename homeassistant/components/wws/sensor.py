@@ -115,7 +115,11 @@ class WwsSensor(CoordinatorEntity[WwsCoordinator], SensorEntity):
                 if key in measurement
             }
 
-        period: dict[str, Any] | None = self.current_period
+        period: dict[str, Any] | None = (
+            self.next_period
+            if self.entity_description.key == "next_price_ct_kwh"
+            else self.current_period
+        )
         attributes: dict[str, Any] = (
             {
                 key: period[key]

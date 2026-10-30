@@ -36,6 +36,7 @@ async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "WestfalenWIND Ökostrom smart"
+    assert result["result"].unique_id == "test@wws.de"
     assert result["data"] == {
         "username": "test@wws.de",
         "password": "test-password",
@@ -44,51 +45,79 @@ async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
 
 
 async def test_config_flow_invalid_auth(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test invalid credentials are rejected."""
     with patch(
         "homeassistant.components.wws.config_flow.DynamiT.async_login",
-        side_effect=EdAuthError("Invalid credentials"),
-    ):
+        new_callable=AsyncMock,
+    ) as mock_login:
+        mock_login.side_effect = EdAuthError("Invalid credentials")
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        flow_id = result["flow_id"]
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            flow_id,
             {
                 "username": "wrong@example.com",
                 "password": "wrong-password",
             },
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_auth"}
+
+        mock_login.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                "username": "test@wws.de",
+                "password": "test-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_config_flow_cannot_connect(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test connection errors are handled."""
     with patch(
         "homeassistant.components.wws.config_flow.DynamiT.async_login",
-        side_effect=EdAPIError("API unavailable"),
-    ):
+        new_callable=AsyncMock,
+    ) as mock_login:
+        mock_login.side_effect = EdAPIError("API unavailable")
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        flow_id = result["flow_id"]
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            flow_id,
             {
                 "username": "test@example.com",
                 "password": "test-password",
             },
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        mock_login.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                "username": "test@wws.de",
+                "password": "test-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_config_flow_already_configured(
