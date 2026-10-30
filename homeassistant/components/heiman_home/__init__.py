@@ -61,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         config_entry=entry,
         oauth_session=session,
     )
-    entry.async_on_unload(coordinator.async_shutdown)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -86,6 +85,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
-    # The coordinator's resources are released by async_shutdown, which is
-    # registered with entry.async_on_unload during setup.
+    # The coordinator's resources are released by its async_shutdown, which
+    # DataUpdateCoordinator registers with entry.async_on_unload.
     return True

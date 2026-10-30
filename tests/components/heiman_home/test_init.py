@@ -380,18 +380,23 @@ async def test_setup_mqtt_init_failure_with_cleanup(
 
     mock_coordinator = MagicMock()
     mock_coordinator.api_client = mock_api_client_instance
-    # The coordinator releases resources through async_shutdown, which the
-    # integration registers with entry.async_on_unload.
+    # The coordinator releases resources through async_shutdown, which
+    # DataUpdateCoordinator registers with entry.async_on_unload. The class
+    # is mocked here, so mimic the base class registration.
     mock_coordinator.async_shutdown = mock_api_client_instance.close
     mock_coordinator.async_init_mqtt_client = AsyncMock(
         side_effect=HeimanMQTTError("MQTT connection failed")
     )
     mock_coordinator.async_config_entry_first_refresh = AsyncMock(return_value=None)
 
+    def _create_coordinator(*args: object, **kwargs: object) -> MagicMock:
+        entry.async_on_unload(mock_coordinator.async_shutdown)
+        return mock_coordinator
+
     with (
         patch(
             "homeassistant.components.heiman_home.HeimanDataUpdateCoordinator",
-            return_value=mock_coordinator,
+            side_effect=_create_coordinator,
         ),
         patch(
             "homeassistant.components.heiman_home.async_get_config_entry_implementation",
