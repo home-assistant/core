@@ -16,6 +16,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "peak_active": {
+        "name": "Peak event in progress"
+      },
+      "peak_today_am": {
+        "name": "Peak event today AM"
+      },
+      "peak_today_pm": {
+        "name": "Peak event today PM"
+      },
+      "peak_tomorrow_am": {
+        "name": "Peak event tomorrow AM"
+      },
+      "peak_tomorrow_pm": {
+        "name": "Peak event tomorrow PM"
+      }
+    },
     "sensor": {
       "event_begin": {
         "name": "Peak event begins"

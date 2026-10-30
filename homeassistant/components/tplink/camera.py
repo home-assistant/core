@@ -22,9 +22,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
 from .const import CONF_CAMERA_CREDENTIALS
-from .coordinator import TPLinkDataUpdateCoordinator
+from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkModuleEntity, TPLinkModuleEntityDescription
 
 _LOGGER = logging.getLogger(__name__)

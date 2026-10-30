@@ -12,6 +12,7 @@ from cookidoo_api import (
     CookidooRequestException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
@@ -22,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import AUTH_DATA
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

@@ -9,6 +9,15 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohttp
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
@@ -42,16 +51,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_fire_time_changed,
-    mock_integration,
-    mock_platform,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 SNAPSHOT_ENDPOINT_URL = SNAPSHOT_DEFAULT_URL + SNAPSHOT_URL_PATH
 

@@ -1,6 +1,7 @@
 {
   "domain": "crownstone",
   "name": "Crownstone",
+  "categories": ["plugs_switches"],
   "codeowners": ["@Crownstone", "@RicArch97"],
   "config_flow": true,
   "dependencies": ["usb"],

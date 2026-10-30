@@ -10,6 +10,7 @@ from pyportainer import (
     PortainerTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.components.portainer.services import (
@@ -29,8 +30,6 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import setup_integration
 from .conftest import TEST_CONTAINER_ID, TEST_CONTAINER_NAME, TEST_ENTRY
-
-from tests.common import MockConfigEntry, MockUser
 
 TEST_ENDPOINT_ID = 1
 TEST_DEVICE_IDENTIFIER = f"{TEST_ENTRY}_{TEST_ENDPOINT_ID}"

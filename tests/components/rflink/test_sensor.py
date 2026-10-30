@@ -752,3 +752,60 @@ async def test_removed_sensor_unregisters_lookups(
 
     assert hass.states.get("sensor.test_02") is None
     assert hass.states.get("sensor.test_03").state == "65"
+
+
+@pytest.mark.parametrize(
+    "event_id",
+    [
+        pytest.param("test_02", id="device_id"),
+        pytest.param("test_alias_02_0", id="alias"),
+    ],
+)
+async def test_renamed_sensor_handles_events(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: er.EntityRegistry,
+    event_id: str,
+) -> None:
+    """Test events are routed to the new entity_id after renaming a sensor."""
+    config = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "test_02": {
+                        "name": "test_02",
+                        "sensor_type": "humidity",
+                        "aliases": ["test_alias_02_0"],
+                    }
+                },
+            },
+        },
+    }
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    entity_registry.async_update_entity(
+        "sensor.test_02", new_entity_id="sensor.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_02") is None
+    assert hass.states.get("sensor.renamed").state == STATE_UNKNOWN
+    # The old entity_id is no longer routed to, so it can be reused
+    assert hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR] == {
+        "test_02": ["sensor.renamed"],
+        "test_alias_02_0": ["sensor.renamed"],
+    }
+
+    event_callback(
+        {"id": event_id, "sensor": "humidity", "value": 65, "unit": PERCENTAGE}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.renamed").state == "65"
+
+    # Removing the renamed sensor unregisters it under its new entity_id
+    entity_registry.async_remove("sensor.renamed")
+    await hass.async_block_till_done()
+
+    assert hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR] == {}

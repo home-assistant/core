@@ -1,6 +1,7 @@
 {
   "domain": "geniushub",
   "name": "Genius Hub",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@manzanotti"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geniushub",

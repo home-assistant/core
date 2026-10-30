@@ -1,6 +1,6 @@
 """The todoist integration."""
 
-import datetime
+import datetime as dt
 import logging
 
 from todoist_api_python.api_async import TodoistAPIAsync
@@ -16,7 +16,7 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(minutes=1)
+SCAN_INTERVAL = dt.timedelta(minutes=1)
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TodoistConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TodoistConfigEntry) -> None:
     """Set up todoist from a config entry."""
 
     token = entry.data[CONF_TOKEN]
@@ -42,9 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TodoistConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TodoistConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TodoistConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

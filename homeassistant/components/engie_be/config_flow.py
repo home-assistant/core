@@ -1,5 +1,6 @@
 """Config flow for the ENGIE Belgium integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 from aioengiebelgium import (
@@ -13,7 +14,7 @@ from aioengiebelgium import (
 )
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -112,6 +113,37 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the stored tokens are rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for the password and restart the MFA login."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            errors = await self._async_start_authentication(
+                {
+                    CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_MFA_METHOD: reauth_entry.data[CONF_MFA_METHOD],
+                }
+            )
+            if not errors:
+                return await self.async_step_mfa()
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
+            description_placeholders={CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
+            errors=errors,
+        )
+
     async def async_step_mfa(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -131,6 +163,15 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors={"base": "invalid_auth"},
                     )
                 await self.async_set_unique_id(subject)
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data_updates={
+                            CONF_ACCESS_TOKEN: access_token,
+                            CONF_REFRESH_TOKEN: refresh_token,
+                        },
+                    )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=self._email,

@@ -8,6 +8,7 @@ from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.const import ATTR_ARMED, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 from . import FibaroController
 
@@ -19,13 +20,20 @@ class FibaroEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, fibaro_device: DeviceModel) -> None:
+    def __init__(
+        self, fibaro_device: DeviceModel, controller: FibaroController
+    ) -> None:
         """Initialize the device."""
         self.fibaro_device = fibaro_device
-        self.controller: FibaroController = fibaro_device.fibaro_controller
-        self.ha_id = fibaro_device.ha_id
-        self._attr_name = fibaro_device.friendly_name
-        self._attr_unique_id = fibaro_device.unique_id_str
+        self.controller = controller
+
+        room_name = controller.get_room_name(fibaro_device.room_id)
+        self.ha_id = f"{slugify(room_name)}_{slugify(fibaro_device.name)}_{fibaro_device.fibaro_id}"
+
+        self._attr_name = f"{room_name} {fibaro_device.name}"
+        self._attr_unique_id = (
+            f"{slugify(controller.hub_serial)}.{fibaro_device.fibaro_id}"
+        )
 
         self._attr_device_info = self.controller.get_device_info(fibaro_device)
         # propagate hidden attribute set in fibaro home center to HA
@@ -61,7 +69,7 @@ class FibaroEntity(Entity):
 
     def set_level(self, level: int) -> None:
         """Set the level of Fibaro device."""
-        self.action("setValue", level)
+        self.action("setValue", [level])
         if self.fibaro_device.value.has_value:
             self.fibaro_device.properties["value"] = level
         if self.fibaro_device.has_brightness:
@@ -69,7 +77,7 @@ class FibaroEntity(Entity):
 
     def set_level2(self, level: int) -> None:
         """Set the level2 of Fibaro device."""
-        self.action("setValue2", level)
+        self.action("setValue2", [level])
         if self.fibaro_device.value_2.has_value:
             self.fibaro_device.properties["value2"] = level
 
@@ -89,9 +97,9 @@ class FibaroEntity(Entity):
         white = int(max(0, min(255, white)))
         color_str = f"{red},{green},{blue},{white}"
         self.fibaro_device.properties["color"] = color_str
-        self.action("setColor", str(red), str(green), str(blue), str(white))
+        self.action("setColor", [str(red), str(green), str(blue), str(white)])
 
-    def action(self, cmd: str, *args: Any) -> None:
+    def action(self, cmd: str, args: list[Any] | None = None) -> None:
         """Perform an action on the Fibaro HC."""
         self.fibaro_device.execute_action(cmd, args)
 

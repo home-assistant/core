@@ -1,7 +1,7 @@
 """Data update coordinator for iaqualink."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import httpx2
 from iaqualink.exception import (
@@ -10,7 +10,6 @@ from iaqualink.exception import (
     AqualinkServiceUnauthorizedException,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -18,16 +17,22 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, UPDATE_INTERVAL_BY_SYSTEM_TYPE, UPDATE_INTERVAL_DEFAULT
 from .utils import error_detail
 
+if TYPE_CHECKING:
+    from . import AqualinkConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data coordinator for Aqualink systems."""
 
-    config_entry: ConfigEntry
+    config_entry: AqualinkConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, system: Any
+        self,
+        hass: HomeAssistant,
+        config_entry: AqualinkConfigEntry,
+        system: Any,
     ) -> None:
         """Initialize the coordinator."""
         update_interval = UPDATE_INTERVAL_BY_SYSTEM_TYPE.get(

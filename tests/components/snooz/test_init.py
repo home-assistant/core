@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.snooz.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import TEST_ADDRESS, TEST_PAIRING_TOKEN, SnoozFixture
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_retries_when_service_info_not_found(

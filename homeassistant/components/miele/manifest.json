@@ -1,6 +1,7 @@
 {
   "domain": "miele",
   "name": "Miele",
+  "categories": ["appliances_cleaning", "climate.fans_ventilation"],
   "codeowners": ["@astrandb"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

@@ -19,7 +19,7 @@ type NextBusConfigEntry = ConfigEntry[NextBusDataUpdateCoordinator]
 NEXTBUS_KEY: HassKey[dict[str, NextBusDataUpdateCoordinator]] = HassKey(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NextBusConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NextBusConfigEntry) -> None:
     """Set up platforms for NextBus."""
     entry_agency = entry.data[CONF_AGENCY]
     entry_stop = entry.data[CONF_STOP]
@@ -40,21 +40,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: NextBusConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NextBusConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NextBusConfigEntry) -> None:
     """Unload a config entry."""
-    if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        entry_agency = entry.data[CONF_AGENCY]
-        entry_stop = entry.data[CONF_STOP]
-        coordinator = entry.runtime_data
-        coordinator.remove_stop_route(entry_stop, entry.data[CONF_ROUTE])
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-        if not coordinator.has_routes():
-            await coordinator.async_shutdown()
-            hass.data[NEXTBUS_KEY].pop(f"{entry_agency}-{entry_stop}")
+    entry_agency = entry.data[CONF_AGENCY]
+    entry_stop = entry.data[CONF_STOP]
+    coordinator = entry.runtime_data
+    coordinator.remove_stop_route(entry_stop, entry.data[CONF_ROUTE])
 
-        return True
-
-    return False
+    if not coordinator.has_routes():
+        await coordinator.async_shutdown()
+        hass.data[NEXTBUS_KEY].pop(f"{entry_agency}-{entry_stop}")

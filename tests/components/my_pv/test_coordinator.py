@@ -5,12 +5,13 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from my_pv.exceptions import MyPVTooManyRequestsError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.my_pv.coordinator import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import setup_integration
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
@@ -20,21 +21,18 @@ async def test_coordinator_update_data(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a coordinator update."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await setup_integration(hass, mock_config_entry)
 
     # Test successful setup and first data fetch
-    await hass.async_block_till_done()
     states = hass.states.async_all()
-    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+    assert states and all(state.state != STATE_UNAVAILABLE for state in states)
 
     # Test successful data fetch
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     states = hass.states.async_all()
-    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+    assert states and all(state.state != STATE_UNAVAILABLE for state in states)
 
 
 async def test_coordinator_update_data_not_connected(
@@ -44,14 +42,11 @@ async def test_coordinator_update_data_not_connected(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test coordinator update when client not connected."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await setup_integration(hass, mock_config_entry)
 
     # Test successful setup and first data fetch
-    await hass.async_block_till_done()
     states = hass.states.async_all()
-    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+    assert states and all(state.state != STATE_UNAVAILABLE for state in states)
 
     # Test states get unavailable when not connected
     freezer.tick(UPDATE_INTERVAL)
@@ -61,7 +56,7 @@ async def test_coordinator_update_data_not_connected(
     await hass.async_block_till_done()
     mock_my_pv_client.connect.assert_awaited_once_with()
     states = hass.states.async_all()
-    assert False not in [state.state == STATE_UNAVAILABLE for state in states]
+    assert states and all(state.state == STATE_UNAVAILABLE for state in states)
 
     # Test successful data fetch
     freezer.tick(UPDATE_INTERVAL)
@@ -78,7 +73,7 @@ async def test_coordinator_update_data_not_connected(
     await hass.async_block_till_done()
     mock_my_pv_client.connect.assert_awaited_once_with()
     states = hass.states.async_all()
-    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+    assert states and all(state.state != STATE_UNAVAILABLE for state in states)
 
 
 async def test_coordinator_update_data_rate_limiting(
@@ -88,14 +83,11 @@ async def test_coordinator_update_data_rate_limiting(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test coordinator update when client is rate limiting."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await setup_integration(hass, mock_config_entry)
 
     # Test successful setup and first data fetch
-    await hass.async_block_till_done()
     states = hass.states.async_all()
-    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+    assert states and all(state.state != STATE_UNAVAILABLE for state in states)
 
     # Test states stay available when rate limiting
     freezer.tick(UPDATE_INTERVAL)
@@ -104,7 +96,7 @@ async def test_coordinator_update_data_rate_limiting(
     await hass.async_block_till_done()
     mock_my_pv_client.fetch_data.assert_awaited_once_with()
     states = hass.states.async_all()
-    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+    assert states and all(state.state != STATE_UNAVAILABLE for state in states)
 
     # Test successful data fetch
     freezer.tick(2 * UPDATE_INTERVAL)
@@ -113,4 +105,4 @@ async def test_coordinator_update_data_rate_limiting(
     await hass.async_block_till_done()
     mock_my_pv_client.fetch_data.assert_awaited_once_with()
     states = hass.states.async_all()
-    assert False not in [state.state != STATE_UNAVAILABLE for state in states]
+    assert states and all(state.state != STATE_UNAVAILABLE for state in states)

@@ -8,6 +8,8 @@ from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.usage_prediction import DOMAIN
 from homeassistant.components.usage_prediction.const import DEFAULT_LIMIT
@@ -15,9 +17,6 @@ from homeassistant.components.usage_prediction.models import EntityUsagePredicti
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser
-from tests.typing import WebSocketGenerator
 
 # Morning in the test time zone
 NOW = datetime(2026, 8, 26, 15, 0, 0, tzinfo=dt_util.UTC)

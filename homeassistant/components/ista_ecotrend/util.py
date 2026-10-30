@@ -1,6 +1,6 @@
 """Utility functions for Ista EcoTrend integration."""
 
-import datetime
+import datetime as dt
 from enum import StrEnum
 from typing import Any
 
@@ -70,17 +70,17 @@ def as_number(value: str | float | None) -> float | int | None:
     return value
 
 
-def last_day_of_month(month: int, year: int) -> datetime.datetime:
+def last_day_of_month(month: int, year: int) -> dt.datetime:
     """Get the last day of the month."""
 
     return dt_util.as_local(
-        datetime.datetime(
+        dt.datetime(
             month=month + 1 if month < 12 else 1,
             year=year if month < 12 else year + 1,
             day=1,
-            tzinfo=datetime.UTC,
+            tzinfo=dt.UTC,
         )
-        + datetime.timedelta(days=-1)
+        + dt.timedelta(days=-1)
     )
 
 

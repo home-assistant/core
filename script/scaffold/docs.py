@@ -5,43 +5,43 @@ from .model import Info
 DATA = {
     "backup": {
         "title": "Backup",
-        "docs": "https://developers.home-assistant.io/docs/core/platform/backup",
+        "docs": "https://contributors.home-assistant.io/core/integrations/backup/",
     },
     "config_flow": {
         "title": "Config Flow",
-        "docs": "https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html",
+        "docs": "https://contributors.home-assistant.io/core/integrations/config-flow/",
     },
     "config_flow_helper": {
         "title": "Helper Config Flow",
-        "docs": "https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html#helper",
+        "docs": "https://contributors.home-assistant.io/core/integrations/config-flow/#simple-flows-with-schemaconfigflowhandler",
     },
     "config_flow_discovery": {
         "title": "Discoverable Config Flow",
-        "docs": "https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html#discoverable-integrations-that-require-no-authentication",
+        "docs": "https://contributors.home-assistant.io/core/integrations/config-flow/#discoverable-integrations-without-authentication",
     },
     "config_flow_oauth2": {
         "title": "OAuth2 Config Flow",
-        "docs": "https://developers.home-assistant.io/docs/en/next/config_entries_config_flow_handler.html#configuration-via-oauth2",
+        "docs": "https://contributors.home-assistant.io/core/integrations/oauth2/",
     },
     "device_action": {
         "title": "Device Action",
-        "docs": "https://developers.home-assistant.io/docs/en/device_automation_action.html",
+        "docs": "https://contributors.home-assistant.io/core/integrations/device-automations/",
     },
     "device_condition": {
         "title": "Device Condition",
-        "docs": "https://developers.home-assistant.io/docs/en/device_automation_condition.html",
+        "docs": "https://contributors.home-assistant.io/core/integrations/device-automations/",
     },
     "device_trigger": {
         "title": "Device Trigger",
-        "docs": "https://developers.home-assistant.io/docs/en/device_automation_trigger.html",
+        "docs": "https://contributors.home-assistant.io/core/integrations/device-automations/",
     },
     "integration": {
         "title": "Integration",
-        "docs": "https://developers.home-assistant.io/docs/en/creating_integration_file_structure.html",
+        "docs": "https://contributors.home-assistant.io/core/integrations/file-structure/",
     },
     "reproduce_state": {
         "title": "Reproduce State",
-        "docs": "https://developers.home-assistant.io/docs/core/platform/reproduce_state",
+        "docs": "https://contributors.home-assistant.io/core/integrations/reproduce-state/",
         "extra": (
             "You will now need to update the code to"
             " make sure that every attribute that can"
@@ -51,7 +51,7 @@ DATA = {
     },
     "significant_change": {
         "title": "Significant Change",
-        "docs": "https://developers.home-assistant.io/docs/core/platform/significant_change",
+        "docs": "https://contributors.home-assistant.io/core/integrations/significant-change/",
         "extra": (
             "You will now need to update the code to"
             " make sure that entities with different"

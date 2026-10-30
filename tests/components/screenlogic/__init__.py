@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import logging
 
-from tests.common import load_json_object_fixture
+from pytest_homeassistant.common import load_json_object_fixture
 
 MOCK_ADAPTER_NAME = "Pentair: DD-EE-FF"
 MOCK_ADAPTER_MAC = "aa:bb:cc:dd:ee:ff"

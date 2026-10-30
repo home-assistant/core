@@ -58,7 +58,22 @@
         }
       }
     },
-    "expose": {},
-    "time_server": {}
+    "expose": {
+      "light.valid": {
+        "options": [
+          {
+            "ga": { "write": "5/5/5", "dpt": "5.010" },
+            "attribute": "brightness"
+          }
+        ]
+      },
+      "light.invalid": {
+        "options": [{ "ga": { "write": "5/5/6" } }]
+      }
+    },
+    "time_server": {
+      "time": { "write": "6/6/6" },
+      "date": { "state": "6/6/7" }
+    }
   }
 }

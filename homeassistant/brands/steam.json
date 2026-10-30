@@ -1,0 +1,5 @@
+{
+  "domain": "steam",
+  "name": "Steam",
+  "integrations": ["steam_online", "steamvr_base_station"]
+}

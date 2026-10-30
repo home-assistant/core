@@ -168,8 +168,7 @@ class ModbusBaseEntity(Entity):
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        # also runs when the add is aborted after the first update is scheduled,
-        # and a rename removes and re-adds the entity, so it must not stop it
+        # also runs when the add is aborted after the first update is scheduled
         self.async_on_remove(self._async_cancel_updates)
         self._cancel_call = self._async_call_later(
             self._hub.config_delay + 0.1, self.async_await_connection
@@ -286,11 +285,8 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
             v_result = []
             for entry in val:
                 v_temp = self.__process_raw_value(entry, scale, offset)
-                if self._data_type != DataType.CUSTOM:
-                    v_result.append(str(v_temp))
-                else:
-                    v_result.append(str(v_temp) if v_temp is not None else "0")
-            return ",".join(map(str, v_result))
+                v_result.append(str(v_temp))
+            return ",".join(v_result)
 
         # Apply scale, precision, limits to floats and ints
         return self.__process_raw_value(val[0], scale, offset)

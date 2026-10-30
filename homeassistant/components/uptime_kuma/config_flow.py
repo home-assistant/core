@@ -68,6 +68,9 @@ async def validate_connection(
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
+    else:
+        if int(uptime_kuma.version.major) < 2:
+            errors["base"] = "version_unsupported"
     return errors
 
 
@@ -213,7 +216,6 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         ):
             if user_input is None:
-                self._set_confirm_only()
                 return self.async_show_form(
                     step_id="hassio_confirm",
                     description_placeholders={

@@ -13,6 +13,7 @@ async def test_import(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_IMPORT}, data={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOMAIN
 
 
 async def test_user(hass: HomeAssistant) -> None:
@@ -43,6 +44,7 @@ async def test_user_confirm(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {}
+    assert result["result"].unique_id == DOMAIN
 
 
 async def test_onboarding_flow(hass: HomeAssistant) -> None:
@@ -54,3 +56,4 @@ async def test_onboarding_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Shopping list"
     assert result["data"] == {}
+    assert result["result"].unique_id == DOMAIN

@@ -1,6 +1,7 @@
 {
   "domain": "teleinfo",
   "name": "Teleinfo",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@esciara"],
   "config_flow": true,
   "dependencies": ["usb"],

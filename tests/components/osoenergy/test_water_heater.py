@@ -3,6 +3,7 @@
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.osoenergy.const import DOMAIN
@@ -31,8 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import snapshot_platform
 
 
 @patch("homeassistant.components.osoenergy.PLATFORMS", [Platform.WATER_HEATER])

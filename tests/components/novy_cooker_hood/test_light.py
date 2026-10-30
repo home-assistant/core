@@ -1,6 +1,13 @@
 """Tests for the Novy Hood light platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
 from homeassistant.components.light import (
@@ -16,13 +23,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
 
 from .conftest import TRANSMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 ENTITY_ID = "light.novy_cooker_hood_light"
 
@@ -97,29 +99,3 @@ async def test_entity_follows_transmitter_availability(
     await assert_availability_follows_source_entity(
         hass, ENTITY_ID, [TRANSMITTER_ENTITY_ID]
     )
-
-
-async def test_tracking_follows_transmitter_rename(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
-) -> None:
-    """Availability tracking and sending survive a transmitter entity rename."""
-    new_transmitter_id = "radio_frequency.renamed_transmitter"
-    entity_registry.async_update_entity(
-        TRANSMITTER_ENTITY_ID, new_entity_id=new_transmitter_id
-    )
-    await hass.async_block_till_done()
-
-    await assert_availability_follows_source_entity(
-        hass, ENTITY_ID, [new_transmitter_id]
-    )
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    assert len(mock_rf_entity.send_command_calls) == 1

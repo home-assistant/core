@@ -1,6 +1,7 @@
 {
   "domain": "uptimerobot",
   "name": "UptimeRobot",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@ludeeus", "@chemelli74"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/uptimerobot",

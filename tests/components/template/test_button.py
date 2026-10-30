@@ -4,6 +4,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -40,8 +41,6 @@ from .conftest import (
     setup_and_test_unique_id,
     setup_entity,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
 TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"

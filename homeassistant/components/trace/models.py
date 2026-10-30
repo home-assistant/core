@@ -93,7 +93,8 @@ class ActionTrace(BaseTrace):
         self.key = f"{self._domain}.{item_id}"
         self._dict: dict[str, Any] | None = None
         self._short_dict: dict[str, Any] | None = None
-        if trace_id_get():
+        # An automation without an id stores no trace, so there is nothing to link
+        if item_id and trace_id_get():
             trace_set_child_id(self.key, self.run_id)
         trace_id_set((self.key, self.run_id))
 

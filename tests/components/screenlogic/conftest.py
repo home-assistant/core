@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.screenlogic import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
@@ -15,8 +16,6 @@ from . import (
     MOCK_ADAPTER_PORT,
     MOCK_CONFIG_ENTRY_ID,
 )
-
-from tests.common import MockConfigEntry
 
 
 def pytest_configure(config: pytest.Config) -> None:

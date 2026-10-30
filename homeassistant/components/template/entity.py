@@ -3,6 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from functools import partial
 import logging
 from typing import Any, override
 
@@ -16,6 +17,7 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
@@ -38,6 +40,32 @@ class EntityTemplate:
     validator: Callable[[Any], Any] | None
     on_update: Callable[[Any], None] | None
     none_on_template_error: bool
+
+
+class _TemplateStateFromEntity(TemplateStateFromEntityId):
+    """Template state of an entity which follows changes of its entity_id."""
+
+    __slots__ = ("_entity",)
+
+    # pylint: disable-next=super-init-not-called
+    def __init__(self, hass: HomeAssistant, entity: Entity) -> None:
+        """Initialize template state."""
+        self._hass = hass
+        self._collect = True
+        self._entity = entity
+        self._cache: dict[str, Any] = {}
+
+    @property
+    @override
+    def _entity_id(self) -> str:  # type: ignore[override]
+        """Return the current entity_id of the entity."""
+        return self._entity.entity_id
+
+    @property
+    @override
+    def entity_id(self) -> str:  # type: ignore[override]
+        """Return the current entity_id of the entity."""
+        return self._entity.entity_id
 
 
 class AbstractTemplateEntity(Entity):
@@ -67,6 +95,7 @@ class AbstractTemplateEntity(Entity):
         self._action_scripts: dict[str, Script] = {}
         self._attr_extra_state_attributes = {}
         self._assumed_attributes: dict[str, str] = {}
+        self._rendered_list_items: dict[str, Any] = {}
 
         self._attribute_templates: dict[str, Template] | None = None
         self._attributes_template: Template | None = None
@@ -165,6 +194,71 @@ class AbstractTemplateEntity(Entity):
             on_update.
         """
 
+    def setup_list_item_templates(
+        self,
+        list_option: str,
+        list_attribute: str,
+        list_validator: Callable[[Any], Any],
+        option: str,
+        attribute: str,
+        item_validator: Callable[[Any], Any],
+    ) -> None:
+        """Set up a list template and an item template validated against it.
+
+        The item validator must read the list from list_attribute. The raw
+        rendered item is cached because the item attribute holds None when
+        validation fails, and an unchanged item template does not re-render,
+        so the cache is needed to revalidate the item when only the list changes.
+        """
+        # The list template must be set up first, the item validator reads it.
+        self.setup_template(
+            list_option,
+            list_attribute,
+            list_validator,
+            partial(
+                self._update_list, option, list_attribute, attribute, item_validator
+            ),
+            none_on_template_error=False,
+        )
+        self.setup_template(
+            option,
+            attribute,
+            on_update=partial(
+                self._update_list_item, option, attribute, item_validator
+            ),
+            none_on_template_error=False,
+        )
+
+    @callback
+    def _update_list(
+        self,
+        option: str,
+        list_attribute: str,
+        attribute: str,
+        item_validator: Callable[[Any], Any],
+        items: list[Any] | TemplateError | None,
+    ) -> None:
+        """Update a list and revalidate the item rendered against it."""
+        setattr(
+            self, list_attribute, None if isinstance(items, TemplateError) else items
+        )
+        if option in self._rendered_list_items:
+            setattr(self, attribute, item_validator(self._rendered_list_items[option]))
+
+    @callback
+    def _update_list_item(
+        self,
+        option: str,
+        attribute: str,
+        item_validator: Callable[[Any], Any],
+        result: Any,
+    ) -> None:
+        """Store the rendered item and validate it against its list."""
+        if isinstance(result, TemplateError):
+            result = None
+        self._rendered_list_items[option] = result
+        setattr(self, attribute, item_validator(result))
+
     def add_template(
         self,
         option: str,
@@ -245,14 +339,8 @@ class AbstractTemplateEntity(Entity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up scripts when removing from Home Assistant."""
-        if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:
-            # Entity ID not changed, unload scripts as they will not be reused.
-            for action_script in self._action_scripts.values():
-                await action_script.async_unload()
-        else:
-            # Entity ID changed, just stop scripts
-            for action_script in self._action_scripts.values():
-                await action_script.async_stop()
+        for action_script in self._action_scripts.values():
+            await action_script.async_unload()
 
     async def async_run_script(
         self,
@@ -266,7 +354,7 @@ class AbstractTemplateEntity(Entity):
             run_variables = {}
         await script.async_run(
             run_variables={
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                "this": _TemplateStateFromEntity(self.hass, self),
                 **self._render_script_variables(),
                 **run_variables,
             },

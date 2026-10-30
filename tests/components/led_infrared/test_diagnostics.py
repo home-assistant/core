@@ -1,22 +1,23 @@
 """Test for diagnostics platform of the LED Infrared integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.led_infrared.const import LEDIrDeviceType
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
-
 
 @pytest.mark.parametrize(
     "config_entry",
     [
         LEDIrDeviceType.GENERIC_10_KEY,
+        LEDIrDeviceType.GENERIC_10_KEY_B708,
         LEDIrDeviceType.GENERIC_13_KEY,
+        LEDIrDeviceType.GENERIC_21_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
         LEDIrDeviceType.GENERIC_44_KEY,

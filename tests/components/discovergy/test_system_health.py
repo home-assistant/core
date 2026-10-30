@@ -4,14 +4,13 @@ import asyncio
 
 from aiohttp import ClientError
 from pydiscovergy.const import API_BASE
+from pytest_homeassistant.common import get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.discovergy.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_discovergy_system_health(

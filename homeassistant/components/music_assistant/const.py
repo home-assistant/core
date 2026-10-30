@@ -12,6 +12,10 @@ AUTH_SCHEMA_VERSION = 28
 # Schema version where hassio discovery support was added
 HASSIO_DISCOVERY_SCHEMA_VERSION = 28
 
+# The official Music Assistant Home Assistant app
+APP_SLUG = "d5369777_music_assistant"
+APP_NAME = "Music Assistant"
+
 ATTR_IS_GROUP = "is_group"
 ATTR_GROUP_MEMBERS = "group_members"
 ATTR_GROUP_PARENTS = "group_parents"

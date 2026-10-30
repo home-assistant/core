@@ -4,19 +4,18 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyyardian import OperationInfo, YardianDeviceState
 
 from homeassistant.components.yardian.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, Platform
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.yardian.async_setup_entry", return_value=True
+        "homeassistant.components.yardian.async_setup_entry", return_value=None
     ) as patched_setup_entry:
         yield patched_setup_entry
 

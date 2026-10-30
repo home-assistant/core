@@ -11,6 +11,8 @@ from aiohttp import ClientError
 from aiohttp.hdrs import AUTHORIZATION
 import jwt.warnings
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from pywebpush import WebPushException
 from syrupy.assertion import SnapshotAssertion
 
@@ -52,9 +54,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 CONFIG_FILE = "file.conf"
 
@@ -583,7 +582,7 @@ async def test_send_message(
     ],
 )
 @pytest.mark.parametrize("domain", [NOTIFY_DOMAIN, DOMAIN])
-@pytest.mark.usefixtures("mock_jwt", "mock_uuid")
+@pytest.mark.usefixtures("mock_jwt", "mock_uuid", "mock_save")
 @pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 async def test_send_message_exceptions(
     hass: HomeAssistant,
@@ -658,7 +657,7 @@ async def test_send_message_save_fails(
     assert "Error saving registration" in caplog.text
 
 
-@pytest.mark.usefixtures("mock_jwt", "mock_uuid")
+@pytest.mark.usefixtures("mock_jwt", "mock_uuid", "mock_save")
 @pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 async def test_send_message_unavailable(
     hass: HomeAssistant,

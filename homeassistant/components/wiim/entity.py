@@ -26,9 +26,9 @@ class WiimBaseEntity(Entity):
             sw_version=self._device.firmware_version,
         )
         if self._device.presentation_url:
-            self._attr_device_info["configuration_url"] = self._device.presentation_url
+            self._attr_device_info.configuration_url = self._device.presentation_url
         elif self._device.http_api_url:
-            self._attr_device_info["configuration_url"] = self._device.http_api_url
+            self._attr_device_info.configuration_url = self._device.http_api_url
 
     @property
     @override

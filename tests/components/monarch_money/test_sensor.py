@@ -1,10 +1,16 @@
 """Test sensors."""
 
 from copy import deepcopy
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from typedmonarchmoney.models import MonarchBudget
 
@@ -15,8 +21,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_all_entities(
@@ -133,23 +137,25 @@ async def test_budget_sensors_discover_and_recover_categories(
         is None
     )
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(hours=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     vacation_entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, vacation_unique_id
     )
     assert vacation_entity_id is not None
 
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(hours=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     vacation_state = hass.states.get(vacation_entity_id)
     assert vacation_state is not None
     assert vacation_state.state == "unavailable"
 
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(hours=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     vacation_state = hass.states.get(vacation_entity_id)
     assert vacation_state is not None
     assert vacation_state.state == "unknown"
@@ -229,8 +235,9 @@ async def test_budget_sensors_recover_when_current_month_appears(
     assert budget_state is not None
     assert budget_state.state == "unavailable"
 
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(hours=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     budget_state = hass.states.get(budget_entity_id)
     assert budget_state is not None

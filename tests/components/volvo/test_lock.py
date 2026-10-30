@@ -6,6 +6,11 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import VolvoApiException, VolvoCarsCommandResult
@@ -24,8 +29,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import configure_mock
 from .const import DEFAULT_VIN
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_api", "full_model")

@@ -12,6 +12,7 @@ from pyanglianwater.exceptions import (
     UnknownEndpointError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant import config_entries
 from homeassistant.components.anglian_water.const import CONF_ACCOUNT_NUMBER, DOMAIN
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import ACCESS_TOKEN, ACCOUNT_NUMBER, PASSWORD, USERNAME
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -245,6 +244,7 @@ async def test_single_account_flow_with_mfa_exception(
         (ValueError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_account_fetch_exception(
     hass: HomeAssistant,
     mock_anglian_water_authenticator: AsyncMock,
@@ -274,6 +274,28 @@ async def test_account_fetch_exception(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
 
+    mock_anglian_water_client.api.get_associated_accounts.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_account"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("exception_type", "expected_error"),
@@ -286,6 +308,7 @@ async def test_account_fetch_exception(
         (ValueError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_mfa_account_fetch_exception(
     hass: HomeAssistant,
     mock_anglian_water_authenticator: AsyncMock,
@@ -324,6 +347,25 @@ async def test_mfa_account_fetch_exception(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mfa"
     assert result["errors"] == {"base": expected_error}
+
+    mock_anglian_water_client.api.get_associated_accounts.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_CODE: "123456"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_account"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -510,14 +552,7 @@ async def test_reauth_flow(
     mock_anglian_water_authenticator.refresh_token = "new_access_token"
     original_data = dict(mock_config_entry.data)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result is not None
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -557,14 +592,7 @@ async def test_reauth_flow_auth_exception(
     """Test that the reauth flow can recover from an auth exception."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result is not None
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -609,14 +637,7 @@ async def test_reauth_flow_account_not_found(
         "result": {"active": []}
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result is not None
 
     result = await hass.config_entries.flow.async_configure(
@@ -658,14 +679,7 @@ async def test_reauth_flow_mfa_required(
     """Test the reauth flow with MFA required."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result is not None
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -712,14 +726,7 @@ async def test_reauth_flow_mfa_exception(
     """Test that the reauth flow can recover from an MFA exception."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result is not None
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -786,14 +793,7 @@ async def test_reauth_flow_account_fetch_exception(
     mock_config_entry.add_to_hass(hass)
     original_data = dict(mock_config_entry.data)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     mock_anglian_water_client.api.get_associated_accounts.side_effect = exception
 
@@ -809,3 +809,16 @@ async def test_reauth_flow_account_fetch_exception(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": expected_error}
     assert mock_config_entry.data == original_data
+
+    mock_anglian_water_client.api.get_associated_accounts.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

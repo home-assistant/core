@@ -1,6 +1,7 @@
 {
   "domain": "idrive_e2",
   "name": "IDrive e2",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@patrickvorgers"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/idrive_e2",

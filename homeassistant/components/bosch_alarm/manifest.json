@@ -1,6 +1,7 @@
 {
   "domain": "bosch_alarm",
   "name": "Bosch Alarm",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@mag1024", "@sanjay900"],
   "config_flow": true,
   "dhcp": [

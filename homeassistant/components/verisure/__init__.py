@@ -40,7 +40,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Set up Verisure from a config entry."""
     await hass.async_add_executor_job(migrate_cookie_files, hass, entry)
 
@@ -70,8 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> 
     # Update options
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
-
 
 async def update_listener(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Handle options update."""
@@ -79,13 +77,9 @@ async def update_listener(hass: HomeAssistant, entry: VerisureConfigEntry) -> No
     entry.runtime_data.async_update_listeners()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Unload Verisure config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
-
-    return True
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
@@ -104,7 +98,7 @@ def migrate_cookie_files(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s", entry.version)
 
@@ -127,5 +121,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, version=2)
 
     LOGGER.debug("Migration to version %s successful", entry.version)
-
-    return True

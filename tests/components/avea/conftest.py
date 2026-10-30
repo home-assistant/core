@@ -1,13 +1,12 @@
 """Tests fixtures for the Avea integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.avea.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 
 from . import AVEA_DISCOVERY_INFO
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

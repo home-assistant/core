@@ -2,6 +2,7 @@
   "domain": "open_router",
   "name": "OpenRouter",
   "after_dependencies": ["assist_pipeline", "intent"],
+  "categories": ["ai_voice.ai_models"],
   "codeowners": ["@joostlek", "@ab3lson"],
   "config_flow": true,
   "dependencies": ["conversation"],
@@ -9,5 +10,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["openai==3.10.0", "python-open-router==0.4.0"]
+  "requirements": ["openai==3.26.0", "python-open-router==0.5.0"]
 }

@@ -129,6 +129,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Error communicating with the 1-Wire server at {host}:{port}"
+    },
     "write_failed": {
       "message": "Error writing to {device_file}"
     }

@@ -46,7 +46,7 @@ class HikvisionData:
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Set up Hikvision from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -170,13 +170,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Stop the event stream
-        await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Stop the event stream
+    await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)

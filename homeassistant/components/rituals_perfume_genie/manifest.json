@@ -1,6 +1,7 @@
 {
   "domain": "rituals_perfume_genie",
   "name": "Rituals Perfume Genie",
+  "categories": ["appliances_cleaning"],
   "codeowners": ["@milanmeu", "@frenck", "@quebulm"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rituals_perfume_genie",

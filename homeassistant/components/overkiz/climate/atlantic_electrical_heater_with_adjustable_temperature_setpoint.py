@@ -82,7 +82,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -125,10 +125,25 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation ie. heating, idle, off."""
         states = self.device.states
+
+        # Percentage of nominal power in use; the most reliable heating
+        # indicator, so prefer it when the device reports it.
         if (
-            state := states.get(OverkizState.CORE_REGULATION_MODE)
-        ) and state.value_as_str:
-            return OVERKIZ_TO_HVAC_ACTION[state.value_as_str]
+            working_rate := states.get(OverkizState.IO_CURRENT_WORKING_RATE)
+        ) and working_rate.value_as_float is not None:
+            if self.hvac_mode == HVACMode.OFF:
+                return HVACAction.OFF
+            if working_rate.value_as_float > 0:
+                return HVACAction.HEATING
+            return HVACAction.IDLE
+
+        # Fallback for devices without a working rate. Less accurate: some
+        # devices keep reporting standby or none while heating.
+        if (
+            regulation_mode := states.get(OverkizState.CORE_REGULATION_MODE)
+        ) and regulation_mode.value_as_str:
+            return OVERKIZ_TO_HVAC_ACTION[regulation_mode.value_as_str]
+
         return HVACAction.OFF
 
     @property
@@ -165,7 +180,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature."""
         # core:TargetTemperatureState stays pinned to comfort in auto mode.
         state_name = (
@@ -179,7 +194,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
             temperature := self.temperature_device.states.get(

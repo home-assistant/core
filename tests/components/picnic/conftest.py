@@ -5,15 +5,14 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from pytest_homeassistant.typing import WebSocketGenerator
 from python_picnic_api2.models import Cart, DeliverySummary, Eta, User
 
 from homeassistant.components.picnic import CONF_COUNTRY_CODE, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "todo.mock_title_shopping_cart"
 

@@ -62,7 +62,9 @@ rules:
     status: exempt
     comment: The integration uses ring cloud api to identify devices and \
       does not use network identifiers
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: The integration has no repairs
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done

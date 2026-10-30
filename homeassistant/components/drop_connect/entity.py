@@ -51,4 +51,4 @@ class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
                 identifiers={(DOMAIN, entry_data[CONF_DEVICE_OWNER_ID])}
             )
             if via_devices:
-                self._attr_device_info["via_device_id"] = via_devices[0].id
+                self._attr_device_info.via_device_id = via_devices[0].id

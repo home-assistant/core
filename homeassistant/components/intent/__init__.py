@@ -17,28 +17,18 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
     CoverDeviceClass,
+    CoverService,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
     ValveDeviceClass,
+    ValveService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -210,9 +200,9 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
             # on = open
             # off = close
             if service == SERVICE_TURN_ON:
-                service_name = SERVICE_OPEN_COVER
+                service_name: str = CoverService.OPEN
             else:
-                service_name = SERVICE_CLOSE_COVER
+                service_name = CoverService.CLOSE
 
             await self._run_then_background(
                 hass.async_create_task(
@@ -231,9 +221,9 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
             # on = lock
             # off = unlock
             if service == SERVICE_TURN_ON:
-                service_name = SERVICE_LOCK
+                service_name = LockService.LOCK
             else:
-                service_name = SERVICE_UNLOCK
+                service_name = LockService.UNLOCK
 
             await self._run_then_background(
                 hass.async_create_task(
@@ -252,9 +242,9 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
             # on = opened
             # off = closed
             if service == SERVICE_TURN_ON:
-                service_name = SERVICE_OPEN_VALVE
+                service_name = ValveService.OPEN
             else:
-                service_name = SERVICE_CLOSE_VALVE
+                service_name = ValveService.CLOSE
 
             await self._run_then_background(
                 hass.async_create_task(
@@ -448,10 +438,10 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
     ) -> tuple[str, str]:
         """Get the domain and service name to call."""
         if state.domain == COVER_DOMAIN:
-            return (COVER_DOMAIN, SERVICE_SET_COVER_POSITION)
+            return (COVER_DOMAIN, CoverService.SET_POSITION)
 
         if state.domain == VALVE_DOMAIN:
-            return (VALVE_DOMAIN, SERVICE_SET_VALVE_POSITION)
+            return (VALVE_DOMAIN, ValveService.SET_POSITION)
 
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 
@@ -474,10 +464,10 @@ class StopMovingIntentHandler(intent.DynamicServiceIntentHandler):
     ) -> tuple[str, str]:
         """Get the domain and service name to call."""
         if state.domain == COVER_DOMAIN:
-            return (COVER_DOMAIN, SERVICE_STOP_COVER)
+            return (COVER_DOMAIN, CoverService.STOP)
 
         if state.domain == VALVE_DOMAIN:
-            return (VALVE_DOMAIN, SERVICE_STOP_VALVE)
+            return (VALVE_DOMAIN, ValveService.STOP)
 
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 

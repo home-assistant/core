@@ -5,6 +5,7 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.exceptions import ReolinkError
 from reolink_aio.typings import VOD_trigger
 
@@ -44,8 +45,6 @@ from .conftest import (
     TEST_USE_HTTPS,
     TEST_USERNAME2,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_YEAR = 2023
 TEST_MONTH = 11

@@ -1,12 +1,15 @@
 """Tests for HomematicIP Cloud alarm control panel."""
 
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from homematicip.async_home import AsyncHome
 import pytest
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.homematicip_cloud.alarm_control_panel import (
+    HomematicipAlarmControlPanelEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -60,13 +63,12 @@ async def test_hmip_alarm_control_panel(
 
     home = mock_hap.home
     # the mocked connection answers every call with a tuple, not a RestResult
-    home.set_security_zones_activation_async.return_value = Mock(success=True)
+    home.set_security_zones_activation_async.return_value = Mock(success=True, json={})
 
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_away", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
-    assert home.mock_calls[-1][1] == (True, True)
+    home.set_security_zones_activation_async.assert_awaited_with(True, True)
     await _async_manipulate_security_zones(
         hass, home, internal_active=True, external_active=True
     )
@@ -75,24 +77,21 @@ async def test_hmip_alarm_control_panel(
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_home", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
-    assert home.mock_calls[-1][1] == (False, True)
+    home.set_security_zones_activation_async.assert_awaited_with(False, True)
     await _async_manipulate_security_zones(hass, home, external_active=True)
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_HOME
 
     await hass.services.async_call(
         "alarm_control_panel", "alarm_disarm", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
-    assert home.mock_calls[-1][1] == (False, False)
+    home.set_security_zones_activation_async.assert_awaited_with(False, False)
     await _async_manipulate_security_zones(hass, home)
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
 
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_away", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
-    assert home.mock_calls[-1][1] == (True, True)
+    home.set_security_zones_activation_async.assert_awaited_with(True, True)
     await _async_manipulate_security_zones(
         hass, home, internal_active=True, external_active=True, alarm_triggered=True
     )
@@ -101,8 +100,7 @@ async def test_hmip_alarm_control_panel(
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_home", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
-    assert home.mock_calls[-1][1] == (False, True)
+    home.set_security_zones_activation_async.assert_awaited_with(False, True)
     await _async_manipulate_security_zones(
         hass, home, external_active=True, alarm_triggered=True
     )
@@ -191,3 +189,36 @@ async def test_hmip_alarm_control_panel_removal_removes_home_callback(
         hass, home, internal_active=True, external_active=True
     )
     assert hass.states.get(entity_id) is None
+
+
+async def test_hmip_alarm_control_panel_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
+) -> None:
+    """Test a renamed alarm panel keeps following home updates in place."""
+    entity_id = "alarm_control_panel.hmip_alarm_control_panel"
+    new_entity_id = "alarm_control_panel.renamed"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_groups=["EXTERNAL", "INTERNAL"]
+    )
+    home = mock_hap.home
+
+    with patch.object(
+        HomematicipAlarmControlPanelEntity,
+        "async_added_to_hass",
+        autospec=True,
+        side_effect=HomematicipAlarmControlPanelEntity.async_added_to_hass,
+    ) as mock_added_to_hass:
+        entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
+        await hass.async_block_till_done()
+
+    # The entity_id is changed in place, the entity is not added again
+    mock_added_to_hass.assert_not_called()
+    assert hass.states.get(entity_id) is None
+    assert hass.states.get(new_entity_id).state == AlarmControlPanelState.DISARMED
+
+    await _async_manipulate_security_zones(
+        hass, home, internal_active=True, external_active=True
+    )
+    assert hass.states.get(new_entity_id).state == AlarmControlPanelState.ARMED_AWAY

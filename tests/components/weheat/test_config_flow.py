@@ -3,6 +3,9 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from weheat.exceptions import ApiException
 from yarl import URL
 
@@ -28,10 +31,6 @@ from .const import (
     USER_UUID_1,
     USER_UUID_2,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")

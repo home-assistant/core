@@ -1,0 +1,10 @@
+{
+  "services": {
+    "order_medication": {
+      "service": "mdi:cart-plus"
+    },
+    "search_medication": {
+      "service": "mdi:magnify"
+    }
+  }
+}

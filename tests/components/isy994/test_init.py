@@ -14,6 +14,7 @@ from pyisy.constants import (
 from pyisy.helpers import EventEmitter, NodeProperty
 from pyisy.variables import Variable
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.isy994.const import DOMAIN, EVENT_ISY994_CONTROL
 from homeassistant.config_entries import ConfigEntryState
@@ -30,8 +31,6 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from . import entity_listeners
 from .conftest import MOCK_UUID as MOCK_ISY_UUID
-
-from tests.common import MockConfigEntry, async_capture_events
 
 MOCK_UUID = "ce:fb:72:31:b7:b9"
 
@@ -62,6 +61,29 @@ async def test_migrate_minor_version_drops_tls(
     assert entry.minor_version == 2
     assert "tls" not in entry.data
     assert entry.data[CONF_VERIFY_SSL] is False
+
+
+async def test_setup_invalid_host(hass: HomeAssistant) -> None:
+    """Test setup fails when the host has an unsupported scheme."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=2,
+        data={
+            CONF_HOST: "ftp://1.1.1.1",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_VERIFY_SSL: True,
+        },
+        unique_id=MOCK_UUID,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "The ISY/IoX host value in configuration is invalid"
 
 
 @pytest.mark.parametrize("verify_ssl", [True, False])

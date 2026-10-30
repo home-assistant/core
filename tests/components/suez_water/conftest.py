@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, patch
 from pysuez import AggregatedData, PriceResult
 from pysuez.const import ATTRIBUTION
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.plugins import RecorderInstanceContextManager
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
-
-from tests.common import MockConfigEntry
-from tests.conftest import RecorderInstanceContextManager
 
 MOCK_DATA = {
     "username": "test-username",
@@ -44,7 +43,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry(recorder_mock: Recorder) -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.suez_water.async_setup_entry", return_value=True
+        "homeassistant.components.suez_water.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

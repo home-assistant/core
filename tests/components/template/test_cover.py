@@ -1,13 +1,20 @@
 """The tests for the Template cover platform."""
 
+from itertools import chain
+from typing import Any
+
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cover, template
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
     CoverState,
@@ -53,9 +60,6 @@ from .conftest import (
     setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
-
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_POSITION_ENTITY_ID = "sensor.test_position"
 TEST_TILT_POSITION_ENTITY_ID = "sensor.test_tilt_position"
@@ -85,6 +89,18 @@ SET_COVER_TILT_POSITION = make_test_action(
 COVER_ACTIONS = {
     **OPEN_COVER,
     **CLOSE_COVER,
+}
+
+TEST_SPEEDS = ["slow", "fast"]
+OPEN_COVER_WITH_SPEED = make_test_action("open_cover", {"speed": "{{ speed }}"})
+CLOSE_COVER_WITH_SPEED = make_test_action("close_cover", {"speed": "{{ speed }}"})
+SET_COVER_POSITION_WITH_SPEED = make_test_action(
+    "set_cover_position", {"position": "{{ position }}", "speed": "{{ speed }}"}
+)
+COVER_ACTIONS_WITH_SPEED = {
+    **OPEN_COVER_WITH_SPEED,
+    **CLOSE_COVER_WITH_SPEED,
+    **SET_COVER_POSITION_WITH_SPEED,
 }
 
 
@@ -646,6 +662,176 @@ async def test_set_position(hass: HomeAssistant, calls: list[ServiceCall]) -> No
             TEST_COVER, calls, expected_calls, "set_cover_position", position=position
         )
         expected_calls += 1
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("config", "expected_speeds", "expected_speed_feature"),
+    [
+        pytest.param(
+            {**COVER_ACTIONS, "supported_speeds": TEST_SPEEDS},
+            TEST_SPEEDS,
+            CoverEntityFeature.SPEED,
+            id="list",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS, "supported_speeds": "fast"},
+            ["fast"],
+            CoverEntityFeature.SPEED,
+            id="single_string",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS, "supported_speeds": []}, None, 0, id="empty_list"
+        ),
+        pytest.param(COVER_ACTIONS, None, 0, id="not_configured"),
+    ],
+)
+@pytest.mark.usefixtures("setup_cover")
+async def test_supported_speeds(
+    hass: HomeAssistant,
+    expected_speeds: list[str] | None,
+    expected_speed_feature: CoverEntityFeature,
+) -> None:
+    """Test the supported_speeds option sets the speeds and feature."""
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("supported_speeds") == expected_speeds
+    assert (
+        state.attributes["supported_features"] & CoverEntityFeature.SPEED
+        == expected_speed_feature
+    )
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("config", "service", "options", "expected_action", "expected_data"),
+    [
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_OPEN_COVER,
+            {ATTR_SPEED: "fast"},
+            "open_cover",
+            {"speed": "fast"},
+            id="open_with_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_OPEN_COVER,
+            {},
+            "open_cover",
+            {"speed": None},
+            id="open_without_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_CLOSE_COVER,
+            {ATTR_SPEED: "slow"},
+            "close_cover",
+            {"speed": "slow"},
+            id="close_with_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_CLOSE_COVER,
+            {},
+            "close_cover",
+            {"speed": None},
+            id="close_without_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 30, ATTR_SPEED: "fast"},
+            "set_cover_position",
+            {"position": 30, "speed": "fast"},
+            id="set_position_with_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 30},
+            "set_cover_position",
+            {"position": 30, "speed": None},
+            id="set_position_without_speed",
+        ),
+        pytest.param(
+            {**SET_COVER_POSITION_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_OPEN_COVER,
+            {ATTR_SPEED: "slow"},
+            "set_cover_position",
+            {"position": 100, "speed": "slow"},
+            id="open_with_set_position_only",
+        ),
+        pytest.param(
+            {**SET_COVER_POSITION_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_CLOSE_COVER,
+            {ATTR_SPEED: "slow"},
+            "set_cover_position",
+            {"position": 0, "speed": "slow"},
+            id="close_with_set_position_only",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_OPEN_COVER,
+            {ATTR_SPEED: "turbo"},
+            "open_cover",
+            {"speed": None},
+            id="open_with_unsupported_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_CLOSE_COVER,
+            {ATTR_SPEED: "turbo"},
+            "close_cover",
+            {"speed": None},
+            id="close_with_unsupported_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 30, ATTR_SPEED: "turbo"},
+            "set_cover_position",
+            {"position": 30, "speed": None},
+            id="set_position_with_unsupported_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "variables": {"speed": "configured"}},
+            SERVICE_OPEN_COVER,
+            {ATTR_SPEED: "fast"},
+            "open_cover",
+            {"speed": "configured"},
+            id="no_speeds_keeps_configured_variable",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_cover")
+async def test_speed_action(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    service: str,
+    options: dict[str, Any],
+    expected_action: str,
+    expected_data: dict[str, Any],
+) -> None:
+    """Test the requested speed is passed to the actions."""
+    # This forces a trigger for trigger based entities
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, None)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: TEST_COVER.entity_id, **options},
+        blocking=True,
+    )
+
+    assert_action(TEST_COVER, calls, 1, expected_action, **expected_data)
 
 
 @pytest.mark.parametrize(
@@ -1466,7 +1652,11 @@ async def test_extra_template_attributes(
 
 
 @pytest.mark.parametrize(
-    "attribute", [*list(CoverEntityStateAttribute), "device_class"]
+    "attribute",
+    [
+        *chain(CoverEntityCapabilityAttribute, CoverEntityStateAttribute),
+        "device_class",
+    ],
 )
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
@@ -1474,7 +1664,7 @@ async def test_extra_template_attributes(
 async def test_blocked_template_attributes(
     hass: HomeAssistant,
     style: ConfigurationStyle,
-    attribute: CoverEntityStateAttribute,
+    attribute: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blocked extra attributes."""
@@ -1516,7 +1706,11 @@ async def test_attributes_template(
 
 
 @pytest.mark.parametrize(
-    "attribute", [*list(CoverEntityStateAttribute), "device_class"]
+    "attribute",
+    [
+        *chain(CoverEntityCapabilityAttribute, CoverEntityStateAttribute),
+        "device_class",
+    ],
 )
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
@@ -1524,7 +1718,7 @@ async def test_attributes_template(
 async def test_attributes_template_with_blocked_attributes(
     hass: HomeAssistant,
     style: ConfigurationStyle,
-    attribute: CoverEntityStateAttribute,
+    attribute: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blocked attributes for a single attributes template."""

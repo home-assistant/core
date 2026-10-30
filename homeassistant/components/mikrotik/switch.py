@@ -11,8 +11,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import MikrotikConfigEntry, mikrotik_config_entry_errors
+from .coordinator import MikrotikConfigEntry
 from .entity import MikrotikDeviceEntity
+from .utils import mikrotik_config_entry_errors
 
 PARALLEL_UPDATES = 0
 

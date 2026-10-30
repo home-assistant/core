@@ -1,6 +1,7 @@
 {
   "domain": "tapsaff",
   "name": "Taps Aff",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@bazwilliams"],
   "documentation": "https://www.home-assistant.io/integrations/tapsaff",
   "iot_class": "cloud_polling",

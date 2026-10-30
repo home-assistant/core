@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from mcstatus import BedrockServer, JavaServer, LegacyServer
 from mcstatus.responses import BedrockStatusResponse, JavaStatusResponse
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF
@@ -19,8 +20,6 @@ from .const import (
     TEST_LEGACY_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(

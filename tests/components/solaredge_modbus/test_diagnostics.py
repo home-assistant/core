@@ -2,15 +2,14 @@
 
 from modbus_connection import IllegalDataAddressError
 from modbus_connection.mock import MockModbusUnit
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from .conftest import add_storage_capacity
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 # The control blocks, each absent on a device that refuses its base address.
 CONTROL_BASES = {

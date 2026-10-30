@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from api.soma_api import SomaApi
+from pytest_homeassistant.common import MockConfigEntry
 from requests import RequestException
 
 from homeassistant.components.soma import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "123.45.67.89"
 MOCK_PORT = 3000

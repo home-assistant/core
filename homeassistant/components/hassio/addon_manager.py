@@ -143,9 +143,27 @@ class AddonManager:
     @api_error("Failed to get the {addon_name} app info")
     async def async_get_addon_info(self) -> AddonInfo:
         """Return and cache manager add-on info."""
-        addon_store_info = await self._supervisor_client.store.addon_info(
-            self.addon_slug
-        )
+        try:
+            addon_store_info = await self._supervisor_client.store.addon_info(
+                self.addon_slug
+            )
+        except SupervisorNotFoundError:
+            # Apps removed from the store can still be installed (detached)
+            try:
+                addon_info = await self._supervisor_client.addons.addon_info(
+                    self.addon_slug
+                )
+            except SupervisorNotFoundError:
+                return AddonInfo(
+                    available=False,
+                    hostname=None,
+                    options={},
+                    state=AddonState.NOT_INSTALLED,
+                    update_available=False,
+                    version=None,
+                )
+            return self._async_convert_installed_addon_info(addon_info)
+
         self._logger.debug("App store info: %s", addon_store_info.to_dict())
         if not addon_store_info.installed:
             return AddonInfo(

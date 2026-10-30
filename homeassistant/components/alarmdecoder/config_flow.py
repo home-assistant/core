@@ -1,5 +1,6 @@
 """Config flow for AlarmDecoder."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, cast, override
 
@@ -18,7 +19,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     CONF_ALT_NIGHT_MODE,
@@ -50,6 +51,12 @@ from .const import (
 EDIT_KEY = "edit_selection"
 EDIT_ZONES = "Zones"
 EDIT_SETTINGS = "Arming Settings"
+DEFAULT_CONNECTION = {
+    CONF_HOST: DEFAULT_DEVICE_HOST,
+    CONF_PORT: DEFAULT_DEVICE_PORT,
+    CONF_DEVICE_PATH: DEFAULT_DEVICE_PATH,
+    CONF_DEVICE_BAUD: DEFAULT_DEVICE_BAUD,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,64 +109,48 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._async_current_entries(), user_input, self.protocol
             ):
                 return self.async_abort(reason="already_configured")
-            connection: dict[str, Any] = {}
-            baud = None
-            device: Device
-            if self.protocol == PROTOCOL_SOCKET:
-                host = connection[CONF_HOST] = cast(str, user_input[CONF_HOST])
-                port = connection[CONF_PORT] = cast(int, user_input[CONF_PORT])
-                title: str = f"{host}:{port}"
-                device = SocketDevice(interface=(host, port))
-            if self.protocol == PROTOCOL_SERIAL:
-                path = connection[CONF_DEVICE_PATH] = cast(
-                    str, user_input[CONF_DEVICE_PATH]
-                )
-                baud = connection[CONF_DEVICE_BAUD] = cast(
-                    int, user_input[CONF_DEVICE_BAUD]
-                )
-                title = path
-                device = SerialDevice(interface=path)
-
-            controller = AdExt(device)
-
-            def test_connection():
-                controller.open(baud)
-                controller.close()
-
-            try:
-                await self.hass.async_add_executor_job(test_connection)
+            errors = await _async_test_connection(self.hass, self.protocol, user_input)
+            if not errors:
                 return self.async_create_entry(
-                    title=title, data={CONF_PROTOCOL: self.protocol, **connection}
+                    title=_connection_title(self.protocol, user_input),
+                    data={CONF_PROTOCOL: self.protocol, **user_input},
                 )
-            except NoDeviceError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during AlarmDecoder setup")
-                errors["base"] = "unknown"
-
-        schema: probatio.Schema
-        if self.protocol == PROTOCOL_SOCKET:
-            schema = probatio.Schema(
-                {
-                    probatio.Required(CONF_HOST, default=DEFAULT_DEVICE_HOST): str,
-                    probatio.Required(CONF_PORT, default=DEFAULT_DEVICE_PORT): int,
-                }
-            )
-        if self.protocol == PROTOCOL_SERIAL:
-            schema = probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_DEVICE_PATH, default=DEFAULT_DEVICE_PATH
-                    ): str,
-                    probatio.Required(
-                        CONF_DEVICE_BAUD, default=DEFAULT_DEVICE_BAUD
-                    ): int,
-                }
-            )
 
         return self.async_show_form(
             step_id="protocol",
-            data_schema=schema,
+            data_schema=_connection_schema(self.protocol, DEFAULT_CONNECTION),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the connection settings of an existing entry."""
+        entry = self._get_reconfigure_entry()
+        protocol = entry.data[CONF_PROTOCOL]
+        errors = {}
+        if user_input is not None:
+            other_entries = [
+                other
+                for other in self._async_current_entries()
+                if other.entry_id != entry.entry_id
+            ]
+            if _device_already_added(other_entries, user_input, protocol):
+                return self.async_abort(reason="already_configured")
+            errors = await _async_test_connection(self.hass, protocol, user_input)
+            if not errors:
+                # Keep a title the user chose; replace the generated one.
+                title = entry.title
+                if title == _connection_title(protocol, entry.data):
+                    title = _connection_title(protocol, user_input)
+                # The entry's update listener reloads it.
+                return self.async_update_and_abort(
+                    entry, title=title, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=_connection_schema(protocol, entry.data),
             errors=errors,
         )
 
@@ -402,3 +393,60 @@ def _device_already_added(
             return True
 
     return False
+
+
+def _connection_schema(
+    protocol: str | None, defaults: Mapping[str, Any]
+) -> probatio.Schema:
+    """Return the connection settings schema for a protocol."""
+    if protocol == PROTOCOL_SOCKET:
+        return probatio.Schema(
+            {
+                probatio.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
+                probatio.Required(CONF_PORT, default=defaults[CONF_PORT]): int,
+            }
+        )
+    return probatio.Schema(
+        {
+            probatio.Required(
+                CONF_DEVICE_PATH, default=defaults[CONF_DEVICE_PATH]
+            ): str,
+            probatio.Required(
+                CONF_DEVICE_BAUD, default=defaults[CONF_DEVICE_BAUD]
+            ): int,
+        }
+    )
+
+
+def _connection_title(protocol: str | None, connection: Mapping[str, Any]) -> str:
+    """Return the entry title generated for connection settings."""
+    if protocol == PROTOCOL_SOCKET:
+        return f"{connection[CONF_HOST]}:{connection[CONF_PORT]}"
+    return cast(str, connection[CONF_DEVICE_PATH])
+
+
+async def _async_test_connection(
+    hass: HomeAssistant, protocol: str | None, connection: dict[str, Any]
+) -> dict[str, str]:
+    """Open and close a connection to the AlarmDecoder; return form errors."""
+    baud = None
+    device: Device
+    if protocol == PROTOCOL_SOCKET:
+        device = SocketDevice(interface=(connection[CONF_HOST], connection[CONF_PORT]))
+    else:
+        device = SerialDevice(interface=connection[CONF_DEVICE_PATH])
+        baud = connection[CONF_DEVICE_BAUD]
+    controller = AdExt(device)
+
+    def test_connection() -> None:
+        controller.open(baud)
+        controller.close()
+
+    try:
+        await hass.async_add_executor_job(test_connection)
+    except NoDeviceError:
+        return {"base": "cannot_connect"}
+    except Exception:
+        _LOGGER.exception("Unexpected exception connecting to the AlarmDecoder")
+        return {"base": "unknown"}
+    return {}

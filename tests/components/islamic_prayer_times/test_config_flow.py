@@ -1,6 +1,7 @@
 """Tests for Islamic Prayer Times config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.islamic_prayer_times.const import (
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -36,6 +35,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
+    assert result["result"].unique_id == "12.34-23.45"
 
 
 async def test_options(hass: HomeAssistant) -> None:

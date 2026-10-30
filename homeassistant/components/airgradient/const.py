@@ -22,6 +22,7 @@ TVOC_LEARNING_OFFSET = "tvoc_learning_offset"
 POST_DATA = "post_data_to_airgradient"
 PM_STANDARD_CONFIG = "pm_standard"
 TEMPERATURE_UNIT = "temperature_unit"
+ALTITUDE_UNIT = "altitude_unit"
 LED_BAR_MODE = "led_bar_mode"
 LED_BAR_BRIGHTNESS = "led_bar_brightness"
 DISPLAY_BRIGHTNESS = "display_brightness"
@@ -63,6 +64,7 @@ GO_CONFIG = frozenset(
         TVOC_LEARNING_OFFSET,
         PM_STANDARD_CONFIG,
         TEMPERATURE_UNIT,
+        ALTITUDE_UNIT,
         MEASUREMENT_INTERVAL,
         GPS_MODE,
         FRONT_LED_BRIGHTNESS,

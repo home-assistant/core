@@ -105,6 +105,7 @@ def async_subscribe_receiver(
     return entity.async_subscribe_received_signal(signal_callback)
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class InfraredConsumerEntity(Entity):
     """Base class for entities that track the availability of infrared entities.
 
@@ -155,7 +156,9 @@ class InfraredConsumerEntity(Entity):
         self._infrared_availability[infrared_entity_id] = (
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
-        self._attr_available = all(self._infrared_availability.values())
+        available = all(self._infrared_availability.values())
+        if available != self.available:
+            self._async_infrared_availability_changed(available)
 
         remove_listener = async_track_state_change_event(
             self.hass, [infrared_entity_id], state_changed
@@ -177,15 +180,6 @@ class InfraredEmitterConsumerEntity(InfraredConsumerEntity):
 
     _attr_should_poll = False
     _infrared_emitter_entity_id: str
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        This can be removed in Home Assistant Core 2027.11.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -212,15 +206,6 @@ class InfraredReceiverConsumerEntity(InfraredConsumerEntity):
     _attr_should_poll = False
     _infrared_receiver_entity_id: str
     _remove_signal_subscription: CALLBACK_TYPE | None = None
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        This can be removed in Home Assistant Core 2027.11.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

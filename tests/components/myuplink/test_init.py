@@ -6,6 +6,9 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
@@ -19,10 +22,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import UNIQUE_ID
-
-from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 async def test_load_unload_entry(

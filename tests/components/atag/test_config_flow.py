@@ -3,6 +3,7 @@
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.atag import DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import UID, USER_INPUT, init_integration, mock_connection
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -65,6 +64,7 @@ async def test_adding_second_device(
             user_input=USER_INPUT,
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "secondary_device"
 
 
 async def test_connection_error(
@@ -88,6 +88,14 @@ async def test_connection_error(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_unauthorized(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -108,6 +116,14 @@ async def test_unauthorized(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unauthorized"}
+
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_full_flow_implementation(

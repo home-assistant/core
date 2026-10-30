@@ -2,6 +2,10 @@
 
 from unittest.mock import ANY
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
     CONF_CA_CERTS,
@@ -12,10 +16,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import MockBridge, async_setup_integration
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

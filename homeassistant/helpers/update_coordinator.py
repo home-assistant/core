@@ -375,6 +375,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             translation_domain=getattr(cause, "translation_domain", None),
             translation_key=getattr(cause, "translation_key", None),
             translation_placeholders=getattr(cause, "translation_placeholders", None),
+            retry_after=getattr(cause, "retry_after", None),
         )
         ex.__cause__ = cause
         raise ex
@@ -512,9 +513,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         except UpdateFailed as err:
             self.last_exception = err
-            # We can only honor a retry_after, after the config entry has been set up
-            # Basically meaning that the retry after can't be used when coming
-            # from an async_config_entry_first_refresh
+            # During async_config_entry_first_refresh the retry_after is passed on
+            # to ConfigEntryNotReady, so the config entry setup retry honors it
             if err.retry_after is not None and not raise_on_entry_error:
                 self._retry_after = err.retry_after
                 self.logger.debug(
@@ -689,15 +689,6 @@ class BaseCoordinatorEntity[
                 self._handle_coordinator_update, self.coordinator_context
             )
         )
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes, the listener is not keyed on it.
-
-        This can be removed in Home Assistant Core 2027.11.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @callback
     def _handle_coordinator_update(self) -> None:

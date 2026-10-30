@@ -10,6 +10,7 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 import probatio
 
 from homeassistant.components.http import KEY_HASS
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.onboarding import (
     BaseOnboardingView,
@@ -18,13 +19,9 @@ from homeassistant.components.onboarding import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import (
-    BackupManager,
-    Folder,
-    IncorrectPasswordError,
-    async_get_manager,
-    http as backup_http,
-)
+from . import async_get_manager, http as backup_http
+from .manager import BackupManager, IncorrectPasswordError
+from .models import Folder
 
 if TYPE_CHECKING:
     from homeassistant.components.onboarding import OnboardingStoreData
@@ -87,6 +84,7 @@ class RestoreBackupView(NoAuthBaseOnboardingView):
 
     url = "/api/onboarding/backup/restore"
     name = "api:onboarding:backup:restore"
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     @RequestDataValidator(
         probatio.Schema(

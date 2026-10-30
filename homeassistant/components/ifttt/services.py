@@ -7,6 +7,7 @@ import probatio
 import pyfttt
 import requests
 
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -18,7 +19,9 @@ from .const import (
     ATTR_VALUE2,
     ATTR_VALUE3,
     DATA_API_KEYS,
+    DATA_IFTTT_ALARM,
     DOMAIN,
+    SERVICE_PUSH_ALARM_STATE,
     SERVICE_TRIGGER,
 )
 
@@ -33,6 +36,13 @@ SERVICE_TRIGGER_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_VALUE1): cv.string,
         probatio.Optional(ATTR_VALUE2): cv.string,
         probatio.Optional(ATTR_VALUE3): cv.string,
+    }
+)
+
+PUSH_ALARM_STATE_SERVICE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(ATTR_STATE): cv.string,
     }
 )
 
@@ -65,9 +75,28 @@ def _trigger_service(call: ServiceCall) -> None:
         ) from err
 
 
+async def _push_state_update(service: ServiceCall) -> None:
+    """Set the service state as device state attribute."""
+    entity_ids = service.data.get(ATTR_ENTITY_ID)
+    state = service.data.get(ATTR_STATE)
+    devices = service.hass.data.get(DATA_IFTTT_ALARM, [])
+    if entity_ids:
+        devices = [d for d in devices if d.entity_id in entity_ids]
+
+    for device in devices:
+        device.push_alarm_state(state)
+        device.async_schedule_update_ha_state()
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the IFTTT integration."""
     hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER, _trigger_service, schema=SERVICE_TRIGGER_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PUSH_ALARM_STATE,
+        _push_state_update,
+        schema=PUSH_ALARM_STATE_SERVICE_SCHEMA,
     )

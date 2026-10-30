@@ -266,6 +266,12 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 self._consecutive_subscription_failures = 0
                 self._should_log_subscription_error = True
 
+            # pytraccar catches CancelledError and returns normally, so a
+            # cancel (e.g. on config entry unload) must be detected here or
+            # the loop would reconnect and keep running.
+            if (task := asyncio.current_task()) and task.cancelling():
+                raise asyncio.CancelledError
+
             await asyncio.sleep(_SUBSCRIPTION_RECONNECT_DELAY)
 
     def _log_subscription_failure(

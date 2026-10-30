@@ -31,6 +31,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "EVSE 1.1.1.1"
     assert result["data"] == {CONF_HOST: "1.1.1.1"}
+    assert result["result"].unique_id == "ABC123"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

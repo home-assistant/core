@@ -14,14 +14,13 @@ from pylamarzocco.models import (
 )
 from pylamarzocco.util import InstallationKey
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_MAC, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_INSTALLATION_KEY, SERIAL_DICT, USER_INPUT, async_init_integration
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

@@ -24,10 +24,12 @@ if TYPE_CHECKING:
 # Attributes
 ATTR_DESTINATION = "destination"
 ATTR_GPS = "gps"
+ATTR_PLACE_IDS = "place_ids"
 
 # Services
 SERVICE_NAVIGATE_TO_DESTINATION = "navigate_to_destination"
 SERVICE_NAVIGATE_TO_COORDINATES = "navigate_to_coordinates"
+SERVICE_NAVIGATE_TO_WAYPOINTS = "navigate_to_waypoints"
 
 
 def async_get_vehicle_for_service_call(
@@ -101,6 +103,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     probatio.Required(CONF_LATITUDE): cv.latitude,
                     probatio.Required(CONF_LONGITUDE): cv.longitude,
                 },
+            }
+        ),
+    )
+
+    async def navigate_to_waypoints(call: ServiceCall) -> None:
+        """Send an ordered trip using caller-supplied Google Place IDs."""
+        vehicle = async_get_vehicle_for_service_call(hass, call)
+        await wake_up_vehicle(vehicle)
+        await handle_vehicle_command(
+            vehicle.api.navigation_waypoints_request(
+                ",".join(f"refId:{place_id}" for place_id in call.data[ATTR_PLACE_IDS])
+            )
+        )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_NAVIGATE_TO_WAYPOINTS,
+        navigate_to_waypoints,
+        schema=probatio.Schema(
+            {
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_PLACE_IDS): probatio.All(
+                    [probatio.All(str, probatio.Match(r"^[^\s,:]+\Z"))],
+                    probatio.Length(min=1),
+                ),
             }
         ),
     )

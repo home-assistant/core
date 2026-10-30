@@ -14,6 +14,7 @@ from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakeController
 from bleak.exc import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.homekit_controller import config_flow
@@ -27,8 +28,6 @@ from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 PAIRING_START_FORM_ERRORS = [
     (KeyError, "pairing_failed"),
@@ -803,7 +802,10 @@ async def test_pair_abort_errors_on_finish(
 
 @pytest.mark.parametrize(("exception", "expected"), PAIRING_FINISH_FORM_ERRORS)
 async def test_pair_form_errors_on_finish(
-    hass: HomeAssistant, controller, exception, expected
+    hass: HomeAssistant,
+    controller: FakeController,
+    exception: type[Exception],
+    expected: str,
 ) -> None:
     """Test various pairing errors."""
     device = setup_mock_accessory(controller)
@@ -850,8 +852,16 @@ async def test_pair_form_errors_on_finish(
         "source": config_entries.SOURCE_ZEROCONF,
     }
 
+    finish_pairing.side_effect = await device.async_start_pairing(device.description.id)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
+
+async def test_pair_unknown_errors(
+    hass: HomeAssistant, controller: FakeController
+) -> None:
     """Test describing unknown errors."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -901,6 +911,11 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_works(hass: HomeAssistant, controller) -> None:

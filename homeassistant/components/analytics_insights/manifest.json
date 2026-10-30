@@ -1,6 +1,7 @@
 {
   "domain": "analytics_insights",
   "name": "Home Assistant Analytics Insights",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/analytics_insights",

@@ -1,6 +1,7 @@
 {
   "domain": "imou",
   "name": "Imou",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@Imou-OpenPlatform"],
   "config_flow": true,
   "dhcp": [
@@ -19,6 +20,6 @@
   "documentation": "https://www.home-assistant.io/integrations/imou",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
-  "requirements": ["pyimouapi==1.4.0"]
+  "quality_scale": "gold",
+  "requirements": ["pyimouapi==1.4.4"]
 }

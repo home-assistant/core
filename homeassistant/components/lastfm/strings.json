@@ -22,6 +22,11 @@
       }
     }
   },
+  "exceptions": {
+    "update_failed": {
+      "message": "Could not retrieve data from Last.fm for any of the configured users"
+    }
+  },
   "options": {
     "error": {
       "hidden_recent_tracks": "[%key:component::lastfm::config::error::hidden_recent_tracks%]",

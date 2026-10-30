@@ -1,6 +1,7 @@
 {
   "domain": "cpuspeed",
   "name": "CPU Speed",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@fabaff"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cpuspeed",

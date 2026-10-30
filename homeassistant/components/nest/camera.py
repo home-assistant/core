@@ -3,7 +3,7 @@
 from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 import functools
 import logging
 from pathlib import Path
@@ -41,11 +41,11 @@ _LOGGER = logging.getLogger(__name__)
 PLACEHOLDER = Path(__file__).parent / "placeholder.png"
 
 # Used to schedule an alarm to refresh the stream before expiration
-STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
+STREAM_EXPIRATION_BUFFER = dt.timedelta(seconds=30)
 
 # Refresh streams with a bounded interval and backoff on failure
-MIN_REFRESH_BACKOFF_INTERVAL = datetime.timedelta(minutes=1)
-MAX_REFRESH_BACKOFF_INTERVAL = datetime.timedelta(minutes=10)
+MIN_REFRESH_BACKOFF_INTERVAL = dt.timedelta(minutes=1)
+MAX_REFRESH_BACKOFF_INTERVAL = dt.timedelta(minutes=10)
 BACKOFF_MULTIPLIER = 1.5
 
 
@@ -84,8 +84,8 @@ class StreamRefresh:
     def __init__(
         self,
         hass: HomeAssistant,
-        expires_at: datetime.datetime,
-        refresh_cb: Callable[[], Awaitable[datetime.datetime | None]],
+        expires_at: dt.datetime,
+        refresh_cb: Callable[[], Awaitable[dt.datetime | None]],
     ) -> None:
         """Initialize StreamRefresh."""
         self._hass = hass
@@ -99,7 +99,7 @@ class StreamRefresh:
         if self._unsub:
             self._unsub()
 
-    async def _handle_refresh(self, _: datetime.datetime) -> None:
+    async def _handle_refresh(self, _: dt.datetime) -> None:
         """Alarm that fires to check if the stream should be refreshed."""
         self._unsub = None
         try:
@@ -123,7 +123,7 @@ class StreamRefresh:
             )
         self._schedule_stream_refresh(refresh_time)
 
-    def _schedule_stream_refresh(self, refresh_time: datetime.datetime) -> None:
+    def _schedule_stream_refresh(self, refresh_time: dt.datetime) -> None:
         """Schedules an alarm to refresh any streams before expiration."""
         _LOGGER.debug("Scheduling stream refresh for %s", refresh_time)
         self._unsub = async_track_point_in_utc_time(
@@ -215,7 +215,7 @@ class NestRTSPEntity(NestCameraBaseEntity):
             _LOGGER.warning("Stream already expired")
         return self._rtsp_stream.rtsp_stream_url
 
-    async def _async_refresh_stream(self) -> datetime.datetime | None:
+    async def _async_refresh_stream(self) -> dt.datetime | None:
         """Refresh stream to extend expiration time."""
         if not self._rtsp_stream:
             return None
@@ -262,7 +262,7 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         # client that trusts the Content-Type header.
         self.content_type = "image/png"
 
-    async def _async_refresh_stream(self, session_id: str) -> datetime.datetime | None:
+    async def _async_refresh_stream(self, session_id: str) -> dt.datetime | None:
         """Refresh stream to extend expiration time."""
         if not (webrtc_stream := self._webrtc_sessions.get(session_id)):
             return None

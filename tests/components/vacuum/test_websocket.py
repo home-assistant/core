@@ -3,6 +3,14 @@
 from dataclasses import asdict
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    mock_integration,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.vacuum import (
     DOMAIN,
@@ -20,15 +28,6 @@ from . import (
     help_async_setup_entry_init,
     help_async_unload_entry,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    mock_integration,
-    setup_test_component_platform,
-)
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("config_flow_fixture")

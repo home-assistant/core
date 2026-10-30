@@ -5,14 +5,20 @@ from typing import override
 from tailscale import Device, Tailscale, TailscaleAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_TAILNET, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import (
+    CONF_OAUTH_CLIENT_ID,
+    CONF_OAUTH_CLIENT_SECRET,
+    CONF_TAILNET,
+    DOMAIN,
+    LOGGER,
+    SCAN_INTERVAL,
+)
 
 type TailscaleConfigEntry = ConfigEntry[TailscaleDataUpdateCoordinator]
 
@@ -27,7 +33,8 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         session = async_get_clientsession(hass)
         self.tailscale = Tailscale(
             session=session,
-            api_key=config_entry.data[CONF_API_KEY],
+            oauth_client_id=config_entry.data[CONF_OAUTH_CLIENT_ID],
+            oauth_client_secret=config_entry.data[CONF_OAUTH_CLIENT_SECRET],
             tailnet=config_entry.data[CONF_TAILNET],
         )
         self.previous_devices: set[str] = set()

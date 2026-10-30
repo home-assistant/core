@@ -21,7 +21,7 @@ from homeassistant.helpers.service import (
 
 from .const import DOMAIN
 from .hap import HomematicIPConfigEntry
-from .helpers import get_door_opener_authorization_channel, is_error_response
+from .helpers import get_door_opener_authorization_channel, get_error_code
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -404,13 +404,13 @@ async def _async_pull_latch(service: ServiceCall) -> None:
                 translation_placeholders={"device_name": device.label},
             )
         result = await channel.async_pull_latch(pin)
-        if is_error_response(result):
+        if (error_code := get_error_code(result)) is not None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="pull_latch_failed",
                 translation_placeholders={
                     "device_name": device.label,
-                    "error_code": str(result.get("errorCode")),
+                    "error_code": error_code,
                 },
             )
 

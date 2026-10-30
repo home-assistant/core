@@ -5,6 +5,11 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    mock_restore_cache,
+)
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.knx.const import (
@@ -32,12 +37,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import (
-    async_capture_events,
-    async_fire_time_changed,
-    mock_restore_cache,
-)
 
 
 async def test_binary_sensor_entity_category(

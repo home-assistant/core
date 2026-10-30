@@ -527,7 +527,9 @@ class ImmichMediaView(HomeAssistantView):
             if size == "person":
                 image = await immich_api.people.async_get_person_thumbnail(asset_id)
             else:
-                image = await immich_api.assets.async_view_asset(asset_id, size)
+                image = await immich_api.assets.async_view_asset(
+                    asset_id, size, edited=True
+                )
         except ImmichError as exc:
             raise HTTPNotFound from exc
         return Response(body=image, content_type=f"{mime_type_base}/{mime_type_format}")

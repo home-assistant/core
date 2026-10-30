@@ -1,0 +1,6 @@
+stop_id,stop_name,stop_lat,stop_lon
+S1,First Street,40.0,-75.0
+S2,Second Street,40.01,-75.01
+S3,Third Street,40.02,-75.02
+N1,Night Depot,40.1,-75.1
+N2,Night Terminal,40.11,-75.11

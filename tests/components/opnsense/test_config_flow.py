@@ -202,6 +202,7 @@ async def test_interfaces_step_with_tracker_interfaces(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_TRACKER_INTERFACES] == ["LAN", "WAN"]
+    assert result["result"].unique_id == "mocked_unique_id"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -218,6 +219,7 @@ async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> N
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == CONFIG_DATA_IMPORT[CONF_URL]
+    assert result["result"].unique_id == "mocked_unique_id"
 
 
 @pytest.mark.usefixtures(
@@ -305,6 +307,7 @@ async def test_import_empty_tracker_interfaces(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert CONF_TRACKER_INTERFACES not in result["data"]
+    assert result["result"].unique_id == "mocked_unique_id"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

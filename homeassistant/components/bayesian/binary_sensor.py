@@ -190,7 +190,16 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_OBSERVATIONS): probatio.Schema(
             probatio.All(
                 probatio.EnsureList(),
-                [probatio.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
+                [
+                    probatio.TaggedUnion(
+                        CONF_PLATFORM,
+                        {
+                            CONF_TEMPLATE: TEMPLATE_SCHEMA,
+                            CONF_STATE: STATE_SCHEMA,
+                            CONF_NUMERIC_STATE: NUMERIC_STATE_SCHEMA,
+                        },
+                    )
+                ],
                 no_overlapping,
             )
         ),

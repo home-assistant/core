@@ -12,6 +12,17 @@ from unittest.mock import AsyncMock, patch
 from aiogithubapi import GitHubLoginDeviceModel, GitHubLoginOauthModel
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    CLIENT_ID,
+    MockConfigEntry,
+    MockUser,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from yarl import URL
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -40,15 +51,6 @@ from . import (
     setup_integration,
 )
 from .const import FROZEN_TIME, PROXY_HEADERS, TOKEN, WARNING_ACCEPTANCE
-
-from tests.common import (
-    CLIENT_ID,
-    MockConfigEntry,
-    MockUser,
-    async_load_json_object_fixture,
-    load_json_object_fixture,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 FIXTURE_PROXY_PATH = Path(__file__).parent / "fixtures" / "proxy"
 
@@ -264,7 +266,7 @@ def stored_repositories(hass_storage: dict[str, Any], config_dir: Path) -> None:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.marketplace.async_setup_entry", return_value=True
+        "homeassistant.components.marketplace.async_setup_entry", return_value=None
     ):
         yield
 

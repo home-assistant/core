@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from evolutionhttp import BryantEvolutionLocalClient
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -15,8 +16,6 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import DEFAULT_SYSTEM_ZONES
 from .test_climate import trigger_polling
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

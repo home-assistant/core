@@ -7,6 +7,7 @@ from typing import Any
 
 from aiohttp import ClientResponse
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.alexa import DOMAIN, smart_home
 from homeassistant.const import CONTENT_TYPE_JSON
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_common import get_new_request
-
-from tests.typing import ClientSessionGenerator
 
 
 async def do_http_discovery(

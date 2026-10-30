@@ -8,9 +8,11 @@ from unittest.mock import Mock, PropertyMock, patch
 from aiohttp import ClientError, StreamReader
 from aiohttp.test_utils import TestClient
 import pytest
-
-from tests.common import MockUser
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 
 
 @pytest.fixture

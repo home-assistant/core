@@ -4,6 +4,8 @@ from collections.abc import Callable
 
 from lifx import Device
 import pytest
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -22,9 +24,6 @@ from .helpers import (
     create_reference_matrix_light,
     create_reference_thread_light,
 )
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(

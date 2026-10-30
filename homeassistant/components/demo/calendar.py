@@ -1,6 +1,6 @@
 """Demo platform that has two fake calendars."""
 
-import datetime
+import datetime as dt
 from typing import override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -26,10 +26,10 @@ async def async_setup_entry(
 
 def calendar_data_future() -> CalendarEvent:
     """Representation of a Demo Calendar for a future event."""
-    half_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    half_hour_from_now = dt_util.now() + dt.timedelta(minutes=30)
     return CalendarEvent(
         start=half_hour_from_now,
-        end=half_hour_from_now + datetime.timedelta(minutes=60),
+        end=half_hour_from_now + dt.timedelta(minutes=60),
         summary="Future Event",
         description="Future Description",
         location="Future Location",
@@ -38,10 +38,10 @@ def calendar_data_future() -> CalendarEvent:
 
 def calendar_data_current() -> CalendarEvent:
     """Representation of a Demo Calendar for a current event."""
-    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
+    middle_of_event = dt_util.now() - dt.timedelta(minutes=30)
     return CalendarEvent(
         start=middle_of_event,
-        end=middle_of_event + datetime.timedelta(minutes=60),
+        end=middle_of_event + dt.timedelta(minutes=60),
         summary="Current Event",
     )
 
@@ -64,8 +64,8 @@ class DemoCalendar(CalendarEntity):
     async def async_get_events(
         self,
         hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         assert start_date < end_date

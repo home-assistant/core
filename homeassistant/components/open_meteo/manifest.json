@@ -1,6 +1,7 @@
 {
   "domain": "open_meteo",
   "name": "Open-Meteo",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "dependencies": ["zone"],

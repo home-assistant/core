@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 
 import blebox_uniapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -32,8 +33,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_config_entry, async_setup_entity, mock_feature
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="saunabox")

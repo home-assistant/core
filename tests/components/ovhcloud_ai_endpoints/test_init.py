@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 import httpx2
 from openai import AuthenticationError, BadRequestError, OpenAIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ovhcloud_ai_endpoints.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unload(

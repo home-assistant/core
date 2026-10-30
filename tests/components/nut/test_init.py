@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 from aionut import NUTError, NUTLoginError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -21,9 +23,6 @@ from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .util import _get_mock_nutclient, async_init_integration
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_config_entry_migrations(hass: HomeAssistant) -> None:

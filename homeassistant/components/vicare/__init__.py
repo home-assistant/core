@@ -10,10 +10,15 @@ from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareOAuthManager import obtain_token_via_basic_auth_pkce
 from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
+    PyViCareInvalidDataError,
+    PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
+import requests
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -59,7 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: ViCareConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if config_entry.version == 1 and config_entry.minor_version < 2:
@@ -84,8 +89,13 @@ async def async_migrate_entry(
         )
         _LOGGER.debug("Imported configured client_id as application credential")
 
+        token_path = hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
         token = await hass.async_add_executor_job(
-            obtain_token_via_basic_auth_pkce, client_id, username, password
+            _obtain_token_and_remove_token_file,
+            client_id,
+            username,
+            password,
+            token_path,
         )
 
         data.pop(CONF_USERNAME)
@@ -94,9 +104,6 @@ async def async_migrate_entry(
 
         data["auth_implementation"] = DOMAIN
         data[CONF_TOKEN] = token
-
-        token_path = hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
-        await hass.async_add_executor_job(_remove_token_file, token_path)
 
         hass.config_entries.async_update_entry(
             config_entry, data=data, version=2, minor_version=1
@@ -127,8 +134,6 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
         _LOGGER.debug("Promoted pre-merge ViCare config entry from 1.3 to 2.1")
 
-    return True
-
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -139,7 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
 
@@ -178,6 +183,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
         raise ConfigEntryNotReady(
             f"ViCare API rate limit exceeded, resets at {err.limitResetDate}"
         ) from err
+    except (
+        PyViCareDeviceCommunicationError,
+        PyViCareInternalServerError,
+        PyViCareInvalidDataError,
+        requests.RequestException,
+    ) as err:
+        # The coordinator treats the same errors as transient.
+        raise ConfigEntryNotReady("Unable to reach the ViCare API") from err
 
     # Group devices by gateway: in viaGateway mode one bulk fetch refreshes
     # every device behind a gateway, so one coordinator serves the gateway.
@@ -210,8 +223,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     await _async_register_zigbee_gateway_devices(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def _async_register_zigbee_gateway_devices(
@@ -250,6 +261,15 @@ def _remove_token_file(token_path: str) -> None:
         os.remove(token_path)
 
 
+def _obtain_token_and_remove_token_file(
+    client_id: str, username: str, password: str, token_path: str
+) -> dict[str, object]:
+    """Obtain an OAuth token and remove the legacy token file."""
+    token = obtain_token_via_basic_auth_pkce(client_id, username, password)
+    _remove_token_file(token_path)
+    return token
+
+
 def _setup_vicare_api(
     auth: ConfigEntryAuth,
     cache_duration: int = DEFAULT_CACHE_DURATION,
@@ -261,16 +281,16 @@ def _setup_vicare_api(
     client.initWithExternalOAuth(auth)
 
     device_config_list = get_supported_devices(client.devices)
+    probed: dict[str, bool] = {}
 
     # In viaGateway mode each gateway is one bulk fetch per cycle, so the rate
-    # limit scales with the number of gateways, not devices. Offline gateways
-    # are never fetched, and are skipped below, so they must not count here
-    # either; this has to match the grouping in async_setup_entry.
+    # limit scales with the number of gateways, not devices. Unreachable
+    # gateways are skipped below, so they must not count here either; this has
+    # to match the grouping in async_setup_entry.
     gateway_count = len(
         {
             config.getConfig().serial
-            for config in device_config_list
-            if config.isOnline()
+            for config in _reachable_devices(device_config_list, probed)
         }
     )
     if gateway_count > 1:
@@ -294,9 +314,7 @@ def _setup_vicare_api(
         )
 
     devices = []
-    for device_config in device_config_list:
-        if not bool(device_config.isOnline()):
-            continue
+    for device_config in _reachable_devices(device_config_list, probed):
         api = device_config.asAutoDetectDevice()
         devices.append(
             ViCareDevice(config=device_config, api=api, serial=get_device_serial(api))
@@ -307,9 +325,38 @@ def _setup_vicare_api(
     return ViCareData(client=client, devices=devices)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
+def _reachable_devices(
+    device_config_list: list[PyViCareDeviceConfig], probed: dict[str, bool]
+) -> list[PyViCareDeviceConfig]:
+    """Return the devices to set up, probing each gateway reported offline once.
+
+    The API's online flag is not reliable: a device can be reported offline
+    while its gateway keeps delivering current data.
+    """
+    reachable = []
+    for config in device_config_list:
+        if not config.isOnline():
+            serial = config.getConfig().serial
+            if serial not in probed:
+                probed[serial] = _gateway_delivers_data(config)
+            if not probed[serial]:
+                continue
+        reachable.append(config)
+    return reachable
+
+
+def _gateway_delivers_data(config: PyViCareDeviceConfig) -> bool:
+    """Return whether a fetch from the device's gateway succeeds."""
+    try:
+        config.asAutoDetectDevice().service.fetch_all_features(config.getConfig())
+    except PyViCareDeviceCommunicationError, PyViCareNotSupportedFeatureError:
+        return False
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
     """Unload ViCare config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_devices_and_entities(

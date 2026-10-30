@@ -3,6 +3,7 @@
 AUTHENTICATE_TIMEOUT = 5
 
 DOMAIN = "roon"
+ENTITY_ID_CHANGED_SIGNAL = f"{DOMAIN}_entity_id_changed"
 
 CONF_ROON_ID = "roon_server_id"
 CONF_ROON_NAME = "roon_server_name"

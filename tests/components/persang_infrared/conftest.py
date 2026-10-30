@@ -5,6 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from infrared_protocols.codes.persang.speaker import PersangSpeakerCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 from homeassistant.components.persang_infrared import PLATFORMS
 from homeassistant.components.persang_infrared.const import (
@@ -13,12 +18,6 @@ from homeassistant.components.persang_infrared.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import (
-    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
-)
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.fixture

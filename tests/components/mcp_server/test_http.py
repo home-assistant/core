@@ -13,9 +13,13 @@ import mcp
 import mcp.client.session
 import mcp.client.sse
 import mcp.client.streamable_http
-from mcp.shared.exceptions import McpError
+from mcp.shared.exceptions import MCPError
 import probatio
+import pydantic
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, setup_test_component_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -47,9 +51,7 @@ from homeassistant.util.json import JsonObjectType
 
 from .conftest import TEST_LLM_API_ID, MockLLMAPI
 
-from tests.common import MockConfigEntry, setup_test_component_platform
 from tests.components.light.common import MockLight
-from tests.typing import ClientSessionGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -392,6 +394,7 @@ async def mcp_sse_session(
 
     headers = {"Authorization": f"Bearer {hass_supervisor_access_token}"}
 
+    # pylint: disable-next=contextmanager-generator-missing-cleanup
     async with (
         mcp.client.sse.sse_client(mcp_url, headers=headers) as streams,
         mcp.client.session.ClientSession(*streams) as session,
@@ -413,7 +416,7 @@ async def mcp_streamable_session(
     async with (
         mcp.client.streamable_http.streamable_http_client(
             mcp_url, http_client=create_async_httpx_client(hass, headers=headers)
-        ) as (read_stream, write_stream, _),
+        ) as (read_stream, write_stream),
         mcp.client.session.ClientSession(read_stream, write_stream) as session,
     ):
         await session.initialize()
@@ -430,48 +433,83 @@ def mcp_client_fixture(mcp_protocol: str) -> Any:
     raise ValueError(f"Unknown MCP protocol: {mcp_protocol}")
 
 
+async def test_server_icons(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mcp_protocol: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Advertise a frontend icon that can be fetched without authentication."""
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_client()
+    mcp_url = str(
+        client.make_url({"sse": SSE_API, "streamable": STREAMABLE_API}[mcp_protocol])
+    )
+    base_url = str(URL(mcp_url).origin())
+    # The icon URL follows the origin of the request, not the configured URLs
+    hass.config.internal_url = "http://homeassistant.local:8123"
+    hass.config.external_url = "https://example.com"
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        assert session.server_info is not None
+        assert session.server_info.icons == [
+            mcp.types.Icon(
+                src=f"{base_url}/static/icons/favicon-192x192.png",
+                mime_type="image/png",
+                sizes=["192x192"],
+            )
+        ]
+
+        async with (
+            aiohttp.ClientSession() as icon_client,
+            icon_client.get(
+                session.server_info.icons[0].src, allow_redirects=False
+            ) as response,
+        ):
+            assert response.status == HTTPStatus.OK
+            assert response.content_type == "image/png"
+            assert (await response.read()).startswith(b"\x89PNG\r\n\x1a\n")
+
+
 @pytest.mark.parametrize(
     ("mcp_request", "result_type"),
     [
         pytest.param(
-            mcp.types.ClientRequest(mcp.types.ListToolsRequest()),
+            mcp.types.ListToolsRequest(),
             mcp.types.ListToolsResult,
             id="tools-list",
         ),
         pytest.param(
-            mcp.types.ClientRequest(
-                mcp.types.CallToolRequest(
-                    params=mcp.types.CallToolRequestParams(
-                        name="intent__HassTurnOn",
-                        arguments={"name": "kitchen light"},
-                    )
+            mcp.types.CallToolRequest(
+                params=mcp.types.CallToolRequestParams(
+                    name="intent__HassTurnOn",
+                    arguments={"name": "kitchen light"},
                 )
             ),
             mcp.types.CallToolResult,
             id="tools-call",
         ),
         pytest.param(
-            mcp.types.ClientRequest(mcp.types.ListPromptsRequest()),
+            mcp.types.ListPromptsRequest(),
             mcp.types.ListPromptsResult,
             id="prompts-list",
         ),
         pytest.param(
-            mcp.types.ClientRequest(
-                mcp.types.GetPromptRequest(
-                    params=mcp.types.GetPromptRequestParams(name="Assist")
-                )
+            mcp.types.GetPromptRequest(
+                params=mcp.types.GetPromptRequestParams(name="Device control")
             ),
             mcp.types.GetPromptResult,
             id="prompts-get",
         ),
         pytest.param(
-            mcp.types.ClientRequest(mcp.types.ListResourcesRequest()),
+            mcp.types.ListResourcesRequest(),
             mcp.types.ListResourcesResult,
             id="resources-list",
         ),
         pytest.param(
-            mcp.types.ClientRequest.model_validate(
-                {"method": "resources/read", "params": {"uri": SNAPSHOT_RESOURCE_URI}}
+            mcp.types.ReadResourceRequest(
+                params=mcp.types.ReadResourceRequestParams(uri=SNAPSHOT_RESOURCE_URI)
             ),
             mcp.types.ReadResourceResult,
             id="resources-read",
@@ -495,7 +533,10 @@ async def test_request_device_id(
     ) as mock_get_api:
         async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
             await session.send_request(
-                mcp.types.ClientRequest.model_validate(request_data), result_type
+                pydantic.TypeAdapter(mcp.types.ClientRequest).validate_python(
+                    request_data
+                ),
+                result_type,
             )
             assert mock_get_api.await_count > 0
             device_contexts = [call.args[2] for call in mock_get_api.await_args_list]
@@ -531,9 +572,7 @@ async def test_request_metadata_without_device_id(
     ) as mock_get_api:
         async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
             await session.list_tools(
-                params=mcp.types.PaginatedRequestParams(
-                    _meta=mcp.types.RequestParams.Meta.model_validate(metadata)
-                )
+                params=mcp.types.PaginatedRequestParams(_meta=metadata)
             )
 
     mock_get_api.assert_awaited_once()
@@ -559,13 +598,11 @@ async def test_request_invalid_device_id(
     """Reject caller device metadata with an invalid type."""
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         with pytest.raises(
-            McpError, match="io.home-assistant/device_id must be a string"
+            MCPError, match="io.home-assistant/device_id must be a string"
         ):
             await session.list_tools(
                 params=mcp.types.PaginatedRequestParams(
-                    _meta=mcp.types.RequestParams.Meta.model_validate(
-                        {DEVICE_ID_META_KEY: device_id}
-                    )
+                    _meta={DEVICE_ID_META_KEY: device_id}
                 )
             )
 
@@ -576,20 +613,17 @@ async def test_tool_call_invalid_device_id(
     mcp_client: MCPClientFactory,
     hass_supervisor_access_token: str,
 ) -> None:
-    """Invalid caller metadata returns a tool error without performing the action."""
+    """Invalid caller metadata raises an error without performing the action."""
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        result = await session.call_tool(
-            name="intent__HassTurnOn",
-            arguments={"name": "kitchen light"},
-            meta={DEVICE_ID_META_KEY: 123},
-        )
+        with pytest.raises(
+            MCPError, match="io.home-assistant/device_id must be a string"
+        ):
+            await session.call_tool(
+                name="intent__HassTurnOn",
+                arguments={"name": "kitchen light"},
+                meta={DEVICE_ID_META_KEY: 123},
+            )
 
-    assert result.isError
-    assert result.content == [
-        mcp.types.TextContent(
-            type="text", text="io.home-assistant/device_id must be a string"
-        )
-    ]
     assert hass.states.get(TEST_ENTITY).state == STATE_OFF
 
 
@@ -609,9 +643,7 @@ async def test_request_device_id_enables_timer_tools(
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.list_tools(
             params=mcp.types.PaginatedRequestParams(
-                _meta=mcp.types.RequestParams.Meta.model_validate(
-                    {DEVICE_ID_META_KEY: "test-device"}
-                )
+                _meta={DEVICE_ID_META_KEY: "test-device"}
             )
         )
         assert "intent__HassStartTimer" in {tool.name for tool in result.tools}
@@ -640,15 +672,15 @@ async def test_mcp_tools_list(
     )
     assert tool.name == "intent__HassTurnOn"
     assert tool.description is not None
-    assert tool.inputSchema
-    assert tool.inputSchema.get("type") == "object"
-    properties = tool.inputSchema.get("properties")
+    assert tool.input_schema
+    assert tool.input_schema.get("type") == "object"
+    properties = tool.input_schema.get("properties")
     assert properties.get("name") == {"type": "string"}
     assert tool.annotations == mcp.types.ToolAnnotations(
-        readOnlyHint=False,
-        destructiveHint=True,
-        idempotentHint=False,
-        openWorldHint=False,
+        read_only_hint=False,
+        destructive_hint=True,
+        idempotent_hint=False,
+        open_world_hint=False,
     )
 
 
@@ -695,8 +727,8 @@ async def test_mcp_tools_list_required_parameters(
         result = await session.list_tools()
 
     tool = next(iter(tool for tool in result.tools if tool.name == "test_tool"))
-    assert tool.inputSchema.get("type") == "object"
-    assert tool.inputSchema.get("required") == expected_required
+    assert tool.input_schema.get("type") == "object"
+    assert tool.input_schema.get("required") == expected_required
 
 
 @pytest.mark.parametrize(("all_llm_apis", "llm_hass_api"), [(True, [])])
@@ -722,8 +754,58 @@ async def test_mcp_tools_list_all_llm_apis(
         result = await session.list_tools()
 
     tool_names = {tool.name for tool in result.tools}
-    assert "assist__homeassistant__GetLiveContext" in tool_names
-    assert "test-api__test_tool" in tool_names
+    assert "homeassistant__GetLiveContext" in tool_names
+    assert "assist__homeassistant__GetLiveContext" not in tool_names
+    assert "device-control__homeassistant__GetLiveContext" not in tool_names
+    assert "test_tool" in tool_names
+    assert [tool.name for tool in result.tools].count("llm__GetDateTime") == 1
+
+
+@pytest.mark.parametrize("llm_hass_api", [[llm.LLM_API_ASSIST, TEST_LLM_API_ID]])
+async def test_mcp_merged_live_context(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Call live context with its unchanged name in a merged API."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="homeassistant__GetLiveContext", arguments={"domain": "light"}
+        )
+
+    assert not result.is_error
+    assert "Kitchen Light" in result.content[0].text
+
+
+@pytest.mark.parametrize("llm_hass_api", [[llm.LLM_API_ASSIST, TEST_LLM_API_ID]])
+@pytest.mark.parametrize("read_only", [True])
+async def test_mcp_merged_read_only_blocks_write_tools(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Merged write tools are excluded by the read-only tool filter."""
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert result.is_error
+    assert 'Tool "intent__HassTurnOn" not found' in result.content[0].text
+    assert hass.states.get(TEST_ENTITY).state == STATE_OFF
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -768,7 +850,7 @@ async def test_mcp_tools_list_json_schema(
         result = await session.list_tools()
 
     tool = next(tool for tool in result.tools if tool.name == "test_tool")
-    assert tool.inputSchema["properties"]["value"] == expected_schema
+    assert tool.input_schema["properties"]["value"] == expected_schema
 
 
 @pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
@@ -805,10 +887,10 @@ async def test_mcp_tools_list_metadata(
     tool = next(iter(tool for tool in result.tools if tool.name == "test_tool"))
     assert tool.title == "Test tool"
     assert tool.annotations == mcp.types.ToolAnnotations(
-        readOnlyHint=True,
-        destructiveHint=False,
-        idempotentHint=True,
-        openWorldHint=False,
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=True,
+        open_world_hint=False,
     )
 
 
@@ -832,7 +914,7 @@ async def test_mcp_tool_call(
             arguments={"name": "kitchen light"},
         )
 
-    assert not result.isError
+    assert not result.is_error
     assert len(result.content) == 1
     assert result.content[0].type == "text"
     # The content is the raw tool call payload
@@ -844,6 +926,34 @@ async def test_mcp_tool_call(
     state = hass.states.get("light.kitchen")
     assert state
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize("read_only", [True])
+async def test_mcp_read_only(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: MCPClientFactory,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the read-only option only exposes tools that do not change anything."""
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_tools()
+        tool_names = {tool.name for tool in result.tools}
+        assert "homeassistant__GetLiveContext" in tool_names
+        assert "intent__HassTurnOn" not in tool_names
+        assert all(tool.annotations.read_only_hint for tool in result.tools)
+
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert result.is_error
+    assert "not found" in result.content[0].text
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
 
 
 async def test_mcp_tool_call_failed(
@@ -861,7 +971,7 @@ async def test_mcp_tool_call_failed(
             arguments={"name": "backyard"},
         )
 
-    assert result.isError
+    assert result.is_error
     assert len(result.content) == 1
     assert result.content[0].type == "text"
     assert "Error calling tool" in result.content[0].text
@@ -882,8 +992,8 @@ async def test_prompt_list(
 
     assert len(result.prompts) == 1
     prompt = result.prompts[0]
-    assert prompt.name == "Assist"
-    assert prompt.description == "Default prompt for Home Assistant Assist API"
+    assert prompt.name == "Device control"
+    assert prompt.description == "Default prompt for Home Assistant Device control API"
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
@@ -897,9 +1007,9 @@ async def test_prompt_get(
     """Test the get prompt endpoint."""
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        result = await session.get_prompt(name="Assist")
+        result = await session.get_prompt(name="Device control")
 
-    assert result.description == "Default prompt for Home Assistant Assist API"
+    assert result.description == "Default prompt for Home Assistant Device control API"
     assert len(result.messages) == 1
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"
@@ -917,7 +1027,7 @@ async def test_get_unknown_prompt(
     """Test the get prompt endpoint."""
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        with pytest.raises(McpError):
+        with pytest.raises(MCPError):
             await session.get_prompt(name="Unknown")
 
 
@@ -940,7 +1050,7 @@ async def test_mcp_resources_list(
     assert resource.name == "assist_context_snapshot"
     assert resource.title == "Assist context snapshot"
     assert resource.description is not None
-    assert resource.mimeType == "text/plain"
+    assert resource.mime_type == "text/plain"
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
@@ -961,7 +1071,7 @@ async def test_mcp_resource_read(
     assert len(result.contents) == 1
     content = result.contents[0]
     assert content.uri == resource.uri
-    assert content.mimeType == "text/plain"
+    assert content.mime_type == "text/plain"
     assert content.text == (
         "Live Context: An overview of the areas and the devices in this smart home:\n"
         "- names: Kitchen Light\n"
@@ -987,7 +1097,7 @@ async def test_mcp_resource_read_unknown_resource(
     ).uri
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
-        with pytest.raises(McpError, match="Unknown resource"):
+        with pytest.raises(MCPError, match="Unknown resource"):
             await session.read_resource(unknown_uri)
 
 
@@ -1015,7 +1125,7 @@ async def test_mcp_resources_unavailable_without_live_context_tool(
 
         assert result.resources == []
 
-        with pytest.raises(McpError, match="Unknown resource"):
+        with pytest.raises(MCPError, match="Unknown resource"):
             await session.read_resource(resource_uri)
 
 
@@ -1050,7 +1160,7 @@ async def test_mcp_tool_call_unicode(
                 arguments={},
             )
 
-    assert not result.isError
+    assert not result.is_error
     assert len(result.content) == 1
     assert result.content[0].type == "text"
 
@@ -1093,7 +1203,7 @@ async def test_mcp_tool_call_error_flag(
         async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
             result = await session.call_tool(name="AnyTool", arguments={})
 
-    assert result.isError == expected_is_error
+    assert result.is_error == expected_is_error
     assert result.content[0].text == json.dumps(tool_result.data)
 
 
@@ -1118,6 +1228,34 @@ async def test_streamable_api_id_exposes_registered_api(
 
     assert len(result.prompts) == 1
     assert result.prompts[0].name == "Test API"
+
+
+@pytest.mark.parametrize("read_only", [True])
+async def test_streamable_api_id_ignores_read_only(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the keyed endpoint keeps write controls when the read-only option is on."""
+    client = await hass_client()
+    mcp_url = str(client.make_url(f"{STREAMABLE_API}/{llm.LLM_API_ASSIST}"))
+
+    async with mcp_streamable_session(
+        hass, mcp_url, hass_supervisor_access_token
+    ) as session:
+        result = await session.list_tools()
+        assert "intent__HassTurnOn" in {tool.name for tool in result.tools}
+
+        result = await session.call_tool(
+            name="intent__HassTurnOn",
+            arguments={"name": "kitchen light"},
+        )
+
+    assert not result.is_error
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_ON
 
 
 async def test_streamable_api_id_requires_admin(

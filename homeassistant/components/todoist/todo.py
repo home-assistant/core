@@ -1,7 +1,7 @@
 """A todo platform for Todoist."""
 
 import asyncio
-import datetime
+import datetime as dt
 from typing import Any, cast, override
 
 from todoist_api_python.models import Task
@@ -42,7 +42,7 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
         "description": item.description or "",
     }
     if due := item.due:
-        if isinstance(due, datetime.datetime):
+        if isinstance(due, dt.datetime):
             item_data["due_datetime"] = due
         else:
             item_data["due_date"] = due

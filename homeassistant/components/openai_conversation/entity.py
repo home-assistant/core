@@ -722,6 +722,7 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                     model_args["service_tier"] = "default"
                     continue
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:
@@ -729,6 +730,7 @@ class OpenAIBaseLLMEntity(Entity):
                     isinstance(err, openai.APIError)
                     and err.type == "insufficient_quota"
                 ):
+                    # pylint: disable-next=home-assistant-log-and-raise
                     LOGGER.error("Insufficient funds for OpenAI: %s", err)
                     raise HomeAssistantError("Insufficient funds for OpenAI") from err
                 if "Verify Organization" in str(err):
@@ -746,6 +748,7 @@ class OpenAIBaseLLMEntity(Entity):
                         },
                     )
 
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
 

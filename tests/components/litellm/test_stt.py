@@ -14,6 +14,7 @@ from openai import (
     omit,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import stt
 from homeassistant.components.litellm.const import (
@@ -28,8 +29,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import TEST_URL
-
-from tests.common import MockConfigEntry
 
 
 async def _audio_stream(*chunks: bytes) -> AsyncIterable[bytes]:

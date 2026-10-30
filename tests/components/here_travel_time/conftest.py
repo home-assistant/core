@@ -3,8 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-
-from tests.common import load_json_object_fixture
+from pytest_homeassistant.common import load_json_object_fixture
 
 RESPONSE = load_json_object_fixture("here_travel_time/car_response.json")
 TRANSIT_RESPONSE = load_json_object_fixture(

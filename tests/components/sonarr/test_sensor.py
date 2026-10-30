@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from aiopyarr import ArrException
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -16,8 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
 

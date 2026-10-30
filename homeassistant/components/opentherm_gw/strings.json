@@ -165,6 +165,11 @@
         "name": "Heat hot water once"
       }
     },
+    "number": {
+      "control_setpoint_override_n": {
+        "name": "Control setpoint {circuit_number} override"
+      }
+    },
     "select": {
       "dhw_ovrd_mode": {
         "name": "Hot water override",

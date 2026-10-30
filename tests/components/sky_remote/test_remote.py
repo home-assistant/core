@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.remote import (
     ATTR_COMMAND,
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_mock_entry
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "remote.example_com"
 

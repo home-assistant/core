@@ -6,14 +6,13 @@ from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import config
 from homeassistant.components.config import DOMAIN, scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture

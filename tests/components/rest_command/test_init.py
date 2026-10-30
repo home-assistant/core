@@ -7,6 +7,7 @@ from unittest.mock import patch
 import aiohttp
 from multidict import CIMultiDict
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from yarl import URL
 
 from homeassistant.components.rest_command import DOMAIN
@@ -21,8 +22,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL, ComponentSetup
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> None:
@@ -46,6 +45,25 @@ async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> N
 
     assert hass.services.has_service(DOMAIN, "new_test")
     assert not hass.services.has_service(DOMAIN, "get_test")
+
+
+async def test_reload_without_domain_config(
+    hass: HomeAssistant, setup_component: ComponentSetup
+) -> None:
+    """Verify reload removes all commands when the domain key is gone."""
+    await setup_component()
+
+    assert hass.services.has_service(DOMAIN, "get_test")
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={},
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    assert not hass.services.has_service(DOMAIN, "get_test")
+    assert hass.services.has_service(DOMAIN, SERVICE_RELOAD)
 
 
 async def test_setup_tests(

@@ -1,6 +1,7 @@
 {
   "domain": "flo",
   "name": "Flo",
+  "categories": ["water.meters_leak_detection"],
   "codeowners": ["@dmulcahey"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flo",

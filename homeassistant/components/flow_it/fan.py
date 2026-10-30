@@ -1,4 +1,4 @@
-"""Fan platform for Flow-it."""
+"""Fan platform for AriaQ."""
 
 from typing import Any, override
 
@@ -20,8 +20,8 @@ from homeassistant.util.percentage import (
 )
 
 from .const import DOMAIN
-from .coordinator import FlowItConfigEntry, FlowItCoordinator
-from .entity import FlowItVmcEntity
+from .coordinator import AriaQConfigEntry, AriaQCoordinator
+from .entity import AriaQVmcEntity
 
 ORDERED_NAMED_FAN_SPEEDS = [
     Speed.LEVEL_1,
@@ -36,16 +36,16 @@ PRESET_MODES = [Speed.AUTO, Speed.BOOST]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: FlowItConfigEntry,
+    config_entry: AriaQConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Flow-it fan."""
+    """Set up the AriaQ fan."""
     data = config_entry.runtime_data
-    async_add_entities([FlowItVmcFan(data.coordinator, data.vmc)])
+    async_add_entities([AriaQVmcFan(data.coordinator, data.vmc)])
 
 
-class FlowItVmcFan(FlowItVmcEntity, FanEntity):
-    """Flow-it fan entity."""
+class AriaQVmcFan(AriaQVmcEntity, FanEntity):
+    """AriaQ fan entity."""
 
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
@@ -57,7 +57,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
     _attr_preset_modes = list(PRESET_MODES)
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
 
-    def __init__(self, coordinator: FlowItCoordinator, vmc: FlowItVMCMachine) -> None:
+    def __init__(self, coordinator: AriaQCoordinator, vmc: FlowItVMCMachine) -> None:
         """Initialize the fan."""
         super().__init__(
             coordinator,

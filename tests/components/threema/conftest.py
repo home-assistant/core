@@ -6,6 +6,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.threema.const import (
     CONF_API_SECRET,
@@ -16,8 +17,6 @@ from homeassistant.components.threema.const import (
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_RECIPIENT
-
-from tests.common import MockConfigEntry
 
 MOCK_GATEWAY_ID = "*TESTGWY"
 MOCK_API_SECRET = "test_secret_key_12345"

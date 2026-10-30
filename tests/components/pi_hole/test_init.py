@@ -4,6 +4,7 @@ from unittest.mock import ANY, AsyncMock
 
 from hole.exceptions import HoleError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import pi_hole, switch
 from homeassistant.components.pi_hole.const import (
@@ -33,8 +34,6 @@ from . import (
     _create_mocked_hole,
     _patch_init_hole,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

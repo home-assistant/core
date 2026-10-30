@@ -3,11 +3,13 @@
 import asyncio
 from copy import deepcopy
 from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
@@ -50,8 +52,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import setup_platform
 from .conftest import create_config_entry
 from .const import LIVE_STATUS, SITE_INFO, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 SETUP_ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -909,6 +909,87 @@ async def test_energy_info_refresh_ratelimited(
     await hass.async_block_till_done()
 
     assert mock_site_info.call_count == third_refresh_call_count
+
+
+async def test_refresh_ratelimited_logs_once(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_site_info: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a rate limit logs once until a refresh succeeds, then logs recovery."""
+
+    caplog.set_level(logging.DEBUG)
+    await setup_platform(hass, normal_config_entry)
+
+    mock_site_info.side_effect = RateLimited({})
+    for _ in range(3):
+        freezer.tick(ENERGY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_site_info.call_count == 4
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.getMessage()
+        == "Tesla Fleet Energy Site Info rate limited, will skip refresh"
+    ] == [logging.WARNING, logging.DEBUG, logging.DEBUG]
+
+    mock_site_info.side_effect = None
+    for _ in range(2):
+        freezer.tick(ENERGY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_site_info.call_count == 6
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.getMessage()
+        == "Tesla Fleet Energy Site Info is no longer rate limited"
+    ] == [logging.INFO]
+
+
+async def test_refresh_ratelimited_invalid_response_no_recovery(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_live_status: AsyncMock,
+    mock_energy_history: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an invalid response after a rate limit does not log recovery."""
+
+    caplog.set_level(logging.DEBUG)
+    await setup_platform(hass, normal_config_entry)
+
+    mock_live_status.side_effect = RateLimited({})
+    mock_energy_history.side_effect = RateLimited({})
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_live_status.side_effect = None
+    mock_live_status.return_value = {"response": None}
+    mock_energy_history.side_effect = None
+    mock_energy_history.return_value = {"response": {}}
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_live_status.call_count == 3
+    assert mock_energy_history.call_count == 2
+    assert sorted(
+        record.getMessage()
+        for record in caplog.records
+        if record.getMessage().endswith("rate limited, will skip refresh")
+    ) == [
+        "Tesla Fleet Energy History 123456 rate limited, will skip refresh",
+        "Tesla Fleet Energy Site Live rate limited, will skip refresh",
+    ]
+    assert "is no longer rate limited" not in caplog.text
 
 
 async def test_energy_history_refresh_ratelimited(

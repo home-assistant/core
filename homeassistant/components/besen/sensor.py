@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.const import (
     EntityCategory,
@@ -25,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import BesenConfigEntry
 from .coordinator import BesenCoordinator
@@ -60,7 +60,7 @@ CHARGING_STATES: Final = {
     "Finish Charging": "finish_charging",
     "Waiting": "waiting",
     "Finished": "finished",
-    "Cancel": "canceled",
+    "Scheduled": "scheduled",
     "Connect": "connect",
     "Fault": "fault",
 }

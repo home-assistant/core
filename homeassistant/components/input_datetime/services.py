@@ -2,21 +2,38 @@
 
 import probatio
 
-from homeassistant.const import ATTR_DATE, ATTR_TIME, CONF_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import ATTR_DATETIME, ATTR_TIMESTAMP, DATA_INPUT_DATETIME, DOMAIN
+from .const import (
+    DATA_INPUT_DATETIME,
+    DOMAIN,
+    InputDatetimeService,
+    InputDatetimeServiceArgument,
+)
 
 RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
 
 def _validate_set_datetime_attrs(config):
     """Validate set_datetime service attributes."""
-    has_date_or_time_attr = any(key in config for key in (ATTR_DATE, ATTR_TIME))
+    has_date_or_time_attr = any(
+        key in config
+        for key in (
+            InputDatetimeServiceArgument.DATE,
+            InputDatetimeServiceArgument.TIME,
+        )
+    )
     if (
-        sum([has_date_or_time_attr, ATTR_DATETIME in config, ATTR_TIMESTAMP in config])
+        sum(
+            [
+                has_date_or_time_attr,
+                InputDatetimeServiceArgument.DATETIME in config,
+                InputDatetimeServiceArgument.TIMESTAMP in config,
+            ]
+        )
         > 1
     ):
         raise probatio.Invalid(f"Cannot use together: {', '.join(config.keys())}")
@@ -39,23 +56,32 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD,
+        InputDatetimeService.RELOAD,
         _async_reload_service,
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
     hass.data[DATA_INPUT_DATETIME].component.async_register_entity_service(
-        "set_datetime",
+        InputDatetimeService.SET,
         probatio.All(
             cv.make_entity_service_schema(
                 {
-                    probatio.Optional(ATTR_DATE): cv.date,
-                    probatio.Optional(ATTR_TIME): cv.time,
-                    probatio.Optional(ATTR_DATETIME): cv.datetime,
-                    probatio.Optional(ATTR_TIMESTAMP): probatio.Coerce(float),
+                    probatio.Optional(InputDatetimeServiceArgument.DATE): cv.date,
+                    probatio.Optional(InputDatetimeServiceArgument.TIME): cv.time,
+                    probatio.Optional(
+                        InputDatetimeServiceArgument.DATETIME
+                    ): cv.datetime,
+                    probatio.Optional(
+                        InputDatetimeServiceArgument.TIMESTAMP
+                    ): probatio.Coerce(float),
                 },
             ),
-            probatio.AtLeastOne(ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP),
+            probatio.AtLeastOne(
+                InputDatetimeServiceArgument.DATE.value,
+                InputDatetimeServiceArgument.TIME.value,
+                InputDatetimeServiceArgument.DATETIME.value,
+                InputDatetimeServiceArgument.TIMESTAMP.value,
+            ),
             _validate_set_datetime_attrs,
         ),
         "async_set_datetime",

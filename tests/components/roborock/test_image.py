@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from roborock import MultiMapsList, RoborockException
 from roborock.data import CombinedMapInfo, RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
@@ -27,9 +29,6 @@ from .mock_data import (
     ROOM_MAPPING,
     STATUS,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 _LOGGER = logging.getLogger(__name__)
 

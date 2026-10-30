@@ -78,8 +78,8 @@ def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @staticmethod
     @callback
@@ -142,7 +142,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         sensor_type = SUPPORTED_MODEL_TYPES[model_name]
 
         options: dict[str, Any] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
-        if sensor_type == SupportedModels.CURTAIN:
+        if sensor_type in (SupportedModels.CURTAIN, SupportedModels.CURTAIN_3):
             options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
 
         return self.async_create_entry(
@@ -163,7 +163,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_create_entry_from_discovery(user_input)
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm",
             data_schema=probatio.Schema({}),
@@ -499,10 +498,9 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                     ): bool
                 }
             )
-        if (
-            CONF_SENSOR_TYPE in self.config_entry.data
-            and self.config_entry.data[CONF_SENSOR_TYPE] == SupportedModels.CURTAIN
-        ):
+        if CONF_SENSOR_TYPE in self.config_entry.data and self.config_entry.data[
+            CONF_SENSOR_TYPE
+        ] in (SupportedModels.CURTAIN, SupportedModels.CURTAIN_3):
             options.update(
                 {
                     probatio.Optional(

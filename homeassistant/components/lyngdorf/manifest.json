@@ -1,6 +1,7 @@
 {
   "domain": "lyngdorf",
   "name": "Lyngdorf",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@fishloa"],
   "config_flow": true,
   "dependencies": ["ssdp"],

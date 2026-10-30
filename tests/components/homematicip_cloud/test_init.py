@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.exceptions.connection_exceptions import HmipConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homematicip_cloud.const import (
     CONF_ACCESSPOINT,
@@ -19,8 +20,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_with_accesspoint_passed_to_config_entry(
@@ -135,6 +134,7 @@ async def test_load_entry_fails_due_to_generic_exception(
 
     assert hmip_config_entry.runtime_data
     assert hmip_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert hmip_config_entry.reason == "Error connecting with HomematicIP Cloud"
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

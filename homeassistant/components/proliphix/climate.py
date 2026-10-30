@@ -58,7 +58,7 @@ class ProliphixThermostat(ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, pdp: proliphix.PDP) -> None:
         """Initialize the thermostat."""
@@ -78,13 +78,13 @@ class ProliphixThermostat(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self._pdp.cur_temp
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._pdp.setback
 

@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any
 
 from aioharmony.const import SendCommandDevice
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.harmony.const import (
     DOMAIN,
@@ -37,8 +38,6 @@ from homeassistant.util import utcnow
 
 from .conftest import ACTIVITIES_TO_IDS, TV_DEVICE_ID, TV_DEVICE_NAME
 from .const import ENTITY_REMOTE, HUB_NAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 PLAY_COMMAND = "Play"
 STOP_COMMAND = "Stop"

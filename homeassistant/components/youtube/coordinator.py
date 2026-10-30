@@ -107,9 +107,15 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         youtube, channel
                     )
         except UnauthorizedError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from err
         except YouTubeBackendError as err:
-            raise UpdateFailed("Couldn't connect to YouTube") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from err
         return res
 
     async def _async_get_channel_data(

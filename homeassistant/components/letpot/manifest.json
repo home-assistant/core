@@ -1,6 +1,7 @@
 {
   "domain": "letpot",
   "name": "LetPot",
+  "categories": ["garden_plants"],
   "codeowners": ["@jpelgrom"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/letpot",

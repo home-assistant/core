@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from irm_kmi_api import ExtendedForecast
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
@@ -19,8 +20,6 @@ import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
 from .const import WEATHER_ENTITY_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _get_forecast(

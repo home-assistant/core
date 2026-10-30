@@ -16,7 +16,7 @@ PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirlyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirlyConfigEntry) -> None:
     """Set up Airly as config entry."""
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data[CONF_LATITUDE]
@@ -76,9 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirlyConfigEntry) -> boo
         _LOGGER.debug("Removing deprecated air_quality entity %s", entity_id)
         ent_reg.async_remove(entity_id)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirlyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirlyConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

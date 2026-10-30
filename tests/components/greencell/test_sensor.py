@@ -3,6 +3,7 @@
 import logging
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.greencell.const import GREENCELL_HABU_DEN
@@ -33,8 +34,6 @@ from .conftest import (
     TEST_VOLTAGE_PAYLOAD_SINGLE,
     TEST_VOLTAGE_TOPIC,
 )
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 
 async def test_sensor_states_and_snapshots(

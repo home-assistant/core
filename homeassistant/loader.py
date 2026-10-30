@@ -41,6 +41,7 @@ from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.config_flows import FLOWS
 from .generated.dhcp import DHCP
+from .generated.lorawan import LORAWAN
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
@@ -59,6 +60,41 @@ if TYPE_CHECKING:
     from .helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
+
+LORAWAN_SCHEMA = probatio.All(
+    [
+        probatio.All(
+            probatio.ExactSequence(
+                (
+                    probatio.All(str, probatio.Length(min=1)),
+                    probatio.Any(
+                        probatio.All(
+                            probatio.Check(
+                                lambda value: type(value) is int,
+                                "Expected an integer brand ID",
+                            ),
+                            probatio.Range(min=0),
+                        ),
+                        probatio.All(str, probatio.Length(min=1)),
+                    ),
+                )
+            ),
+            probatio.Coerce(tuple),
+        )
+    ],
+    probatio.Length(min=1),
+    probatio.Unique(),
+)
+LORAWAN_MANIFEST_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("lorawan"): LORAWAN_SCHEMA,
+        probatio.Required("config_flow"): True,
+        probatio.Required("dependencies"): probatio.All(
+            [str], probatio.Contains("lorawan")
+        ),
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
 
 #
 # Integration.get_component will check preload platforms and
@@ -280,8 +316,11 @@ class Manifest(TypedDict, total=False):
     issue_tracker: str
     quality_scale: str
     iot_class: str
+    categories: list[str]
+    connectivity: list[str]
     bluetooth: list[dict[str, int | str]]
     mqtt: list[str]
+    lorawan: list[tuple[str, int | str]]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
     dhcp: list[dict[str, bool | str]]
@@ -355,7 +394,15 @@ async def async_get_custom_components(
     if comps_or_future is None:
         future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
 
-        comps = await hass.async_add_executor_job(_get_custom_components, hass)
+        try:
+            comps = await hass.async_add_executor_job(_get_custom_components, hass)
+        except BaseException as err:
+            if hass.data.get(DATA_CUSTOM_COMPONENTS) is future:
+                del hass.data[DATA_CUSTOM_COMPONENTS]
+            future.set_exception(err)
+            # Retrieve the exception even when there are no concurrent callers.
+            future.exception()
+            raise
 
         # A cache cleared during the scan asks for a newer scan, this one
         # must not put its older result back.
@@ -489,7 +536,9 @@ async def async_get_integration_descriptions(
             integration_key = "integration"
 
         metadata = {
+            "categories": integration.categories,
             "config_flow": integration.config_flow,
+            "connectivity": integration.connectivity,
             "integration_type": integration.integration_type,
             "iot_class": integration.iot_class,
             "name": integration.name,
@@ -664,6 +713,29 @@ async def async_get_homekit(
     return homekit
 
 
+async def async_get_lorawan(
+    hass: HomeAssistant,
+) -> dict[str, list[tuple[str, int | str]]]:
+    """Return LoRaWAN vendor registrations, including custom integrations."""
+    registrations = LORAWAN.copy()
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        registrations.pop(integration.domain, None)
+        vendors = integration.lorawan
+        if vendors is None:
+            continue
+        try:
+            vendors = LORAWAN_MANIFEST_SCHEMA(integration.manifest)["lorawan"]
+        except probatio.Invalid:
+            _LOGGER.warning(
+                "Ignoring invalid LoRaWAN discovery registration for %s",
+                integration.domain,
+            )
+            continue
+        registrations[integration.domain] = vendors
+    return registrations
+
+
 async def async_get_ssdp(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]:
     """Return cached list of ssdp mappings."""
 
@@ -765,8 +837,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a version key in the"
                         " manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io"
-                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://contributors.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes/#versions"
                         " for more details"
                     ),
                     integration.domain,
@@ -788,8 +860,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a valid version key"
                         " (%s) in the manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io"
-                        "/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://contributors.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes/#versions"
                         " for more details"
                     ),
                     integration.domain,
@@ -914,6 +986,19 @@ class Integration:
         return self.manifest.get("iot_class")
 
     @cached_property
+    def categories(self) -> list[str]:
+        """Return the integration categories, the primary category first."""
+        return self.manifest.get("categories", [])
+
+    @cached_property
+    def connectivity(self) -> list[str]:
+        """Return the protocols used to reach the devices or service.
+
+        Empty means it is not filled in yet, not that nothing is reached.
+        """
+        return self.manifest.get("connectivity", [])
+
+    @cached_property
     def integration_type(
         self,
     ) -> Literal[
@@ -958,6 +1043,11 @@ class Integration:
     def mqtt(self) -> list[str] | None:
         """Return Integration MQTT entries."""
         return self.manifest.get("mqtt")
+
+    @property
+    def lorawan(self) -> list[tuple[str, int | str]] | None:
+        """Return the stack and brand IDs this integration supports."""
+        return self.manifest.get("lorawan")
 
     @property
     def ssdp(self) -> list[dict[str, str]] | None:
