@@ -19,7 +19,7 @@
       },
       "modbus_tcp": {
         "data": {
-          "address": "Modbus address",
+          "address": "[%key:component::modbus::common::modbus_address%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
@@ -121,7 +121,7 @@
   "selector": {
     "protocol": {
       "options": {
-        "modbus_tcp": "Modbus TCP",
+        "modbus_tcp": "[%key:component::modbus::common::modbus_tcp%]",
         "rest_api": "REST API"
       }
     }

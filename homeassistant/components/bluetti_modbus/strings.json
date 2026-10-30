@@ -16,7 +16,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "[%key:component::bluetti_modbus::config::step::user::data::unit_id%]"
+          "unit_id": "[%key:component::modbus::common::modbus_address%]"
         },
         "data_description": {
           "host": "[%key:component::bluetti_modbus::config::step::user::data_description::host%]",
@@ -29,7 +29,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "Device ID"
+          "unit_id": "[%key:component::modbus::common::modbus_address%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your BLUETTI power station.",
