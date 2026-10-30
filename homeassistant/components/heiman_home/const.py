@@ -10,7 +10,6 @@ OAUTH_TOKEN_URL = "https://spapi.heiman.cn/api-auth/oauth/token"
 API_BASE_URL = "https://spapi.heiman.cn"
 
 # Configuration Items
-CONF_HOME_ID = "home_id"
 CONF_USER_ID = "user_id"
 CONF_REFRESH_TOKEN = "refresh_token"
 

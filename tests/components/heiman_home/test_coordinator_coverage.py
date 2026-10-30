@@ -12,7 +12,7 @@ from heimanconnect.cloud_client_wrapper import HeimanCloudClientWrapper
 from heimanconnect.models import DeviceProperty as SDKDeviceProperty, HeimanDevice
 import pytest
 
-from homeassistant.components.heiman_home.const import CONF_HOME_ID, CONF_USER_ID
+from homeassistant.components.heiman_home.const import CONF_USER_ID
 from homeassistant.components.heiman_home.coordinator import (
     HeimanData,
     HeimanDataUpdateCoordinator,
@@ -28,7 +28,6 @@ async def test_coordinator_fetch_user_info_connection_error(
 ) -> None:
     """Test _fetch_user_and_home_info handles connection error."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -52,15 +51,14 @@ async def test_coordinator_fetch_user_info_connection_error(
 
     # Should raise UpdateFailed
     with pytest.raises(UpdateFailed, match="Connection error"):
-        await coordinator._fetch_user_and_home_info()
+        await coordinator._async_setup()
 
 
 async def test_coordinator_fetch_user_info_general_exception(
     hass: HomeAssistant,
 ) -> None:
-    """Test _fetch_user_and_home_info handles general exception."""
+    """Test unexpected errors propagate so the framework can retry setup."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -82,15 +80,15 @@ async def test_coordinator_fetch_user_info_general_exception(
 
     coordinator.data = HeimanData()
 
-    # Should raise UpdateFailed
-    with pytest.raises(UpdateFailed, match="Failed to fetch user info"):
-        await coordinator._fetch_user_and_home_info()
+    # Unexpected errors are not translated here; async_config_entry_first_refresh
+    # turns them into ConfigEntryNotReady.
+    with pytest.raises(RuntimeError, match="Unexpected error"):
+        await coordinator._async_setup()
 
 
 async def test_coordinator_fetch_home_info_exception(hass: HomeAssistant) -> None:
     """Test _fetch_user_and_home_info handles home info exception."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -117,8 +115,8 @@ async def test_coordinator_fetch_home_info_exception(hass: HomeAssistant) -> Non
     coordinator.data = HeimanData()
 
     # Should not raise, but set error
-    await coordinator._fetch_user_and_home_info()
-    assert "home_info" in coordinator.data.errors
+    await coordinator._async_setup()
+    assert "homes" in coordinator.data.errors
 
 
 async def test_coordinator_fetch_devices_connection_error_no_previous_data(
@@ -126,7 +124,6 @@ async def test_coordinator_fetch_devices_connection_error_no_previous_data(
 ) -> None:
     """Test _fetch_and_process_devices with connection error and no previous data."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -158,7 +155,6 @@ async def test_coordinator_fetch_devices_general_exception_no_previous_data(
 ) -> None:
     """Test _fetch_and_process_devices with general exception and no previous data."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -188,7 +184,6 @@ async def test_coordinator_fetch_devices_general_exception_no_previous_data(
 async def test_coordinator_update_device_details(hass: HomeAssistant) -> None:
     """Test _update_device_details calls SDK method."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -218,7 +213,6 @@ async def test_coordinator_update_device_details(hass: HomeAssistant) -> None:
 async def test_coordinator_merge_device_states(hass: HomeAssistant) -> None:
     """Test _merge_device_states merges old device states."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -272,7 +266,6 @@ async def test_coordinator_mqtt_init_oauth2_token_path(hass: HomeAssistant) -> N
     """Test MQTT init gets token from OAuth2 session."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         CONF_USER_ID: "test-user",
     }
     config_entry.entry_id = "test-entry"
@@ -317,7 +310,6 @@ async def test_coordinator_mqtt_init_no_user_id(hass: HomeAssistant) -> None:
     """Test MQTT init raises error when user_id missing."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         "token": {"access_token": "test-token"},
         # No CONF_USER_ID
     }
@@ -348,7 +340,6 @@ async def test_coordinator_mqtt_init_with_user_info(hass: HomeAssistant) -> None
     """Test MQTT init gets user display name from user_info."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         CONF_USER_ID: "test-user",
         "token": {"access_token": "test-token"},
     }
@@ -369,7 +360,7 @@ async def test_coordinator_mqtt_init_with_user_info(hass: HomeAssistant) -> None
     # Set user_info
     mock_user = MagicMock()
     mock_user.get_display_name = MagicMock(return_value="Test User")
-    coordinator.data = HeimanData(user_info=mock_user)
+    coordinator.user_info = mock_user
 
     # Mock MQTT client
     with patch(
@@ -393,7 +384,6 @@ async def test_coordinator_mqtt_init_cloud_client_access_error(
     """Test MQTT init handles missing cloud_client gracefully."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         CONF_USER_ID: "test-user",
         "token": {"access_token": "test-token"},
     }
@@ -441,7 +431,6 @@ async def test_coordinator_mqtt_init_heiman_mqtt_error(hass: HomeAssistant) -> N
     """Test MQTT init re-raises HeimanMQTTError after cleanup."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         CONF_USER_ID: "test-user",
         "token": {"access_token": "test-token"},
     }
@@ -492,7 +481,6 @@ async def test_coordinator_on_device_property_update_new_property(
 ) -> None:
     """Test _on_device_property_update adds new property."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -530,7 +518,6 @@ async def test_coordinator_read_device_properties_no_properties_returned(
 ) -> None:
     """Test async_read_device_properties when no properties returned."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -567,7 +554,6 @@ async def test_coordinator_read_device_properties_no_properties_returned(
 async def test_coordinator_get_online_devices(hass: HomeAssistant) -> None:
     """Test get_online_devices filters online devices."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -604,7 +590,6 @@ async def test_coordinator_get_online_devices(hass: HomeAssistant) -> None:
 async def test_coordinator_get_device_property_not_found(hass: HomeAssistant) -> None:
     """Test get_device_property returns None when device or property not found."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -637,7 +622,6 @@ async def test_coordinator_get_device_property_not_found(hass: HomeAssistant) ->
 async def test_coordinator_async_update_data_success(hass: HomeAssistant) -> None:
     """Test _async_update_data successful execution."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -672,111 +656,27 @@ async def test_coordinator_async_update_data_success(hass: HomeAssistant) -> Non
 
     coordinator.data = HeimanData()
 
+    await coordinator._async_setup()
+
     # Execute update
     result = await coordinator._async_update_data()
 
     # Verify data was updated
-    assert result.user_info is not None
-    assert result.home_info is not None
+    assert coordinator.user_info is not None
     assert "device-1" in result.devices
-
-
-async def test_coordinator_fetch_home_info_with_matching_home(
-    hass: HomeAssistant,
-) -> None:
-    """Test _fetch_user_and_home_info finds matching home by ID."""
-    config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "target-home-id"}
-    config_entry.entry_id = "test-entry"
-
-    mock_api_client = MagicMock()
-    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
-    mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client.initialize = AsyncMock()
-
-    # Mock user info
-    mock_user = MagicMock()
-    mock_cloud_wrapper.async_get_user_info = AsyncMock(return_value=mock_user)
-
-    # Mock homes - return multiple homes, one matching
-    mock_home1 = MagicMock()
-    mock_home1.home_id = "other-home-id"
-    mock_home2 = MagicMock()
-    mock_home2.home_id = "target-home-id"
-    mock_cloud_wrapper.async_get_homes = AsyncMock(
-        return_value=[mock_home1, mock_home2]
-    )
-
-    coordinator = HeimanDataUpdateCoordinator(
-        hass=hass,
-        logger=MagicMock(),
-        api_client=mock_api_client,
-        config_entry=config_entry,
-    )
-
-    coordinator.data = HeimanData()
-
-    await coordinator._fetch_user_and_home_info()
-
-    # Should find the matching home
-    assert coordinator.data.home_info.home_id == "target-home-id"
-
-
-async def test_coordinator_fetch_home_info_home_not_found(
-    hass: HomeAssistant,
-) -> None:
-    """Test _fetch_user_and_home_info raises UpdateFailed when home_id not found."""
-    config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "non-existent-home-id"}
-    config_entry.entry_id = "test-entry"
-
-    mock_api_client = MagicMock()
-    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
-    mock_api_client.cloud_client = mock_cloud_wrapper
-    mock_api_client.initialize = AsyncMock()
-
-    # Mock user info
-    mock_user = MagicMock()
-    mock_cloud_wrapper.async_get_user_info = AsyncMock(return_value=mock_user)
-
-    # Mock homes - return homes but none matching the configured home_id
-    mock_home1 = MagicMock()
-    mock_home1.home_id = "home-1"
-    mock_home2 = MagicMock()
-    mock_home2.home_id = "home-2"
-    mock_cloud_wrapper.async_get_homes = AsyncMock(
-        return_value=[mock_home1, mock_home2]
-    )
-
-    coordinator = HeimanDataUpdateCoordinator(
-        hass=hass,
-        logger=MagicMock(),
-        api_client=mock_api_client,
-        config_entry=config_entry,
-    )
-
-    coordinator.data = HeimanData()
-
-    # Should raise UpdateFailed with clear error message
-    with pytest.raises(UpdateFailed, match="non-existent-home-id.*was not found"):
-        await coordinator._fetch_user_and_home_info()
 
 
 async def test_coordinator_fetch_home_info_auth_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test _fetch_user_and_home_info raises ConfigEntryAuthFailed on HeimanAuthError."""
+    """Test async_setup records homes fetch error without raising."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
     mock_api_client.initialize = AsyncMock()
-
-    # Mock user info - already exists so we skip the first try block
-    mock_user = MagicMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -786,16 +686,15 @@ async def test_coordinator_fetch_home_info_auth_error(
     )
 
     coordinator.data = HeimanData()
-    coordinator.data.user_info = mock_user  # Set user_info to skip first try block
 
-    # Mock async_get_homes to raise HeimanAuthError
+    # Mock async_get_homes to raise HeimanApiError
     mock_cloud_wrapper.async_get_homes = AsyncMock(
-        side_effect=HeimanAuthError("Token expired")
+        side_effect=HeimanApiError("Failed to get homes")
     )
 
-    # Should raise ConfigEntryAuthFailed to trigger re-auth flow
-    with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator._fetch_user_and_home_info()
+    # Should not raise, but record the error
+    await coordinator._async_setup()
+    assert "homes" in coordinator.data.errors
 
 
 async def test_coordinator_fetch_home_info_config_entry_auth_failed(
@@ -803,16 +702,12 @@ async def test_coordinator_fetch_home_info_config_entry_auth_failed(
 ) -> None:
     """Test _fetch_user_and_home_info re-raises ConfigEntryAuthFailed for home info."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
     mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
     mock_api_client.cloud_client = mock_cloud_wrapper
     mock_api_client.initialize = AsyncMock()
-
-    # Mock user info - already exists so we skip the first try block
-    mock_user = MagicMock()
 
     coordinator = HeimanDataUpdateCoordinator(
         hass=hass,
@@ -822,7 +717,6 @@ async def test_coordinator_fetch_home_info_config_entry_auth_failed(
     )
 
     coordinator.data = HeimanData()
-    coordinator.data.user_info = mock_user  # Set user_info to skip first try block
 
     # Mock async_get_homes to raise ConfigEntryAuthFailed directly
     mock_cloud_wrapper.async_get_homes = AsyncMock(
@@ -831,7 +725,7 @@ async def test_coordinator_fetch_home_info_config_entry_auth_failed(
 
     # Should re-raise ConfigEntryAuthFailed unchanged
     with pytest.raises(ConfigEntryAuthFailed, match="Already authenticated failed"):
-        await coordinator._fetch_user_and_home_info()
+        await coordinator._async_setup()
 
 
 async def test_coordinator_fetch_devices_creates_all_devices(
@@ -843,7 +737,6 @@ async def test_coordinator_fetch_devices_creates_all_devices(
     exposes gets an entity, users can disable the ones they don't need.
     """
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -886,7 +779,6 @@ async def test_coordinator_mqtt_init_oauth2_token_none_debug_log(
     """Test MQTT init raises error when OAuth2 token is None after validation."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         CONF_USER_ID: "test-user",
     }
     config_entry.entry_id = "test-entry"
@@ -925,7 +817,6 @@ async def test_coordinator_mqtt_init_no_access_token_warning(
     """Test MQTT init raises error when no access_token available."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         CONF_USER_ID: "test-user",
     }
     config_entry.entry_id = "test-entry"
@@ -960,7 +851,6 @@ async def test_coordinator_on_device_property_update_device_not_found(
 ) -> None:
     """Test _on_device_property_update returns early when device not found."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -988,7 +878,6 @@ async def test_coordinator_on_device_property_update_existing_property(
 ) -> None:
     """Test _on_device_property_update updates existing property."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -1030,7 +919,6 @@ async def test_coordinator_read_device_properties_mqtt_not_initialized(
 ) -> None:
     """Test async_read_device_properties warns when MQTT not initialized."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -1057,7 +945,6 @@ async def test_coordinator_read_device_properties_device_not_found(
 ) -> None:
     """Test async_read_device_properties warns when device not found."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -1086,7 +973,6 @@ async def test_coordinator_read_device_properties_exception(
 ) -> None:
     """Test async_read_device_properties handles exception."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -1124,7 +1010,6 @@ async def test_coordinator_read_device_properties_exception(
 async def test_coordinator_get_device_property_success(hass: HomeAssistant) -> None:
     """Test get_device_property returns property value."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -1159,7 +1044,6 @@ async def test_coordinator_get_device_property_success(hass: HomeAssistant) -> N
 async def test_coordinator_fetch_user_info_auth_failed(hass: HomeAssistant) -> None:
     """Test _fetch_user_and_home_info re-raises ConfigEntryAuthFailed for user info."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -1183,13 +1067,12 @@ async def test_coordinator_fetch_user_info_auth_failed(hass: HomeAssistant) -> N
 
     # Should re-raise ConfigEntryAuthFailed without wrapping it
     with pytest.raises(ConfigEntryAuthFailed, match="Token expired"):
-        await coordinator._fetch_user_and_home_info()
+        await coordinator._async_setup()
 
 
 async def test_coordinator_fetch_devices_auth_failed(hass: HomeAssistant) -> None:
     """Test _fetch_and_process_devices re-raises ConfigEntryAuthFailed."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -1221,7 +1104,6 @@ async def test_coordinator_fetch_devices_heiman_auth_error(
 ) -> None:
     """Test _fetch_and_process_devices raises ConfigEntryAuthFailed on HeimanAuthError."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -1246,3 +1128,31 @@ async def test_coordinator_fetch_devices_heiman_auth_error(
     # Should raise ConfigEntryAuthFailed to trigger re-auth flow
     with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._fetch_and_process_devices("test-home-id")
+
+
+async def test_coordinator_async_shutdown_releases_resources(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_shutdown disconnects MQTT and closes the API client."""
+    config_entry = MagicMock(spec=ConfigEntry)
+    config_entry.entry_id = "test-entry"
+
+    mock_api_client = MagicMock()
+    mock_api_client.close = AsyncMock()
+
+    mock_mqtt_client = MagicMock()
+    mock_mqtt_client.disconnect = AsyncMock()
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=MagicMock(),
+        api_client=mock_api_client,
+        config_entry=config_entry,
+    )
+    coordinator.mqtt_client = mock_mqtt_client
+
+    await coordinator.async_shutdown()
+
+    mock_mqtt_client.disconnect.assert_awaited_once()
+    mock_api_client.close.assert_awaited_once()
+    assert coordinator.mqtt_client is None

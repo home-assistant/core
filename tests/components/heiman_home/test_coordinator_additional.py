@@ -6,7 +6,6 @@ from heimanconnect.cloud_client_wrapper import HeimanCloudClientWrapper
 from heimanconnect.models import HeimanDevice
 import pytest
 
-from homeassistant.components.heiman_home.const import CONF_HOME_ID
 from homeassistant.components.heiman_home.coordinator import (
     DeviceProperty,
     HeimanData,
@@ -20,7 +19,7 @@ from homeassistant.core import HomeAssistant
 async def test_coordinator_get_device(hass: HomeAssistant) -> None:
     """Test getting device by ID."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.data = {}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -46,8 +45,6 @@ async def test_coordinator_get_device(hass: HomeAssistant) -> None:
 
     coordinator.data = HeimanData(
         devices={"device-1": mock_device},
-        user_info=None,
-        home_info=None,
         errors={},
     )
 
@@ -64,7 +61,7 @@ async def test_coordinator_get_device(hass: HomeAssistant) -> None:
 async def test_coordinator_get_devices_by_type(hass: HomeAssistant) -> None:
     """Test getting devices by type."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.data = {}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -102,8 +99,6 @@ async def test_coordinator_get_devices_by_type(hass: HomeAssistant) -> None:
             "device-1": sensor_device,
             "device-2": switch_device,
         },
-        user_info=None,
-        home_info=None,
         errors={},
     )
 
@@ -123,7 +118,7 @@ async def test_coordinator_get_devices_by_type(hass: HomeAssistant) -> None:
 async def test_coordinator_mqtt_init_no_token(hass: HomeAssistant) -> None:
     """Test MQTT init raises error when no token available."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.data = {}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -140,8 +135,6 @@ async def test_coordinator_mqtt_init_no_token(hass: HomeAssistant) -> None:
 
     coordinator.data = HeimanData(
         devices={},
-        user_info=None,
-        home_info=None,
         errors={},
     )
 
@@ -165,7 +158,6 @@ async def test_coordinator_mqtt_init_no_user_display_name(hass: HomeAssistant) -
     """Test MQTT init when user display name unavailable."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         "user_id": "test-user",
         "token": {"access_token": "test-token"},
     }
@@ -183,11 +175,9 @@ async def test_coordinator_mqtt_init_no_user_display_name(hass: HomeAssistant) -
         config_entry=config_entry,
     )
 
-    # Set user_info to None to trigger the exception path
+    # No user info is available, so no display name can be resolved
     coordinator.data = HeimanData(
         devices={},
-        user_info=None,  # No user info
-        home_info=None,
         errors={},
     )
 
@@ -205,7 +195,7 @@ async def test_coordinator_mqtt_init_no_user_display_name(hass: HomeAssistant) -
         mock_mqtt_instance.connect = AsyncMock()
         mock_mqtt_class.return_value = mock_mqtt_instance
 
-        # This should handle the None user_info gracefully
+        # MQTT client must still be created without a display name
         await coordinator.async_init_mqtt_client()
 
         # Verify MQTT client was created despite missing user display name
@@ -220,7 +210,6 @@ async def test_coordinator_mqtt_init_cloud_client_exception(
     """Test MQTT init handles cloud_client access exception."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         "user_id": "test-user",
         "token": {"access_token": "test-token"},
     }
@@ -242,8 +231,6 @@ async def test_coordinator_mqtt_init_cloud_client_exception(
 
     coordinator.data = HeimanData(
         devices={},
-        user_info=None,
-        home_info=None,
         errors={},
     )
 
@@ -275,7 +262,7 @@ async def test_coordinator_read_device_properties_with_returned_properties(
 ) -> None:
     """Test reading device properties with returned data."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.data = {}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -310,8 +297,6 @@ async def test_coordinator_read_device_properties_with_returned_properties(
 
     coordinator.data = HeimanData(
         devices={"device-1": mock_device},
-        user_info=None,
-        home_info=None,
         errors={},
     )
 
@@ -336,7 +321,6 @@ async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> N
     """Test MQTT init re-raises general exceptions after cleanup."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {
-        CONF_HOME_ID: "test-home-id",
         "user_id": "test-user",
         "token": {"access_token": "test-token"},
     }
@@ -356,8 +340,6 @@ async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> N
 
     coordinator.data = HeimanData(
         devices={},
-        user_info=None,
-        home_info=None,
         errors={},
     )
 
@@ -388,7 +370,7 @@ async def test_coordinator_mqtt_init_general_exception(hass: HomeAssistant) -> N
 async def test_coordinator_mqtt_init_already_initialized(hass: HomeAssistant) -> None:
     """Test MQTT init when already initialized."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.data = {}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -405,8 +387,6 @@ async def test_coordinator_mqtt_init_already_initialized(hass: HomeAssistant) ->
 
     coordinator.data = HeimanData(
         devices={},
-        user_info=None,
-        home_info=None,
         errors={},
     )
 
@@ -425,7 +405,7 @@ async def test_coordinator_mqtt_init_token_none_after_validation(
 ) -> None:
     """Test MQTT init raises error when token is None after validation."""
     config_entry = MagicMock(spec=ConfigEntry)
-    config_entry.data = {CONF_HOME_ID: "test-home-id"}
+    config_entry.data = {}
     config_entry.entry_id = "test-entry"
 
     mock_api_client = MagicMock()
@@ -442,8 +422,6 @@ async def test_coordinator_mqtt_init_token_none_after_validation(
 
     coordinator.data = HeimanData(
         devices={},
-        user_info=None,
-        home_info=None,
         errors={},
     )
 

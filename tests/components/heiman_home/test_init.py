@@ -103,76 +103,16 @@ async def test_setup_with_auth_failure(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
-        side_effect=ConfigEntryAuthFailed("Token expired"),
+    with (
+        patch(
+            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
+            side_effect=ConfigEntryAuthFailed("Token expired"),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_unload_with_mqtt_disconnect(
-    hass: HomeAssistant, setup_credentials: None
-) -> None:
-    """Test unload properly disconnects MQTT client."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
-    # Create mocks for MQTT and API client
-    mock_mqtt_client = MagicMock()
-    mock_mqtt_client.disconnect = AsyncMock()
-
-    mock_api_client = MagicMock()
-    mock_api_client.close = AsyncMock()
-
-    mock_coordinator = MagicMock()
-    mock_coordinator.mqtt_client = mock_mqtt_client
-    mock_coordinator.api_client = mock_api_client
-
-    # Patch the coordinator creation to use our mock
-    with (
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_init_mqtt_client",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.async_get_config_entry_implementation",
-            new_callable=AsyncMock,
-            return_value=MagicMock(),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Replace runtime_data with our mock after setup
-    entry.runtime_data = mock_coordinator
-
-    # Unload
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_mqtt_client.disconnect.assert_awaited_once()
-    mock_api_client.close.assert_awaited_once()
 
 
 async def test_setup_entry_oauth2_implementation_unavailable(
@@ -353,174 +293,6 @@ async def test_setup_oauth2_token_value_error(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_with_coordinator_none(
-    hass: HomeAssistant, setup_credentials: None
-) -> None:
-    """Test unload when coordinator is None (e.g., after failed setup)."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
-    # Simulate failed setup where coordinator is not set
-    with patch(
-        "homeassistant.components.heiman_home.OAuth2Session",
-        autospec=True,
-    ) as mock_oauth_session:
-        mock_session_instance = MagicMock()
-        mock_oauth_session.return_value = mock_session_instance
-        mock_session_instance.async_ensure_token_valid = AsyncMock(
-            side_effect=Exception("Setup failed")
-        )
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-    # Entry should not have runtime_data set after failed setup
-    assert not hasattr(entry, "runtime_data") or entry.runtime_data is None
-
-    # Now unload - should handle coordinator being None
-    unload_ok = await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert unload_ok is True
-
-
-async def test_unload_with_mqtt_disconnect_exception(
-    hass: HomeAssistant, setup_credentials: None
-) -> None:
-    """Test unload handles MQTT disconnect exception gracefully."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
-    # Create mocks for MQTT client
-    mock_mqtt_client = MagicMock()
-    mock_mqtt_client.disconnect = AsyncMock(
-        side_effect=Exception("MQTT disconnect failed")
-    )
-
-    mock_api_client = MagicMock()
-    mock_api_client.close = AsyncMock()
-
-    mock_coordinator = MagicMock()
-    mock_coordinator.mqtt_client = mock_mqtt_client
-    mock_coordinator.api_client = mock_api_client
-
-    with (
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_init_mqtt_client",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.async_get_config_entry_implementation",
-            new_callable=AsyncMock,
-            return_value=MagicMock(),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Replace runtime_data with our mock after setup
-    entry.runtime_data = mock_coordinator
-
-    # Unload should handle MQTT disconnect exception gracefully
-    unload_ok = await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert unload_ok is True
-
-
-async def test_unload_with_api_client_close_exception(
-    hass: HomeAssistant, setup_credentials: None
-) -> None:
-    """Test unload handles API client close exception gracefully."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
-    # Create mocks
-    mock_mqtt_client = MagicMock()
-    mock_mqtt_client.disconnect = AsyncMock()
-
-    mock_api_client = MagicMock()
-    mock_api_client.close = AsyncMock(side_effect=Exception("API close failed"))
-
-    mock_coordinator = MagicMock()
-    mock_coordinator.mqtt_client = mock_mqtt_client
-    mock_coordinator.api_client = mock_api_client
-
-    with (
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_init_mqtt_client",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.async_get_config_entry_implementation",
-            new_callable=AsyncMock,
-            return_value=MagicMock(),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Replace runtime_data with our mock after setup
-    entry.runtime_data = mock_coordinator
-
-    # Unload should handle API close exception gracefully
-    unload_ok = await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert unload_ok is True
-
-
 async def test_unload_returns_false_when_platforms_unload_fails(
     hass: HomeAssistant, setup_credentials: None
 ) -> None:
@@ -608,6 +380,9 @@ async def test_setup_mqtt_init_failure_with_cleanup(
 
     mock_coordinator = MagicMock()
     mock_coordinator.api_client = mock_api_client_instance
+    # The coordinator releases resources through async_shutdown, which the
+    # integration registers with entry.async_on_unload.
+    mock_coordinator.async_shutdown = mock_api_client_instance.close
     mock_coordinator.async_init_mqtt_client = AsyncMock(
         side_effect=HeimanMQTTError("MQTT connection failed")
     )
@@ -635,40 +410,3 @@ async def test_setup_mqtt_init_failure_with_cleanup(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
     mock_api_client_instance.close.assert_awaited_once()
-
-
-async def test_unload_with_no_runtime_data(hass: HomeAssistant) -> None:
-    """Test unload when entry has no runtime_data.
-
-    This tests the edge case where async_unload_platforms succeeds but
-    coordinator is None because setup failed before runtime_data was set.
-    In this scenario, unload should return True without attempting cleanup.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
-    # Ensure runtime_data is not set by deleting it if it exists
-    if hasattr(entry, "runtime_data"):
-        object.__delattr__(entry, "runtime_data")
-
-    # Mock async_unload_platforms to succeed
-    with patch.object(
-        hass.config_entries,
-        "async_unload_platforms",
-        new=AsyncMock(return_value=True),
-    ):
-        result = await hass.config_entries.async_unload(entry.entry_id)
-
-    # Should return True without attempting cleanup
-    assert result is True

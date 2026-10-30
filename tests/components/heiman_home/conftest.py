@@ -51,10 +51,9 @@ def mock_config_entry() -> MockConfigEntry:
                 "refresh_token": "test-refresh-token",
                 "expires_in": 3600,
             },
-            "home_id": "test-home-id",
             "user_id": "test-user-id",
         },
-        unique_id="test-user-id_test-home-id",
+        unique_id="test-user-id",
     )
 
 
@@ -92,8 +91,6 @@ def mock_coordinator() -> Generator[AsyncMock]:
         coordinator.async_config_entry_first_refresh = AsyncMock()
         coordinator.async_init_mqtt_client = AsyncMock()
         coordinator.data = MagicMock()
-        coordinator.data.user_info = None
-        coordinator.data.home_info = None
         coordinator.data.devices = {}
         yield coordinator
 

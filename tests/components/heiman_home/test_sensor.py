@@ -310,64 +310,6 @@ async def test_sensor_apply_sensor_config_battery(hass: HomeAssistant) -> None:
     assert sensor.state_class == SensorStateClass.MEASUREMENT
 
 
-async def test_sensor_apply_sensor_config_numeric(hass: HomeAssistant) -> None:
-    """Test sensor configuration for numeric values."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "pressure": DeviceProperty(
-            identifier="pressure",
-            name="Pressure",
-            value=1013.25,
-            data_type="double",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="pressure",
-    )
-
-    # Numeric sensors should have state_class
-    assert sensor.state_class == SensorStateClass.MEASUREMENT
-
-
-async def test_sensor_apply_sensor_config_non_numeric(hass: HomeAssistant) -> None:
-    """Test sensor configuration for non-numeric values."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.properties = {
-        "status": DeviceProperty(
-            identifier="status",
-            name="Status",
-            value="online",
-            data_type="string",
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="status",
-    )
-
-    # Non-numeric sensors should not have state_class
-    assert not hasattr(sensor, "state_class") or sensor.state_class is None
-
-
 async def test_sensor_entity_device_info(hass: HomeAssistant) -> None:
     """Test sensor entity device info."""
     mock_coordinator = MagicMock()

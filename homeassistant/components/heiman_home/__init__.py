@@ -1,6 +1,5 @@
 """Heiman Home Assistant integration."""
 
-import contextlib
 import logging
 
 from heimanconnect import HeimanMQTTError
@@ -62,26 +61,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         config_entry=entry,
         oauth_session=session,
     )
+    entry.async_on_unload(coordinator.async_shutdown)
 
+    await coordinator.async_config_entry_first_refresh()
+
+    # Initialize MQTT client after successful first refresh. A transient
+    # broker outage must be retried by Home Assistant instead of leaving
+    # the config entry in a setup error state.
     try:
-        await coordinator.async_config_entry_first_refresh()
-
-        # Initialize MQTT client after successful first refresh. A transient
-        # broker outage must be retried by Home Assistant instead of leaving
-        # the config entry in a setup error state.
-        try:
-            await coordinator.async_init_mqtt_client()
-        except HeimanMQTTError as err:
-            raise ConfigEntryNotReady(f"MQTT connection failed: {err}") from err
-    except Exception:
-        # Clean up resources if first refresh or MQTT initialization fails
-        mqtt_client = getattr(coordinator, "mqtt_client", None)
-        if mqtt_client is not None:
-            with contextlib.suppress(Exception):
-                await mqtt_client.disconnect()
-        with contextlib.suppress(Exception):
-            await api_client.close()
-        raise
+        await coordinator.async_init_mqtt_client()
+    except HeimanMQTTError as err:
+        raise ConfigEntryNotReady(f"MQTT connection failed: {err}") from err
 
     # Set runtime_data only after successful initialization
     entry.runtime_data = coordinator
@@ -93,23 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
-    coordinator = entry.runtime_data
-
-    # Disconnect MQTT client (may not be initialized if setup failed early)
-    if coordinator.mqtt_client is not None:
-        try:
-            await coordinator.mqtt_client.disconnect()
-        except Exception:
-            _LOGGER.exception("Error disconnecting MQTT client during unload")
-
-    # Close API client (always exists once coordinator is created)
-    try:
-        await coordinator.api_client.close()
-    except Exception:
-        _LOGGER.exception("Error closing API client during unload")
-
+    # The coordinator's resources are released by async_shutdown, which is
+    # registered with entry.async_on_unload during setup.
     return True

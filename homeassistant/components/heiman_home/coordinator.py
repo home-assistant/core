@@ -25,7 +25,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HeimanApiClient
-from .const import CONF_HOME_ID, CONF_USER_ID
+from .const import CONF_USER_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +41,6 @@ UPDATE_INTERVAL = timedelta(minutes=30)
 class HeimanData:
     """Container for Heiman data."""
 
-    user_info: HeimanUser | None = None
-    home_info: HeimanHome | None = None
     devices: dict[str, HeimanDevice] = field(default_factory=dict)
     errors: dict[str, str] = field(default_factory=dict)
 
@@ -79,7 +77,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         self.api_client = api_client
         self.config_entry = config_entry
-        self.home_id: str = config_entry.data[CONF_HOME_ID]
+        self.user_info: HeimanUser | None = None
+        self.homes: list[HeimanHome] = []
         self.data = HeimanData()
         self.mqtt_client: HeimanMqttClient | None = None
         self.oauth_session = oauth_session
@@ -89,62 +88,32 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         self._device_detail_cache_ttl = 300
 
     @override
+    async def _async_setup(self) -> None:
+        """Fetch account-level data once before the first refresh."""
+        await self.api_client.initialize()
+        cloud_wrapper = self.api_client.cloud_client
+        try:
+            self.user_info = await cloud_wrapper.async_get_user_info()
+        except HeimanAuthError as err:
+            raise ConfigEntryAuthFailed from err
+        except HeimanConnectionError as err:
+            raise UpdateFailed(f"Connection error: {err}") from err
+
+        try:
+            self.homes = await cloud_wrapper.async_get_homes()
+        except (HeimanConnectionError, HeimanApiError) as err:
+            _LOGGER.warning("Failed to fetch homes: %s", err)
+            self.data.errors["homes"] = str(err)
+
+    @override
     async def _async_update_data(self) -> HeimanData:
         """Update coordinator data."""
-        # Ensure client is initialized
-        await self.api_client.initialize()
-
-        # Clear errors at the start of update, then repopulate as we go
         self.data.errors.clear()
 
-        # Fetch user and home info on first update
-        await self._fetch_user_and_home_info()
-
-        # Get and process devices
-        await self._fetch_and_process_devices(self.home_id)
+        for home in self.homes:
+            await self._fetch_and_process_devices(home.home_id)
 
         return self.data
-
-    async def _fetch_user_and_home_info(self) -> None:
-        """Fetch user and home information on first update."""
-        cloud_wrapper = self.api_client.cloud_client
-
-        # Get user info (only on first update)
-        if self.data.user_info is None:
-            try:
-                self.data.user_info = await cloud_wrapper.async_get_user_info()
-            except HeimanAuthError as err:
-                raise ConfigEntryAuthFailed from err
-            except HeimanConnectionError as err:
-                raise UpdateFailed(f"Connection error: {err}") from err
-            except ConfigEntryAuthFailed:
-                raise
-            except Exception as err:
-                _LOGGER.error("Failed to fetch user info: %s", err)
-                raise UpdateFailed(f"Failed to fetch user info: {err}") from err
-
-        # Get home info (only on first update)
-        if self.data.home_info is None:
-            try:
-                homes = await cloud_wrapper.async_get_homes()
-                if homes:
-                    home_info = next(
-                        (h for h in homes if h.home_id == self.home_id),
-                        None,
-                    )
-                    if home_info is None:
-                        raise UpdateFailed(
-                            f"Configured home_id '{self.home_id}' was not found in the account"
-                        )
-                    self.data.home_info = home_info
-            except HeimanAuthError as err:
-                raise ConfigEntryAuthFailed from err
-            except ConfigEntryAuthFailed:
-                # Re-raise authentication errors to trigger re-auth flow
-                raise
-            except (HeimanConnectionError, HeimanApiError) as err:
-                _LOGGER.warning("Failed to fetch home info: %s", err)
-                self.data.errors["home_info"] = str(err)
 
     async def _fetch_and_process_devices(self, home_id: str) -> None:
         """Fetch and process device data."""
@@ -276,8 +245,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         try:
             # Get user display name using SDK method
             user_display_name = None
-            if self.data.user_info:
-                user_display_name = self.data.user_info.get_display_name()
+            if self.user_info:
+                user_display_name = self.user_info.get_display_name()
 
             # Get cloud client reference for child device detection
             cloud_client = None
@@ -315,6 +284,13 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             with contextlib.suppress(Exception):
                 await self.mqtt_client.disconnect()
         self.mqtt_client = None
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Release resources when the config entry is torn down."""
+        await self._cleanup_mqtt_client()
+        await self.api_client.close()
+        await super().async_shutdown()
 
     def _on_device_property_update(
         self, device_id: str, properties: dict[str, Any]

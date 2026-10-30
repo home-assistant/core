@@ -84,6 +84,20 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    description.key: description for description in SENSOR_TYPES
+}
+
+# Devices report their signal properties under different names; map the
+# property identifiers onto the description keys above.
+PROPERTY_ALIASES: dict[str, str] = {
+    "rssi": "signal_strength",
+    "signal": "signal_strength",
+    "linkquality": "signal_strength",
+    "lqi": "signal_strength",
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HeimanConfigEntry,
@@ -197,93 +211,30 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             hw_version=device.hardware_version,
         )
 
-        # Apply device class and unit based on property type (only if property exists)
-        if prop:
-            self._apply_sensor_config(property_identifier, prop)
-
-    def _apply_sensor_config(
-        self, property_identifier: str, prop: DeviceProperty | None
-    ) -> None:
-        """Apply sensor configuration based on property type.
-
-        Args:
-            property_identifier: Property identifier
-            prop: Property object
-        """
-        # Map property name aliases to SENSOR_TYPES keys
-        # This handles variations like RSSI, Signal, LinkQuality -> signal_strength
-        property_aliases = {
-            "rssi": "signal_strength",
-            "signal": "signal_strength",
-            "linkquality": "signal_strength",
-            "lqi": "signal_strength",
-        }
-
-        # Find matching SensorEntityDescription from SENSOR_TYPES
-        config = None
-        matched_key = None
-
-        # First check if property has an alias
-        normalized_prop = property_identifier.lower()
-        sensor_key = property_aliases.get(normalized_prop, normalized_prop)
-
-        # Use exact match to avoid false positives
-        # e.g., "color" should not match "co_concentration"
-        for desc in SENSOR_TYPES:
-            if desc.key == sensor_key:
-                config = desc
-                matched_key = desc.key
-                break
-
-        if config and prop:
-            # For signal_strength properties, require the current value to be
-            # numeric or None before applying the device class and dBm unit.
-            # Some devices report a numeric-looking data_type while the current
-            # value is actually a string or another incompatible type.
-            if matched_key == "signal_strength":
-                value_is_numeric_or_none = prop.value is None or (
-                    isinstance(prop.value, (int, float))
-                    and not isinstance(prop.value, bool)
-                )
-                if not value_is_numeric_or_none:
-                    # Skip applying signal_strength device class for non-numeric values
-                    matched_key = None
-                    config = None
-
-        if config and matched_key:
-            if config.device_class:
-                self._attr_device_class = config.device_class
-            self._attr_native_unit_of_measurement = config.native_unit_of_measurement
-            if config.state_class:
-                self._attr_state_class = config.state_class
-        elif prop:
-            # Prefer property metadata so numeric sensors that initially report
-            # None still get a stable state_class. Fall back to the current
-            # value only when the metadata is absent or unrecognized.
-            data_type = (
-                prop.data_type.lower() if isinstance(prop.data_type, str) else ""
+        # Readable properties without a matching description still get an
+        # entity, just without a device class, unit or state class.
+        description = SENSOR_DESCRIPTIONS.get(
+            PROPERTY_ALIASES.get(
+                property_identifier.lower(), property_identifier.lower()
             )
-            data_type_is_numeric = data_type in {
-                "int",
-                "integer",
-                "float",
-                "double",
-                "number",
-                "numeric",
-                "decimal",
-            }
-            value_is_numeric = (
-                prop.value is not None
-                and isinstance(prop.value, (int, float))
+        )
+        if prop is None or description is None:
+            return
+
+        # Some devices report a numeric-looking data_type for signal strength
+        # while the current value is actually a string.
+        if description.key == "signal_strength" and prop.value is not None:
+            if not (
+                isinstance(prop.value, (int, float))
                 and not isinstance(prop.value, bool)
-            )
-            if data_type_is_numeric or value_is_numeric:
-                # Expose the SDK-provided unit so statistics and unit
-                # conversion work for properties discovered dynamically.
-                if prop.unit:
-                    self._attr_native_unit_of_measurement = prop.unit
-                self._attr_state_class = SensorStateClass.MEASUREMENT
-            # Non-numeric sensors should not have state_class set
+            ):
+                return
+
+        self._attr_device_class = description.device_class
+        self._attr_native_unit_of_measurement = (
+            description.native_unit_of_measurement
+        )
+        self._attr_state_class = description.state_class
 
     @property
     @override
