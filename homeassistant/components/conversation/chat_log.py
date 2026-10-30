@@ -88,9 +88,13 @@ def async_get_chat_log(
             raise RuntimeError(
                 "Cannot attach chat log delta listener unless initial caller"
             )
-        if user_input is not None and (
-            (content := chat_log.content[-1]).role != "user"
-            or content.content != user_input.text
+        if (
+            user_input is not None
+            and user_input.audio is None
+            and (
+                (content := chat_log.content[-1]).role != "user"
+                or content.content != user_input.text
+            )
         ):
             chat_log.async_add_user_content(UserContent(content=user_input.text))
 
@@ -121,7 +125,8 @@ def async_get_chat_log(
         )
 
     chat_log.turn_start = len(chat_log.content)
-    if user_input is not None:
+    # With audio input, the agent adds the transcript when it has one
+    if user_input is not None and user_input.audio is None:
         chat_log.async_add_user_content(UserContent(content=user_input.text))
 
     if chat_log_delta_listener:
@@ -420,6 +425,8 @@ class ChatLog:
         """Add user content to the log."""
         LOGGER.debug("Adding user content: %s", content)
         self.content.append(content)
+        if self.delta_listener:
+            self.delta_listener(self, content.as_dict())
         _async_notify_subscribers(
             self.hass,
             self.conversation_id,

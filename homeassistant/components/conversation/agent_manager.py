@@ -1,7 +1,6 @@
 """Agent foundation for conversation integration."""
 
 from collections.abc import Callable
-import dataclasses
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -23,11 +22,18 @@ from homeassistant.helpers import (
 )
 
 from .chat_log import current_chat_log
-from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, IntentSource
+from .const import (
+    DATA_COMPONENT,
+    HOME_ASSISTANT_AGENT,
+    ConversationEntityFeature,
+    IntentSource,
+)
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
     AgentInfo,
+    ConversationAudioInput,
+    ConversationAudioOutput,
     ConversationInput,
     ConversationResult,
 )
@@ -92,8 +98,10 @@ async def async_converse(
     device_id: str | None = None,
     satellite_id: str | None = None,
     extra_system_prompt: str | None = None,
+    audio: ConversationAudioInput | None = None,
+    audio_output: ConversationAudioOutput | None = None,
 ) -> ConversationResult:
-    """Process text and get intent."""
+    """Process text or spoken audio and get intent."""
     if agent_id is None:
         agent_id = HOME_ASSISTANT_AGENT
 
@@ -101,6 +109,18 @@ async def async_converse(
 
     if agent is None:
         raise ValueError(f"Agent {agent_id} not found")
+
+    if audio is not None and not (
+        isinstance(agent, ConversationEntity)
+        and (agent.supported_features or 0) & ConversationEntityFeature.AUDIO_INPUT
+    ):
+        raise ValueError(f"Agent {agent_id} does not support audio input")
+
+    if audio_output is not None and not (
+        isinstance(agent, ConversationEntity)
+        and (agent.supported_features or 0) & ConversationEntityFeature.AUDIO_OUTPUT
+    ):
+        raise ValueError(f"Agent {agent_id} does not support audio output")
 
     if isinstance(agent, ConversationEntity):
         agent.async_set_context(context)
@@ -121,12 +141,14 @@ async def async_converse(
         language=language,
         agent_id=agent_id,
         extra_system_prompt=extra_system_prompt,
+        audio=audio,
+        audio_output=audio_output,
     )
     with async_conversation_trace() as trace:
         trace.add_event(
             ConversationTraceEvent(
                 ConversationTraceEventType.ASYNC_PROCESS,
-                dataclasses.asdict(conversation_input),
+                conversation_input.as_dict(),
             )
         )
         try:
