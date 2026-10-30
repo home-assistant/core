@@ -550,24 +550,14 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
 
         if flow.flow_id not in self._progress:
             # The flow was removed during the step, raise UnknownFlow unless
-            # the result is an abort. Compares against the string value
-            # because this runs before the legacy-string normalization
-            # below, and out-of-tree flow handlers may still return raw "abort".
-            if result["type"] != FlowResultType.ABORT.value:
+            # the result is an abort.
+            if result["type"] is not FlowResultType.ABORT:
                 raise UnknownFlow
             return result
 
         # Setup the flow handler's preview if needed
         if result.get("preview") is not None:
             await self._async_setup_preview(flow)
-
-        if not isinstance(result["type"], FlowResultType):
-            result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
-            report_usage(
-                "does not use FlowResultType enum for data entry flow result type",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2025.1",
-            )
 
         if (
             result["type"] is FlowResultType.SHOW_PROGRESS
