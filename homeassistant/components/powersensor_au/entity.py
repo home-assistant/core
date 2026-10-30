@@ -80,7 +80,6 @@ class PowersensorEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to the data-update signal and register the unavailability timer."""
         await super().async_added_to_hass()
-        self._has_recently_received_update_message = False
         self.async_on_remove(
             async_dispatcher_connect(self.hass, self._signal, self._handle_update)
         )
