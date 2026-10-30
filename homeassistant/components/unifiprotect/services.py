@@ -8,11 +8,14 @@ from typing import Any, cast
 import probatio
 from pydantic import ValidationError
 from uiprotect.api import ProtectApiClient
-from uiprotect.data import Camera, Chime
-from uiprotect.data.public_devices import PublicCamera
+from uiprotect.data import Camera, ModelType
+from uiprotect.data.public_bootstrap import PublicBootstrap
+from uiprotect.data.public_devices import PublicCamera, PublicChime
 from uiprotect.exceptions import ClientError
+from uiprotect.utils import normalize_mac
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_DEVICE_ID,
@@ -56,7 +59,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
-SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
@@ -65,16 +67,6 @@ SERVICE_TRIGGER_ALARM_WEBHOOK = "trigger_alarm_webhook"
 
 ATTR_PRESET = "preset"
 ATTR_TRIGGER_ID = "trigger_id"
-
-ALL_GLOBAL_SERVICES = [
-    SERVICE_ADD_DOORBELL_TEXT,
-    SERVICE_REMOVE_DOORBELL_TEXT,
-    SERVICE_SET_CHIME_PAIRED,
-    SERVICE_REMOVE_PRIVACY_ZONE,
-    SERVICE_GET_USER_KEYRING_INFO,
-    SERVICE_PTZ_GOTO_PRESET,
-    SERVICE_TRIGGER_ALARM_WEBHOOK,
-]
 
 DOORBELL_TEXT_SCHEMA = probatio.Schema(
     {
@@ -233,22 +225,82 @@ def _async_unique_id_to_mac(unique_id: str) -> str:
     return unique_id.split("_", maxsplit=1)[0]
 
 
+@callback
+def _async_device_name(
+    hass: HomeAssistant, device_id: str | None, fallback: str
+) -> str:
+    """Return the name of a Home Assistant device for an error message."""
+    device = dr.async_get(hass).async_get(device_id) if device_id else None
+    return (device and (device.name_by_user or device.name)) or fallback
+
+
+@callback
+def _async_device_not_available(
+    hass: HomeAssistant, device_id: str | None, mac: str
+) -> HomeAssistantError:
+    """Return the error for a device the public API does not know."""
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_available",
+        translation_placeholders={
+            "device_name": _async_device_name(hass, device_id, mac)
+        },
+    )
+
+
+@callback
+def _async_get_public_chime(
+    hass: HomeAssistant, public_bootstrap: PublicBootstrap, device_id: str
+) -> PublicChime:
+    """Get the public chime of a device.
+
+    Matched by mac, read from the device: the registries only know a Protect
+    device by its mac, and other integrations can add entities to the device.
+    """
+    device = dr.async_get(hass).async_get(device_id, include_child_devices=False)
+    macs = (
+        [mac for kind, mac in device.connections if kind == dr.CONNECTION_NETWORK_MAC]
+        if device
+        else []
+    )
+    for mac in macs:
+        if (
+            chime := public_bootstrap.get_device_from_mac(mac, ModelType.CHIME)
+        ) is not None:
+            return cast(PublicChime, chime)
+    nvr = public_bootstrap.nvr
+    nvr_mac = normalize_mac(nvr.mac) if nvr is not None and nvr.mac else None
+    if any(
+        public_bootstrap.get_device_from_mac(mac) is not None
+        # get_device_from_mac skips the NVR.
+        or normalize_mac(mac) == nvr_mac
+        for mac in macs
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_a_chime",
+            translation_placeholders={
+                "device_name": _async_device_name(hass, device_id, macs[0])
+            },
+        )
+    raise _async_device_not_available(hass, device_id, macs[0] if macs else device_id)
+
+
+# The deprecated doorbell binary sensor stays accepted until it is removed.
+_DOORBELL_ENTITY_CLASSES = {
+    (Platform.BINARY_SENSOR, BinarySensorDeviceClass.OCCUPANCY),
+    (Platform.EVENT, EventDeviceClass.DOORBELL),
+}
+
+
 async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     """Set paired doorbells on chime."""
-    ref = async_extract_referenced_entity_ids(call.hass, TargetSelection(call.data))
+    chime_device_id: str = call.data[ATTR_DEVICE_ID]
+    instance = _async_get_ufp_instance(call.hass, chime_device_id)
+    public_bootstrap = instance.public_bootstrap
+    chime = _async_get_public_chime(call.hass, public_bootstrap, chime_device_id)
+
     entity_registry = er.async_get(call.hass)
-
-    entity_id = ref.indirectly_referenced.pop()
-    chime_button = entity_registry.async_get(entity_id)
-    assert chime_button is not None
-    assert chime_button.device_id is not None
-    chime_mac = _async_unique_id_to_mac(chime_button.unique_id)
-
-    instance = _async_get_ufp_instance(call.hass, chime_button.device_id)
-    chime = instance.bootstrap.get_device_from_mac(chime_mac)
-    chime = cast(Chime, chime)
-    assert chime is not None
-
     call.data = ReadOnlyDict(call.data.get("doorbells") or {})
     doorbell_refs = async_extract_referenced_entity_ids(
         call.hass, TargetSelection(call.data)
@@ -259,18 +311,28 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
         assert doorbell_sensor is not None
         if (
             doorbell_sensor.platform != DOMAIN
-            or doorbell_sensor.domain != Platform.BINARY_SENSOR
-            or doorbell_sensor.original_device_class
-            != BinarySensorDeviceClass.OCCUPANCY
+            or (doorbell_sensor.domain, doorbell_sensor.original_device_class)
+            not in _DOORBELL_ENTITY_CLASSES
         ):
             continue
         doorbell_mac = _async_unique_id_to_mac(doorbell_sensor.unique_id)
-        camera = instance.bootstrap.get_device_from_mac(doorbell_mac)
-        assert camera is not None
+        if (
+            camera := public_bootstrap.get_device_from_mac(
+                doorbell_mac, ModelType.CAMERA
+            )
+        ) is None:
+            raise _async_device_not_available(
+                call.hass, doorbell_sensor.device_id, doorbell_mac
+            )
         doorbell_ids.add(camera.id)
-    data_before_changed = chime.dict_with_excludes()
-    chime.camera_ids = sorted(doorbell_ids)
-    await chime.save_device(data_before_changed)
+    try:
+        await chime.set_camera_ids(sorted(doorbell_ids))
+    except (ClientError, ValidationError) as err:
+        _LOGGER.debug("Error pairing UniFi Protect chime: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_error",
+        ) from err
 
 
 @callback

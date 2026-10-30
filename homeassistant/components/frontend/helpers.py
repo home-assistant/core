@@ -14,7 +14,6 @@ from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME_DARK = "name_dark"
 
 CONF_THEMES = "themes"
 

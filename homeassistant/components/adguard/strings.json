@@ -26,6 +26,20 @@
         "description": "AdGuard Home rejected the credentials. Enter the username and password to log in with.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::adguard::config::step::user::data_description::host%]"
+        },
+        "description": "Update the connection settings of your AdGuard Home instance."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -108,6 +122,9 @@
     },
     "error_while_turn_on": {
       "message": "An error occurred while turning on AdGuard Home switch."
+    },
+    "install_update_failed": {
+      "message": "Failed to install the AdGuard Home update"
     },
     "update_failed": {
       "message": "An error occurred while updating AdGuard Home: {error}"

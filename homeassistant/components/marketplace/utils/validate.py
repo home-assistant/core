@@ -142,6 +142,8 @@ V2_COMMON_DATA_JSON_SCHEMA = {
 
 V2_INTEGRATION_DATA_JSON_SCHEMA = {
     **V2_COMMON_DATA_JSON_SCHEMA,
+    # Checked where it is used, a bad value loses just the categories
+    probatio.Optional("categories"): object,
     probatio.Required("domain"): probatio.All(str, probatio.Match(VALID_DOMAIN)),
     probatio.Required("manifest_name"): str,
 }

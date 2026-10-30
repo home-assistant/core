@@ -2,13 +2,11 @@
 # name: test_entry_diagnostics
   dict({
     'info': dict({
-      'categories': list([
-      ]),
-      'latitude': '**REDACTED**',
-      'longitude': '**REDACTED**',
-      'radius': 25,
-      'scan_interval': 300.0,
-      'unit_system': 'metric',
+      'location': dict({
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'radius': 25000,
+      }),
     }),
     'service': dict({
       'last_timestamp': None,

@@ -8,6 +8,11 @@
         "default": "mdi:home-clock"
       }
     },
+    "event": {
+      "fault": {
+        "default": "mdi:alert-circle-outline"
+      }
+    },
     "sensor": {
       "bat_config_capacity": {
         "default": "mdi:battery-check-outline"

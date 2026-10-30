@@ -7,6 +7,7 @@ from typing import Any, cast, override
 import probatio
 
 from homeassistant.components import websocket_api
+from homeassistant.components.media_player import SERVICE_SELECT_SOURCE
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
@@ -35,6 +36,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_OPTIONS,
+    CONF_SOURCE,
     CONF_STATE,
     CONF_TEMPERATURE_UNIT,
     CONF_UNIT_OF_MEASUREMENT,
@@ -42,6 +44,15 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     DEGREE,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     Platform,
     UnitOfTemperature,
 )
@@ -52,6 +63,7 @@ from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
 )
@@ -130,6 +142,12 @@ from .light import (
     async_create_preview_light,
 )
 from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
+from .media_player import (
+    CONF_IS_VOLUME_MUTED,
+    CONF_SOURCE_LIST,
+    CONF_VOLUME_LEVEL,
+    async_create_preview_media_player,
+)
 from .number import CONF_SET_VALUE, async_create_preview_number
 from .select import CONF_SELECT_OPTION, async_create_preview_select
 from .sensor import async_create_preview_sensor
@@ -149,6 +167,20 @@ from .update import (
     async_create_preview_update,
 )
 from .vacuum import CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, async_create_preview_vacuum
+from .water_heater import (
+    CONF_AWAY_MODE,
+    CONF_CURRENT_TEMPERATURE as CONF_WATER_HEATER_CURRENT_TEMPERATURE,
+    CONF_MAX_TEMPERATURE as CONF_WATER_HEATER_MAX_TEMPERATURE,
+    CONF_MIN_TEMPERATURE as CONF_WATER_HEATER_MIN_TEMPERATURE,
+    CONF_OPERATION_LIST,
+    CONF_OPERATION_MODE,
+    CONF_TARGET_TEMPERATURE as CONF_WATER_HEATER_TARGET_TEMPERATURE,
+    SET_OPERATION_MODE_ACTION,
+    SET_TEMPERATURE_ACTION as SET_WATER_HEATER_TEMPERATURE_ACTION,
+    TURN_AWAY_MODE_OFF_ACTION,
+    TURN_AWAY_MODE_ON_ACTION,
+    async_create_preview_water_heater,
+)
 from .weather import (
     CONF_FORECAST_DAILY,
     CONF_FORECAST_HOURLY,
@@ -160,6 +192,23 @@ from .weather import (
 _SCHEMA_STATE: dict[probatio.Marker, Any] = {
     probatio.Required(CONF_STATE): selector.TemplateSelector(),
 }
+
+# (option, the option it requires, error when missing)
+_MEDIA_PLAYER_REQUIRED_OPTIONS = (
+    (CONF_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+    (SERVICE_SELECT_SOURCE, CONF_SOURCE_LIST, "source_list_required"),
+    (SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, "volume_up_and_down_required"),
+    (SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, "volume_up_and_down_required"),
+)
+
+# Device class can only be chosen when the entity is created.
+_CONFIG_DEVICE_CLASS_DOMAINS = (
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.EVENT,
+    Platform.MEDIA_PLAYER,
+    Platform.UPDATE,
+)
 
 
 def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
@@ -213,12 +262,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         schema |= {
             probatio.Optional(CONF_PRESS): selector.ActionSelector(),
         }
-        if flow_type == "config":
-            schema |= {
-                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                    selector.DeviceClassSelectorConfig(domain=Platform.BUTTON),
-                ),
-            }
 
     if domain == Platform.CLIMATE:
         schema |= {
@@ -267,12 +310,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(CONF_POSITION): selector.TemplateSelector(),
             probatio.Optional(POSITION_ACTION): selector.ActionSelector(),
         }
-        if flow_type == "config":
-            schema |= {
-                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                    selector.DeviceClassSelectorConfig(domain=Platform.COVER),
-                ),
-            }
 
     if domain == Platform.DEVICE_TRACKER:
         schema |= {
@@ -289,13 +326,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Required(CONF_EVENT_TYPE): selector.TemplateSelector(),
             probatio.Required(CONF_EVENT_TYPES): selector.TemplateSelector(),
         }
-
-        if flow_type == "config":
-            schema |= {
-                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                    selector.DeviceClassSelectorConfig(domain=Platform.EVENT),
-                ),
-            }
 
     if domain == Platform.FAN:
         schema |= {
@@ -339,6 +369,27 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Required(CONF_UNLOCK): selector.ActionSelector(),
             probatio.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
             probatio.Optional(CONF_OPEN): selector.ActionSelector(),
+        }
+
+    if domain == Platform.MEDIA_PLAYER:
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
+            probatio.Optional(CONF_TURN_ON): selector.ActionSelector(),
+            probatio.Optional(CONF_TURN_OFF): selector.ActionSelector(),
+            probatio.Optional(CONF_VOLUME_LEVEL): selector.TemplateSelector(),
+            probatio.Optional(CONF_IS_VOLUME_MUTED): selector.TemplateSelector(),
+            probatio.Optional(SERVICE_VOLUME_SET): selector.ActionSelector(),
+            probatio.Optional(SERVICE_VOLUME_UP): selector.ActionSelector(),
+            probatio.Optional(SERVICE_VOLUME_DOWN): selector.ActionSelector(),
+            probatio.Optional(SERVICE_VOLUME_MUTE): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_PLAY): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_PAUSE): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_STOP): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_NEXT_TRACK): selector.ActionSelector(),
+            probatio.Optional(SERVICE_MEDIA_PREVIOUS_TRACK): selector.ActionSelector(),
+            probatio.Optional(CONF_SOURCE): selector.TemplateSelector(),
+            probatio.Optional(CONF_SOURCE_LIST): selector.TemplateSelector(),
+            probatio.Optional(SERVICE_SELECT_SOURCE): selector.ActionSelector(),
         }
 
     if domain == Platform.NUMBER:
@@ -415,12 +466,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(CONF_BACKUP): selector.BooleanSelector(),
             probatio.Optional(CONF_SPECIFIC_VERSION): selector.BooleanSelector(),
         }
-        if flow_type == "config":
-            schema |= {
-                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                    selector.DeviceClassSelectorConfig(domain=Platform.UPDATE),
-                ),
-            }
 
     if domain == Platform.VACUUM:
         schema |= {
@@ -443,6 +488,58 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(SERVICE_LOCATE): selector.ActionSelector(),
         }
 
+    if domain == Platform.WATER_HEATER:
+        schema |= {
+            probatio.Required(CONF_OPERATION_LIST): selector.TemplateSelector(),
+            probatio.Optional(CONF_OPERATION_MODE): selector.TemplateSelector(),
+            probatio.Required(SET_OPERATION_MODE_ACTION): selector.ActionSelector(),
+            probatio.Optional(
+                CONF_WATER_HEATER_CURRENT_TEMPERATURE
+            ): selector.TemplateSelector(),
+            probatio.Optional(
+                CONF_WATER_HEATER_TARGET_TEMPERATURE
+            ): selector.TemplateSelector(),
+            probatio.Optional(
+                SET_WATER_HEATER_TEMPERATURE_ACTION
+            ): selector.ActionSelector(),
+            probatio.Inclusive(
+                CONF_TURN_ON, "on_off_actions"
+            ): selector.ActionSelector(),
+            probatio.Inclusive(
+                CONF_TURN_OFF, "on_off_actions"
+            ): selector.ActionSelector(),
+            probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
+        }
+        additional_options |= {
+            probatio.Optional(CONF_AWAY_MODE): selector.TemplateSelector(),
+            probatio.Optional(TURN_AWAY_MODE_ON_ACTION): selector.ActionSelector(),
+            probatio.Optional(TURN_AWAY_MODE_OFF_ACTION): selector.ActionSelector(),
+            probatio.Optional(
+                CONF_WATER_HEATER_MIN_TEMPERATURE
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+            probatio.Optional(
+                CONF_WATER_HEATER_MAX_TEMPERATURE
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+        }
+
     if domain == Platform.WEATHER:
         schema |= {
             probatio.Required(CONF_CONDITION): selector.TemplateSelector(),
@@ -457,6 +554,13 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             ),
             probatio.Optional(CONF_FORECAST_DAILY): selector.TemplateSelector(),
             probatio.Optional(CONF_FORECAST_HOURLY): selector.TemplateSelector(),
+        }
+
+    if flow_type == "config" and domain in _CONFIG_DEVICE_CLASS_DOMAINS:
+        schema |= {
+            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform(domain)),
+            ),
         }
 
     schema |= {
@@ -554,6 +658,7 @@ def validate_user_input(
     """Do post validation of user input.
 
     For sensors: Validate unit of measurement.
+    For media players: Validate options that require another option.
     For all domaines: Set template type.
     """
 
@@ -568,6 +673,25 @@ def validate_user_input(
         if template_type == Platform.CLIMATE:
             tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
                 user_input
+            )
+        if template_type == Platform.MEDIA_PLAYER:
+            for option, required_option, error in _MEDIA_PLAYER_REQUIRED_OPTIONS:
+                if option in user_input and required_option not in user_input:
+                    raise SchemaFlowError(error)
+        if template_type == Platform.WATER_HEATER:
+            tcv.requires_option(
+                CONF_WATER_HEATER_TARGET_TEMPERATURE,
+                SET_WATER_HEATER_TEMPERATURE_ACTION,
+            )(user_input)
+            additional_options = user_input.get(CONF_ADDITIONAL_OPTIONS, {})
+            tcv.requires_option(CONF_AWAY_MODE, TURN_AWAY_MODE_ON_ACTION)(
+                additional_options
+            )
+            tcv.requires_option(TURN_AWAY_MODE_ON_ACTION, TURN_AWAY_MODE_OFF_ACTION)(
+                additional_options
+            )
+            tcv.requires_option(TURN_AWAY_MODE_OFF_ACTION, TURN_AWAY_MODE_ON_ACTION)(
+                additional_options
             )
         return {"template_type": template_type} | user_input
 
@@ -586,12 +710,14 @@ TEMPLATE_TYPES = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
     Platform.WEATHER,
 ]
 
@@ -650,6 +776,11 @@ CONFIG_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.LOCK),
     ),
+    Platform.MEDIA_PLAYER: SchemaFlowFormStep(
+        config_schema(Platform.MEDIA_PLAYER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.MEDIA_PLAYER),
+    ),
     Platform.NUMBER: SchemaFlowFormStep(
         config_schema(Platform.NUMBER),
         preview="template",
@@ -679,6 +810,11 @@ CONFIG_FLOW = {
         config_schema(Platform.VACUUM),
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
+    ),
+    Platform.WATER_HEATER: SchemaFlowFormStep(
+        config_schema(Platform.WATER_HEATER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WATER_HEATER),
     ),
     Platform.WEATHER: SchemaFlowFormStep(
         config_schema(Platform.WEATHER),
@@ -744,6 +880,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.LOCK),
     ),
+    Platform.MEDIA_PLAYER: SchemaFlowFormStep(
+        options_schema(Platform.MEDIA_PLAYER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.MEDIA_PLAYER),
+    ),
     Platform.NUMBER: SchemaFlowFormStep(
         options_schema(Platform.NUMBER),
         preview="template",
@@ -774,6 +915,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
     ),
+    Platform.WATER_HEATER: SchemaFlowFormStep(
+        options_schema(Platform.WATER_HEATER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WATER_HEATER),
+    ),
     Platform.WEATHER: SchemaFlowFormStep(
         options_schema(Platform.WEATHER),
         preview="template",
@@ -795,12 +941,14 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.FAN: async_create_preview_fan,
     Platform.LIGHT: async_create_preview_light,
     Platform.LOCK: async_create_preview_lock,
+    Platform.MEDIA_PLAYER: async_create_preview_media_player,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
     Platform.SWITCH: async_create_preview_switch,
     Platform.UPDATE: async_create_preview_update,
     Platform.VACUUM: async_create_preview_vacuum,
+    Platform.WATER_HEATER: async_create_preview_water_heater,
     Platform.WEATHER: async_create_preview_weather,
 }
 
@@ -865,6 +1013,13 @@ def ws_start_preview(
                 _validate_state_class(user_input)
             except probatio.Invalid as ex:
                 errors[CONF_STATE_CLASS] = str(ex.msg)
+
+        if domain == Platform.MEDIA_PLAYER:
+            for option, required_option, _ in _MEDIA_PLAYER_REQUIRED_OPTIONS:
+                try:
+                    tcv.requires_option(option, required_option)(user_input)
+                except probatio.Invalid as ex:
+                    errors[option] = str(ex.msg)
 
         return errors
 

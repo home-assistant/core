@@ -40,6 +40,8 @@ from .const import (
     SERVICE_SYNC,
     RemoteEntityFeature,
     RemoteEntityStateAttribute,
+    RemoteService,
+    RemoteServiceArgument,
 )
 from .entity import RemoteEntity, RemoteEntityDescription
 from .services import async_setup_services
@@ -85,6 +87,8 @@ __all__ = [
     "RemoteEntityDescription",
     "RemoteEntityFeature",
     "RemoteEntityStateAttribute",
+    "RemoteService",
+    "RemoteServiceArgument",
 ]
 
 

@@ -27,3 +27,9 @@ class ButtonDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(ButtonDeviceClass))
+
+
+class ButtonService(StrEnum):
+    """Store keys for button services."""
+
+    PRESS = "press"

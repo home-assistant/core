@@ -134,7 +134,10 @@ if TYPE_CHECKING:
         MockInfraredEmitterEntity,
         MockInfraredReceiverEntity,
     )
-    from .components.radio_frequency.common import MockRadioFrequencyEntity
+    from .components.radio_frequency.common import (
+        MockRadioFrequencyEntity,
+        MockRadioFrequencyReceiverEntity,
+    )
 
 
 pytest.register_assert_rewrite("pytest_homeassistant.common")
@@ -2102,6 +2105,18 @@ async def mock_rf_entity_fixture(
     from .components.radio_frequency.common import mock_rf_entity_fixture_helper  # noqa: PLC0415
 
     return await mock_rf_entity_fixture_helper(hass)
+
+
+@pytest.fixture(name="mock_rf_receiver_entity")
+async def mock_rf_receiver_entity_fixture(
+    hass: HomeAssistant, init_radio_frequency: None
+) -> MockRadioFrequencyReceiverEntity:
+    """Return a mock radio frequency receiver entity."""
+    from .components.radio_frequency.common import (  # noqa: PLC0415
+        mock_rf_receiver_entity_fixture_helper,
+    )
+
+    return await mock_rf_receiver_entity_fixture_helper(hass)
 
 
 # Infrared test fixtures

@@ -13,7 +13,13 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import DATA_COMPONENT, DOMAIN, SERVICE_GET_FORECASTS, WeatherEntityFeature
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    WeatherEntityFeature,
+    WeatherService,
+    WeatherServiceArgument,
+)
 
 if TYPE_CHECKING:
     from .entity import WeatherEntity
@@ -35,7 +41,7 @@ async def _async_get_forecasts_service(
     weather: WeatherEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """Get weather forecast."""
-    forecast_type = service_call.data["type"]
+    forecast_type = service_call.data[WeatherServiceArgument.TYPE]
     supported_features = weather.supported_features or 0
     if forecast_type == "daily":
         if (supported_features & WeatherEntityFeature.FORECAST_DAILY) == 0:
@@ -62,8 +68,12 @@ async def _async_get_forecasts_service(
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the weather services."""
     hass.data[DATA_COMPONENT].async_register_entity_service(
-        SERVICE_GET_FORECASTS,
-        {probatio.Required("type"): probatio.In(("daily", "hourly", "twice_daily"))},
+        WeatherService.GET_FORECASTS,
+        {
+            probatio.Required(WeatherServiceArgument.TYPE): probatio.In(
+                ("daily", "hourly", "twice_daily")
+            )
+        },
         _async_get_forecasts_service,
         required_features=[
             WeatherEntityFeature.FORECAST_DAILY,

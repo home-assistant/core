@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, final, override
 
 from propcache.api import cached_property
 
-from homeassistant.const import ATTR_CODE
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -17,6 +16,7 @@ from .const import (
     DOMAIN,
     LockEntityFeature,
     LockEntityStateAttribute,
+    LockServiceArgument,
     LockState,
 )
 
@@ -64,7 +64,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @callback
     def add_default_code(self, data: dict[Any, Any]) -> dict[Any, Any]:
         """Add default lock code."""
-        code: str = data.pop(ATTR_CODE, "")
+        code: str = data.pop(LockServiceArgument.CODE, "")
         if not code:
             code = self._lock_option_default_code
         if self.code_format_cmp and not self.code_format_cmp.match(code):
@@ -79,7 +79,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 },
             )
         if code:
-            data[ATTR_CODE] = code
+            data[LockServiceArgument.CODE] = code
         return data
 
     @cached_property

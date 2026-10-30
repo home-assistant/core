@@ -5,20 +5,11 @@ from collections.abc import Iterable
 import logging
 from typing import Any, Final
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
-)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import AlarmControlPanelState
-from .const import DOMAIN
+from .const import DOMAIN, AlarmControlPanelService
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -58,19 +49,19 @@ async def _async_reproduce_state(
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if state.state == AlarmControlPanelState.ARMED_AWAY:
-        service = SERVICE_ALARM_ARM_AWAY
+        service = AlarmControlPanelService.ARM_AWAY
     elif state.state == AlarmControlPanelState.ARMED_CUSTOM_BYPASS:
-        service = SERVICE_ALARM_ARM_CUSTOM_BYPASS
+        service = AlarmControlPanelService.ARM_CUSTOM_BYPASS
     elif state.state == AlarmControlPanelState.ARMED_HOME:
-        service = SERVICE_ALARM_ARM_HOME
+        service = AlarmControlPanelService.ARM_HOME
     elif state.state == AlarmControlPanelState.ARMED_NIGHT:
-        service = SERVICE_ALARM_ARM_NIGHT
+        service = AlarmControlPanelService.ARM_NIGHT
     elif state.state == AlarmControlPanelState.ARMED_VACATION:
-        service = SERVICE_ALARM_ARM_VACATION
+        service = AlarmControlPanelService.ARM_VACATION
     elif state.state == AlarmControlPanelState.DISARMED:
-        service = SERVICE_ALARM_DISARM
+        service = AlarmControlPanelService.DISARM
     elif state.state == AlarmControlPanelState.TRIGGERED:
-        service = SERVICE_ALARM_TRIGGER
+        service = AlarmControlPanelService.TRIGGER
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

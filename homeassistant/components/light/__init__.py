@@ -339,7 +339,9 @@ class Profiles:
                 if not state_on or not params:
                     self.apply_profile(name, params)
                 elif self.data[name].transition is not None:
-                    params.setdefault(ATTR_TRANSITION, self.data[name].transition)
+                    params.setdefault(
+                        LightServiceArgument.TRANSITION, self.data[name].transition
+                    )
 
     @callback
     def apply_profile(self, name: str, params: dict[str, Any]) -> None:
@@ -348,21 +350,21 @@ class Profiles:
             return
 
         color_attributes = (
-            ATTR_COLOR_NAME,
-            ATTR_COLOR_TEMP_KELVIN,
-            ATTR_HS_COLOR,
-            ATTR_RGB_COLOR,
-            ATTR_RGBW_COLOR,
-            ATTR_RGBWW_COLOR,
-            ATTR_XY_COLOR,
-            ATTR_WHITE,
+            LightServiceArgument.COLOR_NAME,
+            LightServiceArgument.COLOR_TEMP_KELVIN,
+            LightServiceArgument.HS_COLOR,
+            LightServiceArgument.RGB_COLOR,
+            LightServiceArgument.RGBW_COLOR,
+            LightServiceArgument.RGBWW_COLOR,
+            LightServiceArgument.XY_COLOR,
+            LightServiceArgument.WHITE,
         )
 
         if profile.hs_color is not None and not any(
             color_attribute in params for color_attribute in color_attributes
         ):
-            params[ATTR_HS_COLOR] = profile.hs_color
+            params[LightServiceArgument.HS_COLOR] = profile.hs_color
         if profile.brightness is not None:
-            params.setdefault(ATTR_BRIGHTNESS, profile.brightness)
+            params.setdefault(LightServiceArgument.BRIGHTNESS, profile.brightness)
         if profile.transition is not None:
-            params.setdefault(ATTR_TRANSITION, profile.transition)
+            params.setdefault(LightServiceArgument.TRANSITION, profile.transition)

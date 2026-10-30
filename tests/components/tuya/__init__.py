@@ -1,5 +1,6 @@
 """Tests for the Tuya component."""
 
+from copy import copy
 import pathlib
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -158,6 +159,15 @@ async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerD
             # It was redacted, which may cause issue with b64decode
             device.status[key] = ""
     return device
+
+
+def add_indexed_switches(device: CustomerDevice, channels: int) -> None:
+    """Add indexed switch DPs, copied from the unindexed "switch" DP."""
+    for index in range(1, channels + 1):
+        for container in (device.function, device.status_range):
+            container[f"switch_{index}"] = copy(container["switch"])
+            container[f"switch_{index}"].code = f"switch_{index}"
+        device.status[f"switch_{index}"] = False
 
 
 def create_manager(

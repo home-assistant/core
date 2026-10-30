@@ -10,6 +10,7 @@ from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterCommand, NullValue
 from matter_server.client.models import device_types
 from matter_server.client.models.node import MatterEndpoint
+from matter_server.common import custom_clusters
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -595,5 +596,18 @@ DISCOVERY_SCHEMAS = [
         # Mode is mandatory on every covering, but the bit reverses the lift
         # direction, so a tilt-only covering has nothing to configure
         featuremap_contains=clusters.WindowCovering.Bitmaps.Feature.kLift,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="AqaraLedStripMusicSyncEnabled",
+            translation_key="music_sync",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(
+            custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncEnabled,
+        ),
+        vendor_id=(4447,),
     ),
 ]

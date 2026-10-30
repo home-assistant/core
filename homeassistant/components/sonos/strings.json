@@ -145,6 +145,12 @@
     "invalid_sonos_playlist": {
       "message": "Could not find Sonos playlist: {name}"
     },
+    "media_not_found": {
+      "message": "Media not found: {media_content_type} / {media_content_id}"
+    },
+    "restore_missing_snapshots": {
+      "message": "Restore failed, speakers are missing snapshots: {speakers}"
+    },
     "speaker_not_found": {
       "message": "{entity_id} is not a known Sonos speaker."
     },
@@ -162,6 +168,9 @@
     },
     "upnp_call_failed_music_service_unavailable": {
       "message": "Error on {target} (UPnP error code {error_code}): {error}. This may indicate the selected music service is not available on the speaker."
+    },
+    "websocket_error": {
+      "message": "An error occurred while communicating with the Sonos speaker"
     }
   },
   "issues": {

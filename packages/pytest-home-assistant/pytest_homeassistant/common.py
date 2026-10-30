@@ -887,15 +887,15 @@ class MockModule:
         async_setup: Callable[[HomeAssistant, ConfigType], Coroutine[Any, Any, bool]]
         | None = None,
         async_setup_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool | None]
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
         ]
         | None = None,
         async_unload_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool | None]
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
         ]
         | None = None,
         async_migrate_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool | None]
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
         ]
         | None = None,
         async_remove_entry: Callable[

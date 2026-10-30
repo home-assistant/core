@@ -418,6 +418,9 @@
           "smart": "Smart"
         }
       },
+      "filtration_remaining": {
+        "name": "Filtration time remaining"
+      },
       "filtration_speed": {
         "name": "Current filtration speed",
         "state": {

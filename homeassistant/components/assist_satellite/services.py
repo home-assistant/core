@@ -15,7 +15,6 @@ from hassil.util import (
 import probatio
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -25,7 +24,13 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import DATA_COMPONENT, DOMAIN, AssistSatelliteEntityFeature
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    AssistSatelliteEntityFeature,
+    AssistSatelliteService,
+    AssistSatelliteServiceArgument,
+)
 from .entity import AssistSatelliteEntity
 
 
@@ -95,35 +100,57 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        "announce",
+        AssistSatelliteService.ANNOUNCE,
         probatio.All(
             cv.make_entity_service_schema(
                 {
-                    probatio.Optional("message"): str,
-                    probatio.Optional("media_id"): _media_id_validator,
-                    probatio.Optional("preannounce", default=True): bool,
-                    probatio.Optional("preannounce_media_id"): _media_id_validator,
+                    probatio.Optional(AssistSatelliteServiceArgument.MESSAGE): str,
+                    probatio.Optional(
+                        AssistSatelliteServiceArgument.MEDIA_ID
+                    ): _media_id_validator,
+                    probatio.Optional(
+                        AssistSatelliteServiceArgument.PREANNOUNCE, default=True
+                    ): bool,
+                    probatio.Optional(
+                        AssistSatelliteServiceArgument.PREANNOUNCE_MEDIA_ID
+                    ): _media_id_validator,
                 }
             ),
-            probatio.AtLeastOne("message", "media_id"),
+            probatio.AtLeastOne(
+                AssistSatelliteServiceArgument.MESSAGE.value,
+                AssistSatelliteServiceArgument.MEDIA_ID.value,
+            ),
         ),
         "async_internal_announce",
         [AssistSatelliteEntityFeature.ANNOUNCE],
     )
 
     component.async_register_entity_service(
-        "start_conversation",
+        AssistSatelliteService.START_CONVERSATION,
         probatio.All(
             cv.make_entity_service_schema(
                 {
-                    probatio.Optional("start_message"): str,
-                    probatio.Optional("start_media_id"): _media_id_validator,
-                    probatio.Optional("preannounce", default=True): bool,
-                    probatio.Optional("preannounce_media_id"): _media_id_validator,
-                    probatio.Optional("extra_system_prompt"): str,
+                    probatio.Optional(
+                        AssistSatelliteServiceArgument.START_MESSAGE
+                    ): str,
+                    probatio.Optional(
+                        AssistSatelliteServiceArgument.START_MEDIA_ID
+                    ): _media_id_validator,
+                    probatio.Optional(
+                        AssistSatelliteServiceArgument.PREANNOUNCE, default=True
+                    ): bool,
+                    probatio.Optional(
+                        AssistSatelliteServiceArgument.PREANNOUNCE_MEDIA_ID
+                    ): _media_id_validator,
+                    probatio.Optional(
+                        AssistSatelliteServiceArgument.EXTRA_SYSTEM_PROMPT
+                    ): str,
                 }
             ),
-            probatio.AtLeastOne("start_message", "start_media_id"),
+            probatio.AtLeastOne(
+                AssistSatelliteServiceArgument.START_MESSAGE.value,
+                AssistSatelliteServiceArgument.START_MEDIA_ID.value,
+            ),
         ),
         "async_internal_start_conversation",
         [AssistSatelliteEntityFeature.START_CONVERSATION],
@@ -131,7 +158,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def handle_ask_question(call: ServiceCall) -> dict[str, Any]:
         """Handle a Show View service call."""
-        satellite_entity_id: str = call.data[ATTR_ENTITY_ID]
+        satellite_entity_id: str = call.data[AssistSatelliteServiceArgument.ENTITY_ID]
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
             if user is None:
@@ -161,13 +188,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         satellite_entity.async_set_context(call.context)
 
         ask_question_args = {
-            "question": call.data.get("question"),
-            "question_media_id": call.data.get("question_media_id"),
-            "preannounce": call.data.get("preannounce", True),
-            "answers": call.data.get("answers"),
+            "question": call.data.get(AssistSatelliteServiceArgument.QUESTION),
+            "question_media_id": call.data.get(
+                AssistSatelliteServiceArgument.QUESTION_MEDIA_ID
+            ),
+            "preannounce": call.data.get(
+                AssistSatelliteServiceArgument.PREANNOUNCE, True
+            ),
+            "answers": call.data.get(AssistSatelliteServiceArgument.ANSWERS),
         }
 
-        if preannounce_media_id := call.data.get("preannounce_media_id"):
+        if preannounce_media_id := call.data.get(
+            AssistSatelliteServiceArgument.PREANNOUNCE_MEDIA_ID
+        ):
             ask_question_args["preannounce_media_id"] = preannounce_media_id
 
         answer = await satellite_entity.async_internal_ask_question(**ask_question_args)
@@ -182,16 +215,24 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         domain=DOMAIN,
-        service="ask_question",
+        service=AssistSatelliteService.ASK_QUESTION,
         service_func=handle_ask_question,
         schema=probatio.All(
             {
-                probatio.Required(ATTR_ENTITY_ID): cv.entity_domain(DOMAIN),
-                probatio.Optional("question"): str,
-                probatio.Optional("question_media_id"): _media_id_validator,
-                probatio.Optional("preannounce", default=True): bool,
-                probatio.Optional("preannounce_media_id"): _media_id_validator,
-                probatio.Optional("answers"): [
+                probatio.Required(
+                    AssistSatelliteServiceArgument.ENTITY_ID
+                ): cv.entity_domain(DOMAIN),
+                probatio.Optional(AssistSatelliteServiceArgument.QUESTION): str,
+                probatio.Optional(
+                    AssistSatelliteServiceArgument.QUESTION_MEDIA_ID
+                ): _media_id_validator,
+                probatio.Optional(
+                    AssistSatelliteServiceArgument.PREANNOUNCE, default=True
+                ): bool,
+                probatio.Optional(
+                    AssistSatelliteServiceArgument.PREANNOUNCE_MEDIA_ID
+                ): _media_id_validator,
+                probatio.Optional(AssistSatelliteServiceArgument.ANSWERS): [
                     {
                         probatio.Required("id"): str,
                         probatio.Required("sentences"): probatio.All(
@@ -204,7 +245,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     }
                 ],
             },
-            probatio.AtLeastOne("question", "question_media_id"),
+            probatio.AtLeastOne(
+                AssistSatelliteServiceArgument.QUESTION.value,
+                AssistSatelliteServiceArgument.QUESTION_MEDIA_ID.value,
+            ),
         ),
         supports_response=SupportsResponse.ONLY,
     )

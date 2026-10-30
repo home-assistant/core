@@ -29,16 +29,14 @@ from .const import (
     SERVICE_RESET,
     SERVICE_SET_VALUE,
     CounterEntityStateAttribute,
+    CounterService,
+    CounterServiceArgument,
 )
 from .entity import Counter
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_INITIAL = "initial"
-ATTR_STEP = "step"
-ATTR_MINIMUM = "minimum"
-ATTR_MAXIMUM = "maximum"
 
 DEFAULT_INITIAL = 0
 DEFAULT_STEP = 1
@@ -69,6 +67,8 @@ __all__ = [
     "SERVICE_SET_VALUE",
     "STORAGE_FIELDS",
     "CounterEntityStateAttribute",
+    "CounterService",
+    "CounterServiceArgument",
 ]
 
 

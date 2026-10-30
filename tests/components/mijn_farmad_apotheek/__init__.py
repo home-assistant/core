@@ -18,7 +18,7 @@ from homeassistant.components.mijn_farmad_apotheek.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
@@ -38,22 +38,27 @@ API_PRODUCT_DESCRIPTION_LATER = "Dafalgan 2g"
 API_DRAFT_ID = "mock-draft-id"
 API_BASKET_ID = "mock-basket-id"
 API_SEARCH_QUERY = "dafalgan"
+API_OTP = "123456"
+API_OTP_2 = "654321"
 
 ENTRY_DATA = {
+    CONF_EMAIL: API_ACCOUNT_EMAIL,
     CONF_ACCESS_TOKEN: API_ACCESS_TOKEN,
     CONF_REFRESH_TOKEN: API_REFRESH_TOKEN,
 }
 
 USER_INPUT = {
-    "email": API_ACCOUNT_EMAIL,
-    "password": "mock-password",
+    CONF_EMAIL: API_ACCOUNT_EMAIL,
+    CONF_PASSWORD: "mock-password",
 }
 
 
-def get_mock_account(apbs: tuple[str, ...] = (API_APB,)) -> FarmadAccount:
+def get_mock_account(
+    apbs: tuple[str, ...] = (API_APB,), *, account_id: str = API_ACCOUNT_ID
+) -> FarmadAccount:
     """Return a Farmad account for the mocked client."""
     return FarmadAccount(
-        id=API_ACCOUNT_ID,
+        id=account_id,
         email=API_ACCOUNT_EMAIL,
         first_name="Test",
         last_name="User",
@@ -152,12 +157,14 @@ async def init_integration(
     hass: HomeAssistant,
     *,
     data: dict[str, Any] | UndefinedType = UNDEFINED,
+    entry_id: str | None = None,
 ) -> MockConfigEntry:
     """Set up the Mijn Farmad Apotheek integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRY_DATA if data is UNDEFINED else data,
         unique_id=API_ACCOUNT_ID,
+        entry_id=entry_id,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

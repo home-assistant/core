@@ -10,7 +10,14 @@ from homeassistant.helpers import config_validation as cv, storage
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DATA_COMPONENT, DATA_PREFERENCES, DOMAIN, AITaskEntityFeature
+from .const import (
+    DATA_COMPONENT,
+    DATA_PREFERENCES,
+    DOMAIN,
+    AITaskEntityFeature,
+    AITaskService,
+    AITaskServiceArgument,
+)
 from .entity import AITaskEntity
 from .evaluation import (
     ChoiceAnswer,
@@ -41,6 +48,8 @@ __all__ = [
     "DOMAIN",
     "AITaskEntity",
     "AITaskEntityFeature",
+    "AITaskService",
+    "AITaskServiceArgument",
     "ChoiceAnswer",
     "ChoiceQuestion",
     "EvaluationAnswer",

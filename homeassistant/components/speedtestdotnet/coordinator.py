@@ -80,6 +80,12 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.hass.async_add_executor_job(self.update_data)
         except speedtest.NoMatchedServers as err:
-            raise UpdateFailed("Selected server is not found.") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="server_not_found",
+            ) from err
         except speedtest.SpeedtestException as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from err

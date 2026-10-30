@@ -1,21 +1,15 @@
 """Reproduce an Input select state."""
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.components.select import (
-    ATTR_OPTIONS,
-    SERVICE_SELECT_OPTION,
-    SelectEntityCapabilityAttribute,
-)
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
+from homeassistant.components.select import SelectEntityCapabilityAttribute
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from .const import DOMAIN, SERVICE_SET_OPTIONS
-
-ATTR_GROUP = [ATTR_OPTION, ATTR_OPTIONS]
+from .const import DOMAIN, InputSelectService, InputSelectServiceArgument
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,19 +28,18 @@ async def _async_reproduce_state(
         return
 
     # Return if we are already at the right state.
-    if cur_state.state == state.state and all(
-        check_attr_equal(cur_state.attributes, state.attributes, attr)
-        for attr in ATTR_GROUP
-    ):
+    if cur_state.state == state.state and cur_state.attributes.get(
+        SelectEntityCapabilityAttribute.OPTIONS
+    ) == state.attributes.get(SelectEntityCapabilityAttribute.OPTIONS):
         return
 
     # Set service data
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-    # If options are specified, call SERVICE_SET_OPTIONS
+    # If options are specified, call set_options
     if SelectEntityCapabilityAttribute.OPTIONS in state.attributes:
-        service = SERVICE_SET_OPTIONS
-        service_data[ATTR_OPTIONS] = state.attributes[
+        service = InputSelectService.SET_OPTIONS
+        service_data[InputSelectServiceArgument.OPTIONS] = state.attributes[
             SelectEntityCapabilityAttribute.OPTIONS
         ]
 
@@ -54,13 +47,13 @@ async def _async_reproduce_state(
             DOMAIN, service, service_data, context=context, blocking=True
         )
 
-        # Remove ATTR_OPTIONS from service_data so we can
+        # Remove options from service_data so we can
         # reuse service_data in next call
-        del service_data[ATTR_OPTIONS]
+        del service_data[InputSelectServiceArgument.OPTIONS]
 
-    # Call SERVICE_SELECT_OPTION
-    service = SERVICE_SELECT_OPTION
-    service_data[ATTR_OPTION] = state.state
+    # Call select_option
+    service = InputSelectService.SELECT_OPTION
+    service_data[InputSelectServiceArgument.OPTION] = state.state
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True
@@ -84,8 +77,3 @@ async def async_reproduce_states(
             for state in states
         )
     )
-
-
-def check_attr_equal(attr1: Mapping, attr2: Mapping, attr_str: str) -> bool:
-    """Return true if the given attributes are equal."""
-    return attr1.get(attr_str) == attr2.get(attr_str)

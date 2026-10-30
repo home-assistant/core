@@ -1,11 +1,15 @@
 """The command_line component utils."""
 
 import asyncio
+from collections.abc import Mapping
 from contextlib import suppress
 import hashlib
+import json
 import re
 import shlex
 from typing import Any, Literal, overload
+
+from jsonpath import ExprSyntaxError, JSONPathTypeError, search
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -121,25 +125,32 @@ def build_shell_template_issue_id(platform: str, name: str) -> str:
 
 
 @callback
-def async_prune_shell_template_issues(
-    hass: HomeAssistant, valid_issue_ids: set[str]
-) -> None:
-    """Delete deprecation issues for entities that no longer exist.
+def async_refresh_shell_template_issues(hass: HomeAssistant) -> ir.IssuesRefresh:
+    """Begin a refresh of the deprecation issues, which deletes orphaned ones."""
+    return ir.async_refresh_issues(hass, DOMAIN, issue_id_pattern=_ISSUE_ID_PREFIX)
 
-    Called on reload to remove issues left behind by removed or renamed
-    entities. Issues for still-configured entities are kept so a user's decision
-    to ignore an issue survives the reload; each entity refreshes or clears its
-    own issue on its next update. Deleting and later recreating an issue would
-    reset the ignore state, so we never delete an issue we cannot prove is stale.
+
+def notify_name(notify_config: dict[str, Any]) -> str:
+    """Return the name of a notify service, the integration domain if not set."""
+    return notify_config.get(CONF_NAME) or DOMAIN
+
+
+@callback
+def async_keep_shell_template_issue(
+    hass: HomeAssistant, platform: str, platform_config: dict[str, Any]
+) -> None:
+    """Keep the deprecation issue of an entity which is being set up.
+
+    Whether the issue is still valid is only known when the entity next runs its
+    command, which then creates or deletes it.
     """
-    registry = ir.async_get(hass)
-    for domain, issue_id in list(registry.issues):
-        if (
-            domain == DOMAIN
-            and issue_id.startswith(_ISSUE_ID_PREFIX)
-            and issue_id not in valid_issue_ids
-        ):
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
+    if platform == NOTIFY_DOMAIN:
+        name = notify_name(platform_config)
+    elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
+        name = platform_config[CONF_NAME]
+    else:
+        return
+    ir.async_keep_issue(hass, DOMAIN, build_shell_template_issue_id(platform, name))
 
 
 @overload
@@ -349,24 +360,25 @@ def create_platform_yaml_not_supported_issue(
     )
 
 
-def shell_template_issue_ids(
-    command_line_config: list[dict[str, dict[str, Any]]],
-) -> set[str]:
-    """Return the shell template deprecation issue ids for the given config.
-
-    Only sensor, binary_sensor and notify run templated commands and can raise
-    the issue. The name mirrors each platform's setup: sensor and binary_sensor
-    always have a name (schema default), while notify falls back to the
-    integration domain when no name is configured.
-    """
-    issue_ids: set[str] = set()
-    for platform_config in command_line_config:
-        for platform, platform_conf in platform_config.items():
-            if platform == NOTIFY_DOMAIN:
-                name = platform_conf.get(CONF_NAME) or DOMAIN
-            elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
-                name = platform_conf[CONF_NAME]
-            else:
-                continue
-            issue_ids.add(build_shell_template_issue_id(platform, name))
-    return issue_ids
+def parse_json_attributes(
+    value: str | None,
+    json_attributes: list[str],
+    json_attributes_path: str | None,
+) -> dict[str, Any]:
+    """Extract the configured attributes from a JSON command output."""
+    if not value:
+        LOGGER.warning("Empty reply found when expecting JSON data")
+        return {}
+    try:
+        json_dict = json.loads(value)
+        if json_attributes_path is not None:
+            json_dict = search(json_attributes_path, json_dict)
+    except ValueError, TypeError, ExprSyntaxError, JSONPathTypeError:
+        LOGGER.warning("Unable to parse output as JSON: %s", value)
+        return {}
+    if isinstance(json_dict, list) and json_dict:
+        json_dict = json_dict[0]
+    if not isinstance(json_dict, Mapping):
+        LOGGER.warning("JSON result was not a dictionary")
+        return {}
+    return {k: json_dict[k] for k in json_attributes if k in json_dict}

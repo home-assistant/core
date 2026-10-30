@@ -1,5 +1,6 @@
 """Tests for the Bitcoin sensor platform."""
 
+import logging
 from unittest.mock import MagicMock
 
 from blockchain.exchangerates import Currency
@@ -13,21 +14,27 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bitcoin.const import DOMAIN
-from homeassistant.components.bitcoin.sensor import SCAN_INTERVAL
+from homeassistant.components.bitcoin.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_CURRENCY,
     CONF_DISPLAY_OPTIONS,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-ENTITY_EXCHANGE_RATE = "sensor.exchange_rate_1_btc"
+ENTITY_EXCHANGE_RATE = "sensor.bitcoin_exchange_rate"
 
 YAML_CONFIG = {
     SENSOR_DOMAIN: {
@@ -101,6 +108,59 @@ async def test_one_fetch_per_cycle(
     assert mock_statistics.call_count == 2
 
 
+@pytest.mark.usefixtures("mock_exchangerates")
+async def test_unavailable_while_blockchain_unreachable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_statistics: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensors go unavailable during an outage and come back after it."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_statistics.side_effect = OSError("boom")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_EXCHANGE_RATE).state == STATE_UNAVAILABLE
+    # An outage costs one request per cycle, not one per sensor.
+    assert mock_statistics.call_count == 2
+
+    mock_statistics.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_EXCHANGE_RATE).state == "79600.7"
+
+
+@pytest.mark.usefixtures("mock_statistics")
+async def test_exchange_rate_falls_back_when_currency_disappears(
+    hass: HomeAssistant,
+    mock_exchangerates: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a currency that stops being quoted while running falls back to USD."""
+    entry = MockConfigEntry(domain=DOMAIN, title="Bitcoin", data={CONF_CURRENCY: "EUR"})
+    await setup_integration(hass, entry)
+    state = hass.states.get(ENTITY_EXCHANGE_RATE)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
+
+    mock_exchangerates.return_value = {
+        "USD": Currency(79618.09, 79622.5, 79613.7, "$", 79600.7)
+    }
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_EXCHANGE_RATE)
+    assert state.state == "79600.7"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "USD"
+    assert "Unexpected error" not in caplog.text
+
+
 @pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
 async def test_yaml_import(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
@@ -110,7 +170,7 @@ async def test_yaml_import(
     await hass.async_block_till_done()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data == {CONF_CURRENCY: "EUR", CONF_DISPLAY_OPTIONS: ["exchangerate"]}
+    assert entry.data == {CONF_CURRENCY: "EUR"}
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
@@ -232,47 +292,43 @@ async def test_yaml_import_with_ignored_entry(
     )
 
 
-@pytest.mark.parametrize(
-    ("display_options", "expected"),
-    [
-        pytest.param(
-            ["trade_volume_usd"], {"sensor.trade_volume": "USD"}, id="trade_volume_usd"
-        ),
-        pytest.param(
-            ["trade_volume_btc"], {"sensor.trade_volume": "BTC"}, id="trade_volume_btc"
-        ),
-        pytest.param(
-            ["trade_volume_btc", "trade_volume_usd"],
-            {"sensor.trade_volume": "BTC", "sensor.trade_volume_2": "USD"},
-            id="both_trade_volumes",
-        ),
-        pytest.param(
-            ["miners_revenue_btc"],
-            {"sensor.miners_revenue": "BTC"},
-            id="miners_revenue_btc",
-        ),
-        pytest.param(
-            ["miners_revenue_usd"],
-            {"sensor.miners_revenue": "USD"},
-            id="miners_revenue_usd",
-        ),
-    ],
-)
 @pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
-async def test_imported_sensors_keep_their_entity_ids(
-    hass: HomeAssistant, display_options: list[str], expected: dict[str, str]
+async def test_registered_sensors_keep_their_entity_ids(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test sensors an imported YAML setup had keep the entity ID they had.
-
-    The expected values are what the YAML platform created for these
-    display_options before the config flow existed.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Bitcoin",
-        data={CONF_CURRENCY: "USD", CONF_DISPLAY_OPTIONS: display_options},
+    """Test sensors that are already registered keep their entity ID and name it."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{mock_config_entry.entry_id}_exchangerate",
+        suggested_object_id="exchange_rate_1_btc",
+        config_entry=mock_config_entry,
     )
-    await setup_integration(hass, entry)
 
-    for entity_id, unit in expected.items():
-        assert hass.states.get(entity_id).attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.exchange_rate_1_btc")
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Bitcoin Exchange rate"
+    assert hass.states.get(ENTITY_EXCHANGE_RATE) is None
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")
+async def test_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the sensors belong to one Bitcoin service device."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device == snapshot

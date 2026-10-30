@@ -87,6 +87,16 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = probatio.Schema(
 )
 
 
+def _references_registries(selection: TargetSelection) -> bool:
+    """Return if resolving the selection depends on the registries."""
+    return bool(
+        selection.area_ids
+        or selection.device_ids
+        or selection.floor_ids
+        or selection.label_ids
+    )
+
+
 class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
@@ -204,18 +214,17 @@ class EntityConditionBase(Condition):
             action()
 
         selection = self._target_selection
+        exclude = selection.exclude
         # Explicit entity ids don't depend on the registries, skip the target tracker
-        if not (
-            selection.area_ids
-            or selection.device_ids
-            or selection.floor_ids
-            or selection.label_ids
+        if not _references_registries(selection) and (
+            exclude is None or not _references_registries(exclude)
         ):
+            excluded_entity_ids = exclude.entity_ids if exclude else set()
             return async_track_state_change_event(
                 self._hass,
                 {
                     entity_id
-                    for entity_id in selection.entity_ids
+                    for entity_id in selection.entity_ids - excluded_entity_ids
                     if split_entity_id(entity_id)[0] in self._domain_specs
                 },
                 state_changed,
@@ -395,7 +404,7 @@ class EntityConditionBase(Condition):
                 )
         except (SQLAlchemyError, TimeoutError) as err:
             # Best effort: keep the conservative anchors rather than failing.
-            _LOGGER.debug("Error priming condition durations from history: %s", err)
+            _LOGGER.debug("Error priming condition durations from history: %r", err)
             return
 
         queued_states = queued or {}

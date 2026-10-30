@@ -69,3 +69,26 @@ class VacuumEntityFeature(IntFlag):
     STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
     CLEAN_AREA = 16384
+
+
+class VacuumService(StrEnum):
+    """Store keys for vacuum services."""
+
+    CLEAN_AREA = "clean_area"
+    CLEAN_SPOT = "clean_spot"
+    LOCATE = "locate"
+    PAUSE = "pause"
+    RETURN_TO_BASE = "return_to_base"
+    SEND_COMMAND = "send_command"
+    SET_FAN_SPEED = "set_fan_speed"
+    START = "start"
+    STOP = "stop"
+
+
+class VacuumServiceArgument(StrEnum):
+    """Store keys for vacuum service arguments."""
+
+    CLEANING_AREA_ID = "cleaning_area_id"
+    COMMAND = "command"
+    FAN_SPEED = "fan_speed"
+    PARAMS = "params"

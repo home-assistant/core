@@ -22,6 +22,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         title="Brussels",
+        entry_id="01JIRMKMI00000000000000000",
         domain=DOMAIN,
         data={
             CONF_LOCATION: {ATTR_LATITUDE: 50.84, ATTR_LONGITUDE: 4.35},

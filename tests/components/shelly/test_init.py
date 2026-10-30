@@ -1,6 +1,7 @@
 """Test cases for the Shelly component."""
 
 import asyncio
+from datetime import timedelta
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
@@ -20,10 +21,12 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_capture_events,
+    async_fire_time_changed,
     async_load_json_object_fixture,
 )
 
@@ -36,9 +39,13 @@ from homeassistant.components.shelly.const import (
     CONF_GEN,
     CONF_SLEEP_PERIOD,
     DOMAIN,
+    ENTRY_RELOAD_COOLDOWN,
+    FIRMWARE_UNSUPPORTED_ISSUE_ID,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
+    RPC_RECONNECT_INTERVAL,
     BLEScannerMode,
 )
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -49,7 +56,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     EVENT_DEVICE_REGISTRY_UPDATED,
@@ -59,7 +66,15 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
-from . import MOCK_MAC, init_integration, mutate_rpc_device_status, register_sub_device
+from . import (
+    MOCK_MAC,
+    init_integration,
+    mock_rest_update,
+    mutate_rpc_device_status,
+    register_sub_device,
+)
+
+FIRMWARE_UNSUPPORTED_ID = FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
 
 
 async def test_custom_coap_port(
@@ -198,20 +213,118 @@ async def test_device_unsupported_firmware(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     issue_registry: ir.IssueRegistry,
+    entity_registry: EntityRegistry,
 ) -> None:
-    """Test device init with unsupported firmware."""
+    """Test device init with unsupported firmware sets up only the update platform."""
+    # Old block firmware does not have CoIoT settings
+    monkeypatch.delitem(mock_block_device.settings, "coiot")
     monkeypatch.setattr(mock_block_device, "firmware_supported", False)
     monkeypatch.setattr(mock_rpc_device, "firmware_supported", False)
 
     entry = await init_integration(hass, gen)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    issue_id = "firmware_unsupported_123456789ABC"
-    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert entry.state is ConfigEntryState.LOADED
+    assert {
+        entity.domain
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    } == {UPDATE_DOMAIN}
+
+    assert (issue := issue_registry.async_get_issue(DOMAIN, FIRMWARE_UNSUPPORTED_ID))
     assert issue.config_entry_id == entry.entry_id
+    assert issue.is_fixable is True
+    assert issue.translation_key == "unsupported_firmware_fixable"
+    assert issue.data == {"entry_id": entry.entry_id}
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert not issue_registry.async_get_issue(DOMAIN, FIRMWARE_UNSUPPORTED_ID)
+
+
+async def test_block_device_unsupported_firmware_updated(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test block device entry is reloaded once firmware is supported."""
+    entity_id = "switch.test_name_channel_1"
+    coiot_settings = mock_block_device.settings["coiot"]
+    # Old block firmware does not have CoIoT settings
+    monkeypatch.delitem(mock_block_device.settings, "coiot")
+    monkeypatch.setattr(mock_block_device, "firmware_supported", False)
+
+    entry = await init_integration(hass, 1)
+    assert entry.state is ConfigEntryState.LOADED
+    assert not hass.states.get(entity_id)
+    assert issue_registry.async_get_issue(DOMAIN, FIRMWARE_UNSUPPORTED_ID)
+
+    # Firmware is still unsupported, no reload
+    await mock_rest_update(hass, freezer)
+    await mock_rest_update(hass, freezer, seconds=ENTRY_RELOAD_COOLDOWN)
+    assert not hass.states.get(entity_id)
+    mock_block_device.shutdown.assert_not_called()
+    # CoAP is not polled for unsupported firmware
+    mock_block_device.update.assert_not_called()
+
+    monkeypatch.setitem(mock_block_device.settings, "coiot", coiot_settings)
+    monkeypatch.setattr(mock_block_device, "firmware_supported", True)
+    await mock_rest_update(hass, freezer)
+    await mock_rest_update(hass, freezer, seconds=ENTRY_RELOAD_COOLDOWN)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert not issue_registry.async_get_issue(DOMAIN, FIRMWARE_UNSUPPORTED_ID)
+    # Device is shut down when the limited entry is unloaded for reload
+    mock_block_device.shutdown.assert_called_once()
+
+
+async def test_rpc_device_unsupported_firmware_updated(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test RPC device entry is reloaded once firmware is supported."""
+    entity_id = "switch.test_name_test_switch_0"
+    update_entity_id = "update.test_name_firmware"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    monkeypatch.setattr(mock_rpc_device, "firmware_supported", False)
+
+    entry = await init_integration(hass, 2)
+    assert entry.state is ConfigEntryState.LOADED
+    assert not hass.states.get(entity_id)
+    assert issue_registry.async_get_issue(DOMAIN, FIRMWARE_UNSUPPORTED_ID)
+
+    # Device reconnects still running unsupported firmware
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    freezer.tick(timedelta(seconds=RPC_RECONNECT_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(update_entity_id))
+    assert state.state != STATE_UNAVAILABLE
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert not hass.states.get(entity_id)
+
+    # Device reconnects after firmware update
+    monkeypatch.setattr(mock_rpc_device, "firmware_supported", True)
+    freezer.tick(timedelta(seconds=RPC_RECONNECT_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert not issue_registry.async_get_issue(DOMAIN, FIRMWARE_UNSUPPORTED_ID)
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -654,16 +767,16 @@ async def test_device_script_getcode_error(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_device_ledstrip_effects_error(
+@pytest.mark.parametrize("method", ["ledstrip_list_effects", "ledstrip_list_palettes"])
+async def test_device_ledstrip_list_error(
     hass: HomeAssistant,
     mock_ledstrip_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    method: str,
 ) -> None:
-    """Test device LED strip effects list error."""
+    """Test device LED strip list error."""
     monkeypatch.setattr(
-        mock_ledstrip_rpc_device,
-        "ledstrip_list_effects",
-        AsyncMock(side_effect=RpcCallError(0)),
+        mock_ledstrip_rpc_device, method, AsyncMock(side_effect=RpcCallError(0))
     )
 
     entry = await init_integration(hass, 2)
@@ -970,6 +1083,39 @@ async def test_rpc_ble_scanner_startup_wait_times_out(
     assert entry.state is ConfigEntryState.LOADED
     connect_event.set()
     await hass.async_block_till_done()
+
+
+async def test_rpc_setup_device_reconnecting_before_platforms(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test setup uses last known data if the device reconnects before platforms."""
+    entity_id = "sensor.test_name_voltmeter"
+
+    async def _device_reconnecting(*args: Any, **kwargs: Any) -> Mock:
+        # The device disconnected and is re-initializing, keeping last known data
+        monkeypatch.setattr(mock_rpc_device, "initialized", False)
+        return Mock()
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_connect_scanner",
+        _device_reconnecting,
+    ):
+        entry = await init_integration(
+            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        )
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "4.321"
 
 
 async def test_rpc_disabled_ble_scanner_does_not_wait_at_startup(

@@ -43,6 +43,11 @@
       }
     }
   },
+  "device": {
+    "lens": {
+      "name": "Lens {lens}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "animal": {
