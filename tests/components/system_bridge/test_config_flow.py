@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -514,6 +515,41 @@ async def test_reauth_connection_closed_error(hass: HomeAssistant) -> None:
     assert result3["reason"] == "reauth_successful"
 
 
+async def test_reauth_unknown_error(hass: HomeAssistant) -> None:
+    """Test reauth recovers from an unknown error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id=FIXTURE_UUID, data=FIXTURE_USER_INPUT
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await mock_config.start_reauth_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+        ),
+        patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.get_data",
+            side_effect=Exception,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authenticate"
+    assert result["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
 async def test_reauth_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -642,6 +678,48 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(AuthenticationException, "invalid_auth", id="invalid_auth"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_zeroconf_errors(
+    hass: HomeAssistant, exception: type[Exception], error: str
+) -> None:
+    """Test zeroconf recovers from errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=FIXTURE_ZEROCONF,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+        ),
+        patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.get_data",
+            side_effect=exception,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authenticate"
+    assert result["errors"] == {"base": error}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_already_configured(
