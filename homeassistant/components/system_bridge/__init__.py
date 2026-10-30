@@ -141,7 +141,10 @@ async def async_setup_entry(
                 and system.version is not None
                 and parse_version(system.version).release >= AUDIO_MIN_VERSION
             ):
-                await coordinator.async_get_data([Module.AUDIO])
+                try:
+                    await coordinator.async_get_data([Module.AUDIO])
+                except DataMissingException:
+                    _LOGGER.debug("No audio data yet, it will come from the listener")
     except AuthenticationException as exception:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,

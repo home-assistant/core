@@ -89,6 +89,30 @@ async def test_setup_requests_audio_when_supported(
     ) is requests_audio
 
 
+@pytest.mark.usefixtures("mock_version")
+async def test_setup_without_audio_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test setup carries on when the backend has no audio data yet."""
+    modules_data = replace(
+        mock_websocket_client.get_data.return_value,
+        system=replace(FIXTURE_SYSTEM, version="5.16.0"),
+    )
+    mock_websocket_client.get_data.return_value = None
+    mock_websocket_client.get_data.side_effect = [
+        modules_data,
+        DataMissingException("No data received for modules: ['audio']"),
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
     """Test migration."""
     config_entry = MockConfigEntry(
