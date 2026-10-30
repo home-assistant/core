@@ -90,7 +90,7 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
             identifiers={(DOMAIN, tank_id)},
             name=tank.name or f"Tank {tank_id}",
             manufacturer="Rotarex",
-            model="DIMES SRG",
+            model="Dimes Wave",
         )
 
     @property

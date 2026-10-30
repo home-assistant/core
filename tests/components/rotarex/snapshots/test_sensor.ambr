@@ -238,7 +238,7 @@
     'labels': set({
     }),
     'manufacturer': 'Rotarex',
-    'model': 'DIMES SRG',
+    'model': 'Dimes Wave',
     'model_id': None,
     'name': 'Tank 1',
     'name_by_user': None,
@@ -268,7 +268,7 @@
     'labels': set({
     }),
     'manufacturer': 'Rotarex',
-    'model': 'DIMES SRG',
+    'model': 'Dimes Wave',
     'model_id': None,
     'name': 'Tank 2',
     'name_by_user': None,
