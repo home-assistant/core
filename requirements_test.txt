@@ -10,7 +10,7 @@
 # ast-serialize is an internal mypy dependency
 ast-serialize==0.12.1
 astroid==4.3.4
-coverage==7.16.2
+coverage==7.17.0
 freezegun==1.5.5
 # librt is an internal mypy dependency
 librt==0.16.0
