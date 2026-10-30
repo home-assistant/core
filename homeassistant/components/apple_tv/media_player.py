@@ -30,6 +30,7 @@ from yarl import URL
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -40,13 +41,21 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_platforms,
+)
 from homeassistant.util import dt as dt_util
 
 from . import AppleTvConfigEntry, AppleTVManager
 from .browse_media import build_app_list
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_GROUP_CHANGED
 from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +82,7 @@ SUPPORT_APPLE_TV = (
     | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.SHUFFLE_SET
+    | MediaPlayerEntityFeature.GROUPING
 )
 
 
@@ -97,6 +107,8 @@ SUPPORT_FEATURE_MAPPING = {
     | MediaPlayerEntityFeature.SELECT_SOURCE,
     FeatureName.LaunchApp: MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.SELECT_SOURCE,
+    FeatureName.AddOutputDevices: MediaPlayerEntityFeature.GROUPING,
+    FeatureName.RemoveOutputDevices: MediaPlayerEntityFeature.GROUPING,
 }
 
 
@@ -137,6 +149,47 @@ def _catch_command_errors[_T: AppleTvMediaPlayer, **_P](
     return wrapper
 
 
+type _GroupingPlayers = dict[str, tuple[AppleTvMediaPlayer, AppleTV]]
+
+
+@callback
+def _grouping_players(hass: HomeAssistant) -> _GroupingPlayers:
+    """Return each player that can be grouped and its connection, by output device ID."""
+    players: _GroupingPlayers = {}
+    for platform in async_get_platforms(hass, DOMAIN):
+        if platform.domain != MEDIA_PLAYER_DOMAIN:
+            continue
+        for entity in platform.entities.values():
+            if (
+                isinstance(entity, AppleTvMediaPlayer)
+                and (atv := entity.grouping_atv)
+                and (output_device_id := atv.device_info.output_device_id)
+            ):
+                players[output_device_id] = (entity, atv)
+    return players
+
+
+def _grouping_unavailable(entity_id: str) -> ServiceValidationError:
+    """Return the error for a player that can't be grouped now."""
+    return ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="grouping_unavailable",
+        translation_placeholders={"entity_id": entity_id},
+    )
+
+
+def _find_leader(
+    players: _GroupingPlayers, output_device_id: str
+) -> tuple[AppleTvMediaPlayer, AppleTV] | None:
+    """Return the player that has the given device in its group."""
+    for leader_id, (player, atv) in players.items():
+        if leader_id != output_device_id and any(
+            device.identifier == output_device_id for device in atv.audio.output_devices
+        ):
+            return player, atv
+    return None
+
+
 class AppleTvMediaPlayer(
     AppleTVEntity, MediaPlayerEntity, PowerListener, AudioListener, PushListener
 ):
@@ -151,6 +204,24 @@ class AppleTvMediaPlayer(
         self._playing: Playing | None = None
         self._playing_last_updated: datetime | None = None
         self._app_list: dict[str, str] = {}
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle when an entity is about to be added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_GROUP_CHANGED, self._async_update_group_members
+            )
+        )
+        async_dispatcher_send(self.hass, SIGNAL_GROUP_CHANGED)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Let the other players rebuild their group members."""
+        super().async_entity_id_changed(old_entity_id)
+        async_dispatcher_send(self.hass, SIGNAL_GROUP_CHANGED)
 
     @callback
     @override
@@ -293,6 +364,7 @@ class AppleTvMediaPlayer(
 
         This is a callback function from pyatv.interface.AudioListener.
         """
+        async_dispatcher_send(self.hass, SIGNAL_GROUP_CHANGED)
 
     @property
     @override
@@ -343,6 +415,43 @@ class AppleTvMediaPlayer(
         if self._playing:
             return self._playing.content_identifier
         return None
+
+    @property
+    def grouping_atv(self) -> AppleTV | None:
+        """Return the connection, if this player can be grouped."""
+        # The manager drops a closed connection before the entity is told about it
+        if (atv := self.manager.atv) and atv.features.in_state(
+            FeatureState.Available, FeatureName.OutputDevices
+        ):
+            return atv
+        return None
+
+    @callback
+    def _async_update_group_members(self) -> None:
+        """Rebuild the group members from the output devices of the group leader."""
+        if self.atv is not self.manager.atv:
+            # Closed by the manager, this entity is told about it later
+            return
+        self._attr_group_members = None
+        if (atv := self.grouping_atv) and (
+            output_device_id := atv.device_info.output_device_id
+        ):
+            players = _grouping_players(self.hass)
+            leader: tuple[AppleTvMediaPlayer, AppleTV] = (self, atv)
+            # A group member reports no output devices, only its leader knows the group
+            if not atv.audio.output_devices:
+                leader = _find_leader(players, output_device_id) or leader
+            leader_player, leader_atv = leader
+            self._attr_group_members = [
+                leader_player.entity_id,
+                *(
+                    players[device.identifier][0].entity_id
+                    for device in leader_atv.audio.output_devices
+                    if device.identifier in players
+                    and players[device.identifier][0] is not leader_player
+                ),
+            ]
+        self.async_write_ha_state()
 
     @property
     @override
@@ -697,3 +806,61 @@ class AppleTvMediaPlayer(
         if self.atv:
             if app_id := self._app_list.get(source):
                 await self.atv.apps.launch_app(app_id)
+
+    def _member_output_device_id(
+        self, players_by_entity_id: dict[str, str], entity_id: str
+    ) -> str:
+        """Return the output device ID of a player that should join the group."""
+        entity_entry = er.async_get(self.hass).async_get(entity_id)
+        if (
+            entity_entry is None
+            or entity_entry.platform != DOMAIN
+            or entity_entry.domain != MEDIA_PLAYER_DOMAIN
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_grouping_entity",
+                translation_placeholders={"entity_id": entity_id},
+            )
+        if (output_device_id := players_by_entity_id.get(entity_id)) is None:
+            raise _grouping_unavailable(entity_id)
+        return output_device_id
+
+    @override
+    @_catch_command_errors
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Add other players to the group of this player."""
+        if (atv := self.grouping_atv) is None:
+            raise _grouping_unavailable(self.entity_id)
+        players_by_entity_id = {
+            player.entity_id: output_device_id
+            for output_device_id, (player, _) in _grouping_players(self.hass).items()
+        }
+        member_ids = [
+            self._member_output_device_id(players_by_entity_id, entity_id)
+            for entity_id in group_members
+            if entity_id != self.entity_id
+        ]
+        grouped = {device.identifier for device in atv.audio.output_devices}
+        # pyatv waits for a device update, which an unchanged group never sends
+        if new_ids := [
+            device_id for device_id in member_ids if device_id not in grouped
+        ]:
+            await atv.audio.add_output_devices(*new_ids)  # type: ignore[arg-type]
+
+    @override
+    @_catch_command_errors
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from its group, or end the group it leads."""
+        if (atv := self.grouping_atv) is None or (
+            output_device_id := atv.device_info.output_device_id
+        ) is None:
+            raise _grouping_unavailable(self.entity_id)
+        if others := [
+            device.identifier
+            for device in atv.audio.output_devices
+            if device.identifier != output_device_id
+        ]:
+            await atv.audio.remove_output_devices(*others)  # type: ignore[arg-type]
+        elif leader := _find_leader(_grouping_players(self.hass), output_device_id):
+            await leader[1].audio.remove_output_devices(output_device_id)  # type: ignore[arg-type]

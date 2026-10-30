@@ -248,8 +248,7 @@ class _MockPushUpdater(PushUpdater):
         self._active = False
 
 
-@pytest.fixture
-def mock_atv() -> AsyncMock:
+def _create_mock_atv() -> AsyncMock:
     """Create a mock Apple TV interface."""
     atv = AsyncMock()
     atv.close = MagicMock()
@@ -264,6 +263,21 @@ def mock_atv() -> AsyncMock:
     atv.device_info.build_number = "19J346"
     atv.device_info.operating_system = OperatingSystem.TvOS
     atv.device_info.mac = "AA:BB:CC:DD:EE:FF"
+    return atv
+
+
+@pytest.fixture
+def mock_atv() -> AsyncMock:
+    """Create a mock Apple TV interface."""
+    return _create_mock_atv()
+
+
+@pytest.fixture
+def mock_homepod_atv() -> AsyncMock:
+    """Create a mock interface for a second device, a HomePod."""
+    atv = _create_mock_atv()
+    atv.device_info.model = DeviceModel.HomePodMini
+    atv.device_info.mac = "AA:BB:CC:DD:EE:00"
     return atv
 
 
