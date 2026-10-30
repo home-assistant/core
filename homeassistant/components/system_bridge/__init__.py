@@ -44,7 +44,9 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
+    Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.UPDATE,
 ]
 
