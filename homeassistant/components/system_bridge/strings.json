@@ -17,6 +17,9 @@
         "data": {
           "token": "[%key:common::config_flow::data::api_token%]"
         },
+        "data_description": {
+          "token": "[%key:component::system_bridge::config::step::user::data_description::token%]"
+        },
         "description": "Please enter the token set in your configuration for {name}."
       },
       "user": {
@@ -24,6 +27,11 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "token": "Token"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the computer running System Bridge.",
+          "port": "The port System Bridge listens on. The default is 9170.",
+          "token": "The token from the System Bridge settings."
         },
         "description": "Please enter your connection details."
       }
