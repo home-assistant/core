@@ -741,26 +741,57 @@ async def test_repeated_command_failure_still_reaches_a_coordinator_without_a_po
     assert audyssey_coordinator.last_update_success is False
 
 
-@pytest.mark.usefixtures("client")
-async def test_update_audyssey_restores_availability(hass: HomeAssistant) -> None:
-    """A successful call clears a prior Audyssey coordinator failure.
+@pytest.mark.parametrize(
+    ("zone2_side_effect", "recovered"),
+    [
+        pytest.param(None, True, id="other_zone_answers"),
+        pytest.param(
+            AvrNetworkError("Network error", "test"), False, id="other_zone_fails"
+        ),
+    ],
+)
+async def test_update_audyssey_recovers_only_through_every_zone(
+    hass: HomeAssistant,
+    client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    zone2_side_effect: Exception | None,
+    recovered: bool,
+) -> None:
+    """One zone's successful call does not clear a receiver-wide failure.
 
-    The fetch is this zone's own rather than the coordinator's, so the
-    coordinator has to be told it succeeded - otherwise it would stay
-    failed until its next read even after this has updated the receiver's
-    properties.
+    With Telnet healthy, a cleared failure lets every later poll skip, so a
+    zone the failed read missed would never be read. The call instead queues
+    the failed coordinator's refresh, which reads every zone.
     """
-    entry = await setup_denonavr(hass)
-    mark_unavailable(entry.runtime_data.audyssey_coordinator)
+    zone2 = create_autospec(DenonAVR, instance=True)
+    zone2.name = TEST_NAME
+    zone2.zone = "Zone2"
+    zone2.input_func_list = []
+    zone2.sound_mode_list = []
+    client.zones = {TEST_ZONE: client, "Zone2": zone2}
+    client.telnet_connected = True
+    client.telnet_healthy = True
+    entry = await setup_denonavr(hass, options={CONF_USE_TELNET: True})
+    audyssey_coordinator = entry.runtime_data.audyssey_coordinator
+    mark_unavailable(audyssey_coordinator)
+    zone2.async_update_audyssey.side_effect = zone2_side_effect
+    zone2_reads = zone2.async_update_audyssey.await_count
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_UPDATE_AUDYSSEY,
         {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
-    assert entry.runtime_data.audyssey_coordinator.last_update_success is True
+    assert audyssey_coordinator.last_update_success is False
+
+    freezer.tick(timedelta(seconds=ACTION_REFRESH_DEBOUNCE_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert zone2.async_update_audyssey.await_count == zone2_reads + 1
+    assert audyssey_coordinator.last_update_success is recovered
 
 
 async def test_update_audyssey_action_survives_a_receiver_without_audyssey(

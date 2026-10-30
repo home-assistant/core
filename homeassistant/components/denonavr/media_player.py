@@ -529,11 +529,14 @@ class DenonDevice(CoordinatorEntity[DenonAvrDataUpdateCoordinator], MediaPlayerE
             # Audyssey-scoped, so that coordinator's data is suspect too.
             mark_unavailable(self._audyssey_coordinator)
             raise
-        # Clears a prior failure, which would otherwise force the
-        # coordinator's next read, and refreshes dynamic_eq. Not
-        # async_set_updated_data(): that cancels the refresh set_dynamic_eq
-        # queued, which reads the other zones while Telnet is down.
-        self._audyssey_coordinator.last_update_success = True
+        if not self._audyssey_coordinator.last_update_success:
+            # One zone answering does not confirm the others, and with Telnet
+            # healthy only a failed coordinator's refresh reads them all.
+            await self._audyssey_coordinator.async_request_refresh()
+            return
+        # Refreshes dynamic_eq. Not async_set_updated_data(): that cancels the
+        # refresh set_dynamic_eq queued, which reads the other zones while
+        # Telnet is down.
         self._audyssey_coordinator.async_update_listeners()
 
     @async_log_errors
