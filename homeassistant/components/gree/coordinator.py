@@ -59,16 +59,21 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.device = device
         self.device.add_handler(Response.RESULT, self.device_state_updated)
+        self.device.add_handler(Response.DATA, self.device_response_received)
 
         self._error_count: int = 0
         self._last_response_time: datetime = utcnow()
         self._last_error_time: datetime | None = None
 
+    def device_response_received(self, *args: Any) -> None:
+        """Record a device response rather than a successful request send."""
+        self._error_count = 0
+        self._last_response_time = utcnow()
+
     def device_state_updated(self, *args: Any) -> None:
         """Handle device state updates."""
         _LOGGER.debug("Device state updated: %s", json_dumps(args))
-        self._error_count = 0
-        self._last_response_time = utcnow()
+        self.device_response_received()
         self.async_set_updated_data(self.device.raw_properties)
 
     @override
@@ -87,7 +92,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._error_count += 1
 
             # Under normal conditions GREE units timeout every once in a while
-            if self.last_update_success and self._error_count >= MAX_ERRORS:
+            if self._error_count >= MAX_ERRORS:
                 raise UpdateFailed(
                     f"Device {self.name} at {self.device.device_info.ip} is"
                     " unavailable, could not send update request"
@@ -113,13 +118,12 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
             else:
                 self._error_count = 0
-            if self.last_update_success and self._error_count >= MAX_ERRORS:
+            if self._error_count >= MAX_ERRORS:
                 raise UpdateFailed(
                     f"Device {self.name} is unresponsive for"
                     " too long and now unavailable"
                 )
 
-        self._last_response_time = utcnow()
         return copy.deepcopy(self.device.raw_properties)
 
     async def push_state_update(self):
