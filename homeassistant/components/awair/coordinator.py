@@ -128,6 +128,5 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
                     self._device = devices[0]
                 result = await self._fetch_air_data(self._device)
             except AwairError as err:
-                LOGGER.error("Unexpected API error: %s", err)
                 raise UpdateFailed(err) from err
             return {result.device.uuid: result}

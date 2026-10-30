@@ -4,14 +4,13 @@ import logging
 
 import probatio
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.conversation import HOME_ASSISTANT_AGENT, async_get_agent
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

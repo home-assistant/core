@@ -26,6 +26,18 @@
       "cpu_speed": {
         "default": "mdi:speedometer"
       },
+      "disk_device_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_device_write_rate": {
+        "default": "mdi:database-arrow-up"
+      },
+      "disk_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_write_rate": {
+        "default": "mdi:database-arrow-up"
+      },
       "display_refresh_rate": {
         "default": "mdi:monitor"
       },
@@ -68,6 +80,15 @@
       "load": {
         "default": "mdi:percent"
       },
+      "load_average": {
+        "default": "mdi:gauge"
+      },
+      "load_average_15": {
+        "default": "mdi:gauge"
+      },
+      "load_average_5": {
+        "default": "mdi:gauge"
+      },
       "memory_free": {
         "default": "mdi:memory"
       },
@@ -76,6 +97,24 @@
       },
       "memory_used_percentage": {
         "default": "mdi:memory"
+      },
+      "network_download_rate": {
+        "default": "mdi:download-network"
+      },
+      "network_interface_download_rate": {
+        "default": "mdi:download-network"
+      },
+      "network_interface_link_rate": {
+        "default": "mdi:speedometer"
+      },
+      "network_interface_ssid": {
+        "default": "mdi:wifi"
+      },
+      "network_interface_upload_rate": {
+        "default": "mdi:upload-network"
+      },
+      "network_upload_rate": {
+        "default": "mdi:upload-network"
       },
       "os": {
         "default": "mdi:devices"

@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_PROMPT
 from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -27,11 +27,13 @@ from homeassistant.helpers.selector import (
 )
 
 from . import _create_client, _validate_api_key
-from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
+from .const import DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 
 class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -76,7 +78,7 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,
@@ -212,7 +214,11 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                         CONF_LLM_HASS_API,
                         default=selected_apis,
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             ),
@@ -279,7 +285,11 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             ),

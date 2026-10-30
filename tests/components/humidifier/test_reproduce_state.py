@@ -1,6 +1,7 @@
 """The tests for reproduction of state."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
@@ -21,8 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 ENTITY_1 = "humidifier.test1"
 ENTITY_2 = "humidifier.test2"

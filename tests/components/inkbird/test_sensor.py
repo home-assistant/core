@@ -15,6 +15,8 @@ from inkbird_ble import (
 )
 from inkbird_ble.parser import Model
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from sensor_state_data import SensorDeviceClass
 
 from homeassistant.components.bluetooth import async_last_service_info
@@ -40,9 +42,6 @@ from . import (
     SPS_SERVICE_INFO,
     SPS_WITH_CORRUPT_NAME_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 def _make_sensor_update(name: str, humidity: float) -> SensorUpdate:

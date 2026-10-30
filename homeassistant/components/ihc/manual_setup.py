@@ -85,7 +85,7 @@ SENSOR_SCHEMA = DEVICE_SCHEMA.extend(
 
 IHC_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_URL): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Optional(CONF_AUTOSETUP, default=True): cv.boolean,

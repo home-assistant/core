@@ -20,7 +20,7 @@ async def test_creating_entry_sets_up_climate_discovery(hass: HomeAssistant) -> 
         ),
         patch(
             "homeassistant.components.hisense_aehw4a1.climate.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -47,7 +47,7 @@ async def test_configuring_hisense_w4a1_create_entry(hass: HomeAssistant) -> Non
         ),
         patch(
             "homeassistant.components.hisense_aehw4a1.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
     ):
         await async_setup_component(
@@ -71,7 +71,7 @@ async def test_configuring_hisense_w4a1_not_creates_entry_for_device_not_found(
         ),
         patch(
             "homeassistant.components.hisense_aehw4a1.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
     ):
         await async_setup_component(
@@ -90,7 +90,7 @@ async def test_configuring_hisense_w4a1_not_creates_entry_for_empty_import(
     """Test that specifying config will not create an entry."""
     with patch(
         "homeassistant.components.hisense_aehw4a1.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         await async_setup_component(hass, hisense_aehw4a1.DOMAIN, {})
         await hass.async_block_till_done()

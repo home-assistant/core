@@ -5,15 +5,14 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.frontend import DOMAIN
 from homeassistant.components.frontend.storage import async_user_store
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

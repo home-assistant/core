@@ -5,20 +5,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-
-from homeassistant.components.schedule.const import (
-    ATTR_NEXT_EVENT,
-    CONF_FROM,
-    CONF_SUNDAY,
-    CONF_TO,
-    DOMAIN,
-)
-from homeassistant.components.schedule.trigger import TRIGGERS
-from homeassistant.const import CONF_ICON, CONF_NAME, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-
-from tests.common import async_fire_time_changed
-from tests.components.common import (
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     arm_trigger,
@@ -31,6 +19,17 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.schedule.const import (
+    CONF_FROM,
+    CONF_SUNDAY,
+    CONF_TO,
+    DOMAIN,
+    ScheduleEntityStateAttribute,
+)
+from homeassistant.components.schedule.trigger import TRIGGERS
+from homeassistant.const import CONF_ICON, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -83,13 +82,41 @@ def test_trigger_target_support() -> None:
     [
         *parametrize_trigger_states(
             trigger="schedule.block_ended",
-            target_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
-            other_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
+            target_states=[
+                (
+                    STATE_OFF,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:20:00-07:00"
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:30:00-07:00"
+                    },
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="schedule.block_started",
-            target_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
-            other_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:20:00-07:00"
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_OFF,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:30:00-07:00"
+                    },
+                )
+            ],
         ),
     ],
 )
@@ -125,13 +152,41 @@ async def test_schedule_state_trigger_behavior_each(
     [
         *parametrize_trigger_states(
             trigger="schedule.block_ended",
-            target_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
-            other_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
+            target_states=[
+                (
+                    STATE_OFF,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:20:00-07:00"
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:30:00-07:00"
+                    },
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="schedule.block_started",
-            target_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
-            other_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:20:00-07:00"
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_OFF,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:30:00-07:00"
+                    },
+                )
+            ],
         ),
     ],
 )
@@ -167,13 +222,41 @@ async def test_schedule_state_trigger_behavior_first(
     [
         *parametrize_trigger_states(
             trigger="schedule.block_ended",
-            target_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
-            other_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
+            target_states=[
+                (
+                    STATE_OFF,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:20:00-07:00"
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_ON,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:30:00-07:00"
+                    },
+                )
+            ],
         ),
         *parametrize_trigger_states(
             trigger="schedule.block_started",
-            target_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
-            other_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
+            target_states=[
+                (
+                    STATE_ON,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:20:00-07:00"
+                    },
+                )
+            ],
+            other_states=[
+                (
+                    STATE_OFF,
+                    {
+                        ScheduleEntityStateAttribute.NEXT_EVENT: "2022-08-30T13:30:00-07:00"
+                    },
+                )
+            ],
         ),
     ],
 )
@@ -238,44 +321,56 @@ async def test_schedule_state_trigger_back_to_back(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T22:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T22:00:00-07:00"
+    )
 
     # move time into first block
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T22:30:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T22:30:00-07:00"
+    )
 
     assert len(calls) == 1
     assert calls[0] == entity_id
     calls.clear()
 
     # move time into second block (back-to-back)
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T23:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T23:00:00-07:00"
+    )
 
     assert len(calls) == 1
     assert calls[0] == entity_id
     calls.clear()
 
     # move time to after second block to ensure it turns off
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T22:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-11T22:00:00-07:00"
+    )
 
     assert len(calls) == 0

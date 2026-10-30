@@ -4,6 +4,8 @@ import asyncio
 from unittest.mock import Mock
 
 from aiohttp import ClientError
+from pytest_homeassistant.common import MockConfigEntry, get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.isy994.const import DOMAIN, ISY_URL_POSTFIX
 from homeassistant.config_entries import ConfigEntryState
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_config_flow import MOCK_HOSTNAME, MOCK_UUID
-
-from tests.common import MockConfigEntry, get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENTRY_ID = "cad4af20b811990e757588519917d6af"
 MOCK_CONNECTED = "connected"

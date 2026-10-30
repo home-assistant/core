@@ -31,7 +31,7 @@ class HomeAssistantMicroBeesData:
     session: config_entry_oauth2_flow.OAuth2Session
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
@@ -45,10 +45,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) 
 
     _LOGGER.debug("Migration successful")
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> None:
     """Set up microBees from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -76,9 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) ->
         session=session,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MicroBeesConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

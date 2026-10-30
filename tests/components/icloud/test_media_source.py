@@ -8,6 +8,8 @@ import urllib.parse
 
 from aiohttp import hdrs
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.icloud.const import DOMAIN
 from homeassistant.components.icloud.media_source import PhotoCache
@@ -22,9 +24,6 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import AsyncMock, MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)

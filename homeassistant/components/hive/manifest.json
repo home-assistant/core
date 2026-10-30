@@ -1,6 +1,11 @@
 {
   "domain": "hive",
   "name": "Hive",
+  "categories": [
+    "climate.thermostats_heating",
+    "lighting.bulbs_lamps",
+    "plugs_switches"
+  ],
   "codeowners": ["@Rendili", "@KJonline"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hive",

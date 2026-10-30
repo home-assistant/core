@@ -1,14 +1,14 @@
 """Support to set a numeric value from a slider or text box."""
 
-from contextlib import suppress
+from dataclasses import dataclass
 import logging
-from typing import Any, Self, override
+from typing import override
 
 import probatio
 
-from homeassistant.components.number import NumberEntity
-from homeassistant.const import (  # noqa: F401
-    ATTR_MODE,
+from homeassistant.components.number import DEVICE_CLASS_UNITS, DEVICE_CLASSES_SCHEMA
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_ID,
     CONF_MODE,
@@ -16,37 +16,61 @@ from homeassistant.const import (  # noqa: F401
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import InputNumberEntityStateAttribute
+from .const import (
+    ATTR_VALUE,
+    CONF_INITIAL,
+    CONF_MAX,
+    CONF_MIN,
+    CONF_STEP,
+    DATA_INPUT_NUMBER,
+    DOMAIN,
+    SERVICE_DECREMENT,
+    SERVICE_INCREMENT,
+    SERVICE_SET_VALUE,
+    InputNumberService,
+    InputNumberServiceArgument,
+)
+from .entity import InputNumber
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "input_number"
-
-CONF_INITIAL = "initial"
-CONF_MIN = "min"
-CONF_MAX = "max"
-CONF_STEP = "step"
 
 MODE_SLIDER = "slider"
 MODE_BOX = "box"
 
-ATTR_INITIAL = "initial"
-ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
 
-SERVICE_SET_VALUE = "set_value"
-SERVICE_INCREMENT = "increment"
-SERVICE_DECREMENT = "decrement"
+__all__ = [
+    "ATTR_MAX",
+    "ATTR_MIN",
+    "ATTR_STEP",
+    "ATTR_VALUE",
+    "CONF_INITIAL",
+    "CONF_MAX",
+    "CONF_MIN",
+    "CONF_MODE",
+    "CONF_NAME",
+    "CONF_STEP",
+    "CONF_UNIT_OF_MEASUREMENT",
+    "DOMAIN",
+    "SERVICE_DECREMENT",
+    "SERVICE_INCREMENT",
+    "SERVICE_RELOAD",
+    "SERVICE_SET_VALUE",
+    "STORAGE_FIELDS",
+    "InputNumber",
+    "InputNumberService",
+    "InputNumberServiceArgument",
+]
 
 
 def _cv_input_number(cfg):
@@ -62,11 +86,22 @@ def _cv_input_number(cfg):
         raise probatio.Invalid(
             f"Initial value {state} not in range {minimum}-{maximum}"
         )
+    # Remove when number entities enforce valid units for their device class
+    if (
+        (device_class := cfg.get(CONF_DEVICE_CLASS)) is not None
+        and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        and (unit := cfg.get(CONF_UNIT_OF_MEASUREMENT)) not in units
+    ):
+        valid_units = sorted(str(valid) if valid else "no unit" for valid in units)
+        raise probatio.Invalid(
+            f"Unit of measurement '{unit}' is not valid for device class "
+            f"'{device_class}'; expected one of {valid_units}"
+        )
     return cfg
 
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Required(CONF_MIN): probatio.Coerce(float),
     probatio.Required(CONF_MAX): probatio.Coerce(float),
     probatio.Optional(CONF_INITIAL): probatio.Coerce(float),
@@ -75,6 +110,7 @@ STORAGE_FIELDS: VolDictType = {
     ),
     probatio.Optional(CONF_ICON): cv.icon,
     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
         [MODE_BOX, MODE_SLIDER]
     ),
@@ -94,6 +130,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     ),
                     probatio.Optional(CONF_ICON): cv.icon,
                     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                    probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
                     probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
                         [MODE_BOX, MODE_SLIDER]
                     ),
@@ -104,9 +141,16 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+
+
+@dataclass(slots=True)
+class InputNumberData:
+    """Runtime data for the input_number integration."""
+
+    component: EntityComponent[InputNumber]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -139,31 +183,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **conf} for id_, conf in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_INPUT_NUMBER] = InputNumberData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SET_VALUE,
-        {probatio.Required(ATTR_VALUE): probatio.Coerce(float)},
-        "async_set_native_value",
-    )
-
-    component.async_register_entity_service(SERVICE_INCREMENT, None, "async_increment")
-
-    component.async_register_entity_service(SERVICE_DECREMENT, None, "async_decrement")
-
+    async_setup_services(hass)
     return True
 
 
@@ -205,114 +227,3 @@ class NumberStorageCollection(collection.DictStorageCollection):
         """Return a new updated data object."""
         update_data = self.SCHEMA(update_data)
         return {CONF_ID: item[CONF_ID]} | update_data
-
-
-# pylint: disable-next=home-assistant-enforce-class-module
-class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
-    """Representation of a slider."""
-
-    _unrecorded_attributes = frozenset({InputNumberEntityStateAttribute.EDITABLE})
-
-    _attr_should_poll = False
-    editable: bool
-
-    def __init__(self, config: ConfigType) -> None:
-        """Initialize an input number."""
-        self._initial_value: float | None = config.get(CONF_INITIAL)
-        self._attr_native_value = self._initial_value
-        self._update_config_attributes(config)
-
-    def _update_config_attributes(self, config: ConfigType) -> None:
-        """Update attributes based on the config."""
-        self._attr_icon = config.get(CONF_ICON)
-        self._attr_mode = config[CONF_MODE]
-        self._attr_name = config.get(CONF_NAME)
-        self._attr_native_min_value = config[CONF_MIN]
-        self._attr_native_max_value = config[CONF_MAX]
-        self._attr_native_step = config[CONF_STEP]
-        self._attr_unique_id = config[CONF_ID]
-        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @classmethod
-    @override
-    def from_storage(cls, config: ConfigType) -> Self:
-        """Return entity instance initialized from storage."""
-        input_num = cls(config)
-        input_num.editable = True
-        return input_num
-
-    @classmethod
-    @override
-    def from_yaml(cls, config: ConfigType) -> Self:
-        """Return entity instance initialized from yaml."""
-        input_num = cls(config)
-        input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
-        input_num.editable = False
-        return input_num
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {
-            InputNumberEntityStateAttribute.INITIAL: self._initial_value,
-            InputNumberEntityStateAttribute.EDITABLE: self.editable,
-        }
-
-    @override
-    async def async_added_to_hass(self):
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if self._attr_native_value is not None:
-            return
-
-        value: float | None = None
-        if state := await self.async_get_last_state():
-            with suppress(ValueError):
-                value = float(state.state)
-
-        # Check against None because value can be 0
-        if (
-            value is not None
-            and self.native_min_value <= value <= self.native_max_value
-        ):
-            self._attr_native_value = value
-        else:
-            self._attr_native_value = self.native_min_value
-
-    @override
-    async def async_set_native_value(self, value):
-        """Set new value."""
-        num_value = float(value)
-
-        if num_value < self.native_min_value or num_value > self.native_max_value:
-            raise probatio.Invalid(
-                f"Invalid value for {self.entity_id}: {value} (range "
-                f"{self.native_min_value} - {self.native_max_value})"
-            )
-
-        self._attr_native_value = num_value
-        self.async_write_ha_state()
-
-    async def async_increment(self):
-        """Increment value."""
-        await self.async_set_native_value(
-            min(self._attr_native_value + self.native_step, self.native_max_value)
-        )
-
-    async def async_decrement(self):
-        """Decrement value."""
-        await self.async_set_native_value(
-            max(self._attr_native_value - self.native_step, self.native_min_value)
-        )
-
-    @override
-    async def async_update_config(self, config: ConfigType) -> None:
-        """Handle when the config is updated."""
-        self._update_config_attributes(config)
-        # just in case min/max values changed
-        if self._attr_native_value is None:
-            return
-        self._attr_native_value = min(self._attr_native_value, self.native_max_value)
-        self._attr_native_value = max(self._attr_native_value, self.native_min_value)
-        self.async_write_ha_state()

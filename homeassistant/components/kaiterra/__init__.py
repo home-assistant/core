@@ -41,7 +41,7 @@ KAITERRA_DEVICE_SCHEMA = probatio.Schema(
 
 KAITERRA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_DEVICES): probatio.All(
             probatio.EnsureList(), [KAITERRA_DEVICE_SCHEMA]
         ),

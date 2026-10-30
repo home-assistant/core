@@ -132,7 +132,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
             probatio.Required(CONF_PROTOCOL): probatio.In(PROTOCOL_CHOICES),
             probatio.Required(CONF_HOST): str,
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 
@@ -186,7 +186,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             probatio.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
             probatio.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
-            probatio.Required(CONF_PASSWORD, default=password): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD), default=password): str,
             probatio.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
         }
 
@@ -267,7 +267,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST, default=discovery_info[CONF_HOST]
             ): TextSelector(TextSelectorConfig(read_only=True)),
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 

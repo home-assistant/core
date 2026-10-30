@@ -19,11 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 AUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
     }
 )
 
-PASSWORD_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): cv.string})
+PASSWORD_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string}
+)
 
 
 class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):

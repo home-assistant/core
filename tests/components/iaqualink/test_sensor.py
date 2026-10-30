@@ -8,6 +8,7 @@ from iaqualink.client import AqualinkClient
 from iaqualink.systems.iaqua.device import IaquaSensor
 from iaqualink.systems.iaqua.system import IaquaSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
@@ -22,8 +23,6 @@ from .conftest import (
     get_aqualink_system,
     setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(

@@ -32,6 +32,7 @@ FIXTURE_DEFAULT_CHARACTERISTICS = {
     cometblue_const.CHARACTERISTIC_MODEL: b"Comet Blue",
     cometblue_const.CHARACTERISTIC_VERSION: b"0.0.10",
     cometblue_const.CHARACTERISTIC_MANUFACTURER: b"Eurotronic GmbH",
+    cometblue_const.CHARACTERISTIC_DATETIME: b":\x15\x0c\n\x1a",
     cometblue_const.CHARACTERISTIC_HOLIDAY_1: [
         128,
         27,

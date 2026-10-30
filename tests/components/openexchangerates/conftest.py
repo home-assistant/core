@@ -4,10 +4,9 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openexchangerates.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -23,7 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.openexchangerates.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

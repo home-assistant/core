@@ -53,11 +53,64 @@
   },
   "entity": {
     "binary_sensor": {
+      "automatic_charging_paused": {
+        "name": "Automatic charging paused"
+      },
+      "backup_power_active": {
+        "name": "Backup power active"
+      },
+      "dynamic_load_balancing_overload_active": {
+        "name": "Load balancing overload"
+      },
       "electricity_price_low": {
         "name": "Electricity price low"
+      },
+      "grid_congestion_active": {
+        "name": "Grid congestion"
+      },
+      "home_optimization_active": {
+        "name": "Home optimization active"
+      },
+      "overload_protection": {
+        "name": "Overload protection"
+      }
+    },
+    "select": {
+      "control_mode": {
+        "name": "Control mode",
+        "state": {
+          "day_ahead_arbitrage": "Day-ahead arbitrage",
+          "dynamic_charging": "Dynamic charging",
+          "home_optimization": "Home optimization",
+          "self_consumption": "Self-consumption"
+        }
       }
     },
     "sensor": {
+      "backup_power_capacity": {
+        "name": "Backup power capacity"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "backup_power_active": "Backup power active",
+          "charging": "Charging",
+          "cooling": "Cooling",
+          "discharging": "Discharging",
+          "fault": "Fault",
+          "off": "[%key:common::state::off%]",
+          "operative": "Operative",
+          "permanent_fault": "Permanent fault",
+          "preheat": "Preheating",
+          "shutting_down": "Shutting down",
+          "sleeping": "Sleeping",
+          "standby": "[%key:common::state::standby%]",
+          "starting": "Starting",
+          "throttled": "Throttled",
+          "unknown_state": "Unknown state",
+          "updating": "Updating"
+        }
+      },
       "current_electricity_price": {
         "name": "Current electricity price"
       },
@@ -71,6 +124,12 @@
       },
       "current_sustainability_score": {
         "name": "Current sustainability score"
+      },
+      "cycle_count": {
+        "name": "Charge cycles"
+      },
+      "earned_today": {
+        "name": "Earned today"
       },
       "electricity_cost_this_month": {
         "name": "Electricity cost this month"
@@ -100,6 +159,12 @@
       "electricity_produced_this_month": {
         "name": "Electricity returned this month"
       },
+      "energy_charged_today": {
+        "name": "Energy charged today"
+      },
+      "energy_discharged_today": {
+        "name": "Energy discharged today"
+      },
       "gas_cost_this_month": {
         "name": "Gas cost this month"
       },
@@ -115,6 +180,27 @@
       "highest_electricity_price_tomorrow": {
         "name": "Highest electricity price tomorrow"
       },
+      "inverter_state": {
+        "name": "Inverter state",
+        "state": {
+          "backup_power_active": "[%key:component::zonneplan::entity::sensor::battery_state::state::backup_power_active%]",
+          "charging": "[%key:component::zonneplan::entity::sensor::battery_state::state::charging%]",
+          "cooling": "[%key:component::zonneplan::entity::sensor::battery_state::state::cooling%]",
+          "discharging": "[%key:component::zonneplan::entity::sensor::battery_state::state::discharging%]",
+          "fault": "[%key:component::zonneplan::entity::sensor::battery_state::state::fault%]",
+          "off": "[%key:common::state::off%]",
+          "operative": "[%key:component::zonneplan::entity::sensor::battery_state::state::operative%]",
+          "permanent_fault": "[%key:component::zonneplan::entity::sensor::battery_state::state::permanent_fault%]",
+          "preheat": "[%key:component::zonneplan::entity::sensor::battery_state::state::preheat%]",
+          "shutting_down": "[%key:component::zonneplan::entity::sensor::battery_state::state::shutting_down%]",
+          "sleeping": "[%key:component::zonneplan::entity::sensor::battery_state::state::sleeping%]",
+          "standby": "[%key:common::state::standby%]",
+          "starting": "[%key:component::zonneplan::entity::sensor::battery_state::state::starting%]",
+          "throttled": "[%key:component::zonneplan::entity::sensor::battery_state::state::throttled%]",
+          "unknown_state": "[%key:component::zonneplan::entity::sensor::battery_state::state::unknown_state%]",
+          "updating": "[%key:component::zonneplan::entity::sensor::battery_state::state::updating%]"
+        }
+      },
       "lowest_electricity_price_today": {
         "name": "Lowest electricity price today"
       },
@@ -123,6 +209,9 @@
       },
       "next_hour_electricity_price": {
         "name": "Next hour electricity price"
+      },
+      "total_earned": {
+        "name": "Total earned"
       }
     }
   },
@@ -130,8 +219,17 @@
     "api_error": {
       "message": "Unexpected error from the Zonneplan API"
     },
+    "battery_not_found": {
+      "message": "The Zonneplan API returned no data for the home battery"
+    },
     "cannot_connect": {
       "message": "Error communicating with the Zonneplan API"
+    },
+    "charge_point_not_found": {
+      "message": "The Zonneplan API returned no data for the charge point"
+    },
+    "day_ahead_arbitrage_not_set_up": {
+      "message": "Day-ahead arbitrage has not been set up for this battery yet. Set it up in the Zonneplan app first."
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate"

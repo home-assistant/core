@@ -13,7 +13,7 @@ from .coordinator import RidwellConfigEntry, RidwellDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RidwellConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RidwellConfigEntry) -> None:
     """Set up Ridwell from a config entry."""
     coordinator = RidwellDataUpdateCoordinator(hass, entry)
     await coordinator.async_initialize()
@@ -21,8 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RidwellConfigEntry) -> b
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def options_update_listener(
@@ -32,12 +30,12 @@ async def options_update_listener(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RidwellConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RidwellConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate an old config entry."""
     version = entry.version
 
@@ -59,5 +57,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
     LOGGER.debug("Migration to version %s successful", version)
-
-    return True

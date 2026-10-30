@@ -1,12 +1,12 @@
 """DataUpdateCoordinator for the airtouch integration."""
 
+from datetime import timedelta
 import logging
 from typing import override
 
 from airtouch4pyapi import AirTouch
 from airtouch4pyapi.airtouch import AirTouchStatus
 
-from homeassistant.components.climate import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -14,6 +14,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 type AirTouch4ConfigEntry = ConfigEntry[AirtouchDataUpdateCoordinator]
 

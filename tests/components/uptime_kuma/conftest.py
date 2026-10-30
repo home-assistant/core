@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pythonkuma import MonitorType, UptimeKumaMonitor, UptimeKumaVersion
 from pythonkuma.models import MonitorStatus
 from pythonkuma.update import LatestRelease
@@ -11,8 +12,6 @@ from pythonkuma.update import LatestRelease
 from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
-
-from tests.common import MockConfigEntry
 
 ADDON_SERVICE_INFO = HassioServiceInfo(
     config={
@@ -29,7 +28,7 @@ ADDON_SERVICE_INFO = HassioServiceInfo(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.uptime_kuma.async_setup_entry", return_value=True
+        "homeassistant.components.uptime_kuma.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

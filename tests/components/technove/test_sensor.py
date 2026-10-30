@@ -6,6 +6,11 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from syrupy.assertion import SnapshotAssertion
 from technove import Station, Status, TechnoVEError
 
@@ -15,12 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")

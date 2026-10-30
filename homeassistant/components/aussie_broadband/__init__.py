@@ -20,7 +20,7 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AussieBroadbandConfigEntry
-) -> bool:
+) -> None:
     """Set up Aussie Broadband from a config entry."""
     # Login to the Aussie Broadband API and retrieve the current service list
     client = AussieBB(
@@ -51,11 +51,9 @@ async def async_setup_entry(
     entry.runtime_data = services
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AussieBroadbandConfigEntry
-) -> bool:
+) -> None:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

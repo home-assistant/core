@@ -1,5 +1,6 @@
 """Tests for the venstar integration."""
 
+from pytest_homeassistant.common import async_load_fixture
 import requests_mock
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -7,8 +8,6 @@ from homeassistant.components.venstar.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_load_fixture
 
 TEST_MODELS = ["t2k", "colortouch"]
 

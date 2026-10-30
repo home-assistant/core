@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 from aioflo.errors import RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.flo.const import CONF_USE_SSO
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")

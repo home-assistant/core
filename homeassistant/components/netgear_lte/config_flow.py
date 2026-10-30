@@ -47,7 +47,7 @@ class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
                 probatio.Schema(
                     {
                         probatio.Required(CONF_HOST): str,
-                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
                 user_input or {CONF_HOST: DEFAULT_HOST},

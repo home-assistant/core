@@ -49,7 +49,7 @@ async def async_setup_entry(
 class ATWWaterHeater(MelCloudHomeATWUnitEntity, WaterHeaterEntity):
     """Representation of the hot water tank of a MELCloud Home ATW unit."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -58,13 +58,13 @@ class ATWWaterHeater(MelCloudHomeATWUnitEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the tank water temperature."""
         return self.unit.tank_water_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target tank water temperature."""
         return self.unit.set_tank_water_temperature
 

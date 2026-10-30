@@ -2,11 +2,11 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.common import MockConfigEntry
 
 TOGRILL_SERVICE_INFO = BluetoothServiceInfo(
     name="Pro-05",

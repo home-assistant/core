@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from guntamatic.heater import NoSerialException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.guntamatic.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_DATA, MOCK_PARSE_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(

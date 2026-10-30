@@ -1,6 +1,7 @@
 """The tests for template helpers."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.alarm_control_panel import (
@@ -44,8 +45,6 @@ from .conftest import (
     setup_entity,
     setup_mock_devices,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def _setup_and_test_yaml_device_action(

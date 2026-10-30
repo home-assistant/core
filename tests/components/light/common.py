@@ -6,6 +6,8 @@ components. Instead call the service directly.
 
 from typing import Any, Literal
 
+from pytest_homeassistant.common import MockToggleEntity
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -36,8 +38,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockToggleEntity
 
 
 async def async_turn_on(

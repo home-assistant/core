@@ -1,0 +1,69 @@
+{
+  "vehicle": {
+    "name": "Enyaq Coupé",
+    "vin": "TMBJM7NP2M1TMP511",
+    "licensePlate": "EL107FP",
+    "odometer": {
+      "mileageInKm": 9618,
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "status": {
+      "overall": {
+        "doorsLocked": "NO",
+        "locked": "YES",
+        "doors": "CLOSED",
+        "windows": "CLOSED",
+        "lights": "OFF",
+        "reliableLockStatus": "LOCKED"
+      },
+      "detail": {
+        "sunroof": "CLOSED",
+        "trunk": "CLOSED",
+        "bonnet": "CLOSED"
+      },
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "charging": {
+      "isVehicleInSavedLocation": false,
+      "status": {
+        "chargingRateInKilometersPerHour": 20.0,
+        "chargePowerInKw": 11.0,
+        "fullyChargedAt": "2024-01-15T14:30:00Z",
+        "state": "CHARGING",
+        "chargeType": "AC",
+        "battery": {
+          "remainingCruisingRangeInMeters": 513000,
+          "stateOfChargeInPercent": 99
+        }
+      },
+      "settings": {
+        "targetStateOfChargeInPercent": 80,
+        "autoUnlockPlugWhenCharged": "OFF"
+      },
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "fuelStatus": {
+      "carType": "ELECTRIC",
+      "totalRangeInKm": 513,
+      "primaryEngineRange": {
+        "engineType": "ELECTRIC",
+        "currentSocInPercent": 99,
+        "remainingRangeInKm": 513
+      },
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "airConditioning": {
+      "state": "OFF",
+      "targetTemperature": {
+        "value": 21.5,
+        "unit": "CELSIUS"
+      },
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "auxiliaryHeating": {
+      "state": "OFF",
+      "durationInSeconds": 1200,
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    }
+  }
+}

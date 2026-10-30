@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiolyric.exceptions import LyricAuthenticationException
 from aiolyric.objects.location import LyricLocation
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lyric.api import OAuth2SessionLyric
 from homeassistant.components.lyric.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .conftest import build_mock_lyric, location_json, lyric_exception, thermostat_json
-
-from tests.common import MockConfigEntry
 
 
 async def test_oauth_implementation_not_available(

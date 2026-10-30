@@ -21,8 +21,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import BringConfigEntry
 from .const import DOMAIN
+from .coordinator import BringConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 autocomplete="email",
             ),
         ),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

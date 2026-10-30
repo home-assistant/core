@@ -1,6 +1,7 @@
 {
   "domain": "zinvolt",
   "name": "Zinvolt",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zinvolt",
@@ -8,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["zinvolt"],
   "quality_scale": "bronze",
-  "requirements": ["zinvolt==1.0.1"]
+  "requirements": ["zinvolt==1.1.1"]
 }

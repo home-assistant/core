@@ -1,6 +1,7 @@
 {
   "domain": "feedreader",
   "name": "Feedreader",
+  "categories": ["news_social_media"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/feedreader",

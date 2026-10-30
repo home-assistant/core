@@ -1,6 +1,7 @@
 {
   "domain": "harman_kardon_avr",
   "name": "Harman Kardon AVR",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/harman_kardon_avr",
   "iot_class": "local_polling",

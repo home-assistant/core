@@ -7,6 +7,7 @@ import pypck
 from pypck import lcn_defs
 from pypck.device import DeviceConnection, Serials
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.lcn import PchkConnectionManager
 from homeassistant.components.lcn.config_flow import LcnFlowHandler
@@ -15,8 +16,6 @@ from homeassistant.components.lcn.helpers import AddressType, generate_unique_id
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 LATEST_CONFIG_ENTRY_VERSION = (LcnFlowHandler.VERSION, LcnFlowHandler.MINOR_VERSION)
 

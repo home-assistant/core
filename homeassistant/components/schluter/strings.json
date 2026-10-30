@@ -1,0 +1,7 @@
+{
+  "exceptions": {
+    "set_temperature_failed": {
+      "message": "Failed to set the thermostat temperature."
+    }
+  }
+}

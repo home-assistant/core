@@ -3,12 +3,12 @@
 import asyncio
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
 
 from . import _ssdp_headers, init_ssdp_component
-
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 @patch(

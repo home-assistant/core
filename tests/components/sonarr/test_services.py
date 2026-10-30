@@ -9,6 +9,7 @@ from aiopyarr import (
     SonarrQueue,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sonarr.const import (
@@ -27,8 +28,6 @@ from homeassistant.components.sonarr.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

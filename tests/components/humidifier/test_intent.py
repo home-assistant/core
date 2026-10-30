@@ -1,6 +1,7 @@
 """Tests for the humidifier intents."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -30,8 +31,6 @@ from homeassistant.helpers.intent import (
     async_handle,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 
 async def test_intent_set_humidity(hass: HomeAssistant) -> None:

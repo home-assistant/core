@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
+from .const import CONF_SITE_ID, DATA_API_CLIENT, DATA_SERVICES, DOMAIN, LOGGER
 from .coordinator import (
     SolarEdgeDataService,
     SolarEdgeDetailsDataService,
@@ -275,7 +275,6 @@ BATTERY_SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="battery_power",
         json_key="power",
-        translation_key="battery_power",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -296,6 +295,7 @@ async def async_setup_entry(
 
     api = entry.runtime_data[DATA_API_CLIENT]
     sensor_factory = SolarEdgeSensorFactory(hass, entry, entry.data[CONF_SITE_ID], api)
+    entry.runtime_data[DATA_SERVICES] = sensor_factory.all_services
 
     # Set up and refresh base services first
     for service in sensor_factory.all_services:

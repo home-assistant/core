@@ -32,8 +32,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import initialize_bot
-from .bot import TelegramBotConfigEntry, TelegramNotificationService
+from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
 from .const import (
     ATTR_PARSER,
     BOT_NAME,
@@ -81,7 +80,7 @@ STEP_USER_DATA_SCHEMA: probatio.Schema = probatio.Schema(
                 translation_key="platforms",
             )
         ),
-        probatio.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -137,7 +136,7 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: probatio.Schema = probatio.Schema(
 )
 STEP_REAUTH_DATA_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

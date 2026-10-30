@@ -124,6 +124,9 @@
     }
   },
   "exceptions": {
+    "device_status_failed": {
+      "message": "Failed to obtain the status of device {device_id}"
+    },
     "invalid_config_entry": {
       "message": "Config entry not found or not loaded!"
     },

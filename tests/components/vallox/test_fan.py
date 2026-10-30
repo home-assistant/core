@@ -3,6 +3,7 @@
 from unittest.mock import call
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vallox_websocket_api import MetricData, MetricValue, Profile, ValloxApiException
 
 from homeassistant.components.fan import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import patch_set_fan_speed, patch_set_profile, patch_set_values
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

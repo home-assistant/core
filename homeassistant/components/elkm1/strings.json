@@ -57,6 +57,14 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_config_item": {
+      "message": "Invalid configuration for {item}"
+    },
+    "login_failed": {
+      "message": "ElkM1 login failed for {host}"
+    }
+  },
   "issues": {
     "deprecated_sensor": {
       "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nUpdate your dashboards, templates, automations and scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",

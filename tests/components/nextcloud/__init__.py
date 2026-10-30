@@ -2,13 +2,13 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.nextcloud.const import DOMAIN
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .const import MOCKED_ENTRY_ID
-
-from tests.common import MockConfigEntry
 
 
 def mock_config_entry(config: dict) -> MockConfigEntry:

@@ -1,5 +1,11 @@
 """Test repairs for doorbird."""
 
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.doorbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -8,9 +14,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_not_found_exception
 from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
-
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 
 async def test_change_schedule_fails(
@@ -29,6 +32,7 @@ async def test_change_schedule_fails(
     issue = list(issue_registry.issues.values())[0]
     issue_id = issue.issue_id
     assert issue.domain == DOMAIN
+    assert issue.config_entry_id == doorbird_entry.entry.entry_id
 
     client = await hass_client()
 

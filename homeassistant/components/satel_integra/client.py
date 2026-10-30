@@ -1,6 +1,7 @@
 """Satel Integra client."""
 
 from collections.abc import Callable
+import logging
 
 from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
@@ -28,6 +29,8 @@ from .const import (
     SUBENTRY_TYPE_ZONE,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class SatelClient:
     """Client to connect to Satel Integra."""
@@ -38,6 +41,7 @@ class SatelClient:
         """Initialize the client wrapper."""
         self.hass = hass
         self.config_entry = entry
+        self._connection_status_unsubscribe: Callable[[], None] | None = None
 
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
@@ -77,12 +81,7 @@ class SatelClient:
             integration_key=entry.data[CONF_ENCRYPTION_KEY],
         )
 
-    async def async_connect(
-        self,
-        zones_update_callback: Callable[[dict[int, int]], None],
-        outputs_update_callback: Callable[[dict[int, int]], None],
-        partitions_update_callback: Callable[[], None],
-    ) -> None:
+    async def async_connect(self) -> None:
         """Start controller connection."""
         try:
             await self.controller.connect(raise_exceptions=True)
@@ -102,12 +101,6 @@ class SatelClient:
                 translation_key="connection_initialization_failed",
             ) from ex
 
-        self.controller.register_callbacks(
-            alarm_status_callback=partitions_update_callback,
-            zone_changed_callback=zones_update_callback,
-            output_changed_callback=outputs_update_callback,
-        )
-
         try:
             await self.controller.start(enable_monitoring=True)
         except SatelMonitoringStartError as ex:
@@ -116,7 +109,32 @@ class SatelClient:
                 translation_key="monitoring_start_failed",
             ) from ex
 
+        self._connection_status_unsubscribe = (
+            self.controller.add_connection_status_callback(
+                self._on_connection_state_change
+            )
+        )
+        self.config_entry.async_on_unload(self._unsubscribe_connection_status)
+
     async def async_close(self) -> None:
         """Close the connection."""
 
+        self._unsubscribe_connection_status()
         await self.controller.close()
+
+    def _unsubscribe_connection_status(self) -> None:
+        """Unsubscribe from connection status updates."""
+        if self._connection_status_unsubscribe is not None:
+            self._connection_status_unsubscribe()
+            self._connection_status_unsubscribe = None
+
+    def _on_connection_state_change(self) -> None:
+        """Handle connection state changes."""
+        if self.controller.connected:
+            _LOGGER.info(
+                "Satel Integra device is back online: %s", self.config_entry.title
+            )
+        else:
+            _LOGGER.info(
+                "Satel Integra device is unavailable: %s", self.config_entry.title
+            )

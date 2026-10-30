@@ -1,7 +1,7 @@
 """VRM Coordinator and Client."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from typing import override
 
 from victron_vrm import VictronVRMClient
@@ -38,14 +38,14 @@ async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastSto
     now = dt_util.now(time_zone)
     today = now.date()
     start = int(
-        datetime.datetime.combine(
-            today - datetime.timedelta(days=1), datetime.time.min, time_zone
+        dt.datetime.combine(
+            today - dt.timedelta(days=1), dt.time.min, time_zone
         ).timestamp()
     )
     # Get timestamp of the end of 6th day from now
     end = int(
-        datetime.datetime.combine(
-            today + datetime.timedelta(days=6), datetime.time.min, time_zone
+        dt.datetime.combine(
+            today + dt.timedelta(days=6), dt.time.min, time_zone
         ).timestamp()
     )
     stats = await client.installations.stats(
@@ -87,7 +87,7 @@ class VictronRemoteMonitoringDataUpdateCoordinator(
             LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=datetime.timedelta(minutes=60),
+            update_interval=dt.timedelta(minutes=60),
         )
 
     @override

@@ -64,7 +64,7 @@ def _ordered_shared_schema(schema_input):
             CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")
         ): str,
         probatio.Required(
-            CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")
+            probatio.Secret(CONF_PASSWORD), default=schema_input.get(CONF_PASSWORD, "")
         ): str,
     }
 

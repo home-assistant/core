@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from panasonic_viera import TV_TYPE_ENCRYPTED, TV_TYPE_NONENCRYPTED
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.panasonic_viera.const import (
     ATTR_FRIENDLY_NAME,
@@ -22,7 +23,9 @@ from homeassistant.const import ATTR_MANUFACTURER, CONF_HOST, CONF_NAME, CONF_PO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from tests.common import MockConfigEntry
+MOCK_USER_INPUT = {
+    CONF_HOST: "0.0.0.0",
+}
 
 MOCK_BASIC_DATA = {
     CONF_HOST: "0.0.0.0",
@@ -39,6 +42,11 @@ MOCK_ENCRYPTION_DATA = {
     CONF_APP_ID: "mock-app-id",
     CONF_ENCRYPTION_KEY: "mock-encryption-key",
 }
+
+MOCK_INPUTS = ["TV", "HDMI1", "HDMI2"]
+
+MOCK_MAC = "d8:af:f1:12:34:56"
+MOCK_UDN = "uuid:4D454930-0100-1000-8001-D8AFF1123456"
 
 MOCK_DEVICE_INFO = {
     ATTR_FRIENDLY_NAME: DEFAULT_NAME,
@@ -85,6 +93,14 @@ def get_mock_remote(
     mock_remote.send_key = Mock()
 
     mock_remote.get_volume = Mock(return_value=100)
+
+    mock_remote.list_inputs = Mock(return_value=list(MOCK_INPUTS))
+    mock_remote.get_input = Mock(return_value=MOCK_INPUTS[0])
+
+    def set_input(input_name, timeout=5):
+        mock_remote.get_input.return_value = input_name
+
+    mock_remote.set_input = Mock(side_effect=set_input)
 
     return mock_remote
 

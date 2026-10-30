@@ -97,7 +97,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+                    probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
                     probatio.Required(
                         CONF_COUNTRY, default=self._get_default_country_code()
                     ): CountrySelector(

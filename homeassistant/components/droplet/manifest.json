@@ -1,6 +1,7 @@
 {
   "domain": "droplet",
   "name": "Droplet",
+  "categories": ["water.meters_leak_detection"],
   "codeowners": ["@sarahseidman"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/droplet",

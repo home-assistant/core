@@ -7,7 +7,7 @@ from typing import Any, override
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
-from ical.event import Event
+from ical.event import Event, EventStatus
 from ical.exceptions import CalendarParseError
 from ical.store import EventStore, EventStoreError
 from ical.timeline import Timeline, materialize_timeline
@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import LocalCalendarConfigEntry
-from .const import CONF_CALENDAR_NAME
+from .const import CONF_CALENDAR_NAME, DOMAIN
 from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +92,11 @@ class LocalCalendarEntity(CalendarEntity):
         """Return the next upcoming event."""
         if self._timeline is None:
             return None
-        events = self._timeline.active_after(dt_util.now())
+        events = (
+            event
+            for event in self._timeline.active_after(dt_util.now())
+            if not _is_cancelled(event)
+        )
         if event := next(events, None):
             return _get_calendar_event(event)
         return None
@@ -108,7 +112,11 @@ class LocalCalendarEntity(CalendarEntity):
                 start_date,
                 end_date,
             )
-            return [_get_calendar_event(event) for event in events]
+            return [
+                _get_calendar_event(event)
+                for event in events
+                if not _is_cancelled(event)
+            ]
 
         return await self.hass.async_add_executor_job(events_in_range)
 
@@ -160,7 +168,10 @@ class LocalCalendarEntity(CalendarEntity):
                     recurrence_range=range_value,
                 )
             except EventStoreError as err:
-                raise HomeAssistantError(f"Error while deleting event: {err}") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="delete_event_error",
+                ) from err
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -192,7 +203,10 @@ class LocalCalendarEntity(CalendarEntity):
             try:
                 await self.hass.async_add_executor_job(apply_edit)
             except EventStoreError as err:
-                raise HomeAssistantError(f"Error while updating event: {err}") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="update_event_error",
+                ) from err
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -229,14 +243,22 @@ def _parse_event(event: dict[str, Any]) -> Event:
         raise probatio.Invalid("Error parsing event input fields") from err
 
 
+def _is_cancelled(event: Event) -> bool:
+    """Return whether an event has been called off.
+
+    rfc5545 keeps a cancelled event in the calendar rather than deleting it,
+    and an imported calendar can carry one. A calendar entity does not return
+    such events.
+    """
+    return event.status == EventStatus.CANCELLED
+
+
 def _get_status(event: Event) -> CalendarEventStatus | None:
     """Return the status of an event, if a calendar entity reports that status.
 
-    ical models the full rfc5545 set, which includes cancelled, and an imported
-    calendar can contain such an event. A calendar entity does not report a
-    cancelled status, so anything outside the supported set maps to no status.
-    ical's enum is a plain (str, Enum) rather than a StrEnum, so its value has
-    to be read explicitly.
+    Cancelled events are filtered out before this, so they never reach here.
+    ical's enum is a plain (str, Enum) rather than a StrEnum, so its value has to
+    be read explicitly.
     """
     if event.status is None:
         return None

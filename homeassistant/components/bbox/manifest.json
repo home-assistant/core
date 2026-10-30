@@ -1,6 +1,10 @@
 {
   "domain": "bbox",
   "name": "Bbox",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/bbox",
   "iot_class": "local_polling",

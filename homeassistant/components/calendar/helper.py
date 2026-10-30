@@ -1,7 +1,7 @@
 """Helper functions for the calendar integration."""
 
 from collections.abc import Callable, Iterable
-import datetime
+import datetime as dt
 from itertools import groupby
 from typing import Any
 
@@ -18,12 +18,12 @@ VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
 
 # Ensure events created in Home Assistant have a positive duration
-MIN_NEW_EVENT_DURATION = datetime.timedelta(seconds=1)
+MIN_NEW_EVENT_DURATION = dt.timedelta(seconds=1)
 
 
 # Events must have a non-negative duration e.g. Google Calendar can create zero
 # duration events in the UI.
-MIN_EVENT_DURATION = datetime.timedelta(seconds=0)
+MIN_EVENT_DURATION = dt.timedelta(seconds=0)
 
 
 def has_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
@@ -34,7 +34,7 @@ def has_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
         for k in keys:
             if (
                 (value := obj.get(k))
-                and isinstance(value, datetime.datetime)
+                and isinstance(value, dt.datetime)
                 and value.tzinfo is None
             ):
                 raise probatio.Invalid("Expected all values to have a timezone")
@@ -50,7 +50,7 @@ def has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, 
         """Test that all keys that are datetime values have the same timezone."""
         tzinfos = []
         for key in keys:
-            if not (value := obj.get(key)) or not isinstance(value, datetime.datetime):
+            if not (value := obj.get(key)) or not isinstance(value, dt.datetime):
                 return obj
             tzinfos.append(value.tzinfo)
         uniq_values = groupby(tzinfos)
@@ -67,7 +67,7 @@ def as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
         """Convert all keys that are datetime values to local timezone."""
         for k in keys:
-            if (value := obj.get(k)) and isinstance(value, datetime.datetime):
+            if (value := obj.get(k)) and isinstance(value, dt.datetime):
                 obj[k] = dt_util.as_local(value)
         return obj
 
@@ -75,7 +75,7 @@ def as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
 
 
 def has_min_duration(
-    start_key: str, end_key: str, min_duration: datetime.timedelta
+    start_key: str, end_key: str, min_duration: dt.timedelta
 ) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Verify that the time span between start and end has a minimum duration."""
 
@@ -99,7 +99,7 @@ def has_positive_interval(
 
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
         if (duration := obj.get(duration_key)) is not None:
-            if duration <= datetime.timedelta(seconds=0):
+            if duration <= dt.timedelta(seconds=0):
                 raise probatio.Invalid(f"Expected positive duration ({duration})")
             return obj
 
@@ -159,7 +159,7 @@ def event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
     result: dict[str, str] = {}
     for name, value in obj:
-        if isinstance(value, (datetime.datetime, datetime.date)):
+        if isinstance(value, (dt.datetime, dt.date)):
             result[name] = value.isoformat()
         elif value is not None:
             result[name] = str(value)
@@ -170,9 +170,9 @@ def api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     """Convert CalendarEvent dataclass items to the API format."""
     result: dict[str, Any] = {}
     for name, value in obj:
-        if isinstance(value, datetime.datetime):
+        if isinstance(value, dt.datetime):
             result[name] = {"dateTime": dt_util.as_local(value).isoformat()}
-        elif isinstance(value, datetime.date):
+        elif isinstance(value, dt.date):
             result[name] = {"date": value.isoformat()}
         else:
             result[name] = value
@@ -191,16 +191,16 @@ def list_events_dict_factory(
 
 
 def get_datetime_local(
-    dt_or_d: datetime.datetime | datetime.date,
-) -> datetime.datetime:
+    dt_or_d: dt.datetime | dt.date,
+) -> dt.datetime:
     """Convert a calendar event date/datetime to a datetime if needed."""
-    if isinstance(dt_or_d, datetime.datetime):
+    if isinstance(dt_or_d, dt.datetime):
         return dt_util.as_local(dt_or_d)
     return dt_util.start_of_local_day(dt_or_d)
 
 
-def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
+def _get_api_date(dt_or_d: dt.datetime | dt.date) -> dict[str, str]:
     """Convert a calendar event date/datetime to a datetime if needed."""
-    if isinstance(dt_or_d, datetime.datetime):
+    if isinstance(dt_or_d, dt.datetime):
         return {"dateTime": dt_util.as_local(dt_or_d).isoformat()}
     return {"date": dt_or_d.isoformat()}

@@ -1,72 +1,101 @@
 """Tests for the Electra Smart integration setup."""
 
+from json import loads
 from unittest.mock import AsyncMock, Mock, patch
 
-from electrasmart.device import OperationMode
+from electrasmart.api import ElectraApiError, ElectraIntruderLockoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.electrasmart.const import (
-    CONF_IMEI,
-    CONF_PHONE_NUMBER,
-    DOMAIN,
-)
-from homeassistant.const import CONF_TOKEN
+from homeassistant import config_entries
+from homeassistant.components.electrasmart.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
 
-
-@pytest.fixture(name="mock_device")
-def mock_device_fixture() -> Mock:
-    """Return a mocked Electra AC device."""
-    device = Mock(
-        mac="a8032ab12345",
-        model="Electra A/C",
-        manufactor="Electra",
-        features=[],
-        is_disconnected=Mock(return_value=False),
-        is_on=Mock(return_value=False),
-        is_horizontal_swing=Mock(return_value=False),
-        is_vertical_swing=Mock(return_value=False),
-        get_fan_speed=Mock(return_value=OperationMode.FAN_SPEED_AUTO),
-        get_mode=Mock(return_value=OperationMode.MODE_COOL),
-        get_sensor_temperature=Mock(return_value=24),
-        get_temperature=Mock(return_value=22),
-        get_shabat_mode=Mock(return_value=False),
-    )
-    # `name` is a reserved Mock kwarg, so it must be set after construction.
-    device.name = "Living Room"
-    return device
-
-
+@pytest.mark.usefixtures("setup_integration")
 async def test_device_registry(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_device: Mock,
+    config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device registry entry, including the network MAC connection."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="0521234567",
-        data={
-            CONF_TOKEN: "token",
-            CONF_IMEI: "2b950000024051000000000000000000",
-            CONF_PHONE_NUMBER: "0521234567",
-        },
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "a8032ab12345"), config_entry.entry_id
     )
-    entry.add_to_hass(hass)
+    assert device_entry == snapshot
 
-    mock_api = Mock(devices=[mock_device], fetch_devices=AsyncMock())
+
+async def test_reauth_on_intruder_lockout(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A locked out account asks for reauthentication instead of retrying setup."""
+    config_entry.add_to_hass(hass)
+
+    mock_generate_token = loads(
+        await async_load_fixture(hass, "generate_token_response.json", DOMAIN)
+    )
+    mock_api = Mock(
+        devices=[],
+        fetch_devices=AsyncMock(
+            side_effect=ElectraIntruderLockoutError("Failed to retrieve SID")
+        ),
+    )
+    with (
+        patch(
+            "homeassistant.components.electrasmart.ElectraAPI", return_value=mock_api
+        ),
+        patch(
+            "electrasmart.api.ElectraAPI.generate_new_token",
+            return_value=mock_generate_token,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+async def test_setup_retries_when_the_api_cannot_be_reached(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """An API error during setup asks Home Assistant to retry."""
+    config_entry.add_to_hass(hass)
+
+    mock_api = Mock(
+        devices=[],
+        fetch_devices=AsyncMock(side_effect=ElectraApiError("Cannot reach the API")),
+    )
     with patch(
         "homeassistant.components.electrasmart.ElectraAPI", return_value=mock_api
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "a8032ab12345"), entry.entry_id
-    )
-    assert device_entry == snapshot
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_update_listener_reloads_the_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_api: Mock
+) -> None:
+    """An updated config entry reloads the integration."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.electrasmart.ElectraAPI", return_value=mock_api
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+
+        assert hass.config_entries.async_update_entry(config_entry, title="Electra")
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert mock_api.fetch_devices.await_count == 2

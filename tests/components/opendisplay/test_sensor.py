@@ -11,6 +11,16 @@ from habluetooth import CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 from opendisplay import voltage_to_percent
 from opendisplay.models.enums import CapacityEstimator, PowerMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
@@ -20,13 +30,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import DEVICE_CONFIG, TEST_ADDRESS, VALID_SERVICE_INFO, make_service_info
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 

@@ -19,7 +19,7 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WillowConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WillowConfigEntry) -> None:
     """Set up Willow from a config entry."""
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
@@ -46,9 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WillowConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WillowConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WillowConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

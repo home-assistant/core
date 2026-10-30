@@ -6,15 +6,14 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_capture_events
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import DOMAIN, const, dashboard
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component, async_capture_events
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

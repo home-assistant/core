@@ -3,14 +3,13 @@
 import json
 
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from .test_common import get_device_discovery_payload, send_discovery_message
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 @pytest.mark.freeze_time("2024-02-26 01:21:34")

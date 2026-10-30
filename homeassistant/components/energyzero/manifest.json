@@ -1,6 +1,7 @@
 {
   "domain": "energyzero",
   "name": "EnergyZero",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/energyzero",

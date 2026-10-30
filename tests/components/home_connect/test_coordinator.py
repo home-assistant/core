@@ -42,6 +42,8 @@ from aiohomeconnect.model.program import (
 from aiohttp import ConnectionTimeoutError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_OPEN,
@@ -73,9 +75,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import SERVER_ACCESS_TOKEN
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 INITIAL_FETCH_CLIENT_METHODS = [
     "get_settings",

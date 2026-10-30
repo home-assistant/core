@@ -15,6 +15,8 @@ from aioesphomeapi import (
     build_device_unique_id,
 )
 import pytest
+from pytest_homeassistant.common import mock_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -60,9 +62,6 @@ from .conftest import (
     MockGenericDeviceEntryType,
     reconnect_with_updated_entity_info,
 )
-
-from tests.common import mock_platform
-from tests.typing import WebSocketGenerator
 
 # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
 # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY

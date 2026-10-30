@@ -1,6 +1,7 @@
 """Helpers to help coordinate updates."""
 
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -14,20 +15,24 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NotAuthenticatedError,
     ServiceUnavailableError,
+    SomfyServiceError,
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
 )
 from pyoverkiz.models import (
+    Action,
     Device,
     DeviceEvent,
     DeviceRemovedEvent,
     DeviceStateChangedEvent,
     ExecutionRegisteredEvent,
     ExecutionStateChangedEvent,
+    Gateway,
+    GatewayEvent,
     Place,
 )
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     OAuth2TokenRequestError,
@@ -40,12 +45,27 @@ from homeassistant.util.decorator import Registry
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    RATE_LIMIT_RETRY_AFTER,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_EXECUTION,
+)
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Any], Coroutine[Any, Any, None]]
 ] = Registry()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OverkizDeviceCommand:
+    """A command sent to a device as part of an execution."""
+
+    device_url: str
+    command_name: str
 
 
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
@@ -62,6 +82,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         *,
         client: OverkizClient,
         devices: list[Device],
+        gateways: list[Gateway],
         places: Place | None,
     ) -> None:
         """Initialize global data updater."""
@@ -76,7 +97,12 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.executions: dict[str, list[dict[str, str]]] = {}
+        self.executions: dict[str, set[OverkizDeviceCommand]] = {}
+        # A gateway reports its devices' states from cache while it is
+        # unreachable, so nothing in the device payload reveals the outage.
+        self.unreachable_gateways: set[str] = {
+            gateway.gateway_id for gateway in gateways if gateway.alive is False
+        }
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
 
@@ -103,11 +129,19 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsError as exception:
-            raise UpdateFailed("Too many requests, try again later.") from exception
+            # retry_after replaces the update interval rather than extending it.
+            raise UpdateFailed(
+                "Too many requests, try again later.",
+                retry_after=max(
+                    RATE_LIMIT_RETRY_AFTER, self._default_update_interval
+                ).total_seconds(),
+            ) from exception
         except MaintenanceError as exception:
             raise UpdateFailed("Server is down for maintenance.") from exception
         except ServiceUnavailableError as exception:
             raise UpdateFailed("Server is unavailable.") from exception
+        except SomfyServiceError as exception:
+            raise UpdateFailed("Somfy service error.") from exception
         except InvalidEventListenerIdError as exception:
             raise UpdateFailed(exception) from exception
         except (TimeoutError, ClientConnectorError) as exception:
@@ -156,10 +190,46 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         return areas
 
+    @callback
+    def async_execution_started(self) -> None:
+        """Show the in-progress state and poll fast until executions finish."""
+        self.async_update_listeners()
+        if not self.is_stateless and self.update_interval != UPDATE_INTERVAL_EXECUTION:
+            self.update_interval = UPDATE_INTERVAL_EXECUTION
+            self._schedule_refresh()
+
     def set_update_interval(self, update_interval: timedelta) -> None:
         """Set the update interval and store this value."""
         self.update_interval = update_interval
         self._default_update_interval = update_interval
+
+    def register_execution(self, exec_id: str, actions: list[Action]) -> None:
+        """Track the device commands of an execution until it completes or fails."""
+        # The action queue can merge concurrent action groups under one
+        # exec_id, so accumulate rather than overwrite.
+        self.executions.setdefault(exec_id, set()).update(
+            OverkizDeviceCommand(
+                device_url=action.device_url, command_name=command.name
+            )
+            for action in actions
+            for command in action.commands
+        )
+
+
+@EVENT_HANDLERS.register(EventName.GATEWAY_DOWN)
+async def on_gateway_down(
+    coordinator: OverkizDataUpdateCoordinator, event: GatewayEvent
+) -> None:
+    """Handle gateway down event."""
+    coordinator.unreachable_gateways.add(event.gateway_id)
+
+
+@EVENT_HANDLERS.register(EventName.GATEWAY_ALIVE)
+async def on_gateway_alive(
+    coordinator: OverkizDataUpdateCoordinator, event: GatewayEvent
+) -> None:
+    """Handle gateway alive event."""
+    coordinator.unreachable_gateways.discard(event.gateway_id)
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_AVAILABLE)
@@ -200,6 +270,12 @@ async def on_device_state_changed(
     if event.device_url not in coordinator.devices:
         return
 
+    # GATEWAY_ALIVE is the only other way out of unreachable_gateways, so a
+    # missed one would strand every entity on that gateway indefinitely.
+    coordinator.unreachable_gateways.discard(
+        coordinator.devices[event.device_url].identifier.gateway_id
+    )
+
     for state in event.device_states:
         device = coordinator.devices[event.device_url]
         device.states[state.name] = state
@@ -227,11 +303,10 @@ async def on_execution_registered(
     coordinator: OverkizDataUpdateCoordinator, event: ExecutionRegisteredEvent
 ) -> None:
     """Handle execution registered event."""
-    if event.exec_id not in coordinator.executions:
-        coordinator.executions[event.exec_id] = []
+    coordinator.executions.setdefault(event.exec_id, set())
 
     if not coordinator.is_stateless:
-        coordinator.update_interval = timedelta(seconds=1)
+        coordinator.update_interval = UPDATE_INTERVAL_EXECUTION
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)

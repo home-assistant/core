@@ -87,7 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: GeonetnzVolcanoConfigEntry
-) -> bool:
+) -> None:
     """Set up the GeoNet NZ Volcano component as config entry."""
     radius = config_entry.data[CONF_RADIUS]
     unit_system = config_entry.data[CONF_UNIT_SYSTEM]
@@ -100,15 +100,14 @@ async def async_setup_entry(
     config_entry.runtime_data = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GeonetnzVolcanoConfigEntry
-) -> bool:
+) -> None:
     """Unload an GeoNet NZ Volcano component config entry."""
     await entry.runtime_data.async_stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 class GeonetnzVolcanoFeedEntityManager:

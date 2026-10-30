@@ -6,25 +6,23 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import const
 from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.ecobee.climate import (
+from homeassistant.components.ecobee.climate import PRESET_AWAY_INDEFINITELY, Thermostat
+from homeassistant.components.ecobee.const import DOMAIN
+from homeassistant.components.ecobee.services import (
     ATTR_PRESET_MODE,
     ATTR_SENSOR_LIST,
-    PRESET_AWAY_INDEFINITELY,
-    Thermostat,
+    _async_get_thermostats,
 )
-from homeassistant.components.ecobee.const import DOMAIN
-from homeassistant.components.ecobee.services import _async_get_thermostats
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.ecobee"
 

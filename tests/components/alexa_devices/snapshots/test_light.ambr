@@ -1,0 +1,83 @@
+# serializer version: 1
+# name: test_all_entities[light.echo_glow_test-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'Campfire',
+        'Solid Color',
+      ]),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.HS: 'hs'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('alexa_devices', 'glow_test_serial_number')]>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.echo_glow_test',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'alexa_devices',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 4>,
+    'translation_key': None,
+    'unique_id': 'glow_test_serial_number-light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[light.echo_glow_test-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 76,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.HS: 'hs'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Campfire',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'Campfire',
+        'Solid Color',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Glow Test',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
+        120.0,
+        50.0,
+      ),
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
+        128,
+        255,
+        128,
+      ),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.HS: 'hs'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
+        0.245,
+        0.545,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.echo_glow_test',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

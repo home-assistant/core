@@ -11,18 +11,29 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 
-from .const import DATA_COMPONENT, SERVICE_GET_FORECASTS, WeatherEntityFeature
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    WeatherEntityFeature,
+    WeatherService,
+    WeatherServiceArgument,
+)
 
 if TYPE_CHECKING:
-    from . import WeatherEntity
+    from .entity import WeatherEntity
 
 
 def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
     """Raise error on attempt to get an unsupported forecast."""
-    raise HomeAssistantError(
-        f"Weather entity '{entity_id}' does not support '{forecast_type}' forecast"
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="unsupported_forecast_type",
+        translation_placeholders={
+            "entity_id": entity_id,
+            "forecast_type": forecast_type,
+        },
     )
 
 
@@ -30,7 +41,7 @@ async def _async_get_forecasts_service(
     weather: WeatherEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """Get weather forecast."""
-    forecast_type = service_call.data["type"]
+    forecast_type = service_call.data[WeatherServiceArgument.TYPE]
     supported_features = weather.supported_features or 0
     if forecast_type == "daily":
         if (supported_features & WeatherEntityFeature.FORECAST_DAILY) == 0:
@@ -57,8 +68,12 @@ async def _async_get_forecasts_service(
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the weather services."""
     hass.data[DATA_COMPONENT].async_register_entity_service(
-        SERVICE_GET_FORECASTS,
-        {probatio.Required("type"): probatio.In(("daily", "hourly", "twice_daily"))},
+        WeatherService.GET_FORECASTS,
+        {
+            probatio.Required(WeatherServiceArgument.TYPE): probatio.In(
+                ("daily", "hourly", "twice_daily")
+            )
+        },
         _async_get_forecasts_service,
         required_features=[
             WeatherEntityFeature.FORECAST_DAILY,

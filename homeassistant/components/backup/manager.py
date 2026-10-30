@@ -33,15 +33,10 @@ from homeassistant.helpers import (
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
-from homeassistant.util.async_iterator import AsyncIteratorReader
+from homeassistant.util.async_iterator import AsyncIteratorReader, async_close_iterator
 
 from . import util as backup_util
-from .agent import (
-    BackupAgent,
-    BackupAgentError,
-    BackupAgentPlatformProtocol,
-    LocalBackupAgent,
-)
+from .agent import BackupAgent, BackupAgentPlatformProtocol, LocalBackupAgent
 from .config import (
     BackupConfig,
     CreateBackupParametersDict,
@@ -60,6 +55,7 @@ from .const import (
 from .models import (
     AddonInfo,
     AgentBackup,
+    BackupAgentError,
     BackupError,
     BackupManagerError,
     BackupNotFound,
@@ -382,6 +378,7 @@ class BackupManager:
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = BlockedEvent()
         self.last_action_event: ManagerStateEvent | None = None
+        self.last_upload_events: dict[str, UploadBackupEvent] = {}
         self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
         self._backup_platform_event_subscriptions: list[
             Callable[[BackupPlatformEvent], None]
@@ -409,6 +406,53 @@ class BackupManager:
             start.async_at_started(self.hass, set_manager_idle_after_start)
 
         await self.load_platforms()
+
+    @callback
+    def async_rename_agent(
+        self,
+        old_agent_id: str,
+        new_agent_id: str,
+        *,
+        overwrite_orphaned_settings: bool = False,
+    ) -> None:
+        """Rename a backup agent in the backup config and known backups.
+
+        Integrations call this when the ID of one of their backup agents changes,
+        for example when migrating the unique ID of a config entry. Settings of the
+        new agent ID are orphaned if none of the integration's config entries,
+        including disabled ones, provide it, for example when they were left
+        behind by a removed config entry. Integrations which know this pass
+        overwrite_orphaned_settings to replace them with those of the old agent ID.
+
+        Raises ValueError if the agent IDs belong to different integrations, if
+        the new agent ID is loaded, or if both agent IDs are configured and
+        overwrite_orphaned_settings is not set.
+        """
+        if old_agent_id.partition(".")[0] != new_agent_id.partition(".")[0]:
+            raise ValueError(
+                f"Can't rename backup agent {old_agent_id} to {new_agent_id} of"
+                " another integration"
+            )
+        if old_agent_id == new_agent_id:
+            return
+        config = self.config.data
+        if new_agent_id in self.backup_agents or (
+            not overwrite_orphaned_settings
+            and (
+                old_agent_id in config.agents
+                or old_agent_id in config.create_backup.agent_ids
+            )
+            and (
+                new_agent_id in config.agents
+                or new_agent_id in config.create_backup.agent_ids
+            )
+        ):
+            raise ValueError(f"Backup agent {new_agent_id} already exists")
+        if overwrite_orphaned_settings:
+            self.config.remove_agent(new_agent_id)
+            self.known_backups.remove_failed_agent(new_agent_id)
+        self.config.rename_agent(old_agent_id, new_agent_id)
+        self.known_backups.rename_failed_agent(old_agent_id, new_agent_id)
 
     @property
     def state(self) -> BackupManagerState:
@@ -595,6 +639,16 @@ class BackupManager:
                 )
             agent = self.backup_agents[agent_id]
 
+            # Agents may open the stream multiple times, e.g. when retrying, and
+            # may not consume or close it if the upload fails
+            opened_streams: list[AsyncIterator[bytes]] = []
+
+            async def open_stream_and_track() -> AsyncIterator[bytes]:
+                """Open a stream and keep track of it."""
+                stream = await open_stream_func()
+                opened_streams.append(stream)
+                return stream
+
             latest_uploaded_bytes = 0
 
             @callback
@@ -624,12 +678,20 @@ class BackupManager:
                 latest_uploaded_bytes = bytes_uploaded
                 upload_progress_debouncer.async_schedule_call()
 
-            await agent.async_upload_backup(
-                open_stream=open_stream_func,
-                backup=_backup,
-                on_progress=on_upload_progress,
-            )
-            upload_progress_debouncer.async_cancel()
+            # Tell listeners which agents this backup is uploaded to.
+            _emit_upload_progress()
+            try:
+                await agent.async_upload_backup(
+                    open_stream=open_stream_and_track,
+                    backup=_backup,
+                    on_progress=on_upload_progress,
+                )
+            finally:
+                upload_progress_debouncer.async_cancel()
+                for stream in opened_streams:
+                    await async_close_iterator(stream)
+                if streamer:
+                    await streamer.wait()
             self.async_on_backup_event(
                 UploadBackupEvent(
                     manager_state=self.state,
@@ -638,8 +700,6 @@ class BackupManager:
                     total_bytes=_backup.size,
                 )
             )
-            if streamer:
-                await streamer.wait()
 
         sync_backup_results = await asyncio.gather(
             *(upload_backup_to_agent(agent_id) for agent_id in agent_ids),
@@ -1291,6 +1351,9 @@ class BackupManager:
                     # create backup was successful, update
                     # last_completed_automatic_backup
                     self.config.data.last_completed_automatic_backup = dt_util.now()
+                    self.config.data.last_completed_automatic_backup_size = (
+                        written_backup.backup.size
+                    )
                     self.store.save()
                 backup_success = True
 
@@ -1444,9 +1507,13 @@ class BackupManager:
         """Forward event to subscribers."""
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
-        if not isinstance(event, UploadBackupEvent):
+        if isinstance(event, UploadBackupEvent):
+            self.last_upload_events[event.agent_id] = event
+        else:
             self.last_event = event
-            if not isinstance(event, (BlockedEvent, IdleEvent)):
+            if isinstance(event, (BlockedEvent, IdleEvent)):
+                self.last_upload_events.clear()
+            else:
                 self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
@@ -1605,7 +1672,10 @@ class BackupManager:
         except backup_util.DecryptError as err:
             raise BackupManagerError(str(err)) from err
         finally:
-            reader.close()
+            if isinstance(reader, AsyncIteratorReader):
+                await reader.aclose()
+            else:
+                reader.close()
 
 
 class KnownBackups:
@@ -1650,6 +1720,28 @@ class KnownBackups:
             failed_agent_ids=list(chain(agent_errors, unavailable_agents)),
             failed_folders=list(failed_folders),
         )
+        self._manager.store.save()
+
+    def rename_failed_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+        """Rename an agent in the failed agents of known backups."""
+        for backup in self._backups.values():
+            # The new agent ID may already be listed, only keep it once
+            backup.failed_agent_ids = list(
+                dict.fromkeys(
+                    new_agent_id if agent_id == old_agent_id else agent_id
+                    for agent_id in backup.failed_agent_ids
+                )
+            )
+        self._manager.store.save()
+
+    def remove_failed_agent(self, agent_id: str) -> None:
+        """Remove an agent from the failed agents of known backups."""
+        for backup in self._backups.values():
+            backup.failed_agent_ids = [
+                failed_agent_id
+                for failed_agent_id in backup.failed_agent_ids
+                if failed_agent_id != agent_id
+            ]
         self._manager.store.save()
 
     def get(self, backup_id: str) -> KnownBackup | None:
@@ -2078,12 +2170,15 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         else:
             async_add_executor_job = self._hass.async_add_executor_job
             path = self.temp_backup_dir / f"{backup_id}.tar"
-            stream = await open_stream()
             await async_add_executor_job(make_backup_dir, self.temp_backup_dir)
             f = await async_add_executor_job(path.open, "wb")
             try:
-                async for chunk in stream:
-                    await async_add_executor_job(f.write, chunk)
+                stream = await open_stream()
+                try:
+                    async for chunk in stream:
+                        await async_add_executor_job(f.write, chunk)
+                finally:
+                    await async_close_iterator(stream)
             finally:
                 await async_add_executor_job(f.close)
 

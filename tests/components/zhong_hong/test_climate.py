@@ -5,6 +5,7 @@ import threading
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zhong_hong_hvac.protocol import StatusFanMode, StatusOperation, StatusSwitch
 
 from homeassistant.components.climate import (
@@ -44,8 +45,6 @@ from homeassistant.helpers.translation import async_get_translations
 
 from . import setup_integration
 from .conftest import DEVICE_ADDRESS, ENTITY_ID, FakeGateway, build_status
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Spelled out instead of importing SCAN_INTERVAL and READBACK_DELAY, so that
 # changing either in the integration makes these tests fail instead of

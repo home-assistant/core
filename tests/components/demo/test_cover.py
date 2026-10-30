@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -32,8 +33,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {"cover": {"platform": "demo"}}
 ENTITY_COVER = "cover.living_room_window"

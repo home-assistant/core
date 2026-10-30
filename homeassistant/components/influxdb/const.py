@@ -147,10 +147,10 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     probatio.Optional(CONF_PRECISION): probatio.In(["ms", "s", "us", "ns"]),
     # Connection config for V1 API only.
     probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-    probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+    probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "authentication"): cv.string,
     probatio.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
     # Connection config for V2 API only.
-    probatio.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
+    probatio.Inclusive(probatio.Secret(CONF_TOKEN), "v2_authentication"): cv.string,
     probatio.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     probatio.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
 }

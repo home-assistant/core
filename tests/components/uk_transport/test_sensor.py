@@ -3,6 +3,7 @@
 import re
 from unittest.mock import patch
 
+from pytest_homeassistant.common import async_load_fixture
 import requests_mock
 
 from homeassistant.components.uk_transport.sensor import (
@@ -21,8 +22,6 @@ from homeassistant.components.uk_transport.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
-
-from tests.common import async_load_fixture
 
 BUS_ATCOCODE = "340000368SHE"
 BUS_DIRECTION = "Wantage"

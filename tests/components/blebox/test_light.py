@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 import blebox_uniapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,8 +27,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_config_entry, async_setup_entity, mock_feature
-
-from tests.common import MockConfigEntry
 
 ALL_LIGHT_FIXTURES = ["dimmer", "wlightbox_s", "wlightbox"]
 

@@ -1,6 +1,7 @@
 """Sensor tests for the Goalzero integration."""
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.goalzero.const import DEFAULT_NAME
 from homeassistant.components.sensor import (
@@ -23,8 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from brother import SnmpError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.brother.const import (
     CONF_COMMUNITY,
@@ -15,8 +16,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(

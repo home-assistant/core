@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_IGNORE, SOURCE_USER
@@ -21,8 +22,6 @@ from .conftest import (
     USER_INPUT,
     USER_INPUT_API_KEY,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("user_input", [USER_INPUT, USER_INPUT_API_KEY])
@@ -44,6 +43,7 @@ async def test_form(
         user_input,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == user_input
@@ -343,6 +343,7 @@ async def test_hassio_discovery_confirm_only(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "p539df76c_pyload-ng"
     assert result["data"] == {**ADDON_DISCOVERY_INFO, CONF_VERIFY_SSL: False}
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

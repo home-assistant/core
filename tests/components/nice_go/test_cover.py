@@ -6,6 +6,11 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from nice_go import ApiError, AuthFailedError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
@@ -21,12 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 async def test_covers(

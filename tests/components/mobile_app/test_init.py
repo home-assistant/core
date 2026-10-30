@@ -7,6 +7,12 @@ from unittest.mock import Mock, patch
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_mock_cloud_connection_status,
+    async_mock_service,
+)
 
 from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.mobile_app.const import (
@@ -32,13 +38,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .const import CALL_SERVICE, REGISTER_CLEARTEXT
-
-from tests.common import (
-    MockConfigEntry,
-    MockUser,
-    async_mock_cloud_connection_status,
-    async_mock_service,
-)
 
 
 @pytest.mark.usefixtures("create_registrations")

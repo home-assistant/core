@@ -4,6 +4,7 @@ import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers.state import (
+    StateTriggerArgument,
     async_attach_trigger as async_attach_state_trigger,
     async_validate_trigger_config as async_validate_state_trigger_config,
 )
@@ -56,9 +57,9 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    state_config = {
-        CONF_PLATFORM: "state",
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+    state_config: ConfigType = {
+        StateTriggerArgument.PLATFORM: "state",
+        StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
     state_config = await async_validate_state_trigger_config(hass, state_config)

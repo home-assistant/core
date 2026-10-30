@@ -3,6 +3,7 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, HomeAssistant, MockConfigEntry
 from watergate_local_api import WatergateApiException
 
 from homeassistant.components.watergate.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEFAULT_DEVICE_STATE, DEFAULT_SERIAL_NUMBER, MOCK_WEBHOOK_ID
-
-from tests.common import AsyncMock, HomeAssistant, MockConfigEntry
 
 
 async def test_step_user_form(

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from ismartgate import GogoGate2Api
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.gogogate2 import DEVICE_TYPE_GOGOGATE2
 from homeassistant.components.gogogate2.const import DEVICE_TYPE_ISMARTGATE, DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")

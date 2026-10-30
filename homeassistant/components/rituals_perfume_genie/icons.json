@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "cartridge": {
+        "default": "mdi:flask",
+        "state": {
+          "off": "mdi:flask-empty-outline"
+        }
+      }
+    },
     "number": {
       "perfume_amount": {
         "default": "mdi:gauge"
@@ -24,6 +32,12 @@
     "switch": {
       "fan": {
         "default": "mdi:fan"
+      },
+      "standby_led": {
+        "default": "mdi:led-on",
+        "state": {
+          "off": "mdi:led-off"
+        }
       }
     }
   }

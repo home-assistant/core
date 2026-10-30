@@ -54,7 +54,8 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from . import HYGROSTAT_SCHEMA
+from .const import (
     CONF_AWAY_FIXED,
     CONF_AWAY_HUMIDITY,
     CONF_DRY_TOLERANCE,
@@ -68,12 +69,10 @@ from . import (
     CONF_STALE_DURATION,
     CONF_TARGET_HUMIDITY,
     CONF_WET_TOLERANCE,
-    HYGROSTAT_SCHEMA,
+    GenericHygrostatEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_SAVED_HUMIDITY = "saved_humidity"
 
 PLATFORM_SCHEMA = HUMIDIFIER_PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
@@ -276,9 +275,13 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 self._target_humidity = int(
                     old_state.attributes[HumidifierEntityStateAttribute.HUMIDITY]
                 )
-            if old_state.attributes.get(ATTR_SAVED_HUMIDITY):
+            if old_state.attributes.get(
+                GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY
+            ):
                 self._saved_target_humidity = int(
-                    old_state.attributes[ATTR_SAVED_HUMIDITY]
+                    old_state.attributes[
+                        GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY
+                    ]
                 )
             if old_state.state:
                 self._state = old_state.state == STATE_ON
@@ -313,7 +316,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         if self._saved_target_humidity:
-            return {ATTR_SAVED_HUMIDITY: self._saved_target_humidity}
+            return {
+                GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY: self._saved_target_humidity
+            }
         return None
 
     @property

@@ -10,6 +10,7 @@ from mozart_api.models import (
     WebsocketNotificationTag,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,8 +32,6 @@ from .const import (
     TEST_SERIAL_NUMBER,
 )
 from .util import get_balance_entity_ids, get_remote_entity_ids
-
-from tests.common import MockConfigEntry
 
 
 async def test_connection(

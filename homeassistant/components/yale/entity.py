@@ -9,14 +9,13 @@ from yalexs.keypad import KeypadDetail
 from yalexs.lock import Lock, LockDetail
 from yalexs.util import get_configuration_url
 
-from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from . import DOMAIN, YaleData
-from .const import MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
+from .data import YaleData
 
 DEVICE_TYPES = ["keypad", "lock", "camera", "doorbell", "door", "bell"]
 
@@ -48,7 +47,7 @@ class YaleEntity(Entity):
             configuration_url=get_configuration_url(data.brand),
         )
         if isinstance(detail, LockDetail) and (mac := detail.mac_address):
-            self._attr_device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_BLUETOOTH, mac)}
+            self._attr_device_info.connections = {(dr.CONNECTION_BLUETOOTH, mac)}
 
     @property
     def _detail(self) -> DoorbellDetail | LockDetail:

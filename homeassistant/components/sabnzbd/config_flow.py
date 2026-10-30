@@ -31,7 +31,7 @@ USER_SCHEMA = probatio.Schema(
                 type=TextSelectorType.URL,
             )
         ),
-        probatio.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
             )

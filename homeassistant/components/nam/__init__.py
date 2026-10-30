@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> None:
     """Set up Nettigo as config entry."""
     host: str = entry.data[CONF_HOST]
     username: str | None = entry.data.get(CONF_USERNAME)
@@ -66,9 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
             _LOGGER.debug("Removing deprecated air_quality entity %s", entity_id)
             ent_reg.async_remove(entity_id)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

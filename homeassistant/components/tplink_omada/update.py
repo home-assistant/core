@@ -58,7 +58,6 @@ async def async_setup_entry(
 class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
     """Firmware update status for the Omada Controller."""
 
-    _attr_translation_key = "firmware"
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_entity_category = EntityCategory.CONFIG
 

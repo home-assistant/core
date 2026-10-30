@@ -22,7 +22,7 @@ SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER = "media_player"
 SERVICE_SEND_TEXT_COMMAND_SCHEMA = probatio.All(
     {
         probatio.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): probatio.All(
-            probatio.EnsureList(), [probatio.All(str, probatio.Length(min=1))]
+            probatio.EnsureList(), [probatio.All(str, probatio.NonEmpty())]
         ),
         probatio.Optional(
             SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER

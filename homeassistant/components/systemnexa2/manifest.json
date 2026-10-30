@@ -1,6 +1,7 @@
 {
   "domain": "systemnexa2",
   "name": "System Nexa 2",
+  "categories": ["plugs_switches"],
   "codeowners": ["@konsulten"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/systemnexa2",

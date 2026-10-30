@@ -14,9 +14,9 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onedrive_for_business', 'MOCK_DRIVE_ID')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,7 +39,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state',
-    'unique_id': 'mock_drive_id_drive_state',
+    'unique_id': 'MOCK_DRIVE_ID_drive_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -71,9 +71,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onedrive_for_business', 'MOCK_DRIVE_ID')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -102,7 +102,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_size',
-    'unique_id': 'mock_drive_id_remaining_size',
+    'unique_id': 'MOCK_DRIVE_ID_remaining_size',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -129,9 +129,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onedrive_for_business', 'MOCK_DRIVE_ID')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -160,7 +160,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_size',
-    'unique_id': 'mock_drive_id_total_size',
+    'unique_id': 'MOCK_DRIVE_ID_total_size',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -187,9 +187,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onedrive_for_business', 'MOCK_DRIVE_ID')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -218,7 +218,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'used_size',
-    'unique_id': 'mock_drive_id_used_size',
+    'unique_id': 'MOCK_DRIVE_ID_used_size',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---

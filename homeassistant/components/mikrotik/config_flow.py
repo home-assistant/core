@@ -14,6 +14,11 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     CONF_ARP_PING,
@@ -29,9 +34,15 @@ from .errors import CannotConnect, LoginError
 
 DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(autocomplete="username")
+        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
         probatio.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
         probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
@@ -139,7 +150,12 @@ class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                 }
             ),
             errors=errors,

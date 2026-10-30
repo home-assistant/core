@@ -7,6 +7,7 @@ from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 from pydaikin.exceptions import DaikinException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.daikin import update_unique_id
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .test_config_flow import HOST, MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

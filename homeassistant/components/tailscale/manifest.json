@@ -1,6 +1,7 @@
 {
   "domain": "tailscale",
   "name": "Tailscale",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tailscale",

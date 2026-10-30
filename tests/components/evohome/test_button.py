@@ -4,37 +4,34 @@ All evohome systems have a controller and at least one zone.
 """
 
 from collections.abc import Callable
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from evohomeasync2 import ControlSystem, EvohomeClient, HotWater, Zone
+from evohomeasync2 import ControlSystem, HotWater, Zone, exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import TEST_INSTALLS
 
 
 @pytest.fixture
 def system_button_id(
-    evohome: MagicMock, entity_id: Callable[[Platform, str], str]
+    tcs: ControlSystem, entity_id: Callable[[Platform, str], str]
 ) -> str:
     """Return the entity_id of the system reset button."""
-
-    evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
 
     return entity_id(Platform.BUTTON, f"{tcs.id}_reset")
 
 
 @pytest.fixture
-def dhw_button_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+def dhw_button_id(tcs: ControlSystem, entity_id: Callable[[Platform, str], str]) -> str:
     """Return the entity_id of the DHW reset button."""
 
-    evo: EvohomeClient = evohome.return_value
-    dhw: HotWater | None = evo.tcs.hotwater
+    dhw: HotWater | None = tcs.hotwater
 
     assert dhw is not None, "Fixture has no DHW zone"
 
@@ -43,14 +40,11 @@ def dhw_button_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str])
 
 @pytest.fixture
 def zone_button_id(
-    evohome: MagicMock, entity_id: Callable[[Platform, str], str]
+    tcs: ControlSystem, entity_id: Callable[[Platform, str], str]
 ) -> str:
     """Return the entity_id of the first zone's reset button."""
 
-    evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
-
-    zone: Zone = evo.tcs.zones[0]
+    zone: Zone = tcs.zones[0]
 
     return entity_id(
         Platform.BUTTON,
@@ -128,3 +122,28 @@ async def test_dhw_reset_button_press(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_button_press_api_call_failed(
+    hass: HomeAssistant,
+    system_button_id: str,
+) -> None:
+    """Test SERVICE_PRESS raises HomeAssistantError if the vendor's API call fails."""
+
+    with (
+        patch(
+            "evohomeasync2.control_system.ControlSystem.reset",
+            side_effect=evo_exc.ApiCallFailedError("API call failed"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: system_button_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "api_call_failed"

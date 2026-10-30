@@ -1,6 +1,7 @@
 {
   "domain": "solax",
   "name": "SolaX Power",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@squishykid", "@Darsstar"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solax",

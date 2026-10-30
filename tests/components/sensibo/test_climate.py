@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from probatio import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -64,8 +65,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 async def test_climate_find_valid_targets() -> None:

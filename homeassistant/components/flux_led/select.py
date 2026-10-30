@@ -6,6 +6,7 @@ from typing import override
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.base_device import DeviceType
 from flux_led.const import (
+    COLOR_MODE_RGBW as FLUX_COLOR_MODE_RGBW,
     DEFAULT_WHITE_CHANNEL_TYPE,
     STATE_CHANGE_LATENCY,
     WhiteChannelType,
@@ -17,7 +18,7 @@ from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_WHITE_CHANNEL_TYPE, FLUX_COLOR_MODE_RGBW
+from .const import CONF_WHITE_CHANNEL_TYPE
 from .coordinator import FluxLedConfigEntry, FluxLedUpdateCoordinator
 from .entity import FluxBaseEntity, FluxEntity
 from .util import _human_readable_option

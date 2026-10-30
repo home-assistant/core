@@ -34,7 +34,7 @@ def create_modbus_params(
     return ModbusTcpParams(host=data[CONF_HOST], port=data.get(CONF_PORT, DEFAULT_PORT))
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> None:
     """Set up Flexit from a config entry."""
     unit = async_get_unit(
         hass, entry, create_modbus_params(entry.data), entry.data[CONF_UNIT]
@@ -45,12 +45,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant,
     entry: FlexitConfigEntry,
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

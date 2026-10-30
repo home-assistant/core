@@ -1,6 +1,7 @@
 {
   "domain": "tami4",
   "name": "Tami4 Edge / Edge+",
+  "categories": ["water.water_treatment", "appliances_cleaning.cooking"],
   "codeowners": ["@Guy293"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tami4",

@@ -30,12 +30,11 @@ from pyliebherrhomeapi.exceptions import (
     LiebherrTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 # Complete multi-zone device for comprehensive testing
 MOCK_DEVICE = Device(
@@ -149,7 +148,7 @@ MOCK_DEVICE_STATE = DeviceState(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.liebherr.async_setup_entry", return_value=True
+        "homeassistant.components.liebherr.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

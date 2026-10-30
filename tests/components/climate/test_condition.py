@@ -3,22 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.climate.condition import CONDITIONS
-from homeassistant.components.climate.const import (
-    ATTR_HUMIDITY,
-    ATTR_HVAC_ACTION,
-    HVACAction,
-    HVACMode,
-)
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-)
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -34,6 +19,20 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.climate.condition import CONDITIONS
+from homeassistant.components.climate.const import (
+    ATTR_HUMIDITY,
+    ATTR_HVAC_ACTION,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

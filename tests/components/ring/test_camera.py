@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import make_mocked_request
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 import ring_doorbell
 from ring_doorbell.webrtcstream import RingWebRtcMessage
 from syrupy.assertion import SnapshotAssertion
@@ -28,9 +30,6 @@ from homeassistant.util.aiohttp import MockStreamReader
 
 from .common import MockConfigEntry, setup_platform
 from .device_mocks import FRONT_DEVICE_ID
-
-from tests.common import async_fire_time_changed, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 SMALLEST_VALID_JPEG = (
     "ffd8ffe000104a46494600010101004800480000ffdb00430003020202020203020202030303030406040404040408060"

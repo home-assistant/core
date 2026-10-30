@@ -1,6 +1,7 @@
 {
   "domain": "immich",
   "name": "Immich",
+  "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
   "dependencies": ["http"],

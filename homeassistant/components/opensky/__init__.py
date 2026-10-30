@@ -9,11 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_CONTRIBUTING_USER, PLATFORMS
+from .const import CONF_CONTRIBUTING_USER, DOMAIN, PLATFORMS
 from .coordinator import OpenSkyConfigEntry, OpenSkyDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> None:
     """Set up opensky from a config entry."""
 
     client = OpenSky(session=async_get_clientsession(hass))
@@ -27,7 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> b
                 contributing_user=entry.options.get(CONF_CONTRIBUTING_USER, False),
             )
         except OpenSkyError as exc:
-            raise ConfigEntryNotReady from exc
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from exc
 
     coordinator = OpenSkyDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
@@ -36,12 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> None:
     """Unload opensky config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: OpenSkyConfigEntry) -> None:

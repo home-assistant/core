@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from neopool_modbus.decoders import decode_device_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 
 from homeassistant.components.neopool.const import DOMAIN
 from homeassistant.components.neopool.helpers import prepare_device_time
@@ -26,8 +27,6 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, MockUser
 
 
 def _device_id(hass: HomeAssistant, entry: MockConfigEntry) -> str:

@@ -1,7 +1,6 @@
 """The surepetcare integration."""
 
 from datetime import timedelta
-import logging
 
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
@@ -15,8 +14,6 @@ from .const import DOMAIN
 from .coordinator import SurePetcareConfigEntry, SurePetcareDataCoordinator
 from .services import async_setup_services
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -29,13 +26,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) -> None:
     """Set up Sure Petcare from a config entry."""
     try:
         coordinator = SurePetcareDataCoordinator(hass, entry)
     except SurePetcareAuthenticationError as error:
-        _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
-        raise ConfigEntryAuthFailed from error
+        raise ConfigEntryAuthFailed("Invalid username/password") from error
     except SurePetcareError as error:
         raise ConfigEntryNotReady from error
 
@@ -44,11 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SurePetcareConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

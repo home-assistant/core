@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.essent.const import UPDATE_INTERVAL
@@ -13,8 +18,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 # Freeze time to match fixture download moment (2025-11-24 at 14:11 CET)
 pytestmark = pytest.mark.freeze_time("2025-11-24T14:11:00+01:00")

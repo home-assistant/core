@@ -249,7 +249,10 @@ class Sensor(CoilEntity, SensorEntity):
         if state_class := NATURE_TO_STATE_CLASS.get(coil.nature):
             self._attr_state_class = state_class
 
-        if not coil.mappings:
+        if coil.mappings:
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = list(coil.mappings.values())
+        else:
             self._attr_suggested_display_precision = ceil(log10(abs(coil.factor)))
 
     @override

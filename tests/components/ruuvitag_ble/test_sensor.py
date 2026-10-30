@@ -1,6 +1,8 @@
 """Test the Ruuvi BLE sensors."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ruuvitag_ble.const import DOMAIN
@@ -13,9 +15,6 @@ from .fixtures import (
     RUUVI_V5_SERVICE_INFO,
     RUUVI_V6_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "entity_registry_enabled_by_default")

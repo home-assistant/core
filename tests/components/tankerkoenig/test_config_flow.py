@@ -9,6 +9,7 @@ from aiotankerkoenig.exceptions import (
     TankerkoenigInvalidKeyError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tankerkoenig.const import CONF_STATIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -26,8 +27,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .const import NEARBY_STATIONS
-
-from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = {
     CONF_NAME: "Home",
@@ -63,7 +62,7 @@ async def test_user(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
@@ -89,6 +88,7 @@ async def test_user(hass: HomeAssistant) -> None:
             "36b4b812-xxxx-xxxx-xxxx-c51735325858",
         ]
         assert result["options"][CONF_SHOW_ON_MAP]
+        assert result["result"].unique_id == "51.0_13.0"
 
         await hass.async_block_till_done()
 
@@ -154,6 +154,26 @@ async def test_user_errors(
         assert result["step_id"] == "user"
         assert result["errors"] == errors
 
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
+        ),
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+            return_value=NEARBY_STATIONS,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "select_station"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_STATIONS_DATA
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_no_stations(hass: HomeAssistant) -> None:
     """Test starting a flow by user which does not find any station."""
@@ -173,6 +193,26 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"][CONF_RADIUS] == "no_stations"
+
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
+        ),
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+            return_value=NEARBY_STATIONS,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "select_station"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_STATIONS_DATA
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -208,7 +248,7 @@ async def test_reauth(
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",

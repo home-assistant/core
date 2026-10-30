@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from miio import DeviceException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -58,12 +59,11 @@ from homeassistant.const import (
     UnitOfRatio,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import TEST_MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # calls made when device status is requested
 STATUS_CALLS = [
@@ -277,6 +277,25 @@ async def test_xiaomi_vacuum_battery_sensor(
     state = hass.states.get(battery_entity_id)
     assert state is not None
     assert state.state == "64"
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_mirobo_is_got_error"
+)
+@pytest.mark.freeze_time("2026-10-10 16:00:00+00:00")
+async def test_xiaomi_vacuum_dnd_sensors(hass: HomeAssistant) -> None:
+    """Test the DnD sensors use the next occurrence in the configured time zone."""
+    await hass.config.async_set_time_zone("America/New_York")
+    entity_name = "test_vacuum_cleaner_dnd"
+    await setup_component(hass, entity_name)
+
+    # 22:00 is still ahead today, 06:00 has passed and moves to tomorrow
+    state = hass.states.get(f"sensor.{entity_name}_dnd_start")
+    assert state is not None
+    assert state.state == "2026-10-11T02:00:00+00:00"
+    state = hass.states.get(f"sensor.{entity_name}_dnd_end")
+    assert state is not None
+    assert state.state == "2026-10-11T10:00:00+00:00"
 
 
 async def test_xiaomi_vacuum_battery_sensor_unknown(
@@ -591,7 +610,7 @@ async def test_xiaomi_specific_services(
 
 
 async def test_xiaomi_vacuum_fanspeeds(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_mirobo_fanspeeds
+    hass: HomeAssistant, mock_mirobo_fanspeeds: MagicMock
 ) -> None:
     """Test Xiaomi vacuum fanspeeds."""
     entity_name = "test_vacuum_cleaner_2"
@@ -630,14 +649,15 @@ async def test_xiaomi_vacuum_fanspeeds(
     mock_mirobo_fanspeeds.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_fanspeeds.reset_mock()
 
-    assert "ERROR" not in caplog.text
-    await hass.services.async_call(
-        VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {"entity_id": entity_id, "fan_speed": "invent"},
-        blocking=True,
-    )
-    assert "Fan speed step not recognized" in caplog.text
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_SET_FAN_SPEED,
+            {"entity_id": entity_id, "fan_speed": "invent"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "invalid_fan_speed"
+    mock_mirobo_fanspeeds.set_fan_speed.assert_not_called()
 
 
 async def setup_component(hass: HomeAssistant, entity_name: str) -> str:

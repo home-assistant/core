@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -24,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
 from .const import TeslemetryClimateSide
@@ -109,7 +109,7 @@ class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
 
     api: Vehicle | VehicleRouter
     _attr_precision = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
     _attr_preset_modes = list(PRESET_MODES.values())
     _attr_fan_modes = ["off", "bioweapon"]
@@ -149,7 +149,7 @@ class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
                     passenger_temp=temp,
                 )
             )
-            self._attr_target_temperature = temp
+            self._attr_native_target_temperature = temp
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
             # Set HVAC mode will call write_ha_state
@@ -236,8 +236,10 @@ class TeslemetryVehiclePollingClimateEntity(
         else:
             self._attr_hvac_mode = HVACMode.OFF
 
-        self._attr_current_temperature = self.get("climate_state_inside_temp")
-        self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
+        self._attr_native_current_temperature = self.get("climate_state_inside_temp")
+        self._attr_native_target_temperature = self.get(
+            f"climate_state_{self.key}_setting"
+        )
         keeper_mode = self.get("climate_state_climate_keeper_mode")
         self._attr_preset_mode = (
             POLLING_PRESET_MODES.get(keeper_mode) if keeper_mode else None
@@ -255,7 +257,7 @@ class TeslemetryVehiclePollingClimateEntity(
 
 
 class TeslemetryStreamingClimateEntity(
-    TeslemetryClimateEntity, TeslemetryVehicleStreamEntity, RestoreEntity
+    TeslemetryClimateEntity, TeslemetryVehicleStreamEntity, RestoreClimate
 ):
     """Teslemetry steering wheel climate control."""
 
@@ -277,8 +279,8 @@ class TeslemetryStreamingClimateEntity(
 
         # Initialize defaults
         self._attr_hvac_mode = None
-        self._attr_current_temperature = None
-        self._attr_target_temperature = None
+        self._attr_native_current_temperature = None
+        self._attr_native_target_temperature = None
         self._attr_fan_mode = None
         self._attr_preset_mode = None
 
@@ -309,14 +311,15 @@ class TeslemetryStreamingClimateEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_current_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.CURRENT_TEMPERATURE
-            )
-            self._attr_target_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE
-            )
             self._attr_preset_mode = state.attributes.get(
                 ClimateEntityStateAttribute.PRESET_MODE
+            )
+        if (climate_data := await self.async_get_last_climate_data()) is not None:
+            self._attr_native_current_temperature = (
+                climate_data.native_current_temperature
+            )
+            self._attr_native_target_temperature = (
+                climate_data.native_target_temperature
             )
 
         self.async_on_remove(
@@ -361,7 +364,7 @@ class TeslemetryStreamingClimateEntity(
                 )
 
     def _async_handle_inside_temp(self, data: float | None) -> None:
-        self._attr_current_temperature = data
+        self._attr_native_current_temperature = data
         self.async_write_ha_state()
 
     def _async_handle_hvac_power(self, data: str | None) -> None:
@@ -379,7 +382,7 @@ class TeslemetryStreamingClimateEntity(
         self.async_write_ha_state()
 
     def _async_handle_hvac_temperature_request(self, data: float | None) -> None:
-        self._attr_target_temperature = data
+        self._attr_native_target_temperature = data
         self.async_write_ha_state()
 
 
@@ -404,7 +407,7 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
     _attr_target_temperature_step = 5
     _attr_min_temp = 30
     _attr_max_temp = 40
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(COP_MODES.values())
     _attr_entity_registry_enabled_default = False
 
@@ -430,7 +433,7 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(self.api.set_cop_temp(COP_TEMPERATURES[level]))
-            self._attr_target_temperature = level
+            self._attr_native_target_temperature = level
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
             # Set HVAC mode will call write_ha_state
@@ -499,17 +502,17 @@ class TeslemetryVehiclePollingCabinOverheatProtectionEntity(
             self._attr_hvac_mode = COP_MODES.get(state)
 
         if (level := self.get("climate_state_cop_activation_temperature")) is None:
-            self._attr_target_temperature = None
+            self._attr_native_target_temperature = None
         else:
-            self._attr_target_temperature = COP_LEVELS.get(level)
+            self._attr_native_target_temperature = COP_LEVELS.get(level)
 
-        self._attr_current_temperature = self.get("climate_state_inside_temp")
+        self._attr_native_current_temperature = self.get("climate_state_inside_temp")
 
 
 class TeslemetryStreamingCabinOverheatProtectionEntity(
     TeslemetryVehicleStreamEntity,
     TeslemetryCabinOverheatProtectionEntity,
-    RestoreEntity,
+    RestoreClimate,
 ):
     """Vehicle Cabin Overheat Protection."""
 
@@ -523,8 +526,8 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
 
         # Initialize defaults
         self._attr_hvac_mode = None
-        self._attr_current_temperature = None
-        self._attr_target_temperature = None
+        self._attr_native_current_temperature = None
+        self._attr_native_target_temperature = None
         self._attr_fan_mode = None
         self._attr_preset_mode = None
 
@@ -550,11 +553,12 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_current_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.CURRENT_TEMPERATURE
+        if (climate_data := await self.async_get_last_climate_data()) is not None:
+            self._attr_native_current_temperature = (
+                climate_data.native_current_temperature
             )
-            self._attr_target_temperature = state.attributes.get(
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            self._attr_native_target_temperature = (
+                climate_data.native_target_temperature
             )
 
         self.async_on_remove(
@@ -574,7 +578,7 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
         )
 
     def _async_handle_inside_temp(self, value: float | None) -> None:
-        self._attr_current_temperature = value
+        self._attr_native_current_temperature = value
         self.async_write_ha_state()
 
     def _async_handle_protection_mode(self, value: str | None) -> None:
@@ -582,7 +586,7 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
         self.async_write_ha_state()
 
     def _async_handle_temperature_limit(self, value: str | None) -> None:
-        self._attr_target_temperature = (
+        self._attr_native_target_temperature = (
             COP_LEVELS.get(value) if value is not None else None
         )
         self.async_write_ha_state()

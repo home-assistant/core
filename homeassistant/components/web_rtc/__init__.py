@@ -38,7 +38,9 @@ CONFIG_SCHEMA = probatio.Schema(
                                     probatio.EnsureList(), [validate_stun_or_turn_url]
                                 ),
                                 probatio.Optional(CONF_USERNAME): cv.string,
-                                probatio.Optional(CONF_CREDENTIAL): cv.string,
+                                probatio.Optional(
+                                    probatio.Secret(CONF_CREDENTIAL)
+                                ): cv.string,
                             }
                         )
                     ],

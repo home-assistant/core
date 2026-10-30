@@ -40,9 +40,6 @@
       "current_l3": {
         "name": "Current phase L3"
       },
-      "power": {
-        "name": "Power"
-      },
       "status": {
         "name": "Status",
         "state": {

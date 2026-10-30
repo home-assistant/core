@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, Mock
 from aiohttp import ClientResponseError
 from probatio import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 TEST_APPLIANCE = "Dummy_Appliance_1"
 

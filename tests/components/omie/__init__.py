@@ -3,10 +3,9 @@
 from datetime import date
 
 from pyomie.model import OMIEResults
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(

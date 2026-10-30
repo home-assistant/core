@@ -1,7 +1,8 @@
 {
   "domain": "broadlink",
   "name": "Broadlink",
-  "codeowners": ["@danielhiversen", "@felipediel", "@L-I-Am"],
+  "categories": ["buttons_remotes", "plugs_switches"],
+  "codeowners": ["@danielhiversen", "@felipediel", "@L-I-Am", "@DAB-LABS"],
   "config_flow": true,
   "dhcp": [
     {
@@ -39,5 +40,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["broadlink_async"],
-  "requirements": ["broadlink-async==1.1.0"]
+  "requirements": ["broadlink-async==1.1.1"]
 }

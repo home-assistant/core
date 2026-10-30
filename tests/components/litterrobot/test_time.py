@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from pylitterbot import LitterRobot3
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
@@ -15,8 +16,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import create_mock_account, setup_integration
-
-from tests.common import snapshot_platform
 
 SLEEP_START_TIME_ENTITY_ID = "time.test_sleep_mode_start_time"
 

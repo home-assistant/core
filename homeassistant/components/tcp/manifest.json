@@ -1,6 +1,7 @@
 {
   "domain": "tcp",
   "name": "TCP",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/tcp",
   "iot_class": "local_polling",

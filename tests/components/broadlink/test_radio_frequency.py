@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call
 
 from broadlink_async.exceptions import BroadlinkException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from rf_protocols.commands.ook import OOKCommand
 
 from homeassistant.components import radio_frequency
@@ -22,8 +23,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import get_device
-
-from tests.common import async_fire_time_changed
 
 _FREQ_433 = 433_920_000
 _FREQ_315 = 315_000_000

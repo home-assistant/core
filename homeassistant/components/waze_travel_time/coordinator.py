@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Literal, override
 
-import httpx
+import httpx2
 from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRCError
 
 from homeassistant.config_entries import ConfigEntry
@@ -149,9 +149,15 @@ async def async_get_travel_times(
             ]
 
     except WRCError as exp:
-        raise UpdateFailed(f"Error on retrieving data: {exp}") from exp
-    except httpx.RequestError as exp:
-        raise UpdateFailed(f"Connection error: {exp}") from exp
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_error",
+        ) from exp
+    except httpx2.RequestError as exp:
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from exp
 
     else:
         return filtered_routes
@@ -206,7 +212,10 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
         await self.hass.data[SEMAPHORE_KEY].acquire()
         try:
             if origin_coordinates is None or destination_coordinates is None:
-                raise UpdateFailed("Unable to determine origin or destination")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_origin_or_destination",
+                )
 
             # Grab options on every update
             incl_filter = self.config_entry.options[CONF_INCL_FILTER]

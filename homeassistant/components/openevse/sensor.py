@@ -77,7 +77,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         options=STATUS_OPTIONS,
-        value_fn=lambda ev: _map_status(ev.status),
+        value_fn=lambda ev: _map_status(ev.state),
     ),
     OpenEVSESensorDescription(
         key="service_level",

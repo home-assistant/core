@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from denonavr.exceptions import AvrNetworkError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.denonavr.config_flow import (
@@ -27,8 +28,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "5.6.7.8"
@@ -83,7 +82,7 @@ def denonavr_connect_fixture():
         ),
         patch(
             "homeassistant.components.denonavr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -116,6 +115,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
@@ -150,6 +150,7 @@ async def test_config_flow_manual_discover_1_success(hass: HomeAssistant) -> Non
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
@@ -193,6 +194,7 @@ async def test_config_flow_manual_discover_2_success(hass: HomeAssistant) -> Non
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
@@ -222,6 +224,17 @@ async def test_config_flow_manual_discover_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
 
+    with patch(
+        "homeassistant.components.denonavr.config_flow.denonavr.async_discover",
+        return_value=TEST_DISCOVER_1_RECEIVER,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_manual_host_no_serial(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user.
@@ -245,6 +258,7 @@ async def test_config_flow_manual_host_no_serial(hass: HomeAssistant) -> None:
             {CONF_HOST: TEST_HOST},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -348,6 +362,7 @@ async def test_config_flow_ssdp(hass: HomeAssistant) -> None:
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
@@ -519,6 +534,7 @@ async def test_config_flow_manual_host_no_serial_double_config(
             {CONF_HOST: TEST_HOST},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {

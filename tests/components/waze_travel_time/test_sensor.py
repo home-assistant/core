@@ -1,7 +1,8 @@
 """Test Waze Travel Time sensors."""
 
-import httpx
+import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pywaze.route_calculator import WRCError
 
 from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
 
-from tests.common import MockConfigEntry
-
 ENTITY_ID = "sensor.waze_travel_time"
 
 
@@ -39,8 +38,8 @@ def mock_update_wrcerror_fixture(mock_update):
 
 @pytest.fixture(name="mock_update_connect_error")
 def mock_update_connect_error_fixture(mock_update):
-    """Mock an update to the sensor failed with httpx.ConnectError."""
-    mock_update.side_effect = httpx.ConnectError("[Errno -3] Try again")
+    """Mock an update to the sensor failed with httpx2.ConnectError."""
+    mock_update.side_effect = httpx2.ConnectError("[Errno -3] Try again")
     return mock_update
 
 
@@ -149,10 +148,14 @@ async def test_excl_filter(hass: HomeAssistant) -> None:
     ("error_fixture", "log_message"),
     [
         pytest.param(
-            "mock_update_wrcerror", "Error on retrieving data: ", id="wrcerror"
+            "mock_update_wrcerror",
+            "An error occurred while retrieving data from Waze",
+            id="wrcerror",
         ),
         pytest.param(
-            "mock_update_connect_error", "Connection error: ", id="connect_error"
+            "mock_update_connect_error",
+            "An error occurred while connecting to Waze",
+            id="connect_error",
         ),
     ],
 )

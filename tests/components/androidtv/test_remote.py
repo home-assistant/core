@@ -5,6 +5,7 @@ from unittest.mock import call, patch
 
 from androidtv.constants import KEYS
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.androidtv.const import (
     CONF_TURN_OFF_COMMAND,
@@ -32,8 +33,6 @@ from .common import (
     SHELL_RESPONSE_STANDBY,
     setup_mock_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _setup(config: dict[str, Any]) -> tuple[str, str, MockConfigEntry]:

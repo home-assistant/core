@@ -1,5 +1,8 @@
 """The tests for the PG LAB Electronics cover."""
 
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.components import cover
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -18,9 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .test_common import get_device_discovery_payload, send_discovery_message
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 COVER_FEATURES = (
     cover.CoverEntityFeature.OPEN

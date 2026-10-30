@@ -1,6 +1,7 @@
 {
   "domain": "rainforest_eagle",
   "name": "Rainforest Eagle",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@gtdiehl", "@jcalbert", "@hastarin"],
   "config_flow": true,
   "dhcp": [

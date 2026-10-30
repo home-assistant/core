@@ -14,7 +14,7 @@ from .const import DOMAIN, LOGGER
 
 CONFIG_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 
