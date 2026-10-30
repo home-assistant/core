@@ -1099,6 +1099,7 @@ async def test_hmip_binary_sensor_unique_ids(
         "binary_sensor.heizkorperthermostat4_battery": "3014F71100000000ETRV0013_0_battery",
         "binary_sensor.heizkorperthermostat_battery": "3014F7110000000000000012_0_battery",
         "binary_sensor.heizung_battery": "3014F7110000000000000011_0_battery",
+        "binary_sensor.home_arming_blocked": "00000000-0000-0000-0000-000000000001_arming_blocked",
         "binary_sensor.home_cloud_connection": "00000000-0000-0000-0000-000000000001_cloud_connection",
         "binary_sensor.internal_securityzone": "00000000-0000-0000-0000-000000000016_security_zone",
         "binary_sensor.kombisignalmelder_battery": "3014F7110000000000000MP3_0_battery",
