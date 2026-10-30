@@ -1588,9 +1588,11 @@ async def _fallback_poll(
 ) -> None:
     """Report the transport state and let the fallback poll run."""
     soco.get_current_transport_info.return_value = {"current_transport_state": state}
+    poll_count = soco.get_current_transport_info.call_count
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert soco.get_current_transport_info.call_count == poll_count + 1
 
 
 @pytest.mark.usefixtures("async_autosetup_sonos", "internal_url")
