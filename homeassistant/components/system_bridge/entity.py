@@ -233,12 +233,13 @@ def unique_names(
     """Map each ID to its name, adding the ID to names that repeat or are reserved."""
     items = list(items)
     reserved = list(reserved)
-    for _ in range(2):
-        # A second pass catches names that match another device's added ID
+    while True:
+        # Adding an ID can match another device's name, so repeat until unique
         counts = Counter(name for _, name in items)
         counts.update(reserved)
+        if all(counts[name] == 1 for _, name in items):
+            return dict(items)
         items = [
             (item_id, name if counts[name] == 1 else f"{name} ({item_id})")
             for item_id, name in items
         ]
-    return dict(items)

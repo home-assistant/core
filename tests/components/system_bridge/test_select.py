@@ -112,26 +112,42 @@ async def test_select_duplicate_names(
     )
 
 
+@pytest.mark.parametrize(
+    "others",
+    [
+        pytest.param([("twin", ""), ("lookalike", " (twin)")], id="added_id"),
+        pytest.param(
+            [("b", ""), ("c", " (a)"), ("d", " (a) (a)")],
+            id="added_id_twice",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_select_name_matching_added_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    others: list[tuple[str, str]],
 ) -> None:
     """Test a name matching another input's name with its ID added stays unique."""
     coordinator = mock_config_entry.runtime_data
-    microphone = FIXTURE_AUDIO.inputs[0]
-    twin = replace(microphone, id="twin", default=False)
-    lookalike = replace(
-        microphone, id="lookalike", name=f"{microphone.name} (twin)", default=False
-    )
+    microphone = replace(FIXTURE_AUDIO.inputs[0], id="a")
+    inputs = [
+        microphone,
+        *(
+            replace(
+                microphone, id=item_id, name=f"{microphone.name}{suffix}", default=False
+            )
+            for item_id, suffix in others
+        ),
+    ]
 
     await coordinator.async_handle_module(
-        Module.AUDIO, replace(FIXTURE_AUDIO, inputs=[microphone, twin, lookalike])
+        Module.AUDIO, replace(FIXTURE_AUDIO, inputs=inputs)
     )
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert len(set(state.attributes[ATTR_OPTIONS])) == 3
+    assert len(set(state.attributes[ATTR_OPTIONS])) == len(inputs)
 
 
 @pytest.mark.usefixtures("init_integration")
