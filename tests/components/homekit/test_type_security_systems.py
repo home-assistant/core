@@ -1,5 +1,8 @@
 """Test different accessory types: Security Systems."""
 
+from collections.abc import Callable
+from unittest.mock import patch
+
 from pyhap.loader import get_loader
 import pytest
 from pytest_homeassistant.common import async_mock_service
@@ -19,6 +22,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State
+
+PANEL_ENTITY_ID = "alarm_control_panel.test"
+HOME_AND_AWAY = (
+    AlarmControlPanelEntityFeature.ARM_HOME | AlarmControlPanelEntityFeature.ARM_AWAY
+)
 
 
 async def test_switch_set_state(
@@ -448,7 +456,7 @@ async def test_handle_non_alarm_states(
         ),
     ],
 )
-async def test_set_if_valid_guards_frozen_valid_values(
+async def test_set_if_valid_guards_valid_values(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     hk_driver: HomeDriver,
@@ -457,7 +465,7 @@ async def test_set_if_valid_guards_frozen_valid_values(
     expected_current: int,
     expected_target: int,
 ) -> None:
-    """Test armed_home is pushed only when it is in the frozen valid values.
+    """Test armed_home is pushed only when it is in the valid values.
 
     armed_home maps to StayArm (0) for both the current and target
     characteristics, so a build without ARM_HOME must skip both.
@@ -480,12 +488,13 @@ async def test_set_if_valid_guards_frozen_valid_values(
 
     # Call the update path directly: the state-change dispatcher swallows
     # callback exceptions, so a regressed set_value would raise unnoticed there.
-    # The live state advertises ARM_HOME, as after a reload-skipping feature change.
+    # The live state reports a mode its features don't declare, as read-only
+    # panels do.
     acc.async_update_state(
         State(
             entity_id,
             AlarmControlPanelState.ARMED_HOME,
-            attributes={"supported_features": AlarmControlPanelEntityFeature.ARM_HOME},
+            attributes={"supported_features": build_features},
         )
     )
     await hass.async_block_till_done()
@@ -527,3 +536,131 @@ async def test_skip_warning_logged_once_per_value(
     for char in ("SecuritySystemCurrentState", "SecuritySystemTargetState"):
         for value in (0, 2):
             assert caplog.text.count(f"Skipping unsupported {char} value {value}") == 1
+
+
+async def _async_setup_panel(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    features: AlarmControlPanelEntityFeature,
+) -> SecuritySystem:
+    """Set up a panel accessory whose config hash is already advertised."""
+    hass.states.async_set(
+        PANEL_ENTITY_ID,
+        AlarmControlPanelState.DISARMED,
+        {"supported_features": features},
+    )
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", PANEL_ENTITY_ID, 1, {})
+    hk_driver.add_accessory(acc)
+    hk_driver.state.set_accessories_hash(hk_driver.accessories_hash)
+    acc.run()
+    await hass.async_block_till_done()
+    return acc
+
+
+@pytest.mark.parametrize(
+    "before_change",
+    [
+        pytest.param(lambda hass: None, id="while_available"),
+        # A config entry reload writes the registry's old features as unavailable
+        pytest.param(
+            lambda hass: hass.states.async_set(
+                PANEL_ENTITY_ID,
+                STATE_UNAVAILABLE,
+                {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
+            ),
+            id="across_unavailable",
+        ),
+        # A YAML reload of an entity without a unique ID removes its state
+        pytest.param(
+            lambda hass: hass.states.async_remove(PANEL_ENTITY_ID),
+            id="across_removal",
+        ),
+    ],
+)
+async def test_feature_change_updates_valid_values_in_place(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    before_change: Callable[[HomeAssistant], object],
+) -> None:
+    """Test a new arm mode is advertised without rebuilding the accessory."""
+    acc = await _async_setup_panel(
+        hass, hk_driver, AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
+    with (
+        patch.object(acc, "async_reload") as mock_reload,
+        patch.object(hk_driver, "async_update_advertisement") as mock_advertise,
+    ):
+        before_change(hass)
+        hass.states.async_set(
+            PANEL_ENTITY_ID,
+            AlarmControlPanelState.ARMED_HOME,
+            {"supported_features": HOME_AND_AWAY},
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+    mock_advertise.assert_called_once()
+    assert acc.char_current_state.value == 0
+    assert acc.char_target_state.value == 0
+
+
+async def test_feature_change_without_new_valid_values_changes_nothing(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test features HomeKit can't represent leave the accessory untouched."""
+    acc = await _async_setup_panel(
+        hass, hk_driver, AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
+    with (
+        patch.object(acc, "async_reload") as mock_reload,
+        patch.object(hk_driver, "async_update_accessories_hash") as mock_update_hash,
+    ):
+        # Vacation shares away's HomeKit value; trigger has no target value.
+        hass.states.async_set(
+            PANEL_ENTITY_ID,
+            AlarmControlPanelState.ARMED_AWAY,
+            {
+                "supported_features": AlarmControlPanelEntityFeature.ARM_AWAY
+                | AlarmControlPanelEntityFeature.ARM_VACATION
+                | AlarmControlPanelEntityFeature.TRIGGER
+            },
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+    mock_update_hash.assert_not_called()
+    assert acc.char_current_state.value == 1
+
+
+async def test_feature_removal_falls_back_to_disarmed(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test removing the active arm mode falls back cleanly and warns again."""
+    acc = await _async_setup_panel(
+        hass, hk_driver, AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
+    with patch.object(hk_driver, "async_update_advertisement") as mock_advertise:
+        for features in (
+            AlarmControlPanelEntityFeature.ARM_AWAY,
+            HOME_AND_AWAY,
+            AlarmControlPanelEntityFeature.ARM_AWAY,
+        ):
+            hass.states.async_set(
+                PANEL_ENTITY_ID,
+                AlarmControlPanelState.ARMED_HOME,
+                {"supported_features": features},
+            )
+            await hass.async_block_till_done()
+
+    assert mock_advertise.call_count == 2
+    assert acc.char_current_state.value == 3
+    assert acc.char_target_state.value == 3
+    # Once before home was added, and again after it was removed.
+    assert caplog.text.count("Skipping unsupported SecuritySystemCurrentState") == 2
+    assert "is an invalid value" not in caplog.text
