@@ -11,13 +11,11 @@ from propcache.api import cached_property
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.trace import ATTR_ITEM_ID, ATTR_RUN_ID
 from homeassistant.const import (
-    ATTR_AREA_ID,
     ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     ATTR_NAME,
     CONF_PATH,
     STATE_ON,
+    TargetKey,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -332,11 +330,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self._condition is not None:
             for conf in self._condition.config:
                 referenced |= condition_helper.async_extract_targets(
-                    conf, ATTR_LABEL_ID
+                    conf, TargetKey.LABEL_ID
                 )
 
         for conf in self._trigger_config:
-            referenced |= set(trigger_helper.async_extract_targets(conf, ATTR_LABEL_ID))
+            referenced |= set(
+                trigger_helper.async_extract_targets(conf, TargetKey.LABEL_ID)
+            )
         return referenced
 
     @cached_property
@@ -348,11 +348,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self._condition is not None:
             for conf in self._condition.config:
                 referenced |= condition_helper.async_extract_targets(
-                    conf, ATTR_FLOOR_ID
+                    conf, TargetKey.FLOOR_ID
                 )
 
         for conf in self._trigger_config:
-            referenced |= set(trigger_helper.async_extract_targets(conf, ATTR_FLOOR_ID))
+            referenced |= set(
+                trigger_helper.async_extract_targets(conf, TargetKey.FLOOR_ID)
+            )
         return referenced
 
     @cached_property
@@ -363,10 +365,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if self._condition is not None:
             for conf in self._condition.config:
-                referenced |= condition_helper.async_extract_targets(conf, ATTR_AREA_ID)
+                referenced |= condition_helper.async_extract_targets(
+                    conf, TargetKey.AREA_ID
+                )
 
         for conf in self._trigger_config:
-            referenced |= set(trigger_helper.async_extract_targets(conf, ATTR_AREA_ID))
+            referenced |= set(
+                trigger_helper.async_extract_targets(conf, TargetKey.AREA_ID)
+            )
         return referenced
 
     @property
