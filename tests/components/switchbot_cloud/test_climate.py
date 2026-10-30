@@ -703,7 +703,6 @@ async def test_smart_radiator_thermostat_set_hvac_mode(
     )
 
 
-
 async def test_smart_radiator_thermostat_target_temperature(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
