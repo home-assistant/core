@@ -57,6 +57,13 @@ HASS_TO_HOMEKIT_TARGET = {
     AlarmControlPanelState.DISARMED: HK_ALARM_DISARMED,
 }
 
+HASS_TO_HOMEKIT_FEATURES = {
+    AlarmControlPanelEntityFeature.ARM_HOME: HK_ALARM_STAY_ARMED,
+    AlarmControlPanelEntityFeature.ARM_AWAY: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelEntityFeature.ARM_VACATION: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelEntityFeature.ARM_NIGHT: HK_ALARM_NIGHT_ARMED,
+}
+
 HASS_TO_HOMEKIT_SERVICES = {
     AlarmControlPanelService.ARM_HOME: HK_ALARM_STAY_ARMED,
     AlarmControlPanelService.ARM_AWAY: HK_ALARM_AWAY_ARMED,
@@ -74,17 +81,9 @@ HK_TO_SERVICE = {
 
 def _armed_states(features: int) -> set[int]:
     """Return the HomeKit armed states the alarm panel features allow."""
-    armed = set()
-    if features & AlarmControlPanelEntityFeature.ARM_HOME:
-        armed.add(HK_ALARM_STAY_ARMED)
-    if features & (
-        AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.ARM_VACATION
-    ):
-        armed.add(HK_ALARM_AWAY_ARMED)
-    if features & AlarmControlPanelEntityFeature.ARM_NIGHT:
-        armed.add(HK_ALARM_NIGHT_ARMED)
-    return armed
+    return {
+        hk for feature, hk in HASS_TO_HOMEKIT_FEATURES.items() if features & feature
+    }
 
 
 @TYPES.register("SecuritySystem")

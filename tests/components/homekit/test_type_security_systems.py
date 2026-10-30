@@ -317,6 +317,18 @@ async def test_supported_states(hass: HomeAssistant, hk_driver) -> None:
             ],
         },
         {
+            "features": AlarmControlPanelEntityFeature.ARM_VACATION,
+            "current_values": [
+                default_current_states["Disarmed"],
+                default_current_states["AlarmTriggered"],
+                default_current_states["AwayArm"],
+            ],
+            "target_values": [
+                default_target_services["Disarm"],
+                default_target_services["AwayArm"],
+            ],
+        },
+        {
             "features": AlarmControlPanelEntityFeature.ARM_HOME
             | AlarmControlPanelEntityFeature.ARM_AWAY,
             "current_values": [
@@ -386,11 +398,12 @@ async def test_supported_states(hass: HomeAssistant, hk_driver) -> None:
         valid_current_values = acc.char_current_state.properties.get("ValidValues")
         valid_target_values = acc.char_target_state.properties.get("ValidValues")
 
-        for val in valid_current_values.values():
-            assert val in test_config.get("current_values")
-
-        for val in valid_target_values.values():
-            assert val in test_config.get("target_values")
+        assert sorted(valid_current_values.values()) == sorted(
+            test_config["current_values"]
+        )
+        assert sorted(valid_target_values.values()) == sorted(
+            test_config["target_values"]
+        )
 
 
 async def test_supported_states_without_arm_home_log_no_error(
