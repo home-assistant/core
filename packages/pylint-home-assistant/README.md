@@ -100,7 +100,6 @@ Every check has a code following the
 | `C7410` | [`home-assistant-enforce-greek-micro-char`](#c7410-home-assistant-enforce-greek-micro-char) | Use Greek mu (U+03BC), not ANSI micro sign (U+00B5) |
 | `C7411` | [`home-assistant-enforce-class-module`](#c7411-home-assistant-enforce-class-module) | Entity class should be in the correct platform module |
 | `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
-| `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 | `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
 | `C7416` | [`home-assistant-noqa-f401-with-all`](#c7416-home-assistant-noqa-f401-with-all) | List re-exported names in `__all__` instead of using `# noqa: F401` |
@@ -969,16 +968,6 @@ another translation references with `[%key:...%]`.
 
 Other platforms, such as `switch`, don't fall back to the device class name,
 so they are not checked.
-
-
-## `home_assistant_duplicate_const` checker
-
-Detects constants in integration modules that duplicate one already exported
-from `homeassistant.const` with the same value.
-
-### `C7413`: `home-assistant-duplicate-const`
-
-Import the constant from `homeassistant.const` instead of redefining it.
 
 
 ## `home_assistant_actions_swallowed_exceptions` checker
