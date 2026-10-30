@@ -22,20 +22,6 @@ from .entity import ElectraEntity
 PARALLEL_UPDATES = 0
 
 
-def _is_sensor_fault(device: ElectraAirConditioner, field: str) -> bool | None:
-    """Return whether the AC reports one of its temperature sensors as faulty.
-
-    The healthy value of these flags is not identical across models ('NORM'
-    and 'NORMAL' are both in the wild). An AC that stops reporting the field
-    leaves the flag unknown instead of healthy, because the entity only exists
-    for a unit that reported it at some point.
-    """
-    value = device.measurements.get(field)
-    if value is None:
-        return None
-    return not str(value).upper().startswith("NORM")
-
-
 @dataclass(frozen=True, kw_only=True)
 class ElectraBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe an Electra binary sensor."""
@@ -58,15 +44,21 @@ BINARY_SENSORS: tuple[ElectraBinarySensorEntityDescription, ...] = (
         key="indoor_coil_sensor_fault",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_supported=lambda device: "I_BAD_ICT" in device.measurements,
-        value_fn=lambda device: _is_sensor_fault(device, "I_BAD_ICT"),
+        # The health flag is decoded by the library: its healthy value is not
+        # identical across models, and an AC that stops reporting the field
+        # reads as unknown rather than as healthy.
+        is_supported=lambda device: device.get_indoor_coil_sensor_fault() is not None,
+        value_fn=lambda device: device.get_indoor_coil_sensor_fault(),
     ),
     ElectraBinarySensorEntityDescription(
         key="return_air_sensor_fault",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_supported=lambda device: "I_BAD_RAT" in device.measurements,
-        value_fn=lambda device: _is_sensor_fault(device, "I_BAD_RAT"),
+        # The health flag is decoded by the library: its healthy value is not
+        # identical across models, and an AC that stops reporting the field
+        # reads as unknown rather than as healthy.
+        is_supported=lambda device: device.get_return_air_sensor_fault() is not None,
+        value_fn=lambda device: device.get_return_air_sensor_fault(),
     ),
 )
 

@@ -1,8 +1,9 @@
 """Common fixtures for the Electra Smart tests."""
 
+from functools import partial
 from unittest.mock import AsyncMock, Mock, patch
 
-from electrasmart.device import OperationMode
+from electrasmart.device import ElectraAirConditioner, OperationMode
 from electrasmart.device.const import Feature
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -60,6 +61,19 @@ def _mock_device(mac: str, name: str) -> Mock:
     )
     # `name` is a reserved Mock kwarg, so it must be set after construction.
     device.name = name
+    # The health flags are decoded by the library, and these mocks carry the
+    # telemetry rather than the real object, so bind the library's own
+    # implementations to this mock: the tests then drive the real comparison
+    # against whatever MEASUREMENTS holds.
+    device.get_measurement_fault = Mock(
+        side_effect=partial(ElectraAirConditioner.get_measurement_fault, device)
+    )
+    device.get_indoor_coil_sensor_fault = Mock(
+        side_effect=partial(ElectraAirConditioner.get_indoor_coil_sensor_fault, device)
+    )
+    device.get_return_air_sensor_fault = Mock(
+        side_effect=partial(ElectraAirConditioner.get_return_air_sensor_fault, device)
+    )
     return device
 
 
