@@ -209,6 +209,14 @@ def add_entities(
     tracked: set[str],
 ) -> None:
     """Add sensors for devices that support them."""
+    # Tracked keys are "<device>_<sensor>", so a dropped device only matches
+    # by prefix; without this its entities never come back when it does.
+    tracked.intersection_update(
+        key
+        for key in tracked
+        if any(key.startswith(f"{dev_id}_") for dev_id in account.devices)
+    )
+
     new_entities = []
 
     for dev_id, device in account.devices.items():
