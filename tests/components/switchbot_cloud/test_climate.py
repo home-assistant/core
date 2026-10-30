@@ -701,3 +701,32 @@ async def test_smart_radiator_thermostat_set_hvac_mode(
         "command",
         5,
     )
+
+
+
+async def test_smart_radiator_thermostat_target_temperature(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test smart radiator thermostat uses targetTemperature from coordinator data."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            deviceType="Smart Radiator Thermostat",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = {
+        "mode": 1,
+        "temperature": 23.5,
+        "targetTemperature": 20.0,
+    }
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("climate.climate_1")
+    assert state is not None
+    assert state.attributes["current_temperature"] == 23.5
+    assert state.attributes["temperature"] == 20.0
