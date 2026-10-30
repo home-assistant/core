@@ -8,8 +8,7 @@ from yarl import URL
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.http import current_request
-from homeassistant.helpers.network import is_internal_request
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .coordinator import (
     get_addons_list,
@@ -45,14 +44,18 @@ def _get_supervisor_data_if_available(
 
 def _get_observer_url(hass: HomeAssistant) -> str | None:
     """Return the observer URL on the host the user reached Home Assistant at."""
-    # The observer is published on the host, only reachable on the local network
-    if not is_internal_request(hass):
+    # The observer is published on the host, only reachable on the local network.
+    # Same check as is_internal_request, but returns the internal URL it matched.
+    try:
+        internal_url = get_url(
+            hass, allow_external=False, allow_cloud=False, require_current_request=True
+        )
+    except NoURLAvailableError:
         return None
-    request = current_request.get()
+    host = URL(internal_url).host
     if TYPE_CHECKING:
-        assert request is not None
-        assert request.url.host is not None
-    return str(URL.build(scheme="http", host=request.url.host, port=OBSERVER_PORT))
+        assert host is not None
+    return str(URL.build(scheme="http", host=host, port=OBSERVER_PORT))
 
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:

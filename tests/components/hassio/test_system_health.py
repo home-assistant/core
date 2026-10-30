@@ -358,11 +358,12 @@ async def test_hassio_system_health_with_issues(
     }
 
 
-def _mock_request(host: str) -> Mock:
-    """Return a request made to host."""
+def _mock_request(host: str, url_host: str) -> Mock:
+    """Return a request with a Host header and the host the URL resolved to."""
+    # They differ when a trusted proxy sets X-Forwarded-Host
     return Mock(
         headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: host})),
-        url=URL(f"http://{host}"),
+        url=URL(f"http://{url_host}"),
     )
 
 
@@ -370,7 +371,7 @@ def _mock_request(host: str) -> Mock:
     ("current", "expected"),
     [
         pytest.param(
-            _mock_request("homeassistant.local:8123"),
+            _mock_request("homeassistant.local:8123", "homeassistant.local:8123"),
             {
                 "type": "failed",
                 "error": "unreachable",
@@ -379,7 +380,16 @@ def _mock_request(host: str) -> Mock:
             id="internal",
         ),
         pytest.param(
-            _mock_request("ha.example.com"),
+            _mock_request("homeassistant.local:8123", "ha.example.com"),
+            {
+                "type": "failed",
+                "error": "unreachable",
+                "more_info": "http://homeassistant.local:4357",
+            },
+            id="internal_forwarded_host",
+        ),
+        pytest.param(
+            _mock_request("ha.example.com", "ha.example.com"),
             {"type": "failed", "error": "unreachable"},
             id="external",
         ),
