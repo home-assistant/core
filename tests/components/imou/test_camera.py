@@ -1,7 +1,7 @@
 """Tests for Imou camera platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
@@ -214,22 +214,49 @@ async def test_idle_stream_is_dropped_so_the_next_open_fetches_again(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """After nobody is pulling, drop the Stream so the next open is a new ticket."""
-    mock_imou_ha_device_manager.async_get_device_stream.return_value = TEST_STREAM_URL
+    first_url = "rtsp://example.com/live1"
+    second_url = "rtsp://example.com/live2"
+    mock_imou_ha_device_manager.async_get_device_stream.side_effect = [
+        first_url,
+        second_url,
+    ]
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
     camera = get_camera_from_entity_id(hass, entity_id)
-    stream = MagicMock()
-    stream.outputs.return_value = {}
-    stream.stop = AsyncMock()
-    camera.stream = stream
 
-    await async_get_stream_source(hass, entity_id)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
-    )
-    await hass.async_block_till_done()
+    def _mock_stream() -> MagicMock:
+        stream = MagicMock()
+        stream.outputs.return_value = {}
+        stream.stop = AsyncMock()
+        stream.set_update_callback = MagicMock()
+        return stream
 
-    stream.stop.assert_awaited_once()
-    assert camera.stream is None
+    first_stream = _mock_stream()
+    second_stream = _mock_stream()
+
+    with patch(
+        "homeassistant.components.camera.entity.create_stream",
+        side_effect=[first_stream, second_stream],
+    ) as create_stream:
+        assert await camera.async_create_stream() is first_stream
+        assert create_stream.call_args.args[1] == first_url
+        assert mock_imou_ha_device_manager.async_get_device_stream.await_count == 1
+
+        # Cached path: still the same Stream, no second ticket.
+        assert await camera.async_create_stream() is first_stream
+        assert create_stream.call_count == 1
+
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + STREAM_IDLE_CHECK + timedelta(seconds=2)
+        )
+        await hass.async_block_till_done()
+
+        first_stream.stop.assert_awaited_once()
+        assert camera.stream is None
+
+        assert await camera.async_create_stream() is second_stream
+        assert create_stream.call_args.args[1] == second_url
+        assert mock_imou_ha_device_manager.async_get_device_stream.await_count == 2
+        assert create_stream.call_count == 2
 
 
 @pytest.mark.parametrize(

@@ -139,8 +139,10 @@ class ImouCamera(ImouEntity, Camera):
             self._schedule_idle_check()
             return
         if stream is not None:
-            await stream.stop()
+            # Clear before awaiting stop so a concurrent create_stream does not
+            # reuse this instance (and its expired RTSP URL) while shutdown yields.
             self.stream = None
+            await stream.stop()
 
     @override
     @async_wrap_imou_command("get_image_failed")
