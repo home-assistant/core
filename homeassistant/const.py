@@ -483,6 +483,14 @@ class EntityStateAttribute(StrEnum):
     UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
 
+class CommonServiceArgument(StrEnum):
+    """Action fields shared by the actions of many integrations."""
+
+    CONFIG_ENTRY_ID = "config_entry_id"
+    DEVICE_ID = "device_id"
+    ENTITY_ID = "entity_id"
+
+
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
 class UnitOfApparentPower(StrEnum):
