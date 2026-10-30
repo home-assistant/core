@@ -243,6 +243,9 @@
       "inverter_alarm_ripple": {
         "name": "[%key:component::victron_gx::common::ripple_alarm%]"
       },
+      "platform_firmware_large_image_support": {
+        "name": "Large image support"
+      },
       "solarcharger_load_state": {
         "name": "Load state"
       },
@@ -268,6 +271,9 @@
     "button": {
       "platform_device_reboot": {
         "name": "Device reboot"
+      },
+      "platform_network_wifi_scan": {
+        "name": "Scan"
       }
     },
     "device_tracker": {
@@ -455,7 +461,7 @@
         "state": {
           "not_possible": "Not possible",
           "not_started": "Not started",
-          "start": "Starting",
+          "start": "[%key:common::action::start%]",
           "started": "Started"
         }
       },
@@ -1730,6 +1736,36 @@
       "multi_yield_yesterday": {
         "name": "[%key:component::victron_gx::common::yield_yesterday%]"
       },
+      "platform_device_hq_serial_number": {
+        "name": "Hq serial number"
+      },
+      "platform_device_model": {
+        "name": "[%key:common::generic::model%]"
+      },
+      "platform_device_product_id": {
+        "name": "Product id"
+      },
+      "platform_device_unique_id": {
+        "name": "Unique id"
+      },
+      "platform_firmware_installed_build": {
+        "name": "Build"
+      },
+      "platform_firmware_installed_image_type": {
+        "name": "Image type"
+      },
+      "platform_firmware_online_available_build": {
+        "name": "Available build"
+      },
+      "platform_network_ethernet_link_local_ip_address": {
+        "name": "Link local ip address"
+      },
+      "platform_network_has_bluetooth_support": {
+        "name": "Has bluetooth support"
+      },
+      "platform_network_wifi_signal_strength": {
+        "name": "Signal strength"
+      },
       "platform_venus_firmware_available_version": {
         "name": "Available version"
       },
@@ -2512,6 +2548,15 @@
       "multi_relay0_state": {
         "name": "Relay on Multi RS state"
       },
+      "platform_network_ethernet_gateway_enabled": {
+        "name": "Allow using ethernet for internet access"
+      },
+      "platform_network_wifi_gateway_enabled": {
+        "name": "Allow using wifi for internet access"
+      },
+      "platform_services_access_point_enabled": {
+        "name": "Create access point"
+      },
       "solarcharger_relay_state": {
         "name": "Relay state"
       },
@@ -2571,6 +2616,11 @@
       },
       "vebus_pvinverter_disable": {
         "name": "Vebus PV inverter disable"
+      }
+    },
+    "text": {
+      "platform_network_set_value": {
+        "name": "Set value"
       }
     },
     "time": {
