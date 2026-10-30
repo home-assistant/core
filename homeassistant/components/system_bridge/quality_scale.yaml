@@ -8,8 +8,14 @@ rules:
       when the connection drops.
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
-  config-flow: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      The already configured aborts and the reauth unique ID mismatch are not
+      tested.
+  config-flow:
+    status: todo
+    comment: The config flow fields have no data_description.
   dependency-transparency: done
   docs-actions: done
   docs-conditions:
@@ -51,7 +57,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
