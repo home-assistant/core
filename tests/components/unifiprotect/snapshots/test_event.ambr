@@ -105,7 +105,7 @@
     'device_id': <DeviceEntry connections=[('mac', '26:db:af:f1:33:a4')]>,
     'disabled_by': None,
     'domain': 'event',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'event.test_sensor_maintenance',
     'has_entity_name': True,
     'hidden_by': None,

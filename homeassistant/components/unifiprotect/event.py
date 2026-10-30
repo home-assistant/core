@@ -26,7 +26,7 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -756,6 +756,7 @@ SENSOR_EVENT_DESCRIPTIONS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
         key="maintenance",
         translation_key="maintenance",
+        entity_category=EntityCategory.DIAGNOSTIC,
         event_types=list(_MAINTENANCE_EVENT_TYPES.values()),
         ufp_capability=SensorFeatureCapability.SMOKE,
         ufp_public_event_types=tuple(_MAINTENANCE_EVENT_TYPES),
