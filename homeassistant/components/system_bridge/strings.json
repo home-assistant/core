@@ -41,6 +41,23 @@
         "name": "Pending reboot"
       }
     },
+    "button": {
+      "power_hibernate": {
+        "name": "Hibernate"
+      },
+      "power_lock": {
+        "name": "Lock"
+      },
+      "power_logout": {
+        "name": "Log out"
+      },
+      "power_shutdown": {
+        "name": "Shut down"
+      },
+      "power_sleep": {
+        "name": "Sleep"
+      }
+    },
     "media_player": {
       "media": {
         "name": "Media"
@@ -145,7 +162,7 @@
         "name": "{gpu_name} memory used"
       },
       "gpu_memory_used_percentage": {
-        "name": "{gpu_name} memory used %"
+        "name": "{gpu_name} memory usage"
       },
       "gpu_power_usage": {
         "name": "{gpu_name} power usage"
@@ -178,7 +195,7 @@
         "name": "Memory used"
       },
       "memory_used_percentage": {
-        "name": "Memory used %"
+        "name": "Memory usage"
       },
       "network_download_rate": {
         "name": "Network download rate"
@@ -241,6 +258,9 @@
     },
     "no_data_received": {
       "message": "No data received from {host}"
+    },
+    "power_command_failed": {
+      "message": "Failed to send the power command: {error}"
     },
     "process_not_found": {
       "message": "Could not find process with ID {id}."

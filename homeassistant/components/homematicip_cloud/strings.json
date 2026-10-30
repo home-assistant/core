@@ -37,6 +37,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "arming_blocked": {
+        "name": "Arming blocked"
+      },
       "chamber_degraded": {
         "name": "Chamber degraded"
       },
