@@ -89,10 +89,10 @@ async def test_only_one_battery_sensor_detected(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("sensor.room_1_test_climate_5_battery")
+        entry = entity_registry.async_get("sensor.test_climate_battery")
         assert entry
         assert entry.unique_id == "hc2_111111.5_battery"
-        assert entry.original_name == "Room 1 Test climate Battery"
+        assert entry.original_name == "Battery"
         assert entry.original_device_class == SensorDeviceClass.BATTERY
 
         entries = er.async_entries_for_config_entry(
@@ -115,7 +115,7 @@ async def test_battery_sensor_value_updates(
     with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
 
-    entity_id = "sensor.room_1_test_climate_5_battery"
+    entity_id = "sensor.test_climate_battery"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "80"

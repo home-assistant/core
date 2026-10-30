@@ -1,6 +1,7 @@
 """Support for Fibaro sensors."""
 
 from contextlib import suppress
+import logging
 from typing import override
 
 from pyfibaro.fibaro_device import DeviceModel
@@ -28,6 +29,8 @@ from homeassistant.util import convert
 
 from . import FibaroConfigEntry, FibaroController
 from .entity import FibaroEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 # List of known sensors which represents a fibaro device
 MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {
@@ -94,7 +97,7 @@ ADDITIONAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 BATTERY_SENSOR_TYPE = SensorEntityDescription(
     key="battery",
-    name="Battery",
+    has_entity_name=True,
     native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     device_class=SensorDeviceClass.BATTERY,
     state_class=SensorStateClass.MEASUREMENT,
@@ -234,16 +237,21 @@ class FibaroBatterySensor(FibaroEntity, SensorEntity):
         self.entity_description = entity_description
 
         # To differentiate additional sensors from main sensors they need
-        # to get different names and ids
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{self.ha_id}_{entity_description.key}"
-        )
-        self._attr_name = f"{self._attr_name} {entity_description.name}"
+        # to get different unique id
         self._attr_unique_id = f"{self._attr_unique_id}_{entity_description.key}"
+
+        # clear values set by FibaroEntity, this code can be removed
+        # after FibaroEntity complies as well to the new standard
+        self.entity_id = None  # type: ignore[assignment]
+        del self._attr_name
 
     @override
     def update(self) -> None:
         """Update the state."""
         super().update()
-        with suppress(KeyError, ValueError):
+        try:
             self._attr_native_value = self.fibaro_device.battery_level
+        except (TypeError, ValueError) as ex:
+            _LOGGER.error(
+                "Value update for battery sensor %s failed: %s", self.entity_id, ex
+            )
