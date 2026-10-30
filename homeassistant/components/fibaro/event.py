@@ -5,11 +5,7 @@ from typing import override
 from pyfibaro.fibaro_device import DeviceModel, SceneEvent
 from pyfibaro.fibaro_state_resolver import FibaroEvent
 
-from homeassistant.components.event import (
-    ENTITY_ID_FORMAT,
-    EventDeviceClass,
-    EventEntity,
-)
+from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -50,8 +46,6 @@ class FibaroEventEntity(FibaroEntity, EventEntity):
         super().__init__(fibaro_device, controller)
 
         key_id = scene_event.key_id
-
-        self.entity_id = ENTITY_ID_FORMAT.format(f"{self.ha_id}_button_{key_id}")
 
         self._button = key_id
 

@@ -7,7 +7,6 @@ from typing import Any, override
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
     PRESET_AWAY,
     PRESET_BOOST,
     ClimateEntity,
@@ -133,7 +132,6 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         self._target_temp_device: DeviceModel | None = None
         self._op_mode_device: DeviceModel | None = None
         self._fan_mode_device: DeviceModel | None = None
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
         siblings = self.controller.get_siblings(fibaro_device)
         _LOGGER.debug("%s siblings: %s", self.ha_id, siblings)
