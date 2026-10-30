@@ -45,6 +45,9 @@ from typing import (
 
 import probatio
 from propcache.api import cached_property, under_cached_property
+
+# 'typing_extensions.sentinel' is not supported by Pylance yet, requires >2026.4.1
+# Use temporary alias to make the switch easier later.
 from typing_extensions import Sentinel as sentinel
 
 from . import util
