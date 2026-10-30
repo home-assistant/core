@@ -236,7 +236,7 @@ def format_report(report: dict[str, Any]) -> str:
     if report["slow"]:
         lines.append(f"Callbacks over {report['threshold_ms']} ms:")
         lines.extend(
-            f"  {row['at']}: {row['ms']} ms {row['callback']}{where(row)}"
+            f"  #{row['seq']} {row['at']}: {row['ms']} ms {row['callback']}{where(row)}"
             for row in report["slow"]
         )
     if report["errors"]:

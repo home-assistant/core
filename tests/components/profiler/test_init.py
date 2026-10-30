@@ -652,6 +652,7 @@ async def test_loop_timing_attribution(
     await hass.services.async_call(DOMAIN, SERVICE_DUMP_LOOP_TIMING, {}, blocking=True)
     assert f"{here}.later [profiler: Profiler]: 1 calls" in caplog.text
     assert "Callbacks over 50.0 ms:" in caplog.text
+    assert "  #1 " in caplog.text
     await hass.config_entries.async_unload(entry.entry_id)
 
 
