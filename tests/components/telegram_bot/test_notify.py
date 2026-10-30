@@ -59,7 +59,6 @@ async def test_send_message(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=None,
-            read_timeout=None,
             message_thread_id=None,
         )
 
