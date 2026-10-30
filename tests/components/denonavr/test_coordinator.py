@@ -12,6 +12,7 @@ from denonavr.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.denonavr.const import DOMAIN
 from homeassistant.components.denonavr.coordinator import (
@@ -21,8 +22,6 @@ from homeassistant.components.denonavr.coordinator import (
     mark_unavailable,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Both refresh functions carry the same per-zone contract, so each case below
 # runs against both.
