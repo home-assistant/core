@@ -1,7 +1,7 @@
 """Type casting functions for Home Assistant templates."""
 
 import math
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import jinja2.filters
 from typing_extensions import Sentinel as sentinel
@@ -70,11 +70,9 @@ class TypeCastExtension(BaseTemplateExtension):
     @staticmethod
     def forgiving_int(value: Any, default: Any = _SENTINEL, base: int = 10) -> Any:
         """Try to convert value to an int, and raise if it fails."""
+        result: int | _SENTINEL
         try:
-            result = cast(
-                "int | _SENTINEL",
-                jinja2.filters.do_int(value, default=default, base=base),
-            )
+            result = jinja2.filters.do_int(value, default=default, base=base)
         except OverflowError:
             # Jinja's do_int doesn't catch this for an infinite float
             result = default
