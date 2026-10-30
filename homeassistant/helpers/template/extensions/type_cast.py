@@ -72,7 +72,7 @@ class TypeCastExtension(BaseTemplateExtension):
         """Try to convert value to an int, and raise if it fails."""
         try:
             result = cast(
-                int | _SENTINEL,
+                "int | _SENTINEL",
                 jinja2.filters.do_int(value, default=default, base=base),
             )
         except OverflowError:
