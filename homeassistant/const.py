@@ -461,6 +461,14 @@ ATTR_TEMPERATURE: Final = "temperature"
 ATTR_PERSONS: Final = "persons"
 
 
+class CommonServiceArgument(StrEnum):
+    """Action fields shared by the actions of many integrations."""
+
+    CONFIG_ENTRY_ID = "config_entry_id"
+    DEVICE_ID = "device_id"
+    ENTITY_ID = "entity_id"
+
+
 class EntityCapabilityAttribute(StrEnum):
     """Capability attributes shared by all entities."""
 
@@ -481,14 +489,6 @@ class EntityStateAttribute(StrEnum):
     RESTORED = "restored"
     SUPPORTED_FEATURES = "supported_features"
     UNIT_OF_MEASUREMENT = "unit_of_measurement"
-
-
-class CommonServiceArgument(StrEnum):
-    """Action fields shared by the actions of many integrations."""
-
-    CONFIG_ENTRY_ID = "config_entry_id"
-    DEVICE_ID = "device_id"
-    ENTITY_ID = "entity_id"
 
 
 # #### UNITS OF MEASUREMENT ####
