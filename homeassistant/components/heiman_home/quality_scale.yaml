@@ -66,9 +66,7 @@ rules:
   entity-translations: done
   entity-unavailable: done
   exception-translations: todo
-  icon-translations:
-    status: exempt
-    comment: No custom icons are used.
+  icon-translations: done
   inject-websession: done
   integration-owner: done
   log-when-unavailable: todo

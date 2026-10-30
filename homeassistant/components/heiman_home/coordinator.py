@@ -102,21 +102,27 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         try:
             self.homes = await cloud_wrapper.async_get_homes()
         except (HeimanConnectionError, HeimanApiError) as err:
-            _LOGGER.warning("Failed to fetch homes: %s", err)
-            self.data.errors["homes"] = str(err)
+            raise UpdateFailed(f"Connection error fetching homes: {err}") from err
 
     @override
     async def _async_update_data(self) -> HeimanData:
         """Update coordinator data."""
         self.data.errors.clear()
 
+        # Collect the devices of every home before replacing the device
+        # mapping, otherwise only the last home's devices would survive.
+        devices: dict[str, HeimanDevice] = {}
         for home in self.homes:
-            await self._fetch_and_process_devices(home.home_id)
+            devices.update(await self._fetch_and_process_devices(home.home_id))
+
+        self._merge_device_states(devices)
 
         return self.data
 
-    async def _fetch_and_process_devices(self, home_id: str) -> None:
-        """Fetch and process device data."""
+    async def _fetch_and_process_devices(
+        self, home_id: str
+    ) -> dict[str, HeimanDevice]:
+        """Fetch and process the devices of a single home."""
         cloud_wrapper = self.api_client.cloud_client
 
         try:
@@ -124,9 +130,6 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
             # Get detailed info for devices to populate property values
             await self._update_device_details(devices)
-
-            # Update device data and merge old states
-            self._merge_device_states(devices)
 
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed from err
@@ -140,6 +143,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             _LOGGER.exception("Failed to fetch devices")
             self.data.errors["devices"] = str(err)
             raise UpdateFailed(f"Failed to fetch devices: {err}") from err
+
+        return devices
 
     async def _update_device_details(self, devices: dict[str, HeimanDevice]) -> None:
         """Update device details including properties from deriveMetadata.
@@ -323,12 +328,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         entity=entity_type,
                     )
 
-        # Schedule entity update if coordinator is set up
-        # hass.add_job is thread-safe and uses call_soon_threadsafe internally
-        if hasattr(self, "async_set_updated_data") and self.hass:
-            # Use hass.add_job to schedule the update in the event loop
-            # Pass the coroutine function and data as arguments
-            self.hass.add_job(self.async_set_updated_data, self.data)
+        # Notify listeners without resetting the polling interval;
+        # hass.add_job is thread-safe (uses call_soon_threadsafe internally)
+        self.hass.add_job(self.async_update_listeners)
 
     async def async_read_device_properties(self, device_id: str) -> None:
         """Read properties from a specific device via MQTT.
@@ -371,12 +373,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                                 entity=entity_type,
                             )
 
-                # Trigger entity update
-                # hass.add_job is thread-safe and uses call_soon_threadsafe internally
-                if hasattr(self, "async_set_updated_data") and self.hass:
-                    # Use hass.add_job to schedule the update in the event loop
-                    # Pass the coroutine function and data as arguments
-                    self.hass.add_job(self.async_set_updated_data, self.data)
+                # Notify listeners without resetting the polling interval
+                self.async_update_listeners()
             else:
                 _LOGGER.warning("No properties returned from device %s", device_id)
 

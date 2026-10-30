@@ -114,9 +114,9 @@ async def test_coordinator_fetch_home_info_exception(hass: HomeAssistant) -> Non
 
     coordinator.data = HeimanData()
 
-    # Should not raise, but set error
-    await coordinator._async_setup()
-    assert "homes" in coordinator.data.errors
+    # Setup fails so Home Assistant retries instead of loading with no homes
+    with pytest.raises(UpdateFailed, match="Connection error fetching homes"):
+        await coordinator._async_setup()
 
 
 async def test_coordinator_fetch_devices_connection_error_no_previous_data(
@@ -502,8 +502,8 @@ async def test_coordinator_on_device_property_update_new_property(
     coordinator.data = HeimanData(devices={"device-1": mock_device})
     coordinator.hass = hass
 
-    # Mock async_set_updated_data
-    coordinator.async_set_updated_data = AsyncMock()
+    # Mock async_update_listeners
+    coordinator.async_update_listeners = MagicMock()
 
     # Call with new property
     coordinator._on_device_property_update("device-1", {"new_prop": 42})
@@ -669,7 +669,7 @@ async def test_coordinator_async_update_data_success(hass: HomeAssistant) -> Non
 async def test_coordinator_fetch_home_info_auth_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_setup records homes fetch error without raising."""
+    """Test _async_setup raises UpdateFailed when fetching homes fails."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.entry_id = "test-entry"
 
@@ -692,9 +692,10 @@ async def test_coordinator_fetch_home_info_auth_error(
         side_effect=HeimanApiError("Failed to get homes")
     )
 
-    # Should not raise, but record the error
-    await coordinator._async_setup()
-    assert "homes" in coordinator.data.errors
+    # Setup must fail so Home Assistant retries instead of silently
+    # loading with zero devices
+    with pytest.raises(UpdateFailed, match="Connection error fetching homes"):
+        await coordinator._async_setup()
 
 
 async def test_coordinator_fetch_home_info_config_entry_auth_failed(
@@ -728,10 +729,63 @@ async def test_coordinator_fetch_home_info_config_entry_auth_failed(
         await coordinator._async_setup()
 
 
+async def test_coordinator_update_data_aggregates_all_homes(
+    hass: HomeAssistant,
+) -> None:
+    """Test that devices from every home end up in the coordinator data.
+
+    A single entry covers the whole account, so the devices of each home have
+    to be collected into one mapping. Replacing the mapping per home would
+    leave only the last home's devices behind.
+    """
+    config_entry = MagicMock(spec=ConfigEntry)
+    config_entry.entry_id = "test-entry"
+
+    mock_api_client = MagicMock()
+    mock_cloud_wrapper = MagicMock(spec=HeimanCloudClientWrapper)
+    mock_api_client.cloud_client = mock_cloud_wrapper
+    mock_api_client.initialize = AsyncMock()
+
+    mock_device1 = MagicMock(spec=HeimanDevice)
+    mock_device1.device_id = "device-1"
+    mock_device1.merge_from = MagicMock()
+
+    mock_device2 = MagicMock(spec=HeimanDevice)
+    mock_device2.device_id = "device-2"
+    mock_device2.merge_from = MagicMock()
+
+    mock_cloud_wrapper.async_get_devices = AsyncMock(
+        side_effect=lambda home_id: {
+            "home-a": {"device-1": mock_device1},
+            "home-b": {"device-2": mock_device2},
+        }[home_id]
+    )
+    mock_cloud_wrapper.async_fetch_and_process_device_details = AsyncMock()
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=MagicMock(),
+        api_client=mock_api_client,
+        config_entry=config_entry,
+    )
+    coordinator.data = HeimanData()
+
+    home_a = MagicMock()
+    home_a.home_id = "home-a"
+    home_b = MagicMock()
+    home_b.home_id = "home-b"
+    coordinator.homes = [home_a, home_b]
+
+    await coordinator._async_update_data()
+
+    # Devices of both homes are present, not just the last one
+    assert set(coordinator.data.devices) == {"device-1", "device-2"}
+
+
 async def test_coordinator_fetch_devices_creates_all_devices(
     hass: HomeAssistant,
 ) -> None:
-    """Test _fetch_and_process_devices creates entities for every device.
+    """Test _fetch_and_process_devices returns every device of a home.
 
     Filtering is not a concept in Home Assistant core: every device the account
     exposes gets an entity, users can disable the ones they don't need.
@@ -767,10 +821,10 @@ async def test_coordinator_fetch_devices_creates_all_devices(
 
     coordinator.data = HeimanData()
 
-    await coordinator._fetch_and_process_devices("test-home-id")
+    devices = await coordinator._fetch_and_process_devices("test-home-id")
 
-    # Every discovered device ends up in the coordinator data
-    assert set(coordinator.data.devices) == {"device-1", "device-2"}
+    # Every discovered device is returned for the home
+    assert set(devices) == {"device-1", "device-2"}
 
 
 async def test_coordinator_mqtt_init_oauth2_token_none_debug_log(
@@ -905,7 +959,7 @@ async def test_coordinator_on_device_property_update_existing_property(
 
     coordinator.data = HeimanData(devices={"device-1": mock_device})
     coordinator.hass = hass
-    coordinator.async_set_updated_data = AsyncMock()
+    coordinator.async_update_listeners = MagicMock()
 
     # Update existing property
     coordinator._on_device_property_update("device-1", {"temperature": 25.5})

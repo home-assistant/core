@@ -792,17 +792,17 @@ async def test_sensor_creation_readable_without_entity_marker(
 
     # Property with entity=None (should also create sensor)
     entity_none_prop = DeviceProperty(
-        identifier="rssi_value",
-        name="RSSI Value",
-        value=-65,
-        data_type="int",
+        identifier="voltage",
+        name="Voltage",
+        value=3.7,
+        data_type="float",
         readable=True,
         entity=None,
     )
 
     mock_device.properties = {
         "signal_strength": no_entity_prop,
-        "rssi_value": entity_none_prop,
+        "voltage": entity_none_prop,
     }
     mock_coordinator.get_all_devices.return_value = [mock_device]
     mock_coordinator.last_update_success = True
@@ -819,7 +819,58 @@ async def test_sensor_creation_readable_without_entity_marker(
     assert len(added_entities) == 2
     unique_ids = {sensor.unique_id for sensor in added_entities}
     assert "device-no-entity_signal_strength" in unique_ids
-    assert "device-no-entity_rssi_value" in unique_ids
+    assert "device-no-entity_voltage" in unique_ids
+
+
+async def test_sensor_creation_skips_properties_without_description(
+    hass: HomeAssistant, setup_credentials: None
+) -> None:
+    """Test that properties without an entity description get no sensor.
+
+    The entity descriptions already cover every supported property, so nothing
+    is inferred at runtime and undescribed properties stay out of the entity
+    registry.
+    """
+    mock_coordinator = MagicMock()
+    mock_device = MagicMock(spec=HeimanDevice)
+    mock_device.device_id = "device-unknown"
+    mock_device.device_name = "Device With Unknown Property"
+    mock_device.manufacturer = "Heiman"
+    mock_device.model = "HS1"
+    mock_device.product_id = "prod-1"
+    mock_device.firmware_version = "1.0"
+    mock_device.hardware_version = "1.0"
+    mock_device.online = True
+
+    mock_device.properties = {
+        # Described property - gets an entity
+        "temperature": DeviceProperty(
+            identifier="temperature",
+            name="Temperature",
+            value=25.5,
+            data_type="float",
+            readable=True,
+        ),
+        # Undescribed property - no entity, it has neither a device class
+        # nor a name to show in the UI
+        "rssi_value": DeviceProperty(
+            identifier="rssi_value",
+            name="RSSI Value",
+            value=-65,
+            data_type="int",
+            readable=True,
+        ),
+    }
+    mock_coordinator.get_all_devices.return_value = [mock_device]
+    mock_coordinator.last_update_success = True
+    mock_coordinator.get_device.return_value = mock_device
+
+    await _async_setup_entry(hass, mock_coordinator)
+
+    added_entities = _get_platform_entities(hass)
+
+    assert len(added_entities) == 1
+    assert added_entities[0].unique_id == "device-unknown_temperature"
 
 
 async def test_sensor_creation_skips_non_sensor_entities(
@@ -891,44 +942,6 @@ async def test_sensor_creation_skips_non_sensor_entities(
     # Check that only sensor entity was created (switch and binary_sensor skipped)
     assert len(added_entities) == 1
     assert added_entities[0].unique_id == "device-mixed_temperature"
-
-
-async def test_sensor_signal_strength_non_numeric_skips_device_class(
-    hass: HomeAssistant,
-) -> None:
-    """Test signal_strength config skips device class for non-numeric values.
-
-    When signal_strength has a non-numeric value, the sensor should not
-    apply the signal_strength device class.
-    """
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-
-    # Signal strength with string value (non-numeric)
-    mock_device.properties = {
-        "signal_strength": DeviceProperty(
-            identifier="signal_strength",
-            name="Signal Strength",
-            value="excellent",  # Non-numeric string
-            data_type="string",  # String data type
-            readable=True,
-        )
-    }
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    sensor = HeimanSensorEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-        property_identifier="signal_strength",
-    )
-
-    # Should not have signal_strength device class set
-    # because value is non-numeric
-    assert sensor.device_class != SensorDeviceClass.SIGNAL_STRENGTH
 
 
 async def test_sensor_skips_non_scalar_properties(hass: HomeAssistant) -> None:

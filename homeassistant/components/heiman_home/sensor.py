@@ -35,48 +35,56 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
+        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="humidity",
+        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="battery",
+        translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltage",
+        translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="power",
+        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="energy",
+        translation_key="energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="co_concentration",
+        translation_key="co_concentration",
         device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="signal_strength",
+        translation_key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -86,15 +94,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     description.key: description for description in SENSOR_TYPES
-}
-
-# Devices report their signal properties under different names; map the
-# property identifiers onto the description keys above.
-PROPERTY_ALIASES: dict[str, str] = {
-    "rssi": "signal_strength",
-    "signal": "signal_strength",
-    "linkquality": "signal_strength",
-    "lqi": "signal_strength",
 }
 
 
@@ -112,8 +111,13 @@ async def async_setup_entry(
     # properties are discovered when eligibility changes.
     last_sensor_candidates: frozenset[tuple[str, str]] | None = None
 
-    def _property_is_sensor_eligible(prop: DeviceProperty) -> bool:
+    def _property_is_sensor_eligible(property_id: str, prop: DeviceProperty) -> bool:
         """Return True if a readable property should have a sensor entity."""
+        # Only properties described by SENSOR_TYPES get an entity. Everything
+        # the entity needs (device class, unit, state class) comes from the
+        # entity description, so nothing is inferred at runtime.
+        if SENSOR_DESCRIPTIONS.get(property_id.lower()) is None:
+            return False
         if not prop.readable:
             return False
         entity_platform = getattr(prop, "entity", None)
@@ -123,14 +127,8 @@ async def async_setup_entry(
         # to another entity platform.
         if entity_platform is not None:
             return False
-        # Skip values that cannot be represented by sensor native_value when
-        # auto-creating sensors, unless explicitly marked as entity="sensor".
-        if prop.data_type in {"bool", "array", "object"}:
-            return False
-        return (
-            prop.value is None
-            or DeviceProperty.validate_sensor_value(prop.value) is not None
-        )
+        # Skip values that cannot be represented by sensor native_value.
+        return prop.data_type not in {"bool", "array", "object"}
 
     def _create_sensors_for_devices() -> None:
         """Create sensors for all devices and add new ones."""
@@ -141,7 +139,7 @@ async def async_setup_entry(
 
         for device in devices:
             for property_id, prop in device.properties.items():
-                if not _property_is_sensor_eligible(prop):
+                if not _property_is_sensor_eligible(property_id, prop):
                     continue
                 current_sensor_candidates.add((device.device_id, property_id))
                 unique_id = f"{device.device_id}_{property_id}"
@@ -211,24 +209,9 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             hw_version=device.hardware_version,
         )
 
-        # Readable properties without a matching description still get an
-        # entity, just without a device class, unit or state class.
-        description = SENSOR_DESCRIPTIONS.get(
-            PROPERTY_ALIASES.get(
-                property_identifier.lower(), property_identifier.lower()
-            )
-        )
+        description = SENSOR_DESCRIPTIONS.get(property_identifier.lower())
         if prop is None or description is None:
             return
-
-        # Some devices report a numeric-looking data_type for signal strength
-        # while the current value is actually a string.
-        if description.key == "signal_strength" and prop.value is not None:
-            if not (
-                isinstance(prop.value, (int, float))
-                and not isinstance(prop.value, bool)
-            ):
-                return
 
         self._attr_device_class = description.device_class
         self._attr_native_unit_of_measurement = (
