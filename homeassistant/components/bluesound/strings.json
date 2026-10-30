@@ -34,5 +34,13 @@
         "name": "Set sleep timer"
       }
     }
+  },
+  "exceptions": {
+    "player_unreachable": {
+      "message": "Could not reach the Bluesound player: {error}"
+    },
+    "unexpected_response": {
+      "message": "The Bluesound player returned an unexpected response: {error}"
+    }
   }
 }
