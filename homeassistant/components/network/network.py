@@ -69,11 +69,18 @@ class Network:
         if not enable_adapters(self.adapters, self.configured_adapters):
             enable_auto_detected_adapters(self.adapters)
 
-    async def async_reload_adapters(self) -> None:
-        """Reload the adapters."""
+    async def async_reload_adapters(self) -> bool:
+        """Reload adapters from the system, returning True if they changed.
+
+        Freshly loaded adapters are unconfigured (all disabled), so the new
+        set must be configured before it can be compared against the current,
+        already configured adapters.
+        """
+        previous = self.adapters
         self.adapters = await async_load_adapters()
         self.async_configure()
         _LOGGER.debug("Adapters: %s", self.adapters)
+        return self.adapters != previous
 
     async def async_reconfig(self, config: dict[str, Any]) -> None:
         """Reconfigure network."""
