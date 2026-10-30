@@ -898,3 +898,178 @@ async def test_web_reauth_flow(
     }
 
     assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("entry_unique_id", "primary_calendar_email", "reason", "access_token"),
+    [
+        pytest.param(
+            EMAIL_ADDRESS,
+            EMAIL_ADDRESS,
+            "reconfigure_successful",
+            "ACCESS_TOKEN",
+            id="success",
+        ),
+        pytest.param(
+            EMAIL_ADDRESS,
+            "another-email@example.com",
+            "unique_id_mismatch",
+            "OLD_ACCESS_TOKEN",
+            id="account_mismatch",
+        ),
+        pytest.param(
+            None,
+            EMAIL_ADDRESS,
+            "reconfigure_successful",
+            "ACCESS_TOKEN",
+            id="no_unique_id",
+        ),
+    ],
+)
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+    entry_unique_id: str | None,
+    reason: str,
+    access_token: str,
+) -> None:
+    """Test reconfigure re-runs the device auth flow for the same account."""
+    options = {CONF_CALENDAR_ACCESS: FeatureAccess.read_only.name}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=entry_unique_id,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OLD_ACCESS_TOKEN"},
+        },
+        options=options,
+    )
+    config_entry.add_to_hass(hass)
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "auth"
+
+    with patch("homeassistant.components.google.async_setup_entry", return_value=None):
+        # Run one tick to invoke the credential exchange check
+        await fire_alarm(hass, utcnow() + CODE_CHECK_ALARM_TIMEDELTA)
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"]
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data["token"]["access_token"] == access_token
+    assert config_entry.options == options
+    assert config_entry.unique_id == EMAIL_ADDRESS
+
+
+async def test_reconfigure_flow_no_unique_id_already_configured(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+) -> None:
+    """Test reconfigure of an entry without unique ID to an already configured account."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=EMAIL_ADDRESS,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OTHER_ACCESS_TOKEN"},
+        },
+    ).add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OLD_ACCESS_TOKEN"},
+        },
+    )
+    config_entry.add_to_hass(hass)
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    # Run one tick to invoke the credential exchange check
+    await fire_alarm(hass, utcnow() + CODE_CHECK_ALARM_TIMEDELTA)
+    result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.unique_id is None
+    assert config_entry.data["token"]["access_token"] == "OLD_ACCESS_TOKEN"
+
+
+async def test_web_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test reconfigure of a web credential entry asks for the configured access."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=EMAIL_ADDRESS,
+        data={
+            CONF_CREDENTIAL_TYPE: CredentialType.WEB_AUTH,
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OLD_ACCESS_TOKEN"},
+        },
+        options={CONF_CALENDAR_ACCESS: FeatureAccess.read_only.name},
+    )
+    config_entry.add_to_hass(hass)
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=https://www.googleapis.com/auth/calendar.readonly"
+        "&access_type=offline&prompt=consent"
+    )
+    # Web auth credential type skips the device auth attempt
+    mock_code_flow.assert_not_called()
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "token_type": "Bearer",
+            "expires_in": 60,
+            "scope": "https://www.googleapis.com/auth/calendar.readonly",
+        },
+    )
+
+    with patch("homeassistant.components.google.async_setup_entry", return_value=None):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert config_entry.data[CONF_CREDENTIAL_TYPE] == CredentialType.WEB_AUTH

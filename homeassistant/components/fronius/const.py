@@ -57,6 +57,8 @@ class FroniusDeviceInfo(NamedTuple):
     """Information about a Fronius inverter device."""
 
     device_info: DeviceInfo
+    # registry id of the inverter device, the parent of its MPPT child devices
+    device_id: str
     solar_net_id: SolarNetId
     unique_id: str
 

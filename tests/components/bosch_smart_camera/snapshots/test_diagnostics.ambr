@@ -1,0 +1,18 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'cameras': list([
+      dict({
+        'firmware_version': '9.40.25',
+        'hardware_version': 'HOME_Eyes_Outdoor',
+        'id': '**REDACTED**',
+        'model': 'eyes_outdoor_ii',
+        'title': '**REDACTED**',
+      }),
+    ]),
+    'entry_data': dict({
+      'auth_implementation': 'bosch_smart_camera',
+      'token': '**REDACTED**',
+    }),
+  })
+# ---

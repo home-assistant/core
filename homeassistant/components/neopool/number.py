@@ -1,10 +1,7 @@
 """Number platform for the NeoPool integration."""
 
-import asyncio
-from collections.abc import Callable
-from contextlib import suppress
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from typing import Any, override
 
 from neopool_modbus.capabilities import (
@@ -16,7 +13,6 @@ from neopool_modbus.capabilities import (
     is_temperature_active,
 )
 from neopool_modbus.decoders import decode_masked_flag, is_hydrolysis_in_percent
-from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import MaskedFlag, SetpointKind, is_valid_relay_gpio
 
 from homeassistant.components.number import (
@@ -32,22 +28,17 @@ from homeassistant.const import (
     UnitOfRatio,
     UnitOfTemperature,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
-from .const import CONF_USE_COVER_SENSOR, DOMAIN
+from .const import CONF_USE_COVER_SENSOR
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
-from .entity import NeoPoolEntity
+from .entity import NeoPoolDebouncedWriteEntity
 
 # The platform coalesces rapid writes per entity via a debounce timer and
 # serializes the shared masked register with masked_write_lock, so a platform
 # semaphore would add nothing but latency between independent UI interactions.
 PARALLEL_UPDATES = 0
-
-# Wait for the stepper to settle so only the final value hits the device's EEPROM.
-WRITE_DELAY = timedelta(seconds=3)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -288,7 +279,7 @@ async def async_setup_entry(
     )
 
 
-class NeoPoolNumber(NeoPoolEntity, NumberEntity):
+class NeoPoolNumber(NeoPoolDebouncedWriteEntity[float], NumberEntity):
     """Representation of a NeoPool number entity."""
 
     entity_description: NeoPoolNumberEntityDescription
@@ -308,15 +299,6 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
             f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
         )
 
-        self._write_unsub: CALLBACK_TYPE | None = None
-        self._pending_value: float | None = None
-        # Bumped per set_value; a flush clears only the value it queued.
-        self._pending_token = 0
-        self._write_future: asyncio.Future[Exception | None] | None = None
-        self._flush_lock = asyncio.Lock()
-        self._flush_tasks: set[asyncio.Task[None]] = set()
-        self._removing = False
-
     def _decode_raw(self) -> float | None:
         """Decode the current coordinator-data value for this entity."""
         if (flag := self.entity_description.masked_flag) is not None:
@@ -326,218 +308,29 @@ class NeoPoolNumber(NeoPoolEntity, NumberEntity):
         return float(raw) if isinstance(raw, (int, float)) else None
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Clear transient write state, in case this entity is re-added.
-
-        An entity-ID change removes and then re-adds the same object, so
-        async_will_remove_from_hass leaves _removing set and a cancelled
-        pending value behind. Reset both here, else every later flush aborts
-        and the stale optimistic value stays visible.
-        """
-        self._removing = False
-        self._pending_value = None
-        await super().async_added_to_hass()
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Cancel a pending write when removed, and stop any in-flight one."""
-        self._removing = True
-        self._cancel_pending_write()
-        if self._write_future is not None and not self._write_future.done():
-            # Awaiting callers treat cancellation as a clean exit.
-            self._write_future.cancel()
-        # A flush that already fired runs as its own task; cancel and await
-        # every in-flight one so no device call outlives removal and races the
-        # client close in async_unload_entry. Two set_value calls spaced beyond
-        # WRITE_DELAY can overlap, so more than one task may be active.
-        for task in list(self._flush_tasks):
-            task.cancel()
-        for task in list(self._flush_tasks):
-            with suppress(asyncio.CancelledError):
-                await task
-        await super().async_will_remove_from_hass()
-
-    @callback
-    def _cancel_pending_write(self) -> None:
-        """Cancel a scheduled write, if any."""
-        if self._write_unsub is not None:
-            self._write_unsub()
-            self._write_unsub = None
-
-    @override
     async def async_set_native_value(self, value: float) -> None:
-        """Set the native value of the number entity.
+        """Set the native value of the number entity, debounced."""
+        await self._debounced_set(value)
 
-        The write is debounced so a rapid stepper settles into a single EEPROM
-        cycle. Callers in the same window await one shared future the coalesced
-        write resolves, so a blocking service call still sees the outcome.
-        """
-        self._pending_value = value
-        # A later same-valued set_value takes a fresh token, so a flush clears
-        # exactly the value it queued, not a newer batch's identical one.
-        self._pending_token += 1
-        self.async_write_ha_state()
-        self._cancel_pending_write()
-        if self._write_future is None or self._write_future.done():
-            self._write_future = self.hass.loop.create_future()
-        future = self._write_future
-        self._write_unsub = async_call_later(
-            self.hass, WRITE_DELAY, self._schedule_flush
-        )
-        try:
-            # Shield so cancelling one caller's task does not cancel the batch.
-            # The coalesced write never fails the future: cancelling any caller
-            # makes asyncio.shield attach its own logger to the shared future,
-            # which would report a later set_exception as an unretrieved error.
-            # So the write carries its outcome as the future's result instead:
-            # None on success, or the error to re-raise here.
-            outcome = await asyncio.shield(future)
-        except asyncio.CancelledError:
-            if self._removing:
-                return
-            raise
-        if outcome is not None:
-            raise outcome
-
-    @callback
-    def _schedule_flush(self, _now: datetime) -> None:
-        """Run the debounced write as a tracked task so removal can await it."""
-        self._write_unsub = None
-        # Detach this batch synchronously, before the task is scheduled: a
-        # set_value that runs before _async_flush must start a fresh future and
-        # its own timer, not reuse this batch or have its newer timer cleared by
-        # the coroutine. _pending_value stays put to back the optimistic value.
-        future = self._write_future
-        self._write_future = None
-        token = self._pending_token
-        pending = self._pending_value
-        task = self.coordinator.config_entry.async_create_background_task(
-            self.hass,
-            self._async_flush(future, pending, token),
-            name=f"{self._attr_unique_id}_flush",
-        )
-        # Track every in-flight flush: a second set_value spaced beyond
-        # WRITE_DELAY can start a new task while an earlier one is still in its
-        # device call, and removal must cancel and await all of them.
-        self._flush_tasks.add(task)
-        task.add_done_callback(self._flush_tasks.discard)
-
-    async def _async_flush(
-        self,
-        future: asyncio.Future[Exception | None] | None,
-        pending: float | None,
-        token: int,
-    ) -> None:
-        """Write the settled value, resolving the awaited coalesce future."""
-        # False until a run reaches the end; the finally fails any earlier exit.
-        resolved = False
-        try:
-            if pending is None:  # pragma: no cover - timer fires only when queued
-                return
-            async with self._flush_lock:
-                if self._abort_if_removing(future):
-                    resolved = True
-                    return
-                client = self.coordinator.client
-                desc = self.entity_description
-                raw = round(pending * desc.scale)
-                # Skip the EEPROM cycle if the device already holds this value.
-                if (current := self._decode_raw()) is not None and (
-                    round(current * desc.scale) == raw
-                ):
-                    self._clear_pending_if_current(token)
-                    if future is not None and not future.done():
-                        future.set_result(None)
-                    resolved = True
-                    return
-                try:
-                    if desc.setpoint is not None:
-                        await client.async_set_setpoint(desc.setpoint, raw)
-                        overrides = {self._data_key: raw / desc.scale}
-                    elif desc.masked_flag is not None:
-                        # Serialize the read-modify-write against sibling writes.
-                        async with self.coordinator.masked_write_lock:
-                            overrides = await client.async_set_masked_register(
-                                desc.masked_flag, raw
-                            )
-                    else:  # pragma: no cover - description validated upstream
-                        return
-                except (NeoPoolError, OSError, TimeoutError) as err:
-                    self._report_write_failure(
-                        future,
-                        token,
-                        HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="modbus_communication_error",
-                            translation_placeholders={"error": str(err)},
-                        ),
-                    )
-                    resolved = True
-                    return
-                except Exception as err:  # noqa: BLE001
-                    # Surface unexpected errors unchanged, not as a comm error.
-                    self._report_write_failure(future, token, err)
-                    resolved = True
-                    return
-                if self._abort_if_removing(future):  # pragma: no cover
-                    # Removal cancels every tracked flush task, so a batch
-                    # waiting on the lock unwinds before it writes; this
-                    # post-write removal check is a defensive guard.
-                    resolved = True
-                    return
-                try:
-                    # Merge before clearing, else the stale register reading
-                    # briefly surfaces as a rollback event.
-                    self.coordinator.async_set_updated_data(
-                        {**self.coordinator.data, **overrides}
-                    )
-                    self._clear_pending_if_current(token)
-                    self.coordinator.request_refresh_with_followup()
-                except Exception as err:  # noqa: BLE001
-                    # Write succeeded; surface the merge error unchanged.
-                    self._report_write_failure(future, token, err)
-                    resolved = True
-                    return
-                if future is not None and not future.done():
-                    future.set_result(None)
-                resolved = True
-        finally:
-            if not resolved and future is not None and not future.done():
-                future.cancel()  # pragma: no cover - task cancel is non-deterministic
-
-    @callback
-    def _abort_if_removing(
-        self, future: asyncio.Future[Exception | None] | None
-    ) -> bool:
-        """Skip the write when removed, releasing the detached future cleanly."""
-        if not self._removing:
-            return False
-        if future is not None and not future.done():
-            future.cancel()
-        return True
-
-    @callback
-    def _report_write_failure(
-        self,
-        future: asyncio.Future[Exception | None] | None,
-        batch_token: int,
-        exc: Exception,
-    ) -> None:
-        """Roll the optimistic value back and fail the awaiting caller."""
-        self._clear_pending_if_current(batch_token)
-        if future is not None and not future.done():
-            # Carry the error as the result, not via set_exception: a cancelled
-            # caller leaves asyncio.shield's logger on the shared future, which
-            # would report a set_exception as unretrieved. Surviving callers
-            # re-raise it after the shield returns.
-            future.set_result(exc)
-
-    @callback
-    def _clear_pending_if_current(self, batch_token: int) -> None:
-        """Drop the optimistic value unless a newer set_value replaced it."""
-        if self._pending_token == batch_token:
-            self._pending_value = None
-        self.async_write_ha_state()
+    @override
+    async def _write_pending(self, pending: float) -> Mapping[str, Any] | None:
+        """Write the settled setpoint or masked register, skipping no-op cycles."""
+        client = self.coordinator.client
+        desc = self.entity_description
+        raw = round(pending * desc.scale)
+        # Skip the EEPROM cycle if the device already holds this value.
+        if (current := self._decode_raw()) is not None and (
+            round(current * desc.scale) == raw
+        ):
+            return None
+        if desc.setpoint is not None:
+            await client.async_set_setpoint(desc.setpoint, raw)
+            return {self._data_key: raw / desc.scale}
+        if desc.masked_flag is not None:
+            # Serialize the read-modify-write against sibling writes.
+            async with self.coordinator.masked_write_lock:
+                return await client.async_set_masked_register(desc.masked_flag, raw)
+        return None  # pragma: no cover - description validated upstream
 
     @property
     @override

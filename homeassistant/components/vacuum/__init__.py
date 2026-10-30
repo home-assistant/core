@@ -53,8 +53,6 @@ ATTR_CLEANED_AREA = "cleaned_area"
 ATTR_FAN_SPEED_LIST = "fan_speed_list"
 ATTR_STATUS = "status"
 
-SERVICE_START_PAUSE = "start_pause"
-
 DEFAULT_NAME = "Vacuum cleaner robot"
 
 
@@ -77,7 +75,6 @@ __all__ = [
     "SERVICE_SEND_COMMAND",
     "SERVICE_SET_FAN_SPEED",
     "SERVICE_START",
-    "SERVICE_START_PAUSE",
     "SERVICE_STOP",
     "SERVICE_TOGGLE",
     "SERVICE_TURN_OFF",

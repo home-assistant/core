@@ -1384,6 +1384,9 @@
       "program_progress": {
         "name": "Program progress"
       },
+      "program_running_time": {
+        "name": "Program running time"
+      },
       "refrigerator_door_alarm": {
         "name": "Refrigerator door alarm",
         "state": {

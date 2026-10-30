@@ -259,6 +259,18 @@
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
+    "command_invalid_access_code": {
+      "message": "The alarm panel did not recognize the access code."
+    },
+    "command_no_access": {
+      "message": "The access code does not have permission to perform this action."
+    },
+    "command_outcome_unknown": {
+      "message": "The alarm panel did not confirm the command. The requested action may have completed; check the panel state before trying again."
+    },
+    "command_rejected": {
+      "message": "The alarm panel rejected the command with result code {result_code}. Check the panel configuration and event log for more information."
+    },
     "connection_initialization_failed": {
       "message": "[%key:component::satel_integra::config::error::connection_initialization_failed%]"
     },

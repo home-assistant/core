@@ -1,6 +1,6 @@
 """Test datetime template functions."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
@@ -33,6 +33,29 @@ from tests.helpers.template.helpers import render, render_to_info
 def test_is_datetime(hass: HomeAssistant, value, expected) -> None:
     """Test is datetime."""
     assert render(hass, "{{ value is datetime }}", {"value": value}) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ([1, 2], False),
+        ({1, 2}, False),
+        ({"a": 1, "b": 2}, False),
+        (ReadOnlyDict({"a": 1, "b": 2}), False),
+        (MappingProxyType({"a": 1, "b": 2}), False),
+        ("abc", False),
+        ("PT10M", False),
+        (b"abc", False),
+        ((1, 2), False),
+        (10, False),
+        (datetime(2024, 1, 1, 0, 0, 0), False),
+        (timedelta(0), True),
+        (timedelta(hours=1, minutes=30), True),
+    ],
+)
+def test_is_timedelta(hass: HomeAssistant, value, expected) -> None:
+    """Test is timedelta."""
+    assert render(hass, "{{ value is timedelta }}", {"value": value}) == expected
 
 
 def test_strptime(hass: HomeAssistant) -> None:

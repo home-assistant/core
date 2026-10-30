@@ -89,7 +89,7 @@ class OverkizConfigFlow(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     _verify_ssl: bool = True
     _api_type: APIType = APIType.CLOUD

@@ -156,6 +156,19 @@ class SolarSourceType(TypedDict):
     name: NotRequired[str]
 
 
+class HomeSourceType(TypedDict):
+    """Dictionary holding the whole-home consumption meter.
+
+    It does not touch any other calculation,
+    and is intended to be used with a main panel sensor.
+    """
+
+    type: Literal["home"]
+    stat_energy_to: str
+    stat_rate: NotRequired[str]
+    name: NotRequired[str]
+
+
 class BatterySourceType(TypedDict):
     """Dictionary holding the source of battery storage."""
 
@@ -229,6 +242,7 @@ class WaterSourceType(TypedDict):
 type SourceType = (
     GridSourceType
     | SolarSourceType
+    | HomeSourceType
     | BatterySourceType
     | GasSourceType
     | WaterSourceType
@@ -516,6 +530,14 @@ SOLAR_SOURCE_SCHEMA = probatio.Schema(
         probatio.Optional("name"): str,
     }
 )
+HOME_SOURCE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("type"): "home",
+        probatio.Required("stat_energy_to"): str,
+        probatio.Optional("stat_rate"): str,
+        probatio.Optional("name"): str,
+    }
+)
 BATTERY_SOURCE_SCHEMA = probatio.Schema(
     {
         probatio.Required("type"): "battery",
@@ -572,7 +594,8 @@ WATER_SOURCE_SCHEMA = probatio.All(
 
 def check_type_limits(value: list[SourceType]) -> list[SourceType]:
     """Validate that we don't have too many of certain types."""
-    # Currently no type limits - multiple grid sources are allowed (like batteries)
+    if sum(1 for source in value if source["type"] == "home") > 1:
+        raise probatio.Invalid("Only one home source is allowed")
     return value
 
 
@@ -624,6 +647,7 @@ ENERGY_SOURCE_SCHEMA = probatio.All(
                 {
                     "grid": GRID_SOURCE_SCHEMA,
                     "solar": SOLAR_SOURCE_SCHEMA,
+                    "home": HOME_SOURCE_SCHEMA,
                     "battery": BATTERY_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
                     "water": WATER_SOURCE_SCHEMA,

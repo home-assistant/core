@@ -19,15 +19,15 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
+from homeassistant.components.script.const import (
+    ScriptEntityStateAttribute,
+    ScriptService,
+)
 from homeassistant.components.script.entity import ScriptEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    SERVICE_RELOAD,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -171,7 +171,7 @@ async def test_turn_on_off_toggle(
 
     if toggle:
         await hass.services.async_call(
-            DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_ID}
+            DOMAIN, ScriptService.TOGGLE, {ATTR_ENTITY_ID: ENTITY_ID}
         )
     else:
         await hass.services.async_call(DOMAIN, split_entity_id(ENTITY_ID)[1])
@@ -386,7 +386,7 @@ async def test_bad_config_validation(
     ):
         await hass.services.async_call(
             script.DOMAIN,
-            SERVICE_RELOAD,
+            ScriptService.RELOAD,
             context=Context(user_id=hass_admin_user.id),
             blocking=True,
         )
@@ -437,7 +437,7 @@ async def test_reload_service(hass: HomeAssistant, running) -> None:
         "homeassistant.config.load_yaml_config_file",
         return_value={"script": {object_id: {"sequence": [{"delay": {"seconds": 5}}]}}},
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ScriptService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     if running != "same":
@@ -495,7 +495,9 @@ async def test_reload_unchanged_does_not_stop(
         autospec=True,
         return_value=config,
     ):
-        await hass.services.async_call(script.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            script.DOMAIN, ScriptService.RELOAD, blocking=True
+        )
 
     hass.states.async_set(test_entity, "goodbye")
     await hass.async_block_till_done()
@@ -568,7 +570,9 @@ async def test_reload_unchanged_script(
             autospec=True,
             return_value=config,
         ):
-            await hass.services.async_call(script.DOMAIN, SERVICE_RELOAD, blocking=True)
+            await hass.services.async_call(
+                script.DOMAIN, ScriptService.RELOAD, blocking=True
+            )
 
         assert script_entity_init.call_count == 0
         script_entity_init.reset_mock()
@@ -619,7 +623,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
             }
         },
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ScriptService.RELOAD, blocking=True)
 
     descriptions = await async_get_all_descriptions(hass)
 
@@ -645,7 +649,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
             }
         },
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ScriptService.RELOAD, blocking=True)
 
     descriptions = await async_get_all_descriptions(hass)
 
@@ -685,7 +689,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, context=context
+        DOMAIN, ScriptService.TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, context=context
     )
     await asyncio.wait_for(started_flag.wait(), 1)
 
@@ -711,7 +715,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     stop_context = Context()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_OFF,
+        ScriptService.TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
         context=stop_context,
@@ -881,7 +885,7 @@ async def test_turning_no_scripts_off(hass: HomeAssistant) -> None:
 
     # Testing it doesn't raise
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {"entity_id": []}, blocking=True
+        DOMAIN, ScriptService.TURN_OFF, {"entity_id": []}, blocking=True
     )
 
 
@@ -1528,11 +1532,11 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
 
     state = hass.states.get("script.no_last_triggered")
     assert state
-    assert state.attributes["last_triggered"] is None
+    assert state.attributes[ScriptEntityStateAttribute.LAST_TRIGGERED] is None
 
     state = hass.states.get("script.last_triggered")
     assert state
-    assert state.attributes["last_triggered"] == time
+    assert state.attributes[ScriptEntityStateAttribute.LAST_TRIGGERED] == time
 
 
 @pytest.mark.parametrize(
@@ -1883,7 +1887,7 @@ async def test_script_service_changed_entity_id(
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "script.custom_entity_id"}
+        DOMAIN, ScriptService.TURN_ON, {ATTR_ENTITY_ID: "script.custom_entity_id"}
     )
     # Can't block till done while the script is waiting
     await asyncio.wait_for(called.wait(), 1)
@@ -1951,7 +1955,7 @@ async def test_unavailable_script_changed_entity_id(
         autospec=True,
         return_value={script.DOMAIN: {}},
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ScriptService.RELOAD, blocking=True)
 
     assert not issue_registry.async_get_issue(
         DOMAIN, "script.renamed_validation_failed_schema"
@@ -1984,7 +1988,7 @@ async def test_reload_keeps_ignored_validation_issue(
             }
         },
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ScriptService.RELOAD, blocking=True)
     await hass.async_block_till_done()
 
     assert hass.states.get("script.bad_script") is not old_state
@@ -2017,7 +2021,7 @@ async def test_reload_deletes_resolved_validation_issue(
         autospec=True,
         return_value={script.DOMAIN: new_config},
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ScriptService.RELOAD, blocking=True)
     await hass.async_block_till_done()
 
     assert not issue_registry.async_get_issue(DOMAIN, BROKEN_SCRIPT_ISSUE_ID)
@@ -2048,7 +2052,7 @@ async def test_failed_reload_deletes_issue_of_removed_script(
         ),
         pytest.raises(HomeAssistantError, match="Boom"),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, ScriptService.RELOAD, blocking=True)
     await hass.async_block_till_done()
 
     assert not issue_registry.async_get_issue(DOMAIN, BROKEN_SCRIPT_ISSUE_ID)
@@ -2346,7 +2350,9 @@ async def test_remove_script_entity_unloads_script(hass: HomeAssistant) -> None:
             wraps=entity.script.async_unload,
         ) as script_unload,
     ):
-        await hass.services.async_call(script.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            script.DOMAIN, ScriptService.RELOAD, blocking=True
+        )
         await hass.async_block_till_done()
 
     script_unload.assert_called_once()

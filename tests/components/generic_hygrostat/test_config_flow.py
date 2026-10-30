@@ -6,16 +6,15 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.generic_hygrostat import (
+from homeassistant.components.generic_hygrostat.const import (
     CONF_DRY_TOLERANCE,
     CONF_HUMIDIFIER,
-    CONF_NAME,
     CONF_SENSOR,
     CONF_WET_TOLERANCE,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_DEVICE_CLASS
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 SNAPSHOT_FLOW_PROPS = props("type", "title", "result", "error")

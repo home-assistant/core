@@ -286,7 +286,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_device
             )
 
-        self._set_confirm_only()
         placeholders = self._async_make_placeholders_from_discovery()
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

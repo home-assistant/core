@@ -2,6 +2,7 @@
 
 from typing import override
 
+from homematicip.base.enums import WaterSupplyState
 from homematicip.base.functionalChannels import FunctionalChannelType
 from homematicip.device import Device
 
@@ -24,12 +25,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP valves from a config entry."""
     hap = config_entry.runtime_data
-    entities = [
+    entities: list[ValveEntity] = [
         HomematicipWateringValve(hap, device, ch.index)
         for device in hap.home.devices
         for ch in device.functionalChannels
         if ch.functionalChannelType == FunctionalChannelType.WATERING_ACTUATOR_CHANNEL
     ]
+    entities.extend(
+        HomematicipWaterSupplyValve(hap, device, ch.index)
+        for device in hap.home.devices
+        for ch in device.functionalChannels
+        if ch.functionalChannelType == FunctionalChannelType.WATER_SUPPLY_STOP_CHANNEL
+    )
 
     async_add_entities(entities)
 
@@ -70,3 +77,42 @@ class HomematicipWateringValve(HomematicipGenericEntity, ValveEntity):
         """Return if the valve is closed."""
         channel = self.get_channel_or_raise()
         return channel.wateringActive is False
+
+
+class HomematicipWaterSupplyValve(HomematicipGenericEntity, ValveEntity):
+    """Representation of a HomematicIP water supply stop valve."""
+
+    _attr_reports_position = False
+    _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+    _attr_device_class = ValveDeviceClass.WATER
+
+    def __init__(self, hap: HomematicipHAP, device: Device, channel: int) -> None:
+        """Initialize the valve."""
+        super().__init__(
+            hap,
+            device=device,
+            channel=channel,
+            channel_real_index=channel,
+            feature_id="water_supply",
+        )
+
+    @override
+    async def async_open_valve(self) -> None:
+        """Open the valve."""
+        channel = self.get_channel_or_raise()
+        await channel.set_water_supply_state_async(WaterSupplyState.FULL_OPENED)
+
+    @override
+    async def async_close_valve(self) -> None:
+        """Close the valve."""
+        channel = self.get_channel_or_raise()
+        await channel.set_water_supply_state_async(WaterSupplyState.NO_WATERFLOW)
+
+    @property
+    @override
+    def is_closed(self) -> bool | None:
+        """Return if the valve is closed."""
+        state = self.get_channel_or_raise().waterSupplyState
+        if state in (None, WaterSupplyState.UNKNOWN):
+            return None
+        return state == WaterSupplyState.NO_WATERFLOW

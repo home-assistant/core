@@ -83,9 +83,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: Split off to a follow-up PR to keep this one reviewable.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repairable issues are raised.

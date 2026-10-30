@@ -239,7 +239,6 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         self.context["title_placeholders"] = {
             "name": self.title,
             "ip_address": self.ip_address,

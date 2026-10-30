@@ -14,6 +14,8 @@ import sys
 from typing import Any, TypedDict
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+from hassfest.model import Config, Integration
+from hassfest.requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.utils import canonicalize_name
@@ -21,9 +23,6 @@ from packaging.version import InvalidVersion, Version
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
-
-from .model import Config, Integration
-from .requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
@@ -659,7 +658,7 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
 
     for item in json.loads(
         subprocess.run(
-            ["pipdeptree", "-w", "silence", "--json"],
+            [sys.executable, "-m", "pipdeptree", "-w", "silence", "--json"],
             check=True,
             capture_output=True,
             text=True,
@@ -972,7 +971,16 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         if is_installed:
             continue
 
-        args = ["uv", "pip", "install", "--quiet"]
+        args = [
+            sys.executable,
+            "-m",
+            "uv",
+            "pip",
+            "install",
+            "--python",
+            sys.executable,
+            "--quiet",
+        ]
         if install_args:
             args.append(install_args)
         args.append(requirement_arg)

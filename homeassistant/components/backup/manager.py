@@ -408,24 +408,49 @@ class BackupManager:
         await self.load_platforms()
 
     @callback
-    def async_rename_agent(self, old_agent_id: str, new_agent_id: str) -> None:
+    def async_rename_agent(
+        self,
+        old_agent_id: str,
+        new_agent_id: str,
+        *,
+        overwrite_orphaned_settings: bool = False,
+    ) -> None:
         """Rename a backup agent in the backup config and known backups.
 
         Integrations call this when the ID of one of their backup agents changes,
-        for example when migrating the unique ID of a config entry. Raises
-        ValueError if the old agent ID is configured and the new agent ID is
-        already loaded or configured.
+        for example when migrating the unique ID of a config entry. Settings of the
+        new agent ID are orphaned if none of the integration's config entries,
+        including disabled ones, provide it, for example when they were left
+        behind by a removed config entry. Integrations which know this pass
+        overwrite_orphaned_settings to replace them with those of the old agent ID.
+
+        Raises ValueError if the agent IDs belong to different integrations, if
+        the new agent ID is loaded, or if both agent IDs are configured and
+        overwrite_orphaned_settings is not set.
         """
+        if old_agent_id.partition(".")[0] != new_agent_id.partition(".")[0]:
+            raise ValueError(
+                f"Can't rename backup agent {old_agent_id} to {new_agent_id} of"
+                " another integration"
+            )
+        if old_agent_id == new_agent_id:
+            return
         config = self.config.data
-        if (
-            old_agent_id in config.agents
-            or old_agent_id in config.create_backup.agent_ids
-        ) and (
-            new_agent_id in self.backup_agents
-            or new_agent_id in config.agents
-            or new_agent_id in config.create_backup.agent_ids
+        if new_agent_id in self.backup_agents or (
+            not overwrite_orphaned_settings
+            and (
+                old_agent_id in config.agents
+                or old_agent_id in config.create_backup.agent_ids
+            )
+            and (
+                new_agent_id in config.agents
+                or new_agent_id in config.create_backup.agent_ids
+            )
         ):
             raise ValueError(f"Backup agent {new_agent_id} already exists")
+        if overwrite_orphaned_settings:
+            self.config.remove_agent(new_agent_id)
+            self.known_backups.remove_failed_agent(new_agent_id)
         self.config.rename_agent(old_agent_id, new_agent_id)
         self.known_backups.rename_failed_agent(old_agent_id, new_agent_id)
 
@@ -1700,9 +1725,22 @@ class KnownBackups:
     def rename_failed_agent(self, old_agent_id: str, new_agent_id: str) -> None:
         """Rename an agent in the failed agents of known backups."""
         for backup in self._backups.values():
+            # The new agent ID may already be listed, only keep it once
+            backup.failed_agent_ids = list(
+                dict.fromkeys(
+                    new_agent_id if agent_id == old_agent_id else agent_id
+                    for agent_id in backup.failed_agent_ids
+                )
+            )
+        self._manager.store.save()
+
+    def remove_failed_agent(self, agent_id: str) -> None:
+        """Remove an agent from the failed agents of known backups."""
+        for backup in self._backups.values():
             backup.failed_agent_ids = [
-                new_agent_id if agent_id == old_agent_id else agent_id
-                for agent_id in backup.failed_agent_ids
+                failed_agent_id
+                for failed_agent_id in backup.failed_agent_ids
+                if failed_agent_id != agent_id
             ]
         self._manager.store.save()
 

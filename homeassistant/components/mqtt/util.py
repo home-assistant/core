@@ -528,9 +528,9 @@ async def async_cleanup_device_registry(
 
 
 @callback
-def async_begin_mqtt_issues_refresh(hass: HomeAssistant) -> ir.IssuesRefresh:
+def async_refresh_mqtt_issues(hass: HomeAssistant) -> ir.IssuesRefresh:
     """Begin a refresh of the issues for invalid manually configured items."""
-    return ir.async_begin_issues_refresh(
+    return ir.async_refresh_issues(
         hass, DOMAIN, issue_id_pattern=INVALID_PLATFORM_CONFIG_ISSUE_PREFIX
     )
 

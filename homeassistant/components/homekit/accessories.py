@@ -373,6 +373,10 @@ def get_accessory(  # noqa: C901
             a_type = "NitrogenDioxideSensor"
         elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
             a_type = "VolatileOrganicCompoundsSensor"
+        elif device_class == SensorDeviceClass.OZONE:
+            a_type = "OzoneSensor"
+        elif device_class == SensorDeviceClass.SULPHUR_DIOXIDE:
+            a_type = "SulphurDioxideSensor"
         elif device_class == SensorDeviceClass.GAS:
             a_type = "AirQualitySensor"
         elif device_class == SensorDeviceClass.CO:

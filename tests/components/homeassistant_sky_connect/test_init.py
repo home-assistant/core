@@ -30,9 +30,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from .common import USB_DATA_ZBT1
 
 from tests.components.usb import async_request_scan, patch_scanned_serial_ports
 from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F401
@@ -768,3 +770,63 @@ async def test_multi_pan_migration_issue_deleted_for_ezsp(
         )
         is None
     )
+
+
+async def test_device_via_esphome_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test the device is linked to the ESPHome device proxying its serial port."""
+    esphome_entry = MockConfigEntry(domain="esphome", unique_id="11:22:33:44:55:66")
+    esphome_entry.add_to_hass(hass)
+
+    esphome_device = device_registry.async_get_or_create(
+        config_entry_id=esphome_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66")},
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=USB_DATA_ZBT1.serial_number,
+        data={
+            "description": USB_DATA_ZBT1.description,
+            "device": (
+                f"esphome-hass://esphome/{esphome_entry.entry_id}?port_udev_id=some_id"
+            ),
+            "vid": USB_DATA_ZBT1.vid,
+            "pid": USB_DATA_ZBT1.pid,
+            "serial_number": USB_DATA_ZBT1.serial_number,
+            "manufacturer": USB_DATA_ZBT1.manufacturer,
+            "product": USB_DATA_ZBT1.description,
+            "firmware": "ezsp",
+            "firmware_version": "7.4.4.0",
+        },
+        version=1,
+        minor_version=5,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.multi_pan_addon_using_device",
+        return_value=False,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, USB_DATA_ZBT1.serial_number), config_entry.entry_id
+        )
+        assert device is not None
+        assert device.via_device_id == esphome_device.id
+
+        # Plugging the adapter directly into the host removes the link
+        hass.config_entries.async_update_entry(
+            config_entry, data={**config_entry.data, "device": USB_DATA_ZBT1.device}
+        )
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, USB_DATA_ZBT1.serial_number), config_entry.entry_id
+        )
+        assert device is not None
+        assert device.via_device_id is None

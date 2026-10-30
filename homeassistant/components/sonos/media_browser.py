@@ -216,7 +216,14 @@ async def async_browse_media(
         ),
     )
     if response is None:
-        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="media_not_found",
+            translation_placeholders={
+                "media_content_type": media_content_type,
+                "media_content_id": media_content_id,
+            },
+        )
     return response
 
 

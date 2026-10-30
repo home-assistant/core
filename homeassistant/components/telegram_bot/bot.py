@@ -35,7 +35,7 @@ from telegram import (
 from telegram.constants import InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
-from telegram.request import BaseRequest, HTTPXRequest
+from telegram.request import HTTPXRequest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -92,7 +92,6 @@ from .const import (
     ATTR_RESIZE_KEYBOARD,
     ATTR_STICKER_ID,
     ATTR_TEXT,
-    ATTR_TIMEOUT,
     ATTR_TITLE,
     ATTR_URL,
     ATTR_USER_ID,
@@ -419,15 +418,12 @@ class TelegramNotificationService:
             ATTR_DISABLE_WEB_PREV: None,
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
-            ATTR_TIMEOUT: BaseRequest.DEFAULT_NONE,
             ATTR_MESSAGE_TAG: None,
             ATTR_MESSAGE_THREAD_ID: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
                 params[ATTR_PARSER] = data[ATTR_PARSER]
-            if ATTR_TIMEOUT in data:
-                params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
             if ATTR_DISABLE_NOTIF in data:
                 params[ATTR_DISABLE_NOTIF] = data[ATTR_DISABLE_NOTIF]
             if ATTR_DISABLE_WEB_PREV in data:
@@ -554,7 +550,6 @@ class TelegramNotificationService:
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -703,7 +698,6 @@ class TelegramNotificationService:
             message_id=message_id,
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -738,7 +732,6 @@ class TelegramNotificationService:
                 parse_mode=params[ATTR_PARSER],
                 disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 context=context,
             )
         if type_edit == SERVICE_EDIT_CAPTION:
@@ -750,7 +743,6 @@ class TelegramNotificationService:
                 inline_message_id=inline_message_id,
                 caption=kwargs.get(ATTR_CAPTION),
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 context=context,
             )
@@ -762,7 +754,6 @@ class TelegramNotificationService:
             message_id=message_id,
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -788,7 +779,6 @@ class TelegramNotificationService:
             callback_query_id,
             text=message,
             show_alert=show_alert,
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -841,7 +831,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -856,7 +845,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -871,7 +859,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -887,7 +874,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -903,7 +889,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -918,7 +903,6 @@ class TelegramNotificationService:
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             parse_mode=params[ATTR_PARSER],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
@@ -942,7 +926,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -967,7 +950,6 @@ class TelegramNotificationService:
             longitude=longitude,
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -995,7 +977,6 @@ class TelegramNotificationService:
             open_period=openperiod,
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -1037,7 +1018,6 @@ class TelegramNotificationService:
             message_id,
             reaction=reaction,
             is_big=is_big,
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -1067,7 +1047,6 @@ class TelegramNotificationService:
             text=message,
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             parse_mode=params[ATTR_PARSER],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 

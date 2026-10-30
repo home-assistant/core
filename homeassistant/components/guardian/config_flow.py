@@ -132,6 +132,5 @@ class GuardianConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Finish the configuration via any discovery."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(step_id="discovery_confirm")
         return await self.async_step_user(self.discovery_info)

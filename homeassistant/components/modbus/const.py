@@ -5,7 +5,6 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.const import (
-    CONF_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COVERS,
     CONF_LIGHTS,
@@ -113,14 +112,6 @@ TCP = "tcp"
 UDP = "udp"
 
 
-# service call attributes
-ATTR_ADDRESS = CONF_ADDRESS
-ATTR_HUB = "hub"
-ATTR_UNIT = "unit"
-ATTR_SLAVE = "slave"
-ATTR_VALUE = "value"
-
-
 class DataType(StrEnum):
     """Data types used by sensor etc."""
 
@@ -149,10 +140,6 @@ CALL_TYPE_WRITE_REGISTERS = "write_registers"
 CALL_TYPE_X_COILS = "coils"
 CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 
-# service calls
-SERVICE_WRITE_COIL = "write_coil"
-SERVICE_WRITE_REGISTER = "write_register"
-SERVICE_STOP = "stop"
 
 # dispatcher signals
 SIGNAL_STOP_ENTITY = "modbus.stop_{}"

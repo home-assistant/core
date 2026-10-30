@@ -138,7 +138,6 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={DEVICE_MODEL: self._discovered_device.device.model.value},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],

@@ -1,0 +1,171 @@
+# serializer version: 1
+# name: test_diagnostics[button]
+  dict({
+    'coordinator': dict({
+      'available': True,
+      'last_update_success': True,
+      'scanning_mode': 'ACTIVE',
+    }),
+    'device_type': 'H5125',
+    'model_info': dict({
+      'button_count': 6,
+      'model_id': 'H5125',
+      'requires_active_scan': False,
+      'sensor_type': 'button',
+      'sleepy': True,
+    }),
+    'parsed_advertisement': dict({
+      'binary_sensors': dict({
+      }),
+      'devices': list([
+        dict({
+          'device_id': None,
+          'hw_version': None,
+          'manufacturer': 'Govee',
+          'model': 'H5125',
+          'sw_version': None,
+        }),
+      ]),
+      'events': dict({
+        'button_1': 'press',
+      }),
+      'sensors': dict({
+        'battery': 100,
+        'signal_strength': -36,
+      }),
+    }),
+    'service_info': dict({
+      'connectable': True,
+      'manufacturer_data': dict({
+        '60552': '010a2eafd930383553670101',
+        '61320': '2eaf0000fb0ec968d7056caf2af31be877f1e1e8e3a7f8c6',
+      }),
+      'rssi': -36,
+      'service_data': dict({
+      }),
+      'service_uuids': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_diagnostics[multi_sensor]
+  dict({
+    'coordinator': dict({
+      'available': True,
+      'last_update_success': True,
+      'scanning_mode': 'ACTIVE',
+    }),
+    'device_type': 'H5178',
+    'model_info': dict({
+      'button_count': 0,
+      'model_id': 'H5178',
+      'requires_active_scan': False,
+      'sensor_type': 'thermometer',
+      'sleepy': False,
+    }),
+    'parsed_advertisement': dict({
+      'binary_sensors': dict({
+      }),
+      'devices': list([
+        dict({
+          'device_id': None,
+          'hw_version': None,
+          'manufacturer': 'Govee',
+          'model': None,
+          'sw_version': None,
+        }),
+        dict({
+          'device_id': 'remote',
+          'hw_version': None,
+          'manufacturer': 'Govee',
+          'model': 'H5178-REMOTE',
+          'sw_version': None,
+        }),
+      ]),
+      'events': dict({
+      }),
+      'sensors': dict({
+        'battery (remote)': 100,
+        'humidity (remote)': 99.9,
+        'signal_strength (remote)': -66,
+        'temperature (remote)': 1.0,
+      }),
+    }),
+    'service_info': dict({
+      'connectable': True,
+      'manufacturer_data': dict({
+        '1': '010101002af7640003',
+        '76': '0215494e54454c4c495f524f434b535f48575075f2ffc2',
+      }),
+      'rssi': -66,
+      'service_data': dict({
+      }),
+      'service_uuids': list([
+        '0000ec88-0000-1000-8000-00805f9b34fb',
+      ]),
+    }),
+  })
+# ---
+# name: test_diagnostics[thermometer]
+  dict({
+    'coordinator': dict({
+      'available': True,
+      'last_update_success': True,
+      'scanning_mode': 'ACTIVE',
+    }),
+    'device_type': 'H5075',
+    'model_info': dict({
+      'button_count': 0,
+      'model_id': 'H5075',
+      'requires_active_scan': True,
+      'sensor_type': 'thermometer',
+      'sleepy': False,
+    }),
+    'parsed_advertisement': dict({
+      'binary_sensors': dict({
+      }),
+      'devices': list([
+        dict({
+          'device_id': None,
+          'hw_version': None,
+          'manufacturer': 'Govee',
+          'model': 'H5075',
+          'sw_version': None,
+        }),
+      ]),
+      'events': dict({
+      }),
+      'sensors': dict({
+        'battery': 100,
+        'humidity': 44.2,
+        'signal_strength': -63,
+        'temperature': 21.3,
+      }),
+    }),
+    'service_info': dict({
+      'connectable': True,
+      'manufacturer_data': dict({
+        '60552': '000341c264004c000215494e54454c4c495f524f434b535f48575075f2ff0c',
+      }),
+      'rssi': -63,
+      'service_data': dict({
+      }),
+      'service_uuids': list([
+        '0000ec88-0000-1000-8000-00805f9b34fb',
+      ]),
+    }),
+  })
+# ---
+# name: test_diagnostics_no_advertisement
+  dict({
+    'coordinator': dict({
+      'available': False,
+      'last_update_success': True,
+      'scanning_mode': 'ACTIVE',
+    }),
+    'device_type': None,
+    'model_info': None,
+    'parsed_advertisement': None,
+    'service_info': None,
+  })
+# ---

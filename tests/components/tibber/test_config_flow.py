@@ -362,3 +362,75 @@ async def test_reauth_flow_wrong_account(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
+
+
+@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
+@pytest.mark.parametrize(
+    ("user_id", "reason", "access_token", "title"),
+    [
+        pytest.param(
+            "unique_user_id",
+            "reconfigure_successful",
+            "new-access-token",
+            "Mock Name",
+            id="success",
+        ),
+        pytest.param(
+            "different_user_id",
+            "wrong_account",
+            "old-token",
+            "Existing",
+            id="wrong_account",
+        ),
+    ],
+)
+async def test_reconfigure_flow(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    tibber_mock: MagicMock,
+    user_id: str,
+    reason: str,
+    access_token: str,
+    title: str,
+) -> None:
+    """Test the reconfigure flow."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            AUTH_IMPLEMENTATION: DOMAIN,
+            CONF_TOKEN: {"access_token": "old-token"},
+        },
+        unique_id="unique_user_id",
+        title="Existing",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await existing_entry.start_reconfigure_flow(hass)
+
+    _mock_tibber(tibber_mock, user_id=user_id)
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    authorize_url = result["url"]
+    state = parse_qs(urlparse(authorize_url).query)["state"][0]
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "access_token": "new-access-token",
+            "refresh_token": "new-refresh-token",
+            "token_type": "bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert existing_entry.data[CONF_TOKEN]["access_token"] == access_token
+    assert existing_entry.title == title

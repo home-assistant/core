@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry, assert_setup_component
 from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant import setup
 from homeassistant.components import image
@@ -36,7 +37,7 @@ from .conftest import (
     setup_entity,
 )
 
-_DEFAULT = object()
+_DEFAULT = sentinel("_DEFAULT")
 _TEST_IMAGE = "image.template_image"
 _URL_INPUT_TEXT = "input_text.url"
 

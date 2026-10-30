@@ -40,11 +40,11 @@ async def test_symo_inverter(
     await setup_fronius_integration(hass)
 
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
-    assert_state("sensor.symo_20_dc_current", 0)
+    assert_state("sensor.symo_20_mppt_1_dc_current", 0)
     assert_state("sensor.symo_20_energy_day", 10828)
     assert_state("sensor.symo_20_total_energy", 44186900)
     assert_state("sensor.symo_20_energy_year", 25507686)
-    assert_state("sensor.symo_20_dc_voltage", 16)
+    assert_state("sensor.symo_20_mppt_1_dc_voltage", 16)
     assert_state("sensor.symo_20_status_message", "startup")
 
     # Second test at daytime when inverter is producing
@@ -54,11 +54,11 @@ async def test_symo_inverter(
     await hass.async_block_till_done()
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 65
     # 4 additional AC entities
-    assert_state("sensor.symo_20_dc_current", 2.19)
+    assert_state("sensor.symo_20_mppt_1_dc_current", 2.19)
     assert_state("sensor.symo_20_energy_day", 1113)
     assert_state("sensor.symo_20_total_energy", 44188000)
     assert_state("sensor.symo_20_energy_year", 25508798)
-    assert_state("sensor.symo_20_dc_voltage", 518)
+    assert_state("sensor.symo_20_mppt_1_dc_voltage", 518)
     assert_state("sensor.symo_20_ac_current", 5.19)
     assert_state("sensor.symo_20_frequency", 49.94)
     assert_state("sensor.symo_20_ac_power", 1190)
@@ -424,6 +424,23 @@ async def test_gen24_storage(
     assert inverter_1.manufacturer == "Fronius"
     assert inverter_1.model == "GEN24/Tauro/Verto"
     assert inverter_1.name == "Gen24 Storage"
+
+    # one child device per MPPT module of the inverter
+    for mppt_no in (1, 2):
+        mppt = device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"12345678-mppt-{mppt_no}"), config_entry.entry_id
+        )
+        assert mppt
+        assert mppt.parent_device_id == inverter_1.id
+        assert mppt.name == f"MPPT {mppt_no}"
+        assert mppt == snapshot(name=f"mppt_{mppt_no}")
+        for entity_id in (
+            f"sensor.gen24_storage_mppt_{mppt_no}_dc_current",
+            f"sensor.gen24_storage_mppt_{mppt_no}_dc_voltage",
+        ):
+            entity_entry = entity_registry.async_get(entity_id)
+            assert entity_entry
+            assert entity_entry.device_id == mppt.id
 
     meter = device_registry.async_get_device_by_identifier(
         (DOMAIN, "1234567890"), config_entry.entry_id

@@ -29,7 +29,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityCategory,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CoreState,
+    Event,
+    HomeAssistant,
+    callback,
+    valid_entity_id,
+)
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import (
     area_registry as ar,
@@ -5472,6 +5478,23 @@ async def test_entity_max_length_exceeded(
         "sensor", long_entity_id_name
     )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
+
+
+async def test_entity_id_truncation_strips_trailing_underscore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a truncated entity ID does not end with an underscore."""
+    # The entity ID is cut at 255 characters, right after the underscore
+    name = "a" * 247 + "_" + "b" * 10
+    new_id = entity_registry.async_get_available_entity_id("sensor", name)
+    assert new_id == "sensor." + "a" * 247
+    assert valid_entity_id(new_id)
+
+    # The stripped entity ID is taken, the next one gets a suffix
+    hass.states.async_reserve(new_id)
+    new_id = entity_registry.async_get_available_entity_id("sensor", name)
+    assert new_id == "sensor." + "a" * 246 + "_2"
+    assert valid_entity_id(new_id)
 
 
 async def test_resolve_entity_ids(entity_registry: er.EntityRegistry) -> None:

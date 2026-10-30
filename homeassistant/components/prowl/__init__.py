@@ -26,6 +26,7 @@ from .const import (
     PLATFORMS,
 )
 from .helpers import async_verify_key
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ def _yaml_name(p_config: ConfigType) -> str | None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Prowl component."""
+    async_setup_services(hass)
     hass.data[DATA_HASS_CONFIG] = config
     yaml_configs = [
         p_config

@@ -58,6 +58,14 @@
       }
     }
   },
+  "exceptions": {
+    "server_not_found": {
+      "message": "Selected server is not found"
+    },
+    "update_failed": {
+      "message": "An error occurred while running the speed test"
+    }
+  },
   "options": {
     "step": {
       "init": {

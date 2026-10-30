@@ -800,4 +800,30 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.WindowCovering.Attributes.WagoBlindType,),
         vendor_id=(5428,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="AqaraLedStripMusicSyncEffect",
+            translation_key="music_sync_effect",
+            entity_category=EntityCategory.CONFIG,
+            options=["stretch", "pulse", "dash", "flash"],
+            device_to_ha={
+                1: "stretch",
+                2: "pulse",
+                3: "dash",
+                4: "flash",
+            }.get,
+            ha_to_device={
+                "stretch": 1,
+                "pulse": 2,
+                "dash": 3,
+                "flash": 4,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncEffect,
+        ),
+        vendor_id=(4447,),
+    ),
 ]

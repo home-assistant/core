@@ -43,6 +43,9 @@
       "cook_time": {
         "default": "mdi:microwave"
       },
+      "music_sync_sensitivity": {
+        "default": "mdi:microphone-settings"
+      },
       "speaker_setpoint": {
         "default": "mdi:speaker"
       }
@@ -166,6 +169,12 @@
       },
       "evse_charging_switch": {
         "default": "mdi:ev-station"
+      },
+      "music_sync": {
+        "default": "mdi:music",
+        "state": {
+          "off": "mdi:music-off"
+        }
       },
       "one_touch_locking": {
         "default": "mdi:gesture-tap-button"

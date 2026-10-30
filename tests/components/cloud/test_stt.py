@@ -16,7 +16,13 @@ from homeassistant.components.cloud.const import DOMAIN, PREVIEW_FEATURE_STT_V2
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.stt import (
     DEFAULT_AUDIO_PROCESSING,
+    AudioBitRates,
+    AudioChannels,
+    AudioCodecs,
+    AudioFormats,
+    AudioSampleRates,
     SpeechAudioProcessing,
+    SpeechMetadata,
     async_get_speech_to_text_entity,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -189,6 +195,18 @@ async def _process_audio(
     return await response.json()
 
 
+def _metadata(language: str) -> SpeechMetadata:
+    """Return speech metadata for a language."""
+    return SpeechMetadata(
+        language=language,
+        format=AudioFormats.WAV,
+        codec=AudioCodecs.PCM,
+        bit_rate=AudioBitRates.BITRATE_16,
+        sample_rate=AudioSampleRates.SAMPLERATE_16000,
+        channel=AudioChannels.CHANNEL_MONO,
+    )
+
+
 @pytest.mark.usefixtures("setup_stt")
 async def test_stt_v2_disabled_by_default(
     hass: HomeAssistant,
@@ -208,7 +226,10 @@ async def test_stt_v2_disabled_by_default(
 
     entity = async_get_speech_to_text_entity(hass, ENTITY_ID)
     assert entity
-    assert entity.audio_processing == DEFAULT_AUDIO_PROCESSING
+    assert (
+        entity.async_get_audio_processing(_metadata("de-DE"))
+        == DEFAULT_AUDIO_PROCESSING
+    )
 
 
 @pytest.mark.usefixtures("setup_stt")
@@ -241,8 +262,10 @@ async def test_stt_v2_enabled(
 
     entity = async_get_speech_to_text_entity(hass, ENTITY_ID)
     assert entity
-    assert entity.audio_processing == SpeechAudioProcessing(
-        requires_external_vad=True,
+    assert entity.async_get_audio_processing(
+        _metadata("de-DE")
+    ) == SpeechAudioProcessing(
+        requires_external_vad=False,
         prefers_auto_gain_enabled=False,
         prefers_noise_reduction_enabled=False,
     )
@@ -266,6 +289,14 @@ async def test_stt_v2_falls_back_on_unsupported_language(
     }
     assert cloud.voice.process_stt.call_count == 1
     cloud.stt_v2.process_stt.assert_not_called()
+
+    # The legacy service relies on the pipeline to detect the end of speech
+    entity = async_get_speech_to_text_entity(hass, ENTITY_ID)
+    assert entity
+    assert (
+        entity.async_get_audio_processing(_metadata("hy-AM"))
+        == DEFAULT_AUDIO_PROCESSING
+    )
 
 
 @pytest.mark.parametrize(

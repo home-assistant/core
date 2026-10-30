@@ -98,6 +98,7 @@ from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryLocalComponentsCoordinator,
     TeslemetryLocalStatusCoordinator,
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
@@ -275,7 +276,7 @@ def _async_update_vehicle_repairs(
     vehicle_metadata: dict[str, Any],
 ) -> None:
     """Create repair issues for vehicle metadata issues and delete all others."""
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=_VEHICLE_ISSUE_ID_PATTERN,
@@ -742,7 +743,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     known_vins, known_site_ids = _get_subscribed_ids_from_metadata(metadata)
 
     # Energy sites which are gone or no longer set up leave issues to be deleted
-    gateway_refresh = ir.async_begin_issues_refresh(
+    gateway_refresh = ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=f"{ISSUE_GATEWAY_NOT_FOUND}_",
@@ -906,6 +907,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 if isinstance(energy_site_api, EnergySiteRouter)
                 else None
             )
+            local_components_coordinator = (
+                TeslemetryLocalComponentsCoordinator(
+                    hass, entry, energy_site_api.primary.powerwall, site_id
+                )
+                if isinstance(energy_site_api, EnergySiteRouter)
+                else None
+            )
 
             energysites.append(
                 TeslemetryEnergyData(
@@ -919,6 +927,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     can_local_control=can_local_control,
                     subentry_id=subentry_id,
                     local_status_coordinator=local_status_coordinator,
+                    local_components_coordinator=local_components_coordinator,
                 )
             )
 
@@ -1176,6 +1185,8 @@ async def _async_refresh_energy_site(energysite: TeslemetryEnergyData) -> None:
     if energysite.local_status_coordinator is not None:
         # A local gateway failure must not block the cloud entities.
         await energysite.local_status_coordinator.async_refresh()
+    if energysite.local_components_coordinator is not None:
+        await energysite.local_components_coordinator.async_refresh()
     if energysite.history_coordinator is not None:
         await energysite.history_coordinator.async_set_time_zone(time_zone)
     if energysite.wall_connector_totals_coordinator is not None:

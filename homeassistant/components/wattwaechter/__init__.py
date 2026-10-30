@@ -1,16 +1,17 @@
-"""The WattWächter Plus integration."""
+"""The WattWächter integration."""
 
 import logging
 
 from aio_wattwaechter import Wattwaechter, WattwaechterConnectionError
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, OBIS_GAS_POWER
 from .coordinator import WattwaechterConfigEntry, WattwaechterCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ PLATFORMS = [Platform.SENSOR, Platform.UPDATE]
 async def async_setup_entry(
     hass: HomeAssistant, entry: WattwaechterConfigEntry
 ) -> None:
-    """Set up WattWächter Plus from a config entry."""
+    """Set up WattWächter from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data.get(CONF_TOKEN)
 
@@ -48,7 +49,7 @@ async def async_setup_entry(
 async def async_unload_entry(
     hass: HomeAssistant, entry: WattwaechterConfigEntry
 ) -> None:
-    """Unload a WattWächter Plus config entry."""
+    """Unload a WattWächter config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
@@ -98,3 +99,22 @@ async def async_migrate_entry(
                 unique_id=new_id if entry.unique_id == old_id else entry.unique_id,
             )
         hass.config_entries.async_update_entry(entry, minor_version=2)
+    if entry.minor_version < 3:
+        # Before the gas power had its own sensor, its OBIS code was set up as
+        # a generic sensor, which is disabled by default. Enable it unless the
+        # user turned off new entities for this entry.
+        entity_registry = er.async_get(hass)
+        if (
+            not entry.pref_disable_new_entities
+            and (
+                entity_id := entity_registry.async_get_entity_id(
+                    SENSOR_DOMAIN,
+                    DOMAIN,
+                    f"{entry.data[CONF_DEVICE_ID]}_{OBIS_GAS_POWER}",
+                )
+            )
+            and (entity_entry := entity_registry.async_get(entity_id))
+            and entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        ):
+            entity_registry.async_update_entity(entity_id, disabled_by=None)
+        hass.config_entries.async_update_entry(entry, minor_version=3)

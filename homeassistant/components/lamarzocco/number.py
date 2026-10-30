@@ -32,7 +32,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import LaMarzoccoConfigEntry
+from .coordinator import (
+    LaMarzoccoBluetoothUpdateCoordinator,
+    LaMarzoccoConfigEntry,
+    LaMarzoccoUpdateCoordinator,
+)
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 PARALLEL_UPDATES = 1
@@ -55,9 +59,6 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         translation_key="coffee_temp",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        native_step=PRECISION_TENTHS,
-        native_min_value=85,
-        native_max_value=104,
         set_value_fn=lambda machine, temp: machine.set_coffee_target_temperature(temp),
         native_value_fn=(
             lambda machine: (
@@ -336,9 +337,11 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
-        LaMarzoccoNumberEntity(
-            coordinator, description, entry.runtime_data.bluetooth_coordinator
-        )
+        (
+            LaMarzoccoCoffeeTemperatureNumberEntity
+            if description.key == "coffee_temp"
+            else LaMarzoccoNumberEntity
+        )(coordinator, description, entry.runtime_data.bluetooth_coordinator)
         for description in ENTITIES
         if description.supported_fn(coordinator)
     )
@@ -373,3 +376,23 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
                     },
                 ) from exc
             self.async_write_ha_state()
+
+
+class LaMarzoccoCoffeeTemperatureNumberEntity(LaMarzoccoNumberEntity):
+    """La Marzocco coffee temperature number entity."""
+
+    def __init__(
+        self,
+        coordinator: LaMarzoccoUpdateCoordinator,
+        entity_description: LaMarzoccoNumberEntityDescription,
+        bluetooth_coordinator: LaMarzoccoBluetoothUpdateCoordinator | None = None,
+    ) -> None:
+        """Initialize the coffee temperature entity."""
+        super().__init__(coordinator, entity_description, bluetooth_coordinator)
+        boiler = cast(
+            CoffeeBoiler,
+            coordinator.device.dashboard.config[WidgetType.CM_COFFEE_BOILER],
+        )
+        self._attr_native_min_value = boiler.target_temperature_min
+        self._attr_native_max_value = boiler.target_temperature_max
+        self._attr_native_step = boiler.target_temperature_step

@@ -1049,7 +1049,7 @@ def update_statistics_issues(
     @callback
     def refresh_issues() -> None:
         """Create the collected issues and delete stale ones."""
-        with ir.async_begin_issues_refresh(
+        with ir.async_refresh_issues(
             hass, DOMAIN, issue_id_pattern=STATISTICS_ISSUE_ID_PATTERN
         ):
             for issue_id, (issue_type, data) in issues.items():

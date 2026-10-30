@@ -24,12 +24,6 @@ def zone_unique_id(risco: RiscoCloud, zone_id: int) -> str:
 class RiscoCloudEntity(CoordinatorEntity[RiscoDataUpdateCoordinator]):
     """Risco cloud entity base class."""
 
-    def __init__(
-        self, *, coordinator: RiscoDataUpdateCoordinator, **kwargs: Any
-    ) -> None:
-        """Init the entity."""
-        super().__init__(coordinator=coordinator, **kwargs)
-
     def _get_data_from_coordinator(self) -> None:
         raise NotImplementedError
 

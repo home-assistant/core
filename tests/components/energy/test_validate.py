@@ -308,6 +308,51 @@ async def test_validation_solar(
     }
 
 
+@pytest.mark.usefixtures("mock_get_metadata")
+@pytest.mark.parametrize(
+    ("unit", "issues"),
+    [
+        pytest.param(
+            "beers",
+            [
+                {
+                    "type": "entity_unexpected_unit_energy",
+                    "affected_entities": {("sensor.home_energy", "beers")},
+                    "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
+                }
+            ],
+            id="unexpected_unit",
+        ),
+        pytest.param("kWh", [], id="valid"),
+    ],
+)
+async def test_validation_home(
+    hass: HomeAssistant,
+    mock_energy_manager: EnergyManager,
+    unit: str,
+    issues: list[dict[str, Any]],
+) -> None:
+    """Test validating the whole-home meter unit."""
+    await mock_energy_manager.async_update(
+        {"energy_sources": [{"type": "home", "stat_energy_to": "sensor.home_energy"}]}
+    )
+    hass.states.async_set(
+        "sensor.home_energy",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": unit,
+            "state_class": "total_increasing",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [issues],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+
 async def test_validation_battery(
     hass: HomeAssistant, mock_energy_manager, mock_get_metadata
 ) -> None:

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .device import Device
 
 type UpnpConfigEntry = ConfigEntry[UpnpDataUpdateCoordinator]
@@ -82,5 +82,7 @@ class UpnpDataUpdateCoordinator(
                 exception,
             )
             raise UpdateFailed(
-                f"Unable to communicate with IGD at: {self.device.device_url}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"device_url": self.device.device_url},
             ) from exception

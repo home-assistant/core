@@ -3,9 +3,10 @@
 import json
 from typing import Any
 
+from hassfest.model import Brand, Config, Integration, IntegrationType
+from hassfest.serializer import format_python_namespace
+
 from .brand import validate as validate_brands
-from .model import Brand, Config, Integration, IntegrationType
-from .serializer import format_python_namespace
 
 UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard", "unifi_discovery"}
 

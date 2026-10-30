@@ -837,7 +837,7 @@ async def test_refresh_issues(hass: HomeAssistant) -> None:
     ir.async_ignore_issue(hass, "test", "refresh_1", True)
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
 
-    refresh = ir.async_begin_issues_refresh(hass, "test", issue_id_pattern="refresh_")
+    refresh = ir.async_refresh_issues(hass, "test", issue_id_pattern="refresh_")
     _create_issue(hass, "refresh_1")
     _create_issue(hass, "refresh_5")
     refresh.async_keep(["refresh_2"])
@@ -870,7 +870,7 @@ async def test_refresh_issues_by_id(hass: HomeAssistant) -> None:
     for issue_id in ("issue_1", "issue_2", "issue_3"):
         _create_issue(hass, issue_id)
 
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass, "test", issue_ids=["issue_1", "issue_2", "non_existing"]
     ):
         _create_issue(hass, "issue_1")
@@ -902,7 +902,7 @@ async def test_refresh_issues_pattern(
     for issue_id in issue_ids:
         _create_issue(hass, issue_id)
 
-    with ir.async_begin_issues_refresh(hass, "test", issue_id_pattern=issue_id_pattern):
+    with ir.async_refresh_issues(hass, "test", issue_id_pattern=issue_id_pattern):
         pass
 
     assert set(ir.async_get(hass).issues) == {
@@ -917,7 +917,7 @@ async def test_refresh_issues_context_manager_exception(hass: HomeAssistant) -> 
 
     with (
         pytest.raises(ValueError, match="Boom"),
-        ir.async_begin_issues_refresh(hass, "test", issue_id_pattern="refresh_"),
+        ir.async_refresh_issues(hass, "test", issue_id_pattern="refresh_"),
     ):
         raise ValueError("Boom")
 
@@ -929,7 +929,7 @@ async def test_refresh_issues_cancel(hass: HomeAssistant) -> None:
     """Test a cancelled refresh does not delete issues, also if finished later."""
     _create_issue(hass, "refresh_1")
 
-    refresh = ir.async_begin_issues_refresh(hass, "test", issue_id_pattern="refresh_")
+    refresh = ir.async_refresh_issues(hass, "test", issue_id_pattern="refresh_")
     refresh.async_cancel()
     refresh.async_finish()
 
@@ -941,7 +941,7 @@ async def test_refresh_issues_finish_twice(hass: HomeAssistant) -> None:
     """Test finishing a refresh again does not delete issues created after it."""
     _create_issue(hass, "refresh_1")
 
-    refresh = ir.async_begin_issues_refresh(hass, "test", issue_id_pattern="refresh_")
+    refresh = ir.async_refresh_issues(hass, "test", issue_id_pattern="refresh_")
     refresh.async_finish()
     _create_issue(hass, "refresh_1")
     refresh.async_finish()
@@ -954,7 +954,7 @@ async def test_refresh_issues_deleted_during_refresh(hass: HomeAssistant) -> Non
     """Test an issue deleted and created again during a refresh is not deleted."""
     _create_issue(hass, "refresh_1")
 
-    refresh = ir.async_begin_issues_refresh(hass, "test", issue_id_pattern="refresh_")
+    refresh = ir.async_refresh_issues(hass, "test", issue_id_pattern="refresh_")
     ir.async_delete_issue(hass, "test", "refresh_1")
     _create_issue(hass, "refresh_1")
     refresh.async_finish()
@@ -968,10 +968,8 @@ async def test_refresh_issues_overlapping(hass: HomeAssistant) -> None:
     _create_issue(hass, "refresh_1")
     _create_issue(hass, "refresh_2")
 
-    refresh_old = ir.async_begin_issues_refresh(
-        hass, "test", issue_id_pattern="refresh_"
-    )
-    refresh_new = ir.async_begin_issues_refresh(hass, "test", issue_ids=["refresh_1"])
+    refresh_old = ir.async_refresh_issues(hass, "test", issue_id_pattern="refresh_")
+    refresh_new = ir.async_refresh_issues(hass, "test", issue_ids=["refresh_1"])
     refresh_old.async_finish()
     assert set(ir.async_get(hass).issues) == {("test", "refresh_1")}
 
@@ -1005,7 +1003,7 @@ async def test_refresh_issues_inactive(
     issue_registry = ir.async_get(hass)
     assert not issue_registry.issues[("test", "refresh_1")].active
 
-    with ir.async_begin_issues_refresh(hass, "test", issue_id_pattern="refresh_"):
+    with ir.async_refresh_issues(hass, "test", issue_id_pattern="refresh_"):
         _create_issue(hass, "refresh_1")
 
     assert set(issue_registry.issues) == {("test", "refresh_1")}
@@ -1026,7 +1024,7 @@ async def test_refresh_issues_invalid_scope(
     with pytest.raises(
         ValueError, match="At most one of issue_id_pattern and issue_ids is allowed"
     ):
-        ir.async_begin_issues_refresh(
+        ir.async_refresh_issues(
             hass, "test", issue_id_pattern=issue_id_pattern, issue_ids=[]
         )
 
@@ -1038,7 +1036,7 @@ async def test_refresh_issues_domain(hass: HomeAssistant) -> None:
         _create_issue(hass, issue_id)
     _create_issue(hass, "issue_3", domain="other_domain")
 
-    with ir.async_begin_issues_refresh(hass, "test"):
+    with ir.async_refresh_issues(hass, "test"):
         _create_issue(hass, "issue_1")
 
     assert set(ir.async_get(hass).issues) == {
@@ -1098,7 +1096,7 @@ async def test_refresh_issues_config_entry(
     _create_issue(hass, "a_other_domain", "other", config_entry_id=entry.entry_id)
     issues_before = set(ir.async_get(hass).issues)
 
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass, "test", config_entry_id=entry.entry_id, **kwargs
     ):
         _create_issue(hass, "a_kept", config_entry_id=entry.entry_id)
@@ -1115,7 +1113,7 @@ async def test_delete_deferred_to_refresh(hass: HomeAssistant) -> None:
     _create_issue(hass, "issue_2")
     issue_registry = ir.async_get(hass)
 
-    refresh = ir.async_begin_issues_refresh(hass, "test")
+    refresh = ir.async_refresh_issues(hass, "test")
     ir.async_delete_issue(hass, "test", "issue_1", defer_to_refresh=True)
     issue_registry.async_delete("test", "issue_2", defer_to_refresh=True)
     assert set(issue_registry.issues) == {("test", "issue_1"), ("test", "issue_2")}
@@ -1141,7 +1139,7 @@ async def test_delete_deferred_outside_refresh_scope(hass: HomeAssistant) -> Non
     _create_issue(hass, "issue_1")
     _create_issue(hass, "other")
 
-    refresh = ir.async_begin_issues_refresh(hass, "test", issue_ids=["other"])
+    refresh = ir.async_refresh_issues(hass, "test", issue_ids=["other"])
     # Created after the refresh began, so not in its set
     _create_issue(hass, "issue_2")
     ir.async_delete_issue(hass, "test", "issue_1", defer_to_refresh=True)
@@ -1326,7 +1324,7 @@ async def test_delete_deferred_to_refresh_sequences(
     _create_issue(hass, "issue_1")
     ir.async_ignore_issue(hass, "test", "issue_1", True)
     refreshes = {
-        name: ir.async_begin_issues_refresh(hass, "test", issue_ids=["issue_1"])
+        name: ir.async_refresh_issues(hass, "test", issue_ids=["issue_1"])
         for name in refresh_names
     }
 
@@ -1342,9 +1340,7 @@ async def test_delete_deferred_to_refresh_sequences(
 
 def _begin(name: str) -> _RefreshStep:
     def begin(hass: HomeAssistant, refreshes: dict[str, ir.IssuesRefresh]) -> None:
-        refreshes[name] = ir.async_begin_issues_refresh(
-            hass, "test", issue_ids=["issue_1"]
-        )
+        refreshes[name] = ir.async_refresh_issues(hass, "test", issue_ids=["issue_1"])
 
     return begin
 
@@ -1391,8 +1387,8 @@ async def test_keep_outside_refresh_scope_disjoint_refreshes(
     _create_issue(hass, "issue_1")
     _create_issue(hass, "issue_2")
     refreshes = {
-        "old": ir.async_begin_issues_refresh(hass, "test", issue_ids=["issue_1"]),
-        "new": ir.async_begin_issues_refresh(hass, "test", issue_ids=["issue_2"]),
+        "old": ir.async_refresh_issues(hass, "test", issue_ids=["issue_1"]),
+        "new": ir.async_refresh_issues(hass, "test", issue_ids=["issue_2"]),
     }
     issue_registry = ir.async_get(hass)
 
@@ -1409,7 +1405,7 @@ async def test_delete_not_deferred_during_refresh(hass: HomeAssistant) -> None:
     """Test a plain delete during a refresh deletes immediately and unmarks."""
     _create_issue(hass, "issue_1")
 
-    refresh = ir.async_begin_issues_refresh(hass, "test")
+    refresh = ir.async_refresh_issues(hass, "test")
     ir.async_delete_issue(hass, "test", "issue_1")
     assert ir.async_get(hass).issues == {}
     _create_issue(hass, "issue_1")
@@ -1426,7 +1422,7 @@ async def test_keep_issue_outside_refresh(hass: HomeAssistant) -> None:
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
 
     ir.async_keep_issue(hass, "test", "issue_1")
-    refresh = ir.async_begin_issues_refresh(hass, "test", issue_ids=["issue_2"])
+    refresh = ir.async_refresh_issues(hass, "test", issue_ids=["issue_2"])
     ir.async_keep_issue(hass, "test", "issue_1")
     ir.async_keep_issue(hass, "test", "unknown")
     refresh.async_finish()
@@ -1449,16 +1445,16 @@ async def test_keep_issue_thread_safety(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("issue_registry")
-async def test_begin_issues_refresh_thread_safety(hass: HomeAssistant) -> None:
-    """Test call async_begin_issues_refresh from a thread."""
+async def test_refresh_issues_thread_safety(hass: HomeAssistant) -> None:
+    """Test call async_refresh_issues from a thread."""
     with pytest.raises(
         RuntimeError,
         match=(
-            "Detected code that calls issue_registry.async_begin_refresh from a thread."
+            "Detected code that calls issue_registry.async_refresh_issues from a thread."
         ),
     ):
         await hass.async_add_executor_job(
-            partial(ir.async_begin_issues_refresh, hass, "test", issue_ids=[])
+            partial(ir.async_refresh_issues, hass, "test", issue_ids=[])
         )
 
 
@@ -1475,7 +1471,7 @@ async def test_issues_refresh_thread_safety(
     hass: HomeAssistant, method: str, args: tuple[Any, ...]
 ) -> None:
     """Test call IssuesRefresh methods from a thread."""
-    refresh = ir.async_begin_issues_refresh(hass, "test", issue_ids=[])
+    refresh = ir.async_refresh_issues(hass, "test", issue_ids=[])
     with pytest.raises(
         RuntimeError,
         match=(

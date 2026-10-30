@@ -52,4 +52,5 @@ class BetaFirmwareSwitch(BaseBetaFirmwareSwitch):
             model=variant.full_name,
             manufacturer="Nabu Casa",
             serial_number=serial_number,
+            via_device_id=config_entry.runtime_data.via_device_id,
         )

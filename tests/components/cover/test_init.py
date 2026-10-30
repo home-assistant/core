@@ -221,7 +221,7 @@ async def test_services_with_speed(
     ent1, ent2, _, _, _, _, speed_cover = mock_cover_entities
 
     state = hass.states.get(speed_cover.entity_id)
-    assert state.attributes["supported_speeds"] == ["slow", "fast", "default"]
+    assert state.attributes["supported_speeds"] == ["slow", "medium", "fast"]
 
     speed_cover.last_kwargs = None
     await hass.services.async_call(
@@ -250,18 +250,18 @@ async def test_services_with_speed(
         {
             ATTR_ENTITY_ID: speed_cover.entity_id,
             ATTR_POSITION: 75,
-            ATTR_SPEED: "default",
+            ATTR_SPEED: "medium",
         },
         blocking=True,
     )
-    assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
+    assert speed_cover.last_kwargs == {"position": 75, "speed": "medium"}
 
     # A speed the cover does not list is dropped and the cover still moves
     speed_cover.last_kwargs = None
     await hass.services.async_call(
         cover.DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "invalid"},
+        {ATTR_ENTITY_ID: speed_cover.entity_id, ATTR_SPEED: "default"},
         blocking=True,
     )
     assert speed_cover.last_kwargs == {}

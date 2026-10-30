@@ -47,7 +47,6 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         except PranaApiCommunicationError:
             return self.async_abort(reason="invalid_device_or_unreachable")
 
-        self._set_confirm_only()
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:

@@ -125,11 +125,9 @@ def build_shell_template_issue_id(platform: str, name: str) -> str:
 
 
 @callback
-def async_begin_shell_template_issues_refresh(hass: HomeAssistant) -> ir.IssuesRefresh:
+def async_refresh_shell_template_issues(hass: HomeAssistant) -> ir.IssuesRefresh:
     """Begin a refresh of the deprecation issues, which deletes orphaned ones."""
-    return ir.async_begin_issues_refresh(
-        hass, DOMAIN, issue_id_pattern=_ISSUE_ID_PREFIX
-    )
+    return ir.async_refresh_issues(hass, DOMAIN, issue_id_pattern=_ISSUE_ID_PREFIX)
 
 
 def notify_name(notify_config: dict[str, Any]) -> str:

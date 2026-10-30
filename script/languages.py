@@ -4,9 +4,8 @@ import json
 from pathlib import Path
 import sys
 
+from hassfest.serializer import format_python_namespace
 import requests
-
-from .hassfest.serializer import format_python_namespace
 
 tag = sys.argv[1] if len(sys.argv) > 1 else "dev"
 

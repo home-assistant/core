@@ -4,14 +4,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components.light import (
-    ATTR_EFFECT,
-    DOMAIN as LIGHT_DOMAIN,
-    ColorMode,
-)
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
+from homeassistant.components.light import ColorMode
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import color as color_util
 from homeassistant.util.json import JsonArrayType
 
@@ -1013,41 +1009,6 @@ async def test_grouped_lights(
             mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
             == "identify"
         )
-
-
-async def test_light_turn_on_service_deprecation(
-    hass: HomeAssistant,
-    mock_bridge_v2: Mock,
-    v2_resources_test_data: JsonArrayType,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test calling the turn on service on a light."""
-    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
-
-    test_light_id = "light.test_room_hue_light_with_color_temperature_only"
-
-    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
-
-    event = {
-        "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
-        "type": "light",
-        "effects": {"status": "candle"},
-    }
-    mock_bridge_v2.api.emit_event("update", event)
-    await hass.async_block_till_done()
-
-    # test disable effect
-    # it should send a request with effect set to "no_effect"
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: test_light_id,
-            ATTR_EFFECT: "None",
-        },
-        blocking=True,
-    )
-    assert mock_bridge_v2.mock_requests[0]["json"]["effects"]["effect"] == "no_effect"
 
 
 @pytest.mark.parametrize(

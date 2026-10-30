@@ -99,6 +99,56 @@
     'state': 'on',
   })
 # ---
+# name: test_switches[aqara_led_strip_t2][switch.aqara_led_strip_t2_music_sync-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000002D6-MatterNodeDevice'), ('matter', 'serial_serial_726')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.aqara_led_strip_t2_music_sync',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Music sync',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Music sync',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'music_sync',
+    'unique_id': '00000000000004D2-00000000000002D6-MatterNodeDevice-1-AqaraLedStripMusicSyncEnabled-291503119-19',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[aqara_led_strip_t2][switch.aqara_led_strip_t2_music_sync-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara LED Strip T2 Music sync',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.aqara_led_strip_t2_music_sync',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switches[aqara_shutter_switch_h2][switch.aqara_shutter_switch_h2_eu_reverse_motor_direction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

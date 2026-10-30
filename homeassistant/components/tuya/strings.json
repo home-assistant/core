@@ -235,9 +235,6 @@
       "indexed_minimum_brightness": {
         "name": "Minimum brightness {index}"
       },
-      "indexed_power_warning_threshold": {
-        "name": "Power warning threshold {index}"
-      },
       "indexed_temperature": {
         "name": "Temperature {index}"
       },
@@ -270,6 +267,9 @@
       },
       "powder": {
         "name": "Powder"
+      },
+      "power_warning_threshold": {
+        "name": "Power warning threshold"
       },
       "sensitivity": {
         "name": "Sensitivity"
@@ -763,6 +763,9 @@
       "duster_cloth_life": {
         "name": "Duster cloth lifetime"
       },
+      "energy_today": {
+        "name": "Energy today"
+      },
       "excretion_time_day": {
         "name": "Excretion duration"
       },
@@ -805,36 +808,11 @@
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
-      "indexed_current": {
-        "name": "Current channel {index}"
-      },
-      "indexed_energy_today": {
-        "name": "Energy today channel {index}"
-      },
       "indexed_humidity_outdoor": {
         "name": "Outdoor humidity channel {index}"
       },
-      "indexed_meter_status": {
-        "name": "Status channel {index}",
-        "state": {
-          "close": "[%key:common::state::closed%]",
-          "idle": "[%key:common::state::idle%]",
-          "monitor": "Monitoring",
-          "warning": "Warning",
-          "working": "Working"
-        }
-      },
-      "indexed_power": {
-        "name": "Power channel {index}"
-      },
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
-      },
-      "indexed_total_energy": {
-        "name": "Total energy channel {index}"
-      },
-      "indexed_voltage": {
-        "name": "Voltage channel {index}"
       },
       "inverter_output_power": {
         "name": "Inverter output power"
@@ -887,6 +865,16 @@
       },
       "luminosity": {
         "name": "Luminosity"
+      },
+      "meter_status": {
+        "name": "Status",
+        "state": {
+          "close": "[%key:common::state::closed%]",
+          "idle": "[%key:common::state::idle%]",
+          "monitor": "Monitoring",
+          "warning": "Warning",
+          "working": "Working"
+        }
       },
       "methane": {
         "name": "[%key:component::tuya::entity::binary_sensor::methane::name%]"
@@ -1162,9 +1150,6 @@
       },
       "indexed_alarm": {
         "name": "Alarm {index}"
-      },
-      "indexed_socket": {
-        "name": "Socket {index}"
       },
       "indexed_switch": {
         "name": "Switch {index}"

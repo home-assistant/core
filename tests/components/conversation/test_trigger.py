@@ -1,6 +1,7 @@
 """Test conversation triggers."""
 
 import logging
+from unittest.mock import ANY
 
 import probatio
 import pytest
@@ -64,6 +65,7 @@ async def test_if_fires_on_event(
         context=context,
     )
     assert service_response["response"]["speech"]["plain"]["speech"] == "Done"
+    assert service_response["conversation_id"] is not None
 
     await hass.async_block_till_done()
     assert len(service_calls) == 2
@@ -82,7 +84,7 @@ async def test_if_fires_on_event(
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
-            "conversation_id": None,
+            "conversation_id": service_response["conversation_id"],
             "device_id": None,
             "satellite_id": None,
             "language": "en",
@@ -234,7 +236,7 @@ async def test_response_same_sentence(
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
-            "conversation_id": None,
+            "conversation_id": ANY,
             "device_id": None,
             "satellite_id": None,
             "language": "en",
@@ -415,7 +417,7 @@ async def test_same_trigger_multiple_sentences(
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
-            "conversation_id": None,
+            "conversation_id": ANY,
             "device_id": None,
             "satellite_id": None,
             "language": "en",
@@ -663,7 +665,7 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
         "user_input": {
             "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
-            "conversation_id": None,
+            "conversation_id": ANY,
             "device_id": None,
             "satellite_id": None,
             "language": "en",

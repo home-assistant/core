@@ -1,0 +1,5 @@
+{
+  "domain": "ledvance",
+  "name": "LEDVANCE",
+  "iot_standards": ["matter"]
+}

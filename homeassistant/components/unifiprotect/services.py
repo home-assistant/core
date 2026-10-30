@@ -59,7 +59,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
-SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
@@ -68,16 +67,6 @@ SERVICE_TRIGGER_ALARM_WEBHOOK = "trigger_alarm_webhook"
 
 ATTR_PRESET = "preset"
 ATTR_TRIGGER_ID = "trigger_id"
-
-ALL_GLOBAL_SERVICES = [
-    SERVICE_ADD_DOORBELL_TEXT,
-    SERVICE_REMOVE_DOORBELL_TEXT,
-    SERVICE_SET_CHIME_PAIRED,
-    SERVICE_REMOVE_PRIVACY_ZONE,
-    SERVICE_GET_USER_KEYRING_INFO,
-    SERVICE_PTZ_GOTO_PRESET,
-    SERVICE_TRIGGER_ALARM_WEBHOOK,
-]
 
 DOORBELL_TEXT_SCHEMA = probatio.Schema(
     {

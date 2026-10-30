@@ -9,7 +9,11 @@ from aiohttp import ClientSession
 import probatio
 from pylamarzocco import LaMarzoccoCloudClient
 from pylamarzocco.const import DeviceType
-from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.exceptions import (
+    AuthFail,
+    PolicyAcceptanceRequired,
+    RequestNotSuccessful,
+)
 from pylamarzocco.models import Thing
 from pylamarzocco.util import InstallationKey, generate_installation_key
 
@@ -56,6 +60,8 @@ from .const import (
 from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
+CONF_PROFILE_POLICY = "profile_policy"
+CONF_COMMERCIAL_POLICY = "commercial_policy"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +72,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 4
 
     _client: ClientSession
+    _cloud_client: LaMarzoccoCloudClient
     _installation_key: InstallationKey
 
     def __init__(self) -> None:
@@ -95,51 +102,73 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             self._installation_key = generate_installation_key(
                 str(uuid.uuid4()).lower()
             )
-            cloud_client = LaMarzoccoCloudClient(
+            self._cloud_client = LaMarzoccoCloudClient(
                 username=data[CONF_USERNAME],
                 password=data[CONF_PASSWORD],
                 client=self._client,
                 installation_key=self._installation_key,
             )
             try:
-                await cloud_client.async_register_client()
-                things = await cloud_client.list_things()
+                await self._cloud_client.async_register_client()
+                things = await self._cloud_client.list_things()
+            except PolicyAcceptanceRequired:
+                self._config = data
+                return await self.async_step_accept_policy()
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
                 errors["base"] = "invalid_auth"
-            except RequestNotSuccessful as exc:
-                _LOGGER.error("Error connecting to server: %s", exc)
+            except RequestNotSuccessful, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:
-                self._things = {
-                    thing.serial_number: thing
-                    for thing in things
-                    if thing.type is DeviceType.MACHINE
-                }
-                if not self._things:
-                    errors["base"] = "no_machines"
+                if (error := self._store_machines(things)) is None:
+                    self._config = data
+                    return await self._async_continue_after_login()
+                errors["base"] = error
 
-            if not errors:
-                self._config = data
-                if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=data
-                    )
-                if self._discovered:
-                    if self._discovered[CONF_MACHINE] not in self._things:
-                        errors["base"] = "machine_not_found"
-                    else:
-                        # store discovered connection address
-                        if CONF_MAC in self._discovered:
-                            self._config[CONF_MAC] = self._discovered[CONF_MAC]
-                        if CONF_ADDRESS in self._discovered:
-                            self._config[CONF_ADDRESS] = self._discovered[CONF_ADDRESS]
+        return self._async_show_credentials_form(errors)
 
-                        return await self.async_step_machine_selection(
-                            user_input={CONF_MACHINE: self._discovered[CONF_MACHINE]}
-                        )
-            if not errors:
-                return await self.async_step_machine_selection()
+    @callback
+    def _async_show_credentials_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Show the credentials form of the current flow source."""
+        if self.source == SOURCE_REAUTH:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                    }
+                ),
+                errors=errors,
+            )
+
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_entry = self._get_reconfigure_entry()
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=probatio.Schema(
+                    {
+                        probatio.Required(
+                            CONF_USERNAME, default=reconfigure_entry.data[CONF_USERNAME]
+                        ): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.EMAIL, autocomplete="username"
+                            ),
+                        ),
+                        probatio.Required(
+                            probatio.Secret(CONF_PASSWORD),
+                            default=reconfigure_entry.data[CONF_PASSWORD],
+                        ): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.PASSWORD,
+                                autocomplete="current-password",
+                            ),
+                        ),
+                    }
+                ),
+                errors=errors,
+            )
 
         placeholders: dict[str, str] | None = None
         if self._discovered:
@@ -167,6 +196,74 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=placeholders,
         )
+
+    async def async_step_accept_policy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user accept the latest La Marzocco privacy policy."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await self._cloud_client.accept_privacy_policy(
+                    profile_policy=user_input[CONF_PROFILE_POLICY],
+                    commercial_policy=user_input[CONF_COMMERCIAL_POLICY],
+                )
+                things = await self._cloud_client.list_things()
+            except AuthFail:
+                _LOGGER.debug("Server rejected login credentials")
+                return self._async_show_credentials_form({"base": "invalid_auth"})
+            except PolicyAcceptanceRequired:
+                _LOGGER.debug("Server still requires accepting the privacy policy")
+                errors["base"] = "policy_not_accepted"
+            except RequestNotSuccessful, TimeoutError:
+                errors["base"] = "cannot_connect"
+            else:
+                if (error := self._store_machines(things)) is not None:
+                    return self.async_abort(reason=error)
+                return await self._async_continue_after_login()
+
+        return self.async_show_form(
+            step_id="accept_policy",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_PROFILE_POLICY, default=False): bool,
+                    probatio.Required(CONF_COMMERCIAL_POLICY, default=False): bool,
+                }
+            ),
+            errors=errors,
+        )
+
+    def _store_machines(self, things: list[Thing]) -> str | None:
+        """Store the machines of the account and return an error, if any."""
+        self._things = {
+            thing.serial_number: thing
+            for thing in things
+            if thing.type is DeviceType.MACHINE
+        }
+        if not self._things:
+            return "no_machines"
+        if self._discovered and self._discovered[CONF_MACHINE] not in self._things:
+            return "machine_not_found"
+        return None
+
+    async def _async_continue_after_login(self) -> ConfigFlowResult:
+        """Continue the flow once logged in and the machines are known."""
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates=self._config
+            )
+        if self._discovered:
+            # store discovered connection address
+            if CONF_MAC in self._discovered:
+                self._config[CONF_MAC] = self._discovered[CONF_MAC]
+            if CONF_ADDRESS in self._discovered:
+                self._config[CONF_ADDRESS] = self._discovered[CONF_ADDRESS]
+
+            return await self.async_step_machine_selection(
+                user_input={CONF_MACHINE: self._discovered[CONF_MACHINE]}
+            )
+        return await self.async_step_machine_selection()
 
     async def async_step_machine_selection(
         self, user_input: dict[str, Any] | None = None
@@ -332,14 +429,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if not user_input:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=probatio.Schema(
-                    {
-                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
-                    }
-                ),
-            )
+            return self._async_show_credentials_form()
 
         return await self.async_step_user(user_input)
 
@@ -348,30 +438,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Perform reconfiguration of the config entry."""
         if not user_input:
-            reconfigure_entry = self._get_reconfigure_entry()
-            return self.async_show_form(
-                step_id="reconfigure",
-                data_schema=probatio.Schema(
-                    {
-                        probatio.Required(
-                            CONF_USERNAME, default=reconfigure_entry.data[CONF_USERNAME]
-                        ): TextSelector(
-                            TextSelectorConfig(
-                                type=TextSelectorType.EMAIL, autocomplete="username"
-                            ),
-                        ),
-                        probatio.Required(
-                            probatio.Secret(CONF_PASSWORD),
-                            default=reconfigure_entry.data[CONF_PASSWORD],
-                        ): TextSelector(
-                            TextSelectorConfig(
-                                type=TextSelectorType.PASSWORD,
-                                autocomplete="current-password",
-                            ),
-                        ),
-                    }
-                ),
-            )
+            return self._async_show_credentials_form()
 
         return await self.async_step_user(user_input)
 

@@ -6,6 +6,9 @@ import logging
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_get_serial_port_via_device_id,
+)
 from homeassistant.components.usb import (
     USBDevice,
     async_is_serial_port_present,
@@ -30,6 +33,7 @@ class HomeAssistantConnectZBT2Data:
     """Runtime data definition."""
 
     coordinator: FirmwareUpdateCoordinator
+    via_device_id: str | None
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -86,7 +90,10 @@ async def async_setup_entry(
         session,
         NABU_CASA_FIRMWARE_RELEASES_URL,
     )
-    entry.runtime_data = HomeAssistantConnectZBT2Data(coordinator)
+    entry.runtime_data = HomeAssistantConnectZBT2Data(
+        coordinator=coordinator,
+        via_device_id=async_get_serial_port_via_device_id(hass, device_path),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
 

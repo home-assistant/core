@@ -170,12 +170,13 @@ async def create_streams() -> AsyncGenerator[Streams]:
 
 
 async def create_mcp_server(
-    hass: HomeAssistant,
+    request: web.Request,
     context: Context,
     llm_api_id: str | list[str],
     read_only: bool,
 ) -> tuple[Server, InitializationOptions]:
     """Initialize the MCP server to ensure it's ready to handle requests."""
+    hass = request.app[KEY_HASS]
     llm_context = llm.LLMContext(
         platform=DOMAIN,
         context=context,
@@ -183,7 +184,9 @@ async def create_mcp_server(
         assistant=conversation.DOMAIN,
         device_id=None,
     )
-    server = await create_server(hass, llm_api_id, llm_context, read_only)
+    server = await create_server(
+        hass, llm_api_id, llm_context, read_only, str(request.url.origin())
+    )
     options = await hass.async_add_executor_job(
         server.create_initialization_options  # Reads package for version info
     )
@@ -212,7 +215,7 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         session_manager = entry.runtime_data
 
         server, options = await create_mcp_server(
-            hass,
+            request,
             self.context(request),
             _entry_llm_api_ids(hass, entry),
             entry.data[CONF_READ_ONLY],
@@ -290,8 +293,6 @@ async def _async_handle_streamable_message(
     read_only: bool,
 ) -> web.StreamResponse:
     """Process a single JSON-RPC message for the given LLM API."""
-    hass = request.app[KEY_HASS]
-
     # The request must include a JSON-RPC message
     if CONTENT_TYPE_JSON not in request.headers.get("accept", ""):
         raise HTTPBadRequest(text=f"Client must accept {CONTENT_TYPE_JSON}")
@@ -329,7 +330,7 @@ async def _async_handle_streamable_message(
     # request. We open a buffered stream pair to communicate with it. The
     # request is sent to the MCP server and we wait for a single response
     # then shut down the server.
-    server, options = await create_mcp_server(hass, context, llm_api_id, read_only)
+    server, options = await create_mcp_server(request, context, llm_api_id, read_only)
 
     protocol_version = (
         request.headers.get(MCP_PROTOCOL_VERSION_HEADER) or DEFAULT_NEGOTIATED_VERSION

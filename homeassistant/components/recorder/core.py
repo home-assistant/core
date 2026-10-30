@@ -20,6 +20,7 @@ from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
@@ -124,7 +125,7 @@ _LOGGER = logging.getLogger(__name__)
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
 
-SHUTDOWN_TASK = object()
+SHUTDOWN_TASK = sentinel("SHUTDOWN_TASK")
 
 COMMIT_TASK = CommitTask()
 KEEP_ALIVE_TASK = KeepAliveTask()
@@ -171,7 +172,9 @@ class Recorder(threading.Thread):
         self.auto_repack = auto_repack
         self.keep_days = keep_days
         self.is_running: bool = False
-        self._hass_started: asyncio.Future[object] = hass.loop.create_future()
+        self._hass_started: asyncio.Future[SHUTDOWN_TASK | None] = (
+            hass.loop.create_future()
+        )
         self.commit_interval = commit_interval
         self._queue: queue.SimpleQueue[RecorderTask | Event] = queue.SimpleQueue()
         self.db_url = uri

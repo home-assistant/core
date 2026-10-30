@@ -132,6 +132,8 @@ def get_ip_address(
 ) -> str | None:
     """Return network ip address."""
     addresses = entity.coordinator.data.addresses
+    if addresses is None:
+        return None
     if entity.argument in addresses:
         for addr in addresses[entity.argument]:
             if addr.family == IF_ADDRS_FAMILY[entity.entity_description.key]:

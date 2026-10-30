@@ -27,6 +27,7 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
     DeprecatedFirmwareInfo,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.network import NoURLAvailableError
@@ -283,6 +284,35 @@ async def test_outbound_websocket_incorrectly_enabled_issue(
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize(
+    ("ws_url", "issue_expected"),
+    [
+        ("wss://homeassistant.example.com/api/shelly/ws", True),
+        ("ws://192.168.1.50:8123/api/shelly/ws", True),
+        ("ws://10.10.10.10:8123/other/ws", False),
+        (None, False),
+    ],
+)
+async def test_outbound_websocket_issue_other_url_form(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    ws_url: str | None,
+    issue_expected: bool,
+) -> None:
+    """Test the outbound WebSocket issue matches the path, not the full URL."""
+    monkeypatch.setitem(
+        mock_rpc_device.config, "ws", {"enable": True, "server": ws_url}
+    )
+
+    issue_id = OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID.format(unique=MOCK_MAC)
+    entry = await init_integration(hass, 2)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert bool(issue_registry.async_get_issue(DOMAIN, issue_id)) is issue_expected
 
 
 async def test_repairs_skipped_when_device_not_initialized(

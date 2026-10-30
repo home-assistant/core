@@ -130,5 +130,4 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=f"Teleinfo ({self._discovered_device})",
                 data={CONF_SERIAL_PORT: self._discovered_device},
             )
-        self._set_confirm_only()
         return self.async_show_form(step_id="usb_confirm")

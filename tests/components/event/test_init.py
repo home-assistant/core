@@ -31,7 +31,10 @@ from homeassistant.components.event import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_platforms,
+)
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -171,6 +174,50 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_EVENT_TYPES] == ["short_press", "long_press"]
     assert state.attributes[ATTR_EVENT_TYPE] == "double_press"
     assert state.attributes["hello"] == "world"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")
+async def test_restore_state_naive_timestamp(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a restored naive timestamp is discarded instead of breaking events."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "event.doorbell",
+                    "2021-01-01T23:59:59.123",
+                ),
+                {
+                    "last_event_type": "double_press",
+                    "last_event_attributes": {
+                        "hello": "world",
+                    },
+                },
+            ),
+        ),
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    assert "restored timestamp without timezone" in caplog.text
+
+    state = hass.states.get("event.doorbell")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_EVENT_TYPE] == "double_press"
+
+    platform = async_get_platforms(hass, DOMAIN)[0]
+    entity = platform.domain_entities["event.doorbell"]
+    entity._trigger_event("short_press")
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.doorbell")
+    assert state
+    assert dt_util.parse_datetime(state.state) is not None
 
 
 @pytest.mark.usefixtures("enable_custom_integrations", "mock_event_platform")

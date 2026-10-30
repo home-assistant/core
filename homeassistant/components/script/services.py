@@ -4,19 +4,13 @@ import asyncio
 
 import probatio
 
-from homeassistant.const import (
-    SERVICE_RELOAD,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.async_ import create_eager_task
 
-from .const import ATTR_VARIABLES, DOMAIN
+from .const import ATTR_VARIABLES, DOMAIN, ScriptService
 from .entity import BaseScriptEntity
 from .helpers import async_get_blueprints
 from .util import async_process_config
@@ -78,14 +72,17 @@ async def _toggle_service(service: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the script services."""
     hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, _reload_service, schema=RELOAD_SERVICE_SCHEMA
+        DOMAIN, ScriptService.RELOAD, _reload_service, schema=RELOAD_SERVICE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, _turn_on_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
+        DOMAIN, ScriptService.TURN_ON, _turn_on_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, _turn_off_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
+        DOMAIN,
+        ScriptService.TURN_OFF,
+        _turn_off_service,
+        schema=SCRIPT_TURN_ONOFF_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, _toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
+        DOMAIN, ScriptService.TOGGLE, _toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )

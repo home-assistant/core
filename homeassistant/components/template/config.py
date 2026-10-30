@@ -25,6 +25,7 @@ from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -70,6 +71,7 @@ from . import (
     image as image_platform,
     light as light_platform,
     lock as lock_platform,
+    media_player as media_player_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
@@ -106,6 +108,7 @@ _DEFAULT_NAMES = {
     Platform.IMAGE: image_platform.DEFAULT_NAME,
     Platform.LIGHT: light_platform.DEFAULT_NAME,
     Platform.LOCK: lock_platform.DEFAULT_NAME,
+    Platform.MEDIA_PLAYER: media_player_platform.DEFAULT_NAME,
     Platform.NUMBER: number_platform.DEFAULT_NAME,
     Platform.SELECT: select_platform.DEFAULT_NAME,
     Platform.SENSOR: sensor_platform.DEFAULT_NAME,
@@ -299,6 +302,10 @@ CONFIG_SECTION_SCHEMA = probatio.All(
             ),
             probatio.Optional(LOCK_DOMAIN): probatio.All(
                 probatio.EnsureList(), [lock_platform.LOCK_YAML_SCHEMA]
+            ),
+            probatio.Optional(MEDIA_PLAYER_DOMAIN): probatio.All(
+                probatio.EnsureList(),
+                [media_player_platform.MEDIA_PLAYER_YAML_SCHEMA],
             ),
             probatio.Optional(NUMBER_DOMAIN): probatio.All(
                 probatio.EnsureList(), [number_platform.NUMBER_YAML_SCHEMA]

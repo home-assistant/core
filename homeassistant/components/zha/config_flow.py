@@ -801,9 +801,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovery."""
-
-        self._set_confirm_only()
-
         zha_config_entries = self.hass.config_entries.async_entries(
             DOMAIN, include_ignore=False
         )
