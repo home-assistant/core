@@ -47,7 +47,7 @@ rules:
     comment: A failed reconnect logs a warning on every poll.
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
