@@ -3260,6 +3260,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "fenix_control": {
+      "name": "FENIX Control",
+      "integration_type": "hub",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ffmpeg": {
       "name": "FFmpeg",
       "integrations": {
