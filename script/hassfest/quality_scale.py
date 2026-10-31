@@ -845,7 +845,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "synology_chat",
     "synology_srm",
     "syslog",
-    "system_bridge",
     "systemmonitor",
     "tado",
     "tailscale",
