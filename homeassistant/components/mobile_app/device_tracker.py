@@ -34,11 +34,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_ALTITUDE,
     ATTR_COURSE,
     ATTR_DEVICE_NAME,
+    ATTR_LOCATION_TIME,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
     SIGNAL_LOCATION_UPDATE,
@@ -47,7 +49,13 @@ from .helpers import device_info
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
+ATTR_KEYS = (
+    ATTR_ALTITUDE,
+    ATTR_COURSE,
+    ATTR_LOCATION_TIME,
+    ATTR_SPEED,
+    ATTR_VERTICAL_ACCURACY,
+)
 
 LOCATION_UPDATE_SCHEMA = probatio.All(
     cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
@@ -62,6 +70,11 @@ LOCATION_UPDATE_SCHEMA = probatio.All(
             probatio.Optional(ATTR_COURSE): cv.positive_int,
             probatio.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
             probatio.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
+            # When the device obtained this fix, which can be well before it was
+            # sent: a device may deliver a batched or cached location late.
+            probatio.Optional(ATTR_LOCATION_TIME): probatio.All(
+                cv.datetime, dt_util.as_utc
+            ),
         },
     ),
 )
