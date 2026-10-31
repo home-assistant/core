@@ -1,6 +1,6 @@
 """Tests for the eGauge config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
 from egauge_async.json.models import RegisterInfo, RegisterType
@@ -8,7 +8,6 @@ from httpx2 import ConnectError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.egauge import config_flow
 from homeassistant.components.egauge.const import CONF_INVERT_REGISTERS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -317,28 +316,36 @@ async def test_options_flow_ignores_a_register_no_longer_present(
     assert mock_config_entry.options[CONF_INVERT_REGISTERS] == []
 
 
-async def test_options_flow_reads_registers_through_its_own_client(
+async def test_options_flow_does_not_reuse_the_coordinator_client(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_egauge_client: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test the flow builds a client rather than reusing the coordinator's.
+    """Test the picker read does not go through the coordinator's client.
 
-    EgaugeJsonClient memoises its first register list, so reusing the
-    coordinator's client would return the setup-time snapshot and a register
-    removed from the device would stay selectable.
+    EgaugeJsonClient memoises its first register list, so a read through the
+    coordinator's instance returns the setup-time snapshot. Breaking that
+    instance must not break the dialog.
     """
-    client_cls = config_flow.EgaugeJsonClient
-    calls_before = client_cls.call_count
-    # The device no longer reports Solar, which setup did.
-    mock_egauge_client.get_register_info.return_value = {
-        "Grid": RegisterInfo(name="Grid", type=RegisterType.POWER, idx=0, did=None)
-    }
+    mock_egauge_client.get_register_info.side_effect = RuntimeError(
+        "coordinator client reused"
+    )
+    flow_client = MagicMock()
+    flow_client.get_register_info = AsyncMock(
+        return_value={
+            "Grid": RegisterInfo(name="Grid", type=RegisterType.POWER, idx=0, did=None)
+        }
+    )
 
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.components.egauge.config_flow.EgaugeJsonClient",
+        return_value=flow_client,
+    ):
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
 
-    assert client_cls.call_count == calls_before + 1
     assert result["type"] is FlowResultType.FORM
     select = result["data_schema"].schema[CONF_INVERT_REGISTERS]
     assert select.config["options"] == ["Grid"]
