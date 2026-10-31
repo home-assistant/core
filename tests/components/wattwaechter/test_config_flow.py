@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import (
@@ -39,6 +40,7 @@ from .conftest import (
     MOCK_HOST,
     MOCK_MAC,
     MOCK_MODEL,
+    MOCK_MQTT_CLIENT_ID,
     MOCK_SYSTEM_INFO_GAS,
     MOCK_TOKEN,
 )
@@ -757,3 +759,131 @@ async def test_user_flow_legacy_firmware_without_model_id(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == MOCK_DEVICE_ID
     assert result["data"][CONF_MODEL] == "ww_plus"
+
+
+@pytest.fixture
+def mqtt_device(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -> None:
+    """Register the device as set up through MQTT discovery."""
+    mqtt_entry = MockConfigEntry(domain="mqtt")
+    mqtt_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mqtt_entry.entry_id,
+        identifiers={("mqtt", MOCK_MQTT_CLIENT_ID)},
+    )
+
+
+@pytest.mark.usefixtures("mock_client", "mqtt_device")
+async def test_user_flow_set_up_through_mqtt(hass: HomeAssistant) -> None:
+    """Test the user flow aborts for a device set up through MQTT."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_mqtt"
+
+
+@pytest.mark.usefixtures("mqtt_device")
+async def test_auth_step_set_up_through_mqtt(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Test the auth step aborts for a device set up through MQTT."""
+    mock_client.system_info.side_effect = WattwaechterAuthenticationError(
+        "Auth required"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+    assert result["step_id"] == "auth"
+
+    mock_client.system_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: MOCK_TOKEN}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_mqtt"
+
+
+@pytest.mark.usefixtures("mock_client", "mqtt_device")
+async def test_zeroconf_flow_set_up_through_mqtt(hass: HomeAssistant) -> None:
+    """Test discovery of a device set up through MQTT is not offered."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_mqtt"
+
+
+@pytest.mark.parametrize(
+    ("config_entry_domain", "client_id", "disabled_by"),
+    [
+        pytest.param("mqtt", "wattwaechter-other", None, id="other_client_id"),
+        pytest.param("other", MOCK_MQTT_CLIENT_ID, None, id="not_an_mqtt_device"),
+        pytest.param(
+            "mqtt",
+            MOCK_MQTT_CLIENT_ID,
+            ConfigEntryDisabler.USER,
+            id="mqtt_disabled",
+        ),
+    ],
+)
+async def test_user_flow_other_mqtt_device(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    config_entry_domain: str,
+    client_id: str,
+    disabled_by: ConfigEntryDisabler | None,
+) -> None:
+    """Test only a device of an enabled MQTT entry aborts the flow."""
+    MockConfigEntry(domain="mqtt").add_to_hass(hass)
+    owner_entry = MockConfigEntry(domain=config_entry_domain, disabled_by=disabled_by)
+    owner_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=owner_entry.entry_id, identifiers={("mqtt", client_id)}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: MOCK_HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_DEVICE_ID
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_zeroconf_confirm_set_up_through_mqtt_meanwhile(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test the confirmation aborts if MQTT set up the device in the meantime."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY,
+    )
+    assert result["step_id"] == "zeroconf_confirm"
+
+    mqtt_entry = MockConfigEntry(domain="mqtt")
+    mqtt_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mqtt_entry.entry_id,
+        identifiers={("mqtt", MOCK_MQTT_CLIENT_ID)},
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_mqtt"

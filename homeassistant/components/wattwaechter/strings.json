@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured_mqtt": "This device is already set up in Home Assistant through MQTT. To use this integration instead, turn off MQTT on the device and delete its MQTT device in Home Assistant.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_device": "The device does not match the original WattWächter device."
     },
