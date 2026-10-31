@@ -16,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 from .entity import BraviaTVEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class BraviaTVButtonDescription(ButtonEntityDescription):

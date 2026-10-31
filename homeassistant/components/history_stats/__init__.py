@@ -19,6 +19,7 @@ from .const import (
     CONF_END,
     CONF_MIN_STATE_DURATION,
     CONF_START,
+    DOMAIN,
     PLATFORMS,
     SECTION_ADDITIONAL_SETTINGS,
 )
@@ -28,6 +29,10 @@ from .data import HistoryStats
 type HistoryStatsConfigEntry = ConfigEntry[HistoryStatsUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "DOMAIN",
+]
 
 
 async def async_setup_entry(

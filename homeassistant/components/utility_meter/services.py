@@ -1,5 +1,6 @@
 """Support for tracking consumption over given periods of time."""
 
+from enum import StrEnum
 import logging
 import math
 
@@ -13,15 +14,22 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import async_register_platform_entity_service
 
-from .const import (
-    ATTR_VALUE,
-    DOMAIN,
-    SERVICE_CALIBRATE_METER,
-    SERVICE_RESET,
-    SIGNAL_RESET_METER,
-)
+from .const import DOMAIN, SIGNAL_RESET_METER
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class UtilityMeterService(StrEnum):
+    """Store keys for utility meter services."""
+
+    CALIBRATE = "calibrate"
+    RESET = "reset"
+
+
+class UtilityMeterServiceArgument(StrEnum):
+    """Store keys for utility meter service arguments."""
+
+    VALUE = "value"
 
 
 def _validate_is_number(value):
@@ -56,7 +64,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_RESET,
+        UtilityMeterService.RESET,
         async_reset_meters,
         probatio.Schema(
             {ATTR_ENTITY_ID: probatio.All(probatio.EnsureList(), [cv.entity_id])}
@@ -66,8 +74,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CALIBRATE_METER,
+        UtilityMeterService.CALIBRATE,
         entity_domain=SENSOR_DOMAIN,
         func="async_calibrate",
-        schema={probatio.Required(ATTR_VALUE): _validate_is_number},
+        schema={
+            probatio.Required(UtilityMeterServiceArgument.VALUE): _validate_is_number
+        },
     )

@@ -28,15 +28,13 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_registry as er,
-    selector,
-)
+from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import (
     CONF_AZIMUTH,
     CONF_AZIMUTH_SENSOR,
+    CONF_COORDINATES,
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_DECLINATION,
@@ -94,8 +92,9 @@ _SETUP_CHOICES_SCHEMA = _LOCATION_SCHEMA.extend(_SOURCES_SCHEMA.schema)
 
 _COORDINATES_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_LATITUDE): cv.latitude,
-        probatio.Required(CONF_LONGITUDE): cv.longitude,
+        probatio.Required(CONF_COORDINATES): LocationSelector(
+            LocationSelectorConfig(radius=False)
+        )
     }
 )
 
@@ -270,8 +269,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title="",
                     data={
-                        CONF_LATITUDE: user_input[CONF_LATITUDE],
-                        CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                        **user_input[CONF_COORDINATES],
                     }
                     if fixed_location
                     else {},
@@ -290,8 +288,10 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         if fixed_location:
             schema = _COORDINATES_SCHEMA.extend(schema.schema)
             suggested_values |= {
-                CONF_LATITUDE: self.hass.config.latitude,
-                CONF_LONGITUDE: self.hass.config.longitude,
+                CONF_COORDINATES: {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                }
             }
         return self.async_show_form(
             step_id="plane",
@@ -326,8 +326,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._async_update_location(
                 {
-                    CONF_LATITUDE: user_input[CONF_LATITUDE],
-                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                    **user_input[CONF_COORDINATES],
                 }
             )
 
@@ -337,12 +336,14 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 _COORDINATES_SCHEMA,
                 {
-                    CONF_LATITUDE: entry.data.get(
-                        CONF_LATITUDE, self.hass.config.latitude
-                    ),
-                    CONF_LONGITUDE: entry.data.get(
-                        CONF_LONGITUDE, self.hass.config.longitude
-                    ),
+                    CONF_COORDINATES: {
+                        CONF_LATITUDE: entry.data.get(
+                            CONF_LATITUDE, self.hass.config.latitude
+                        ),
+                        CONF_LONGITUDE: entry.data.get(
+                            CONF_LONGITUDE, self.hass.config.longitude
+                        ),
+                    }
                 },
             ),
         )

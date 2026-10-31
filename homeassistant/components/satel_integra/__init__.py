@@ -28,6 +28,7 @@ from .coordinator import (
     SatelIntegraData,
     SatelIntegraOutputsCoordinator,
     SatelIntegraPartitionsCoordinator,
+    SatelIntegraSystemStatusCoordinator,
     SatelIntegraTemperaturesCoordinator,
     SatelIntegraZonesCoordinator,
 )
@@ -52,21 +53,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> Non
     coordinator_zones = SatelIntegraZonesCoordinator(hass, entry, client)
     coordinator_outputs = SatelIntegraOutputsCoordinator(hass, entry, client)
     coordinator_partitions = SatelIntegraPartitionsCoordinator(hass, entry, client)
+    coordinator_system_status = SatelIntegraSystemStatusCoordinator(hass, entry, client)
     coordinator_temperatures = SatelIntegraTemperaturesCoordinator(hass, entry, client)
 
     for coordinator in (
         coordinator_zones,
         coordinator_outputs,
         coordinator_partitions,
+        coordinator_system_status,
         coordinator_temperatures,
     ):
         coordinator.setup()
 
-    await client.async_connect(
-        coordinator_zones.zones_update_callback,
-        coordinator_outputs.outputs_update_callback,
-        coordinator_partitions.partitions_update_callback,
-    )
+    await client.async_connect()
     await coordinator_temperatures.async_config_entry_first_refresh()
 
     try:
@@ -81,6 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> Non
         coordinator_zones=coordinator_zones,
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
+        coordinator_system_status=coordinator_system_status,
         coordinator_temperatures=coordinator_temperatures,
     )
 

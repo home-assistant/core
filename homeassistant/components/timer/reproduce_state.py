@@ -9,15 +9,13 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
-    ATTR_DURATION,
     DOMAIN,
-    SERVICE_CANCEL,
-    SERVICE_PAUSE,
-    SERVICE_START,
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
     TimerEntityStateAttribute,
+    TimerService,
+    TimerServiceArgument,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,22 +43,22 @@ async def _async_reproduce_state(
 
     # Return if we are already at the right state.
     if cur_state.state == state.state and cur_state.attributes.get(
-        ATTR_DURATION
+        TimerEntityStateAttribute.DURATION
     ) == state.attributes.get(TimerEntityStateAttribute.DURATION):
         return
 
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if state.state == STATUS_ACTIVE:
-        service = SERVICE_START
+        service = TimerService.START
         if TimerEntityStateAttribute.DURATION in state.attributes:
-            service_data[ATTR_DURATION] = state.attributes[
+            service_data[TimerServiceArgument.DURATION] = state.attributes[
                 TimerEntityStateAttribute.DURATION
             ]
     elif state.state == STATUS_PAUSED:
-        service = SERVICE_PAUSE
+        service = TimerService.PAUSE
     elif state.state == STATUS_IDLE:
-        service = SERVICE_CANCEL
+        service = TimerService.CANCEL
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

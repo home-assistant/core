@@ -1,4 +1,4 @@
-"""The Open Thread Border Router integration."""
+"""The OpenThread Border Router integration."""
 
 import logging
 
@@ -36,7 +36,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Open Thread Border Router component."""
+    """Set up the OpenThread Border Router component."""
     websocket_api.async_setup(hass)
 
     async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
@@ -45,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
-    """Set up an Open Thread Border Router config entry."""
+    """Set up an OpenThread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
 
     otbrdata = OTBRData(entry.data["url"], api, entry.entry_id)
@@ -73,7 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None
         aiohttp.ClientError,
         TimeoutError,
     ) as err:
-        raise ConfigEntryNotReady("Unable to connect") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from err
     await update_unique_id(hass, entry, border_agent_id)
     if dataset_tlvs:
         await update_issues(hass, otbrdata, dataset_tlvs)

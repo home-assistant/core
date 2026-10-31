@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import aiosaj
 from freezegun.api import FrozenDateTimeFactory
-import pysaj
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -15,7 +15,7 @@ from . import setup_integration
 
 
 @pytest.mark.parametrize("connection_method", ["ethernet", "wifi"], indirect=True)
-@pytest.mark.usefixtures("mock_pysaj_saj")
+@pytest.mark.usefixtures("mock_aiosaj_saj")
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -29,10 +29,10 @@ async def test_setup_entry(
 async def test_setup_entry_connection_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pysaj_saj: MagicMock,
+    mock_aiosaj_saj: MagicMock,
 ) -> None:
     """Test async_setup_entry handles connection failures."""
-    mock_pysaj_saj.read.return_value = False
+    mock_aiosaj_saj.read.return_value = False
     entry = await setup_integration(hass, mock_config_entry)
     # Entry should be in SETUP_RETRY state when setup fails
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -42,10 +42,10 @@ async def test_setup_entry_connection_failed(
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pysaj_saj: MagicMock,
+    mock_aiosaj_saj: MagicMock,
 ) -> None:
     """Test async_setup_entry fails WiFi auth at setup without endless retries."""
-    mock_pysaj_saj.read.side_effect = pysaj.UnauthorizedException("Auth failed")
+    mock_aiosaj_saj.read.side_effect = aiosaj.UnauthorizedException("Auth failed")
     entry = await setup_integration(hass, mock_config_entry)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -59,14 +59,14 @@ async def test_setup_entry_auth_failed(
 async def test_update_auth_failed_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pysaj_saj: MagicMock,
+    mock_aiosaj_saj: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an auth error during a scheduled refresh starts a reauth flow."""
     entry = await setup_integration(hass, mock_config_entry)
     assert entry.state is ConfigEntryState.LOADED
 
-    mock_pysaj_saj.read.side_effect = pysaj.UnauthorizedException("Auth failed")
+    mock_aiosaj_saj.read.side_effect = aiosaj.UnauthorizedException("Auth failed")
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -81,10 +81,10 @@ async def test_update_auth_failed_starts_reauth(
     "exception",
     [
         pytest.param(
-            pysaj.UnauthorizedException("unexpected"), id="ethernet_unauthorized"
+            aiosaj.UnauthorizedException("unexpected"), id="ethernet_unauthorized"
         ),
         pytest.param(
-            pysaj.UnexpectedResponseException("bad response"), id="unexpected_response"
+            aiosaj.UnexpectedResponseException("bad response"), id="unexpected_response"
         ),
         pytest.param(TimeoutError("timed out"), id="timeout"),
         pytest.param(OSError("network unreachable"), id="os_error"),
@@ -95,16 +95,16 @@ async def test_update_auth_failed_starts_reauth(
 async def test_setup_entry_retries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pysaj_saj: MagicMock,
+    mock_aiosaj_saj: MagicMock,
     exception: Exception,
 ) -> None:
     """Test errors during setup result in a retry."""
-    mock_pysaj_saj.read.side_effect = exception
+    mock_aiosaj_saj.read.side_effect = exception
     entry = await setup_integration(hass, mock_config_entry)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("mock_pysaj_saj")
+@pytest.mark.usefixtures("mock_aiosaj_saj")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

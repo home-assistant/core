@@ -46,7 +46,7 @@ async def test_unload(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB)
     await hass.async_block_till_done()
 
-    assert hass.states.get(current_flow_sensor_name).state == "5.77"
+    assert hass.states.get(current_flow_sensor_name).state == "21.84182599368"
 
     # Unload the device
     await hass.config_entries.async_unload(entry.entry_id)

@@ -66,7 +66,8 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_TTS_DEFAULT_VOICE,
-    REQUEST_TIMEOUT,
+    REQUEST_WITHOUT_AUTH_TIMEOUT,
+    USER_REQUEST_TIMEOUT,
     VOICE_STYLE_SEPERATOR,
 )
 from .google_config import CLOUD_GOOGLE
@@ -351,10 +352,9 @@ class CloudLogoutView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
 
-        async with asyncio.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_WITHOUT_AUTH_TIMEOUT):
             await cloud.logout()
 
-        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "logout"})
         return self.json_message("ok")
 
 
@@ -400,7 +400,7 @@ class CloudRegisterView(HomeAssistantView):
 
         client_metadata = await _async_location_client_metadata(hass)
 
-        async with asyncio.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(USER_REQUEST_TIMEOUT):
             await cloud.auth.async_register(
                 data["email"],
                 data["password"],
@@ -426,7 +426,7 @@ class CloudRegisterAutoLoginView(HomeAssistantView):
 
         client_metadata = await _async_location_client_metadata(hass)
 
-        async with asyncio.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(USER_REQUEST_TIMEOUT):
             hass.data[DATA_PENDING_AUTO_LOGIN] = await cloud.register_and_auto_login(
                 data["email"],
                 data["password"],
@@ -450,7 +450,7 @@ class CloudResendConfirmView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
 
-        async with asyncio.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(USER_REQUEST_TIMEOUT):
             await cloud.auth.async_resend_email_confirm(data["email"])
 
         return self.json_message("ok")
@@ -474,7 +474,7 @@ class CloudForgotPasswordView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
 
-        async with asyncio.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(USER_REQUEST_TIMEOUT):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
@@ -859,7 +859,7 @@ async def websocket_resend_auto_login_confirm(
         )
         return
 
-    async with asyncio.timeout(REQUEST_TIMEOUT):
+    async with asyncio.timeout(USER_REQUEST_TIMEOUT):
         await controller.resend()
 
     connection.send_result(msg["id"])

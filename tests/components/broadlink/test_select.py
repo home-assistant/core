@@ -35,6 +35,7 @@ async def test_select(
     select = selects[0]
 
     mock_setup.api.get_full_status.return_value = {
+        "active": 0,
         "dayofweek": 3,
         "hour": 2,
         "min": 3,

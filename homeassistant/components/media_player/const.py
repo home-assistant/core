@@ -257,17 +257,6 @@ class MediaPlayerEnqueue(StrEnum):
     REPLACE = "replace"
 
 
-MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
-    probatio.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-    probatio.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-    probatio.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_announce"): probatio.Any(
-        cv.boolean, probatio.Coerce(MediaPlayerEnqueue)
-    ),
-    probatio.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce"): cv.boolean,
-    probatio.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
-}
-
-
 class MediaPlayerService(StrEnum):
     """Store keys for media player services."""
 
@@ -302,6 +291,7 @@ class MediaPlayerServiceArgument(StrEnum):
 
     ANNOUNCE = "announce"
     ENQUEUE = "enqueue"
+    EXTRA = "extra"
     GROUP_MEMBERS = "group_members"
     IS_VOLUME_MUTED = "is_volume_muted"
     MEDIA = "media"
@@ -315,3 +305,16 @@ class MediaPlayerServiceArgument(StrEnum):
     SOUND_MODE = "sound_mode"
     SOURCE = "source"
     VOLUME_LEVEL = "volume_level"
+
+
+MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
+    probatio.Required(MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE): cv.string,
+    probatio.Required(MediaPlayerServiceArgument.MEDIA_CONTENT_ID): cv.string,
+    probatio.Exclusive(
+        MediaPlayerServiceArgument.ENQUEUE, "enqueue_announce"
+    ): probatio.Any(cv.boolean, probatio.Coerce(MediaPlayerEnqueue)),
+    probatio.Exclusive(
+        MediaPlayerServiceArgument.ANNOUNCE, "enqueue_announce"
+    ): cv.boolean,
+    probatio.Optional(MediaPlayerServiceArgument.EXTRA, default={}): dict,
+}

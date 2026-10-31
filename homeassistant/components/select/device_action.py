@@ -10,7 +10,6 @@ from homeassistant.components.device_automation import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_OPTION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -24,7 +23,6 @@ from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import (
-    ATTR_CYCLE,
     CONF_CYCLE,
     CONF_OPTION,
     DOMAIN,
@@ -33,6 +31,7 @@ from .const import (
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
     SelectEntityCapabilityAttribute,
+    SelectServiceArgument,
 )
 
 _ACTION_SCHEMA = probatio.TaggedUnion(
@@ -115,9 +114,9 @@ async def async_call_action_from_config(
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
     if config[CONF_TYPE] == SERVICE_SELECT_OPTION:
-        service_data[ATTR_OPTION] = config[CONF_OPTION]
+        service_data[SelectServiceArgument.OPTION] = config[CONF_OPTION]
     if config[CONF_TYPE] in {SERVICE_SELECT_NEXT, SERVICE_SELECT_PREVIOUS}:
-        service_data[ATTR_CYCLE] = config[CONF_CYCLE]
+        service_data[SelectServiceArgument.CYCLE] = config[CONF_CYCLE]
 
     await hass.services.async_call(
         DOMAIN,

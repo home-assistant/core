@@ -8,6 +8,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pysmhi"],
-  "quality_scale": "bronze",
+  "quality_scale": "platinum",
   "requirements": ["pysmhi==2.1.0"]
 }

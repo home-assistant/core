@@ -36,6 +36,12 @@ def binary_sensor_platform() -> Generator[None]:
         yield
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.BINARY_SENSOR
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_binary_sensors(
     hass: HomeAssistant,

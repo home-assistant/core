@@ -17,6 +17,8 @@ import traceback
 from types import GetSetDescriptorType, MemberDescriptorType
 from typing import TYPE_CHECKING, Any, TypeGuard, override
 
+from typing_extensions import Sentinel as sentinel
+
 if TYPE_CHECKING:
     from .session import ConsoleSession
 
@@ -36,9 +38,9 @@ MAX_CHILDREN = 1000
 MAX_STRING_LENGTH = 10000
 
 # Marks a property among children, which is only evaluated on request.
-_GETTER = object()
+_GETTER = sentinel("_GETTER")
 
-_NOT_FOUND = object()
+_NOT_FOUND = sentinel("_NOT_FOUND")
 
 
 class _PreviewRepr(reprlib.Repr):

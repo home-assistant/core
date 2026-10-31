@@ -31,14 +31,6 @@
     },
     "step": {
       "bluetooth_confirm": {
-        "data": {
-          "disable_ap": "Disable Wi-Fi access point after provisioning",
-          "disable_ble_rpc": "Disable Bluetooth RPC after provisioning"
-        },
-        "data_description": {
-          "disable_ap": "For improved security, disable the Wi-Fi access point after successfully connecting to your network.",
-          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after Wi-Fi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
-        },
         "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to Wi-Fi.\n\nDo you want to provision Wi-Fi credentials to this device?",
         "title": "Provision Wi-Fi via Bluetooth"
       },
@@ -382,6 +374,20 @@
           "none": "None",
           "reception": "Reception",
           "workplace": "Workplace"
+        }
+      },
+      "effect_palette": {
+        "name": "Effect palette",
+        "state": {
+          "complementary": "Complementary",
+          "contrast": "Contrast",
+          "fire": "Fire",
+          "forest": "Forest",
+          "harmony": "Harmony",
+          "monochrome": "Monochrome",
+          "ocean": "Ocean",
+          "pastel": "Pastel",
+          "rainbow": "Rainbow"
         }
       }
     },
@@ -812,9 +818,6 @@
     "device_not_initialized": {
       "message": "{device} not initialized"
     },
-    "firmware_unsupported": {
-      "message": "{device} is running an unsupported firmware, please update the firmware"
-    },
     "http_call_error": {
       "message": "HTTP call error occurred for {device}"
     },
@@ -991,6 +994,21 @@
     "unsupported_firmware": {
       "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device.",
       "title": "Unsupported firmware for device {device_name}"
+    },
+    "unsupported_firmware_fixable": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Until the firmware is updated, only the firmware update entity is available for this device.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
+            "title": "[%key:component::shelly::issues::unsupported_firmware::title%]"
+          }
+        }
+      },
+      "title": "[%key:component::shelly::issues::unsupported_firmware::title%]"
     }
   },
   "options": {

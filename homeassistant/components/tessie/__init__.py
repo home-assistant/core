@@ -218,7 +218,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> No
     # connector entities can resolve their via_device parent at construction.
     device_registry = dr.async_get(hass)
     for energysite in energysites:
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=entry.entry_id, device_info=energysite.device
         )
 

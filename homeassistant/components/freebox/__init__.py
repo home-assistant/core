@@ -116,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> N
 
     # Register the router device up front so child devices (home devices, disks)
     # can deterministically resolve it as their via_device on any platform.
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id, device_info=router.device_info
     )
 

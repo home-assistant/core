@@ -44,7 +44,6 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Panasonic Viera config flow."""
         self._data: dict[str, Any] = {
             CONF_HOST: None,
-            CONF_NAME: None,
             CONF_PORT: None,
             CONF_ON_ACTION: None,
             ATTR_DEVICE_INFO: None,
@@ -101,14 +100,6 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=self._data[CONF_HOST]
                         if self._data[CONF_HOST] is not None
                         else "",
-                    ): str,
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    probatio.Optional(
-                        CONF_NAME,
-                        default=self._data[CONF_NAME]
-                        if self._data[CONF_NAME] is not None
-                        else DEFAULT_NAME,
                     ): str,
                 }
             ),
@@ -178,6 +169,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         """Load the data."""
         self._data = config
 
+        self._data[CONF_NAME] = self._data.get(CONF_NAME, DEFAULT_NAME)
         self._data[CONF_PORT] = self._data.get(CONF_PORT, DEFAULT_PORT)
         self._data[CONF_ON_ACTION] = self._data.get(CONF_ON_ACTION)
 

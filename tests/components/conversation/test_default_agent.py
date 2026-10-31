@@ -3530,7 +3530,7 @@ async def test_handle_intents_with_response_errors(
                 user_input.language, error_code, "Mock error message"
             ),
         ) as mock_process,
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(user_input, chat_log)
@@ -3600,7 +3600,7 @@ async def test_handle_failed_intents(
             "homeassistant.components.conversation.default_agent.intent.async_handle",
             side_effect=side_effect,
         ) as mock_handle,
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(user_input, chat_log)
@@ -3657,7 +3657,7 @@ async def test_handle_intents_filters_results(
         patch(
             "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
         ) as mock_process,
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         response = await agent.async_handle_intents(
@@ -3767,7 +3767,9 @@ async def test_intent_tool_call_in_chat_log(hass: HomeAssistant) -> None:
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         pass
@@ -3819,7 +3821,9 @@ async def test_trigger_tool_call_in_chat_log(hass: HomeAssistant) -> None:
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         pass
@@ -3857,7 +3861,9 @@ async def test_no_tool_call_on_no_intent_match(hass: HomeAssistant) -> None:
     assert result.response.response_type is intent.IntentResponseType.ERROR
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         pass
@@ -3883,7 +3889,9 @@ async def test_intent_tool_call_with_error_response(hass: HomeAssistant) -> None
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
     with (
-        chat_session.async_get_chat_session(hass, result.conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session) as chat_log,
     ):
         pass

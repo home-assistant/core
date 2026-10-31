@@ -23,6 +23,7 @@ from homeassistant.components.backup import (
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util.async_iterator import ResourceChunkIterator
 
 from .const import BUF_SIZE, LOGGER
 
@@ -45,16 +46,12 @@ def get_client_options(cfg: SFTPConfigEntryData) -> SSHClientConnectionOptions:
     )
 
 
-class AsyncFileIterator:
-    """Returns iterator of remote file located in SFTP Server.
+class RemoteFileReader:
+    """Read a remote file located in SFTP Server over its own SSH connection.
 
-    This exists in order to properly close remote file after operation is completed
-    and to avoid premature closing of file and session if `BackupAgentClient` is used
-    as context manager.
+    The connection is opened on the first read, so it outlives the
+    `BackupAgentClient` which created the reader.
     """
-
-    _client: BackupAgentClient
-    _fileobj: SFTPClientFile
 
     def __init__(
         self,
@@ -63,42 +60,52 @@ class AsyncFileIterator:
         file_path: str,
         buffer_size: int = BUF_SIZE,
     ) -> None:
-        """Initialize `AsyncFileIterator`."""
+        """Initialize `RemoteFileReader`."""
         self.cfg: SFTPConfigEntry = cfg
         self.hass: HomeAssistant = hass
         self.file_path: str = file_path
         self.buffer_size = buffer_size
-        self._initialized: bool = False
-        LOGGER.debug("Opening file: %s in Async File Iterator", file_path)
+        self._client: BackupAgentClient | None = None
+        self._fileobj: SFTPClientFile | None = None
+        self._closed = False
 
-    async def _initialize(self) -> None:
-        """Load file object."""
-        self._client: BackupAgentClient = await BackupAgentClient(
-            self.cfg, self.hass
-        ).open()
-        self._fileobj: SFTPClientFile = await self._client.sftp.open(
-            self.file_path, "rb"
-        )
+    async def _open(self) -> SFTPClientFile | None:
+        """Open the SSH connection and the remote file."""
+        LOGGER.debug("Opening file: %s", self.file_path)
+        self._client = client = BackupAgentClient(self.cfg, self.hass)
+        try:
+            await client.open()
+            self._fileobj = await client.sftp.open(self.file_path, "rb")
+        finally:
+            # Closing while opening can't close a connection which isn't made yet
+            if self._closed:
+                client.abort()
+        if self._closed:
+            return None
+        return self._fileobj
 
-        self._initialized = True
+    async def read(self) -> bytes:
+        """Read the next chunk, empty bytes at the end of the file."""
+        if (fileobj := self._fileobj) is None and (
+            fileobj := await self._open()
+        ) is None:
+            return b""
+        return await fileobj.read(self.buffer_size)
 
-    def __aiter__(self) -> AsyncIterator[bytes]:
-        """Return self as iterator."""
-        return self
+    def abort(self) -> None:
+        """Close the SSH connection without waiting."""
+        self._closed = True
+        if self._client is not None:
+            self._client.abort()
 
-    async def __anext__(self) -> bytes:
-        """Return next bytes as provided in buffer size."""
-        if not self._initialized:
-            await self._initialize()
-
-        chunk: bytes = await self._fileobj.read(self.buffer_size)
-        if not chunk:
-            try:
-                await self._fileobj.close()
-                await self._client.close()
-            finally:
-                raise StopAsyncIteration
-        return chunk
+    async def aclose(self) -> None:
+        """Close the remote file and the SSH connection."""
+        self._closed = True
+        if (client := self._client) is None:
+            return
+        if self._fileobj is not None:
+            await self._fileobj.close()
+        await client.close()
 
 
 @dataclass(kw_only=True)
@@ -251,13 +258,13 @@ class BackupAgentClient:
         """Close the `BackupAgentClient` context manager."""
         await self.__aexit__(None, None, None)
 
-    async def iter_file(self, backup_id: str) -> AsyncFileIterator:
-        """Return Async File Iterator object.
+    def abort(self) -> None:
+        """Close the SSH connection, and with it the SFTP session, without waiting."""
+        if self._ssh:
+            self._ssh.close()
 
-        `SFTPClientFile` object (that would be returned with
-        `sftp.open`) is not an iterator. So we return custom
-        made class - `AsyncFileIterator` that would allow
-        iteration on file object.
+    async def iter_file(self, backup_id: str) -> ResourceChunkIterator:
+        """Return an async iterator over the backup archive.
 
         Raises:
         ------
@@ -268,7 +275,10 @@ class BackupAgentClient:
         metadata: BackupMetadata = await self._load_metadata(backup_id)
         if not await self.sftp.exists(metadata.file_path):
             raise FileNotFoundError("Backup archive not found on remote location.")
-        return AsyncFileIterator(self.cfg, self.hass, metadata.file_path, BUF_SIZE)
+        reader = RemoteFileReader(self.cfg, self.hass, metadata.file_path, BUF_SIZE)
+        return ResourceChunkIterator(
+            reader.read, close=reader.abort, aclose=reader.aclose
+        )
 
     async def list_backup_location(self) -> list[str]:
         """Return a list of `*.metadata.json` files located in backup location."""

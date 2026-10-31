@@ -7,6 +7,7 @@ import pytest
 from pytest_homeassistant.common import assert_setup_component
 
 from homeassistant.components.template import DOMAIN, trigger_entity
+from homeassistant.components.template.const import TemplateService
 from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
 from homeassistant.components.template.helpers import DATA_COORDINATORS
 from homeassistant.const import (
@@ -14,13 +15,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import condition, template
+from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
@@ -82,6 +82,58 @@ async def test_template_state(hass: HomeAssistant) -> None:
     assert entity.state == "False"
     assert entity.icon == "mdi:off"
     assert entity.entity_picture == "/local/picture_off"
+
+
+async def test_validator_error_recovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Invalid results clear the attribute without preventing later updates."""
+    config = {
+        CONF_ICON: template.Template("{{ icon }}", hass),
+        CONF_STATE: template.Template("{{ value }}", hass),
+    }
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TestEntity(hass, coordinator, config)
+    entity.entity_id = "test.entity"
+    entity.setup_template(CONF_ICON, "_attr_icon", cv.icon)
+
+    coordinator._execute_update({"icon": "mdi:home", "value": "first"})
+    entity._handle_coordinator_update()
+    assert entity._attr_icon == "mdi:home"
+
+    coordinator._execute_update({"icon": "invalid", "value": "second"})
+    entity._handle_coordinator_update()
+    assert entity._attr_icon is None
+    assert hass.states.get("test.entity").state == "second"
+    assert "Error validating template result 'invalid'" in caplog.text
+    assert "for attribute '_attr_icon' in entity test.entity" in caplog.text
+
+    coordinator._execute_update({"icon": "mdi:lightbulb", "value": "third"})
+    entity._handle_coordinator_update()
+    assert entity._attr_icon == "mdi:lightbulb"
+    assert hass.states.get("test.entity").state == "third"
+
+
+async def test_validator_error_callback(hass: HomeAssistant) -> None:
+    """Pass None to the update callback on validation failure and recover."""
+    config = {
+        CONF_ICON: template.Template("{{ icon }}", hass),
+        CONF_STATE: template.Template("on", hass),
+    }
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TestEntity(hass, coordinator, config)
+    entity.entity_id = "test.entity"
+    on_update = Mock()
+    entity.setup_template(CONF_ICON, "_attr_icon", cv.icon, on_update)
+
+    coordinator._execute_update({"icon": "invalid"})
+    entity._handle_coordinator_update()
+    on_update.assert_called_once_with(None)
+
+    on_update.reset_mock()
+    coordinator._execute_update({"icon": "mdi:home"})
+    entity._handle_coordinator_update()
+    on_update.assert_called_once_with("mdi:home")
 
 
 async def test_bad_template_state(hass: HomeAssistant) -> None:
@@ -459,7 +511,7 @@ async def test_trigger_variables_rendered_on_reload(hass: HomeAssistant) -> None
         autospec=True,
         return_value=_config("second"),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     listeners = hass.bus.async_listeners()
@@ -669,7 +721,7 @@ async def test_reload_stops_script_and_unsubscribes_triggers(
         autospec=True,
         return_value={"template": []},
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     # Script should be stopped and unloaded

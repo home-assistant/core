@@ -14,6 +14,7 @@
   "loggers": [
     "bellows",
     "universal_silabs_flasher",
+    "aiospinel",
     "zigpy.serial",
     "serial_asyncio_fast",
     "serialx"

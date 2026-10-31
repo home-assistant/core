@@ -10,8 +10,7 @@
       "user": {
         "data": {
           "elevation": "[%key:common::config_flow::data::elevation%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "description": "Meteorologisk institutt",
         "title": "[%key:common::config_flow::data::location%]"
@@ -31,8 +30,7 @@
       "init": {
         "data": {
           "elevation": "[%key:common::config_flow::data::elevation%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "title": "[%key:common::config_flow::data::location%]"
       }

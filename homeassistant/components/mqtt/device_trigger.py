@@ -30,7 +30,7 @@ from .const import ATTR_DISCOVERY_HASH, CONF_ENCODING, CONF_QOS, CONF_TOPIC, DOM
 from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
 from .entity import MqttDiscoveryDeviceUpdateMixin, send_discovery_done, update_device
 from .models import DATA_MQTT
-from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
+from .schemas import MQTT_DEVICE_INFO_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_AUTOMATION_TYPE): str,
-        probatio.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        probatio.Required(CONF_DEVICE): MQTT_DEVICE_INFO_SCHEMA,
         probatio.Optional(CONF_PAYLOAD, default=None): probatio.Any(None, cv.string),
         probatio.Required(CONF_SUBTYPE): cv.string,
         probatio.Required(CONF_TOPIC): cv.string,
@@ -262,6 +262,8 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
                 config,
             )
             return
+        # Update the device first, so a failing update does not change the trigger
+        update_device(self.hass, self._config_entry, config)
         # The debug info shares the discovery data that holds the current payload,
         # so it is only updated when the update is accepted
         debug_info.update_trigger_discovery_data(
@@ -274,7 +276,6 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
             )
             self.trigger_id = new_trigger_id
 
-        update_device(self.hass, self._config_entry, config)
         device_trigger: Trigger = self._mqtt_data.device_triggers[self.trigger_id]
         await device_trigger.update_trigger(config)
 

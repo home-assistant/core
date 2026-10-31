@@ -88,6 +88,9 @@
     "delete_error": {
       "message": "Failed to delete from OneDrive: {paths}"
     },
+    "duplicate_drive": {
+      "message": "This drive is already set up as {title}. Remove one of the two entries."
+    },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
     },

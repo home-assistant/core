@@ -34,6 +34,7 @@ from paho.mqtt.client import MQTTMessage
 import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import sentinel
 
 from homeassistant import auth, bootstrap, config_entries, loader
 from homeassistant.auth import (
@@ -887,15 +888,15 @@ class MockModule:
         async_setup: Callable[[HomeAssistant, ConfigType], Coroutine[Any, Any, bool]]
         | None = None,
         async_setup_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool | None]
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
         ]
         | None = None,
         async_unload_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool | None]
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
         ]
         | None = None,
         async_migrate_entry: Callable[
-            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool | None]
+            [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
         ]
         | None = None,
         async_remove_entry: Callable[
@@ -1683,7 +1684,7 @@ def async_mock_signal[*_Ts](
     return calls
 
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class _HA_ANY:

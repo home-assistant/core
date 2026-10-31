@@ -1,5 +1,6 @@
 """Platform for Lunatone sensor integration."""
 
+import contextlib
 from typing import Final, override
 
 from lunatone_rest_api_client import Sensor
@@ -20,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -44,12 +44,14 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="air_humidity",
     ),
     SensorType.AIR_PRESSURE: SensorEntityDescription(
         key="air_pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="air_pressure",
     ),
     SensorType.AIR_QUALITY: SensorEntityDescription(
         key="air_quality",
@@ -61,6 +63,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="eco2",
     ),
     SensorType.LIGHT: SensorEntityDescription(
         key="light",
@@ -80,6 +83,15 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+}
+SPECIAL_SENSOR_TYPES: Final[dict[tuple[str, SensorType], SensorEntityDescription]] = {
+    ("CPU temperature", SensorType.TEMPERATURE): SensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="cpu_temperature",
+    )
 }
 
 
@@ -102,10 +114,18 @@ async def async_setup_entry(
     if coordinator_sensors is not None:
         entities.extend(
             LunatoneSensor(
-                coordinator_sensors, description, sensor_id, config_entry.unique_id
+                coordinator_sensors,
+                description,
+                sensor_id,
+                config_entry.unique_id,
             )
-            for sensor_id, sensor_data in coordinator_sensors.data.items()
-            if (description := SENSOR_TYPES.get(sensor_data.data.type))
+            for sensor_id, sensor in coordinator_sensors.data.items()
+            if (
+                description := (
+                    SPECIAL_SENSOR_TYPES.get((sensor.data.name, sensor.data.type))
+                    or SENSOR_TYPES.get(sensor.data.type)
+                )
+            )
         )
 
     async_add_entities(entities)
@@ -132,18 +152,17 @@ class LunatoneSensor(
         self._config_entry_unique_id = config_entry_unique_id
         self._sensor_id = sensor_id
 
-        self._attr_name = self.sensor.data.name
         self._attr_unique_id = (
-            f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
+            f"{self._config_entry_unique_id}-sensor{sensor_id}-{description.key}"
         )
-        device_info = DeviceInfo(
+        device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, self._config_entry_unique_id)},
         )
         if (
             self.sensor.data.address_type == SensorAddressType.DALI
             and self.sensor.data.dali_sensor_address
         ):
-            device_info = DeviceInfo(
+            device_info = dr.DeviceInfo(
                 identifiers={
                     (
                         DOMAIN,
@@ -157,12 +176,13 @@ class LunatoneSensor(
                     "line_id": str(self.sensor.data.dali_sensor_address.line),
                     "dali_address": str(self.sensor.data.dali_sensor_address.address),
                 },
-                via_device_id=dr.async_get_device_id_by_identifier(
+            )
+            with contextlib.suppress(ValueError):
+                device_info.via_device_id = dr.async_get_device_id_by_identifier(
                     self.coordinator.hass,
                     (DOMAIN, str(self._config_entry_unique_id)),
                     config_entry_id=self.coordinator.config_entry.entry_id,
-                ),
-            )
+                )
         self._attr_device_info = device_info
 
     @property
@@ -209,7 +229,7 @@ class LunatoneDALILineStatusSensor(
 
         line_unique_id = f"{config_entry_unique_id}-line{line_id}"
         # Name must match the light platform, either of them may create the device
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, line_unique_id)},
             translation_key="dali_line",
             translation_placeholders={"line_id": str(line_id)},
@@ -225,6 +245,9 @@ class LunatoneDALILineStatusSensor(
     @override
     def native_value(self) -> str:
         """Return the value of the sensor."""
-        return DALI_LINE_STATUS_SENSOR_MAPPING[
-            self.coordinator.data.lines[self._line_id].line_status
-        ]
+        line_data = self.coordinator.data.lines.get(self._line_id)
+        return (
+            DALI_LINE_STATUS_SENSOR_MAPPING[line_data.line_status]
+            if line_data is not None
+            else "not_reachable"
+        )

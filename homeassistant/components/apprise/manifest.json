@@ -7,5 +7,5 @@
   "iot_class": "cloud_push",
   "loggers": ["apprise"],
   "quality_scale": "legacy",
-  "requirements": ["apprise==1.11.0"]
+  "requirements": ["apprise==2.1.0"]
 }

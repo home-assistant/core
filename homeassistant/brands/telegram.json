@@ -1,5 +1,0 @@
-{
-  "domain": "telegram",
-  "name": "Telegram",
-  "integrations": ["telegram", "telegram_bot"]
-}

@@ -167,3 +167,15 @@ VALID_UNITS: dict[str, set[str]] = {
     ATTR_WEATHER_PRECIPITATION_UNIT: VALID_UNITS_PRECIPITATION,
     ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
 }
+
+
+class WeatherService(StrEnum):
+    """Store keys for weather services."""
+
+    GET_FORECASTS = "get_forecasts"
+
+
+class WeatherServiceArgument(StrEnum):
+    """Store keys for weather service arguments."""
+
+    TYPE = "type"
