@@ -4,7 +4,7 @@
   "categories": ["security_safety.cameras"],
   "codeowners": ["@RenierM26"],
   "config_flow": true,
-  "dependencies": ["ffmpeg"],
+  "dependencies": ["ffmpeg", "http"],
   "documentation": "https://www.home-assistant.io/integrations/ezviz",
   "iot_class": "cloud_polling",
   "loggers": ["paho_mqtt", "pyezvizapi"],
