@@ -861,6 +861,8 @@ async def async_start(  # noqa: C901
                 config = device_component.config
                 component = config.pop(CONF_PLATFORM)
                 if not config and device_discovery_diff is not None:
+                    # Removing a component with only a platform is deprecated, the
+                    # log can be removed in HA Core 2027.12, the skip must stay
                     _LOGGER.info(
                         "Ignoring %s '%s' with only the platform option in the MQTT "
                         "device discovery payload on topic %s%s; removing a component "
