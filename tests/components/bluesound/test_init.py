@@ -36,6 +36,20 @@ async def test_setup_entry(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_setup_entry_player_unreachable(
+    hass: HomeAssistant, config_entry: MockConfigEntry, player_mocks: PlayerMocks
+) -> None:
+    """Test setup is retried when the player is unreachable."""
+    player_mocks.player_data.player.sync_status.side_effect = PlayerUnreachableError(
+        "Player not reachable"
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_unload_entry_while_player_is_offline(
     hass: HomeAssistant,
     setup_config_entry: None,
