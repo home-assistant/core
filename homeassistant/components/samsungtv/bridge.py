@@ -10,6 +10,7 @@ from typing import Any, cast, override
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
+from samsungtvws.art import SamsungTVArt
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
@@ -30,6 +31,7 @@ from samsungtvws.exceptions import (
     UnauthorizedError,
 )
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
+from websocket import WebSocketException as SyncWebSocketException
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant.const import (
@@ -223,6 +225,15 @@ class SamsungTVBridge(ABC):
     @abstractmethod
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
+
+    @property
+    def supports_art_mode(self) -> bool:
+        """Return True if the TV supports the Frame art mode API."""
+        return False
+
+    async def async_get_art_mode(self) -> bool | None:
+        """Return True if the TV is showing art, None if unknown."""
+        return None
 
     @abstractmethod
     async def async_send_keys(self, keys: list[str]) -> None:
@@ -613,6 +624,42 @@ class SamsungTVWSBridge(
             return device_info
 
         return None if force else self._device_info
+
+    @property
+    @override
+    def supports_art_mode(self) -> bool:
+        """Return True if the TV supports the Frame art mode API."""
+        return self._get_device_spec("FrameTVSupport") == "true"
+
+    @override
+    async def async_get_art_mode(self) -> bool | None:
+        """Return True if the TV is showing art, None if unknown."""
+        return await self.hass.async_add_executor_job(self._get_art_mode)
+
+    def _get_art_mode(self) -> bool | None:
+        """Read the art mode status over the art app channel."""
+        assert self.port
+        # samsungtvws does not annotate the art API
+        art = SamsungTVArt(  # type: ignore[no-untyped-call]
+            host=self.host,
+            port=self.port,
+            token=self.token,
+            timeout=TIMEOUT_WEBSOCKET,
+            name=VALUE_CONF_NAME,
+        )
+        try:
+            status: str = art.get_artmode()  # type: ignore[no-untyped-call]
+        except (
+            ConnectionFailure,
+            ResponseError,
+            SyncWebSocketException,
+            OSError,
+        ) as err:
+            LOGGER.debug("Failed to get art mode from %s: %s", self.host, repr(err))
+            return None
+        finally:
+            art.close()
+        return status == "on"
 
     async def async_launch_app(self, app_id: str) -> None:
         """Send the launch_app command using websocket protocol."""

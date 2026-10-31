@@ -37,7 +37,7 @@ from .const import (
 )
 from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 
 @callback
