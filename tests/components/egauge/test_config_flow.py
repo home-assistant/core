@@ -357,6 +357,7 @@ async def test_options_flow_does_not_offer_a_register_without_a_sensor(
     """
     mock_egauge_client.get_register_info.return_value = {
         "Grid": RegisterInfo(name="Grid", type=RegisterType.POWER, idx=0, did=None),
+        "Solar": RegisterInfo(name="Solar", type=RegisterType.POWER, idx=1, did=None),
         "Main": RegisterInfo(name="Main", type=RegisterType.POWER, idx=9, did=None),
     }
 
@@ -364,6 +365,7 @@ async def test_options_flow_does_not_offer_a_register_without_a_sensor(
 
     assert result["type"] is FlowResultType.FORM
     select = result["data_schema"].schema[CONF_INVERT_REGISTERS]
+    # Main is on the device but setup built no sensor for it.
     assert select.config["options"] == ["Grid", "Solar"]
 
 
