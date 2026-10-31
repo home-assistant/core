@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_switch_entities_snapshot[cloud_sauter_sop6615lb.json][switch.oven-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'ogp://1234-5678-9123/16000211')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.oven',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-5678-9123/16000211-Oven',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_sauter_sop6615lb.json][switch.oven-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.oven',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.indoor_camera_camera_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
