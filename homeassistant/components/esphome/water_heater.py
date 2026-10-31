@@ -62,7 +62,12 @@ class EsphomeWaterHeater(
         self._attr_min_temp = static_info.min_temperature
         self._attr_max_temp = static_info.max_temperature
         self._attr_target_temperature_step = static_info.target_temperature_step
-        features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        features = WaterHeaterEntityFeature(0)
+        if (
+            static_info.supported_features
+            & WaterHeaterFeature.SUPPORTS_TARGET_TEMPERATURE
+        ):
+            features |= WaterHeaterEntityFeature.TARGET_TEMPERATURE
         if static_info.supported_modes:
             features |= WaterHeaterEntityFeature.OPERATION_MODE
             self._attr_operation_list = [
