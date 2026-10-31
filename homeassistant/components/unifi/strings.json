@@ -174,8 +174,8 @@
       }
     },
     "switch": {
-      "block_client": {
-        "name": "Blocked"
+      "network_access": {
+        "name": "Network access"
       },
       "poe_port_control": {
         "name": "{port_name} PoE"
