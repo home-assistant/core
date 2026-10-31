@@ -32,6 +32,14 @@
         "description": "No Roomba or Braava have been discovered on your network.",
         "title": "Manually connect to the device"
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::roomba::config::step::manual::data_description::host%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
