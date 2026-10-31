@@ -6,7 +6,9 @@
     "computers_network.routers_network"
   ],
   "codeowners": ["@fbradyirl"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cisco_ios",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pexpect", "ptyprocess"],
   "quality_scale": "legacy",
