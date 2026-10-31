@@ -677,6 +677,9 @@
     "mix_settings_read_failed": {
       "message": "Failed to read charge/discharge settings from the Growatt Mix device."
     },
+    "mix_write_failed": {
+      "message": "Failed to write charge/discharge settings to the Growatt Mix device."
+    },
     "mix_write_rejected": {
       "message": "The Growatt Mix device rejected the charge/discharge settings write."
     },
