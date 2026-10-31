@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 import asyncio
+from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, cast, override
@@ -567,17 +568,21 @@ class _RestoreStoreManager:
 
     @callback
     def async_get(self, scope: RestoreScope, storage_key: str) -> Any:
-        """Return the data stored for a coordinator, or None if nothing is stored."""
+        """Return a copy of a coordinator's stored data, or None if nothing is stored."""
         bucket, scope_id = scope
-        return self._data[bucket].get(scope_id, {}).get(storage_key)
+        return deepcopy(self._data[bucket].get(scope_id, {}).get(storage_key))
 
     @callback
     def async_schedule_save(
         self, scope: RestoreScope, storage_key: str, data: Any, delay: float
     ) -> None:
-        """Schedule saving the data of a coordinator."""
+        """Schedule saving a copy of the data of a coordinator."""
+        # A coordinator can outlive its config entry when unloading fails.
+        if (scope, storage_key) not in self._active_keys:
+            return
         bucket, scope_id = scope
-        self._data[bucket].setdefault(scope_id, {})[storage_key] = data
+        # Another coordinator's save must not persist in-place changes to this data.
+        self._data[bucket].setdefault(scope_id, {})[storage_key] = deepcopy(data)
         self._store.async_delay_save(self._data_to_save, delay)
 
     @callback
@@ -594,7 +599,9 @@ class _RestoreStoreManager:
 
     @callback
     def async_clear_config_entry(self, entry_id: str) -> None:
-        """Remove all data stored for a config entry."""
+        """Remove all data stored for a config entry and reject its later saves."""
+        scope = (RESTORE_SCOPE_CONFIG_ENTRIES, entry_id)
+        self._active_keys = {key for key in self._active_keys if key[0] != scope}
         if self._data[RESTORE_SCOPE_CONFIG_ENTRIES].pop(entry_id, None) is None:
             return
         self._store.async_delay_save(self._data_to_save)

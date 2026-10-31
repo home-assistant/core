@@ -2357,3 +2357,114 @@ async def test_persist_successful_none_refresh(
 
     # The successful None result is persisted, so old data cannot resurrect
     assert get_stored_data(hass_storage, restore_entry) is None
+
+
+async def test_saved_data_detached_from_coordinator(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test mutating data in place does not change what another save persists."""
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    other_crd = get_restore_crd(hass, config_entry=restore_entry, storage_key="other")
+    crd.async_set_updated_data({"value": "saved"})
+
+    crd.data["value"] = "mutated"
+    other_crd.async_set_updated_data({"value": "other"})
+    await flush_restore_store(hass)
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "saved"}
+
+
+async def test_restored_data_detached_from_store(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test mutating restored data in place does not change the stored data."""
+    await set_stored_data(hass, hass_storage, restore_entry, {"value": "stored"})
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    other_crd = get_restore_crd(hass, config_entry=restore_entry, storage_key="other")
+
+    crd.data["value"] = "mutated"
+    other_crd.async_set_updated_data({"value": "other"})
+    await flush_restore_store(hass)
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "stored"}
+
+
+async def test_no_save_after_entry_removed_without_unload(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test a coordinator that outlives its removed entry does not recreate data."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    crd = get_restore_crd(hass, config_entry=entry)
+    crd.async_set_updated_data({"value": "saved"})
+    entry._async_set_state(hass, config_entries.ConfigEntryState.FAILED_UNLOAD, "Test")
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    crd.async_set_updated_data({"value": "pushed"})
+    await flush_restore_store(hass)
+
+    assert hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"] == make_store_data()
+
+
+async def test_refresh_finishing_after_shutdown_not_saved(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test a refresh in flight during shutdown cannot replace a new coordinator."""
+    await set_stored_data(hass, hass_storage, restore_entry, {"value": "stored"})
+    fetching = asyncio.Event()
+    finish_fetch = asyncio.Event()
+
+    async def update_method() -> dict[str, Any]:
+        fetching.set()
+        await finish_fetch.wait()
+        return {"value": "late"}
+
+    crd = get_restore_crd(hass, config_entry=restore_entry, update_method=update_method)
+    refresh = hass.async_create_task(crd.async_refresh())
+    await fetching.wait()
+
+    await crd.async_shutdown()
+    replacement = get_restore_crd(hass, config_entry=restore_entry)
+    replacement.async_set_updated_data({"value": "replacement"})
+    finish_fetch.set()
+    await refresh
+    await flush_restore_store(hass)
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "replacement"}
+
+
+async def test_push_after_shutdown_not_saved(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test data pushed to a shut down coordinator cannot replace a new coordinator."""
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    await crd.async_shutdown()
+    replacement = get_restore_crd(hass, config_entry=restore_entry)
+    replacement.async_set_updated_data({"value": "replacement"})
+
+    crd.async_set_updated_data({"value": "late"})
+    await flush_restore_store(hass)
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "replacement"}
+
+
+async def test_repeated_shutdown_keeps_new_registration(
+    hass: HomeAssistant, restore_entry: MockConfigEntry
+) -> None:
+    """Test a second shutdown does not free a key reused by a new coordinator."""
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    await crd.async_shutdown()
+    get_restore_crd(hass, config_entry=restore_entry)
+
+    await crd.async_shutdown()
+
+    with pytest.raises(ValueError, match="already in use"):
+        get_restore_crd(hass, config_entry=restore_entry)

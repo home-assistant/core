@@ -731,12 +731,17 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     @override
     async def async_shutdown(self) -> None:
         """Free the storage key so it can be reused by a new coordinator."""
-        self._store_manager.async_unregister(self._storage_scope, self._storage_key)
+        # A new coordinator may own the key after the first shutdown.
+        if not self._shutdown_requested:
+            self._store_manager.async_unregister(self._storage_scope, self._storage_key)
         await super().async_shutdown()
 
     @callback
     def _schedule_save(self) -> None:
         """Schedule saving the current data to storage."""
+        # An in-flight refresh can finish after a new coordinator took over the key.
+        if self._shutdown_requested:
+            return
         self._store_manager.async_schedule_save(
             self._storage_scope, self._storage_key, self.data, self._save_delay
         )
