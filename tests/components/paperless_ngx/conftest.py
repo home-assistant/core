@@ -70,6 +70,8 @@ def mock_paperless(
         paperless.base_url = "http://paperless.example.com/"
         paperless.host_version = "2.3.0"
         paperless.initialize.return_value = None
+        paperless.documents = MagicMock()
+        paperless.documents.get_next_asn = AsyncMock(return_value=100)
         paperless.statistics = AsyncMock(
             return_value=Statistic.create_with_data(
                 paperless, data=mock_statistic_data, fetched=True
