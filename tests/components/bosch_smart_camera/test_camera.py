@@ -84,7 +84,7 @@ async def test_unknown_model_uses_hardware_version(
 def mock_latest_image() -> Generator[AsyncMock]:
     """Mock the latest event image of the library."""
     with patch(
-        "homeassistant.components.bosch_smart_camera.coordinator.get_latest_event_image",
+        "bosch_shc_camera_client.client.get_latest_event_image",
         autospec=True,
         return_value=b"jpeg-1",
     ) as mock:
@@ -155,7 +155,7 @@ async def test_slow_download_does_not_block_other_cameras(
     mock_list_cameras.return_value = [*CAMERAS, OTHER]
     release = asyncio.Event()
 
-    async def fetch(session, token, camera_id):
+    async def fetch(session, token, camera_id, **kwargs):
         if camera_id == CAMERA_ID:
             await release.wait()
         return camera_id.encode()
@@ -169,6 +169,25 @@ async def test_slow_download_does_not_block_other_cameras(
     assert not slow.done()
     release.set()
     assert (await slow).content == CAMERA_ID.encode()
+
+
+async def test_token_is_fetched_fresh_for_every_request(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_latest_image: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test every library call asks the OAuth session for a valid token."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+    ) as ensure_token:
+        await async_get_image(hass, ENTITY_ID)
+        freezer.tick(timedelta(seconds=SNAPSHOT_TTL + 1))
+        await async_get_image(hass, ENTITY_ID)
+
+    assert ensure_token.await_count == 2
 
 
 async def test_token_refresh_failure_surfaces_translated_error(
