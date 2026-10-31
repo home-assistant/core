@@ -480,10 +480,9 @@ def _async_get_registered_child_devices(
 ) -> set[frozenset[str]]:
     """Return the identifiers of the registered child devices without entities.
 
-    A child device is left without entities, when its components were removed
-    with a component that has only a platform. Child devices with entities are
-    only known through their components, as they can belong to single component
-    discovery.
+    A child device is left without entities, when its components are removed
+    while it stays in the payload. Child devices with entities are only known
+    through their components, as they can belong to single component discovery.
     """
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
