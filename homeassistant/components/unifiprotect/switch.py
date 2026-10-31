@@ -78,7 +78,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_led_status",
         ufp_public_value="led_settings.is_enabled",
         ufp_set_method="set_status_light",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription[Camera](
         key="high_fps",
@@ -87,7 +86,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_highfps",
         ufp_public_value="is_high_fps_enabled",
         ufp_set_method_fn=_set_highfps,
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="system_sounds",
@@ -105,7 +103,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_public_value="osd_settings.is_name_enabled",
         ufp_set_method="set_osd_name",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_date",
@@ -113,7 +110,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_public_value="osd_settings.is_date_enabled",
         ufp_set_method="set_osd_date",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_logo",
@@ -121,7 +117,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_public_value="osd_settings.is_logo_enabled",
         ufp_set_method="set_osd_logo",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_bitrate",
@@ -129,7 +124,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_public_value="osd_settings.is_debug_enabled",
         ufp_set_method="set_osd_nerd_mode",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="color_night_vision",
@@ -156,7 +150,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.PERSON,
         ufp_public_value="is_person_detection_on",
         ufp_set_method="set_person_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_vehicle",
@@ -165,7 +158,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.VEHICLE,
         ufp_public_value="is_vehicle_detection_on",
         ufp_set_method="set_vehicle_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_animal",
@@ -174,7 +166,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.ANIMAL,
         ufp_public_value="is_animal_detection_on",
         ufp_set_method="set_animal_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_package",
@@ -183,7 +174,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.PACKAGE,
         ufp_public_value="is_package_detection_on",
         ufp_set_method="set_package_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_licenseplate",
@@ -192,7 +182,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.LICENSE_PLATE,
         ufp_public_value="is_license_plate_detection_on",
         ufp_set_method="set_license_plate_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_smoke",
@@ -201,7 +190,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.SMOKE,
         ufp_public_value="is_smoke_detection_on",
         ufp_set_method="set_smoke_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_cmonx",
@@ -210,7 +198,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.CMONX,
         ufp_public_value="is_co_detection_on",
         ufp_set_method="set_co_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_siren",
@@ -219,7 +206,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.SIREN,
         ufp_public_value="is_siren_detection_on",
         ufp_set_method="set_siren_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_baby_cry",
@@ -228,7 +214,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.BABY_CRY,
         ufp_public_value="is_baby_cry_detection_on",
         ufp_set_method="set_baby_cry_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_speak",
@@ -237,7 +222,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.SPEAK,
         ufp_public_value="is_speaking_detection_on",
         ufp_set_method="set_speaking_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_bark",
@@ -246,7 +230,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.BARK,
         ufp_public_value="is_bark_detection_on",
         ufp_set_method="set_bark_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_car_alarm",
@@ -256,7 +239,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         # Public API renamed "car alarm" to "burglar"; internal model keeps the legacy name.
         ufp_public_value="is_car_alarm_detection_on",
         ufp_set_method="set_burglar_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_car_horn",
@@ -265,7 +247,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.CAR_HORN,
         ufp_public_value="is_car_horn_detection_on",
         ufp_set_method="set_car_horn_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_glass_break",
@@ -274,7 +255,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_capability=SmartDetectObjectType.GLASS_BREAK,
         ufp_public_value="is_glass_break_detection_on",
         ufp_set_method="set_glass_break_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="track_person",

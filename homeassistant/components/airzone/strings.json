@@ -52,6 +52,14 @@
           "90deg": "[%key:component::airzone::entity::select::grille_angles::state::90deg%]"
         }
       },
+      "heat_stages": {
+        "name": "Heat stage",
+        "state": {
+          "air": "Air",
+          "combined": "Combined",
+          "radiant": "Radiant"
+        }
+      },
       "modes": {
         "name": "Mode",
         "state": {

@@ -10,12 +10,11 @@ from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_
 from syrupy.assertion import SnapshotAssertion
 from yt_dlp import DownloadError
 
-from homeassistant.components.media_extractor.const import (
-    ATTR_URL,
-    DOMAIN,
-    SERVICE_EXTRACT_MEDIA_URL,
+from homeassistant.components.media_extractor.const import DOMAIN
+from homeassistant.components.media_extractor.services import (
+    MediaExtractorService,
+    MediaExtractorServiceArgument,
 )
-from homeassistant.components.media_player import SERVICE_PLAY_MEDIA
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -32,8 +31,8 @@ async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_PLAY_MEDIA)
-    assert hass.services.has_service(DOMAIN, SERVICE_EXTRACT_MEDIA_URL)
+    assert hass.services.has_service(DOMAIN, MediaExtractorService.PLAY_MEDIA)
+    assert hass.services.has_service(DOMAIN, MediaExtractorService.EXTRACT_MEDIA_URL)
     assert len(hass.config_entries.async_entries(DOMAIN))
 
 
@@ -60,8 +59,8 @@ async def test_extract_media_service(
     assert (
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EXTRACT_MEDIA_URL,
-            {ATTR_URL: url},
+            MediaExtractorService.EXTRACT_MEDIA_URL,
+            {MediaExtractorServiceArgument.URL: url},
             blocking=True,
             return_response=True,
         )
@@ -83,8 +82,8 @@ async def test_extracting_playlist_no_entries(
     ) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EXTRACT_MEDIA_URL,
-            {ATTR_URL: YOUTUBE_EMPTY_PLAYLIST},
+            MediaExtractorService.EXTRACT_MEDIA_URL,
+            {MediaExtractorServiceArgument.URL: YOUTUBE_EMPTY_PLAYLIST},
             blocking=True,
             return_response=True,
         )
@@ -114,7 +113,7 @@ async def test_play_media_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaExtractorService.PLAY_MEDIA,
         {
             "entity_id": "media_player.bedroom",
             "media_content_type": media_content_type,
@@ -144,7 +143,7 @@ async def test_download_error(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaExtractorService.PLAY_MEDIA,
             {
                 "entity_id": "media_player.bedroom",
                 "media_content_type": "VIDEO",
@@ -171,7 +170,7 @@ async def test_no_target_entity(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaExtractorService.PLAY_MEDIA,
         {
             "device_id": "fb034c3a9fefe47c584c32a6b51817eb",
             "media_content_type": "VIDEO",
@@ -198,7 +197,7 @@ async def test_playlist(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaExtractorService.PLAY_MEDIA,
         {
             "entity_id": "media_player.bedroom",
             "media_content_type": "VIDEO",
@@ -225,7 +224,7 @@ async def test_playlist_no_entries(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaExtractorService.PLAY_MEDIA,
         {
             "entity_id": "media_player.bedroom",
             "media_content_type": "VIDEO",
@@ -264,7 +263,7 @@ async def test_query_error(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaExtractorService.PLAY_MEDIA,
             {
                 "entity_id": "media_player.bedroom",
                 "media_content_type": "VIDEO",
@@ -306,7 +305,7 @@ async def test_cookiefile_detection(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaExtractorService.PLAY_MEDIA,
         {
             "entity_id": "media_player.bedroom",
             "media_content_type": "VIDEO",
@@ -321,7 +320,7 @@ async def test_cookiefile_detection(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaExtractorService.PLAY_MEDIA,
         {
             "entity_id": "media_player.bedroom",
             "media_content_type": "VIDEO",

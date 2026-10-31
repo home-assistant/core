@@ -19,6 +19,7 @@ from .const import (
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIPTION_NAME,
+    LEGACY_TOPIC_PREFIX,
     OAUTH2_TOKEN,
     SDM_SCOPES,
 )
@@ -167,6 +168,11 @@ def new_pubsub_admin_client(
         ),
         cloud_project_id=cloud_project_id,
     )
+
+
+def is_legacy_topic(topic_name: str) -> bool:
+    """Return True if the topic is a Google-hosted Pub/Sub topic."""
+    return topic_name.startswith(LEGACY_TOPIC_PREFIX)
 
 
 def cloud_project_from_subscription(subscription_name: str) -> str | None:

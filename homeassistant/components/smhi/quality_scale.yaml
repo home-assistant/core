@@ -39,19 +39,19 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: Integration has no options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: Integration does not require authentication.
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Cloud service that cannot be discovered.
@@ -59,14 +59,14 @@ rules:
     status: exempt
     comment: Cloud service that cannot be discovered.
   docs-data-update: done
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: Cloud service without supported devices.
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Each config entry represents a single location.
@@ -76,7 +76,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:

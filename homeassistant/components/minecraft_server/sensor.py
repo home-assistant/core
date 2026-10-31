@@ -4,7 +4,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_TYPE, EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -97,6 +101,7 @@ SENSOR_DESCRIPTIONS = [
     MinecraftServerSensorEntityDescription(
         key=KEY_LATENCY,
         translation_key=KEY_LATENCY,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         suggested_display_precision=0,
         value_fn=lambda data: data.latency,

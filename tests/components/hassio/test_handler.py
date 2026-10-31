@@ -125,6 +125,37 @@ async def test_supervisor_client_source_header(
 
 
 @pytest.mark.usefixtures("socket_enabled")
+async def test_api_range_header(
+    aiohttp_raw_server,  # 'aiohttp_raw_server' must be before 'hass'!
+    hass: HomeAssistant,
+) -> None:
+    """Test the range header is sent."""
+    received_request = None
+
+    async def mock_handler(request):
+        """Return OK."""
+        nonlocal received_request
+        received_request = request
+        return web.json_response({"result": "ok", "data": None})
+
+    server = await aiohttp_raw_server(mock_handler)
+    hassio_handler = HassIO(
+        hass.loop,
+        async_get_clientsession(hass),
+        f"{server.host}:{server.port}",
+    )
+
+    await hassio_handler.send_command(
+        "/core/logs",
+        "GET",
+        range_header="entries=:-1:2",
+    )
+
+    assert received_request is not None
+    assert received_request.headers[hdrs.RANGE] == "entries=:-1:2"
+
+
+@pytest.mark.usefixtures("socket_enabled")
 async def test_send_command_text_error(
     aiohttp_raw_server,  # 'aiohttp_raw_server' must be before 'hass'!
     hass: HomeAssistant,

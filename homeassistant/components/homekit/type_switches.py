@@ -12,9 +12,11 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
-from homeassistant.components import input_button
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
     CONF_MAX as INPUT_NUMBER_CONF_MAX,
@@ -195,7 +197,7 @@ class Switch(HomeAccessory):
         elif self._domain == BUTTON_DOMAIN:
             service = ButtonService.PRESS
         elif self._domain == INPUT_BUTTON_DOMAIN:
-            service = input_button.SERVICE_PRESS
+            service = InputButtonService.PRESS
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
 
@@ -518,8 +520,8 @@ class Valve(ValveBase):
         super().__init__(
             config.get(CONF_TYPE, TYPE_VALVE),
             VALVE_OPEN_STATES,
-            ValveService.OPEN_VALVE,
-            ValveService.CLOSE_VALVE,
+            ValveService.OPEN,
+            ValveService.CLOSE,
             hass,
             driver,
             name,

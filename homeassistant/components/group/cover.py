@@ -32,6 +32,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 from .util import reduce_attribute
 
@@ -121,7 +122,9 @@ class CoverGroup(GroupEntity, CoverEntity):
         }
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entities
+        }
         self._attr_unique_id = unique_id
 
     @callback
@@ -173,7 +176,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.OPEN_COVER,
+            CoverService.OPEN,
             data,
             blocking=True,
             context=self._context,
@@ -185,7 +188,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.CLOSE_COVER,
+            CoverService.CLOSE,
             data,
             blocking=True,
             context=self._context,
@@ -197,7 +200,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._covers[KEY_STOP]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.STOP_COVER,
+            CoverService.STOP,
             data,
             blocking=True,
             context=self._context,
@@ -212,7 +215,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         }
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.SET_COVER_POSITION,
+            CoverService.SET_POSITION,
             data,
             blocking=True,
             context=self._context,
@@ -224,7 +227,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.OPEN_COVER_TILT,
+            CoverService.OPEN_TILT,
             data,
             blocking=True,
             context=self._context,
@@ -236,7 +239,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.CLOSE_COVER_TILT,
+            CoverService.CLOSE_TILT,
             data,
             blocking=True,
             context=self._context,
@@ -248,7 +251,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._tilts[KEY_STOP]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.STOP_COVER_TILT,
+            CoverService.STOP_TILT,
             data,
             blocking=True,
             context=self._context,
@@ -265,7 +268,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         }
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.SET_COVER_TILT_POSITION,
+            CoverService.SET_TILT_POSITION,
             data,
             blocking=True,
             context=self._context,

@@ -191,5 +191,6 @@ class AirthingsDeviceSensor(
         """Check if device and sensor is available in data."""
         return (
             super().available
+            and self._id in self.coordinator.data
             and self.entity_description.key in self.coordinator.data[self._id].sensors
         )

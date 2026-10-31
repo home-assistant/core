@@ -2,17 +2,11 @@
 
 import probatio
 
-from homeassistant.const import (
-    CONF_ID,
-    SERVICE_RELOAD,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DATA_INPUT_BOOLEAN, DOMAIN
+from .const import DATA_INPUT_BOOLEAN, DOMAIN, InputBooleanService
 
 RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
@@ -33,12 +27,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD,
+        InputBooleanService.RELOAD,
         _async_reload_service,
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
     component = hass.data[DATA_INPUT_BOOLEAN].component
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
+    component.async_register_entity_service(
+        InputBooleanService.TURN_ON, None, "async_turn_on"
+    )
+    component.async_register_entity_service(
+        InputBooleanService.TURN_OFF, None, "async_turn_off"
+    )
+    component.async_register_entity_service(
+        InputBooleanService.TOGGLE, None, "async_toggle"
+    )

@@ -26,16 +26,13 @@ from .const import (
     SERVICE_PAUSE,
     SERVICE_START,
     TimerEntityStateAttribute,
+    TimerService,
+    TimerServiceArgument,
 )
 from .entity import Timer, _format_timedelta
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_REMAINING = "remaining"
-ATTR_FINISHES_AT = "finishes_at"
-ATTR_RESTORE = "restore"
-ATTR_LAST_TRANSITION = "last_transition"
 
 
 STORAGE_KEY = DOMAIN
@@ -60,6 +57,8 @@ __all__ = [
     "STORAGE_FIELDS",
     "Timer",
     "TimerEntityStateAttribute",
+    "TimerService",
+    "TimerServiceArgument",
     "TimerStorageCollection",
 ]
 

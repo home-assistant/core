@@ -17,6 +17,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.EVENT,
+    Platform.LIGHT,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.SELECT,
@@ -67,7 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> No
     async def _on_http2_reauth_required() -> None:
         entry.async_start_reauth(hass)
 
-    alexa_httpx_client = httpx_client.get_async_client(
+    # AVS allows one directives stream per HTTP/2 connection, so a shared
+    # client would make multiple accounts close each other's stream.
+    alexa_httpx_client = httpx_client.create_async_httpx_client(
         hass,
         alpn_protocols=SSL_ALPN_HTTP11_HTTP2,
     )

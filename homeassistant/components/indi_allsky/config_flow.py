@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -33,9 +34,10 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
-from .util import get_ssl_context, normalize_host
+from .util import get_ssl_context, is_ip_address, normalize_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +73,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
-REAUTH_CONFIRM_SCHEMA = probatio.Schema(
+STEP_CREDENTIALS_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(
@@ -88,8 +90,10 @@ REAUTH_CONFIRM_SCHEMA = probatio.Schema(
     }
 )
 
+REAUTH_CONFIRM_SCHEMA = STEP_CREDENTIALS_SCHEMA
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+
+async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Validate that the user input allows us to connect to INDI Allsky."""
     username = data.get(CONF_USERNAME)
     password = data.get(CONF_PASSWORD)
@@ -134,6 +138,9 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for INDI Allsky."""
 
     VERSION = 1
+
+    _discovered_data: dict[str, Any] | None = None
+    _requires_auth: bool = False
 
     @override
     async def async_step_user(
@@ -192,6 +199,174 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
             ),
+            errors=errors,
+        )
+
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery of an INDI Allsky server."""
+        host = normalize_host(discovery_info.host)
+        hostname = normalize_host(discovery_info.hostname)
+        ssl = str(discovery_info.properties.get("ssl", "true")).lower() == "true"
+        port = discovery_info.port or (443 if ssl else 80)
+        mac = discovery_info.properties.get("mac")
+
+        if mac:
+            formatted_mac = format_mac(mac)
+            current_entry = await self.async_set_unique_id(formatted_mac)
+            if current_entry is None:
+                for entry in self._async_current_entries(include_ignore=False):
+                    if (
+                        entry.unique_id is None
+                        and normalize_host(entry.data[CONF_HOST]) in (host, hostname)
+                        and entry.data[CONF_PORT] == port
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            entry, unique_id=formatted_mac
+                        )
+                        current_entry = entry
+                        break
+            current_host = current_entry.data.get(CONF_HOST) if current_entry else None
+            if current_entry and current_entry.data.get(CONF_SSL, True) != ssl:
+                return self.async_abort(reason="already_configured")
+            updates: dict[str, Any] = {
+                CONF_PORT: port,
+                CONF_SSL: ssl,
+            }
+            if not (current_host and not is_ip_address(current_host)):
+                updates[CONF_HOST] = host
+            self._abort_if_unique_id_configured(updates=updates)
+        else:
+            for entry in self._async_current_entries(include_ignore=False):
+                if (
+                    normalize_host(entry.data[CONF_HOST]) in (host, hostname)
+                    and entry.data[CONF_PORT] == port
+                ):
+                    return self.async_abort(reason="already_configured")
+            await self._async_handle_discovery_without_unique_id()
+
+        self._discovered_data = {
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_SSL: ssl,
+            CONF_VERIFY_SSL: True,
+        }
+
+        server_name = discovery_info.name.split("._")[0]
+        self.context["title_placeholders"] = {"name": server_name}
+
+        unverified_ssl_needed = False
+        try:
+            await validate_input(self.hass, self._discovered_data)
+        except InvalidAuth:
+            self._requires_auth = True
+        except CannotConnect, Unknown:
+            if ssl:
+                try:
+                    unverified_data = {**self._discovered_data, CONF_VERIFY_SSL: False}
+                    await validate_input(self.hass, unverified_data)
+                except InvalidAuth:
+                    self._requires_auth = True
+                    unverified_ssl_needed = True
+                except CannotConnect, Unknown:
+                    return self.async_abort(reason="cannot_connect")
+                else:
+                    unverified_ssl_needed = True
+            else:
+                return self.async_abort(reason="cannot_connect")
+
+        if unverified_ssl_needed:
+            return await self.async_step_unverified_ssl()
+
+        if self._requires_auth:
+            return await self.async_step_credentials()
+
+        return await self.async_step_discovery_confirm()
+
+    def _create_discovered_entry(self) -> ConfigFlowResult:
+        """Create a config entry from discovered data."""
+        assert self._discovered_data is not None
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: self._discovered_data[CONF_HOST],
+                CONF_PORT: self._discovered_data[CONF_PORT],
+            }
+        )
+        port = self._discovered_data[CONF_PORT]
+        default_port = 443 if self._discovered_data[CONF_SSL] else 80
+        host_str = (
+            f"{self._discovered_data[CONF_HOST]}:{port}"
+            if port != default_port
+            else self._discovered_data[CONF_HOST]
+        )
+        return self.async_create_entry(
+            title=f"INDI Allsky ({host_str})",
+            data=self._discovered_data,
+        )
+
+    async def async_step_unverified_ssl(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user consent for unverified SSL."""
+        if user_input is not None:
+            assert self._discovered_data is not None
+            self._discovered_data[CONF_VERIFY_SSL] = False
+            if self._requires_auth:
+                return await self.async_step_credentials()
+            return self._create_discovered_entry()
+
+        return self.async_show_form(
+            step_id="unverified_ssl",
+            description_placeholders=self.context.get("title_placeholders", {}),
+        )
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user confirmation of discovery."""
+        if user_input is not None:
+            return self._create_discovered_entry()
+
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders=self.context.get("title_placeholders", {}),
+        )
+
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle credentials for a discovered INDI Allsky device."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            assert self._discovered_data is not None
+            data = {
+                **self._discovered_data,
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+
+            try:
+                await validate_input(self.hass, data)
+            except MissingCredentials:
+                errors["base"] = "missing_credentials"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self._discovered_data = data
+                return self._create_discovered_entry()
+
+        return self.async_show_form(
+            step_id="credentials",
+            data_schema=STEP_CREDENTIALS_SCHEMA,
+            description_placeholders=self.context.get("title_placeholders", {}),
             errors=errors,
         )
 

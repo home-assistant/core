@@ -13,15 +13,7 @@
       selector:
         duration:
           enable_day: true
-    offset_type:
-      required: true
-      default: before
-      selector:
-        select:
-          translation_key: trigger_offset_type
-          options:
-            - before
-            - after
+          mode: offset
 
 event_started: *trigger_common
 event_ended: *trigger_common

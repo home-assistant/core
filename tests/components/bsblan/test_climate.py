@@ -512,6 +512,31 @@ async def test_dual_circuit_climate_entities(
     assert state2 is not None
 
 
+@pytest.mark.parametrize(
+    ("hvac_mode_int", "status", "expected_action"),
+    [
+        (1, HeatingCircuitStatus.OFF, HVACAction.IDLE),
+        (0, HeatingCircuitStatus.OFF, HVACAction.OFF),
+        (0, HeatingCircuitStatus.FROST_PROTECTION, HVACAction.HEATING),
+    ],
+)
+async def test_hvac_action_in_protection_mode(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    hvac_mode_int: int,
+    status: int,
+    expected_action: HVACAction,
+) -> None:
+    """Test an idle circuit reports off in protection mode, unless it heats."""
+    mock_bsblan.state.return_value.hvac_mode = MagicMock(value=hvac_mode_int)
+    mock_bsblan.state.return_value.hvac_action = MagicMock(value=status)
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    assert hass.states.get(ENTITY_ID).attributes["hvac_action"] == expected_action
+
+
 async def test_set_data_rereads_only_the_circuit(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,

@@ -66,6 +66,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -100,6 +101,58 @@ async def test_light_unique_id(
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("effect", "label"),
+    [
+        pytest.param("blue_fade", "Blue fade", id="fade"),
+        pytest.param("rb_cross_fade", "Red/blue cross fade", id="cross-fade"),
+        pytest.param("cycle_rgb", "Cycle RGB", id="rgb-cycle"),
+        pytest.param("random", "Random", id="random"),
+    ],
+)
+async def test_effect_labels_preserve_effect_values(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    effect: str,
+    label: str,
+) -> None:
+    """Test readable effect labels preserve state and service identifiers."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.effect_list = [effect, "device_specific_effect"]
+    bulb.effect = effect
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.bulb_rgbcw_ddeeff"
+    assert entity_registry.async_get(entity_id).translation_key == "light"
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_EFFECT_LIST] == [effect, "device_specific_effect"]
+    assert state.attributes[ATTR_EFFECT] == effect
+
+    translations = await async_get_translations(hass, "en", "entity", {DOMAIN})
+    assert (
+        translations[
+            f"component.flux_led.entity.light.light.state_attributes.effect.state.{effect}"
+        ]
+        == label
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: effect},
+        blocking=True,
+    )
+    bulb.async_set_effect.assert_called_once_with(effect, 50, 50)
 
 
 async def test_light_goes_unavailable_and_recovers(

@@ -10,7 +10,7 @@ import threading
 from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.helpers.recorder import DATA_RECORDER, session_scope
-from homeassistant.helpers.typing import UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.event_type import EventType
 
 from . import entity_registry, purge, statistics
@@ -83,9 +83,9 @@ class UpdateStatisticsMetadataTask(RecorderTask):
 
     on_done: Callable[[], None] | None
     statistic_id: str
-    new_statistic_id: str | UndefinedType | None
-    new_unit_class: str | UndefinedType | None
-    new_unit_of_measurement: str | UndefinedType | None
+    new_statistic_id: str | Undefined | None
+    new_unit_class: str | Undefined | None
+    new_unit_of_measurement: str | Undefined | None
 
     @override
     def run(self, instance: Recorder) -> None:

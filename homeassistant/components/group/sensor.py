@@ -27,7 +27,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_ENTITIES,
     CONF_NAME,
@@ -57,7 +56,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN
+from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN, GroupEntityStateAttribute
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Sensor Group"
@@ -489,7 +488,10 @@ class SensorGroup(GroupEntity, SensorEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
-        return {ATTR_ENTITY_ID: self._entity_ids, **self._extra_state_attribute}
+        return {
+            GroupEntityStateAttribute.ENTITY_ID: self._entity_ids,
+            **self._extra_state_attribute,
+        }
 
     @property
     @override
