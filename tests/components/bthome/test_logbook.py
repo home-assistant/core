@@ -1,5 +1,7 @@
 """The tests for bthome logbook."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.bthome.const import (
     BTHOME_BLE_EVENT,
     DOMAIN,
@@ -8,7 +10,6 @@ from homeassistant.components.bthome.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 

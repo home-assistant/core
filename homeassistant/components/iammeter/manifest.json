@@ -1,6 +1,7 @@
 {
   "domain": "iammeter",
   "name": "IamMeter",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@lewei50", "@IAMMETER", "@miwyf"],
   "documentation": "https://www.home-assistant.io/integrations/iammeter",
   "iot_class": "local_polling",

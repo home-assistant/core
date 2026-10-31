@@ -35,7 +35,7 @@ class BAFAutoComfort(BAFEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
     _attr_translation_key = "auto_comfort"
 
@@ -47,8 +47,8 @@ class BAFAutoComfort(BAFEntity, ClimateEntity):
         auto_on = device.auto_comfort_enable
         self._attr_hvac_mode = HVACMode.FAN_ONLY if auto_on else HVACMode.OFF
         self._attr_hvac_action = HVACAction.FAN if device.speed else HVACAction.OFF
-        self._attr_target_temperature = device.comfort_ideal_temperature
-        self._attr_current_temperature = device.temperature
+        self._attr_native_target_temperature = device.comfort_ideal_temperature
+        self._attr_native_current_temperature = device.temperature
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

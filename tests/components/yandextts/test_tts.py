@@ -5,6 +5,9 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_mock_service
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.media_player import (
@@ -15,10 +18,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, async_mock_service
 from tests.components.tts.common import retrieve_media
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 URL = "https://tts.voicetech.yandex.net/generate?"
 

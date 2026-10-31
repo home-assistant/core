@@ -49,6 +49,7 @@ from .utils import (
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
+    is_rpc_ledstrip_control_available,
     is_view_for_platform,
 )
 
@@ -182,6 +183,23 @@ class RpcRelaySwitch(RpcSwitch):
         """Initialize the switch."""
         super().__init__(coordinator, key, attribute, description)
         self._attr_unique_id: str = f"{coordinator.mac}-{key}"
+
+
+class RpcLedStripSwitch(RpcSwitch):
+    """Entity that controls a LED strip effect option on RPC based Shelly devices."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if TYPE_CHECKING:
+            assert self.entity_description.sub_key is not None
+
+        return super().available and is_rpc_ledstrip_control_available(
+            self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects,
+            self.status,
+            self.entity_description.sub_key,
+        )
 
 
 RPC_SWITCHES = {
@@ -422,6 +440,17 @@ RPC_SWITCHES = {
         method_on="cury_set_away_mode",
         method_off="cury_set_away_mode",
         method_params_fn=lambda id, value: (id, value),
+    ),
+    "ledstrip_reverse": RpcSwitchDescription(
+        key="ledstrip",
+        sub_key="reverse",
+        translation_key="effect_reverse",
+        is_on=lambda status: bool(status["reverse"]),
+        method_on="ledstrip_set",
+        method_off="ledstrip_set",
+        method_params_fn=lambda id, value: (id, {"reverse": value}),
+        supported=lambda _: True,
+        entity_class=RpcLedStripSwitch,
     ),
     "camera_privacy": RpcSwitchDescription(
         key="camera",

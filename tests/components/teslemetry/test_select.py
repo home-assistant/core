@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
 from tesla_fleet_api.exceptions import InvalidCommand
@@ -32,8 +33,6 @@ from .const import (
     SITE_INFO,
     VEHICLE_DATA_ALT,
 )
-
-from tests.common import async_fire_time_changed
 
 # Entity description keys for the rear seat-heater entities gated by config.
 REAR_LEFT = "climate_state_seat_heater_rear_left"
@@ -356,6 +355,57 @@ async def test_select_streaming(
     assert hass.states.get("select.test_seat_heater_rear_center").state == STATE_UNKNOWN
     assert hass.states.get("select.test_seat_heater_rear_right").state == "high"
     assert hass.states.get("select.test_steering_wheel_heater").state == "off"
+
+
+@pytest.mark.parametrize(
+    ("hvac_power", "ac_enabled", "call_count"),
+    [
+        pytest.param("HvacPowerStateOn", False, 0, id="climate_on_ac_off"),
+        pytest.param("HvacPowerStatePrecondition", False, 0, id="preconditioning"),
+        pytest.param("HvacPowerStateOff", True, 1, id="climate_off_ac_on"),
+        pytest.param("HvacPowerStateOverheatProtect", True, 1, id="overheat_protect"),
+    ],
+)
+async def test_select_streaming_climate_start(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    hvac_power: str,
+    ac_enabled: bool,
+    call_count: int,
+) -> None:
+    """Tests that streaming heaters only start climate when HVAC is off."""
+
+    await setup_platform(hass, [Platform.SELECT])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.HVAC_POWER: hvac_power,
+                Signal.HVAC_AC_ENABLED: ac_enabled,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.auto_conditioning_start",
+            return_value=COMMAND_OK,
+        ) as start,
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.remote_seat_heater_request",
+            return_value=COMMAND_OK,
+        ),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.test_seat_heater_front_left", ATTR_OPTION: LOW},
+            blocking=True,
+        )
+    assert start.call_count == call_count
 
 
 async def _drive_polling(

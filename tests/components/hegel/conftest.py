@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hegel.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MODEL
 
 from .const import TEST_HOST, TEST_MODEL, TEST_UDN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -18,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.hegel.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

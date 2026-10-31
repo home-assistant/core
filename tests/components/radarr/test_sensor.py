@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 from aiopyarr.exceptions import ArrConnectionException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -21,9 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")

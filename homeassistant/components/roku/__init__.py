@@ -25,7 +25,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RokuConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RokuConfigEntry) -> None:
     """Set up Roku from a config entry."""
     coordinator = RokuDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -34,9 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RokuConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RokuConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RokuConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

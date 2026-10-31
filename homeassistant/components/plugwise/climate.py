@@ -93,7 +93,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     """Representation of a Plugwise thermostat."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     def __init__(
@@ -103,6 +103,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{device_id}-climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._api = coordinator.api
@@ -162,13 +163,13 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device["sensors"].get("temperature")
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach.
 
         Connected to the HVACMode combination of AUTO-HEAT.
@@ -178,7 +179,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float:
+    def native_target_temperature_high(self) -> float:
         """Return the temperature we try to reach in case of cooling.
 
         Connected to the HVACMode combination of AUTO-HEAT_COOL.
@@ -187,7 +188,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float:
+    def native_target_temperature_low(self) -> float:
         """Return the heating temperature we try to reach in case of heating.
 
         Connected to the HVACMode combination AUTO-HEAT_COOL.

@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
             CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK
         ): cv.positive_int,
         probatio.Optional(CONF_ONLY_NAMED, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {

@@ -3,6 +3,12 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.subaru.const import DOMAIN
@@ -16,13 +22,6 @@ from .conftest import (
     MOCK_API_GET_RAW_DATA,
     advance_time_to_next_fetch,
 )
-
-from tests.common import async_load_json_object_fixture
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(

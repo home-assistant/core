@@ -43,6 +43,7 @@ ATTR_SKY_TYPE = "sky_type"
 ATTR_SPEED = "speed"
 ATTR_SPREAD = "spread"
 
+SERVICE_EFFECT_COLORSWEEP = "effect_colorsweep"
 SERVICE_EFFECT_COLORLOOP = "effect_colorloop"
 SERVICE_EFFECT_FLAME = "effect_flame"
 SERVICE_EFFECT_MORPH = "effect_morph"
@@ -56,6 +57,9 @@ SERVICE_SET_STATE = "set_state"
 
 HEV_CYCLE_STATE = "hev_cycle_state"
 LIFX_IDENTIFY_DELAY = 3.0
+# A bulb often misses one poll and answers the next, so it is only shown as
+# unavailable once it has missed this many in a row
+MAX_MISSED_POLLS = 3
 INFRARED_BRIGHTNESS = "infrared_brightness"
 INFRARED_LEVELS = {
     "Disabled": 0.0,

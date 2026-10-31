@@ -39,6 +39,7 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
     assert result2["data"] == {
         "host": host,
     }
+    assert result2["result"].unique_id == host
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -61,3 +62,17 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "airtouch5py.airtouch5_simple_client.Airtouch5SimpleClient.test_connection",
+        return_value=None,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

@@ -155,7 +155,6 @@ SENSORS_BATTERY: tuple[SunsynkSensorEntityDescription, ...] = (
     ),
     SunsynkSensorEntityDescription(
         key="battery_voltage",
-        translation_key="voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -165,7 +164,6 @@ SENSORS_BATTERY: tuple[SunsynkSensorEntityDescription, ...] = (
     ),
     SunsynkSensorEntityDescription(
         key="battery_current",
-        translation_key="current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -175,7 +173,6 @@ SENSORS_BATTERY: tuple[SunsynkSensorEntityDescription, ...] = (
     ),
     SunsynkSensorEntityDescription(
         key="battery_temperature",
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,

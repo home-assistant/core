@@ -24,7 +24,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -139,6 +140,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
 
         self._event_type = None
         self._attr_event_types = []
+        self._event_types_known = False
 
         self.setup_template(
             CONF_EVENT_TYPES,
@@ -156,6 +158,8 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     @callback
     def _update_event_types(self, event_types: Any) -> None:
         """Update the event types from the template."""
+        self._event_types_known = True
+
         if event_types in (None, "None", ""):
             self._attr_event_types = []
             return

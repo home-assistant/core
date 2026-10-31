@@ -3,7 +3,10 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+    Timeout as RequestsTimeout,
+)
 
 from homeassistant.components.zoneminder.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PATH, Platform
@@ -123,27 +126,33 @@ async def test_login_failure_returns_false(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(RequestsConnectionError("Connection refused"), id="refused"),
+        pytest.param(RequestsTimeout("Read timed out"), id="timeout"),
+    ],
+)
 async def test_connection_error_logged(
     hass: HomeAssistant,
     mock_zoneminder_client: MagicMock,
     single_server_config: dict,
     caplog: pytest.LogCaptureFixture,
+    error: Exception,
 ) -> None:
-    """Test RequestsConnectionError is logged but doesn't crash setup.
+    """Test a connection error or timeout is logged but doesn't crash setup.
 
     Regression: The original code (lines 76-82) catches the ConnectionError
     and logs it, but does NOT set success=False. This means a connection error
     doesn't prevent the component from reporting success.
     """
-    mock_zoneminder_client.login.side_effect = RequestsConnectionError(
-        "Connection refused"
-    )
+    mock_zoneminder_client.login.side_effect = error
 
     result = await async_setup_component(hass, DOMAIN, single_server_config)
     await hass.async_block_till_done()
 
     assert "ZoneMinder connection failure" in caplog.text
-    assert "Connection refused" in caplog.text
+    assert str(error) in caplog.text
     # The component still reports success (this is the regression behavior)
     assert result is True
 

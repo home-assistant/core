@@ -21,6 +21,7 @@ import urllib3.exceptions
 from homeassistant import config as conf_util
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_EXCLUDE,
@@ -62,7 +63,6 @@ from .const import (
     CODE_INVALID_INPUTS,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
     COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS,
-    CONF_API_VERSION,
     CONF_BUCKET,
     CONF_COMPONENT_CONFIG,
     CONF_COMPONENT_CONFIG_DOMAIN,
@@ -164,7 +164,7 @@ _CUSTOMIZE_ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         probatio.Optional(CONF_IGNORE_ATTRIBUTES): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
     }
 )
@@ -181,10 +181,10 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {cv.string: cv.string}
         ),
         probatio.Optional(CONF_TAGS_ATTRIBUTES, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_IGNORE_ATTRIBUTES, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_COMPONENT_CONFIG, default={}): probatio.Schema(
             {cv.entity_id: _CUSTOMIZE_ENTITY_SCHEMA}
@@ -337,6 +337,14 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                 with suppress(KeyError, TypeError):
                     if not math.isfinite(json[INFLUX_CONF_FIELDS][key]):
                         del json[INFLUX_CONF_FIELDS][key]
+
+        # InfluxDB reserves "time"; leave the valid "time_str" field unchanged.
+        fields = json[INFLUX_CONF_FIELDS]
+        if INFLUX_CONF_TIME in fields:
+            key = f"{INFLUX_CONF_TIME}_"
+            while key in fields:
+                key = f"{key}_"
+            fields[key] = fields.pop(INFLUX_CONF_TIME)
 
         json[INFLUX_CONF_TAGS].update(tags)
 
@@ -530,7 +538,7 @@ async def _async_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
         async_create_deprecated_yaml_issue(hass)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
     """Set up InfluxDB from a config entry."""
     data = entry.data
 
@@ -575,17 +583,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
 
     entry.runtime_data = influx_thread
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> None:
     """Unload a config entry."""
     influx_thread = entry.runtime_data
 
     # Run shutdown in the executor so the event loop isn't blocked
     await hass.async_add_executor_job(influx_thread.shutdown)
-
-    return True
 
 
 class InfluxThread(threading.Thread):

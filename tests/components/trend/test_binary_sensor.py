@@ -6,17 +6,20 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    mock_restore_cache,
+)
 
 from homeassistant import setup
-from homeassistant.components.trend.const import DOMAIN
+from homeassistant.components.trend.const import DOMAIN, TrendEntityStateAttribute
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import ComponentSetup
-
-from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
 
 
 async def _setup_legacy_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
@@ -258,7 +261,7 @@ async def test_max_samples(
 
     assert (state := hass.states.get("binary_sensor.test_trend_sensor"))
     assert state.state == "on"
-    assert state.attributes["sample_count"] == 3
+    assert state.attributes[TrendEntityStateAttribute.SAMPLE_COUNT] == 3
 
 
 async def test_non_numeric(

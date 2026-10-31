@@ -26,7 +26,7 @@ async def test_flow_success(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.zerproc.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -58,7 +58,7 @@ async def test_flow_no_devices_found(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.zerproc.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -88,7 +88,7 @@ async def test_flow_exceptions_caught(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.zerproc.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

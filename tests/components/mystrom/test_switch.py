@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pymystrom.exceptions import MyStromConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mystrom.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .test_init import init_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])

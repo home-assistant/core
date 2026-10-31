@@ -1,0 +1,24 @@
+{
+  "UpdateAvailable": true,
+  "LatestVersion": "2.46.0",
+  "ServerVersion": "2.45.1",
+  "DatabaseVersion": "2.45.1",
+  "VersionSupport": "STS",
+  "ServerEdition": "CE",
+  "Build": {
+    "BuildNumber": "12345",
+    "ImageTag": "2.45.1",
+    "NodejsVersion": "22.12.0",
+    "PnpmVersion": "9.15.0",
+    "WebpackVersion": "5.97.1",
+    "GoVersion": "go1.25.1",
+    "GitCommit": "a1b2c3d"
+  },
+  "Dependencies": {
+    "DockerVersion": "28.4.0",
+    "HelmVersion": "v3.18.4",
+    "KubectlVersion": "v1.33.2",
+    "ComposeVersion": "v2.39.2"
+  },
+  "Runtime": {}
+}

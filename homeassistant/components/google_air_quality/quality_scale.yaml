@@ -35,9 +35,7 @@ rules:
   log-when-unavailable: done
   config-entry-unloading: done
   reauthentication-flow: todo
-  action-exceptions:
-    status: exempt
-    comment: Integration does not have actions
+  action-exceptions: done
   docs-installation-parameters: todo
   integration-owner: done
   parallel-updates: done

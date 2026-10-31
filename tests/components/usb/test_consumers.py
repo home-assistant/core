@@ -5,6 +5,14 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.hassio import HassioNotReadyError
 from homeassistant.components.usb import DOMAIN
@@ -24,15 +32,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.setup import async_setup_component
 
 from . import patch_scanned_serial_ports
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import WebSocketGenerator
 
 TTY_USB0 = "/dev/ttyUSB0"
 TTY_USB0_BY_ID = "/dev/serial/by-id/usb-Silicon_Labs_CP2102-if00-port0"

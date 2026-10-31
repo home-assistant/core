@@ -1,6 +1,7 @@
 {
   "domain": "vera",
   "name": "Vera",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vera",

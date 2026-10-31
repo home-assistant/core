@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.airvisual import (
     CONF_CITY,
     CONF_GEOGRAPHIES,
@@ -39,8 +41,6 @@ from .conftest import (
     TEST_LONGITUDE2,
     TEST_STATE,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_migration_1_2(hass: HomeAssistant, mock_pyairvisual) -> None:

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from aioautomower.model import (
     ExternalReasons,
@@ -16,6 +16,7 @@ from aioautomower.model import (
     WorkArea,
     WorkAreaType,
 )
+from aioautomower.model.model_mower import UNKNOWN_ERROR
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,19 +24,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    UnitOfLength,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import AutomowerConfigEntry
 from .const import ERROR_KEYS, ERROR_STATES
-from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import (
-    AutomowerBaseEntity,
-    WorkAreaAvailableEntity,
-    _work_area_translation_key,
-)
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
+from .entity import AutomowerBaseEntity, WorkAreaAvailableEntity
 
 _LOGGER = logging.getLogger(__name__)
 # Coordinator is used to centralize the data updates
@@ -44,7 +46,9 @@ PARALLEL_UPDATES = 0
 ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
 
 ERROR_KEY_LIST = sorted(
-    set(ERROR_KEYS) | {state.lower() for state in ERROR_STATES} | {"no_error"}
+    set(ERROR_KEYS)
+    | {state.lower() for state in ERROR_STATES}
+    | {"no_error", STATE_UNKNOWN}
 )
 
 INACTIVE_REASONS: list = [
@@ -135,6 +139,8 @@ def _get_current_work_area_dict(data: MowerAttributes) -> Mapping[str, Any]:
 @callback
 def _get_error_string(data: MowerAttributes) -> str:
     """Return the error key, if not provided the mower state or `no error`."""
+    if data.mower.error_key == UNKNOWN_ERROR:
+        return STATE_UNKNOWN
     if data.mower.error_key is not None:
         return data.mower.error_key
     if data.mower.state in ERROR_STATES:
@@ -337,13 +343,12 @@ class WorkAreaSensorEntityDescription(SensorEntityDescription):
 
     exists_fn: Callable[[WorkArea], bool] = lambda _: True
     value_fn: Callable[[WorkArea], StateType | datetime]
-    translation_key_fn: Callable[[int, str], str]
 
 
 WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     WorkAreaSensorEntityDescription(
         key="progress",
-        translation_key_fn=_work_area_translation_key,
+        translation_key="work_area_progress",
         exists_fn=lambda data: data.type == WorkAreaType.SYSTEMATIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -351,7 +356,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
     ),
     WorkAreaSensorEntityDescription(
         key="last_time_completed",
-        translation_key_fn=_work_area_translation_key,
+        translation_key="work_area_last_time_completed",
         exists_fn=lambda data: data.type == WorkAreaType.SYSTEMATIC,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=attrgetter("last_time_completed"),
@@ -479,11 +484,6 @@ class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
         super().__init__(mower_id, coordinator, work_area_id)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
-        if TYPE_CHECKING:
-            assert self.work_area_attributes is not None
-        self._attr_translation_placeholders = {
-            "work_area": self.work_area_attributes.name
-        }
 
     @property
     @override
@@ -492,11 +492,3 @@ class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):
         if (work_area := self.work_area_attributes) is None:
             return None
         return self.entity_description.value_fn(work_area)
-
-    @property
-    @override
-    def translation_key(self) -> str:
-        """Return the translation key of the work area."""
-        return self.entity_description.translation_key_fn(
-            self.work_area_id, self.entity_description.key
-        )

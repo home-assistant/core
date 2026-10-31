@@ -1,11 +1,13 @@
 """Define test fixtures for ReCollect Waste."""
 
+from collections.abc import Generator
 from datetime import date
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiorecollect.client import PickupEvent, PickupType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recollect_waste.const import (
     CONF_PLACE_ID,
@@ -14,14 +16,12 @@ from homeassistant.components.recollect_waste.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 TEST_PLACE_ID = "12345"
 TEST_SERVICE_ID = "67890"
 
 
 @pytest.fixture(name="client")
-def client_fixture(pickup_events):
+def client_fixture(pickup_events: list[PickupEvent]) -> Mock:
     """Define a fixture to return a mocked aiopurple API object."""
     return Mock(async_get_pickup_events=AsyncMock(return_value=pickup_events))
 
@@ -48,7 +48,7 @@ def config_fixture() -> dict[str, Any]:
 
 
 @pytest.fixture(name="pickup_events")
-def pickup_events_fixture():
+def pickup_events_fixture() -> list[PickupEvent]:
     """Define a list of pickup events."""
     return [
         PickupEvent(
@@ -58,7 +58,7 @@ def pickup_events_fixture():
 
 
 @pytest.fixture(name="mock_aiorecollect")
-def mock_aiorecollect_fixture(client):
+def mock_aiorecollect_fixture(client: Mock) -> Generator[None]:
     """Define a fixture to patch aiorecollect."""
     with (
         patch(

@@ -1,11 +1,12 @@
 """Test the APSystem setup."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock
 
 from APsystemsEZ1 import InverterReturnedError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.apsystems.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,9 +14,7 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-SCAN_INTERVAL = datetime.timedelta(seconds=12)
+SCAN_INTERVAL = dt.timedelta(seconds=12)
 
 
 @pytest.mark.usefixtures("mock_apsystems")

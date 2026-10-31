@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import ACTIVITY_POWER_OFF
+from .const import ACTIVITY_POWER_OFF, DOMAIN
 from .subscriber import HarmonySubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,17 +117,23 @@ class HarmonyData(HarmonySubscriberMixin):
         except (TimeoutError, aioexc.TimeOut) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
-                f"{self.name}: Connection timed-out to {self._address}:8088"
+                translation_domain=DOMAIN,
+                translation_key="connection_timeout",
+                translation_placeholders={"name": self.name, "address": self._address},
             ) from err
         except (ValueError, AttributeError) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
-                f"{self.name}: Error {err} while connected HUB at: {self._address}:8088"
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"name": self.name, "address": self._address},
             ) from err
         if not connected:
             await self._client.close()
             raise ConfigEntryNotReady(
-                f"{self.name}: Unable to connect to HUB at: {self._address}:8088"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"name": self.name, "address": self._address},
             )
 
     async def shutdown(self) -> None:

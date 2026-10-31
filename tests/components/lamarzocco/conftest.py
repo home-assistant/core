@@ -14,14 +14,13 @@ from pylamarzocco.models import (
 )
 from pylamarzocco.util import InstallationKey
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_MAC, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_INSTALLATION_KEY, SERIAL_DICT, USER_INPUT, async_init_integration
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -136,6 +135,12 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
         machine_mock.websocket = MagicMock()
         machine_mock.websocket.connected = True
         machine_mock.websocket.disconnect = AsyncMock()
+        machine_mock.bluetooth_shot_counter_active = False
+        machine_mock.bluetooth_connected = True
+        machine_mock.register_bluetooth_connection_callback.return_value = MagicMock(
+            return_value=None
+        )
+        machine_mock.connect_bluetooth_shot_counter.return_value = True
         yield machine_mock
 
 

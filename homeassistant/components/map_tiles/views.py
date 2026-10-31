@@ -34,6 +34,7 @@ from .const import (
     TILEJSON_MAX_AGE,
     TILEJSON_TTL,
     TILEJSON_URL,
+    TOKEN_HEADER,
     UPSTREAM_HEADERS,
     UPSTREAM_TIMEOUT,
     VECTOR_MAX_ZOOM,
@@ -87,9 +88,13 @@ class _MapTilesView(HomeAssistantView):
         self._cache = cache
 
     def _authenticate(self, request: web.Request) -> None:
-        """Authenticate via the standard middleware or a map tiles query token."""
+        """Authenticate via the standard middleware or a map tiles access token."""
         access_tokens = self._hass.data[DATA_ACCESS_TOKENS]
-        if request[KEY_AUTHENTICATED] or request.query.get("token") in access_tokens:
+        if (
+            request[KEY_AUTHENTICATED]
+            or request.headers.get(TOKEN_HEADER) in access_tokens
+            or request.query.get("token") in access_tokens
+        ):
             return
         if hdrs.AUTHORIZATION in request.headers:
             # A real Bearer attempt, so let the ban middleware count it.

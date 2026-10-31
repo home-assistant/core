@@ -3,8 +3,16 @@
 from typing import Any
 from unittest.mock import patch
 
+import attr
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    FakeRemoteScanner,
+    MockBleakClient,
+    _get_manager,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import HaBluetoothConnector
@@ -24,11 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from . import FakeRemoteScanner, MockBleakClient, _get_manager
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures(
@@ -65,16 +68,14 @@ async def test_options_flow_disabled_not_setup(
 async def test_async_step_user_macos(hass: HomeAssistant) -> None:
     """Test setting up manually with one adapter on MacOS."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "single_adapter"
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -83,6 +84,7 @@ async def test_async_step_user_macos(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Apple Unknown MacOS Model (Core Bluetooth)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == DEFAULT_ADDRESS
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -90,9 +92,7 @@ async def test_async_step_user_macos(hass: HomeAssistant) -> None:
 async def test_async_step_user_linux_one_adapter(hass: HomeAssistant) -> None:
     """Test setting up manually with one adapter on Linux."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "single_adapter"
@@ -104,7 +104,7 @@ async def test_async_step_user_linux_one_adapter(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -113,6 +113,7 @@ async def test_async_step_user_linux_one_adapter(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -121,9 +122,7 @@ async def test_async_step_user_linux_crashed_adapter(
 ) -> None:
     """Test setting up manually with one crashed adapter on Linux."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_adapters"
@@ -133,9 +132,7 @@ async def test_async_step_user_linux_crashed_adapter(
 async def test_async_step_user_linux_two_adapters(hass: HomeAssistant) -> None:
     """Test setting up manually with two adapters on Linux."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "multiple_adapters"
@@ -146,7 +143,7 @@ async def test_async_step_user_linux_two_adapters(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -155,6 +152,7 @@ async def test_async_step_user_linux_two_adapters(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:02)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == "00:00:00:00:00:02"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -164,9 +162,7 @@ async def test_async_step_user_only_allows_one(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id=DEFAULT_ADDRESS)
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_adapters"
@@ -197,7 +193,7 @@ async def test_async_step_integration_discovery(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -206,6 +202,7 @@ async def test_async_step_integration_discovery(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -224,7 +221,7 @@ async def test_async_step_integration_discovery_during_onboarding_one_adapter(
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.onboarding.async_is_onboarded",
@@ -239,6 +236,7 @@ async def test_async_step_integration_discovery_during_onboarding_one_adapter(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result["data"] == {}
+    assert result["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1
 
@@ -264,7 +262,7 @@ async def test_async_step_integration_discovery_during_onboarding_two_adapters(
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.onboarding.async_is_onboarded",
@@ -284,6 +282,7 @@ async def test_async_step_integration_discovery_during_onboarding_two_adapters(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result["data"] == {}
+    assert result["result"].unique_id == "00:00:00:00:00:01"
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Unknown (00:00:00:00:00:02)"
@@ -308,7 +307,7 @@ async def test_async_step_integration_discovery_during_onboarding(
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.onboarding.async_is_onboarded",
@@ -323,6 +322,7 @@ async def test_async_step_integration_discovery_during_onboarding(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ACME Unknown (Core Bluetooth)"
     assert result["data"] == {}
+    assert result["result"].unique_id == DEFAULT_ADDRESS
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1
 
@@ -557,14 +557,14 @@ async def test_async_step_user_linux_adapter_replace_ignored(
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "single_adapter"
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -573,6 +573,7 @@ async def test_async_step_user_linux_adapter_replace_ignored(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -618,6 +619,7 @@ async def test_async_step_integration_discovery_remote_adapter(
         CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
         CONF_SOURCE_DEVICE_ID: device_entry.id,
     }
+    assert result["result"].unique_id == "esp32"
     await hass.async_block_till_done()
 
     new_entry_id: str = result["result"].entry_id
@@ -631,6 +633,70 @@ async def test_async_step_integration_discovery_remote_adapter(
     assert ble_device_entry is not None
     assert ble_device_entry.via_device_id == device_entry.id
     assert ble_device_entry.area_id == area_entry.id
+
+    await hass.config_entries.async_unload(new_entry.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    cancel_scanner()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_step_integration_discovery_remote_adapter_composite_source(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a remote adapter whose stored source device was split since."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
+    manager = _get_manager()
+    cancel_scanner = manager.async_register_scanner(scanner)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "BB:BB:BB:BB:BB:BB")},
+    )
+    other_device_entry = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "BB:BB:BB:BB:BB:BB")},
+    )
+    # Simulate a device split: both devices carry the pre-migration composite id
+    composite_device_id = "composite00000000000000000000ab"
+    device_registry._devices[device_entry.id] = attr.evolve(
+        device_entry, composite_device_id=composite_device_id
+    )
+    device_registry._devices[other_device_entry.id] = attr.evolve(
+        other_device_entry, composite_device_id=composite_device_id
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_SOURCE: scanner.source,
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: composite_device_id,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "esp32"
+    await hass.async_block_till_done()
+
+    new_entry = result["result"]
+    ble_device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), new_entry.entry_id
+    )
+    assert ble_device_entry is not None
+    assert ble_device_entry.via_device_id == device_entry.id
+    assert "pre-migration composite device" not in caplog.text
 
     await hass.config_entries.async_unload(new_entry.entry_id)
     await hass.config_entries.async_unload(entry.entry_id)
@@ -685,6 +751,7 @@ async def test_async_step_integration_discovery_remote_adapter_child_source(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "esp32"
     await hass.async_block_till_done()
 
     new_entry_id: str = result["result"].entry_id

@@ -1,5 +1,9 @@
 """Tests for the diagnostics data provided by the AsusWRT integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.asuswrt.const import DOMAIN
 from homeassistant.components.asuswrt.diagnostics import TO_REDACT
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
@@ -8,10 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .common import CONFIG_DATA_TELNET, ROUTER_MAC_ADDR
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

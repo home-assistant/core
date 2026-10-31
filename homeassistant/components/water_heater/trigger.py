@@ -6,7 +6,6 @@ import probatio
 
 from homeassistant.const import CONF_OPTIONS, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
@@ -30,7 +29,7 @@ _OPERATION_MODE_CHANGED_TRIGGER_SCHEMA = (
         {
             probatio.Required(CONF_OPTIONS): {
                 probatio.Required(CONF_OPERATION_MODE): probatio.All(
-                    cv.ensure_list, probatio.Length(min=1), [str]
+                    probatio.EnsureList(), probatio.NonEmpty(), [str]
                 ),
             },
         }

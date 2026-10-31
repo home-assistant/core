@@ -1,11 +1,10 @@
 """Support for the Pico TTS speech service."""
 
-import contextlib
-import logging
-import os
-import subprocess
-import tempfile
+import io
 from typing import Any, override
+import wave
+
+from py_nanotts import NanoTTS
 
 from homeassistant.components.tts import CONF_LANG, TextToSpeechEntity, TtsAudioType
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +15,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, SUPPORT_LANGUAGES
 
-_LOGGER = logging.getLogger(__name__)
+SAMPLE_RATE = 16000
+SAMPLE_WIDTH = 2
+SAMPLE_CHANNELS = 1
 
 
 async def async_setup_entry(
@@ -44,40 +45,27 @@ class PicoTTSEntity(TextToSpeechEntity):
             model="Pico TTS",
             name=f"Pico TTS {lang}",
         )
+        self._engine = NanoTTS()
 
     @override
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
-        """Load TTS using pico2wave."""
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
-            fname = tmpf.name
-
-        cmd = ["pico2wave", "--wave", fname, "-l", language]
+        """Synthesize speech with NanoTTS."""
         try:
-            subprocess.run(cmd, text=True, input=message, check=True, timeout=30)
-            with open(fname, "rb") as voice:
-                data = voice.read()
-        except subprocess.CalledProcessError as exc:
+            audio = self._engine.speak(message, voice=language)
+        except RuntimeError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="returncode_error",
-                translation_placeholders={"returncode": str(exc.returncode)},
+                translation_key="synthesis_error",
+                translation_placeholders={"error": str(exc)},
             ) from exc
-        except subprocess.TimeoutExpired as exc:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_error",
-            ) from exc
-        except OSError as exc:
-            _LOGGER.debug("Full exception %s", exc)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="file_read_error",
-                translation_placeholders={"filename": fname},
-            ) from exc
-        finally:
-            with contextlib.suppress(OSError):
-                os.remove(fname)
 
-        return "wav", data
+        with io.BytesIO() as wav_io:
+            with wave.open(wav_io, "wb") as wav_file:
+                wav_file.setframerate(SAMPLE_RATE)
+                wav_file.setsampwidth(SAMPLE_WIDTH)
+                wav_file.setnchannels(SAMPLE_CHANNELS)
+                wav_file.writeframes(audio)
+
+            return "wav", wav_io.getvalue()

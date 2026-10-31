@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import async_setup_unit_entities, perform_action, unit_ids
-from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
+from .coordinator import MelCloudHomeConfigEntry
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
 PARALLEL_UPDATES = 1
@@ -154,17 +154,6 @@ class ATASwitch(MelCloudHomeATAUnitEntity, SwitchEntity):
 
     entity_description: MelCloudHomeSwitchEntityDescription[ATAUnit]
 
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeSwitchEntityDescription[ATAUnit],
-        unit: ATAUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
-
     @property
     @override
     def available(self) -> bool:
@@ -198,17 +187,6 @@ class ATWSwitch(MelCloudHomeATWUnitEntity, SwitchEntity):
     """Representation of a MELCloud Home ATW switch."""
 
     entity_description: MelCloudHomeSwitchEntityDescription[ATWUnit]
-
-    def __init__(
-        self,
-        coordinator: MelCloudHomeCoordinator,
-        entity_description: MelCloudHomeSwitchEntityDescription[ATWUnit],
-        unit: ATWUnit,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, unit)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
     @override

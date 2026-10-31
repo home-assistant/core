@@ -3,6 +3,8 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import async_capture_events, mock_restore_cache
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -25,9 +27,6 @@ from homeassistant.util import dt as dt_util
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events, mock_restore_cache
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:

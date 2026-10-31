@@ -1,6 +1,7 @@
 {
   "domain": "braviatv",
   "name": "Sony Bravia TV",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@bieniu", "@Drafteed"],
   "config_flow": true,
   "dependencies": ["ssdp"],
@@ -8,6 +9,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pybravia"],
+  "quality_scale": "bronze",
   "requirements": ["pybravia==0.5.3"],
   "ssdp": [
     {

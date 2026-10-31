@@ -23,7 +23,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: NordPoolConfigEntry
-) -> bool:
+) -> None:
     """Set up Nord Pool from a config entry."""
 
     await cleanup_device(hass, config_entry)
@@ -34,14 +34,12 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: NordPoolConfigEntry
-) -> bool:
+) -> None:
     """Unload Nord Pool config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def cleanup_device(

@@ -65,7 +65,7 @@ def _construct_common_data(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: IntellifireConfigEntry
-) -> bool:
+) -> None:
     """Migrate entries."""
     LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -129,10 +129,8 @@ async def async_migrate_entry(
             )
             LOGGER.debug("Migration to 1.3 successful (options keys renamed)")
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) -> None:
     """Set up IntelliFire from a config entry."""
 
     if CONF_USERNAME not in entry.data:
@@ -170,8 +168,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
-
-    return True
 
 
 async def async_update_options(
@@ -219,6 +215,6 @@ async def _async_wait_for_initialization(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: IntellifireConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

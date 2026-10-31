@@ -55,7 +55,7 @@ async def test_form(
 
 
 @pytest.mark.parametrize("todoist_api_status", [HTTPStatus.UNAUTHORIZED])
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+async def test_form_invalid_auth(hass: HomeAssistant, api: AsyncMock) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,9 +71,18 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "invalid_api_key"}
 
+    api.get_tasks.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: TOKEN,
+        },
+    )
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize("todoist_api_status", [HTTPStatus.INTERNAL_SERVER_ERROR])
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant, api: AsyncMock) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -88,6 +97,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
+
+    api.get_tasks.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: TOKEN,
+        },
+    )
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("todoist_api_status", [HTTPStatus.UNAUTHORIZED])
@@ -108,6 +126,15 @@ async def test_unknown_error(hass: HomeAssistant, api: AsyncMock) -> None:
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "unknown"}
+
+    api.get_tasks.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: TOKEN,
+        },
+    )
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured(hass: HomeAssistant, setup_integration: None) -> None:

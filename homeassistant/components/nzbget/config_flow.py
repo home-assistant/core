@@ -4,6 +4,7 @@ import logging
 from typing import Any, override
 
 import probatio
+from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -23,7 +24,6 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
-from .coordinator import NZBGetAPI, NZBGetAPIException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 probatio.Required(CONF_HOST): str,
                 probatio.Optional(CONF_USERNAME): str,
-                probatio.Optional(CONF_PASSWORD): str,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                 probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                 probatio.Required(CONF_MORE_OPTIONS): section(

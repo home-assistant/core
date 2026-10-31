@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from nice_go import AuthFailedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nice_go.const import (
     CONF_REFRESH_TOKEN,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(

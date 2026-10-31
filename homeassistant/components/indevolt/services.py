@@ -21,7 +21,7 @@ from .coordinator import IndevoltCoordinator
 RT_ACTION_SERVICE_SCHEMA: Final = probatio.Schema(
     {
         probatio.Required("device_id"): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [cv.string],
         ),
         probatio.Required("target_soc"): probatio.All(

@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import ReolinkError
 from syrupy.assertion import SnapshotAssertion
@@ -26,8 +31,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")

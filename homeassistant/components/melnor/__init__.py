@@ -21,7 +21,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> None:
     """Set up melnor from a config entry."""
     ble_device = bluetooth.async_ble_device_from_address(hass, entry.data[CONF_ADDRESS])
 
@@ -71,11 +71,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> None:
     """Unload a config entry."""
     await entry.runtime_data.data.disconnect()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -54,7 +54,7 @@ TRANSPORT_SCHEMA = probatio.Schema(
 TCP_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 
@@ -193,7 +193,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={

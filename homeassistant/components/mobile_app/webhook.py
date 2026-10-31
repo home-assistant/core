@@ -612,7 +612,7 @@ async def webhook_register_sensor(
 @WEBHOOK_COMMANDS.register("update_sensor_states")
 @validate_schema(
     probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [
             # Partial schema, enough to identify schema.
             # We don't validate everything because otherwise 1 invalid sensor

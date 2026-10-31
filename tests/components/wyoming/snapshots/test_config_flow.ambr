@@ -2,7 +2,7 @@
 # name: test_hassio_addon_discovery[info0]
   FlowResultSnapshot({
     'context': dict({
-      'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'configuration_url': 'homeassistant://config/app/mock_piper/info',
       'dismiss_protected': True,
       'source': 'hassio',
       'title_placeholders': dict({
@@ -53,7 +53,7 @@
 # name: test_hassio_addon_discovery[info1]
   FlowResultSnapshot({
     'context': dict({
-      'configuration_url': 'homeassistant://hassio/addon/mock_piper/info',
+      'configuration_url': 'homeassistant://config/app/mock_piper/info',
       'dismiss_protected': True,
       'source': 'hassio',
       'title_placeholders': dict({

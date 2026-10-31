@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from snapcast.control.client import Snapclient
 from snapcast.control.group import Snapgroup
 from snapcast.control.server import CONTROL_PORT
@@ -12,14 +13,12 @@ from snapcast.control.stream import Snapstream
 from homeassistant.components.snapcast.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.snapcast.async_setup_entry", return_value=True
+        "homeassistant.components.snapcast.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -1,6 +1,8 @@
 """Test the Aranet sensors."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.aranet.const import DOMAIN
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -33,9 +35,6 @@ from . import (
     VALID_ARANET_RADON_DATA_SERVICE_INFO,
     VALID_DATA_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 RADON_ENTITY_ID = "sensor.aranetrn_12345_radon_concentration"
 RADON_UNIQUE_ID = "aa:bb:cc:dd:ee:ff-radon_concentration-aa:bb:cc:dd:ee:ff"

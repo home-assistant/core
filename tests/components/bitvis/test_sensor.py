@@ -5,6 +5,7 @@ from unittest.mock import patch
 from bitvis_protobuf import powerhub_pb2
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bitvis.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import find_listener_callback, setup_integration
 from .conftest import TEST_DEVICE_MAC, FakeListener
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 DIAGNOSTIC_UNIQUE_IDS = {
     f"{TEST_DEVICE_MAC}_uptime",

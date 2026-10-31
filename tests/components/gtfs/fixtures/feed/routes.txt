@@ -1,0 +1,3 @@
+route_id,agency_id,route_short_name,route_long_name,route_type
+R1,TA,1,Main Line,3
+N,TA,N,Night Owl,3

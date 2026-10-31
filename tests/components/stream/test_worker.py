@@ -1051,7 +1051,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
     segment = complete_segments[0]
     part = segment.parts[0]
     av_part = av.open(io.BytesIO(segment.init + part.data))
-    assert av_part.streams.video[0].codec_tag == "hev1"
+    assert av_part.streams.video[0].codec_tag == "hvc1"
     av_part.close()
 
     await stream.stop()

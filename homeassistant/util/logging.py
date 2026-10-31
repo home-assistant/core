@@ -11,6 +11,7 @@ import time
 import traceback
 from typing import Any, cast, overload, override
 
+from homeassistant.const import FORMAT_DATETIME
 from homeassistant.core import (
     HassJobType,
     HomeAssistant,
@@ -19,6 +20,22 @@ from homeassistant.core import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+LOG_FORMAT = "%(asctime)s %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
+
+
+class HomeAssistantLogFormatter(logging.Formatter):
+    """Formatter with millisecond precision and the local UTC offset in timestamps."""
+
+    @override
+    def formatTime(self, record: logging.LogRecord, datefmt: str | None = None) -> str:
+        """Format the record timestamp as `YYYY-MM-DD HH:MM:SS.mmm+HH:MM`."""
+        ct = self.converter(record.created)
+        offset = time.strftime("%z", ct)
+        return (
+            f"{time.strftime(datefmt or FORMAT_DATETIME, ct)}"
+            f".{int(record.msecs):03d}{offset[:3]}:{offset[3:]}"
+        )
 
 
 class HomeAssistantQueueListener(logging.handlers.QueueListener):
@@ -269,7 +286,7 @@ def async_create_catching_coro[_T](
     return catch_log_coro_exception(
         target,
         lambda: (
-            f"Exception in {target.__name__} called from\n"
+            f"Exception in {target.__name__} called from\n"  # type: ignore[attr-defined]
             + "".join(traceback.format_list(trace[:-1]))
         ),
     )

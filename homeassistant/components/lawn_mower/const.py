@@ -8,7 +8,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import LawnMowerEntity
+    from .entity import LawnMowerEntity
 
 DOMAIN: Final = "lawn_mower"
 DATA_COMPONENT: HassKey[EntityComponent[LawnMowerEntity]] = HassKey(DOMAIN)
@@ -49,3 +49,12 @@ SERVICE_START_MOWING = "start_mowing"
 SERVICE_PAUSE = "pause"
 SERVICE_DOCK = "dock"
 SERVICE_STOP = "stop"
+
+
+class LawnMowerService(StrEnum):
+    """Store keys for lawn mower services."""
+
+    DOCK = "dock"
+    PAUSE = "pause"
+    START_MOWING = "start_mowing"
+    STOP = "stop"

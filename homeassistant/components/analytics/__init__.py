@@ -83,7 +83,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Analytics from a config entry."""
     snapshots_url = hass.data[_DATA_SNAPSHOTS_URL]
     analytics = Analytics(hass, snapshots_url)
@@ -118,7 +118,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_at_started(hass, start_schedule)
 
     hass.data[DATA_COMPONENT] = analytics
-    return True
 
 
 @callback

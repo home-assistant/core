@@ -4,11 +4,14 @@ from http import HTTPStatus
 from io import BytesIO
 from typing import Any
 
-import httpx
+import httpx2
 from PIL import Image
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, assert_setup_component
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 from syrupy.assertion import SnapshotAssertion
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant import setup
 from homeassistant.components import image
@@ -34,10 +37,7 @@ from .conftest import (
     setup_entity,
 )
 
-from tests.common import MockConfigEntry, assert_setup_component
-from tests.typing import ClientSessionGenerator
-
-_DEFAULT = object()
+_DEFAULT = sentinel("_DEFAULT")
 _TEST_IMAGE = "image.template_image"
 _URL_INPUT_TEXT = "input_text.url"
 
@@ -337,7 +337,7 @@ async def test_template_error(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test handling template error."""
-    respx.get("http://example.com").side_effect = httpx.TimeoutException
+    respx.get("http://example.com").side_effect = httpx2.TimeoutException
 
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(

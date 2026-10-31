@@ -20,6 +20,7 @@ from kasa.smart.modules import Speaker
 from kasa.smart.modules.alarm import Alarm
 from kasa.smart.modules.clean import AreaUnit, Clean, ErrorCode, Status
 from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -29,7 +30,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -41,8 +42,6 @@ from .const import (
     MAC_ADDRESS,
     MODEL,
 )
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])  # noqa: PYI024
 
@@ -257,7 +256,7 @@ def _mocked_feature(
     id: str,
     *,
     require_fixture=False,
-    value: Any = UNDEFINED,
+    value: Any = Undefined,
     name=None,
     type_=None,
     category=None,
@@ -295,12 +294,12 @@ def _mocked_feature(
         assert require_fixture is False, (
             f"No fixture defined for feature {id} and require_fixture is True"
         )
-        assert value is not UNDEFINED, (
+        assert value is not Undefined, (
             f"Value must be provided if feature {id} not defined in features.json"
         )
         fixture = {"value": value, "category": "Primary", "type": "Sensor"}
 
-    if value is not UNDEFINED:
+    if value is not Undefined:
         fixture["value"] = value
     feature.value = fixture["value"]
 

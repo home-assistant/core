@@ -23,7 +23,8 @@ async def test_executor_shutdown_can_interrupt_threads(
 
     sleep_futures = [iexecutor.submit(_loop_sleep_in_executor) for _ in range(100)]
 
-    iexecutor.shutdown()
+    with patch.object(executor, "EXECUTOR_SHUTDOWN_TIMEOUT", 1):
+        iexecutor.shutdown()
 
     for future in sleep_futures:
         with pytest.raises((concurrent.futures.CancelledError, SystemExit)):

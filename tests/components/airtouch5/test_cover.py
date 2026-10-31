@@ -7,6 +7,7 @@ from airtouch5py.packets.zone_status import (
     ZonePowerState,
     ZoneStatusZone,
 )
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 COVER_ENTITY_ID = "cover.zone_1_damper"
 COVER_ZONE_2_ENTITY_ID = "cover.zone_2_damper"

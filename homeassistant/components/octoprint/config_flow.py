@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
@@ -39,7 +38,7 @@ def _schema_with_defaults(
         {
             probatio.Required(CONF_USERNAME, default=username): str,
             probatio.Required(CONF_HOST, default=host): str,
-            probatio.Required(CONF_PORT, default=port): cv.port,
+            probatio.Required(CONF_PORT, default=port): probatio.Port(),
             probatio.Required(CONF_PATH, default=path): str,
             probatio.Required(CONF_SSL, default=ssl): bool,
             probatio.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,

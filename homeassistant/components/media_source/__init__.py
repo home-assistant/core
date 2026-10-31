@@ -19,9 +19,15 @@ from .const import (
     URI_SCHEME_REGEX,
 )
 from .error import MediaSourceError, Unresolvable
-from .helper import async_browse_media, async_resolve_media, async_search_media
+from .helper import (
+    async_browse_media,
+    async_get_media_image,
+    async_resolve_media,
+    async_search_media,
+)
 from .models import (
     BrowseMediaSource,
+    MediaImage,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
@@ -32,7 +38,9 @@ __all__ = [
     "DOMAIN",
     "MEDIA_CLASS_MAP",
     "MEDIA_MIME_TYPES",
+    "URI_SCHEME",
     "BrowseMediaSource",
+    "MediaImage",
     "MediaSource",
     "MediaSourceError",
     "MediaSourceItem",
@@ -40,6 +48,7 @@ __all__ = [
     "RootBrowseMediaSource",
     "Unresolvable",
     "async_browse_media",
+    "async_get_media_image",
     "async_resolve_media",
     "async_search_media",
     "generate_media_source_id",

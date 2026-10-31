@@ -37,7 +37,7 @@ DEFAULT_WIRELESS_ONLY = True
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,

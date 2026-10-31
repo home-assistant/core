@@ -7,25 +7,17 @@ from typing import Any, cast, override
 
 import probatio
 
-from homeassistant.components import light
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_FLASH,
-    ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ATTR_RGBWW_COLOR,
-    ATTR_TRANSITION,
-    ATTR_WHITE,
-    ATTR_XY_COLOR,
+    DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityCapabilityAttribute,
     LightEntityFeature,
     LightEntityStateAttribute,
+    LightService,
+    LightServiceArgument,
     filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -34,8 +26,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -49,6 +39,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 from .util import find_state_attributes, mean_circle, mean_tuple, reduce_attribute
 
@@ -62,7 +53,7 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_UNIQUE_ID): cv.string,
-        probatio.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN),
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(LIGHT_DOMAIN),
         probatio.Optional(CONF_ALL): cv.boolean,
     }
 )
@@ -125,17 +116,17 @@ def async_create_preview_light(
 
 FORWARDED_ATTRIBUTES = frozenset(
     {
-        ATTR_BRIGHTNESS,
-        ATTR_COLOR_TEMP_KELVIN,
-        ATTR_EFFECT,
-        ATTR_FLASH,
-        ATTR_HS_COLOR,
-        ATTR_RGB_COLOR,
-        ATTR_RGBW_COLOR,
-        ATTR_RGBWW_COLOR,
-        ATTR_TRANSITION,
-        ATTR_WHITE,
-        ATTR_XY_COLOR,
+        LightServiceArgument.BRIGHTNESS,
+        LightServiceArgument.COLOR_TEMP_KELVIN,
+        LightServiceArgument.EFFECT,
+        LightServiceArgument.FLASH,
+        LightServiceArgument.HS_COLOR,
+        LightServiceArgument.RGB_COLOR,
+        LightServiceArgument.RGBW_COLOR,
+        LightServiceArgument.RGBWW_COLOR,
+        LightServiceArgument.TRANSITION,
+        LightServiceArgument.WHITE,
+        LightServiceArgument.XY_COLOR,
     }
 )
 
@@ -156,7 +147,9 @@ class LightGroup(GroupEntity, LightEntity):
         self._entity_ids = entity_ids
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
         self.mode = any
         if mode:
@@ -176,8 +169,8 @@ class LightGroup(GroupEntity, LightEntity):
         _LOGGER.debug("Forwarded turn_on command: %s", data)
 
         await self.hass.services.async_call(
-            light.DOMAIN,
-            SERVICE_TURN_ON,
+            LIGHT_DOMAIN,
+            LightService.TURN_ON,
             data,
             blocking=True,
             context=self._context,
@@ -188,12 +181,14 @@ class LightGroup(GroupEntity, LightEntity):
         """Forward the turn_off command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
 
-        if ATTR_TRANSITION in kwargs:
-            data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
+        if LightServiceArgument.TRANSITION in kwargs:
+            data[LightServiceArgument.TRANSITION] = kwargs[
+                LightServiceArgument.TRANSITION
+            ]
 
         await self.hass.services.async_call(
-            light.DOMAIN,
-            SERVICE_TURN_OFF,
+            LIGHT_DOMAIN,
+            LightService.TURN_OFF,
             data,
             blocking=True,
             context=self._context,
@@ -268,9 +263,12 @@ class LightGroup(GroupEntity, LightEntity):
             # Merge all effects from all effect_lists with a union merge.
             self._attr_effect_list = list(set().union(*all_effect_lists))
             self._attr_effect_list.sort()
-            if "None" in self._attr_effect_list:
-                self._attr_effect_list.remove("None")
-                self._attr_effect_list.insert(0, "None")
+            # Each insert lands at the front. Pin "None" first, then "off",
+            # so "off" is first and "None" is second when both are present.
+            for effect_name in ("None", EFFECT_OFF):
+                if effect_name in self._attr_effect_list:
+                    self._attr_effect_list.remove(effect_name)
+                    self._attr_effect_list.insert(0, effect_name)
 
         self._attr_effect = None
         all_effects = list(

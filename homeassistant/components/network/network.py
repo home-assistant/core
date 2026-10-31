@@ -69,6 +69,12 @@ class Network:
         if not enable_adapters(self.adapters, self.configured_adapters):
             enable_auto_detected_adapters(self.adapters)
 
+    async def async_reload_adapters(self) -> None:
+        """Reload the adapters."""
+        self.adapters = await async_load_adapters()
+        self.async_configure()
+        _LOGGER.debug("Adapters: %s", self.adapters)
+
     async def async_reconfig(self, config: dict[str, Any]) -> None:
         """Reconfigure network."""
         self._data[ATTR_CONFIGURED_ADAPTERS] = config[ATTR_CONFIGURED_ADAPTERS]

@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from airly.measurements import Measurement
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

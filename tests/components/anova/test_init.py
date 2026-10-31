@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from anova_wifi import AnovaApi
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration, create_entry
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(hass: HomeAssistant, anova_api: AnovaApi) -> None:

@@ -219,7 +219,7 @@ class TeslaFleetWallConnectorEntity(
 
     @property
     @override
-    def _value(self) -> int:
+    def _value(self) -> Any | None:
         """Return a specific wall connector value from coordinator data."""
         return (
             self.coordinator.data.get("wall_connectors", {})

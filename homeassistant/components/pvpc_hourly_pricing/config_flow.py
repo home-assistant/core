@@ -103,13 +103,21 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_verify(
                 "api_token",
                 data_schema=probatio.Schema(
-                    {probatio.Required(CONF_API_TOKEN, default=self._api_token): str}
+                    {
+                        probatio.Required(
+                            probatio.Secret(CONF_API_TOKEN), default=self._api_token
+                        ): str
+                    }
                 ),
             )
         return self.async_show_form(
             step_id="api_token",
             data_schema=probatio.Schema(
-                {probatio.Required(CONF_API_TOKEN, default=self._api_token): str}
+                {
+                    probatio.Required(
+                        probatio.Secret(CONF_API_TOKEN), default=self._api_token
+                    ): str
+                }
             ),
             description_placeholders={"mail_to_link": _MAIL_TO_LINK},
         )
@@ -168,7 +176,9 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(
                     CONF_USE_API_TOKEN, default=self._use_api_token
                 ): bool,
-                probatio.Optional(CONF_API_TOKEN, default=self._api_token): str,
+                probatio.Optional(
+                    probatio.Secret(CONF_API_TOKEN), default=self._api_token
+                ): str,
             }
         )
         if user_input:
@@ -205,7 +215,11 @@ class PVPCOptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="api_token",
             data_schema=probatio.Schema(
-                {probatio.Required(CONF_API_TOKEN, default=api_token): str}
+                {
+                    probatio.Required(
+                        probatio.Secret(CONF_API_TOKEN), default=api_token
+                    ): str
+                }
             ),
             description_placeholders={"mail_to_link": _MAIL_TO_LINK},
         )

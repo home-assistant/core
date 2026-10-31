@@ -1,6 +1,7 @@
 {
   "domain": "zabbix",
   "name": "Zabbix",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@kruton"],
   "documentation": "https://www.home-assistant.io/integrations/zabbix",
   "iot_class": "local_polling",

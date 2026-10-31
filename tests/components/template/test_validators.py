@@ -129,6 +129,35 @@ async def test_enum(
 
 
 @pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("mmmm", Brewery.MMMM),
+        ("beer", None),
+        ("BeeR", None),
+    ],
+)
+async def test_enum_deprecated(
+    hass: HomeAssistant,
+    value: Any,
+    expected: Brewery | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enum validator rejects deprecated enums."""
+    entity = create_test_entity(hass, {})
+    assert (
+        cv.strenum(entity, "state", Brewery, deprecated_enums=(Brewery.BEER,))(value)
+        == expected
+    )
+    check_for_error(
+        value,
+        expected,
+        caplog.text,
+        f"Received invalid state: {value} for entity Test,"
+        " expected one of mmmm, is, good",
+    )
+
+
+@pytest.mark.parametrize(
     "value",
     [
         "unknown",
@@ -889,6 +918,69 @@ async def test_item_in_list(
     """Test result is in a list."""
     entity = create_test_entity(hass, config)
     value = cv.item_in_list(entity, "state", ["beer", "is", "GOOD"])(value)
+    assert value == expected
+    check_for_error(value, expected, caplog.text, error.format(value))
+
+
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
+            {"default_entity_id": "test.test"},
+            "Received invalid test state: {} for entity test.test, expected 1, 2, 3, 4",
+        ),
+        (
+            {},
+            "Received invalid state: {} for entity Test, expected 1, 2, 3, 4",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("1", "1"),
+        ("2", "2"),
+        ("3", "3"),
+        ("4", "4"),
+        (1, "1"),
+        (2, "2"),
+        (3, "3"),
+        (4, "4"),
+        *expect_none(
+            None,
+            "1.0",
+            "2.0",
+            "3.0",
+            "4.0",
+            "BEER",
+            "IS",
+            "good",
+            "al;dfj",
+            "unknown",
+            "unavailable",
+            "tru",  # codespell:ignore tru
+            83242.2342,
+            True,
+            False,
+            {},
+            {"junk": "stuff"},
+            {"junk"},
+        ),
+    ],
+)
+async def test_string_item_in_list(
+    hass: HomeAssistant,
+    config: dict,
+    error: str,
+    value: Any,
+    expected: bool | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test result is in a list."""
+    entity = create_test_entity(hass, config)
+    value = cv.item_in_list(
+        entity, "state", ["1", "2", "3", "4"], stringify_result=True
+    )(value)
     assert value == expected
     check_for_error(value, expected, caplog.text, error.format(value))
 

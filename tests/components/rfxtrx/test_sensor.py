@@ -1,6 +1,7 @@
 """The tests for the Rfxtrx sensor platform."""
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.const import (
@@ -12,8 +13,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 
 from .conftest import create_rfx_test_entry
-
-from tests.common import mock_restore_cache
 
 
 async def test_default_config(hass: HomeAssistant, rfxtrx) -> None:

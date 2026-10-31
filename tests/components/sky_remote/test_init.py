@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from skyboxremote import SkyBoxConnectionError
 
 from homeassistant.components.sky_remote.const import DEFAULT_PORT, DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_mock_entry
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

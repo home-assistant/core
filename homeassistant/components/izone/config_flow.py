@@ -57,6 +57,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow: user, YAML import, HomeKit, and integration discovery."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     _discovered_controller_host: str | None = None
     _discovered_controller_uid: str | None = None
@@ -192,6 +193,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         controllers_lines = "\n".join(
             f"- {candidate.uid} ({candidate.host})" for candidate in candidates
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="select_controller",
             data_schema=selection_schema,

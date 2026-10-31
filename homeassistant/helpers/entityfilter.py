@@ -80,17 +80,17 @@ def convert_filter(config: dict[str, list[str]]) -> EntityFilter:
 BASE_FILTER_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_EXCLUDE_DOMAINS, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_EXCLUDE_ENTITY_GLOBS, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_EXCLUDE_ENTITIES, default=[]): cv.entity_ids,
         probatio.Optional(CONF_INCLUDE_DOMAINS, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_INCLUDE_ENTITY_GLOBS, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
     }
@@ -120,10 +120,10 @@ def convert_include_exclude_filter(
 INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER = probatio.Schema(
     {
         probatio.Optional(CONF_DOMAINS, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_ENTITY_GLOBS, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
     }
@@ -274,7 +274,7 @@ def _generate_filter_from_sets_and_pattern_lists(
             domain = split_entity_id(entity_id)[0]
             if domain in exclude_d or bool(exclude_eg and exclude_eg.match(entity_id)):
                 return entity_id in include_e
-            return entity_id not in exclude_e
+            return entity_id in include_e or entity_id not in exclude_e
 
         return entity_filter_4b
 

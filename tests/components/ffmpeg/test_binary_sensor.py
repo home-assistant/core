@@ -2,11 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import assert_setup_component
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
 
 CONFIG_NOISE = {
     "binary_sensor": {"platform": "ffmpeg_noise", "input": "testinputvideo"}

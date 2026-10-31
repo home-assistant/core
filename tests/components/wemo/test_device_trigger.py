@@ -1,6 +1,7 @@
 """Verify that WeMo device triggers work as expected."""
 
 import pytest
+from pytest_homeassistant.common import async_get_device_automations, async_mock_service
 from pytest_unordered import unordered
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
@@ -18,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_get_device_automations, async_mock_service
 
 DATA_MESSAGE = {"message": "service-called"}
 

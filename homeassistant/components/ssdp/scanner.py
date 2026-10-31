@@ -416,14 +416,13 @@ class Scanner:
         self, byebye_discovery_info: _SsdpServiceInfo
     ) -> None:
         """Dismiss all discoveries for the given address."""
-        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+        self.hass.config_entries.flow.async_dismiss_discovery_flows(
             _SsdpServiceInfo,
             lambda service_info: bool(
                 service_info.ssdp_st == byebye_discovery_info.ssdp_st
                 and service_info.ssdp_location == byebye_discovery_info.ssdp_location
             ),
-        ):
-            self.hass.config_entries.flow.async_abort(flow["flow_id"])
+        )
 
     async def _async_get_description_dict(
         self, location: str | None

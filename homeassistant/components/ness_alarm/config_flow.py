@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from types import MappingProxyType
 from typing import Any, override
 
 from nessclient import Client
@@ -13,23 +12,18 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentryData,
     ConfigSubentryFlow,
     OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_INFER_ARMING_STATE,
     CONF_SHOW_HOME_MODE,
-    CONF_ZONE_ID,
-    CONF_ZONE_NAME,
     CONF_ZONE_NUMBER,
-    CONF_ZONE_TYPE,
-    CONF_ZONES,
     CONNECTION_TIMEOUT,
     DEFAULT_INFER_ARMING_STATE,
     DEFAULT_PORT,
@@ -44,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(
             CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE
         ): bool,
@@ -140,70 +134,6 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import YAML configuration."""
-        host = import_data[CONF_HOST]
-        port = import_data[CONF_PORT]
-
-        # Check if already configured
-        self._async_abort_entries_match({CONF_HOST: host})
-
-        # Test connection to the alarm panel
-        try:
-            await self._test_connection(host, port)
-        except OSError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception(
-                "Unexpected error connecting to %s:%s during import", host, port
-            )
-            return self.async_abort(reason="unknown")
-
-        # Brief delay to ensure the panel releases the test connection
-        await asyncio.sleep(POST_CONNECTION_DELAY)
-
-        # Prepare subentries for zones
-        subentries: list[ConfigSubentryData] = []
-        zones = import_data.get(CONF_ZONES, [])
-
-        for zone_config in zones:
-            zone_id = zone_config[CONF_ZONE_ID]
-            zone_name = zone_config.get(CONF_ZONE_NAME)
-            zone_type = zone_config.get(CONF_ZONE_TYPE, DEFAULT_ZONE_TYPE)
-
-            # Subentry title is always "Zone {zone_id}"
-            title = f"Zone {zone_id}"
-
-            # Build subentry data
-            subentry_data = {
-                CONF_ZONE_NUMBER: zone_id,
-                CONF_TYPE: zone_type,
-            }
-            # Include zone name in data if provided (for device naming)
-            if zone_name:
-                subentry_data[CONF_ZONE_NAME] = zone_name
-
-            subentries.append(
-                {
-                    "subentry_type": SUBENTRY_TYPE_ZONE,
-                    "title": title,
-                    "unique_id": f"{SUBENTRY_TYPE_ZONE}_{zone_id}",
-                    "data": MappingProxyType(subentry_data),
-                }
-            )
-
-        return self.async_create_entry(
-            title=f"Ness Alarm {host}:{port}",
-            data={
-                CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_INFER_ARMING_STATE: import_data.get(
-                    CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE
-                ),
-            },
-            subentries=subentries,
         )
 
 

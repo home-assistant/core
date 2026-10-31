@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "shutoff_valve": {
+        "default": "mdi:valve",
+        "state": {
+          "off": "mdi:valve-closed",
+          "on": "mdi:valve-open"
+        }
+      }
+    },
+    "sensor": {
+      "alert_count": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "available_hot_water": {
+        "default": "mdi:water-percent"
+      },
+      "compressor_health": {
+        "default": "mdi:heat-pump"
+      },
+      "override_status": {
+        "default": "mdi:tune"
+      },
+      "running_state": {
+        "default": "mdi:state-machine"
+      },
+      "tank_health": {
+        "default": "mdi:water-boiler"
+      }
+    }
+  }
+}

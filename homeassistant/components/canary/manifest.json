@@ -1,6 +1,7 @@
 {
   "domain": "canary",
   "name": "Canary",
+  "categories": ["security_safety.cameras", "security_safety.alarm_systems"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["ffmpeg"],

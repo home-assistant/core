@@ -8,6 +8,7 @@ from airos.exceptions import (
     AirOSException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -15,8 +16,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

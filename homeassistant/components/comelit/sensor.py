@@ -168,7 +168,10 @@ class ComelitVedoSensorEntity(
     @override
     def available(self) -> bool:
         """Sensor availability."""
-        return self._zone_object.human_status is not AlarmZoneState.UNAVAILABLE
+        return (
+            super().available
+            and self._zone_object.human_status is not AlarmZoneState.UNAVAILABLE
+        )
 
     @property
     @override

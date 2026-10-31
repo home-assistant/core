@@ -20,9 +20,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('kitchen_sink', 'outlet_1')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -53,7 +53,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -66,14 +66,14 @@
     }),
     'name': 'Outlet 1',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('kitchen_sink', '2_ch_power_strip')]>,
   })
 # ---
 # name: test_state.3
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),
@@ -120,9 +120,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('kitchen_sink', 'outlet_2')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -153,7 +153,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'disabled_by': None,
     'id': <ANY>,
     'identifiers': set({
@@ -166,14 +166,14 @@
     }),
     'name': 'Outlet 2',
     'name_by_user': None,
-    'parent_device_id': <ANY>,
+    'parent_device_id': <DeviceEntry identifiers=[('kitchen_sink', '2_ch_power_strip')]>,
   })
 # ---
 # name: test_state.7
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),

@@ -56,6 +56,8 @@ from .const import ATTR_SMHI_THUNDER_PROBABILITY, ENTITY_ID_SENSOR_FORMAT
 from .coordinator import SMHIConfigEntry
 from .entity import SmhiWeatherEntity
 
+PARALLEL_UPDATES = 0
+
 # Used to map condition from API results
 CONDITION_CLASSES: Final[dict[str, list[int]]] = {
     ATTR_CONDITION_CLOUDY: [5, 6],

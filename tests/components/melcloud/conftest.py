@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pymelcloud
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.melcloud.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
-
-from tests.common import MockConfigEntry
 
 MOCK_SERIAL = "ABC123456"
 MOCK_MAC = "AA:BB:CC:DD:EE:FF"

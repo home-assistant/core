@@ -1,13 +1,7 @@
 """Tests for the Keenetic NDMS2 component."""
 
 from homeassistant.components.keenetic_ndms2 import const
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
@@ -32,7 +26,6 @@ MOCK_RECONFIGURE = {
 }
 
 MOCK_OPTIONS = {
-    CONF_SCAN_INTERVAL: 15,
     const.CONF_CONSIDER_HOME: 150,
     const.CONF_TRY_HOTSPOT: False,
     const.CONF_INCLUDE_ARP: True,

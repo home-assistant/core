@@ -2,14 +2,13 @@
 
 from unittest.mock import MagicMock, create_autospec, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from zcc.device import ControlPointDevice
 
 from homeassistant.components.zimi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 DEVICE_INFO = {
     "id": "test-device-id",

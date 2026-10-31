@@ -5,6 +5,7 @@
       "connection_error": "Could not fetch account information. Is the user registered in the Spotify Developer Dashboard?",
       "missing_configuration": "The Spotify integration is not configured. Please follow the documentation.",
       "reauth_account_mismatch": "The Spotify account authenticated with does not match the account that needed re-authentication.",
+      "unique_id_mismatch": "The Spotify account authenticated with does not match the account of this entry.",
       "user_not_premium": "The Spotify API has been changed and Developer applications created with a free account can no longer access the API. To continue using the Spotify integration, you should use an Spotify Developer application created with a Spotify Premium account, or upgrade to Spotify Premium."
     },
     "create_entry": {
@@ -27,6 +28,29 @@
         "description": "The Spotify integration needs to re-authenticate with Spotify for account: {account}",
         "title": "[%key:common::config_flow::title::reauth%]"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_account": {
+      "message": "Invalid Spotify account specified"
+    },
+    "invalid_url": {
+      "message": "Invalid Spotify URL specified"
+    },
+    "media_not_found": {
+      "message": "Spotify media not found: {media_content_type} / {media_content_id}"
+    },
+    "missing_scopes": {
+      "message": "The Spotify access token is missing required permissions. Please reauthenticate"
+    },
+    "token_refresh_failed": {
+      "message": "An error occurred while refreshing the Spotify access token: {error}"
+    },
+    "update_failed": {
+      "message": "An error occurred while communicating with Spotify: {error}"
+    },
+    "user_not_premium": {
+      "message": "[%key:component::spotify::issues::user_not_premium::title%]"
     }
   },
   "issues": {

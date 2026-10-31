@@ -4,6 +4,8 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.components.media_player import (
@@ -39,9 +41,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import async_load_json_fixture
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_media_player(
@@ -894,3 +893,39 @@ async def test_mute_requires_both_commands(
     # But should still have other features
     assert features_six & MediaPlayerEntityFeature.PLAY
     assert features_six & MediaPlayerEntityFeature.VOLUME_SET
+
+
+async def test_session_with_server_device_id_skipped(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test a session using the server ID as device ID is not a client device."""
+    sessions = mock_api.sessions.return_value
+    jellystat_session = {
+        **sessions[0],
+        "Id": "SESSION-UUID-JELLYSTAT",
+        "Client": "jellystat",
+        "DeviceName": "Jellyfin Server",
+        "DeviceId": "SERVER-UUID",
+    }
+    mock_api.sessions.return_value = [*sessions, jellystat_session]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "can not be its own via device" not in caplog.text
+    assert not entity_registry.async_get_entity_id(
+        MP_DOMAIN, DOMAIN, "SERVER-UUID-SESSION-UUID-JELLYSTAT"
+    )
+
+    server_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SERVER-UUID"), mock_config_entry.entry_id
+    )
+    assert server_device
+    assert server_device.model != "jellystat"

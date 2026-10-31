@@ -1,5 +1,7 @@
 """Test KNX date."""
 
+from pytest_homeassistant.common import mock_restore_cache
+
 from homeassistant.components.datetime import (
     ATTR_DATETIME,
     DOMAIN as DATETIME_DOMAIN,
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache
 
 # KNX DPT 19.001 doesn't provide timezone information so we send local time
 

@@ -229,7 +229,7 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         translation_key_values=COFFEE_MILK_RATIO_OPTIONS,
         values_translation_key={
             value: translation_key
-            for translation_key, value in FLOW_RATE_OPTIONS.items()
+            for translation_key, value in COFFEE_MILK_RATIO_OPTIONS.items()
         },
     ),
     HomeConnectSelectEntityDescription(

@@ -11,6 +11,37 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FullDevice, SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
+# All values of the button capability, for buttons that don't report which they
+# support, like cloud-to-cloud buttons
+BUTTON_EVENT_TYPES = [
+    "pushed",
+    "held",
+    "double",
+    "pushed_2x",
+    "pushed_3x",
+    "pushed_4x",
+    "pushed_5x",
+    "pushed_6x",
+    "down",
+    "down_2x",
+    "down_3x",
+    "down_4x",
+    "down_5x",
+    "down_6x",
+    "down_hold",
+    "up",
+    "up_2x",
+    "up_3x",
+    "up_4x",
+    "up_5x",
+    "up_6x",
+    "up_hold",
+    "swipe_up",
+    "swipe_down",
+    "swipe_left",
+    "swipe_right",
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -52,8 +83,11 @@ class SmartThingsButtonEvent(SmartThingsEntity, EventEntity):
     @override
     def event_types(self) -> list[str]:
         """Return the event types."""
-        return self.get_attribute_value(
-            Capability.BUTTON, Attribute.SUPPORTED_BUTTON_VALUES
+        return (
+            self.get_attribute_value(
+                Capability.BUTTON, Attribute.SUPPORTED_BUTTON_VALUES
+            )
+            or BUTTON_EVENT_TYPES
         )
 
     @override

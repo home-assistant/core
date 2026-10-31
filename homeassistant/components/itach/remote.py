@@ -46,9 +46,9 @@ PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_MAC): cv.string,
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_DEVICES): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 {
                     probatio.Optional(CONF_NAME): cv.string,
@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
                     probatio.Required(CONF_CONNADDR): cv.positive_int,
                     probatio.Optional(CONF_IR_COUNT): cv.positive_int,
                     probatio.Required(CONF_COMMANDS): probatio.All(
-                        cv.ensure_list,
+                        probatio.EnsureList(),
                         [
                             {
                                 probatio.Required(CONF_NAME): cv.string,

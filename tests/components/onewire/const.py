@@ -1,6 +1,6 @@
 """Constants for 1-Wire integration."""
 
-from aio_ownet.exceptions import OWServerProtocolError
+from aio_ownet.exceptions import OWServerProtocolError, OWServerReturnError
 
 ATTR_INJECT_READS = "inject_reads"
 
@@ -54,7 +54,15 @@ MOCK_OWPROXY_DEVICES = {
     },
     "16.111111111111": {
         # Test case for issue #115984, where the device type cannot be read
-        ATTR_INJECT_READS: {"/type": [OWServerProtocolError()]},
+        ATTR_INJECT_READS: {
+            "/type": [
+                OWServerReturnError(
+                    1,
+                    "Startup - command line parameters invalid",
+                    "/16.111111111111/type",
+                )
+            ]
+        },
     },
     "1F.111111111111": {
         ATTR_INJECT_READS: {"/type": [b"DS2409"]},

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon import (
@@ -17,8 +18,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
-
-from tests.common import MockConfigEntry
 
 devices = MockDevices()
 

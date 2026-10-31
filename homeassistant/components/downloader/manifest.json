@@ -1,6 +1,7 @@
 {
   "domain": "downloader",
   "name": "Downloader",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@erwindouna"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/downloader",

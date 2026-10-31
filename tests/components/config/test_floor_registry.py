@@ -5,14 +5,13 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components.config import floor_registry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.util.dt import utcnow
-
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="client")

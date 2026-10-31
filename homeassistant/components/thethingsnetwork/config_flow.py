@@ -74,7 +74,7 @@ class TTNFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(CONF_HOST): str,
                     probatio.Required(CONF_APP_ID): str,
-                    probatio.Required(CONF_API_KEY): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD, autocomplete="api_key"
                         )

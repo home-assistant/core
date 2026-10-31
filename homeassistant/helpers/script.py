@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCLUDE,
     CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
@@ -111,7 +112,7 @@ from .trace import (
     trace_stack_top,
     trace_update_result,
 )
-from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
+from .typing import ConfigType, TemplateVarsType, Undefined
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -134,6 +135,17 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 
 ATTR_CUR = "current"
 ATTR_MAX = "max"
+
+# Configuration errors which should cause the script to stop also when
+# continue_on_error is True.
+CONFIGURATION_ERRORS = (
+    probatio.Invalid,
+    exceptions.TemplateError,
+    exceptions.ServiceNotFound,
+    exceptions.InvalidEntityFormatError,
+    exceptions.NoEntitySpecifiedError,
+    exceptions.ConditionError,
+)
 
 DATA_SCRIPTS: HassKey[dict[int, ScriptData]] = HassKey("helpers.script")
 DATA_SCRIPT_BREAKPOINTS: HassKey[dict[str, dict[str, set[str]]]] = HassKey(
@@ -429,7 +441,7 @@ class _StopScript(_HaltScript):
         self,
         message: str,
         response: Any,
-        conversation_response: str | UndefinedType | None = UNDEFINED,
+        conversation_response: str | Undefined | None = Undefined,
     ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
@@ -459,7 +471,7 @@ class _ScriptRun:
         self._started = False
         self._stop = hass.loop.create_future()
         self._stopped = asyncio.Event()
-        self._conversation_response: str | UndefinedType | None = UNDEFINED
+        self._conversation_response: str | Undefined | None = Undefined
 
     def _changed(self) -> None:
         if not self._stop.done():
@@ -522,7 +534,7 @@ class _ScriptRun:
             response = err.response
 
             # Bubble up child conversation response
-            if err.conversation_response is not UNDEFINED:
+            if err.conversation_response is not Undefined:
                 self._conversation_response = err.conversation_response
 
         except Exception:
@@ -553,7 +565,7 @@ class _ScriptRun:
                     enabled = self._action[CONF_ENABLED]
                     if isinstance(enabled, Template):
                         try:
-                            enabled = enabled.async_render(limited=True)
+                            enabled = enabled.async_render(self._variables)
                         except exceptions.TemplateError as ex:
                             self._handle_exception(
                                 trace_element,
@@ -617,19 +629,9 @@ class _ScriptRun:
         if isinstance(exception, _StopScript):
             raise exception
 
-        # These are incorrect scripts, and not runtime errors that need to
-        # be handled and thus cannot be stopped by `continue_on_error`.
-        if isinstance(
-            exception,
-            (
-                probatio.Invalid,
-                exceptions.TemplateError,
-                exceptions.ServiceNotFound,
-                exceptions.InvalidEntityFormatError,
-                exceptions.NoEntitySpecifiedError,
-                exceptions.ConditionError,
-            ),
-        ):
+        # These are configuration errors which should cause the script to
+        # stop also when `continue_on_error` is True.
+        if isinstance(exception, CONFIGURATION_ERRORS):
             raise exception
 
         # Only Home Assistant errors can be ignored.
@@ -702,7 +704,7 @@ class _ScriptRun:
                 eager_start=True,
             )
         )
-        if result and result.conversation_response is not UNDEFINED:
+        if result and result.conversation_response is not Undefined:
             self._conversation_response = result.conversation_response
 
     ## Flow control actions ##
@@ -802,7 +804,11 @@ class _ScriptRun:
         self._script.last_action = self._action.get(
             CONF_ALIAS, self._action[CONF_CONDITION]
         )
-        cond = await self._async_get_condition(self._action)
+        # The enabled option was already rendered with the run variables when
+        # this step started, don't let the condition render it again.
+        cond = await self._async_get_condition(
+            {key: value for key, value in self._action.items() if key != CONF_ENABLED}
+        )
         try:
             trace_element = trace_stack_top(trace_stack_cv)
             if trace_element:
@@ -1080,17 +1086,24 @@ class _ScriptRun:
             params[CONF_DOMAIN] == "automation" and params[CONF_SERVICE] == "trigger"
         ) or params[CONF_DOMAIN] in ("python_script", "script")
         trace_set_result(params=params, running_script=running_script)
-        response_data = await self._async_run_long_action(
-            self._hass.async_create_task_internal(
-                self._hass.services.async_call(
-                    **params,
-                    blocking=True,
-                    context=self._context,
-                    return_response=return_response,
-                ),
-                eager_start=True,
+        try:
+            response_data = await self._async_run_long_action(
+                self._hass.async_create_task_internal(
+                    self._hass.services.async_call(
+                        **params,
+                        blocking=True,
+                        context=self._context,
+                        return_response=return_response,
+                    ),
+                    eager_start=True,
+                )
             )
-        )
+        except (*CONFIGURATION_ERRORS, exceptions.HomeAssistantError):
+            raise
+        except Exception as ex:
+            if not self._action.get(CONF_CONTINUE_ON_ERROR, False):
+                raise
+            raise exceptions.HomeAssistantError(ex) from ex
         if response_variable:
             self._variables[response_variable] = response_data
 
@@ -1464,10 +1477,12 @@ type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
-    """Extract referenced IDs."""
+    """Extract referenced IDs, including those in an exclude block."""
     # Data may not exist, or be a template
     if not isinstance(data, dict):
         return
+
+    _referenced_extract_ids(data.get(CONF_EXCLUDE), key, found)
 
     item_ids = data.get(key)
 
@@ -1496,7 +1511,7 @@ class _IfData(TypedDict):
 class ScriptRunResult:
     """Container with the result of a script run."""
 
-    conversation_response: str | UndefinedType | None
+    conversation_response: str | Undefined | None
     service_response: ServiceResponse
     variables: Mapping[str, Any]
 

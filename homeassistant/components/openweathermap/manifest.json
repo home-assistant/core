@@ -1,11 +1,15 @@
 {
   "domain": "openweathermap",
   "name": "OpenWeatherMap",
+  "categories": [
+    "weather_alerts.forecasts",
+    "weather_alerts.air_quality_pollen"
+  ],
   "codeowners": ["@fabaff", "@freekode", "@nzapponi", "@wittypluck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openweathermap",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyopenweathermap"],
-  "requirements": ["pyopenweathermap==0.2.2"]
+  "requirements": ["pyopenweathermap==0.3.0"]
 }

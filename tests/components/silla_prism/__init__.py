@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+
 from homeassistant.components.silla_prism.const import PLATFORMS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import RETAINED_BURST
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 
 async def setup_integration(

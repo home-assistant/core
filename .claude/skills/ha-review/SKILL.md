@@ -15,6 +15,8 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 - Security concerns
 - Test coverage
 - Documentation updates if needed
+- Values that reach new code from existing code. Read the producing side, including its fallbacks and defaults, not only the diff.
+- State added to an entity or coordinator. Check where it is reset, for example on reconnect or reload.
 
 ## Quality scale:
 - If the changes include a `quality_scale.yaml` file, run a subagent to verify all the added or modified rules, following the `ha-quality-scale-verify` skill.
@@ -22,6 +24,7 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 
 ## Verification:
 - After the review, run parallel subagents for each finding to double-check it.
+- When a finding suggests a change, also check that the suggested change is valid, for example that it does not violate one of the Home Assistant pylint plugin rules.
 - Spawn up to a maximum of 10 parallel subagents at a time.
 - Gather the results from the subagents and summarize them in the final review comments.
 
@@ -41,5 +44,7 @@ description: Reviews Home Assistant code changes and provides constructive feedb
     1. [CRITICAL] sensor.py:143 - Memory leak
     2. [PROBLEM] data_processing.py:87 - Inefficient algorithm
     3. [SUGGESTION] test_init.py:45 - Improve x variable name
+    4. [NIT][PRE-EXISTING] const.py:12 - Unused constant
     ```
   - Make sure to include the file and line number when possible in the bullet points.
+  - Flag findings with `[PRE-EXISTING]` after the category when the issue already exists on the base branch and the change only touches, moves or sits next to that code. Confirm against the base branch before flagging. Pre-existing findings should not on their own make the overall assessment "request changes".

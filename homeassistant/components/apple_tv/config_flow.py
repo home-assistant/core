@@ -42,7 +42,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_INPUT = "device_input"
 
-INPUT_PIN_SCHEMA = probatio.Schema({probatio.Required(CONF_PIN, default=""): cv.string})
+INPUT_PIN_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PIN), default=""): cv.string}
+)
 
 DEFAULT_START_OFF = False
 
@@ -617,8 +619,9 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device_identifier, raise_on_progress=False
         )
 
-        # If an existing config entry is updated, then this was a re-auth
-        if existing_entry:
+        # If an existing config entry is updated, then this was a re-auth. An
+        # ignored entry is replaced by the new entry instead.
+        if existing_entry and existing_entry.source != SOURCE_IGNORE:
             return self.async_update_reload_and_abort(
                 existing_entry, data=data, unique_id=self.unique_id
             )
