@@ -1,0 +1,128 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Account is already configured.",
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "Re-configuration was successful.",
+      "unique_id_mismatch": "The username does not match the existing account."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Kingspan service.",
+      "invalid_auth": "Username/Password is wrong.",
+      "no_data": "No tank level data found for this account.",
+      "timeout": "Timed out while connecting to the Kingspan service.",
+      "unknown": "Unexpected error occurred."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "name": "",
+          "password": "",
+          "username": ""
+        },
+        "description": "Re-enter credentials for Kingspan service",
+        "title": "Watchman SENSiT"
+      },
+      "reconfigure": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "name": "",
+          "password": "",
+          "username": ""
+        },
+        "description": "Update credentials for Kingspan service",
+        "title": "Watchman SENSiT"
+      },
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "name": "",
+          "password": "",
+          "username": ""
+        },
+        "description": "Enter credentials for Kingspan service (found in the app)",
+        "title": "Watchman SENSiT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_energy_usage": {
+        "name": "Current Energy Usage"
+      },
+      "current_usage": {
+        "name": "Current Usage"
+      },
+      "forecast_empty": {
+        "name": "Forecast Empty"
+      },
+      "last_reading_date": {
+        "name": "Last Reading Date"
+      },
+      "oil_consumption": {
+        "name": "Oil Consumption"
+      },
+      "oil_level": {
+        "name": "Oil Level"
+      },
+      "tank_capacity": {
+        "name": "Tank Capacity"
+      },
+      "tank_percentage_full": {
+        "name": "Tank Percentage Full"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Failed to fetch data from API: {message}"
+    },
+    "credentials_invalid": {
+      "message": "The provided Kingspan credentials are invalid."
+    },
+    "credentials_not_set": {
+      "message": "The Kingspan credentials have not been configured."
+    },
+    "no_data": {
+      "message": "No data available from Kingspan API."
+    },
+    "timed_out": {
+      "message": "Timed out while connecting to the Kingspan service."
+    }
+  },
+  "issues": {
+    "auth_failed": {
+      "description": "The Kingspan Watchman SENSiT entry {title} could not authenticate. Reconfigure the entry to update the credentials and restore updates.",
+      "title": "Kingspan credentials need attention"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "oil_energy_density": "Oil energy density",
+          "usage_window": "Usage window"
+        },
+        "data_description": {
+          "oil_energy_density": "Energy density of heating oil (kWh per litre)",
+          "usage_window": "Period to consider for average usage (days)"
+        },
+        "description": "Configure options for Kingspan Watchman SENSiT",
+        "title": "Watchman SENSiT Options"
+      }
+    }
+  }
+}
