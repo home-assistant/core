@@ -113,6 +113,7 @@ from .discovery import (
 from .models import (
     DATA_MQTT,
     DiscoveredDisabledEntity,
+    KeptDevices,
     MessageCallbackType,
     MqttSubentryData,
     MqttValueTemplate,
@@ -129,6 +130,7 @@ from .subscription import (
 )
 from .util import (
     async_cleanup_device_registry,
+    async_cleanup_removed_component_device,
     learn_more_url,
     mqtt_config_entry_enabled,
 )
@@ -1079,7 +1081,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             stop_discovery_updates(
                 self.hass, self._discovery_data, self._remove_discovery_updated
             )
-            await self._async_tear_down()
+            await self._async_tear_down(discovery_payload.kept_devices)
             send_discovery_done(self.hass, self._discovery_data)
             _LOGGER.debug(
                 "%s %s has been removed",
@@ -1113,7 +1115,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         await self._async_tear_down()
         await async_remove_discovery_payload(self.hass, self._discovery_data)
 
-    async def _async_tear_down(self) -> None:
+    async def _async_tear_down(self, kept_devices: KeptDevices | None = None) -> None:
         """Handle the cleanup of the discovery service."""
         # Cleanup platform resources
         await self.async_tear_down()
@@ -1121,8 +1123,8 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         if not self._skip_device_removal:
             # Prevent a second cleanup round after the device is removed
             self._skip_device_removal = True
-            await async_cleanup_device_registry(
-                self.hass, self._device_id, self._config_entry_id
+            await async_cleanup_removed_component_device(
+                self.hass, self._device_id, self._config_entry_id, kept_devices
             )
 
     @abstractmethod
@@ -1183,7 +1185,7 @@ class MqttDiscoveryUpdateMixin(Entity):
             self.hass, self._discovery_data, self.entity_id
         )
         # Set in case the entity has been removed and is re-added
-        set_discovery_hash(self.hass, discovery_hash)
+        set_discovery_hash(self.hass, self._discovery_data)
         # The entity is loaded, so it is no longer tracked as disabled
         self.hass.data[DATA_MQTT].discovery_discovered_and_disabled.pop(
             discovery_hash, None
@@ -1195,7 +1197,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         )
 
     async def _async_remove_state_and_registry_entry(
-        self: MqttDiscoveryUpdateMixin,
+        self: MqttDiscoveryUpdateMixin, payload: MQTTDiscoveryPayload
     ) -> None:
         """Remove entity's state and entity registry entry.
 
@@ -1206,8 +1208,11 @@ class MqttDiscoveryUpdateMixin(Entity):
         entity_registry = er.async_get(self.hass)
         if entity_entry := entity_registry.async_get(self.entity_id):
             entity_registry.async_remove(self.entity_id)
-            await async_cleanup_device_registry(
-                self.hass, entity_entry.device_id, entity_entry.config_entry_id
+            await async_cleanup_removed_component_device(
+                self.hass,
+                entity_entry.device_id,
+                entity_entry.config_entry_id,
+                payload.kept_devices,
             )
         else:
             await self.async_remove(force_remove=True)
@@ -1224,14 +1229,16 @@ class MqttDiscoveryUpdateMixin(Entity):
         finally:
             send_discovery_done(self.hass, discovery_data)
 
-    async def _async_process_discovery_update_and_remove(self) -> None:
+    async def _async_process_discovery_update_and_remove(
+        self, payload: MQTTDiscoveryPayload
+    ) -> None:
         """Process discovery update and remove entity."""
         if TYPE_CHECKING:
             assert self._discovery_data
         self._cleanup_discovery_on_remove()
         if self._migrate_discovery is None:
             # Unload and cleanup registry
-            await self._async_remove_state_and_registry_entry()
+            await self._async_remove_state_and_registry_entry(payload)
         else:
             # Only unload the entity
             await self.async_remove(force_remove=True)
@@ -1338,7 +1345,6 @@ class MqttDiscoveryUpdateMixin(Entity):
             send_discovery_done(self.hass, self._discovery_data)
             return
 
-        debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
             # Empty payload: Remove component
             if self._migrate_discovery is None:
@@ -1346,7 +1352,7 @@ class MqttDiscoveryUpdateMixin(Entity):
             else:
                 _LOGGER.info("Unloading component: %s", self.entity_id)
             self.hass.async_create_task(
-                self._async_process_discovery_update_and_remove()
+                self._async_process_discovery_update_and_remove(payload)
             )
         elif self._discovery_update:
             if old_payload != payload:
@@ -1629,7 +1635,6 @@ class MqttEntityDeviceInfo(Entity):
                     self.hass,
                     device.id,
                     config_entry_id,
-                    include_disabled_entities=True,
                 ),
                 "mqtt cleanup parent device",
             )
@@ -1664,7 +1669,6 @@ class MqttEntityDeviceInfo(Entity):
                 hass,
                 unused_device_id,
                 self._config_entry.entry_id,
-                include_disabled_entities=True,
             ),
             "mqtt cleanup device of aborted entity",
         )
@@ -1715,7 +1719,6 @@ class MqttEntityDeviceInfo(Entity):
             self.hass,
             old_device_id,
             self._config_entry.entry_id,
-            include_disabled_entities=True,
         )
 
     @property
@@ -1930,7 +1933,6 @@ class MqttEntity(
             self.hass,
             previous_device_id,
             self._config_entry.entry_id,
-            include_disabled_entities=True,
         )
 
     async def mqtt_async_added_to_hass(self) -> None:
@@ -1960,6 +1962,11 @@ class MqttEntity(
             # Cancel the update, the entity keeps its current config and device
             _log_device_info_error(err)
             return
+        # The debug info shares the discovery data that holds the current payload,
+        # so it is only updated when the update is accepted
+        debug_info.update_entity_discovery_data(
+            self.hass, discovery_payload, self.entity_id
+        )
         self._config = config
         self._setup_from_config(self._config)
         self._setup_common_attributes_from_config(self._config)
