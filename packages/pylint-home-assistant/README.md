@@ -171,6 +171,9 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7454` | [`home-assistant-coordinator-missing-type-parameter`](#w7454-home-assistant-coordinator-missing-type-parameter) | `DataUpdateCoordinator` or `CoordinatorEntity` is subclassed without a type parameter |
+| `W7455` | [`home-assistant-coordinator-entity-should-poll`](#w7455-home-assistant-coordinator-entity-should-poll) | `_attr_should_poll` has no effect on a `CoordinatorEntity` |
+| `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form or handles the unique ID inside a `try` block |
 
 ## `home_assistant_logger` checker
 
@@ -446,6 +449,38 @@ through `async_set_updated_data`: its `last_update_success` doesn't show
 whether the device is reachable.
 
 
+## `home_assistant_coordinator_type_parameter` checker
+
+Checks that coordinator classes are subclassed with a type parameter.
+
+### `W7454`: `home-assistant-coordinator-missing-type-parameter`
+
+`DataUpdateCoordinator` and `CoordinatorEntity` are generic. Without a type
+parameter, `coordinator.data` and `self.coordinator` lose their types, so the
+type checker can't check the code that uses them:
+
+```python
+class MyCoordinator(DataUpdateCoordinator[MyData]):
+    ...
+
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    ...
+```
+
+
+## `home_assistant_coordinator_entity_should_poll` checker
+
+Checks for `_attr_should_poll` on coordinator entities.
+
+### `W7455`: `home-assistant-coordinator-entity-should-poll`
+
+`CoordinatorEntity` overrides `should_poll` to always return `False`, as the
+coordinator tells its entities when it has new data. `_attr_should_poll` is
+only read by `Entity.should_poll`, so setting it on a coordinator entity has
+no effect and can be removed.
+
+
 ## `home_assistant_log_and_raise` checker
 
 Checks for errors that are logged and then raised to Home Assistant.
@@ -547,6 +582,32 @@ class are skipped to avoid false positives.
 
 A `menu_options` entry does not match any `async_step_*` method defined on
 the flow class or its ancestors.
+
+
+## `home_assistant_flow_call_in_try` checker
+
+Checks for flow calls inside a `try` block.
+
+### `W7457`: `home-assistant-flow-call-in-try`
+
+A `try` block in a flow step should only contain the code that can raise the
+errors it catches, such as the calls to the device or service. Creating the
+entry, showing a form, aborting and handling the unique ID belong after it:
+
+```python
+try:
+    info = await client.get_info()
+except CannotConnect:
+    errors["base"] = "cannot_connect"
+else:
+    await self.async_set_unique_id(info.serial_number)
+    self._abort_if_unique_id_configured()
+    return self.async_create_entry(title=info.name, data=user_input)
+```
+
+The unique ID helpers raise `AbortFlow`, which a broad `except Exception`
+swallows and reports as an unknown error. `try` statements that catch
+`AbortFlow` themselves are not checked.
 
 
 ## `home_assistant_unused_test_fixture_args` checker
