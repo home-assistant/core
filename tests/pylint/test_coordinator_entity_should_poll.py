@@ -157,6 +157,21 @@ class MyEntity(MyMixin, CoordinatorEntity[MyCoordinator]):
 """,
             id="mixin_first",
         ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class PollingMixin(Entity):
+    @property
+    def should_poll(self) -> bool:
+        return self._attr_should_poll
+
+class MyEntity(CoordinatorEntity[MyCoordinator], PollingMixin):
+    _attr_should_poll = True
+""",
+            id="should_poll_overridden_by_mixin_after_coordinator_entity",
+        ),
     ],
 )
 def test_should_poll(

@@ -8,37 +8,82 @@ has no effect.
 ``W7455`` (``home-assistant-coordinator-entity-should-poll``)
 """
 
+import astroid
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.helpers.ast_utils import extended_ancestors
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
 _ATTR_SHOULD_POLL = "_attr_should_poll"
 _BASE_COORDINATOR_ENTITY_QNAME = (
     "homeassistant.helpers.update_coordinator.BaseCoordinatorEntity"
 )
-_ENTITY_QNAME = "homeassistant.helpers.entity.Entity"
+
+
+class _UnresolvedMroError(Exception):
+    """Raised when the MRO of a class can't be worked out."""
+
+
+def _base_classes(node: nodes.ClassDef) -> list[nodes.ClassDef]:
+    """Return the base classes of *node*, including subscripted generic bases."""
+    bases: list[nodes.ClassDef] = []
+    for base in node.bases:
+        expression = base.value if isinstance(base, nodes.Subscript) else base
+        try:
+            inferred = next(
+                (
+                    item
+                    for item in expression.infer()
+                    if isinstance(item, nodes.ClassDef)
+                ),
+                None,
+            )
+        except astroid.exceptions.InferenceError:
+            inferred = None
+        if inferred is None or inferred.qname() == node.qname():
+            raise _UnresolvedMroError
+        bases.append(inferred)
+    return bases
+
+
+def _mro(node: nodes.ClassDef) -> list[nodes.ClassDef]:
+    """Return the C3 linearization of *node*.
+
+    astroid's own ``mro()`` drops subscripted bases such as
+    ``CoordinatorEntity[MyCoordinator]``, so it is computed here.
+    """
+    bases = _base_classes(node)
+    sequences = [_mro(base) for base in bases] + [bases]
+    result = [node]
+    while sequences := [sequence for sequence in sequences if sequence]:
+        for sequence in sequences:
+            head = sequence[0].qname()
+            if not any(
+                head in (item.qname() for item in other[1:]) for other in sequences
+            ):
+                break
+        else:
+            raise _UnresolvedMroError
+        result.append(sequence[0])
+        sequences = [
+            sequence[1:] if sequence[0].qname() == head else sequence
+            for sequence in sequences
+        ]
+    return result
 
 
 def _should_poll_from_coordinator_entity(node: nodes.ClassDef) -> bool:
-    """Return True if ``should_poll`` comes from ``BaseCoordinatorEntity``.
-
-    ``BaseCoordinatorEntity`` subclasses ``Entity``, so it comes first in the
-    MRO. Any other class that defines ``should_poll`` might come before it, in
-    which case ``_attr_should_poll`` may still be read.
-    """
-    if "should_poll" in node.locals:
+    """Return True if ``should_poll`` resolves to ``BaseCoordinatorEntity``'s."""
+    try:
+        mro = _mro(node)
+    except _UnresolvedMroError:
         return False
-    is_coordinator_entity = False
-    for ancestor in extended_ancestors(node):
-        qname = ancestor.qname()
-        if qname == _BASE_COORDINATOR_ENTITY_QNAME:
-            is_coordinator_entity = True
-        elif qname != _ENTITY_QNAME and "should_poll" in ancestor.locals:
-            return False
-    return is_coordinator_entity
+    for klass in mro:
+        if "should_poll" in klass.locals:
+            qname: str = klass.qname()
+            return qname == _BASE_COORDINATOR_ENTITY_QNAME
+    return False
 
 
 def _should_poll_assignments(node: nodes.ClassDef) -> list[nodes.NodeNG]:
