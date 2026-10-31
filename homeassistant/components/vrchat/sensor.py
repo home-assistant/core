@@ -215,6 +215,7 @@ class VRChatUserStatusSensor(VRChatUserDataSensorEntity):
 
     entity_description = SensorEntityDescription(
         key="status",
+        translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         options=VRCHAT_USER_STATUS_OPTIONS,
     )
@@ -232,7 +233,9 @@ class VRChatUserStatusSensor(VRChatUserDataSensorEntity):
 class VRChatUserStatusDescriptionSensor(VRChatUserDataSensorEntity):
     """VRChat user status description sensor entity."""
 
-    entity_description = SensorEntityDescription(key="statusDescription")
+    entity_description = SensorEntityDescription(
+        key="statusDescription", translation_key="status_description"
+    )
 
     @property
     @override
@@ -248,6 +251,7 @@ class VRChatUserStateSensor(VRChatUserDataSensorEntity):
 
     entity_description = SensorEntityDescription(
         key="state",
+        translation_key="state",
         device_class=SensorDeviceClass.ENUM,
         options=VRCHAT_USER_STATE_OPTIONS,
     )
@@ -301,7 +305,7 @@ class VRChatUserLocationSensor(
     _attr_native_value = None
 
     entity_description = SensorEntityDescription(
-        key="location", device_class=SensorDeviceClass.ENUM
+        key="location", translation_key="location", device_class=SensorDeviceClass.ENUM
     )
 
     @property

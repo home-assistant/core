@@ -524,6 +524,7 @@ def test_sensor_identity_and_translation_keys(
 
     assert sensor.unique_id == expected_unique_id
     assert sensor.entity_description.key == key
+    assert sensor.entity_description.translation_key == translation_key
     assert sensor.translation_key == translation_key
     assert sensor.device_info["identifiers"] == {(DOMAIN, f"{USER_ID}:{USER_ID}")}
     assert (

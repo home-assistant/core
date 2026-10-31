@@ -1,10 +1,8 @@
 """Entity base classes for the VRChat integration."""
 
 from collections.abc import Mapping
-import re
 from typing import override
 
-from propcache.api import cached_property
 from vrchatapi.highlevel import VRChatUser, VRChatWorldData
 from vrchatapi.highlevel.presence import process_vrchat_string
 from vrchatapi.highlevel.types import HighLevelUserData, User
@@ -83,12 +81,6 @@ class VRChatUserDataEntity(CoordinatorEntity[VRChatAccountDataCoordinator]):
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self.coordinator.available and self.user_id in self.coordinator.data
-
-    @cached_property
-    @override
-    def translation_key(self):
-        """Return the translation key."""
-        return re.sub(r"(?<!^)(?=[A-Z])", "_", self.entity_description.key).lower()
 
     @classmethod
     def get_raw_state_from_user_data(cls, user_data: User, key: str | None = None):
