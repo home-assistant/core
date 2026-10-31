@@ -368,13 +368,21 @@ def entity_ids_or_uuids(value: str | list) -> list[str]:
 
 
 comp_entity_ids = probatio.Any(
-    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
+    # An empty `entity_id:` (None) targets nothing
+    probatio.All(None, probatio.DefaultTo(ENTITY_MATCH_NONE)),
+    probatio.All(
+        str, probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)
+    ),
     entity_ids,
 )
 
 
 comp_entity_ids_or_uuids = probatio.Any(
-    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
+    # An empty `entity_id:` (None) targets nothing
+    probatio.All(None, probatio.DefaultTo(ENTITY_MATCH_NONE)),
+    probatio.All(
+        str, probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)
+    ),
     entity_ids_or_uuids,
 )
 
