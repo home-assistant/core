@@ -1,5 +1,6 @@
 """Support for BLUETTI power stations over Modbus."""
 
+from bluetti_modbus_lib import AGGREGATE_SLAVE_ID
 from modbus_connection import ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
@@ -14,7 +15,7 @@ from .coordinator import (
     BluettiModbusDataUpdateCoordinator,
     BluettiModbusRuntimeData,
 )
-from .device import restricted_device
+from .device import pack_summary, restricted_device
 from .entity import bluetti_modbus_device_info
 
 PLATFORMS = [Platform.SENSOR]
@@ -27,6 +28,7 @@ async def async_setup_entry(
     params = ModbusTcpParams(host=entry.data[CONF_HOST], port=entry.data[CONF_PORT])
     try:
         unit = async_get_unit(hass, entry, params, entry.data[CONF_UNIT_ID])
+        summary_unit = async_get_unit(hass, entry, params, AGGREGATE_SLAVE_ID)
     except HomeAssistantError as err:
         # The device is already in use over different link settings, which
         # one shared connection cannot honour.
@@ -37,7 +39,9 @@ async def async_setup_entry(
         ) from err
 
     device = restricted_device(unit)
-    coordinator = BluettiModbusDataUpdateCoordinator(hass, entry, device)
+    coordinator = BluettiModbusDataUpdateCoordinator(
+        hass, entry, device, pack_summary(summary_unit)
+    )
     await coordinator.async_config_entry_first_refresh()
 
     # Firmware versions come from the first refresh's own values - device
