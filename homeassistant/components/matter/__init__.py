@@ -55,6 +55,7 @@ from .helpers import (
 )
 from .models import MatterDeviceInfo
 from .services import async_setup_services
+from .thread_border_router import ThreadDatasetImporter
 
 if TYPE_CHECKING:
     from matter_ble_proxy import MatterBleProxy
@@ -226,12 +227,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> No
                 LOGGER.exception("Unexpected error connecting BLE proxy")
                 ble_proxy = None
 
-    entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
+    thread_datasets = ThreadDatasetImporter(hass, matter_client, entry)
+    entry.runtime_data = MatterEntryData(
+        adapter=matter,
+        listen_task=listen_task,
+        thread_datasets=thread_datasets,
+        ble_proxy=ble_proxy,
+    )
 
     setup_error: BaseException | None = None
     try:
         await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
         await matter.setup_nodes()
+        thread_datasets.async_setup()
     except Exception as err:  # noqa: BLE001
         # Platform/node setup raised. Cancel the listen task so the cleanup
         # block below tears down the matter client and BLE proxy alongside

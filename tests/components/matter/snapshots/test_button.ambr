@@ -7320,6 +7320,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[thread_border_router][button.border_router_import_thread_network-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000005A-MatterNodeDevice')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.border_router_import_thread_network',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Import Thread network',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Import Thread network',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'import_thread_network',
+    'unique_id': '00000000000004D2-000000000000005A-MatterNodeDevice-1-ThreadDatasetImportButton-1106-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[thread_border_router][button.border_router_import_thread_network-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Border Router Import Thread network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.border_router_import_thread_network',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[wago_home_blind_control][button.home_blind_wi_fi_identify_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

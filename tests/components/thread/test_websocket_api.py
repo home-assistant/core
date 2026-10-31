@@ -13,6 +13,7 @@ from homeassistant.setup import async_setup_component
 from . import (
     DATASET_1,
     DATASET_1_LARGER_TIMESTAMP,
+    DATASET_1_NO_EXTPANID,
     DATASET_2,
     DATASET_3,
     ROUTER_DISCOVERY_GOOGLE_1,
@@ -85,8 +86,30 @@ async def test_add_invalid_dataset(
     assert not msg["success"]
     assert msg["error"] == {
         "code": "invalid_format",
-        "message": "expected 173 bytes for tag 222, got 2",
+        "message": "Invalid dataset: expected 173 bytes for tag 222, got 2",
     }
+
+
+async def test_add_dataset_without_extended_pan_id(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """A dataset the store refuses for a missing field is an invalid format too."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "thread/add_dataset_tlv",
+            "source": "test",
+            "tlv": DATASET_1_NO_EXTPANID,
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {"code": "invalid_format", "message": "Invalid dataset"}
 
 
 async def test_delete_dataset(
