@@ -55,6 +55,14 @@
     }
   },
   "issues": {
+    "core_auto_update_failed": {
+      "description": "Home Assistant could not start the automatic update to {version}, for example because the backup before the update failed. Nothing changed. It will try again in the next update window.\n\nCheck the logs for details, or install the update yourself from **Settings** > **System** > **Updates**.",
+      "title": "Automatic update to Home Assistant {version} did not start"
+    },
+    "core_auto_update_rolled_back": {
+      "description": "Home Assistant installed {version} automatically, but it did not start correctly, so the previous version was restored.\n\nThis version will not be installed automatically. Check the Supervisor logs for details. You can still install it yourself from **Settings** > **System** > **Updates**, or wait for the next bug fix release.",
+      "title": "Automatic update to Home Assistant {version} was rolled back"
+    },
     "issue_addon_app_port_conflict": {
       "fix_flow": {
         "abort": {
