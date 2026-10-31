@@ -1,5 +1,6 @@
 """Provides a sensor to track various status aspects of a NUT device."""
 
+from dataclasses import replace
 import logging
 from typing import Final, override
 
@@ -59,6 +60,22 @@ THRESHOLD_STATUS_OPTIONS = [
     "warning-high",
     "critical-high",
 ]
+INPUT_NUMBER_SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
+    "frequency": SensorEntityDescription(
+        key="frequency",
+        translation_key="input_number_frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "voltage": SensorEntityDescription(
+        key="voltage",
+        translation_key="input_number_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+}
 UPS_BEEPER_STATUS_OPTIONS = [
     "enabled",
     "disabled",
@@ -567,6 +584,15 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    "input.source": SensorEntityDescription(
+        key="input.source",
+        translation_key="input_source",
+    ),
+    "input.source.preferred": SensorEntityDescription(
+        key="input.source.preferred",
+        translation_key="input_source_preferred",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "input.transfer.high": SensorEntityDescription(
         key="input.transfer.high",
         translation_key="input_transfer_high",
@@ -1049,17 +1075,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NUT sensors."""
-    valid_sensor_types: dict[str, SensorEntityDescription]
-
     pynut_data = config_entry.runtime_data
     coordinator = pynut_data.coordinator
     data = pynut_data.data
     unique_id = pynut_data.unique_id
     status = coordinator.data
 
+    additional_sensor_types: dict[str, SensorEntityDescription] = {}
+
     # Dynamically add outlet sensors to valid sensors dictionary
     if outlet_numbers := outlet_numbers_from_status(status):
-        additional_sensor_types: dict[str, SensorEntityDescription] = {}
         for outlet_num in sorted(outlet_numbers):
             outlet_num_str: str = str(outlet_num)
             outlet_name: str = (
@@ -1106,9 +1131,22 @@ async def async_setup_entry(
                 ),
             }
 
-        valid_sensor_types = {**SENSOR_TYPES, **additional_sensor_types}
-    else:
-        valid_sensor_types = SENSOR_TYPES
+    # Dynamically add per-input sensors (input.<n>.*), e.g. for transfer switches
+    for sensor_id in status:
+        prefix, _, rest = sensor_id.partition(".")
+        input_num, _, variable = rest.partition(".")
+        if (
+            prefix == "input"
+            and input_num.isdigit()
+            and (description := INPUT_NUMBER_SENSOR_TYPES.get(variable))
+        ):
+            additional_sensor_types[sensor_id] = replace(
+                description,
+                key=sensor_id,
+                translation_placeholders={"input_number": input_num},
+            )
+
+    valid_sensor_types = {**SENSOR_TYPES, **additional_sensor_types}
 
     # If device reports ambient sensors are not present, then remove
     has_ambient_sensors: bool = status.get(AMBIENT_PRESENT) != "no"

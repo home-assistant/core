@@ -444,3 +444,35 @@ async def test_outlet_sensors_without_outlet_count(
         )
         assert entity_id is not None
         assert hass.states.get(entity_id).state == expected_state
+
+
+async def test_ats_input_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test sensors for the inputs of an automatic transfer switch."""
+    await async_init_integration(hass, "AP4452A")
+    unique_id_base = "APC_AP4452A_5A0000T00000"
+
+    for key, entity_id, expected_state, unit in (
+        ("input.source", "sensor.ups1_input_source", "1", None),
+        (
+            "input.source.preferred",
+            "sensor.ups1_preferred_input_source",
+            "1",
+            None,
+        ),
+        ("input.1.voltage", "sensor.ups1_input_1_voltage", "117", "V"),
+        ("input.2.voltage", "sensor.ups1_input_2_voltage", "118", "V"),
+        ("input.1.frequency", "sensor.ups1_input_1_frequency", "60", "Hz"),
+        ("input.2.frequency", "sensor.ups1_input_2_frequency", "59.9", "Hz"),
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == f"{unique_id_base}_{key}"
+        state = hass.states.get(entity_id)
+        assert state.state == expected_state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == unit
+
+    assert not entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{unique_id_base}_input.count"
+    )
