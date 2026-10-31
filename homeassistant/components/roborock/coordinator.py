@@ -516,7 +516,7 @@ ZEO_REQUEST_PROTOCOLS = [
 class RoborockWashingMachineUpdateCoordinator(
     RoborockDataUpdateCoordinatorA01[RoborockZeoProtocol]
 ):
-    """Coordinator for Zeo devices."""
+    """Coordinator for Zeo devices using MQTT state updates."""
 
     def __init__(
         self,
@@ -527,6 +527,7 @@ class RoborockWashingMachineUpdateCoordinator(
     ) -> None:
         """Initialize."""
         super().__init__(hass, config_entry, device)
+        self.update_interval = None
         self.api = api
         supported_schema_ids = device.product.supported_schema_ids
         self.request_protocols = [
@@ -534,19 +535,30 @@ class RoborockWashingMachineUpdateCoordinator(
             for protocol in ZEO_REQUEST_PROTOCOLS
             if not supported_schema_ids or protocol in supported_schema_ids
         ]
+        # Device setup starts the API subscription before creating the coordinator.
+        self._unsub_update: Callable[[], None] | None = api.add_update_listener(
+            self._handle_update
+        )
+
+    @callback
+    def _handle_update(self) -> None:
+        """Publish the merged state when the device reports changed datapoints."""
+        self.async_set_updated_data(self.api.values)
 
     @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockZeoProtocol, StateType]:
-        try:
-            return await self.api.query_values(self.request_protocols)
-        except RoborockException as ex:
-            _LOGGER.debug("Failed to update washing machine data: %s", ex)
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_data_fail",
-            ) from ex
+        """Read cached state for setup and refreshes after commands."""
+        return self.api.values
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop listening for MQTT state updates."""
+        await super().async_shutdown()
+        if self._unsub_update is not None:
+            self._unsub_update()
+            self._unsub_update = None
 
 
 DYAD_REQUEST_PROTOCOLS = [
