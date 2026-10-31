@@ -2,11 +2,14 @@
 
 import dataclasses
 from typing import Any
+from unittest.mock import patch
 
 from pyblu import PairedPlayer
 from pyblu.errors import PlayerUnreachableError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -16,6 +19,9 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -26,6 +32,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
@@ -35,11 +42,15 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    BrowseMedia,
+    MediaClass,
     MediaPlayerState,
 )
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     STATE_UNAVAILABLE,
@@ -736,3 +747,196 @@ async def test_action_error(
             {ATTR_ENTITY_ID: "media_player.player_name1111", **service_data},
             blocking=True,
         )
+
+
+async def test_media_image_relative_url(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a relative image url is fetched from the player."""
+    aioclient_mock.get("http://1.1.1.1:11000/Artwork", content=b"image")
+    player_mocks.player_data.status_long_polling_mock.set(
+        dataclasses.replace(
+            player_mocks.player_data.status_long_polling_mock.get(), image="/Artwork"
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.player_name1111")
+    client = await hass_client()
+    response = await client.get(state.attributes[ATTR_ENTITY_PICTURE])
+
+    assert await response.read() == b"image"
+
+
+async def test_media_position_and_duration_unknown(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+) -> None:
+    """Test position and duration are not set when the player does not report them."""
+    player_mocks.player_data.status_long_polling_mock.set(
+        dataclasses.replace(
+            player_mocks.player_data.status_long_polling_mock.get(),
+            seconds=None,
+            total_seconds=None,
+        )
+    )
+    await hass.async_block_till_done()
+
+    attributes = hass.states.get("media_player.player_name1111").attributes
+    assert ATTR_MEDIA_POSITION not in attributes
+    assert ATTR_MEDIA_DURATION not in attributes
+
+
+@pytest.mark.parametrize(
+    ("input_id", "stream_url", "source"),
+    [
+        pytest.param("1", None, "input1", id="input_by_id"),
+        pytest.param("unknown", "url3", "input3", id="input_by_url"),
+        pytest.param("4", None, "4", id="input_without_text"),
+        pytest.param(None, "url2", "preset2", id="preset"),
+    ],
+)
+async def test_source(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+    input_id: str | None,
+    stream_url: str | None,
+    source: str,
+) -> None:
+    """Test the current source is matched to an input or preset."""
+    player_mocks.player_data.status_long_polling_mock.set(
+        dataclasses.replace(
+            player_mocks.player_data.status_long_polling_mock.get(),
+            input_id=input_id,
+            stream_url=stream_url,
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("media_player.player_name1111").attributes[ATTR_INPUT_SOURCE]
+        == source
+    )
+
+
+async def test_select_unknown_source(
+    hass: HomeAssistant, setup_config_entry: None
+) -> None:
+    """Test selecting an unknown source raises an error."""
+    with pytest.raises(ServiceValidationError, match="Source unknown not found"):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {
+                ATTR_ENTITY_ID: "media_player.player_name1111",
+                ATTR_INPUT_SOURCE: "unknown",
+            },
+            blocking=True,
+        )
+
+
+async def test_media_seek(
+    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+) -> None:
+    """Test seeking when the player supports it."""
+    player_mocks.player_data.status_long_polling_mock.set(
+        dataclasses.replace(
+            player_mocks.player_data.status_long_polling_mock.get(), can_seek=True
+        )
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_SEEK,
+        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_MEDIA_SEEK_POSITION: 30},
+        blocking=True,
+    )
+
+    player_mocks.player_data.player.play.assert_called_once_with(seek=30)
+
+
+async def test_unjoin_player_as_leader(
+    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+) -> None:
+    """Test the media_player.unjoin action on a group leader."""
+    player_mocks.player_data.sync_status_long_polling_mock.set(
+        dataclasses.replace(
+            player_mocks.player_data.sync_status_long_polling_mock.get(),
+            followers=[PairedPlayer("2.2.2.2", 11000)],
+        )
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
+        blocking=True,
+    )
+
+    player_mocks.player_data.player.remove_follower.assert_called_once_with(
+        "1.1.1.1", 11000
+    )
+
+
+async def test_play_media_source(
+    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+) -> None:
+    """Test playing a media source item plays its resolved url."""
+    with patch(
+        "homeassistant.components.bluesound.media_player.media_source.async_resolve_media",
+        return_value=PlayMedia(
+            url="http://example.com/song.mp3", mime_type="audio/mpeg"
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.player_name1111",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/song.mp3",
+            },
+            blocking=True,
+        )
+
+    player_mocks.player_data.player.play_url.assert_called_once_with(
+        "http://example.com/song.mp3"
+    )
+
+
+async def test_browse_media(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test browsing media is delegated to media source."""
+    with patch(
+        "homeassistant.components.bluesound.media_player.media_source.async_browse_media",
+        return_value=BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="media-source://media_source",
+            media_content_type="",
+            title="Media",
+            can_play=False,
+            can_expand=True,
+        ),
+    ):
+        client = await hass_ws_client()
+        await client.send_json_auto_id(
+            {
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.player_name1111",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["title"] == "Media"
