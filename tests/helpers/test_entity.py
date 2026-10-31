@@ -3027,6 +3027,7 @@ def _custom_on_remove() -> None:
 async def test_change_entity_id_opt_in(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
     entity_class: type[entity.Entity],
     re_added: bool,
 ) -> None:
@@ -3048,6 +3049,7 @@ async def test_change_entity_id_opt_in(
         await hass.async_block_till_done()
 
     assert mock_readd.called is re_added
+    assert ("does not implement async_entity_id_changed" in caplog.text) is re_added
     assert ent.entity_id == "test.test2"
     assert ent._platform_state is entity.EntityPlatformState.ADDED
     assert hass.states.get("test.test") is None
@@ -3063,9 +3065,12 @@ async def test_change_entity_id_opt_in(
 
 
 async def test_change_entity_id_remove_and_add(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test entities which have not opted in are removed and re-added."""
+    mock_integration(hass, MockModule("test_platform"), built_in=False)
     entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
     )
@@ -3075,6 +3080,18 @@ async def test_change_entity_id_remove_and_add(
 
     entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
     await hass.async_block_till_done()
+
+    assert (
+        "Detected that custom integration 'test_platform' has entity class "
+        "tests.helpers.test_entity._LifecycleTrackingEntity which runs its own code "
+        "when its entities are added or removed, but does not implement "
+        "async_entity_id_changed. If anything the entity sets up depends on its "
+        "entity_id, update it in async_entity_id_changed; otherwise implement "
+        "async_entity_id_changed as a no-op, which is all most entities need. Until "
+        "then, entities of this class are removed and re-added when their entity_id "
+        "is changed. This will stop working in Home Assistant 2027.11.0, please "
+        "report it to the author of the 'test_platform' custom integration"
+    ) in caplog.text
 
     assert ent.added_calls == 2
     assert ent.remove_calls == 1
@@ -3090,6 +3107,8 @@ async def test_change_entity_id_remove_and_add(
     assert ent.added_calls == 3
     assert ent.remove_calls == 2
     assert ent.on_remove_calls == 2
+    # The usage is only reported once
+    assert caplog.text.count("does not implement async_entity_id_changed") == 1
     assert hass.states.get("test.test3").state == STATE_UNKNOWN
     _assert_entity_bookkeeping(hass, platform, ent, ["test.test3"])
 
