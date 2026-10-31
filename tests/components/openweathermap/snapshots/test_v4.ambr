@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_v4_transport[v4.0][daily]
+  dict({
+    'weather.openweathermap': dict({
+      'forecast': list([
+        dict({
+          'cloud_coverage': 84,
+          'condition': 'cloudy',
+          'datetime': '2024-04-26T12:00:00+00:00',
+          'dew_point': 11.3,
+          'humidity': 62,
+          'precipitation': 3.71,
+          'precipitation_probability': 50,
+          'pressure': 1015.0,
+          'temperature': 21.3,
+          'templow': 8.1,
+          'uv_index': 4.06,
+          'wind_bearing': 168,
+          'wind_gust_speed': 42.52,
+          'wind_speed': 29.3,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_v4_transport[v4.0][hourly]
+  dict({
+    'weather.openweathermap': dict({
+      'forecast': list([
+        dict({
+          'apparent_temperature': 3.1,
+          'cloud_coverage': 65,
+          'condition': 'rainy',
+          'datetime': '2024-04-25T17:00:00+00:00',
+          'dew_point': 5.0,
+          'humidity': 81,
+          'precipitation': 2.21,
+          'precipitation_probability': 25,
+          'pressure': 1001.0,
+          'temperature': 7.8,
+          'uv_index': 0.23,
+          'wind_bearing': 198,
+          'wind_gust_speed': 38.92,
+          'wind_speed': 31.79,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_v4_transport[v4.0][minutely]
+  dict({
+    'weather.openweathermap': dict({
+      'forecast': list([
+        dict({
+          'datetime': datetime.datetime(2024, 4, 25, 16, 46, tzinfo=datetime.timezone.utc),
+          'precipitation': 1.23,
+        }),
+      ]),
+    }),
+  })
+# ---

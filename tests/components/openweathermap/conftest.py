@@ -10,6 +10,7 @@ from pyopenweathermap import (
     CurrentWeather,
     DailyTemperature,
     DailyWeatherForecast,
+    HourlyWeatherForecast,
     MinutelyWeatherForecast,
     WeatherCondition,
     WeatherReport,
@@ -134,7 +135,15 @@ def owm_client_mock() -> Generator[AsyncMock]:
         MinutelyWeatherForecast(date_time=1728672540, precipitation=0),
     ]
     client.get_weather.return_value = WeatherReport(
-        current_weather, minutely_weather_forecast, [], [daily_weather_forecast]
+        current_weather,
+        minutely_weather_forecast,
+        [
+            HourlyWeatherForecast(
+                **vars(current_weather),
+                precipitation_probability=0.25,
+            )
+        ],
+        [daily_weather_forecast],
     )
     current_air_pollution = CurrentAirPollution(
         date_time=datetime.fromtimestamp(1714063537, tz=UTC),
