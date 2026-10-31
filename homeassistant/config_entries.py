@@ -78,13 +78,7 @@ from .helpers.json import (
     cached_json_fragment_sorted,
     json_fragment,
 )
-from .helpers.typing import (
-    UNDEFINED,
-    ConfigType,
-    DiscoveryInfoType,
-    NoEventData,
-    UndefinedType,
-)
+from .helpers.typing import ConfigType, DiscoveryInfoType, NoEventData, Undefined
 from .loader import async_suggest_report_issue
 from .setup import (
     SetupPhases,
@@ -2735,17 +2729,17 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
-        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | Undefined = Undefined,
         discovery_keys: (
-            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
-        ) = UNDEFINED,
-        minor_version: int | UndefinedType = UNDEFINED,
-        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
-        pref_disable_polling: bool | UndefinedType = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
-        unique_id: str | UndefinedType | None = UNDEFINED,
-        version: int | UndefinedType = UNDEFINED,
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | Undefined
+        ) = Undefined,
+        minor_version: int | Undefined = Undefined,
+        options: Mapping[str, Any] | Undefined = Undefined,
+        pref_disable_new_entities: bool | Undefined = Undefined,
+        pref_disable_polling: bool | Undefined = Undefined,
+        title: str | Undefined = Undefined,
+        unique_id: str | Undefined | None = Undefined,
+        version: int | Undefined = Undefined,
     ) -> bool:
         """Update a config entry.
 
@@ -2774,18 +2768,18 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
-        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | Undefined = Undefined,
         discovery_keys: (
-            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
-        ) = UNDEFINED,
-        minor_version: int | UndefinedType = UNDEFINED,
-        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
-        pref_disable_polling: bool | UndefinedType = UNDEFINED,
-        subentries: dict[str, ConfigSubentry] | UndefinedType = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
-        unique_id: str | UndefinedType | None = UNDEFINED,
-        version: int | UndefinedType = UNDEFINED,
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | Undefined
+        ) = Undefined,
+        minor_version: int | Undefined = Undefined,
+        options: Mapping[str, Any] | Undefined = Undefined,
+        pref_disable_new_entities: bool | Undefined = Undefined,
+        pref_disable_polling: bool | Undefined = Undefined,
+        subentries: dict[str, ConfigSubentry] | Undefined = Undefined,
+        title: str | Undefined = Undefined,
+        unique_id: str | Undefined | None = Undefined,
+        version: int | Undefined = Undefined,
     ) -> bool:
         """Update a config entry.
 
@@ -2802,7 +2796,7 @@ class ConfigEntries:
         removed_subentry_ids: set[str] = set()
         _setter = object.__setattr__
 
-        if unique_id is not UNDEFINED and entry.unique_id != unique_id:
+        if unique_id is not Undefined and entry.unique_id != unique_id:
             # Deprecated in 2024.11, should fail in 2025.11
             if (
                 unique_id is not None
@@ -2835,21 +2829,21 @@ class ConfigEntries:
             ("title", title),
             ("version", version),
         ):
-            if value is UNDEFINED or getattr(entry, attr) == value:
+            if value is Undefined or getattr(entry, attr) == value:
                 continue
 
             _setter(entry, attr, value)
             changed = True
 
-        if data is not UNDEFINED and entry.data != data:
+        if data is not Undefined and entry.data != data:
             changed = True
             _setter(entry, "data", MappingProxyType(data))
 
-        if options is not UNDEFINED and entry.options != options:
+        if options is not Undefined and entry.options != options:
             changed = True
             _setter(entry, "options", MappingProxyType(options))
 
-        if subentries is not UNDEFINED:
+        if subentries is not Undefined:
             if entry.subentries != subentries:
                 removed_subentry_ids = entry.subentries.keys() - subentries.keys()
                 changed = True
@@ -2914,9 +2908,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
-        unique_id: str | UndefinedType | None = UNDEFINED,
+        data: Mapping[str, Any] | Undefined = Undefined,
+        title: str | Undefined = Undefined,
+        unique_id: str | Undefined | None = Undefined,
     ) -> bool:
         """Update a config subentry.
 
@@ -2934,16 +2928,16 @@ class ConfigEntries:
         changed = False
         _setter = object.__setattr__
 
-        if unique_id is not UNDEFINED and subentry.unique_id != unique_id:
+        if unique_id is not Undefined and subentry.unique_id != unique_id:
             self._raise_if_subentry_unique_id_exists(entry, unique_id)
             changed = True
             _setter(subentry, "unique_id", unique_id)
 
-        if title is not UNDEFINED and subentry.title != title:
+        if title is not Undefined and subentry.title != title:
             changed = True
             _setter(subentry, "title", title)
 
-        if data is not UNDEFINED and subentry.data != data:
+        if data is not Undefined and subentry.data != data:
             changed = True
             _setter(subentry, "data", MappingProxyType(data))
 
@@ -3679,11 +3673,11 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | UndefinedType | None,
-        title: str | UndefinedType,
-        data: Mapping[str, Any] | UndefinedType,
-        data_updates: Mapping[str, Any] | UndefinedType,
-        options: Mapping[str, Any] | UndefinedType,
+        unique_id: str | Undefined | None,
+        title: str | Undefined,
+        data: Mapping[str, Any] | Undefined,
+        data_updates: Mapping[str, Any] | Undefined,
+        options: Mapping[str, Any] | Undefined,
     ) -> bool:
         """Update config entry and return result.
 
@@ -3691,8 +3685,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
         update_reload_and_abort methods only.
         """
 
-        if data_updates is not UNDEFINED:
-            if data is not UNDEFINED:
+        if data_updates is not Undefined:
+            if data is not Undefined:
                 raise ValueError("Cannot set both data and data_updates")
             data = entry.data | data_updates
         return self.hass.config_entries.async_update_entry(
@@ -3708,12 +3702,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | UndefinedType | None = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
-        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        reason: str | UndefinedType = UNDEFINED,
+        unique_id: str | Undefined | None = Undefined,
+        title: str | Undefined = Undefined,
+        data: Mapping[str, Any] | Undefined = Undefined,
+        data_updates: Mapping[str, Any] | Undefined = Undefined,
+        options: Mapping[str, Any] | Undefined = Undefined,
+        reason: str | Undefined = Undefined,
     ) -> ConfigFlowResult:
         """Update config entry and finish config flow.
 
@@ -3741,7 +3735,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             options=options,
         )
         translation_domain: str | None = None
-        if reason is UNDEFINED:
+        if reason is Undefined:
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
             else:
@@ -3754,12 +3748,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | UndefinedType | None = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
-        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        reason: str | UndefinedType = UNDEFINED,
+        unique_id: str | Undefined | None = Undefined,
+        title: str | Undefined = Undefined,
+        data: Mapping[str, Any] | Undefined = Undefined,
+        data_updates: Mapping[str, Any] | Undefined = Undefined,
+        options: Mapping[str, Any] | Undefined = Undefined,
+        reason: str | Undefined = Undefined,
         reload_even_if_entry_is_unchanged: bool = True,
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow.
@@ -3799,7 +3793,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 )
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         translation_domain: str | None = None
-        if reason is UNDEFINED:
+        if reason is Undefined:
             if self.source == SOURCE_RECONFIGURE:
                 reason = "reconfigure_successful"
             else:
@@ -3997,10 +3991,10 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | UndefinedType | None = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
-        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        unique_id: str | Undefined | None = Undefined,
+        title: str | Undefined = Undefined,
+        data: Mapping[str, Any] | Undefined = Undefined,
+        data_updates: Mapping[str, Any] | Undefined = Undefined,
     ) -> bool:
         """Update config subentry and return result.
 
@@ -4008,8 +4002,8 @@ class ConfigSubentryFlow(
         update_reload_and_abort methods only.
         """
 
-        if data_updates is not UNDEFINED:
-            if data is not UNDEFINED:
+        if data_updates is not Undefined:
+            if data is not Undefined:
                 raise ValueError("Cannot set both data and data_updates")
             data = subentry.data | data_updates
         return self.hass.config_entries.async_update_subentry(
@@ -4026,11 +4020,11 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | UndefinedType | None = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
-        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        reason: str | UndefinedType = UNDEFINED,
+        unique_id: str | Undefined | None = Undefined,
+        title: str | Undefined = Undefined,
+        data: Mapping[str, Any] | Undefined = Undefined,
+        data_updates: Mapping[str, Any] | Undefined = Undefined,
+        reason: str | Undefined = Undefined,
     ) -> SubentryFlowResult:
         """Update config subentry and finish subentry flow.
 
@@ -4051,7 +4045,7 @@ class ConfigSubentryFlow(
             data_updates=data_updates,
         )
         translation_domain: str | None = None
-        if reason is UNDEFINED:
+        if reason is Undefined:
             reason = "reconfigure_successful"
             translation_domain = HOMEASSISTANT_DOMAIN
         return self.async_abort(reason=reason, translation_domain=translation_domain)
@@ -4062,11 +4056,11 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | UndefinedType | None = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
-        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        reason: str | UndefinedType = UNDEFINED,
+        unique_id: str | Undefined | None = Undefined,
+        title: str | Undefined = Undefined,
+        data: Mapping[str, Any] | Undefined = Undefined,
+        data_updates: Mapping[str, Any] | Undefined = Undefined,
+        reason: str | Undefined = Undefined,
         reload_even_if_entry_is_unchanged: bool = True,
     ) -> SubentryFlowResult:
         """Update config subentry, reload config entry and finish subentry flow.
@@ -4094,7 +4088,7 @@ class ConfigSubentryFlow(
                 raise ValueError("Cannot update and reload entry with update listeners")
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         translation_domain: str | None = None
-        if reason is UNDEFINED:
+        if reason is Undefined:
             reason = "reconfigure_successful"
             translation_domain = HOMEASSISTANT_DOMAIN
         return self.async_abort(reason=reason, translation_domain=translation_domain)

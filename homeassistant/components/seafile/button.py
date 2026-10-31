@@ -40,7 +40,7 @@ class SeafileEmptyTrashButton(SeafileEntity, ButtonEntity):
     """Button to empty the trash of a Seafile library."""
 
     @override
-    @handle_seafile_errors
+    @handle_seafile_errors()
     async def async_press(self) -> None:
         """Permanently delete the items in the trash of the library."""
         await self.coordinator.client.clean_library_trash(self.library_id)

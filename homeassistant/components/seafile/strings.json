@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unique_id_mismatch": "You logged in with a different account. Log in with the account that was set up before."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -25,6 +26,17 @@
         "data_description": {
           "otp": "The code from your authenticator app."
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::seafile::config::step::user::data_description::password%]",
+          "username": "[%key:component::seafile::config::step::user::data_description::username%]"
+        },
+        "description": "The access token of this Seafile account is no longer valid. Log in again to create a new one."
       },
       "user": {
         "data": {

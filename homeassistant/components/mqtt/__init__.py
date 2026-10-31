@@ -83,6 +83,8 @@ from .const import (
     PROTOCOL_311,
     SERVICE_PUBLISH,
     TEMPLATE_ERRORS,
+    MqttService,
+    MqttServiceArgument,
 )
 from .models import (
     DATA_MQTT,
@@ -158,6 +160,8 @@ __all__ = [
     "EntitySubscription",
     "MqttCommandTemplate",
     "MqttData",
+    "MqttService",
+    "MqttServiceArgument",
     "MqttValueTemplate",
     "PayloadSentinel",
     "PublishPayloadType",

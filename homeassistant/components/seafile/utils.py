@@ -1,36 +1,43 @@
 """Utilities for the Seafile integration."""
 
-from collections.abc import Callable, Coroutine
-from functools import wraps
-from typing import Any
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
-from aioseafile import SeafileError, SeafilePermissionError, SeafileTimeoutError
+from aioseafile import (
+    SeafileAuthenticationError,
+    SeafileError,
+    SeafilePermissionError,
+    SeafileTimeoutError,
+)
 
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 
-def handle_seafile_errors[_R, **_P](
-    func: Callable[_P, Coroutine[Any, Any, _R]],
-) -> Callable[_P, Coroutine[Any, Any, _R]]:
+@asynccontextmanager
+async def handle_seafile_errors() -> AsyncGenerator[None]:
     """Raise translated errors for failed Seafile API calls."""
-
-    @wraps(func)
-    async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        try:
-            return await func(*args, **kwargs)
-        except SeafilePermissionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="permission_denied"
-            ) from err
-        except SeafileTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="timeout_connect"
-            ) from err
-        except SeafileError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="api_error"
-            ) from err
-
-    return wrapper
+    try:
+        yield
+    except SeafileAuthenticationError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from err
+    except SeafilePermissionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="permission_denied",
+        ) from err
+    except SeafileTimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect",
+        ) from err
+    except SeafileError as err:
+        LOGGER.debug("Seafile API call failed: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="api_error",
+        ) from err
