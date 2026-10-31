@@ -12,8 +12,9 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import DOMAIN, const, dashboard
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.setup import async_setup_component
+from homeassistant.util.file import WriteError
 
 
 @pytest.fixture(autouse=True)
@@ -847,3 +848,33 @@ async def test_lovelace_info_yaml_mode_fallback(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"resource_mode": "yaml"}
+
+
+async def test_storage_dashboard_save_reports_write_failure(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed storage write raises and keeps config consistent."""
+    options = {"id": "save_probe", "url_path": "save-probe"}
+    dash = dashboard.LovelaceStorage(hass, options)
+    before = {"title": "Before", "views": []}
+    after = {"title": "After", "views": []}
+    await dash.async_save(before)
+
+    events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
+    with (
+        patch.object(
+            storage.Store,
+            "_async_write_data",
+            side_effect=WriteError("simulated write failure"),
+        ),
+        pytest.raises(WriteError),
+    ):
+        await dash.async_save(after)
+
+    assert events == []
+    assert await dash.async_load(False) == before
+    reopened = dashboard.LovelaceStorage(hass, options)
+    assert await reopened.async_load(True) == before
+    assert "Error writing config" in caplog.text
