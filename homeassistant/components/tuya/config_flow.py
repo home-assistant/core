@@ -11,6 +11,7 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_ENDPOINT,
+    CONF_REFRESH_QR_CODE,
     CONF_TERMINAL_ID,
     CONF_TOKEN_INFO,
     CONF_USER_CODE,
@@ -76,19 +77,19 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Step scan."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="scan",
-                data_schema=probatio.Schema(
-                    {
-                        probatio.Optional("QR"): selector.QrCodeSelector(
-                            config=selector.QrCodeSelectorConfig(
-                                data=f"tuyaSmart--qrLogin?token={self.__qr_code}",
-                                scale=5,
-                                error_correction_level=selector.QrErrorCorrectionLevel.QUARTILE,
-                            )
-                        )
-                    }
-                ),
+            return self.__show_scan_form()
+
+        if user_input[CONF_REFRESH_QR_CODE]:
+            success, response = await self.__async_get_qr_code(self.__user_code)
+            if success:
+                return self.__show_scan_form()
+
+            return self.__show_scan_form(
+                errors={"base": "login_error"},
+                description_placeholders={
+                    TUYA_RESPONSE_MSG: response.get(TUYA_RESPONSE_MSG, "Unknown error"),
+                    TUYA_RESPONSE_CODE: response.get(TUYA_RESPONSE_CODE, 0),
+                },
             )
 
         ret, info = await self.hass.async_add_executor_job(
@@ -100,20 +101,8 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
         if not ret:
             # Try to get a new QR code on failure
             await self.__async_get_qr_code(self.__user_code)
-            return self.async_show_form(
-                step_id="scan",
+            return self.__show_scan_form(
                 errors={"base": "login_error"},
-                data_schema=probatio.Schema(
-                    {
-                        probatio.Optional("QR"): selector.QrCodeSelector(
-                            config=selector.QrCodeSelectorConfig(
-                                data=f"tuyaSmart--qrLogin?token={self.__qr_code}",
-                                scale=5,
-                                error_correction_level=selector.QrErrorCorrectionLevel.QUARTILE,
-                            )
-                        )
-                    }
-                ),
                 description_placeholders={
                     TUYA_RESPONSE_MSG: info.get(TUYA_RESPONSE_MSG, "Unknown error"),
                     TUYA_RESPONSE_CODE: info.get(TUYA_RESPONSE_CODE, 0),
@@ -142,6 +131,33 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=info.get("username"),
             data=entry_data,
+        )
+
+    def __show_scan_form(
+        self,
+        *,
+        errors: dict[str, str] | None = None,
+        description_placeholders: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Show the QR code scan form."""
+        return self.async_show_form(
+            step_id="scan",
+            errors=errors,
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional("QR"): selector.QrCodeSelector(
+                        config=selector.QrCodeSelectorConfig(
+                            data=f"tuyaSmart--qrLogin?token={self.__qr_code}",
+                            scale=5,
+                            error_correction_level=selector.QrErrorCorrectionLevel.QUARTILE,
+                        )
+                    ),
+                    probatio.Optional(
+                        CONF_REFRESH_QR_CODE, default=False
+                    ): selector.BooleanSelector(),
+                }
+            ),
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_reauth(
