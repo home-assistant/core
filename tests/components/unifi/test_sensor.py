@@ -445,6 +445,20 @@ UPS_DEVICE_2.update(
 UPS_DEVICE_2["vbms_table"]["battpool"].pop("device_input_voltage")
 UPS_DEVICE_2["vbms_table"]["battpool"]["device_bypass_voltage"] = 121.7
 
+GATEWAY_IPS = {
+    "device_id": "mock-gateway-id",
+    "ids_ips_signature": {"rule_count": 33185, "update_time": 1791975617000},
+    "ip": "10.0.0.1",
+    "mac": "00:00:00:00:02:01",
+    "model": "UDMA6A8",
+    "name": "Gateway",
+    "state": 1,
+    "type": "udm",
+    "version": "5.0.16.30692",
+}
+IPS_SIGNATURES_UPDATED_ENTITY_ID = "sensor.gateway_ips_signatures_updated"
+IPS_RULE_COUNT_ENTITY_ID = "sensor.gateway_ips_rule_count"
+
 UPS_BATTERY_POOL_SENSORS = {
     "batteryLevel": "battery_level",
     "timeToRemain": "battery_runtime",
@@ -579,6 +593,7 @@ UPS_BATTERY_POOL_FIELDS = [
                 "type": "usw",
                 "version": "4.0.42.10433",
             },
+            GATEWAY_IPS,
         ]
     ],
 )
@@ -2587,3 +2602,61 @@ async def test_device_uplink(
     device["uplink"]["uplink_mac"] = "00:00:00:00:00:03"
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:03"
+
+
+@pytest.mark.parametrize("device_payload", [[GATEWAY_IPS]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_ips_signature_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Test IPS ruleset sensors follow the gateway and are retained."""
+    assert (
+        hass.states.get(IPS_SIGNATURES_UPDATED_ENTITY_ID).state
+        == "2026-10-14T11:00:17+00:00"
+    )
+    rule_count_entry = entity_registry.async_get(IPS_RULE_COUNT_ENTITY_ID)
+    assert rule_count_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_update_entity(IPS_RULE_COUNT_ENTITY_ID, disabled_by=None)
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(IPS_RULE_COUNT_ENTITY_ID).state == "33185"
+    registry_entries = {
+        entity_id: entity_registry.async_get(entity_id)
+        for entity_id in (IPS_SIGNATURES_UPDATED_ENTITY_ID, IPS_RULE_COUNT_ENTITY_ID)
+    }
+
+    # Ruleset reloading, update time not yet reported
+    gateway = deepcopy(GATEWAY_IPS)
+    del gateway["ids_ips_signature"]["update_time"]
+    mock_websocket_message(message=MessageKey.DEVICE, data=gateway)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(IPS_SIGNATURES_UPDATED_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(IPS_RULE_COUNT_ENTITY_ID).state == "33185"
+
+    # Gateway stops reporting the ruleset, the sensors are retained
+    del gateway["ids_ips_signature"]
+    mock_websocket_message(message=MessageKey.DEVICE, data=gateway)
+    await hass.async_block_till_done()
+
+    for entity_id, registry_entry in registry_entries.items():
+        assert hass.states.get(entity_id).state == STATE_UNKNOWN
+        assert entity_registry.async_get(entity_id) == registry_entry
+
+    # Ruleset reported again
+    mock_websocket_message(message=MessageKey.DEVICE, data=GATEWAY_IPS)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(IPS_SIGNATURES_UPDATED_ENTITY_ID).state
+        == "2026-10-14T11:00:17+00:00"
+    )
+    assert hass.states.get(IPS_RULE_COUNT_ENTITY_ID).state == "33185"

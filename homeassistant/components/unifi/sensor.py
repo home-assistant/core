@@ -228,6 +228,12 @@ def async_device_battery_pool_value_fn(
 
 
 @callback
+def async_device_ips_signature_discovery_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Determine if a device reports an IPS ruleset."""
+    return hub.api.devices[obj_id].ids_ips_signature is not None
+
+
+@callback
 def async_device_outlet_power_value_fn(
     hub: UnifiHub, outlet: Outlet
 ) -> float | str | None:
@@ -896,6 +902,37 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         discovery_fn=partial(device_system_stats_discovery_fn, 1),
         unique_id_fn=lambda hub, obj_id: f"memory_utilization-{obj_id}",
         value_fn=partial(async_device_system_stats_value_fn, 1),
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="IPS signatures updated",
+        translation_key="ips_signatures_updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        discovery_fn=async_device_ips_signature_discovery_fn,
+        unique_id_fn=lambda hub, obj_id: f"ips_signatures_updated-{obj_id}",
+        value_fn=lambda hub, device: (
+            None
+            if (updated := device.ips_signature_updated) is None
+            else dt_util.utc_from_timestamp(updated)
+        ),
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="IPS rule count",
+        translation_key="ips_rule_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        discovery_fn=async_device_ips_signature_discovery_fn,
+        unique_id_fn=lambda hub, obj_id: f"ips_rule_count-{obj_id}",
+        value_fn=lambda hub, device: device.ips_rule_count,
     ),
 )
 
