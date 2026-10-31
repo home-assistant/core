@@ -160,12 +160,23 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 class MusicCastOptionsFlowHandler(OptionsFlow):
     """Handle MusicCast options."""
 
+    _offered_source_ids: list[str]
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage which sources are displayed."""
         if self.config_entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            displayed_sources = user_input[CONF_DISPLAYED_SOURCES]
+            hidden_sources = [
+                source_id
+                for source_id in self._offered_source_ids
+                if source_id not in displayed_sources
+            ]
+            return self.async_create_entry(data={CONF_HIDDEN_SOURCES: hidden_sources})
 
         coordinator = self.config_entry.runtime_data
 
@@ -178,15 +189,7 @@ class MusicCastOptionsFlowHandler(OptionsFlow):
                         coordinator.data.input_names, zone.input_list, inp
                     ),
                 )
-
-        if user_input is not None:
-            displayed_sources = user_input[CONF_DISPLAYED_SOURCES]
-            hidden_sources = [
-                source_id
-                for source_id in source_labels
-                if source_id not in displayed_sources
-            ]
-            return self.async_create_entry(data={CONF_HIDDEN_SOURCES: hidden_sources})
+        self._offered_source_ids = list(source_labels)
 
         hidden_sources = self.config_entry.options.get(CONF_HIDDEN_SOURCES, [])
 
