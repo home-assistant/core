@@ -1746,6 +1746,8 @@ class EntityRegistry(BaseRegistry):
                 unique_id=unique_id,
             )
 
+        # Assign results of 'none_if_undefined' calls to a temporary variable first
+        # to work around: https://github.com/python/mypy/issues/22334
         original_name_none = none_if_undefined(original_name)
         original_name = original_name_none
         original_name_unprefixed = _unprefix_original_name(
