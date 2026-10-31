@@ -44,13 +44,16 @@ class UnifiEntityLoader:
         self._startup_only_api_updaters = (self._async_update_clients_all,)
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
+        # Version optional v2 endpoints 404 on controllers without them
         self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
             id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
             id(hub.api.devices): UnifiDataUpdateCoordinator(hub, hub.api.devices),
             id(hub.api.dpi_apps): UnifiDataUpdateCoordinator(hub, hub.api.dpi_apps),
             id(hub.api.dpi_groups): UnifiDataUpdateCoordinator(hub, hub.api.dpi_groups),
             id(hub.api.firewall_policies): UnifiDataUpdateCoordinator(
-                hub, hub.api.firewall_policies
+                hub,
+                hub.api.firewall_policies,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
                 hub,
@@ -61,10 +64,14 @@ class UnifiEntityLoader:
                 hub, hub.api.port_forwarding
             ),
             id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
-                hub, hub.api.traffic_rules
+                hub,
+                hub.api.traffic_rules,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
-                hub, hub.api.traffic_routes
+                hub,
+                hub.api.traffic_routes,
+                disable_polling_on_endpoint_not_found=True,
             ),
             id(hub.api.wlans): UnifiDataUpdateCoordinator(hub, hub.api.wlans),
         }
