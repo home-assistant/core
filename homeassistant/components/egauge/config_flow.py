@@ -217,14 +217,13 @@ class EgaugeOptionsFlowHandler(OptionsFlowWithReload):
         try:
             return await client.get_register_info(), None
         except EgaugeAuthenticationError:
-            LOGGER.exception("EGauge rejected the credentials while reading registers")
+            return {}, "invalid_auth"
         except EgaugePermissionError:
-            LOGGER.exception("EGauge refused permission while reading registers")
+            return {}, "missing_permission"
         except EgaugeException:
-            LOGGER.exception("EGauge returned an error while reading registers")
+            return {}, "cannot_fetch_registers"
         except ConnectError:
-            LOGGER.exception("Cannot connect to the eGauge device")
-        except Exception:  # noqa: BLE001 - logged below, reported as unknown
+            return {}, "cannot_fetch_registers"
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception reading eGauge registers")
             return {}, "unknown"
-        return {}, "cannot_fetch_registers"

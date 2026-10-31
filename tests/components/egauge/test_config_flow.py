@@ -381,12 +381,16 @@ async def test_options_flow_does_not_offer_a_register_without_a_sensor(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "reason"),
     [
-        pytest.param(EgaugeAuthenticationError, id="invalid_auth"),
-        pytest.param(EgaugePermissionError, id="missing_permission"),
-        pytest.param(EgaugeException, id="egauge_error"),
-        pytest.param(ConnectError("unreachable"), id="cannot_connect"),
+        pytest.param(EgaugeAuthenticationError, "invalid_auth", id="invalid_auth"),
+        pytest.param(
+            EgaugePermissionError, "missing_permission", id="missing_permission"
+        ),
+        pytest.param(EgaugeException, "cannot_fetch_registers", id="egauge_error"),
+        pytest.param(
+            ConnectError("unreachable"), "cannot_fetch_registers", id="cannot_connect"
+        ),
     ],
 )
 async def test_options_flow_aborts_when_the_refresh_fails(
@@ -394,15 +398,22 @@ async def test_options_flow_aborts_when_the_refresh_fails(
     mock_config_entry: MockConfigEntry,
     mock_egauge_client: MagicMock,
     init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
     side_effect: type[Exception] | Exception,
+    reason: str,
 ) -> None:
-    """Test a failed register read aborts rather than offering cached registers."""
+    """Test a failed register read aborts with its cause, not cached registers.
+
+    These are expected outcomes the abort message explains, so nothing is
+    logged as an exception.
+    """
     mock_egauge_client.get_register_info.side_effect = side_effect
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_fetch_registers"
+    assert result["reason"] == reason
+    assert "Traceback" not in caplog.text
 
 
 async def test_options_flow_aborts_unknown_on_an_unexpected_error(
@@ -410,6 +421,7 @@ async def test_options_flow_aborts_unknown_on_an_unexpected_error(
     mock_config_entry: MockConfigEntry,
     mock_egauge_client: MagicMock,
     init_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an unexpected failure is logged and reported, not swallowed."""
     mock_egauge_client.get_register_info.side_effect = ValueError("boom")
@@ -418,3 +430,4 @@ async def test_options_flow_aborts_unknown_on_an_unexpected_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
+    assert "Unexpected exception reading eGauge registers" in caplog.text
