@@ -4,6 +4,7 @@ from contextlib import suppress
 from datetime import datetime, timedelta
 import os
 from pathlib import Path
+import stat
 import time
 from typing import TypedDict
 
@@ -23,13 +24,9 @@ ISSUE_LEFT_OVER = "debug_recordings_left_over"
 ISSUE_STILL_ENABLED = "debug_recording_still_enabled"
 MAX_RECORDING_AGE = timedelta(days=7)
 CHECK_INTERVAL = timedelta(days=1)
-
-# Runs write to [<device_id>/]<pipeline_name>/<monotonic_ns>/ below the directory.
-RECORDING_GLOBS = [
-    f"{run_dir}/{name}"
-    for run_dir in ("*/*", "*/*/*")
-    for name in ("00_wake-*.wav", "01_stt-*.wav")
-]
+# The recording thread stops after 5 seconds without audio.
+ACTIVE_RUN_TIME = timedelta(minutes=1)
+RECORDING_PREFIXES = ("00_wake-", "01_stt-")
 
 
 class DebugRecordingsData(TypedDict):
@@ -38,15 +35,46 @@ class DebugRecordingsData(TypedDict):
     recording_dirs: list[str]
 
 
-def find_debug_recordings(recording_dir: Path) -> dict[Path, os.stat_result]:
-    """Return the WAV files the debug recording thread wrote."""
+def _find_run_recordings(
+    run_dir: Path, filenames: list[str]
+) -> dict[Path, os.stat_result]:
+    """Return the WAV files the debug recording thread wrote in a run directory."""
     recordings: dict[Path, os.stat_result] = {}
-    for pattern in RECORDING_GLOBS:
-        for recording in recording_dir.glob(pattern):
-            if not recording.parent.name.isdigit():
-                continue
-            with suppress(FileNotFoundError):
-                recordings[recording] = recording.stat()
+    for filename in filenames:
+        if not filename.startswith(RECORDING_PREFIXES) or not filename.endswith(".wav"):
+            continue
+        recording = run_dir / filename
+        try:
+            recording_stat = recording.lstat()
+        except OSError:
+            continue
+        if stat.S_ISREG(recording_stat.st_mode):
+            recordings[recording] = recording_stat
+    return recordings
+
+
+def find_debug_recordings(recording_dir: Path) -> dict[Path, os.stat_result]:
+    """Return the WAV files the debug recording thread wrote, except active runs.
+
+    Runs write to [<device_id>/]<pipeline_name>/<monotonic_ns>/ below the
+    directory, and pipeline names can contain slashes. Symlinks are not
+    followed, so files outside the directory are never returned.
+    """
+    recordings: dict[Path, os.stat_result] = {}
+    active_since = time.time() - ACTIVE_RUN_TIME.total_seconds()
+    for dirpath, _, filenames in os.walk(recording_dir):
+        run_dir = Path(dirpath)
+        if (
+            not run_dir.name.isdigit()
+            or len(run_dir.relative_to(recording_dir).parts) < 2
+        ):
+            continue
+        run_recordings = _find_run_recordings(run_dir, filenames)
+        if all(
+            recording_stat.st_mtime < active_since
+            for recording_stat in run_recordings.values()
+        ):
+            recordings.update(run_recordings)
     return recordings
 
 

@@ -9,6 +9,12 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.assist_pipeline.const import (
     CONF_DEBUG_RECORDING_DIR,
@@ -23,13 +29,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_fire_time_changed
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
-
 WAKE = Path("satellite", "Home Assistant", "1", "00_wake-wake_word.test.wav")
 STT = Path("satellite", "Home Assistant", "1", "01_stt-stt.test.wav")
 OTHER_RUN_STT = Path("Home Assistant", "2", "01_stt-stt.test.wav")
+# The pipeline name "Local/English" adds a directory level.
+NESTED_RUN_STT = Path("satellite", "Local", "English", "3", "01_stt-stt.test.wav")
+RECORDINGS = (WAKE, STT, OTHER_RUN_STT, NESTED_RUN_STT)
 OTHER_FILE = Path("notes.txt")
 OTHER_WAV = Path("sounds", "01_doorbell.wav")
 # Numbered audio in a numeric directory, like a shared media directory has.
@@ -49,7 +54,7 @@ KEPT_FILES = [
 def _write_recordings(recording_dir: Path, days_old: int) -> None:
     """Write recordings like the debug recording thread leaves behind."""
     modified = time.time() - days_old * 86400
-    for recording in (WAKE, STT, OTHER_RUN_STT):
+    for recording in RECORDINGS:
         path = recording_dir / recording
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(b"\0" * 500_000)
@@ -115,8 +120,8 @@ async def test_left_over_repair(
     assert issue is not None
     assert issue.is_fixable
     assert issue.translation_placeholders == {
-        "count": "3",
-        "size": "1.5",
+        "count": "4",
+        "size": "2.0",
         "path": str(left_over_dir),
     }
 
@@ -161,7 +166,7 @@ async def test_left_over_deleted_manually(
 ) -> None:
     """Test a previous directory without recordings is forgotten."""
     await hass.async_add_executor_job(
-        lambda: [(left_over_dir / path).unlink() for path in (WAKE, STT, OTHER_RUN_STT)]
+        lambda: [(left_over_dir / path).unlink() for path in RECORDINGS]
     )
     await _async_setup(hass, None)
 
@@ -193,8 +198,8 @@ async def test_left_over_repair_delete_failed(
     issue = issue_registry.async_get_issue(DOMAIN, ISSUE_LEFT_OVER)
     assert issue is not None
     assert issue.translation_placeholders == {
-        "count": "2",
-        "size": "1.0",
+        "count": "3",
+        "size": "1.5",
         "path": str(left_over_dir),
     }
 
@@ -217,8 +222,8 @@ async def test_still_enabled_repair(
     assert issue is not None
     assert issue.is_fixable
     assert issue.translation_placeholders == {
-        "count": "3",
-        "size": "1.5",
+        "count": "4",
+        "size": "2.0",
         "path": str(tmp_path),
     }
 
@@ -249,6 +254,85 @@ async def test_still_enabled_checked_daily(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert issue_registry.async_get_issue(DOMAIN, ISSUE_STILL_ENABLED) is not None
+
+
+def _write_symlinked_recordings(recording_dir: Path, external_dir: Path) -> None:
+    """Link a directory and a file with recordings outside the recording directory."""
+    _write_recordings(external_dir, days_old=8)
+    (recording_dir / "linked").symlink_to(external_dir, target_is_directory=True)
+    run_dir = recording_dir / "Home Assistant" / "5"
+    run_dir.mkdir(parents=True)
+    (run_dir / "00_wake-linked.wav").symlink_to(external_dir / WAKE)
+
+
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_symlinks_not_followed(
+    hass: HomeAssistant,
+    tmp_path_factory: pytest.TempPathFactory,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test recordings outside the directory are not counted or deleted."""
+    recording_dir = tmp_path_factory.mktemp("recordings")
+    external_dir = tmp_path_factory.mktemp("external")
+    await hass.async_add_executor_job(
+        _write_symlinked_recordings, recording_dir, external_dir
+    )
+    await hass.async_add_executor_job(_write_recordings, recording_dir, 8)
+    await _async_setup(hass, recording_dir)
+
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_STILL_ENABLED)
+    assert issue is not None
+    assert issue.translation_placeholders["count"] == "4"
+
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+    flow = await start_repair_fix_flow(client, DOMAIN, ISSUE_STILL_ENABLED)
+    result = await process_repair_fix_flow(client, flow["flow_id"])
+    assert result["type"] == "create_entry"
+
+    for recording in RECORDINGS:
+        assert await hass.async_add_executor_job((external_dir / recording).exists)
+        assert not await hass.async_add_executor_job((recording_dir / recording).exists)
+
+
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_active_run_kept(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the recordings of a run that is still recording are kept."""
+    await hass.async_add_executor_job(_write_recordings, tmp_path, 8)
+    active = tmp_path / "Home Assistant" / "9" / WAKE.name
+    await hass.async_add_executor_job(active.parent.mkdir)
+    await hass.async_add_executor_job(active.write_bytes, b"\0")
+    await _async_setup(hass, tmp_path)
+
+    issue = issue_registry.async_get_issue(DOMAIN, ISSUE_STILL_ENABLED)
+    assert issue is not None
+    assert issue.translation_placeholders["count"] == "4"
+
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+    flow = await start_repair_fix_flow(client, DOMAIN, ISSUE_STILL_ENABLED)
+    result = await process_repair_fix_flow(client, flow["flow_id"])
+    assert result["type"] == "create_entry"
+
+    assert await hass.async_add_executor_job(active.exists)
+
+
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_unreadable_recordings_skipped(
+    hass: HomeAssistant, tmp_path: Path, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test recordings that can't be read are skipped instead of failing the check."""
+    await hass.async_add_executor_job(_write_recordings, tmp_path, 8)
+    with patch.object(Path, "lstat", side_effect=PermissionError):
+        await _async_setup(hass, tmp_path)
+
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_STILL_ENABLED) is None
 
 
 @pytest.mark.usefixtures("init_supporting_components")
