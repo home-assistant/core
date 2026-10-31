@@ -8,6 +8,7 @@ APPLICATION_CREDENTIALS = [
     "aladdin_connect",
     "august",
     "bosch_smart_camera",
+    "daikin_onecta",
     "dropbox",
     "ekeybionyx",
     "electric_kiwi",
