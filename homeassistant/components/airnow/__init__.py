@@ -1,6 +1,6 @@
 """The AirNow integration."""
 
-import datetime
+import datetime as dt
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,14 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> None:
     """Set up AirNow from a config entry."""
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
     # Reports are published hourly but update twice per hour
-    update_interval = datetime.timedelta(minutes=30)
+    update_interval = dt.timedelta(minutes=30)
 
     # Setup the Coordinator
     session = async_get_clientsession(hass)
@@ -58,10 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bo
         if not dev_entities:
             device_registry.async_remove_device(dev.id)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
@@ -78,9 +76,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.info("Migration to version %s successful", entry.version)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

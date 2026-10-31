@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_MAX_ACCEPTABLE,
@@ -131,6 +132,15 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda plant: plant.battery_level,
+    ),
+    FytaSensorEntityDescription(
+        key="last_updated",
+        translation_key="last_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda plant: (
+            dt_util.as_local(plant.last_updated) if plant.last_updated else None
+        ),
     ),
 ]
 

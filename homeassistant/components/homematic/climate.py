@@ -60,7 +60,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = 4.5
     _attr_max_temp = 30.5
     _attr_target_temperature_step = 0.5
@@ -74,7 +74,7 @@ class HMThermostat(HMDevice, ClimateEntity):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self.target_temperature <= self._hmdevice.OFF_VALUE + 0.5:
+        if self.native_target_temperature <= self._hmdevice.OFF_VALUE + 0.5:
             return HVACMode.OFF
         if "MANU_MODE" in self._hmdevice.ACTIONNODE:
             if self._hm_control_mode == self._hmdevice.MANU_MODE:
@@ -136,7 +136,7 @@ class HMThermostat(HMDevice, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         for node in HM_TEMP_MAP:
             if node in self._data:
@@ -145,7 +145,7 @@ class HMThermostat(HMDevice, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._data.get(self._state)
 

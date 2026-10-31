@@ -3,9 +3,9 @@
 import logging
 from typing import cast
 
+import probatio
 from screenlogicpy import ScreenLogicError
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -28,9 +28,9 @@ from .types import ScreenLogicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-BASE_SERVICE_SCHEMA = vol.Schema(
+BASE_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
@@ -40,14 +40,14 @@ BASE_SERVICE_SCHEMA = vol.Schema(
 
 SET_COLOR_MODE_SCHEMA = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Required(ATTR_COLOR_MODE): vol.In(SUPPORTED_COLOR_MODES),
+        probatio.Required(ATTR_COLOR_MODE): probatio.In(SUPPORTED_COLOR_MODES),
     }
 )
 
 TURN_ON_SUPER_CHLOR_SCHEMA = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Optional(ATTR_RUNTIME, default=24): vol.All(
-            vol.Coerce(int), vol.Clamp(min=MIN_RUNTIME, max=MAX_RUNTIME)
+        probatio.Optional(ATTR_RUNTIME, default=24): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=MIN_RUNTIME, max=MAX_RUNTIME)
         ),
     }
 )

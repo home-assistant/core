@@ -9,7 +9,7 @@ from typing import Any, NotRequired, TypedDict, override
 
 import aiohttp
 import ekey_bionyxpy
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.webhook import (
     async_generate_id as webhook_generate_id,
@@ -121,10 +121,12 @@ class OAuth2FlowHandler(
                 {"value": s.system_id, "label": s.system_name}
                 for s in self._data["systems"]
             ]
-            data_schema = {vol.Required("system"): SelectSelector({"options": options})}
+            data_schema = {
+                probatio.Required("system"): SelectSelector({"options": options})
+            }
             return self.async_show_form(
                 step_id="choose_system",
-                data_schema=vol.Schema(data_schema),
+                data_schema=probatio.Schema(data_schema),
                 description_placeholders={"ekeybionyx": INTEGRATION_NAME},
             )
         self._data["system"] = [
@@ -169,7 +171,7 @@ class OAuth2FlowHandler(
                     errors.update({key: "invalid_name"})
             try:
                 cv.url(user_input[CONF_URL])
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors[CONF_URL] = "invalid_url"
             if set(user_input) == {CONF_URL}:
                 errors["base"] = "no_webhooks_provided"
@@ -208,14 +210,16 @@ class OAuth2FlowHandler(
                 )
 
         data_schema: dict[Any, Any] = {
-            vol.Optional(f"webhook{i + 1}"): vol.All(str, vol.Length(max=50))
+            probatio.Optional(f"webhook{i + 1}"): probatio.All(
+                str, probatio.Length(max=50)
+            )
             for i in range(self._data["system"].function_webhook_quotas["free"])
         }
-        data_schema[vol.Required(CONF_URL)] = str
+        data_schema[probatio.Required(CONF_URL)] = str
         return self.async_show_form(
             step_id="webhooks",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(data_schema),
+                probatio.Schema(data_schema),
                 {
                     CONF_URL: get_url(
                         self.hass,

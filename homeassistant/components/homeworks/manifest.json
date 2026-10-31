@@ -1,6 +1,7 @@
 {
   "domain": "homeworks",
   "name": "Lutron Homeworks",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homeworks",

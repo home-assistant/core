@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_CONDITIONS, CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
@@ -200,7 +200,10 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     @override
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
-        return self._rendered_entity_variables or {}
+        return {
+            **self.coordinator.trigger_variables,
+            **(self._rendered_entity_variables or {}),
+        }
 
     @override
     def _render_single_template(
@@ -274,7 +277,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             validated = {}
             try:
                 result = template_render_complex(attributes_template, variables)
-                validated = vol.All(
+                validated = probatio.All(
                     dict,
                     validate_attributes(
                         self.entity_id,
@@ -286,7 +289,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 log_triggered_template_error(
                     self.entity_id, err, attribute=CONF_ATTRIBUTES
                 )
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 log_validation_error(
                     result, attributes_template, CONF_ATTRIBUTES, self.entity_id, err
                 )
@@ -314,11 +317,21 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 write_state = True
                 continue
 
-            value = (
-                entity_template.validator(rendered)
-                if entity_template.validator
-                else rendered
-            )
+            try:
+                value = (
+                    entity_template.validator(rendered)
+                    if entity_template.validator
+                    else rendered
+                )
+            except probatio.Invalid as err:
+                log_validation_error(
+                    rendered,
+                    entity_template.template,
+                    entity_template.attribute,
+                    self.entity_id,
+                    err,
+                )
+                value = None
 
             if entity_template.on_update:
                 entity_template.on_update(value)

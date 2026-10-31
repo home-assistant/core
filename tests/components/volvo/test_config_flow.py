@@ -4,6 +4,9 @@ from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
 from volvocarsapi.models import VolvoApiException, VolvoCarsVehicle
@@ -27,10 +30,6 @@ from .const import (
     REDIRECT_URI,
     SERVER_TOKEN_RESPONSE,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -74,6 +73,7 @@ async def test_single_vin_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEFAULT_VIN
 
 
 @pytest.mark.parametrize(("api_key_failure"), [pytest.param(True), pytest.param(False)])

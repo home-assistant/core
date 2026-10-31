@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohttp import ClientError
 from pyfreshr.exceptions import LoginError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.freshr.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-pass"}
 

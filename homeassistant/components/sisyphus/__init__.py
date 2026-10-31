@@ -3,8 +3,8 @@
 import asyncio
 import logging
 
+import probatio
 from sisyphus_control import Table
-import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
@@ -18,16 +18,16 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SISYPHUS = "sisyphus"
 DOMAIN = "sisyphus"
 
-AUTODETECT_SCHEMA = vol.Schema({})
+AUTODETECT_SCHEMA = probatio.Schema({})
 
-TABLE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_HOST): cv.string}
+TABLE_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_NAME): cv.string, probatio.Required(CONF_HOST): cv.string}
 )
 
-TABLES_SCHEMA = vol.Schema([TABLE_SCHEMA])
+TABLES_SCHEMA = probatio.Schema([TABLE_SCHEMA])
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Any(AUTODETECT_SCHEMA, TABLES_SCHEMA)}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Any(AUTODETECT_SCHEMA, TABLES_SCHEMA)}, extra=probatio.ALLOW_EXTRA
 )
 
 # Silence these loggers by default. Their INFO level is super chatty and we

@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.proxmoxve.const import (
     CONF_AUTH_METHOD,
@@ -27,12 +32,6 @@ from homeassistant.const import (
 )
 
 from . import MERGED_PERMISSIONS
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 MOCK_TEST_CONFIG_BASE = {
     CONF_AUTH_METHOD: "pam",
@@ -85,7 +84,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.proxmoxve.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 
@@ -131,6 +130,12 @@ def mock_proxmox_client():
             if ProxmoxPermission.SYSAUDIT
             not in mock_instance.access.permissions.get.return_value.get("/nodes", [])
             else load_json_array_fixture("nodes/tasks.json", DOMAIN)
+        )
+        node_mock.version.get.return_value = load_json_object_fixture(
+            "nodes/version.json", DOMAIN
+        )
+        node_mock.apt.update.get.return_value = load_json_array_fixture(
+            "nodes/update.json", DOMAIN
         )
 
         qemu_by_vmid = {int(vm["vmid"]): vm for vm in qemu_list}

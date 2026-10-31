@@ -1,6 +1,7 @@
 {
   "domain": "yandex_transport",
   "name": "Yandex Transport",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@rishatik92", "@devbis"],
   "documentation": "https://www.home-assistant.io/integrations/yandex_transport",
   "iot_class": "cloud_polling",

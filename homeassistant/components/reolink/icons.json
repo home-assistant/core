@@ -669,6 +669,9 @@
     },
     "ptz_move": {
       "service": "mdi:pan"
+    },
+    "snapshot_past": {
+      "service": "mdi:camera-timer"
     }
   }
 }

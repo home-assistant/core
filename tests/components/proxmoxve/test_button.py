@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from requests.exceptions import ConnectTimeout, SSLError
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,8 +17,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import AUDIT_PERMISSIONS, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 BUTTON_DOMAIN = "button"
 
@@ -176,9 +175,9 @@ async def test_snapshot_button(
 
     # Proxmox validates the name as a `pve-configid` of at most 40 characters:
     # two or more, starting with a letter, then only [A-Za-z0-9_-]
-    name = method_mock.call_args.kwargs["name"]
-    assert len(name) <= 40
-    assert re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]+", name)
+    snapname = method_mock.call_args.kwargs["snapname"]
+    assert len(snapname) <= 40
+    assert re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]+", snapname)
 
 
 @pytest.mark.parametrize(

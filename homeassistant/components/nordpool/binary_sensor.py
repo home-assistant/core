@@ -8,13 +8,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.sensor import EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NordPoolConfigEntry
 from .const import CONF_AREAS
-from .coordinator import NordPoolDataUpdateCoordinator
 from .entity import NordpoolBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -66,15 +65,6 @@ class NordpoolPriceBinarySensor(NordpoolBaseEntity, BinarySensorEntity):
     """Representation of a Nord Pool binary sensor."""
 
     entity_description: NordpoolBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: NordPoolDataUpdateCoordinator,
-        entity_description: NordpoolBinarySensorEntityDescription,
-        area: str,
-    ) -> None:
-        """Initiate Nord Pool binary sensor."""
-        super().__init__(coordinator, entity_description, area)
 
     @property
     @override

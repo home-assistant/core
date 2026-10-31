@@ -2,14 +2,10 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
-from uiprotect.data import (
-    Camera,
-    DoorbellMessageType,
-    ModelType,
-    ProtectAdoptableDeviceModel,
-)
+from uiprotect.data import DoorbellMessageType, ModelType, ProtectAdoptableDeviceModel
+from uiprotect.data.public_devices import PublicCamera, PublicDeviceModel
 
 from homeassistant.components.text import TextEntity, TextEntityDescription
 from homeassistant.const import EntityCategory
@@ -18,14 +14,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import (
-    PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
 )
-from .utils import async_ufp_instance_command
+from .utils import async_get_doorbell_settings_public, async_ufp_instance_command
 
 PARALLEL_UPDATES = 0
 
@@ -35,14 +30,17 @@ class ProtectTextEntityDescription(ProtectSettableKeysMixin[T], TextEntityDescri
     """Describes UniFi Protect Text entity."""
 
 
-def _get_doorbell_current(obj: Camera) -> str | None:
-    if obj.lcd_message is None:
-        return obj.api.bootstrap.nvr.doorbell_settings.default_message_text
-    return obj.lcd_message.text
+def _get_doorbell_current(obj: PublicDeviceModel) -> str | None:
+    if (text := cast(PublicCamera, obj).lcd_message_text) is None:
+        return async_get_doorbell_settings_public(obj.api).default_message_text
+    return text
 
 
-async def _set_doorbell_message(obj: Camera, message: str) -> None:
-    await obj.set_lcd_text(DoorbellMessageType.CUSTOM_MESSAGE, text=message)
+async def _set_doorbell_message(obj: PublicCamera, message: str) -> None:
+    # reset_at=None keeps the message up until it is changed
+    await obj.set_lcd_message(
+        DoorbellMessageType.CUSTOM_MESSAGE, text=message, reset_at=None
+    )
 
 
 CAMERA: tuple[ProtectTextEntityDescription, ...] = (
@@ -50,10 +48,9 @@ CAMERA: tuple[ProtectTextEntityDescription, ...] = (
         key="doorbell",
         translation_key="doorbell",
         entity_category=EntityCategory.CONFIG,
-        ufp_value_fn=_get_doorbell_current,
+        ufp_public_value_fn=_get_doorbell_current,
         ufp_set_method_fn=_set_doorbell_message,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -107,4 +104,4 @@ class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
     @override
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
-        await self.entity_description.ufp_set(self.device, value)
+        await self.entity_description.ufp_set(self._ufp_set_target(), value)

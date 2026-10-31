@@ -1,6 +1,7 @@
 {
   "domain": "heos",
   "name": "Denon HEOS",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@andrewsayre"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/heos",

@@ -2,6 +2,7 @@
 
 from aiolibrenms.devices.models import LibrenmsDeviceInfo
 from aiolibrenms.system.models import LibrenmsSystemInfo
+from pytest_homeassistant.common import load_fixture
 
 from homeassistant.components.librenms.const import DOMAIN
 from homeassistant.const import (
@@ -12,8 +13,6 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-
-from tests.common import load_fixture
 
 MOCK_USER_DATA = {
     CONF_URL: "https://librenms",

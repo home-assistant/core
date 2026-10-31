@@ -44,6 +44,7 @@ class MieleBinarySensorDefinition:
 BINARY_SENSOR_TYPES: Final[tuple[MieleBinarySensorDefinition, ...]] = (
     MieleBinarySensorDefinition(
         types=(
+            MieleAppliance.COFFEE_SYSTEM,
             MieleAppliance.DISH_WARMER,
             MieleAppliance.DISHWASHER,
             MieleAppliance.FREEZER,

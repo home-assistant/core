@@ -1,9 +1,10 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL
@@ -27,8 +28,6 @@ from homeassistant.util import dt as dt_util
 
 from . import _generate_mock_feed_entry
 
-from tests.common import async_fire_time_changed
-
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
 
 
@@ -42,7 +41,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         (38.0, -3.0),
         locality="Locality 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        time=dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
         magnitude=5.7,
         mmi=5,
         depth=10.5,

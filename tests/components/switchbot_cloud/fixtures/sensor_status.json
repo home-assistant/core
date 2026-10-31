@@ -210,6 +210,16 @@
     "calibrate": true
   },
   {
+    "deviceId": "7E50C3AEE222",
+    "deviceType": "Smart Lock Ultra Max",
+    "hubDeviceId": "FFFFFFFEEFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "doorState": "open",
+    "calibrate": true
+  },
+  {
     "deviceId": "6D4F9C2A0E8B",
     "deviceType": "Lock Vision",
     "hubDeviceId": "FFFFFFFFFFF",

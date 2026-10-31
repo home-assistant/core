@@ -11,6 +11,7 @@ from homeassistant.components.bluetooth.passive_update_processor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -19,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 type QingpingConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: QingpingConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: QingpingConfigEntry) -> None:
     """Set up Qingping BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -34,9 +35,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: QingpingConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: QingpingConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: QingpingConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: QingpingConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return not entry.runtime_data.available

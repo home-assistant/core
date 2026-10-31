@@ -44,7 +44,23 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed lawn_mower entity."""
-    assert await _tool_names(hass) >= TOOL_NAMES
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tools = {tool.name: tool for tool in result.tools}
+    assert tools.keys() >= TOOL_NAMES
+
+    annotations = llm.ToolAnnotations(idempotent=True, open_world=False)
+    assert {
+        name: (tool.title, tool.integration, tool.annotations)
+        for name, tool in tools.items()
+        if name in TOOL_NAMES
+    } == {
+        "lawn_mower__HassLawnMowerDock": ("Dock lawn mower", "lawn_mower", annotations),
+        "lawn_mower__HassLawnMowerStartMowing": (
+            "Start mowing",
+            "lawn_mower",
+            annotations,
+        ),
+    }
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:

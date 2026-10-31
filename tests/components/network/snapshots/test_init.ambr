@@ -3,6 +3,7 @@
   IssueRegistryItemSnapshot({
     'active': True,
     'breaks_in_ha_version': None,
+    'config_entry_id': None,
     'created': <ANY>,
     'data': None,
     'dismissed_version': None,

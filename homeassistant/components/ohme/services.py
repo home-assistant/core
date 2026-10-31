@@ -3,7 +3,7 @@
 from typing import Final
 
 from ohme import OhmeApiClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -21,9 +21,9 @@ ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_PRICE_CAP: Final = "price_cap"
 
 SERVICE_LIST_CHARGE_SLOTS = "list_charge_slots"
-SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = vol.Schema(
+SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
@@ -32,14 +32,14 @@ SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = vol.Schema(
 )
 
 SERVICE_SET_PRICE_CAP = "set_price_cap"
-SERVICE_SET_PRICE_CAP_SCHEMA: Final = vol.Schema(
+SERVICE_SET_PRICE_CAP_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        vol.Required(ATTR_PRICE_CAP): vol.Coerce(float),
+        probatio.Required(ATTR_PRICE_CAP): probatio.Coerce(float),
     }
 )
 

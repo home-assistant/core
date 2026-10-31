@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 from psutil._ntuples import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -20,7 +21,31 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockProcess
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_ip_addresses_missing_during_initial_setup(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Missing initial IP address data must not abort sensor setup."""
+    interfaces = mock_psutil.net_if_addrs.return_value
+    mock_psutil.net_if_addrs.side_effect = [None, interfaces]
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_psutil.net_if_addrs.call_count == 2
+
+    ipv4_sensor = hass.states.get("sensor.system_monitor_ipv4_address_eth0")
+    assert ipv4_sensor is not None
+    assert ipv4_sensor.state == STATE_UNKNOWN
+
+    memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
+    assert memory_sensor is not None
+    assert memory_sensor.state == "40.0"
 
 
 @pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)

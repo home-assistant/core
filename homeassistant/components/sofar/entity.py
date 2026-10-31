@@ -37,7 +37,6 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
         super().__init__(runtime_data.coordinator_for(entity_description.component))
         self.entity_description = entity_description
         serial = self.coordinator.device.serial_number
-        assert serial is not None
         self._attr_unique_id = f"{serial}_{entity_description.key}"
         self._attr_device_info = self._device_info(runtime_data, serial)
 
@@ -59,6 +58,6 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
     @override
     def available(self) -> bool:
         """Whether this entity's component answered the most recent poll."""
-        if not super().available:
+        if not super().available or self.coordinator.data is None:
             return False
         return self.entity_description.component not in self.coordinator.data.failed

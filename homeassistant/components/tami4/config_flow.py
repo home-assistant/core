@@ -4,8 +4,8 @@ import logging
 import re
 from typing import Any, override
 
+import probatio
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -15,9 +15,9 @@ from .const import CONF_PHONE, CONF_REFRESH_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-_STEP_PHONE_NUMBER_SCHEMA = vol.Schema({vol.Required(CONF_PHONE): cv.string})
+_STEP_PHONE_NUMBER_SCHEMA = probatio.Schema({probatio.Required(CONF_PHONE): cv.string})
 
-_STEP_OTP_CODE_SCHEMA = vol.Schema({vol.Required("otp"): cv.string})
+_STEP_OTP_CODE_SCHEMA = probatio.Schema({probatio.Required("otp"): cv.string})
 _PHONE_MATCHER = re.compile(r"^(\+?972)?0?(?P<number>\d{8,9})$")
 
 

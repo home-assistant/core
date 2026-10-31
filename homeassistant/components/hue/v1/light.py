@@ -315,7 +315,7 @@ def hass_to_hue_brightness(value):
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
-class HueLight(CoordinatorEntity, LightEntity):
+class HueLight(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity):
     """Representation of a Hue light."""
 
     def __init__(

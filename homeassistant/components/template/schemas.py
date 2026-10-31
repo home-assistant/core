@@ -1,6 +1,6 @@
 """Shared schemas for config entry and YAML config items."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_CONDITIONS,
@@ -21,22 +21,22 @@ from .const import (
 )
 from .validators import BlockedTemplateAttributes, validate_attributes
 
-TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = vol.Schema(
+TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_AVAILABILITY): cv.template,
+        probatio.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 
-TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA = vol.Schema(
+TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.template,
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        probatio.Required(CONF_NAME): cv.template,
+        probatio.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
 
 
 TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA = {
-    vol.Optional(CONF_OPTIMISTIC): cv.boolean,
+    probatio.Optional(CONF_OPTIMISTIC): cv.boolean,
 }
 
 
@@ -44,23 +44,23 @@ def make_template_entity_common_schema(
     domain: str,
     default_name: str,
     blocked_attributes: BlockedTemplateAttributes | None = None,
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return a schema with default name."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_AVAILABILITY): cv.template,
-            vol.Optional(CONF_DEFAULT_ENTITY_ID): vol.All(
+            probatio.Optional(CONF_AVAILABILITY): cv.template,
+            probatio.Optional(CONF_DEFAULT_ENTITY_ID): probatio.All(
                 cv.entity_id, cv.entity_domain(domain)
             ),
-            vol.Optional(CONF_ICON): cv.template,
-            vol.Optional(CONF_NAME, default=default_name): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
-            vol.Optional(CONF_ATTRIBUTES): vol.Schema(
-                vol.Any(
-                    vol.All(
+            probatio.Optional(CONF_ICON): cv.template,
+            probatio.Optional(CONF_NAME, default=default_name): cv.template,
+            probatio.Optional(CONF_PICTURE): cv.template,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            probatio.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
+            probatio.Optional(CONF_ATTRIBUTES): probatio.Schema(
+                probatio.Any(
+                    probatio.All(
                         {cv.string: cv.template},
                         validate_attributes(default_name, blocked_attributes),
                     ),

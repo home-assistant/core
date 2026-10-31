@@ -6,7 +6,7 @@
         'coordinator': dict({
           'last_exception': None,
           'last_update_success': True,
-          'update_interval': '0:01:00',
+          'update_interval': 'None',
         }),
         'data': dict({
           'controls': list([

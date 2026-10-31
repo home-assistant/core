@@ -8,6 +8,7 @@ from homematicip.auth import Auth
 from homematicip.base.enums import WeatherCondition, WeatherDayTime
 from homematicip.connection.rest_connection import RestConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homematicip_cloud import (
     DOMAIN,
@@ -26,7 +27,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeFactory
 
-from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -68,6 +68,53 @@ async def default_mock_hap_factory_fixture(
 ) -> HomeFactory:
     """Create a mocked homematic access point."""
     return HomeFactory(hass, mock_connection, hmip_config_entry)
+
+
+@pytest.fixture(name="unknown_type_device_data")
+def unknown_type_device_data_fixture() -> dict[str, Any]:
+    """Return fixture data for a device whose type the library does not know.
+
+    The type is invented so that it stays unknown as devices get added.
+    """
+    device_id = "3014F711000000000UNKNOWN"
+    return {
+        "connectionType": "HMIP_RF",
+        "deviceArchetype": "HMIP",
+        "firmwareVersion": "1.0.10",
+        "functionalChannels": {
+            "0": {
+                "deviceId": device_id,
+                "functionalChannelType": "DEVICE_BASE",
+                "groupIndex": 0,
+                "groups": [],
+                "index": 0,
+                "label": "",
+            },
+            "1": {
+                "deviceId": device_id,
+                "functionalChannelType": "SINGLE_KEY_CHANNEL",
+                "groupIndex": 1,
+                "groups": [],
+                "index": 1,
+                "label": "",
+            },
+            "2": {
+                "deviceId": device_id,
+                "functionalChannelType": "SINGLE_KEY_CHANNEL",
+                "groupIndex": 2,
+                "groups": [],
+                "index": 2,
+                "label": "",
+            },
+        },
+        "homeId": "00000000-0000-0000-0000-000000000001",
+        "id": device_id,
+        "label": "Unknown Device",
+        "lastStatusUpdate": 1614066137987,
+        "modelType": "HmIP-UNKNOWN",
+        "permanentlyReachable": True,
+        "type": "SOME_FUTURE_DEVICE",
+    }
 
 
 @pytest.fixture(name="full_flush_lock_controller_device_data")

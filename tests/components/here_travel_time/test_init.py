@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.here_travel_time.config_flow import (
     DEFAULT_OPTIONS,
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DEFAULT_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("valid_response")

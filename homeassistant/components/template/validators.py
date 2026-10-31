@@ -6,7 +6,7 @@ from itertools import chain
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import config_validation as cv
@@ -32,6 +32,7 @@ class BlockedTemplateAttributes:
         *,
         attributes: tuple[type[StrEnum], ...] | type[StrEnum] | None = None,
         device_class: bool = False,
+        allowed_attributes: tuple[StrEnum | str, ...] | None = None,
     ) -> None:
         """Initialize."""
         blocked_attributes: set[str]
@@ -41,6 +42,9 @@ class BlockedTemplateAttributes:
             blocked_attributes = set(chain(*attributes))
         else:
             blocked_attributes = set(attributes)
+
+        if allowed_attributes:
+            blocked_attributes -= set(allowed_attributes)
 
         if device_class:
             blocked_attributes.add("device_class")
@@ -64,7 +68,7 @@ def validate_attributes(
             return obj
 
         if blocked := blocked_attributes.blocked(obj):
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Unsupported attribute(s) found for {breadcrumb}: {', '.join(blocked)}"
             )
 
@@ -78,7 +82,7 @@ def log_validation_error(
     template: Template,
     attribute: str,
     entity_id: str | None,
-    exception: vol.Invalid,
+    exception: probatio.Invalid,
 ):
     """Log template entity validation error."""
     logging.getLogger(
@@ -142,6 +146,8 @@ def strenum[T: StrEnum](
     state_enum: type[T],
     state_on: T | None = None,
     state_off: T | None = None,
+    *,
+    deprecated_enums: tuple[T, ...] | None = None,
     **kwargs: Any,
 ) -> Callable[[Any], T | None]:
     """Converts the template result to an StrEnum.
@@ -161,9 +167,12 @@ def strenum[T: StrEnum](
         if isinstance(result, str):
             value = result.lower().strip()
             try:
-                return state_enum(value)
+                enum_value = state_enum(value)
             except ValueError:
                 pass
+            else:
+                if enum_value not in (deprecated_enums or ()):
+                    return enum_value
 
         if state_on or state_off:
             try:
@@ -174,10 +183,12 @@ def strenum[T: StrEnum](
                 if state_off and not bool_value:
                     return state_off
 
-            except vol.Invalid:
+            except probatio.Invalid:
                 pass
 
-        expected = tuple(s.value for s in state_enum)
+        expected = tuple(
+            s.value for s in state_enum if s.value not in (deprecated_enums or ())
+        )
         if state_on:
             expected += RESULT_ON
         if state_off:
@@ -226,7 +237,7 @@ def boolean(
 
         try:
             return cv.boolean(result)
-        except vol.Invalid:
+        except probatio.Invalid:
             pass
 
         items: tuple[str, ...] = RESULT_ON + RESULT_OFF
@@ -278,10 +289,10 @@ def number(
                 value = float(value)
         else:
             try:
-                value = vol.Coerce(float)(result)
+                value = probatio.Coerce(float)(result)
                 if return_type is int:
                     value = int(value)
-            except vol.Invalid:
+            except probatio.Invalid:
                 log_validation_result_error(entity, attribute, result, message)
                 return None
 
@@ -346,6 +357,7 @@ def item_in_list[T](
     attribute: str,
     items: list[Any] | str | None,
     items_attribute: str | None = None,
+    stringify_result: bool = False,
     **kwargs: Any,
 ) -> Callable[[Any], Any | None]:
     """Assert the result of the template is an item inside a list.
@@ -377,6 +389,9 @@ def item_in_list[T](
 
             return None
 
+        if stringify_result:
+            result = str(result)
+
         if result not in _items:
             log_validation_result_error(
                 entity,
@@ -404,7 +419,7 @@ def url(
 
         try:
             return cv.url(result)
-        except vol.Invalid:
+        except probatio.Invalid:
             log_validation_result_error(
                 entity,
                 attribute,
@@ -432,7 +447,7 @@ def string(
 
         try:
             return cv.string(result)
-        except vol.Invalid:
+        except probatio.Invalid:
             log_validation_result_error(
                 entity,
                 attribute,
@@ -459,3 +474,42 @@ def check_conditions(
         )
 
     return condition_result
+
+
+def inclusive_group(name: str, optional: str, *required: str) -> Callable[[dict], dict]:
+    """Validate an inclusive group of configuration options, with 1 optional option.
+
+    The optional member requires all required options, however the required options
+    do not require the optional option.
+    """
+    _all = {optional, *required}
+    _required = set(required)
+
+    def verify(obj: dict) -> dict:
+        options = set(obj.keys())
+        if not (common := options.intersection(_all)) or common in (_required, _all):
+            return obj
+
+        missing = _required - common
+        raise probatio.Invalid(
+            f"Some required option(s) are missing from inclusive group '{name}', expected missing options: {', '.join(missing)}."
+        )
+
+    return verify
+
+
+def requires_option(option: str, required_option: str) -> Callable[[dict], dict]:
+    """Validate a pair of options.
+
+    Raises probatio.Invalid if required_option is missing when option is present.
+    """
+
+    def verify(obj: dict) -> dict:
+        if (option in obj and required_option in obj) or option not in obj:
+            return obj
+
+        raise probatio.Invalid(
+            f"Required option: '{required_option}' is missing for option '{option}'. Remove '{option}' from your config or add '{required_option}'."
+        )
+
+    return verify

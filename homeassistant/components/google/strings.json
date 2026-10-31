@@ -5,13 +5,12 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "calendar_api_disabled": "You must [enable the Google Calendar API]({calendar_api_url}) in the Google Cloud Console",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unique_id_mismatch": "The Google account you signed in with does not match the account of this entry. Please sign in with the previously configured account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -49,8 +48,8 @@
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    "invalid_calendar_config": {
+      "message": "Configuration error in {file}"
     }
   },
   "options": {

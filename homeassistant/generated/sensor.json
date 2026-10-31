@@ -22,6 +22,7 @@
       "yd\u00b2"
     ],
     "atmospheric_pressure": [
+      "atm",
       "bar",
       "cbar",
       "hPa",
@@ -122,6 +123,7 @@
       "MJ",
       "MWh",
       "mWh",
+      "thm",
       "TWh",
       "Wh"
     ],
@@ -144,6 +146,7 @@
       "MJ",
       "MWh",
       "mWh",
+      "thm",
       "TWh",
       "Wh"
     ],
@@ -199,6 +202,7 @@
       "mm/h"
     ],
     "pressure": [
+      "atm",
       "bar",
       "cbar",
       "hPa",
@@ -356,6 +360,7 @@
       "yd\u00b2"
     ],
     "atmospheric_pressure": [
+      "atm",
       "bar",
       "cbar",
       "hPa",
@@ -462,6 +467,7 @@
       "MJ",
       "MWh",
       "mWh",
+      "thm",
       "TWh",
       "Wh"
     ],
@@ -484,6 +490,7 @@
       "MJ",
       "MWh",
       "mWh",
+      "thm",
       "TWh",
       "Wh"
     ],
@@ -570,6 +577,7 @@
       "mm/h"
     ],
     "pressure": [
+      "atm",
       "bar",
       "cbar",
       "hPa",

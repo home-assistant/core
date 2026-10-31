@@ -2,9 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The host belongs to a different WiiM device."
     },
     "error": {
@@ -30,6 +28,16 @@
         },
         "data_description": {
           "host": "The hostname or IP address of the WiiM device."
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "audio_output": {
+        "name": "Audio output",
+        "state": {
+          "other_out": "Other out"
         }
       }
     }

@@ -1,6 +1,5 @@
 """Coordinator for Powerfox integration."""
 
-from datetime import datetime
 from typing import override
 
 from powerfox import (
@@ -99,9 +98,7 @@ class PowerfoxReportDataUpdateCoordinator(PowerfoxBaseCoordinator[DeviceReport])
     @override
     async def _async_fetch_data(self) -> DeviceReport:
         """Fetch report data from the Powerfox API."""
-        local_now = datetime.now(  # pylint: disable=home-assistant-enforce-now
-            tz=dt_util.get_time_zone(self.hass.config.time_zone)
-        )
+        local_now = dt_util.now()
         return await self.client.report(
             device_id=self.device.id,
             year=local_now.year,

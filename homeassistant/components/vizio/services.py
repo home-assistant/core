@@ -1,6 +1,6 @@
 """Vizio SmartCast services."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -18,13 +18,17 @@ ATTR_NEW_VALUE = "new_value"
 ATTR_TEXT = "text"
 
 UPDATE_SETTING_SCHEMA: VolDictType = {
-    vol.Required(ATTR_SETTING_TYPE): vol.All(cv.string, vol.Lower, cv.slugify),
-    vol.Required(ATTR_SETTING_NAME): vol.All(cv.string, vol.Lower, cv.slugify),
-    vol.Required(ATTR_NEW_VALUE): vol.Any(vol.Coerce(int), cv.string),
+    probatio.Required(ATTR_SETTING_TYPE): probatio.All(
+        cv.string, probatio.Lower, cv.slugify
+    ),
+    probatio.Required(ATTR_SETTING_NAME): probatio.All(
+        cv.string, probatio.Lower, cv.slugify
+    ),
+    probatio.Required(ATTR_NEW_VALUE): probatio.Any(probatio.Coerce(int), cv.string),
 }
 
 SEND_TEXT_SCHEMA: VolDictType = {
-    vol.Required(ATTR_TEXT): cv.string,
+    probatio.Required(ATTR_TEXT): cv.string,
 }
 
 

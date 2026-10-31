@@ -1,6 +1,7 @@
 {
   "domain": "switchmate",
   "name": "Switchmate SimplySmart Home",
+  "categories": ["plugs_switches"],
   "codeowners": ["@danielhiversen", "@qiz-li"],
   "documentation": "https://www.home-assistant.io/integrations/switchmate",
   "iot_class": "local_polling",

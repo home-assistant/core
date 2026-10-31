@@ -10,7 +10,7 @@ from homeassistant.components import cloud
 from homeassistant.components.webhook import async_generate_id
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
+from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -62,7 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
@@ -90,18 +90,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> b
 
     _LOGGER.debug("Migration successful")
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> None:
     """Set up Monzo from a config entry."""
-    try:
-        external_api = await _async_create_api(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    external_api = await _async_create_api(hass, entry)
 
     coordinator = MonzoCoordinator(hass, entry, external_api)
 
@@ -118,15 +110,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await webhook_manager.async_setup()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.webhook_manager.async_unload()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.webhook_manager.async_unload()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> None:

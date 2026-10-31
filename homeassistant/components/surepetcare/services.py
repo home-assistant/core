@@ -1,7 +1,7 @@
 """Support for Sure Petcare services."""
 
+import probatio
 from surepy.enums import Location
-import voluptuous as vol
 
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -55,13 +55,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_LOCK_STATE,
         handle_set_lock_state,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_FLAP_ID): cv.positive_int,
-                vol.Required(ATTR_LOCK_STATE): vol.All(
+                probatio.Required(ATTR_FLAP_ID): cv.positive_int,
+                probatio.Required(ATTR_LOCK_STATE): probatio.All(
                     cv.string,
-                    vol.Lower,
-                    vol.In(
+                    probatio.Lower,
+                    probatio.In(
                         [
                             "unlocked",
                             "locked_in",
@@ -77,10 +77,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_PET_LOCATION,
         handle_set_pet_location,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_PET_NAME): cv.string,
-                vol.Required(ATTR_LOCATION): vol.In(
+                probatio.Required(ATTR_PET_NAME): cv.string,
+                probatio.Required(ATTR_LOCATION): probatio.In(
                     [
                         Location.INSIDE.name.title(),
                         Location.OUTSIDE.name.title(),

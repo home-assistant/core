@@ -1,6 +1,7 @@
 {
   "domain": "joaoapps_join",
   "name": "Joaoapps Join",
+  "categories": ["messaging_notifications.push_notifications"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/joaoapps_join",
   "iot_class": "cloud_push",

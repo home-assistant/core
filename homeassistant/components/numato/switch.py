@@ -13,6 +13,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -87,14 +88,15 @@ class NumatoGpioSwitch(SwitchEntity):
             )
             self._attr_is_on = True
             self.schedule_update_ha_state()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NumatoGpioError as err:
-            _LOGGER.error(
-                "Failed to turn on Numato device %s port %s: %s",
-                self._device_id,
-                self._port,
-                err,
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_failed",
+                translation_placeholders={
+                    "device_id": str(self._device_id),
+                    "port": str(self._port),
+                },
+            ) from err
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
@@ -105,11 +107,12 @@ class NumatoGpioSwitch(SwitchEntity):
             )
             self._attr_is_on = False
             self.schedule_update_ha_state()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NumatoGpioError as err:
-            _LOGGER.error(
-                "Failed to turn off Numato device %s port %s: %s",
-                self._device_id,
-                self._port,
-                err,
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_off_failed",
+                translation_placeholders={
+                    "device_id": str(self._device_id),
+                    "port": str(self._port),
+                },
+            ) from err

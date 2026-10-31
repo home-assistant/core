@@ -1,6 +1,7 @@
 {
   "domain": "dlink",
   "name": "D-Link Wi-Fi Smart Plugs",
+  "categories": ["plugs_switches"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
   "dhcp": [

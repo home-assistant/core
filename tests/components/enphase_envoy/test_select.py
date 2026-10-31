@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from pyenphase.exceptions import EnvoyError
 from pyenphase.models.acb import ACBChargeStatus, EnvoyACB
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import (
@@ -26,8 +27,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(

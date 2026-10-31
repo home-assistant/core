@@ -1,6 +1,7 @@
 {
   "domain": "israel_rail",
   "name": "Israel Railways",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@shaiu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/israel_rail",

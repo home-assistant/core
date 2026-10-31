@@ -3,15 +3,16 @@
 import asyncio
 from typing import TYPE_CHECKING, Any
 
+from hass_nabucasa.auth.const import AUTH_RENEW_TIMEOUT, AUTH_USER_TIMEOUT
+
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
 
 if TYPE_CHECKING:
-    from hass_nabucasa import Cloud
+    from hass_nabucasa import AutoLoginController, Cloud
 
     from .client import CloudClient
     from .helpers import FixedSizeQueueLogHandler
-    from .models import PendingAutoLogin
 
 DOMAIN = "cloud"
 DATA_CLOUD: HassKey[Cloud[CloudClient]] = HassKey(DOMAIN)
@@ -19,12 +20,18 @@ DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
     "cloud_platforms_setup"
 )
 DATA_CLOUD_LOG_HANDLER: HassKey[FixedSizeQueueLogHandler] = HassKey("cloud_log_handler")
-DATA_PENDING_AUTO_LOGIN: HassKey[PendingAutoLogin | None] = HassKey(
+# In memory only, so a restart drops the registration and the user signs in by hand.
+DATA_PENDING_AUTO_LOGIN: HassKey[AutoLoginController | None] = HassKey(
     "cloud_pending_auto_login"
 )
 EVENT_CLOUD_EVENT = "cloud_event"
 
-REQUEST_TIMEOUT = 10
+# Timeout for user actions that use the cloud API
+USER_REQUEST_TIMEOUT = AUTH_USER_TIMEOUT + 10
+# Timeout for other uses of the cloud API (that may need to renew auth)
+CLOUD_REQUEST_TIMEOUT = AUTH_RENEW_TIMEOUT + 10
+# Timeout for other requests that do not use cloud auth
+REQUEST_WITHOUT_AUTH_TIMEOUT = 10
 
 PREVIEW_FEATURE_STT_V2 = "stt_v2"
 

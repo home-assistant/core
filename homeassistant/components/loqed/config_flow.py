@@ -1,12 +1,13 @@
 """Config flow for loqed integration."""
 
+from collections.abc import Mapping
 import logging
 import re
 from typing import Any, override
 
 import aiohttp
 from loqedAPI import cloud_loqed, loqed
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -17,8 +18,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
+from .coordinator import is_auth_error
 
 _LOGGER = logging.getLogger(__name__)
+
+USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+)
 
 
 class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -54,9 +60,9 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 lock_data = await cloud_client.async_get_locks()
-            except aiohttp.ClientError as err:
+            except (TimeoutError, aiohttp.ClientError) as err:
                 _LOGGER.error("HTTP Connection error to loqed API")
-                raise CannotConnect from err
+                raise (InvalidAuth if is_auth_error(err) else CannotConnect) from err
 
         try:
             match_key, match_value = (
@@ -87,10 +93,10 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
                 "id": selected_lock["id"],
             }
         except StopIteration as err:
-            raise InvalidAuth from err
-        except aiohttp.ClientError as err:
+            raise LockNotFound from err
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("HTTP Connection error to loqed lock")
-            raise CannotConnect from err
+            raise (InvalidAuth if is_auth_error(err) else CannotConnect) from err
 
     @override
     async def async_step_zeroconf(
@@ -103,7 +109,10 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         apiclient = loqed.APIClient(session, f"http://{host}")
         api = loqed.LoqedAPI(apiclient)
-        lock_data = await api.async_get_lock_details()
+        try:
+            lock_data = await api.async_get_lock_details()
+        except TimeoutError, aiohttp.ClientError:
+            return self.async_abort(reason="cannot_connect")
 
         # Check if already exists
         await self.async_set_unique_id(lock_data["bridge_mac_wifi"])
@@ -116,16 +125,10 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show userform to user."""
-        user_data_schema = vol.Schema(
-            {
-                vol.Required(CONF_API_TOKEN): str,
-            }
-        )
-
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=user_data_schema,
+                data_schema=USER_DATA_SCHEMA,
                 description_placeholders={
                     "config_url": "https://integrations.loqed.com/personal-access-tokens",
                 },
@@ -144,8 +147,10 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 lock_data = await cloud_client.async_get_locks()
-            except aiohttp.ClientError:
-                errors["base"] = "cannot_connect"
+            except (TimeoutError, aiohttp.ClientError) as err:
+                errors["base"] = (
+                    "invalid_auth" if is_auth_error(err) else "cannot_connect"
+                )
             else:
                 self._locks = lock_data["data"]
                 self._api_token = user_input[CONF_API_TOKEN]
@@ -159,7 +164,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             return self.async_show_form(
                 step_id="user",
-                data_schema=user_data_schema,
+                data_schema=USER_DATA_SCHEMA,
                 errors=errors,
                 description_placeholders={
                     "config_url": "https://integrations.loqed.com/personal-access-tokens",
@@ -172,6 +177,8 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except LockNotFound:
+            errors["base"] = "lock_not_found"
         else:
             await self.async_set_unique_id(
                 re.sub(
@@ -192,9 +199,49 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=user_data_schema,
+            data_schema=USER_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
+                "config_url": "https://integrations.loqed.com/personal-access-tokens",
+            },
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the credentials are rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new personal access token and refresh the lock data."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                info = await self.validate_input(
+                    self.hass, {**user_input, "lock_id": reauth_entry.data["id"]}
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except LockNotFound:
+                errors["base"] = "lock_not_found"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN], **info},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "name": reauth_entry.title,
                 "config_url": "https://integrations.loqed.com/personal-access-tokens",
             },
         )
@@ -204,8 +251,6 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle lock selection when multiple locks are available."""
         if user_input is not None:
-            if self._api_token is None:
-                return await self.async_step_user()
             return await self.async_step_user(
                 {**user_input, CONF_API_TOKEN: self._api_token}
             )
@@ -214,9 +259,9 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pick_lock",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("lock_id"): vol.In(lock_options),
+                    probatio.Required("lock_id"): probatio.In(lock_options),
                 }
             ),
         )
@@ -228,3 +273,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class LockNotFound(HomeAssistantError):
+    """Error to indicate the lock is not part of the account."""

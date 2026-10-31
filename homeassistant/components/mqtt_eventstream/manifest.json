@@ -1,6 +1,7 @@
 {
   "domain": "mqtt_eventstream",
   "name": "MQTT Eventstream",
+  "categories": ["diy_makers"],
   "codeowners": [],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt_eventstream",

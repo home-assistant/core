@@ -1,6 +1,7 @@
 {
   "domain": "dexcom",
   "name": "Dexcom",
+  "categories": ["health_wellbeing"],
   "codeowners": ["@gagebenne"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dexcom",

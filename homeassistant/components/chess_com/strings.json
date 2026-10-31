@@ -103,5 +103,10 @@
         "unit_of_measurement": "followers"
       }
     }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "An error occurred while communicating with Chess.com: {error}"
+    }
   }
 }

@@ -1,0 +1,179 @@
+# serializer version: 1
+# name: test_evaluate[json]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[json].1
+  dict({
+    'input': '{"message":"Delivered","count":2}',
+    'model': 'gpt-6-luna',
+    'questions': list([
+      dict({
+        'instructions': 'Has the package arrived?',
+        'name': 'delivered',
+        'type': 'predicate',
+      }),
+      dict({
+        'choices': list([
+          dict({
+            'description': 'At the door',
+            'value': 'door',
+          }),
+          dict({
+            'description': 'Somewhere else',
+            'value': 'other',
+          }),
+        ]),
+        'instructions': 'Where was it left?',
+        'name': 'location',
+        'type': 'choice',
+      }),
+      dict({
+        'instructions': 'How urgent is it?',
+        'levels': list([
+          dict({
+            'description': 'No action',
+            'label': '0',
+          }),
+          dict({
+            'description': 'Action needed',
+            'label': '1',
+          }),
+          dict({
+            'description': 'Action needed today',
+            'label': '2',
+          }),
+        ]),
+        'name': 'attention',
+        'type': 'score',
+      }),
+    ]),
+  })
+# ---
+# name: test_evaluate[text]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[text].1
+  dict({
+    'input': 'Delivered',
+    'model': 'gpt-6-luna',
+    'questions': list([
+      dict({
+        'instructions': 'Has the package arrived?',
+        'name': 'delivered',
+        'type': 'predicate',
+      }),
+      dict({
+        'choices': list([
+          dict({
+            'description': 'At the door',
+            'value': 'door',
+          }),
+          dict({
+            'description': 'Somewhere else',
+            'value': 'other',
+          }),
+        ]),
+        'instructions': 'Where was it left?',
+        'name': 'location',
+        'type': 'choice',
+      }),
+      dict({
+        'instructions': 'How urgent is it?',
+        'levels': list([
+          dict({
+            'description': 'No action',
+            'label': '0',
+          }),
+          dict({
+            'description': 'Action needed',
+            'label': '1',
+          }),
+          dict({
+            'description': 'Action needed today',
+            'label': '2',
+          }),
+        ]),
+        'name': 'attention',
+        'type': 'score',
+      }),
+    ]),
+  })
+# ---
+# name: test_images[image-and-state]
+  list([
+    dict({
+      'content': list([
+        dict({
+          'text': 'Look at the front door',
+          'type': 'input_text',
+        }),
+        dict({
+          'image_url': 'data:image/jpeg;base64,Y2FtZXJhIGltYWdl',
+          'type': 'input_image',
+        }),
+      ]),
+      'role': 'user',
+    }),
+  ])
+# ---
+# name: test_images[image-only]
+  list([
+    dict({
+      'content': list([
+        dict({
+          'image_url': 'data:image/jpeg;base64,Y2FtZXJhIGltYWdl',
+          'type': 'input_image',
+        }),
+      ]),
+      'role': 'user',
+    }),
+  ])
+# ---

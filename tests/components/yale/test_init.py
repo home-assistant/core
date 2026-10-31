@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientError, ClientResponseError
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from yalexs.exceptions import InvalidAuth, YaleApiError
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
@@ -38,8 +39,6 @@ from .mocks import (
     mock_client_credentials,
     mock_yale_config_entry,
 )
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_yale_api_is_failing(hass: HomeAssistant) -> None:

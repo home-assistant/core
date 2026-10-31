@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 
 from PySrDaliGateway import CallbackEventType
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import find_device_listener, trigger_availability_callback
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 TEST_DIMMER_ENTITY_ID = "light.dimmer_0000_02"
 TEST_DIMMER_DEVICE_ID = "01010000026A242121110E"

@@ -65,7 +65,6 @@
     "step": {
       "init": {
         "data": {
-          "scan_interval": "Update interval",
           "tracked_asset_pairs": "Tracked asset pairs"
         }
       }

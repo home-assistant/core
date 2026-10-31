@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.api import Chime
 from reolink_aio.enums import BatteryEnum, ConnectionEnum
 from reolink_aio.exceptions import ReolinkError
@@ -27,8 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "4.5.6.7"
@@ -60,7 +59,7 @@ TEST_BC_CON = ConnectionEnum.tcp.value
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.reolink.async_setup_entry", return_value=True
+        "homeassistant.components.reolink.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -112,6 +111,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.protocol = "rtsp"
     host_mock.channels = [0]
     host_mock.stream_channels = [0]
+    host_mock.sub_channels.return_value = {None}
     host_mock.num_cameras = 1
     host_mock.new_devices = False
     host_mock.sw_version_update_required = False
@@ -181,6 +181,8 @@ def _init_host_mock(host_mock: MagicMock) -> None:
         "zoom": {"min": 0, "max": 100},
         "focus": {"min": 0, "max": 100},
     }
+    host_mock.whiteled_event_on_time_range.return_value = (30, 900)
+    host_mock.whiteled_event_flash_time_range.return_value = (10, 30)
     host_mock.capabilities = {"Host": ["RTSP"], "0": ["motion_detection"]}
     host_mock.checked_api_versions = {"GetEvents": 1}
     host_mock.abilities = {"abilityChn": [{"aiTrack": {"permit": 0, "ver": 0}}]}

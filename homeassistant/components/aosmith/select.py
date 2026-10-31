@@ -6,8 +6,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AOSmithConfigEntry
-from .coordinator import AOSmithStatusCoordinator
+from .coordinator import AOSmithConfigEntry, AOSmithStatusCoordinator
 from .entity import AOSmithStatusEntity
 
 HWP_LEVEL_HA_TO_AOSMITH = {

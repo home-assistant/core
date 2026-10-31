@@ -4,9 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smtp.const import (
     CONF_ENCRYPTION,
+    CONF_REPLY_TO,
+    CONF_REPLY_TO_NAME,
     CONF_SENDER_NAME,
     CONF_SERVER,
     DOMAIN,
@@ -21,8 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_SENDER: "email@example.com",
@@ -40,7 +41,7 @@ USER_INPUT = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.smtp.async_setup_entry", return_value=True
+        "homeassistant.components.smtp.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -49,12 +50,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_smtp() -> Generator[MagicMock]:
     """Mock smtplib.SMTP."""
 
+    with patch(
+        "homeassistant.components.smtp.helpers.smtplib.SMTP", autospec=True
+    ) as mock_client:
+        client = mock_client.return_value
+        client.cls = mock_client
+        yield client
+
+
+@pytest.fixture(name="aiosmtplib")
+def mock_aiosmtplib() -> Generator[AsyncMock]:
+    """Mock aiosmtplib."""
+
     with (
         patch(
-            "homeassistant.components.smtp.config_flow.SMTP_SSL", autospec=True
+            "homeassistant.components.smtp.config_flow.SMTP", autospec=True
         ) as mock_client,
-        patch("homeassistant.components.smtp.helpers.smtplib.SMTP", new=mock_client),
-        patch("homeassistant.components.smtp.config_flow.SMTP", new=mock_client),
+        patch("homeassistant.components.smtp.SMTP", new=mock_client),
     ):
         client = mock_client.return_value
         client.cls = mock_client
@@ -83,6 +95,33 @@ def mock_randrange() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="version")
+def mock_version() -> Generator[None]:
+    """Mock Home Assistant version."""
+
+    with patch(
+        "homeassistant.components.smtp.notify.__version__",
+        "2026.10.0",
+    ):
+        yield
+
+
+@pytest.fixture(name="client_context")
+def mock_client_context() -> Generator[None]:
+    """Mock client_context."""
+
+    with (
+        patch(
+            "homeassistant.components.smtp.config_flow.create_client_context"
+        ) as mock_client,
+        patch(
+            "homeassistant.components.smtp.create_client_context",
+            new=mock_client,
+        ),
+    ):
+        yield mock_client
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Mock smtp configuration entry."""
@@ -92,6 +131,8 @@ def mock_config_entry() -> MockConfigEntry:
         data=USER_INPUT,
         options={
             CONF_TIMEOUT: 1312,
+            CONF_REPLY_TO: "replyto@example.com",
+            CONF_REPLY_TO_NAME: "Reply To Name",
         },
         entry_id="123456789",
         subentries_data=[

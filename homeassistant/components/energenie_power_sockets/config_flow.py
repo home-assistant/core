@@ -2,9 +2,9 @@
 
 from typing import Any, override
 
+import probatio
 from pyegps import get_device, search_for_devices
 from pyegps.exceptions import MissingLibrary, UsbError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
@@ -51,8 +51,10 @@ class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Found %d devices", len(devices))
         if len(devices) > 0:
             options = {d.device_id: f"{d.name} ({d.device_id})" for d in devices}
-            data_schema = {CONF_DEVICE_API_ID: vol.In(options)}
+            data_schema = {CONF_DEVICE_API_ID: probatio.In(options)}
         else:
             return self.async_abort(reason="no_device")
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(data_schema))
+        return self.async_show_form(
+            step_id="user", data_schema=probatio.Schema(data_schema)
+        )

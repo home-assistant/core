@@ -1,15 +1,25 @@
 """Fixtures for Waze Travel Time tests."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pywaze.route_calculator import CalcRoutesResponse, WRCError
 
 from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
 from homeassistant.components.waze_travel_time.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+
+@pytest.fixture(autouse=True)
+def no_api_call_delay() -> Generator[None]:
+    """Skip the delay between Waze API calls."""
+    with patch(
+        "homeassistant.components.waze_travel_time.coordinator.SECONDS_BETWEEN_API_CALLS",
+        0,
+    ):
+        yield
 
 
 @pytest.fixture(name="mock_config")
@@ -70,7 +80,7 @@ def bypass_platform_setup_fixture():
     """Bypass platform setup."""
     with patch(
         "homeassistant.components.waze_travel_time.sensor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
@@ -80,6 +90,6 @@ def bypass_setup_fixture():
     """Bypass entry setup."""
     with patch(
         "homeassistant.components.waze_travel_time.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield

@@ -44,6 +44,7 @@ METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, SensorDeviceClass] = {
     MetricType.DURATION: SensorDeviceClass.DURATION,
     MetricType.ENUM: SensorDeviceClass.ENUM,
     MetricType.IRRADIANCE: SensorDeviceClass.IRRADIANCE,
+    MetricType.TIMESTAMP: SensorDeviceClass.TIMESTAMP,
 }
 
 METRIC_NATURE_TO_STATE_CLASS: dict[MetricNature, SensorStateClass] = {

@@ -16,6 +16,70 @@
         }
       }
     },
+    "number": {
+      "cl1": {
+        "default": "mdi:test-tube"
+      },
+      "hidro": {
+        "default": "mdi:air-humidifier"
+      },
+      "hidro_cover_reduction": {
+        "default": "mdi:pool"
+      },
+      "hidro_shutdown_temperature": {
+        "default": "mdi:thermometer-alert"
+      },
+      "rx1": {
+        "default": "mdi:gradient-vertical"
+      },
+      "smart_temp_high": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "smart_temp_low": {
+        "default": "mdi:thermometer-chevron-down"
+      }
+    },
+    "select": {
+      "cell_boost": {
+        "default": "mdi:flash-outline"
+      },
+      "filt_mode": {
+        "default": "mdi:water-sync"
+      },
+      "filtration_speed": {
+        "default": "mdi:fan-speed-3"
+      },
+      "filtration_speed_timer": {
+        "default": "mdi:fan-speed-3"
+      },
+      "filtvalve_interval": {
+        "default": "mdi:timer-sand"
+      },
+      "filtvalve_mode": {
+        "default": "mdi:valve"
+      },
+      "filtvalve_period_minutes": {
+        "default": "mdi:timer-refresh-outline"
+      },
+      "intelligent_filt_min_time": {
+        "default": "mdi:timer-lock-outline"
+      },
+      "relay_activation_delay": {
+        "default": "mdi:timer-plus-outline"
+      },
+      "relay_aux_mode": {
+        "default": "mdi:speedometer-medium"
+      },
+      "relay_aux_period": {
+        "default": "mdi:repeat-variant"
+      },
+      "relay_light_mode": {
+        "default": "mdi:speedometer-medium"
+      },
+      "relay_light_period": {
+        "default": "mdi:repeat-variant"
+      }
+    },
     "sensor": {
       "filt_mode": {
         "default": "mdi:water-sync",
@@ -123,6 +187,34 @@
           "on": "mdi:lightbulb-fluorescent-tube"
         }
       }
+    },
+    "time": {
+      "filtration_start": {
+        "default": "mdi:clock-start"
+      },
+      "filtration_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_aux_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_aux_stop": {
+        "default": "mdi:clock-end"
+      },
+      "relay_light_start": {
+        "default": "mdi:clock-start"
+      },
+      "relay_light_stop": {
+        "default": "mdi:clock-end"
+      }
+    }
+  },
+  "services": {
+    "get_device_time": {
+      "service": "mdi:clock-check-outline"
+    },
+    "set_device_time": {
+      "service": "mdi:clock-edit-outline"
     }
   }
 }

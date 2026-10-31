@@ -15,6 +15,7 @@ from aiohasupervisor.models import (
     SuggestionType,
 )
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -23,8 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 from .test_issues import mock_resolution_info
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -1579,6 +1578,7 @@ async def test_supervisor_issue_detached_addon_removed(
             "addon": "test",
             "help_url": "https://www.home-assistant.io/help/",
             "community_url": "https://community.home-assistant.io/",
+            "backup_url": "/config/backup",
         },
         "last_step": True,
         "preview": None,
@@ -1778,8 +1778,9 @@ async def test_supervisor_issue_deprecated_addon(
             "addon": "test",
             "help_url": "https://www.home-assistant.io/help/",
             "community_url": "https://community.home-assistant.io/",
-            "addon_info": "homeassistant://hassio/addon/test/info",
-            "addon_documentation": "homeassistant://hassio/addon/test/documentation",
+            "backup_url": "/config/backup",
+            "addon_info": "homeassistant://config/app/test/info",
+            "addon_documentation": "homeassistant://config/app/test/documentation",
         },
         "last_step": True,
         "preview": None,
@@ -1869,6 +1870,7 @@ async def test_supervisor_issue_deprecated_arch_addon(
             "addon": "test",
             "help_url": "https://www.home-assistant.io/help/",
             "community_url": "https://community.home-assistant.io/",
+            "backup_url": "/config/backup",
         },
         "last_step": True,
         "preview": None,

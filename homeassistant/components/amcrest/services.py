@@ -1,6 +1,6 @@
 """Services for Amcrest IP cameras."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -41,7 +41,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "goto_preset",
         entity_domain=CAMERA_DOMAIN,
-        schema={vol.Required(_ATTR_PRESET): vol.All(vol.Coerce(int), vol.Range(min=1))},
+        schema={
+            probatio.Required(_ATTR_PRESET): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1)
+            )
+        },
         func="async_goto_preset",
     )
     service.async_register_platform_entity_service(
@@ -49,7 +53,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "set_color_bw",
         entity_domain=CAMERA_DOMAIN,
-        schema={vol.Required(ATTR_COLOR_BW): vol.In(CBW)},
+        schema={probatio.Required(ATTR_COLOR_BW): probatio.In(CBW)},
         func="async_set_color_bw",
     )
     service.async_register_platform_entity_service(
@@ -58,8 +62,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "ptz_control",
         entity_domain=CAMERA_DOMAIN,
         schema={
-            vol.Required(_ATTR_PTZ_MOV): vol.In(MOV),
-            vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
+            probatio.Required(_ATTR_PTZ_MOV): probatio.In(MOV),
+            probatio.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
         },
         func="async_ptz_control",
     )

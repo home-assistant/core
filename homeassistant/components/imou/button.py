@@ -3,7 +3,6 @@
 from typing import override
 
 from pyimouapi.const import PARAM_RESTART_DEVICE
-from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.button import (
@@ -11,13 +10,14 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, PTZ_MOVE_DURATION_MS, imou_device_identifier
+from .const import PTZ_MOVE_DURATION_MS, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
+from .helpers import async_wrap_imou_command
 
 PARALLEL_UPDATES = 1
 # Button types not yet exported by pyimouapi (keep module-local).
@@ -38,10 +38,12 @@ BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
     ButtonEntityDescription(
         key=PARAM_RESTART_DEVICE,
         device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
     ),
     ButtonEntityDescription(
         key=PARAM_MUTE,
         translation_key=PARAM_MUTE,
+        entity_category=EntityCategory.CONFIG,
     ),
     ButtonEntityDescription(
         key=PARAM_PTZ_UP,
@@ -100,18 +102,12 @@ class ImouButton(ImouEntity, ButtonEntity):
     entity_description: ButtonEntityDescription
 
     @override
+    @async_wrap_imou_command("press_button_failed")
     async def async_press(self) -> None:
         """Handle button press."""
         duration = PTZ_MOVE_DURATION_MS if self._entity_type in PTZ_BUTTON_TYPES else 0
-        try:
-            await self.coordinator.device_manager.async_press_button(
-                self.device,
-                self._entity_type,
-                duration,
-            )
-        except ImouException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="press_button_failed",
-                translation_placeholders={"error": e.message},
-            ) from e
+        await self.coordinator.device_manager.async_press_button(
+            self.device,
+            self._entity_type,
+            duration,
+        )

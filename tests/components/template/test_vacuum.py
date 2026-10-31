@@ -6,6 +6,11 @@ from itertools import chain
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
@@ -51,9 +56,7 @@ from .conftest import (
     setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry, async_mock_restore_state_shutdown_restart
 from tests.components.vacuum import common
-from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
@@ -1141,7 +1144,9 @@ async def test_invalid_segments(
 )
 @pytest.mark.usefixtures("setup_vacuum")
 async def test_raise_segments_changed_issue(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that issue is raised on segments change."""
     hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bedroom")
@@ -1160,7 +1165,6 @@ async def test_raise_segments_changed_issue(
     hass.states.async_set(TEST_ATTRIBUTE_ENTITY_ID, "Bathroom")
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert len(issue_registry.issues) != 0
 
 

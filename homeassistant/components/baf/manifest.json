@@ -1,6 +1,7 @@
 {
   "domain": "baf",
   "name": "Big Ass Fans",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@bdraco", "@jfroy"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/baf",

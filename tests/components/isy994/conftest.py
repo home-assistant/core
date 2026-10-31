@@ -2,13 +2,13 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyisy.constants import ES_CONNECTED
 from pyisy.nodes import Node
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.isy994.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 MOCK_UUID = "00:00:00:00:00:00"
 
@@ -42,6 +42,7 @@ def mock_isy():
     mock.networking.nobjs = []
     mock.clock = MagicMock()
     mock.websocket = MagicMock()
+    mock.websocket.status = ES_CONNECTED
     mock.conf = {
         "name": "Skynet ISY",
         "model": "IoX",

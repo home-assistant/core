@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -11,8 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 from .const import NC_DATA, VALID_CONFIG
-
-from tests.common import snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

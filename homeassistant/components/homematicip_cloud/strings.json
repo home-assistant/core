@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "connection_aborted": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -38,14 +37,23 @@
   },
   "entity": {
     "binary_sensor": {
+      "arming_blocked": {
+        "name": "Arming blocked"
+      },
       "chamber_degraded": {
         "name": "Chamber degraded"
       },
       "cloud_connection": {
         "name": "Cloud connection"
       },
+      "heating": {
+        "name": "Heating"
+      },
       "raining": {
         "name": "Raining"
+      },
+      "water_alarm": {
+        "name": "Water alarm"
       }
     },
     "event": {
@@ -92,6 +100,9 @@
       "heating": {
         "name": "Heating"
       },
+      "height": {
+        "name": "Height"
+      },
       "smoke_detector_alarm_counter": {
         "name": "Alarm counter"
       },
@@ -120,6 +131,9 @@
       "today_rain": {
         "name": "Today rain"
       },
+      "water_flow": {
+        "name": "Water flow"
+      },
       "window_state": {
         "name": "Window state",
         "state": {
@@ -139,6 +153,29 @@
     },
     "alarm_activation_failed": {
       "message": "The alarm system did not accept the requested state"
+    },
+    "alarm_activation_outdated": {
+      "message": "The alarm system was not armed because more sensors report a problem than at the last attempt: {devices}"
+    },
+    "device_not_found": {
+      "message": "No matching Homematic IP device found for device ID {device_id}"
+    },
+    "pull_latch_failed": {
+      "message": "{device_name} did not pull the latch, the access point returned {error_code}"
+    },
+    "pull_latch_not_supported": {
+      "message": "{device_name} is not a door opener and cannot pull a latch"
+    },
+    "setup_failed": {
+      "message": "Error connecting with HomematicIP Cloud"
+    }
+  },
+  "selector": {
+    "arm_anyway_mode": {
+      "options": {
+        "away": "Away",
+        "home": "Home"
+      }
     }
   },
   "services": {
@@ -188,6 +225,16 @@
       },
       "name": "Activate vacation"
     },
+    "arm_anyway": {
+      "description": "Arms the alarm system although sensors report a problem. The blocking entry points stay unmonitored.",
+      "fields": {
+        "mode": {
+          "description": "Arm the internal and external zone (away) or only the external one (home).",
+          "name": "Mode"
+        }
+      },
+      "name": "Arm anyway"
+    },
     "deactivate_eco_mode": {
       "description": "Deactivates the eco mode immediately.",
       "fields": {
@@ -225,6 +272,20 @@
         }
       },
       "name": "Dump HAP config"
+    },
+    "pull_latch": {
+      "description": "Pulls the latch of a door opener, optionally using the PIN of its access authorization.",
+      "fields": {
+        "device_id": {
+          "description": "The door opener devices whose latch is pulled.",
+          "name": "Devices"
+        },
+        "pin": {
+          "description": "The PIN of the access authorization. Only needed if a PIN is configured for it.",
+          "name": "PIN"
+        }
+      },
+      "name": "Pull latch"
     },
     "reset_energy_counter": {
       "description": "Resets the energy counter of a measuring entity.",

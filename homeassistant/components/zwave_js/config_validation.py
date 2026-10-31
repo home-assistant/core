@@ -2,25 +2,25 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from zwave_js_server.const import CommandClass
 
 from homeassistant.helpers import config_validation as cv
 
 # Validates that a bitmask is provided in hex form and converts it to decimal
 # int equivalent since that's what the library uses
-BITMASK_SCHEMA = vol.All(
+BITMASK_SCHEMA = probatio.All(
     cv.string,
-    vol.Lower,
-    vol.Match(
+    probatio.Lower,
+    probatio.Match(
         r"^(0x)?[0-9a-f]+$",
         msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
     ),
     lambda value: int(value, 16),
 )
 
-COMMAND_CLASS_SCHEMA = vol.All(
-    vol.Coerce(int), vol.In([cc.value for cc in CommandClass])
+COMMAND_CLASS_SCHEMA = probatio.All(
+    probatio.Coerce(int), probatio.In([cc.value for cc in CommandClass])
 )
 
 
@@ -34,15 +34,15 @@ def boolean(value: Any) -> bool:
             return True
         if value in ("false", "no", "off", "disable"):
             return False
-    raise vol.Invalid(f"invalid boolean value {value}")
+    raise probatio.Invalid(f"invalid boolean value {value}")
 
 
-VALUE_SCHEMA = vol.Any(
+VALUE_SCHEMA = probatio.Any(
     boolean,
     int,
     float,
-    vol.Coerce(int),
-    vol.Coerce(float),
+    probatio.Coerce(int),
+    probatio.Coerce(float),
     BITMASK_SCHEMA,
     cv.string,
     dict,

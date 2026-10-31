@@ -3,9 +3,9 @@
 import logging
 from typing import Any, override
 
+import probatio
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import WallConnectorError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -45,9 +45,9 @@ class TeslaWallConnectorOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SPLIT_PHASE,
                         default=self.config_entry.options.get(
                             CONF_SPLIT_PHASE, DEFAULT_SPLIT_PHASE
@@ -139,10 +139,10 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=self.ip_address): str,
-                vol.Optional(
+                probatio.Required(CONF_HOST, default=self.ip_address): str,
+                probatio.Optional(
                     CONF_SPLIT_PHASE, default=DEFAULT_SPLIT_PHASE
                 ): BooleanSelector(),
             }

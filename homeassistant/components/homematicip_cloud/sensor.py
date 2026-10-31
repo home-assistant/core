@@ -23,6 +23,7 @@ from homematicip.device import (
     LightSensor,
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
+    MotionDetectorSwitchOutdoor,
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
@@ -35,7 +36,9 @@ from homematicip.device import (
     TemperatureHumiditySensorOutdoor,
     TemperatureHumiditySensorWithoutDisplay,
     TiltVibrationSensor,
+    UltrasonicDistanceSensor,
     WateringActuator,
+    WaterSupplyStop,
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
@@ -53,6 +56,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     UnitOfDensity,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfRatio,
@@ -67,7 +71,11 @@ from homeassistant.helpers.typing import StateType
 
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_channels_from_device, smoke_detector_channel_data_exists
+from .helpers import (
+    get_channel_index_by_type,
+    get_channels_from_device,
+    smoke_detector_channel_data_exists,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -144,6 +152,8 @@ class HmipSensorDescription[_DeviceT: Device](SensorEntityDescription):
     extra_attrs_fn: Callable[[_DeviceT], dict[str, Any]] | None = None
     icon_fn: Callable[[_DeviceT], str] | None = None
     channel: int
+    # for devices whose channel does not sit at the position `channel` names
+    channel_type: FunctionalChannelType | None = None
 
 
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -292,6 +302,16 @@ ILLUMINANCE_DESC = HmipSensorDescription[Device](
     channel=1,
 )
 
+MOTION_SWITCH_ILLUMINANCE_DESC = HmipSensorDescription[Device](
+    key="illuminance",
+    device_class=SensorDeviceClass.ILLUMINANCE,
+    native_unit_of_measurement=LIGHT_LUX,
+    state_class=SensorStateClass.MEASUREMENT,
+    channel_value_fn=lambda channel: channel.illumination,
+    channel=1,
+    channel_type=FunctionalChannelType.MOTION_DETECTION_CHANNEL,
+)
+
 POWER_DESC = HmipSensorDescription[Device](
     key="power",
     device_class=SensorDeviceClass.POWER,
@@ -393,6 +413,52 @@ TILT_ANGLE_DESC = HmipSensorDescription[Device](
     state_class=SensorStateClass.MEASUREMENT_ANGLE,
     channel_value_fn=lambda channel: getattr(channel, "absoluteAngle", None),
     channel=1,
+    channel_type=FunctionalChannelType.TILT_VIBRATION_SENSOR_CHANNEL,
+)
+
+# Only the ELV-SH-TACO carries a temperature channel next to the tilt channel.
+TILT_TEMPERATURE_DESC = HmipSensorDescription[Device](
+    key="temperature",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=_temperature_value,
+    extra_attrs_fn=_temperature_extras,
+    exists_fn=lambda d: hasattr(d, "actualTemperature"),
+    channel=1,
+    channel_type=FunctionalChannelType.TEMPERATURE_SENSOR_CHANNEL,
+)
+
+DISTANCE_DESC = HmipSensorDescription[Device](
+    key="distance",
+    device_class=SensorDeviceClass.DISTANCE,
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.distance,
+    channel=1,
+)
+
+HEIGHT_DESC = HmipSensorDescription[Device](
+    key="height",
+    translation_key="height",
+    device_class=SensorDeviceClass.DISTANCE,
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.calculatedHeight,
+    channel=1,
+)
+
+
+WATER_FLOW_DESC = HmipSensorDescription[Device](
+    key="water_flow",
+    translation_key="water_flow",
+    device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+    native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=1,
+    channel_value_fn=lambda channel: channel.waterFlow,
+    channel=1,
+    channel_type=FunctionalChannelType.WATER_SUPPLY_STOP_CHANNEL,
 )
 
 
@@ -425,6 +491,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
     LightSensor: (ILLUMINANCE_DESC,),
     MotionDetectorIndoor: (ILLUMINANCE_DESC,),
     MotionDetectorOutdoor: (ILLUMINANCE_DESC,),
+    MotionDetectorSwitchOutdoor: (MOTION_SWITCH_ILLUMINANCE_DESC,),
     PresenceDetectorIndoor: (ILLUMINANCE_DESC,),
     SwitchMeasuring: (POWER_DESC, ENERGY_DESC),
     PassageDetector: (PASSAGE_COUNTER_DESC,),
@@ -433,7 +500,9 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
         TEMPERATURE_EXTERNAL_CH2_DESC,
         TEMPERATURE_EXTERNAL_DELTA_DESC,
     ),
-    TiltVibrationSensor: (TILT_ANGLE_DESC,),
+    TiltVibrationSensor: (TILT_ANGLE_DESC, TILT_TEMPERATURE_DESC),
+    UltrasonicDistanceSensor: (DISTANCE_DESC, HEIGHT_DESC),
+    WaterSupplyStop: (WATER_FLOW_DESC,),
     WeatherSensor: (
         TEMPERATURE_DESC,
         HUMIDITY_DESC,
@@ -721,7 +790,15 @@ class HomematicipTiltStateSensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the tilt sensor device."""
-        super().__init__(hap, device, post="Tilt State", feature_id="tilt_state")
+        super().__init__(
+            hap,
+            device,
+            post="Tilt State",
+            feature_id="tilt_state",
+            channel_real_index=get_channel_index_by_type(
+                device, FunctionalChannelType.TILT_VIBRATION_SENSOR_CHANNEL
+            ),
+        )
 
     @property
     @override
@@ -1054,11 +1131,17 @@ class HomematicipSensor[_DeviceT: Device](HomematicipGenericEntity, SensorEntity
         description: HmipSensorDescription[_DeviceT],
     ) -> None:
         """Initialize the described sensor."""
+        channel_real_index = (
+            get_channel_index_by_type(device, description.channel_type)
+            if description.channel_type is not None
+            else None
+        )
         super().__init__(
             hap,
             device,
             feature_id=description.key,
             channel=description.channel,
+            channel_real_index=channel_real_index,
             use_description_name=True,
         )
         self.entity_description = description

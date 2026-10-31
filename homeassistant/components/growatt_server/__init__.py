@@ -25,7 +25,7 @@ Error handling pattern for reauth:
 """
 
 from collections.abc import Mapping
-import datetime
+import datetime as dt
 from json import JSONDecodeError
 import logging
 
@@ -83,7 +83,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entries.
 
     Migration from version 1.0 to 1.1:
@@ -144,11 +144,10 @@ async def async_migrate_entry(
             # (plant selection happens in config flow)
             # If it does, this indicates a corrupted config entry
             if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
-                _LOGGER.error(
-                    "V1 API config entry has DEFAULT_PLANT_ID, which indicates a "
-                    "corrupted configuration. Please reconfigure the integration"
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="migration_invalid_plant_id",
                 )
-                return False
 
             # Classic API with DEFAULT_PLANT_ID - resolve to actual plant_id
             if config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
@@ -157,11 +156,10 @@ async def async_migrate_entry(
                 url = config.get(CONF_URL, DEFAULT_URL)
 
                 if not username or not password:
-                    # Credentials missing - cannot migrate
-                    _LOGGER.error(
-                        "Cannot migrate DEFAULT_PLANT_ID due to missing credentials"
+                    raise ConfigEntryError(
+                        translation_domain=DOMAIN,
+                        translation_key="migration_missing_credentials",
                     )
-                    return False
 
                 try:
                     # Create API instance and login
@@ -174,23 +172,20 @@ async def async_migrate_entry(
                         api.plant_list, login_response["user"]["id"]
                     )
                 except (ConfigEntryError, RequestException, JSONDecodeError) as ex:
-                    # API failure during migration - return False to retry later
-                    _LOGGER.error(
-                        "Failed to resolve plant_id during migration: %s. "
-                        "Migration will retry on next restart",
-                        ex,
-                    )
-                    return False
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="migration_plant_id_failed",
+                    ) from ex
 
                 # plant_list() is annotated as list, but the classic API returns
                 # {"data": [...]}. Remove once the annotation is fixed upstream:
                 # https://github.com/indykoning/PyPi_GrowattServer/issues/157
                 if not isinstance(plant_info, dict) or not plant_info.get("data"):
-                    _LOGGER.error(
-                        "No plants found for this account. "
-                        "Migration will retry on next restart"
+                    raise ConfigEntryError(
+                        translation_domain=DOMAIN,
+                        translation_key="migration_no_plants",
+                        translation_placeholders={"username": username},
                     )
-                    return False
 
                 first_plant_id = plant_info["data"][0]["plantId"]
 
@@ -213,8 +208,6 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(config_entry, minor_version=1)
 
         _LOGGER.debug("Migration completed to version %s.%s", config_entry.version, 1)
-
-    return True
 
 
 async def _create_api_and_login(
@@ -321,7 +314,7 @@ def get_device_list_v1(
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
-) -> bool:
+) -> None:
     """Set up Growatt from a config entry."""
 
     config = config_entry.data
@@ -410,7 +403,7 @@ async def async_setup_entry(
     # Set up all the entities
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    async def _async_scan_for_new_devices(_now: datetime.datetime) -> None:
+    async def _async_scan_for_new_devices(_now: dt.datetime) -> None:
         """Scan for new or removed devices and update HA accordingly."""
         # Fetch current config (in case it was updated via reauth or options)
         current_plant_id = config_entry.data[CONF_PLANT_ID]
@@ -497,11 +490,9 @@ async def async_setup_entry(
         )
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

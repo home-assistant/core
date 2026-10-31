@@ -15,6 +15,25 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::librenms::common::data_desc_api_key%]"
+        },
+        "description": "Update the API key for {name}."
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "[%key:component::librenms::common::data_desc_url%]",
+          "verify_ssl": "[%key:component::librenms::common::data_desc_ssl_verify%]"
+        }
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -34,6 +53,16 @@
       "status": {
         "name": "Status"
       }
+    },
+    "sensor": {
+      "database_version": { "name": "Database version" },
+      "device_count": {
+        "name": "Total device count"
+      },
+      "netsnmp_version": { "name": "NetSNMP version" },
+      "php_version": { "name": "PHP version" },
+      "python_version": { "name": "Python version" },
+      "rrdtool_version": { "name": "RRDTool version" }
     }
   },
   "exceptions": {

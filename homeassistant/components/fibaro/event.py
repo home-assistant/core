@@ -5,16 +5,12 @@ from typing import override
 from pyfibaro.fibaro_device import DeviceModel, SceneEvent
 from pyfibaro.fibaro_state_resolver import FibaroEvent
 
-from homeassistant.components.event import (
-    ENTITY_ID_FORMAT,
-    EventDeviceClass,
-    EventEntity,
-)
+from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FibaroConfigEntry
+from . import FibaroConfigEntry, FibaroController
 from .entity import FibaroEntity
 
 
@@ -29,7 +25,7 @@ async def async_setup_entry(
     # Each scene event represents a button on a device
     async_add_entities(
         (
-            FibaroEventEntity(device, scene_event)
+            FibaroEventEntity(device, scene_event, controller)
             for device in controller.fibaro_devices[Platform.EVENT]
             for scene_event in device.central_scene_event
         ),
@@ -40,20 +36,23 @@ async def async_setup_entry(
 class FibaroEventEntity(FibaroEntity, EventEntity):
     """Representation of a Fibaro Event Entity."""
 
-    def __init__(self, fibaro_device: DeviceModel, scene_event: SceneEvent) -> None:
+    def __init__(
+        self,
+        fibaro_device: DeviceModel,
+        scene_event: SceneEvent,
+        controller: FibaroController,
+    ) -> None:
         """Initialize the Fibaro device."""
-        super().__init__(fibaro_device)
+        super().__init__(fibaro_device, controller)
 
         key_id = scene_event.key_id
 
-        self.entity_id = ENTITY_ID_FORMAT.format(f"{self.ha_id}_button_{key_id}")
-
         self._button = key_id
 
-        self._attr_name = f"{fibaro_device.friendly_name} Button {key_id}"
+        self._attr_name = f"{self._attr_name} Button {key_id}"
         self._attr_device_class = EventDeviceClass.BUTTON
         self._attr_event_types = scene_event.key_event_types
-        self._attr_unique_id = f"{fibaro_device.unique_id_str}.{key_id}"
+        self._attr_unique_id = f"{self._attr_unique_id}.{key_id}"
 
     @override
     async def async_added_to_hass(self) -> None:

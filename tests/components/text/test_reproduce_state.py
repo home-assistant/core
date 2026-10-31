@@ -1,6 +1,7 @@
 """Test reproduce state for Text entities."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.text.const import (
     ATTR_MAX,
@@ -12,8 +13,6 @@ from homeassistant.components.text.const import (
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 VALID_TEXT1 = "Hello"
 VALID_TEXT2 = "World"

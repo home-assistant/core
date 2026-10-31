@@ -1,6 +1,7 @@
 {
   "domain": "acmeda",
   "name": "Rollease Acmeda Automate",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@atmurray"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/acmeda",

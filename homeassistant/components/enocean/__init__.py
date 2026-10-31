@@ -1,7 +1,7 @@
 """Support for EnOcean devices."""
 
 from enocean_async import Gateway
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
@@ -18,8 +18,9 @@ from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 type EnOceanConfigEntry = ConfigEntry[Gateway]
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({probatio.Required(CONF_DEVICE): cv.string})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -45,7 +46,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
-) -> bool:
+) -> None:
     """Set up an EnOcean gateway for the given entry."""
     gateway = Gateway(port=config_entry.data[CONF_DEVICE])
 
@@ -64,13 +65,11 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
     )
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
-) -> bool:
+) -> None:
     """Unload EnOcean config entry: stop the gateway."""
 
     config_entry.runtime_data.stop()
-    return True

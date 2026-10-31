@@ -14,6 +14,13 @@ from habiticalib import (
     TaskType,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_persistent_notifications,
+    async_load_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import DOMAIN
@@ -33,14 +40,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ERROR_NOT_FOUND, ERROR_TOO_MANY_REQUESTS
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_persistent_notifications,
-    async_load_fixture,
-    snapshot_platform,
-)
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

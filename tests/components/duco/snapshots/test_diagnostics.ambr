@@ -22,7 +22,8 @@
         'component': 'Ventilation',
         'raw_payload': dict({
         }),
-        'status': 'Ok',
+        'raw_status': 'Ok',
+        'status': 'ok',
       }),
     ]),
     'entry_data': dict({

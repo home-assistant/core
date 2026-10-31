@@ -7,10 +7,11 @@ import os
 import tempfile
 from unittest.mock import patch
 
+import probatio
 from pysignalclirestapi.api import SignalCliRestApiError
 import pytest
+import requests
 from requests_mock.mocker import Mocker
-import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -48,6 +49,38 @@ async def test_signal_messenger_init(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert hass.services.has_service(NOTIFY_DOMAIN, "test")
+
+
+async def test_signal_messenger_init_api_unavailable(
+    hass: HomeAssistant,
+    requests_mock: Mocker,
+    signal_requests_mock_factory: Mocker,
+) -> None:
+    """Test that the service loads and sends once the REST API is available."""
+    requests_mock.get(
+        f"{SIGNAL_BASE_URL}/v1/about", exc=requests.exceptions.ConnectionError
+    )
+    config = {
+        NOTIFY_DOMAIN: {
+            "name": "test",
+            "platform": "signal_messenger",
+            "url": SIGNAL_BASE_URL,
+            "number": NUMBER_FROM,
+            "recipients": NUMBERS_TO,
+        }
+    }
+
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test")
+
+    signal_requests_mock = signal_requests_mock_factory()
+    await hass.services.async_call(
+        NOTIFY_DOMAIN, "test", {"message": MESSAGE}, blocking=True
+    )
+
+    assert_sending_requests(signal_requests_mock)
 
 
 def test_send_message(
@@ -129,7 +162,7 @@ def test_send_message_to_api_with_bad_data_throws_error(
     assert "send message" in str(exc.value).lower()
 
 
-def test_send_message_with_bad_data_throws_vol_error(
+def test_send_message_with_bad_data_throws_probatio_error(
     signal_notification_service: SignalNotificationService,
     signal_requests_mock_factory: Mocker,
     caplog: pytest.LogCaptureFixture,
@@ -139,7 +172,7 @@ def test_send_message_with_bad_data_throws_vol_error(
         caplog.at_level(
             logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
         ),
-        pytest.raises(vol.Invalid) as exc,
+        pytest.raises(probatio.Invalid) as exc,
     ):
         signal_notification_service.send_message(MESSAGE, data={"test": "test"})
 
@@ -147,7 +180,7 @@ def test_send_message_with_bad_data_throws_vol_error(
     assert "not a valid option" in str(exc.value)
 
 
-def test_send_message_styled_with_bad_data_throws_vol_error(
+def test_send_message_styled_with_bad_data_throws_probatio_error(
     signal_notification_service: SignalNotificationService,
     signal_requests_mock_factory: Mocker,
     caplog: pytest.LogCaptureFixture,
@@ -157,7 +190,7 @@ def test_send_message_styled_with_bad_data_throws_vol_error(
         caplog.at_level(
             logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
         ),
-        pytest.raises(vol.Invalid) as exc,
+        pytest.raises(probatio.Invalid) as exc,
     ):
         signal_notification_service.send_message(MESSAGE, data={"text_mode": "test"})
 

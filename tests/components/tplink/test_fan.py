@@ -2,6 +2,7 @@
 
 from freezegun.api import FrozenDateTimeFactory
 from kasa import Device, Module
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -17,8 +18,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import _mocked_device, setup_platform_for_device, snapshot_platform
 from .const import DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_states(

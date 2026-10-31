@@ -20,7 +20,7 @@ from go2rtc_client.ws import (
     WebRTCOffer,
     WsError,
 )
-import voluptuous as vol
+import probatio
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
@@ -44,7 +44,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
@@ -80,10 +84,12 @@ def _validate_auth(config: dict) -> dict:
     debug_ui_enabled = config.get(CONF_DEBUG_UI, False)
 
     if debug_ui_enabled and not auth_exists:
-        raise vol.Invalid("Username and password must be set when debug_ui is true")
+        raise probatio.Invalid(
+            "Username and password must be set when debug_ui is true"
+        )
 
     if auth_exists and CONF_URL not in config and not debug_ui_enabled:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "Username and password can only be set when a URL is"
             " configured or debug_ui is true"
         )
@@ -91,27 +97,27 @@ def _validate_auth(config: dict) -> dict:
     return config
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            vol.Schema(
+        DOMAIN: probatio.All(
+            probatio.Schema(
                 {
-                    vol.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
-                    vol.Exclusive(
+                    probatio.Exclusive(CONF_URL, DOMAIN, DEBUG_UI_URL_MESSAGE): cv.url,
+                    probatio.Exclusive(
                         CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE
                     ): cv.boolean,
-                    vol.Inclusive(CONF_USERNAME, _AUTH): vol.All(
-                        cv.string, vol.Length(min=1)
+                    probatio.Inclusive(CONF_USERNAME, _AUTH): probatio.All(
+                        cv.string, probatio.NonEmpty()
                     ),
-                    vol.Inclusive(CONF_PASSWORD, _AUTH): vol.All(
-                        cv.string, vol.Length(min=1)
-                    ),
+                    probatio.Inclusive(
+                        probatio.Secret(CONF_PASSWORD), _AUTH
+                    ): probatio.All(cv.string, probatio.NonEmpty()),
                 }
             ),
             _validate_auth,
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _DATA_GO2RTC: HassKey[Go2RtcConfig] = HassKey(DOMAIN)
@@ -204,7 +210,7 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
         await hass.config_entries.async_remove(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> None:
     """Set up go2rtc from a config entry."""
 
     config = hass.data[_DATA_GO2RTC]
@@ -219,6 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
                 hass,
                 DOMAIN,
                 "recommended_version",
+                config_entry_id=entry.entry_id,
                 is_fixable=False,
                 is_persistent=False,
                 severity=ir.IssueSeverity.WARNING,
@@ -233,26 +240,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
             raise ConfigEntryNotReady(
                 f"Could not connect to go2rtc instance on {url}"
             ) from err
-        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"url": url},
+        ) from err
     except Go2RtcVersionError as err:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "unsupported_version",
+            config_entry_id=entry.entry_id,
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="unsupported_version",
+            translation_placeholders={"error": str(err)},
+        )
         raise ConfigEntryNotReady(
             f"The go2rtc server version is not supported, {err}"
         ) from err
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
-        return False
+    except Exception as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"url": url},
+        ) from err
+
+    ir.async_delete_issue(hass, DOMAIN, "unsupported_version")
 
     provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
     await provider.initialize()
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> None:
     """Unload a go2rtc config entry."""
     await entry.runtime_data.teardown()
-    return True
 
 
 async def _get_binary(hass: HomeAssistant) -> str | None:
@@ -369,10 +393,13 @@ class WebRTCProvider(CameraWebRTCProvider):
         height: int | None = None,
     ) -> bytes | None:
         """Get an image from the camera."""
-        await self._update_stream_source(camera)
-        return await self._rest_client.get_jpeg_snapshot(
-            get_camera_identifier(camera), width, height
-        )
+        try:
+            await self._update_stream_source(camera)
+            return await self._rest_client.get_jpeg_snapshot(
+                get_camera_identifier(camera), width, height
+            )
+        except Go2RtcClientError as err:
+            raise HomeAssistantError("Unable to get image from go2rtc") from err
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""

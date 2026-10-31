@@ -1,6 +1,7 @@
 {
   "domain": "transmission",
   "name": "Transmission",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@engrbm87", "@JPHutchins", "@andrew-codechimp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/transmission",

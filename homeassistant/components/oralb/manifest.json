@@ -6,6 +6,7 @@
       "manufacturer_id": 220
     }
   ],
+  "categories": ["health_wellbeing"],
   "codeowners": ["@bdraco", "@Lash-L"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

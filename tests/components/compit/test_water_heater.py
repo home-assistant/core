@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from compit_inext_api.consts import CompitParameter
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import ATTR_TEMPERATURE
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration, snapshot_compit_entities
-
-from tests.common import MockConfigEntry
 
 
 async def test_water_heater_entities_snapshot(

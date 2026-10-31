@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 from aioamazondevices.structures import AmazonListInfo, AmazonListType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import (
@@ -27,8 +28,6 @@ from homeassistant.helpers import device_registry as dr
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 
-from tests.common import MockConfigEntry
-
 
 def _fail_todo_list_items(client: AsyncMock, error: Exception) -> None:
     """Make the todo list items sync fail."""
@@ -41,11 +40,6 @@ def _fail_todo_list_items(client: AsyncMock, error: Exception) -> None:
 def _fail_history_state(client: AsyncMock, error: Exception) -> None:
     """Make the history state sync fail."""
     client.sync_history_state.side_effect = error
-
-
-def _fail_media_state(client: AsyncMock, error: Exception) -> None:
-    """Make the media state sync fail."""
-    client.sync_media_state.side_effect = error
 
 
 async def test_device_info(
@@ -247,12 +241,36 @@ async def test_http2_stop_processing_called_on_shutdown(
     mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
 
 
+async def test_http2_client_per_entry(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test each config entry gets its own HTTP/2 client."""
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="second@example.com",
+        data=mock_config_entry.data,
+        unique_id="second_user_id",
+        version=mock_config_entry.version,
+        minor_version=mock_config_entry.minor_version,
+    )
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, second_entry)
+
+    first_client, second_client = (
+        call.args[0]
+        for call in mock_amazon_devices_client.start_http2_processing.call_args_list
+    )
+    # A shared connection would let each account's directives stream close the other
+    assert first_client is not second_client
+
+
 @pytest.mark.parametrize(
     ("configure_failure", "invoked_method"),
     [
         (_fail_todo_list_items, "sync_todo_list_items"),
         (_fail_history_state, "sync_history_state"),
-        (_fail_media_state, "sync_media_state"),
     ],
 )
 @pytest.mark.parametrize(
@@ -311,3 +329,4 @@ async def test_initial_sync_failure_does_not_prevent_other_syncs(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_amazon_devices_client.get_todo_list_items.assert_awaited_once()
     mock_amazon_devices_client.sync_media_state.assert_awaited_once()
+    mock_amazon_devices_client.sync_dnd_state.assert_awaited_once()

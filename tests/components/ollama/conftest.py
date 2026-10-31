@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ollama
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
@@ -13,8 +14,6 @@ from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 from . import TEST_AI_TASK_OPTIONS, TEST_OPTIONS, TEST_USER_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -5,6 +5,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytile.api import API
 from pytile.tile import Tile
 
@@ -12,8 +13,6 @@ from homeassistant.components.tile.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import TEST_PASSWORD, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -84,6 +83,6 @@ def mock_pytile(tile: AsyncMock) -> Generator[None]:
 def mock_setup_entry():
     """Mock async_setup_entry."""
     with patch(
-        "homeassistant.components.tile.async_setup_entry", return_value=True
+        "homeassistant.components.tile.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

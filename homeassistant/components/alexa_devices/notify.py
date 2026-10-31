@@ -8,7 +8,11 @@ from aioamazondevices.api import AmazonEchoApi
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
 from aioamazondevices.structures import AmazonDevice
 
-from homeassistant.components.notify import NotifyEntity, NotifyEntityDescription
+from homeassistant.components.notify import (
+    NotifyEntity,
+    NotifyEntityDescription,
+    NotifyEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,10 +26,11 @@ PARALLEL_UPDATES = 1
 class AmazonNotifyEntityDescription(NotifyEntityDescription):
     """Alexa Devices notify entity description."""
 
-    is_supported: Callable[[AmazonDevice], bool] = lambda _device: True
+    is_supported_fn: Callable[[AmazonDevice], bool] = lambda _device: True
     is_available_fn: Callable[[AmazonDevice], bool] = lambda _device: True
-    method: Callable[[AmazonEchoApi, AmazonDevice, str], Awaitable[None]]
+    method: Callable[[AmazonEchoApi, AmazonDevice, str, str | None], Awaitable[None]]
     subkey: str
+    supported_features: NotifyEntityFeature | None = None
 
 
 NOTIFY: Final = (
@@ -33,18 +38,21 @@ NOTIFY: Final = (
         key="speak",
         translation_key="speak",
         subkey="AUDIO_PLAYER",
-        is_supported=lambda _device: _device.device_family != SPEAKER_GROUP_FAMILY,
-        method=lambda api, device, message: api.call_alexa_speak(device, message),
+        is_supported_fn=lambda _device: _device.device_family != SPEAKER_GROUP_FAMILY,
+        method=lambda api, device, message, _title: api.call_alexa_speak(
+            device, message
+        ),
     ),
     AmazonNotifyEntityDescription(
         key="announce",
         translation_key="announce",
         subkey="AUDIO_PLAYER",
+        supported_features=NotifyEntityFeature.TITLE,
         is_available_fn=lambda device: (
             device.communication_settings.get("communications") != "OFF"
         ),
-        method=lambda api, device, message: api.call_alexa_announcement(
-            device, message
+        method=lambda api, device, message, title: api.call_alexa_announcement(
+            device, message, display_text=title
         ),
     ),
 )
@@ -63,6 +71,7 @@ async def async_setup_entry(
 
     def _check_device() -> None:
         current_devices = set(coordinator.data)
+        known_devices.intersection_update(current_devices)
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)
@@ -71,7 +80,7 @@ async def async_setup_entry(
                 for sensor_desc in NOTIFY
                 for serial_num in new_devices
                 if sensor_desc.subkey in coordinator.data[serial_num].capabilities
-                and sensor_desc.is_supported(coordinator.data[serial_num])
+                and sensor_desc.is_supported_fn(coordinator.data[serial_num])
             )
 
     _check_device()
@@ -82,6 +91,12 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
     """Binary sensor notify platform."""
 
     entity_description: AmazonNotifyEntityDescription
+
+    @property
+    @override
+    def supported_features(self) -> NotifyEntityFeature:
+        """Return the supported features."""
+        return self.entity_description.supported_features or NotifyEntityFeature(0)
 
     @property
     @override
@@ -98,5 +113,5 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
         """Send a message."""
         async with alexa_api_call(self.coordinator):
             await self.entity_description.method(
-                self.coordinator.api, self.device, message
+                self.coordinator.api, self.device, message, title
             )

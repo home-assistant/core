@@ -1,12 +1,17 @@
 """Tests for button platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -24,10 +29,8 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2023, 6, 5, tzinfo=dt.UTC))
 async def test_button_error_confirm(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
@@ -79,7 +82,7 @@ async def test_button_error_confirm(
         ),
     ],
 )
-@pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 2, 29, 11, tzinfo=dt.UTC))
 async def test_button_commands(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,

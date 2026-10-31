@@ -1,11 +1,11 @@
 """Tests for the agent_dvr component."""
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.agent_dvr.const import DOMAIN, SERVER_URL
 from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CONF_DATA = {
     CONF_HOST: "example.local",

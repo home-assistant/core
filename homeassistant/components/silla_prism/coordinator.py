@@ -39,7 +39,7 @@ class PrismCoordinator(DataUpdateCoordinator[PrismStatus]):
         """Initialize the coordinator."""
         super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN)
         self.base_topic: str = entry.data[CONF_BASE_TOPIC]
-        self.device = PrismDevice(self.base_topic)
+        self.device = PrismDevice(self.base_topic, publish=self._async_publish)
         self.device.on_status_update = self._on_status_update
         self.device.on_hello = self._on_hello
 
@@ -59,6 +59,10 @@ class PrismCoordinator(DataUpdateCoordinator[PrismStatus]):
     async def _async_update_data(self) -> PrismStatus:
         """Return the accumulated state (populated by retained messages)."""
         return self.device.status
+
+    async def _async_publish(self, topic: str, payload: str) -> None:
+        """Publish a command built by the library."""
+        await mqtt.async_publish(self.hass, topic, payload)
 
     @callback
     def _message_received(self, msg: ReceiveMessage) -> None:

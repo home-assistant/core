@@ -1,5 +1,19 @@
 {
   "entity": {
+    "binary_sensor": {
+      "diagnostic_filter": {
+        "default": "mdi:air-filter"
+      },
+      "diagnostic_sun_control": {
+        "default": "mdi:blinds-horizontal-closed"
+      },
+      "diagnostic_ventilation": {
+        "default": "mdi:fan-alert"
+      },
+      "diagnostic_ventilation_cooling": {
+        "default": "mdi:home-thermometer-outline"
+      }
+    },
     "sensor": {
       "filter_remaining": {
         "default": "mdi:air-filter"

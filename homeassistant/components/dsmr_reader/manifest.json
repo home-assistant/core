@@ -1,6 +1,7 @@
 {
   "domain": "dsmr_reader",
   "name": "DSMR Reader",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@sorted-bits", "@glodenox", "@erwindouna"],
   "config_flow": true,
   "dependencies": ["mqtt"],

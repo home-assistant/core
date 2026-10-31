@@ -2,10 +2,11 @@
 
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
+from enum import StrEnum
 import logging
 from typing import Any, Literal, TypeGuard, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -41,18 +42,27 @@ type SunEventType = Literal["sunrise", "sunset"]
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AFTER = "after"
-ATTR_BEFORE = "before"
-ATTR_NEXT_UPDATE = "next_update"
+
+class TodEntityStateAttribute(StrEnum):
+    """State attributes for times of the day entities."""
+
+    AFTER = "after"
+    BEFORE = "before"
+    NEXT_UPDATE = "next_update"
+
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_AFTER): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
-        vol.Required(CONF_BEFORE): vol.Any(cv.time, vol.All(vol.Lower, cv.sun_event)),
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
-        vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_AFTER): probatio.Any(
+            cv.time, probatio.All(probatio.Lower, cv.sun_event)
+        ),
+        probatio.Required(CONF_BEFORE): probatio.Any(
+            cv.time, probatio.All(probatio.Lower, cv.sun_event)
+        ),
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
+        probatio.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -146,9 +156,15 @@ class TodSensor(BinarySensorEntity):
         """Return the state attributes of the sensor."""
         if time_zone := dt_util.get_default_time_zone():
             return {
-                ATTR_AFTER: self._time_after.astimezone(time_zone).isoformat(),
-                ATTR_BEFORE: self._time_before.astimezone(time_zone).isoformat(),
-                ATTR_NEXT_UPDATE: self._next_update.astimezone(time_zone).isoformat(),
+                TodEntityStateAttribute.AFTER: self._time_after.astimezone(
+                    time_zone
+                ).isoformat(),
+                TodEntityStateAttribute.BEFORE: self._time_before.astimezone(
+                    time_zone
+                ).isoformat(),
+                TodEntityStateAttribute.NEXT_UPDATE: self._next_update.astimezone(
+                    time_zone
+                ).isoformat(),
             }
         return None
 

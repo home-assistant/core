@@ -1,6 +1,7 @@
 """Test Efergy integration."""
 
 from pyefergy import exceptions
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.efergy.const import DEFAULT_NAME, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import _patch_efergy_status, create_entry, init_integration, setup_platform
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:

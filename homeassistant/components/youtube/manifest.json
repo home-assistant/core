@@ -1,6 +1,7 @@
 {
   "domain": "youtube",
   "name": "YouTube",
+  "categories": ["news_social_media"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

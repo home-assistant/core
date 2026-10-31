@@ -219,6 +219,20 @@ def async_track_unavailable(
 
 
 @hass_callback
+def async_register_advertisement_callback(
+    hass: HomeAssistant,
+    callback: Callable[[BluetoothServiceInfoBleak], None],
+    address: str,
+) -> Callable[[], None]:
+    """Register to receive every advertisement from an address.
+
+    Fires even when the advertisement data is unchanged, unlike
+    async_register_callback. Returns a callback to cancel the registration.
+    """
+    return _get_manager(hass).async_register_advertisement_callback(callback, address)
+
+
+@hass_callback
 def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
     """Trigger discovery of devices which have already been seen."""
     _get_manager(hass).async_rediscover_address(address)

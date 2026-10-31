@@ -5,14 +5,13 @@ import logging
 from uuid import UUID
 
 from bleak import BleakClient, BleakError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.components.device_tracker import (
     CONF_TRACK_NEW,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    SCAN_INTERVAL,
     SourceType,
 )
 from homeassistant.components.device_tracker.legacy import (
@@ -38,12 +37,13 @@ DEFAULT_TRACK_BATTERY_INTERVAL = timedelta(days=1)
 DATA_BLE = "BLE"
 DATA_BLE_ADAPTER = "ADAPTER"
 BLE_PREFIX = "BLE_"
+SCAN_INTERVAL = timedelta(seconds=12)
 MIN_SEEN_NEW = 5
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_TRACK_BATTERY, default=False): cv.boolean,
-        vol.Optional(
+        probatio.Optional(CONF_TRACK_BATTERY, default=False): cv.boolean,
+        probatio.Optional(
             CONF_TRACK_BATTERY_INTERVAL, default=DEFAULT_TRACK_BATTERY_INTERVAL
         ): cv.time_period,
     }

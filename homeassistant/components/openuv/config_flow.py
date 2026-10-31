@@ -4,23 +4,25 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, override
 
-from pyopenuv import Client
+import probatio
+from pyopenuv.client import Client
 from pyopenuv.errors import OpenUvError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import (
     CONF_FROM_WINDOW,
@@ -31,20 +33,29 @@ from .const import (
 )
 from .coordinator import OpenUvConfigEntry
 
-STEP_REAUTH_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(CONF_LOCATION): LocationSelector(
+            LocationSelectorConfig(radius=False)
+        ),
+        probatio.Required(CONF_ELEVATION): probatio.Coerce(float),
+    }
+)
+STEP_REAUTH_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_FROM_WINDOW, description={"suggested_value": DEFAULT_FROM_WINDOW}
-        ): vol.Coerce(float),
-        vol.Optional(
+        ): probatio.Coerce(float),
+        probatio.Optional(
             CONF_TO_WINDOW, description={"suggested_value": DEFAULT_TO_WINDOW}
-        ): vol.Coerce(float),
+        ): probatio.Coerce(float),
     }
 )
 
@@ -71,32 +82,14 @@ class OpenUvData:
 class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an OpenUV config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self) -> None:
         """Initialize."""
         self._reauth_data: Mapping[str, Any] = {}
 
-    @property
-    def step_user_schema(self) -> vol.Schema:
-        """Return the config schema."""
-        return vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): str,
-                vol.Inclusive(
-                    CONF_LATITUDE, "coords", default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Inclusive(
-                    CONF_LONGITUDE, "coords", default=self.hass.config.longitude
-                ): cv.longitude,
-                vol.Optional(
-                    CONF_ELEVATION, default=self.hass.config.elevation
-                ): vol.Coerce(float),
-            }
-        )
-
     async def _async_verify(
-        self, data: OpenUvData, error_step_id: str, error_schema: vol.Schema
+        self, data: OpenUvData, error_step_id: str, error_schema: probatio.Schema
     ) -> ConfigFlowResult:
         """Verify the credentials and create/re-auth the entry."""
         websession = aiohttp_client.async_get_clientsession(self.hass)
@@ -117,8 +110,10 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
 
         entry_data = {
             CONF_API_KEY: data.api_key,
-            CONF_LATITUDE: data.latitude,
-            CONF_LONGITUDE: data.longitude,
+            CONF_LOCATION: {
+                CONF_LATITUDE: data.latitude,
+                CONF_LONGITUDE: data.longitude,
+            },
             CONF_ELEVATION: data.elevation,
         }
 
@@ -154,16 +149,13 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=STEP_REAUTH_SCHEMA,
-                description_placeholders={
-                    CONF_LATITUDE: self._reauth_data[CONF_LATITUDE],
-                    CONF_LONGITUDE: self._reauth_data[CONF_LONGITUDE],
-                },
+                description_placeholders={**self._reauth_data[CONF_LOCATION]},
             )
 
         data = OpenUvData(
             user_input[CONF_API_KEY],
-            self._reauth_data[CONF_LATITUDE],
-            self._reauth_data[CONF_LONGITUDE],
+            self._reauth_data[CONF_LOCATION][CONF_LATITUDE],
+            self._reauth_data[CONF_LOCATION][CONF_LONGITUDE],
             self._reauth_data[CONF_ELEVATION],
         )
 
@@ -176,17 +168,31 @@ class OpenUvFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle the start of the config flow."""
         if not user_input:
             return self.async_show_form(
-                step_id="user", data_schema=self.step_user_schema
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_SCHEMA,
+                    {
+                        CONF_LOCATION: {
+                            CONF_LATITUDE: self.hass.config.latitude,
+                            CONF_LONGITUDE: self.hass.config.longitude,
+                        },
+                        CONF_ELEVATION: self.hass.config.elevation,
+                    },
+                ),
             )
 
         data = OpenUvData(
             user_input[CONF_API_KEY],
-            user_input[CONF_LATITUDE],
-            user_input[CONF_LONGITUDE],
+            user_input[CONF_LOCATION][CONF_LATITUDE],
+            user_input[CONF_LOCATION][CONF_LONGITUDE],
             user_input[CONF_ELEVATION],
         )
 
         await self.async_set_unique_id(data.unique_id)
         self._abort_if_unique_id_configured()
 
-        return await self._async_verify(data, "user", self.step_user_schema)
+        return await self._async_verify(
+            data,
+            "user",
+            self.add_suggested_values_to_schema(STEP_USER_SCHEMA, user_input),
+        )

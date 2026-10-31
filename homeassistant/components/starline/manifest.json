@@ -1,6 +1,7 @@
 {
   "domain": "starline",
   "name": "StarLine",
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@anonym-tsk"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/starline",

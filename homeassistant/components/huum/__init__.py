@@ -6,7 +6,7 @@ from .const import PLATFORMS
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: HuumConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: HuumConfigEntry) -> None:
     """Set up Huum from a config entry."""
     coordinator = HuumDataUpdateCoordinator(
         hass=hass,
@@ -17,11 +17,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: HuumConfigEntry) 
     config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: HuumConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

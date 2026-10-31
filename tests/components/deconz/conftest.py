@@ -7,15 +7,15 @@ from unittest.mock import patch
 
 from pydeconz.websocket import Signal
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.deconz.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 class ConfigEntryFactoryType(Protocol):

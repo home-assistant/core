@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_ipv4_address": "No IPv4 address found."
     },
@@ -36,40 +35,15 @@
       }
     }
   },
-  "issues": {
-    "deprecated_service_join": {
-      "description": "Use the `media_player.join` action instead.\n\nPlease replace this action and adjust your automations and scripts.",
-      "title": "Detected use of deprecated action bluesound.join"
+  "exceptions": {
+    "leader_not_loaded": {
+      "message": "The group leader {leader_id} is not set up in Home Assistant"
     },
-    "deprecated_service_unjoin": {
-      "description": "Use the `media_player.unjoin` action instead.\n\nPlease replace this action and adjust your automations and scripts.",
-      "title": "Detected use of deprecated action bluesound.unjoin"
-    }
-  },
-  "services": {
-    "join": {
-      "description": "Groups players together under a single master speaker.",
-      "fields": {
-        "entity_id": {
-          "description": "Name of entity that will group to master speaker. Platform dependent.",
-          "name": "Entity"
-        },
-        "master": {
-          "description": "Entity ID of the player that should become the master of the group.",
-          "name": "Master"
-        }
-      },
-      "name": "Join"
+    "player_unreachable": {
+      "message": "Could not reach the Bluesound player: {error}"
     },
-    "unjoin": {
-      "description": "Separates a player from a group.",
-      "fields": {
-        "entity_id": {
-          "description": "Name of entity that will be separated from their group. Platform dependent.",
-          "name": "Entity"
-        }
-      },
-      "name": "Unjoin"
+    "unexpected_response": {
+      "message": "The Bluesound player returned an unexpected response: {error}"
     }
   }
 }
