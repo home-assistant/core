@@ -60,7 +60,7 @@
         "state": {
           "charging": "Charging",
           "charging_interrupted": "Charging interrupted",
-          "connect_cable": "Connect cable",
+          "connect_cable": "Cable not connected",
           "conserving": "Conserving",
           "discharging": "Discharging",
           "ready_for_charging": "Ready for charging"

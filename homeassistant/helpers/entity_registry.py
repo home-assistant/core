@@ -1498,7 +1498,9 @@ class EntityRegistry(BaseRegistry):
         if len(domain) > MAX_LENGTH_STATE_DOMAIN:
             raise MaxLengthExceeded(domain, "domain", MAX_LENGTH_STATE_DOMAIN)
 
-        test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID]
+        # An object ID must not end with an underscore, so strip any left
+        # behind when the entity ID is truncated
+        test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID].rstrip("_")
 
         tries = 1
         while (
@@ -1719,10 +1721,16 @@ class EntityRegistry(BaseRegistry):
             """Return None if value is UNDEFINED, otherwise return value."""
             return None if value is UNDEFINED else value
 
-        device_id = none_if_undefined(device_id)
-        has_entity_name_bool = none_if_undefined(has_entity_name) or False
-        object_id_base = none_if_undefined(object_id_base)
-        suggested_object_id = none_if_undefined(suggested_object_id)
+        # Assign results of 'none_if_undefined' calls to a temporary variable first
+        # to work around: https://github.com/python/mypy/issues/22334
+        device_id_none = none_if_undefined(device_id)
+        device_id = device_id_none
+        has_entity_name_none = none_if_undefined(has_entity_name)
+        has_entity_name_bool = has_entity_name_none or False
+        object_id_base_none = none_if_undefined(object_id_base)
+        object_id_base = object_id_base_none
+        suggested_object_id_none = none_if_undefined(suggested_object_id)
+        suggested_object_id = suggested_object_id_none
 
         if entity_id is None:
             entity_id = self._async_generate_entity_id(
@@ -1738,11 +1746,15 @@ class EntityRegistry(BaseRegistry):
                 unique_id=unique_id,
             )
 
-        original_name = none_if_undefined(original_name)
+        # Assign results of 'none_if_undefined' calls to a temporary variable first
+        # to work around: https://github.com/python/mypy/issues/22334
+        original_name_none = none_if_undefined(original_name)
+        original_name = original_name_none
         original_name_unprefixed = _unprefix_original_name(
             self.hass, original_name, has_entity_name_bool, device_id
         )
-        config_entry = none_if_undefined(config_entry)
+        config_entry_none = none_if_undefined(config_entry)
+        config_entry = config_entry_none
 
         if disabled_by is UNDEFINED:
             disabled_by = (

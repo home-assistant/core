@@ -152,7 +152,9 @@ async def test_migrate_eve_temperature_offset_unique_id(
     node = create_node_from_fixture("eve_thermo_v4")
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
-    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}, minor_version=1
+    )
     entry.add_to_hass(hass)
 
     stale_entity = entity_registry.async_get_or_create(
@@ -167,6 +169,7 @@ async def test_migrate_eve_temperature_offset_unique_id(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
     migrated_entity = entity_registry.async_get(stale_entity.entity_id)
     assert migrated_entity
     assert migrated_entity.unique_id == NEW_TEMPERATURE_OFFSET_UNIQUE_ID
@@ -190,7 +193,9 @@ async def test_migrate_eve_temperature_offset_unique_id_conflict(
     node = create_node_from_fixture("eve_thermo_v4")
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
-    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}, minor_version=1
+    )
     entry.add_to_hass(hass)
 
     stale_generic_entity = entity_registry.async_get_or_create(
@@ -212,6 +217,7 @@ async def test_migrate_eve_temperature_offset_unique_id_conflict(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
     assert entity_registry.async_get(stale_generic_entity.entity_id) is None
     migrated_entity = entity_registry.async_get(eve_entity.entity_id)
     assert migrated_entity
@@ -219,6 +225,37 @@ async def test_migrate_eve_temperature_offset_unique_id_conflict(
     state = hass.states.get(eve_entity.entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_migrate_eve_temperature_offset_skipped_on_current_version(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entries already at minor version 2 keep their unique IDs on setup."""
+    node = create_node_from_fixture("eve_thermo_v4")
+    matter_client.get_nodes.return_value = [node]
+    matter_client.get_node.return_value = node
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:5580/ws"}, minor_version=2
+    )
+    entry.add_to_hass(hass)
+
+    eve_entity = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID,
+        config_entry=entry,
+        suggested_object_id="legacy_eve_temperature_offset",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    eve_entry = entity_registry.async_get(eve_entity.entity_id)
+    assert eve_entry
+    assert eve_entry.unique_id == OLD_EVE_TEMPERATURE_OFFSET_UNIQUE_ID
 
 
 async def test_home_assistant_stop(

@@ -1,0 +1,46 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'brightness': 80,
+        'capabilities': dict({
+          'features': list([
+            'COLOR_RGB',
+            'COLOR_KELVIN_TEMPERATURE',
+            'BRIGHTNESS',
+            'SCENES',
+          ]),
+          'scenes': list([
+            'sunrise',
+            'sunset',
+            'movie',
+            'dating',
+            'romantic',
+            'twinkle',
+            'candlelight',
+            'snowflake',
+            'energetic',
+            'breathe',
+            'crossing',
+            'rainbow',
+          ]),
+          'segments_count': 0,
+          'temperature_range': dict({
+            'max_kelvin': 9000,
+            'min_kelvin': 2000,
+          }),
+        }),
+        'is_manual': False,
+        'on': True,
+        'rgb_color': list([
+          255,
+          128,
+          0,
+        ]),
+        'sku': 'H615A',
+        'temperature_color': 0,
+      }),
+    ]),
+  })
+# ---

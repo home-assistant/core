@@ -73,7 +73,7 @@ rules:
   devices:
     status: exempt
     comment: Service does not have entities
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Service does not support discovery

@@ -31,7 +31,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, ManualEntityStateAttribute
 
 CONF_ARMING_STATES = "arming_states"
 CONF_CODE_TEMPLATE = "code_template"
@@ -86,9 +86,6 @@ SUPPORTED_ARMING_STATE_TO_FEATURE = {
         AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     ),
 }
-
-ATTR_PREVIOUS_STATE = "previous_state"
-ATTR_NEXT_STATE = "next_state"
 
 
 def _state_validator(
@@ -454,7 +451,10 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         else:
             prev_state = None
             state = None
-        return {ATTR_PREVIOUS_STATE: prev_state, ATTR_NEXT_STATE: state}
+        return {
+            ManualEntityStateAttribute.PREVIOUS_STATE: prev_state,
+            ManualEntityStateAttribute.NEXT_STATE: state,
+        }
 
     @callback
     def async_scheduled_update(self, now: dt.datetime) -> None:
@@ -468,7 +468,9 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         if state := await self.async_get_last_state():
             self._state_ts = state.last_updated
             try:
-                if next_state := state.attributes.get(ATTR_NEXT_STATE):
+                if next_state := state.attributes.get(
+                    ManualEntityStateAttribute.NEXT_STATE
+                ):
                     # If in arming or pending state we record the transition,
                     # not the current state
                     self._state = AlarmControlPanelState(next_state)
@@ -477,6 +479,8 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             except ValueError:
                 return
 
-            if prev_state := state.attributes.get(ATTR_PREVIOUS_STATE):
+            if prev_state := state.attributes.get(
+                ManualEntityStateAttribute.PREVIOUS_STATE
+            ):
                 self._previous_state = prev_state
                 self._async_set_state_update_events()

@@ -29,3 +29,12 @@ class ScriptEntityStateAttribute(StrEnum):
     CURRENT = "current"
     MAX = "max"
     LAST_ACTION = "last_action"
+
+
+class ScriptService(StrEnum):
+    """Store keys for script services."""
+
+    RELOAD = "reload"
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"

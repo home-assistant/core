@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
+      "addon_managed": "This Thread border router is managed by an app. Its URL is updated automatically.",
       "already_configured": "The Thread border router is already configured",
+      "unique_id_mismatch": "The Thread border router at this URL is not the one that was originally set up.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -9,6 +11,12 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "description": "[%key:component::otbr::config::step::user::description%]"
+      },
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"

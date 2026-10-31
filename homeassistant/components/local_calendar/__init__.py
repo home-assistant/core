@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import slugify
 
-from .const import CONF_CALENDAR_NAME, CONF_STORAGE_KEY, STORAGE_PATH
+from .const import CONF_CALENDAR_NAME, CONF_STORAGE_KEY, DOMAIN, STORAGE_PATH
 from .store import LocalCalendarStore
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
@@ -34,7 +34,11 @@ async def async_setup_entry(
     try:
         await store.async_load()
     except OSError as err:
-        raise ConfigEntryNotReady(f"Failed to load file {path}: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="load_file_error",
+            translation_placeholders={"path": str(path)},
+        ) from err
 
     entry.runtime_data = store
 

@@ -1,18 +1,17 @@
 """Services for the frontend integration."""
 
+from enum import StrEnum
 import logging
 
 import probatio
 
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import service
 
 from .const import DOMAIN
 from .helpers import (
-    CONF_NAME_DARK,
     CONF_THEMES,
     DATA_DEFAULT_DARK_THEME,
     DATA_DEFAULT_THEME,
@@ -28,8 +27,20 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__package__)
 
-SERVICE_SET_THEME = "set_theme"
-SERVICE_RELOAD_THEMES = "reload_themes"
+
+class FrontendService(StrEnum):
+    """Store keys for frontend services."""
+
+    RELOAD_THEMES = "reload_themes"
+    SET_THEME = "set_theme"
+
+
+class FrontendServiceArgument(StrEnum):
+    """Store keys for frontend service arguments."""
+
+    MODE = "mode"
+    NAME = "name"
+    NAME_DARK = "name_dark"
 
 
 @callback
@@ -50,13 +61,13 @@ def _set_theme(call: ServiceCall) -> None:
             to_set = theme
         hass.data[theme_key] = to_set
 
-    name = call.data.get(CONF_NAME)
-    if name is not None and CONF_MODE in call.data:
-        mode = call.data.get("mode", "light")
+    name = call.data.get(FrontendServiceArgument.NAME)
+    if name is not None and FrontendServiceArgument.MODE in call.data:
+        mode = call.data.get(FrontendServiceArgument.MODE, "light")
         light_mode = mode == "light"
         _update_hass_theme(name, light_mode)
     else:
-        name_dark = call.data.get(CONF_NAME_DARK)
+        name_dark = call.data.get(FrontendServiceArgument.NAME_DARK)
         if name:
             _update_hass_theme(name, True)
         if name_dark:
@@ -100,22 +111,26 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_THEME,
+        FrontendService.SET_THEME,
         _set_theme,
         probatio.All(
             {
-                probatio.Optional(CONF_NAME): validate_selected_theme,
-                probatio.Exclusive(
-                    CONF_NAME_DARK, "dark_modes"
+                probatio.Optional(
+                    FrontendServiceArgument.NAME
                 ): validate_selected_theme,
-                probatio.Exclusive(CONF_MODE, "dark_modes"): probatio.Any(
-                    "dark", "light"
-                ),
+                probatio.Exclusive(
+                    FrontendServiceArgument.NAME_DARK, "dark_modes"
+                ): validate_selected_theme,
+                probatio.Exclusive(
+                    FrontendServiceArgument.MODE, "dark_modes"
+                ): probatio.Any("dark", "light"),
             },
-            probatio.AtLeastOne(CONF_NAME, CONF_NAME_DARK),
+            probatio.AtLeastOne(
+                FrontendServiceArgument.NAME, FrontendServiceArgument.NAME_DARK
+            ),
         ),
     )
 
     service.async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD_THEMES, _reload_themes
+        hass, DOMAIN, FrontendService.RELOAD_THEMES, _reload_themes
     )
