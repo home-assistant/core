@@ -25,7 +25,7 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
@@ -737,7 +737,7 @@ def ws_create_device(
     )
     device_registry.async_update_device(
         _device.id,
-        area_id=msg.get("area_id") or UNDEFINED,
+        area_id=msg.get("area_id") or Undefined,
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)
