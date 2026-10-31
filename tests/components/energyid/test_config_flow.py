@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.energyid.config_flow import EnergyIDConfigFlow
 from homeassistant.components.energyid.const import (
     CONF_DEVICE_NAME,
+    CONF_ENABLE_DIRECTIVES,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
     DOMAIN,
@@ -81,21 +82,69 @@ async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> Non
                 CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
             },
         )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "directives"
+        assert result2["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: False}
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {CONF_ENABLE_DIRECTIVES: True}
+        )
         await hass.async_block_till_done()
 
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["title"] == TEST_RECORD_NAME
-        assert result2["data"][CONF_PROVISIONING_KEY] == TEST_PROVISIONING_KEY
-        assert result2["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
-        assert result2["description"] == "add_sensor_mapping_hint"
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        assert result3["title"] == TEST_RECORD_NAME
+        assert result3["data"][CONF_PROVISIONING_KEY] == TEST_PROVISIONING_KEY
+        assert result3["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
+        assert result3["options"] == {CONF_ENABLE_DIRECTIVES: True}
+        assert result3["description"] == "add_sensor_mapping_hint"
 
         # Check unique_id is set correctly
-        entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
+        entry = hass.config_entries.async_get_entry(result3["result"].entry_id)
         # For initially claimed devices, unique_id should be
         # the device_id, not record_number
         assert entry.unique_id.startswith("homeassistant_eid_")
         assert CONF_DEVICE_ID in entry.data
         assert entry.data[CONF_DEVICE_ID] == entry.unique_id
+
+
+async def test_options_flow_enables_automatic_directive_discovery(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test users can opt into every authorized signal without reconnecting."""
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: False}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_ENABLE_DIRECTIVES: True},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_ENABLE_DIRECTIVES: True}
+
+
+async def test_options_flow_defaults_reflect_current_choice(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the options form preselects the previously stored choice."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_ENABLE_DIRECTIVES: True},
+    )
+
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: True}
 
 
 async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> None:
@@ -142,13 +191,20 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
         )
         assert result_done["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
-        final_result = await hass.config_entries.flow.async_configure(
+        directives_result = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
+        )
+        assert directives_result["type"] is FlowResultType.FORM
+        assert directives_result["step_id"] == "directives"
+
+        final_result = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
         )
         await hass.async_block_till_done()
 
         # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
+        assert final_result["options"] == {CONF_ENABLE_DIRECTIVES: False}
         assert final_result["title"] == TEST_RECORD_NAME
         assert final_result["description"] == "add_sensor_mapping_hint"
 
@@ -303,14 +359,20 @@ async def test_multiple_different_devices_allowed(hass: HomeAssistant) -> None:
         )
 
         # Should succeed because device_id will be different
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["title"] == TEST_RECORD_NAME
-        assert result2["data"][CONF_PROVISIONING_KEY] == "key2"
-        assert result2["data"][CONF_PROVISIONING_SECRET] == "secret2"
-        assert result2["description"] == "add_sensor_mapping_hint"
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "directives"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+        )
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        assert result3["title"] == TEST_RECORD_NAME
+        assert result3["data"][CONF_PROVISIONING_KEY] == "key2"
+        assert result3["data"][CONF_PROVISIONING_SECRET] == "secret2"
+        assert result3["description"] == "add_sensor_mapping_hint"
 
         # Verify unique_id is set
-        new_entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
+        new_entry = hass.config_entries.async_get_entry(result3["result"].entry_id)
         assert new_entry.unique_id is not None
         assert new_entry.unique_id != entry.unique_id  # Different from first entry
 
@@ -349,7 +411,13 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
                 CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
             },
         )
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "directives"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
@@ -386,7 +454,13 @@ async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
                 CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
             },
         )
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "directives"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_external_step_claimed_during_display(
@@ -436,13 +510,20 @@ async def test_config_flow_external_step_claimed_during_display(
         )
         assert result_claimed["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
-        final_result = await hass.config_entries.flow.async_configure(
+        directives_result = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
+        )
+        assert directives_result["type"] is FlowResultType.FORM
+        assert directives_result["step_id"] == "directives"
+
+        final_result = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
         )
         await hass.async_block_till_done()
 
         # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
+        assert final_result["options"] == {CONF_ENABLE_DIRECTIVES: False}
 
 
 async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) -> None:
@@ -580,7 +661,13 @@ async def test_config_flow_client_response_error(
                 CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
             },
         )
-        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["step_id"] == "directives"
+
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+        )
+        assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
@@ -976,8 +1063,14 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
         result_done = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
+        assert result_done["type"] is FlowResultType.FORM
+        assert result_done["step_id"] == "directives"
+
+        result_entry = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+        )
         # pylint: disable-next=home-assistant-tests-config-flow-unique-id
-        assert result_done["type"] is FlowResultType.CREATE_ENTRY
+        assert result_entry["type"] is FlowResultType.CREATE_ENTRY
 
         # Verify polling was cancelled - the auth count should not increase
         assert auth_call_count == 2
