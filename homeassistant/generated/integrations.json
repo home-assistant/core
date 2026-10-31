@@ -8573,6 +8573,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "papouch": {
+      "name": "Papouch",
+      "integration_type": "device",
+      "categories": [
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "pcs_lighting": {
       "name": "PCS Lighting",
       "integration_type": "virtual",
