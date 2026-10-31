@@ -1200,6 +1200,46 @@ async def test_device_discovery_keeps_single_component_child_device(
         pytest.param({}, id="all_components_omitted"),
     ],
 )
+async def test_device_discovery_omitted_child_device_with_disabled_entity(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    remaining_components: dict[str, Any],
+) -> None:
+    """Test an omitted disabled component is removed from the entity registry.
+
+    Its omitted child device is removed with it.
+    """
+    await mqtt_mock_entry()
+    await _discover_device(
+        hass,
+        _device_payload(
+            {"sw": _discovery_switch("sw")},
+            [
+                _child_device_payload(
+                    "sub1",
+                    "Sub 1",
+                    {"sw1": {**_discovery_switch("sw1"), "en": False}},
+                )
+            ],
+        ),
+    )
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is not None
+    assert _get_child_device(hass, device_registry, "sub1") is not None
+
+    await _discover_device(hass, _device_payload(remaining_components))
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is None
+    assert _get_child_device(hass, device_registry, "sub1") is None
+
+
+@pytest.mark.parametrize(
+    "remaining_components",
+    [
+        pytest.param({"sw": _discovery_switch("sw")}, id="components_left"),
+        pytest.param({}, id="all_components_omitted"),
+    ],
+)
 async def test_device_discovery_keeps_child_device_shared_with_disabled_entity(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
