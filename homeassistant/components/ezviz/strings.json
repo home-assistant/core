@@ -3,13 +3,15 @@
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
       "ezviz_cloud_account_missing": "EZVIZ cloud account missing. Please reconfigure EZVIZ cloud account",
+      "reconfigure_camera_not_supported": "Only the EZVIZ cloud account can be reconfigured. To change the RTSP credentials of a camera, remove and re-add it.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "mfa_required": "2FA enabled on account, please disable and retry"
+      "mfa_required": "2FA enabled on account, please disable and retry",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{serial}",
     "step": {
@@ -28,6 +30,13 @@
         },
         "description": "Enter credentials to reauthenticate to EZVIZ cloud account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "description": "Update the password and region URL of EZVIZ cloud account {username}."
       },
       "user": {
         "data": {

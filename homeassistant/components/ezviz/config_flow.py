@@ -148,6 +148,24 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             options=DEFAULT_OPTIONS,
         )
 
+    async def _async_validate_cloud_auth(
+        self, data: dict[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, str]]:
+        """Log in to the EZVIZ cloud and return the auth data and form errors."""
+        try:
+            auth_data = await self.hass.async_add_executor_job(
+                _validate_and_create_auth, data
+            )
+        except InvalidURL:
+            return {}, {"base": "invalid_host"}
+        except InvalidHost:
+            return {}, {"base": "cannot_connect"}
+        except EzvizAuthVerificationCode:
+            return {}, {"base": "mfa_required"}
+        except PyEzvizError:
+            return {}, {"base": "invalid_auth"}
+        return auth_data, {}
+
     @staticmethod
     @callback
     @override
@@ -169,8 +187,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
                 return self.async_abort(reason="already_configured_account")
 
-        errors = {}
-        auth_data = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_USERNAME])
@@ -182,27 +199,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_user_custom_url()
 
             try:
-                auth_data = await self.hass.async_add_executor_job(
-                    _validate_and_create_auth, user_input
-                )
-
-            except InvalidURL:
-                errors["base"] = "invalid_host"
-
-            except InvalidHost:
-                errors["base"] = "cannot_connect"
-
-            except EzvizAuthVerificationCode:
-                errors["base"] = "mfa_required"
-
-            except PyEzvizError:
-                errors["base"] = "invalid_auth"
-
+                auth_data, errors = await self._async_validate_cloud_auth(user_input)
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
-            else:
+            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
                     data=auth_data,
@@ -227,35 +229,19 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user for custom region url."""
-        errors = {}
-        auth_data = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             user_input[CONF_USERNAME] = self.username
             user_input[CONF_PASSWORD] = self.password
 
             try:
-                auth_data = await self.hass.async_add_executor_job(
-                    _validate_and_create_auth, user_input
-                )
-
-            except InvalidURL:
-                errors["base"] = "invalid_host"
-
-            except InvalidHost:
-                errors["base"] = "cannot_connect"
-
-            except EzvizAuthVerificationCode:
-                errors["base"] = "mfa_required"
-
-            except PyEzvizError:
-                errors["base"] = "invalid_auth"
-
+                auth_data, errors = await self._async_validate_cloud_auth(user_input)
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
-            else:
+            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
                     data=auth_data,
@@ -394,6 +380,45 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=data_schema,
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the EZVIZ cloud account."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if reconfigure_entry.data[CONF_TYPE] != ATTR_TYPE_CLOUD:
+            return self.async_abort(reason="reconfigure_camera_not_supported")
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                auth_data, errors = await self._async_validate_cloud_auth(
+                    {**user_input, CONF_USERNAME: reconfigure_entry.unique_id}
+                )
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors = {"base": "unknown"}
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=auth_data
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                        probatio.Required(CONF_URL): str,
+                    }
+                ),
+                {CONF_URL: reconfigure_entry.data[CONF_URL]},
+            ),
+            errors=errors,
+            description_placeholders={CONF_USERNAME: reconfigure_entry.title},
         )
 
 
