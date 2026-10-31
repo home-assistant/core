@@ -1,0 +1,11 @@
+{
+  "domain": "koito",
+  "name": "Koito",
+  "codeowners": ["@ryanep"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/koito",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["aiokoito==0.1.0"]
+}
