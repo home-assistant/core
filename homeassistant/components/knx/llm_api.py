@@ -43,7 +43,7 @@ API_PROMPT = (
 )
 
 
-type _ToolFunc = Callable[["KNXModule", Any], Awaitable[Any]]
+type _ToolFunc = Callable[[KNXModule, Any], Awaitable[Any]]
 
 
 class _ToolSpec(NamedTuple):
