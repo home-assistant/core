@@ -122,6 +122,7 @@ Every check has a code following the
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
 | `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
+| `R7406` | [`home-assistant-redundant-entity-init`](#r7406-home-assistant-redundant-entity-init) | Entity `__init__` only forwards its arguments to `super().__init__` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -929,6 +930,71 @@ An EntityDescription field is set equal to a default already declared
 anywhere in the class hierarchy; the assignment can be removed. Only the
 literal defaults `None`, `True`, and `False` are checked; other default
 values are not flagged.
+
+
+## `home_assistant_redundant_entity_init` checker
+
+Detects entity constructors whose whole body is a `super().__init__()` call
+that forwards every parameter through unchanged. Deleting the override leaves
+the inherited constructor in place, with identical runtime behaviour.
+
+Pylint's own `useless-parent-delegation` (`W0246`) already covers overrides
+that repeat the parent's signature verbatim, but it bails out as soon as the
+annotations differ. Narrowing the annotations is precisely what these
+constructors do -- `EntityDescription` becomes a platform-specific
+description, a base coordinator type becomes the integration's own -- so
+`W0246` never fires on them.
+
+### `R7406`: `home-assistant-redundant-entity-init`
+
+The `__init__` of a class inheriting from `Entity` does nothing but pass its
+own parameters to `super().__init__()`. Remove the method:
+
+```python
+class AriaQVmcSensor(AriaQVmcEntity, SensorEntity):
+    # `__init__` is redundant, the base class already takes these three
+    def __init__(
+        self,
+        coordinator: AriaQCoordinator,
+        vmc: FlowItVMCMachine,
+        entity_description: AriaQVmcSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, vmc, entity_description)
+```
+
+A parameter counts as forwarded when it reaches the parent under its own
+name, either positionally in declaration order or as `name=name`; `*args`
+and `**kwargs` must be forwarded as such. Anything else -- a reordering, a
+renamed keyword, a transformed value, an extra or a missing argument, or any
+further statement in the body -- means the constructor does work of its own
+and is not flagged.
+
+Removing the override also has to leave existing call sites working, so the
+checker resolves the `__init__` the class would inherit -- the first one
+along the MRO after the class itself, which is the same function
+`super().__init__` already calls -- and compares signatures. Positional
+parameters must line up by index; a parent declaring the same names in
+another order would silently receive swapped arguments. Every parameter a
+caller may pass by keyword, and every parameter the override forwards *by
+keyword*, must also keep its name: the parent must declare it under that
+exact name at that same index, and accept it by keyword too, rather than
+renaming it, making it positional-only, or absorbing it into `**kwargs`.
+Keyword-only parameters need only to exist in the parent, since they could
+never be passed positionally to begin with. A parent taking more parameters
+is fine: the extra ones have defaults, or the delegating call would already
+fail, so dropping the override only widens what callers may pass.
+
+Four cases are deliberately out of scope. A constructor that declares
+**default values** is skipped, because the parent's defaults may differ and
+removing the override would then change behaviour. A **decorated**
+`__init__` is skipped, since the decorator can give the override a purpose
+the body does not show. A **decorated inherited** `__init__` is skipped as
+well: an `@abstractmethod` constructor needs the override to make the class
+concrete, and a wrapper can change how the parent is called. A constructor
+in a **decorated class** is skipped too: `@dataclass` and friends synthesize
+an `__init__` of their own, which the hand-written one currently suppresses,
+so removing it would not fall through to the parent at all.
 
 
 ## `home_assistant_redundant_translation_key` checker
