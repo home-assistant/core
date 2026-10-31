@@ -26,11 +26,7 @@ async def async_setup_entry(
 
 
 class FloAlertEvent(FloEntity, EventEntity):
-    """Event entity that fires when Flo raises a new alert.
-
-    The pending alerts binary sensor stays on while any alert is undismissed,
-    so it cannot signal alerts raised after the first one.
-    """
+    """Event entity that fires when Flo raises a new alert."""
 
     _attr_event_types = EVENT_TYPES
     _attr_translation_key = "alert"
@@ -46,10 +42,7 @@ class FloAlertEvent(FloEntity, EventEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return True if Flo's cloud is reachable.
-
-        Alerts come from the cloud and can concern a device that is offline.
-        """
+        """Return True while Flo's cloud is reachable, even if the device is not."""
         return self._device.last_update_success
 
     @override
@@ -61,6 +54,10 @@ class FloAlertEvent(FloEntity, EventEntity):
     @callback
     def _handle_update(self) -> None:
         """Fire an event for each alert that is new or has occurred again."""
+        # Events triggered while unavailable would collapse into the last one,
+        # so keep the baseline and report each alert once the coordinator recovers.
+        if not self.available:
+            return
         alarms = self._device.pending_alarms
         for alarm_id, (severity, count) in alarms.items():
             if count <= self._seen_counts.get(alarm_id, 0):

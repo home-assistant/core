@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from aioflo.errors import RequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -57,18 +58,19 @@ async def fired(
 
     events: list[dict[str, Any]] = []
 
+    last_fired: str | None = None
+
     @callback
     def record(event: Event[EventStateChangedData]) -> None:
+        nonlocal last_fired
         new_state = event.data["new_state"]
-        old_state = event.data["old_state"]
-        # Time is frozen, so events fired in one poll share a timestamp state and
-        # differ only in their attributes.
         if (
             event.data["entity_id"] == ENTITY_ID
             and new_state is not None
-            and new_state.state != STATE_UNKNOWN
-            and (old_state is None or old_state.attributes != new_state.attributes)
+            and new_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            and new_state.state != last_fired
         ):
+            last_fired = new_state.state
             events.append(dict(new_state.attributes))
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, record)
@@ -160,6 +162,14 @@ async def test_dismissed_alert_fires_when_raised_again(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, fired: list[dict[str, Any]]
 ) -> None:
     """Test an alert fires again after it was dismissed and then re-raised."""
+    await _poll(
+        hass,
+        freezer,
+        [
+            {"id": 30, "severity": "warning", "count": 2},
+            {"id": 31, "severity": "warning", "count": 1},
+        ],
+    )
     await _poll(hass, freezer, [{"id": 31, "severity": "warning", "count": 1}])
     await _poll(
         hass,
@@ -170,7 +180,65 @@ async def test_dismissed_alert_fires_when_raised_again(
         ],
     )
 
-    assert [(event["alarm_id"], event["count"]) for event in fired] == [(30, 1)]
+    assert [(event["alarm_id"], event["count"]) for event in fired] == [
+        (30, 2),
+        (30, 1),
+    ]
+
+
+async def test_lower_count_does_not_fire(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, fired: list[dict[str, Any]]
+) -> None:
+    """Test a pending alert whose count drops is not reported as new."""
+    await _poll(
+        hass,
+        freezer,
+        [
+            {"id": 30, "severity": "warning", "count": 2},
+            {"id": 31, "severity": "warning", "count": 1},
+        ],
+    )
+    await _poll(
+        hass,
+        freezer,
+        [
+            {"id": 30, "severity": "warning", "count": 1},
+            {"id": 31, "severity": "warning", "count": 1},
+        ],
+    )
+
+    assert [(event["alarm_id"], event["count"]) for event in fired] == [(30, 2)]
+
+
+async def test_alert_fires_after_coordinator_recovers(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, fired: list[dict[str, Any]]
+) -> None:
+    """Test alerts seen as the coordinator fails are each reported on recovery."""
+    pending = [
+        {"id": 30, "severity": "warning", "count": 1},
+        {"id": 31, "severity": "warning", "count": 1},
+    ]
+    new_alerts = [
+        *pending,
+        {"id": 28, "severity": "warning", "count": 1},
+        {"id": 53, "severity": "critical", "count": 1},
+    ]
+    with patch("aioflo.water.Water.get_consumption_info", side_effect=RequestError):
+        # Three failures are buffered; the fourth marks the coordinator failed
+        # after the device info, with the new alerts, was already fetched.
+        for _ in range(3):
+            await _poll(hass, freezer, pending)
+        await _poll(hass, freezer, new_alerts)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert fired == []
+
+    await _poll(hass, freezer, new_alerts)
+
+    assert [(event["event_type"], event["alarm_id"]) for event in fired] == [
+        ("warning", 28),
+        ("critical", 53),
+    ]
 
 
 async def test_alert_fires_while_device_offline(
