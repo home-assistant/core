@@ -663,7 +663,7 @@ async def test_device_discovery_ignores_platform_only_component(
 ) -> None:
     """Test a component with only a platform is ignored, as it is deprecated.
 
-    The component is handled as omitted, so it is removed with its child device.
+    The component and its child device are kept, until they are omitted.
     """
     mqtt_mock = await mqtt_mock_entry()
     components = {"sw": _discovery_switch("sw")}
@@ -683,8 +683,9 @@ async def test_device_discovery_ignores_platform_only_component(
         ),
     )
     parent = _get_device(hass, device_registry, "parent")
+    child_2 = _get_child_device(hass, device_registry, "sub2")
     assert parent is not None
-    assert _get_child_device(hass, device_registry, "sub2") is not None
+    assert child_2 is not None
     mqtt_mock.async_publish.reset_mock()
 
     payload = _device_payload(
@@ -695,10 +696,21 @@ async def test_device_discovery_ignores_platform_only_component(
         ],
     )
     diff = _diff_device_payload(hass, payload)
-    assert diff.desired_components == {
-        ("switch", "parent sw"),
-        ("switch", "parent sw1"),
-    }
+    assert not diff.removed_components
+    assert not diff.removed_child_devices
+
+    await _discover_device(hass, payload)
+    assert entity_registry.async_is_registered("switch.parent_sub_2_switch")
+    assert _device_id(_get_child_device(hass, device_registry, "sub2")) == child_2.id
+    assert (
+        "Ignoring switch 'parent sw2' with only the platform option in the MQTT "
+        f"device discovery payload on topic {DEVICE_TOPIC} from external application "
+        "Foo2Mqtt; removing a component this way is deprecated, omit it from the "
+        "payload instead" in caplog.text
+    )
+
+    payload = _device_payload(components, [child_device_1])
+    diff = _diff_device_payload(hass, payload)
     assert set(diff.removed_components) == {("switch", "parent sw2")}
     assert diff.removed_child_devices == {frozenset({"sub2"})}
 
@@ -708,12 +720,6 @@ async def test_device_discovery_ignores_platform_only_component(
     assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
     assert entity_registry.async_is_registered("switch.parent_sub_1_switch")
     assert entity_registry.async_is_registered("switch.parent_switch")
-    assert (
-        "Ignoring switch 'parent sw2' with only the platform option in the MQTT "
-        f"device discovery payload on topic {DEVICE_TOPIC} from external application "
-        "Foo2Mqtt; removing a component this way is deprecated, omit it from the "
-        "payload instead" in caplog.text
-    )
     mqtt_mock.async_publish.assert_not_called()
 
 

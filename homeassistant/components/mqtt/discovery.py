@@ -496,27 +496,29 @@ def _async_diff_device_discovery(
     """Return the known components and child devices a device payload removes.
 
     The payload is the desired state of the device, a known component is removed
-    when it is omitted. A component with only a platform is ignored, as if it is
-    omitted. A known child device is removed when none of its identifiers is in a
-    child device with desired components.
+    when it is omitted. A component with only a platform is ignored, a known one
+    is kept as is. A known child device is removed when none of its identifiers is
+    in a child device with desired components.
     """
+    known_components = _async_get_known_device_components(hass, topic)
     desired_components: set[tuple[str, str]] = set()
     desired_child_identifiers: set[str] = set()
+    child_device: Mapping[str, Any] | None
     for device_component in _device_discovery_components(device_payload):
-        if len(device_component.config) == 1:
+        discovery_hash = (
+            device_component.config[CONF_PLATFORM],
+            _device_component_discovery_id(
+                object_id, node_id, device_component.component_id
+            ),
+        )
+        if len(device_component.config) > 1:
+            child_device = device_component.child_device
+        elif (known_payload := known_components.get(discovery_hash)) is not None:
+            child_device = known_payload[CONF_DEVICE].get(CONF_CHILD_DEVICE)
+        else:
             continue
-        desired_components.add(
-            (
-                device_component.config[CONF_PLATFORM],
-                _device_component_discovery_id(
-                    object_id, node_id, device_component.component_id
-                ),
-            )
-        )
-        desired_child_identifiers.update(
-            _child_device_identifiers(device_component.child_device)
-        )
-    known_components = _async_get_known_device_components(hass, topic)
+        desired_components.add(discovery_hash)
+        desired_child_identifiers.update(_child_device_identifiers(child_device))
     return _DeviceDiscoveryDiff(
         desired_components,
         {
