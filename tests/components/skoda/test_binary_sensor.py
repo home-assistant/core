@@ -16,7 +16,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.skoda.const import DOMAIN
 from homeassistant.components.skoda.coordinator import UPDATE_INTERVAL
-from homeassistant.const import STATE_OFF, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -59,6 +59,37 @@ async def test_no_binary_sensors_without_status(
     assert not er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
+
+
+@pytest.mark.parametrize(
+    ("reliable_lock_status", "locked", "expected_state"),
+    [
+        pytest.param("UNLOCKED", "YES", STATE_ON, id="reliable_unlocked"),
+        pytest.param("LOCKED", "NO", STATE_OFF, id="reliable_locked"),
+        pytest.param("UNKNOWN", "YES", STATE_UNKNOWN, id="reliable_unknown"),
+    ],
+)
+async def test_lock_prefers_reliable_lock_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_skoda_client: AsyncMock,
+    reliable_lock_status: str,
+    locked: str,
+    expected_state: str,
+) -> None:
+    """Test the lock sensor uses the reliable lock status over the fallback."""
+    vehicle = await async_load_json_object_fixture(
+        hass, "vehicle_electric.json", DOMAIN
+    )
+    overall = vehicle["vehicle"]["status"]["overall"]
+    overall["reliableLockStatus"] = reliable_lock_status
+    overall["locked"] = locked
+    mock_skoda_client.get_vehicle.return_value = VehicleResponse.model_validate(vehicle)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get("binary_sensor.enyaq_coupe_lock"))
+    assert state.state == expected_state
 
 
 async def test_binary_sensor_unknown_when_status_missing(

@@ -57,17 +57,15 @@ class SkodaBinarySensorEntityDescription(BinarySensorEntityDescription):
     )
 
 
-def _is_unlocked(status: VehicleStatus) -> bool | None:
-    if status.overall.reliable_lock_status is not None:
-        return _UNLOCKED_MAP.get(status.overall.reliable_lock_status)
-    return _NOT_LOCKED_MAP.get(status.overall.locked)
-
-
 BINARY_SENSOR_TYPES: tuple[SkodaBinarySensorEntityDescription, ...] = (
     SkodaBinarySensorEntityDescription(
         key="lock",
         device_class=BinarySensorDeviceClass.LOCK,
-        is_on_fn=_is_unlocked,
+        is_on_fn=lambda status: (
+            _UNLOCKED_MAP.get(status.overall.reliable_lock_status)
+            if status.overall.reliable_lock_status is not None
+            else _NOT_LOCKED_MAP.get(status.overall.locked)
+        ),
     ),
     SkodaBinarySensorEntityDescription(
         key="doors",
