@@ -10,6 +10,7 @@ import logging
 from typing import ClassVar, Self
 from urllib.parse import urlparse
 
+from async_upnp_client.advertisement import SsdpAdvertisementListener
 from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
@@ -17,11 +18,13 @@ from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
+    DEVICE_ANNOUNCED,
     DISCOVERY_ATTEMPTS,
     DISCOVERY_INTERVAL,
     DISCOVERY_SEARCH_INTERVAL,
@@ -61,6 +64,7 @@ class YeelightScanner:
         self._host_capabilities: dict[str, CaseInsensitiveDict] = {}
         self._track_interval: CALLBACK_TYPE | None = None
         self._listeners: list[SsdpSearchListener] = []
+        self._advertisement_listeners: list[SsdpAdvertisementListener] = []
         self._setup_future: asyncio.Future[None] | None = None
 
     async def async_setup(self) -> None:
@@ -84,6 +88,31 @@ class YeelightScanner:
                     connect_callback=partial(_set_future_if_not_done, future),
                 )
             )
+            # Bulbs announce themselves when they join the network
+            self._advertisement_listeners.append(
+                SsdpAdvertisementListener(
+                    on_alive=self._async_process_alive,
+                    source=source,
+                    target=SSDP_TARGET,
+                )
+            )
+
+        advertisement_results = await asyncio.gather(
+            *(
+                create_eager_task(advertisement_listener.async_start())
+                for advertisement_listener in self._advertisement_listeners
+            ),
+            return_exceptions=True,
+        )
+        for advertisement_listener, result in zip(
+            self._advertisement_listeners, advertisement_results, strict=True
+        ):
+            if isinstance(result, Exception):
+                _LOGGER.warning(
+                    "Failed to setup advertisement listener for %s: %s",
+                    advertisement_listener.source,
+                    result,
+                )
 
         results = await asyncio.gather(
             *(
@@ -200,3 +229,15 @@ class YeelightScanner:
         self._unique_id_capabilities[unique_id] = headers
         for event in self._host_discovered_events.get(host, []):
             event.set()
+
+    @callback
+    def _async_process_alive(self, headers: CaseInsensitiveDict) -> None:
+        """Process an alive advertisement, sent by bulbs joining the network."""
+        if "id" not in headers or "location" not in headers:
+            return
+        self._async_process_entry(headers)
+        async_dispatcher_send(
+            self._hass,
+            DEVICE_ANNOUNCED.format(headers["id"]),
+            urlparse(headers["location"]).hostname,
+        )

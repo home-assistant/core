@@ -1,6 +1,8 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
 
+import contextlib
 import logging
+import time
 from typing import Any
 
 from yeelight import BulbException
@@ -13,6 +15,7 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     ACTIVE_MODE_NIGHTLIGHT,
+    ALIVE_RECONNECT_GRACE,
     DATA_UPDATED,
     STATE_CHANGE_TIME,
     UPDATE_REQUEST_PROPERTIES,
@@ -74,6 +77,8 @@ class YeelightDevice:
         self._available = True
         self._initialized = False
         self._name: str | None = None
+        self._reconnecting = False
+        self._connected_at = time.monotonic()
 
     @property
     def bulb(self):
@@ -207,6 +212,30 @@ class YeelightDevice:
         await self._async_update_properties()
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
+    async def async_reconnect(self) -> None:
+        """Reconnect after the bulb announced itself, its old connection may be dead."""
+        if (
+            self._reconnecting
+            or time.monotonic() - self._connected_at < ALIVE_RECONNECT_GRACE
+        ):
+            # Bulbs announce themselves a few times in a row
+            return
+        self._reconnecting = True
+        try:
+            _LOGGER.debug("%s announced itself, reconnecting", self._host)
+            music_mode = self.bulb.music_mode
+            # Drops the connection, also a music mode one, and connects again
+            await self.bulb.async_stop_music(force=True)
+            if music_mode:
+                # Raises if the light turned music mode on again in the meantime
+                with contextlib.suppress(AssertionError):
+                    await self.bulb.async_start_music()
+            # A power cut may have changed the state of the bulb
+            await self.async_update(True)
+        finally:
+            self._reconnecting = False
+            self._connected_at = time.monotonic()
+
     async def _async_forced_update(self, _now):
         """Call a forced update."""
         await self.async_update(True)
@@ -217,6 +246,8 @@ class YeelightDevice:
         _LOGGER.debug("Received callback: %s", data)
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
+        if not was_available and self._available:
+            self._connected_at = time.monotonic()
         if update_needs_bg_power_workaround(data) or (
             not was_available and self._available
         ):
