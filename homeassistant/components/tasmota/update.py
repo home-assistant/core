@@ -41,7 +41,9 @@ async def async_setup_entry(
             )
         ):
             added_macs.add(mac)
-            async_add_entities([TasmotaUpdateEntity(coordinator, device)])
+            entity = TasmotaUpdateEntity(coordinator, device)
+            entity.async_on_remove(lambda: added_macs.discard(mac))
+            async_add_entities([entity])
 
     hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(Platform.UPDATE)] = (
         async_dispatcher_connect(

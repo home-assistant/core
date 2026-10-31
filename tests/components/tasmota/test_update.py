@@ -123,6 +123,50 @@ async def test_device_update_entity(
     assert "# RELEASE NOTES" in result
 
 
+async def test_device_update_entity_rediscovered(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the update entity is recreated when a device is rediscovered."""
+    await setup_tasmota_helper(hass)
+
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
+    config_topic = f"{DEFAULT_PREFIX}/{mac}/config"
+
+    async_fire_mqtt_message(hass, config_topic, json.dumps(config))
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(Platform.UPDATE, DOMAIN, dr.format_mac(mac))
+        is not None
+    )
+
+    # Empty config removes the device and its update entity
+    async_fire_mqtt_message(hass, config_topic, "")
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(Platform.UPDATE, DOMAIN, dr.format_mac(mac))
+        is None
+    )
+
+    # Rediscovery creates a new update entity
+    async_fire_mqtt_message(hass, config_topic, json.dumps(config))
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, dr.format_mac(mac)
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_CONFIG["sw"]
+    assert state.attributes[ATTR_LATEST_VERSION] == "14.6.0"
+
+
 @pytest.fixture
 def mock_github_latest_release_failure(request: pytest.FixtureRequest) -> AsyncMock:
     """Mock the GitHub release API to fail or return an empty response."""
