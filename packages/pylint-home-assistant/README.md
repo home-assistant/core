@@ -171,6 +171,7 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7454` | [`home-assistant-coordinator-missing-type-parameter`](#w7454-home-assistant-coordinator-missing-type-parameter) | `DataUpdateCoordinator` or `CoordinatorEntity` is subclassed without a type parameter |
 
 ## `home_assistant_logger` checker
 
@@ -444,6 +445,26 @@ or `_attr_available`, are not flagged. Neither are entities of a push
 coordinator, one that never sets an `update_interval` and gets its data
 through `async_set_updated_data`: its `last_update_success` doesn't show
 whether the device is reachable.
+
+
+## `home_assistant_coordinator_type_parameter` checker
+
+Checks that coordinator classes are subclassed with a type parameter.
+
+### `W7454`: `home-assistant-coordinator-missing-type-parameter`
+
+`DataUpdateCoordinator` and `CoordinatorEntity` are generic. Without a type
+parameter, `coordinator.data` and `self.coordinator` lose their types, so the
+type checker can't check the code that uses them:
+
+```python
+class MyCoordinator(DataUpdateCoordinator[MyData]):
+    ...
+
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    ...
+```
 
 
 ## `home_assistant_log_and_raise` checker
