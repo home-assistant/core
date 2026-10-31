@@ -7915,7 +7915,7 @@
     },
     "nuheat": {
       "name": "NuHeat",
-      "integration_type": "device",
+      "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
       ],
