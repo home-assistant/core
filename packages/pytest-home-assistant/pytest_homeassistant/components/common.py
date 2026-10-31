@@ -890,7 +890,7 @@ def parametrize_trigger_states(
             "excluded_state": _excluded_state_desc(state),
             "others_state": (
                 included
-                if isinstance(others_state, UndefinedType)
+                if others_state is UNDEFINED
                 else _included_state_desc(others_state)
             ),
             "count": count,

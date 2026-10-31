@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.recorder import get_instance
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     ApparentPowerConverter,
@@ -503,7 +503,7 @@ async def ws_update_statistics_metadata(
     async_update_statistics_metadata(
         hass,
         msg["statistic_id"],
-        new_unit_class=msg.get("unit_class", UNDEFINED),
+        new_unit_class=msg.get("unit_class", Undefined),
         new_unit_of_measurement=msg["unit_of_measurement"],
         on_done=update_statistics_metadata_done,
         _called_from_ws_api=True,

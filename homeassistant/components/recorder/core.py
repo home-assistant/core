@@ -45,7 +45,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.recorder import DATA_RECORDER, session_scope
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.event_type import EventType
@@ -635,9 +635,9 @@ class Recorder(threading.Thread):
         self,
         statistic_id: str,
         *,
-        new_statistic_id: str | UndefinedType = UNDEFINED,
-        new_unit_class: str | UndefinedType | None = UNDEFINED,
-        new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
+        new_statistic_id: str | Undefined = Undefined,
+        new_unit_class: str | Undefined | None = Undefined,
+        new_unit_of_measurement: str | Undefined | None = Undefined,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
