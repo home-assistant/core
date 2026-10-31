@@ -37,8 +37,6 @@ async def async_setup_entry(
     """Set up firmware updates."""
     controller = config_entry.runtime_data
 
-    devices = controller.devices_coordinator.data
-
     coordinator = OmadaFirmwareUpdateCoordinator(
         hass, config_entry, controller.omada_client, controller.devices_coordinator
     )
@@ -49,8 +47,16 @@ async def async_setup_entry(
                 controller.controller_status_coordinator,
                 controller.controller_update_coordinator,
             ),
-            *(OmadaDeviceUpdate(coordinator, device) for device in devices.values()),
         ]
+    )
+
+    async def _async_register_device(device: OmadaListDevice) -> bool:
+        """Create the firmware update entity for a device."""
+        async_add_entities([OmadaDeviceUpdate(coordinator, device)])
+        return True
+
+    await controller.async_register_device_entities(
+        lambda device: True, _async_register_device
     )
     await coordinator.async_request_refresh()
 
@@ -222,6 +228,21 @@ class OmadaDeviceUpdate(
 
         self._attr_unique_id = f"{device.mac}_firmware"
 
+        if self.coordinator.data and self._mac in self.coordinator.data:
+            self._update_attrs()
+
+    def _update_attrs(self) -> None:
+        """Set the version and progress attributes from the coordinator."""
+        status = self.coordinator.data[self._mac]
+
+        if status.firmware and status.device.need_upgrade:
+            self._attr_installed_version = status.firmware.current_version
+            self._attr_latest_version = status.firmware.latest_version
+        else:
+            self._attr_installed_version = status.device.firmware_version
+            self._attr_latest_version = status.device.firmware_version
+        self._attr_in_progress = status.device.fw_download
+
     @override
     def release_notes(self) -> str | None:
         """Get the release notes for the latest update."""
@@ -256,14 +277,5 @@ class OmadaDeviceUpdate(
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        status = self.coordinator.data[self._mac]
-
-        if status.firmware and status.device.need_upgrade:
-            self._attr_installed_version = status.firmware.current_version
-            self._attr_latest_version = status.firmware.latest_version
-        else:
-            self._attr_installed_version = status.device.firmware_version
-            self._attr_latest_version = status.device.firmware_version
-        self._attr_in_progress = status.device.fw_download
-
+        self._update_attrs()
         self.async_write_ha_state()

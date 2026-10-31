@@ -1,12 +1,15 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
 from collections.abc import Awaitable, Callable
+import logging
 from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaClient, OmadaSiteClient
-from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
+from tplink_omada_client.devices import OmadaGateway, OmadaListDevice, OmadaSwitch
+from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
@@ -19,6 +22,8 @@ from .coordinator import (
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OmadaSiteController:
@@ -52,6 +57,7 @@ class OmadaSiteController:
         self._clients_coordinator = OmadaClientsCoordinator(
             hass, config_entry, omada_client
         )
+        self._device_entity_registrations: list[set[str]] = []
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
@@ -72,7 +78,7 @@ class OmadaSiteController:
     async def async_register_device_entities(
         self,
         device_filter: Callable[[OmadaListDevice], bool],
-        entity_callback: Callable[[OmadaListDevice], Awaitable[None]],
+        entity_callback: Callable[[OmadaListDevice], Awaitable[bool]],
     ) -> None:
         """Register entities for devices matching the given filter.
 
@@ -81,10 +87,14 @@ class OmadaSiteController:
 
         Args:
             device_filter: Function that returns True if a device should be processed.
-            entity_callback: Given a discovered Omada device, creates entities for that device.
+            entity_callback: Given a discovered Omada device, creates entities and
+                returns True, or returns False when the device is not ready yet.
         """
-        # Track which devices have been processed already
+        # Track which devices have been processed already. A device removed by
+        # cleanup is dropped from these sets so it is registered again when it
+        # reappears.
         processed_devices: set[str] = set()
+        self._device_entity_registrations.append(processed_devices)
 
         async def _async_register_entities() -> None:
             """Register entities for devices that match the filter."""
@@ -98,8 +108,29 @@ class OmadaSiteController:
                 return
 
             for device in devices_to_process:
-                processed_devices.add(device.mac)
-                await entity_callback(device)
+                mac = device.mac
+                # The device list was built before this loop, so recheck: a
+                # concurrent task may have reserved the device in the meantime.
+                if mac in processed_devices:
+                    continue
+                # Reserve the device before awaiting so concurrent
+                # registrations do not process it twice.
+                processed_devices.add(mac)
+                try:
+                    registered = await entity_callback(device)
+                except OmadaClientException as ex:
+                    # Expected transient failures are retried on the next update.
+                    processed_devices.discard(mac)
+                    _LOGGER.debug(
+                        "Failed to register entities for Omada device %s: %s",
+                        mac,
+                        ex,
+                    )
+                    continue
+                if not registered:
+                    # The device is not ready (for example no data for it yet);
+                    # leave it unprocessed so a later update retries.
+                    processed_devices.discard(mac)
 
         @callback
         def _handle_devices_update() -> None:
@@ -111,6 +142,58 @@ class OmadaSiteController:
 
         # Call once on initial setup
         await _async_register_entities()
+
+    def _forget_device_registration(self, mac: str) -> None:
+        """Drop a device from the registration state so it can be added again."""
+        for processed in self._device_entity_registrations:
+            processed.discard(mac)
+
+    async def async_forget_device(self, mac: str) -> None:
+        """Drop cached registration and coordinator state for a device."""
+        self._forget_device_registration(mac)
+        gateway_coordinator = self._gateway_coordinator
+        if gateway_coordinator is not None and gateway_coordinator.mac == mac:
+            gateway_coordinator.invalidate()
+        coordinator = self._switch_port_coordinators.pop(mac, None)
+        if coordinator is not None:
+            await coordinator.async_shutdown()
+
+    @callback
+    def forget_cached_device(self, mac: str) -> None:
+        """Drop a manually removed device from the cached device list."""
+        devices = self._devices_coordinator.data
+        if devices and mac in devices:
+            self._devices_coordinator.async_set_updated_data(
+                {
+                    device_mac: device
+                    for device_mac, device in devices.items()
+                    if device_mac != mac
+                }
+            )
+
+    async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
+        """Remove a device entry and drop its cached coordinator state."""
+        await self.async_forget_device(mac)
+        dr.async_get(self._hass).async_remove_device(device_entry.id)
+
+    async def async_get_gateway(self, mac: str) -> OmadaGateway | None:
+        """Return gateway data, refreshing when the cache does not have it.
+
+        Returns None when the data is unavailable; registration then retries on
+        the next device-list update instead of rebuilding entities from stale
+        port data.
+        """
+        coordinator = self._gateway_coordinator
+        if coordinator is None:
+            return None
+
+        gateway = (coordinator.data or {}).get(mac)
+        if gateway is not None:
+            return gateway
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            return None
+        return (coordinator.data or {}).get(mac)
 
     @property
     def controller_client(self) -> OmadaClient:
@@ -126,12 +209,13 @@ class OmadaSiteController:
         self, switch: OmadaSwitch
     ) -> OmadaSwitchPortCoordinator:
         """Get coordinator for network port information of a given switch."""
-        if switch.mac not in self._switch_port_coordinators:
-            self._switch_port_coordinators[switch.mac] = OmadaSwitchPortCoordinator(
+        mac = switch.mac
+        if mac not in self._switch_port_coordinators:
+            self._switch_port_coordinators[mac] = OmadaSwitchPortCoordinator(
                 self._hass, self._config_entry, self._omada_client, switch
             )
 
-        return self._switch_port_coordinators[switch.mac]
+        return self._switch_port_coordinators[mac]
 
     @property
     def controller_status_coordinator(self) -> OmadaControllerStatusCoordinator:

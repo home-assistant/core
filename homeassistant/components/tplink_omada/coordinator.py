@@ -22,12 +22,14 @@ from tplink_omada_client.devices import (
 from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
+    from .controller import OmadaSiteController
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -190,6 +192,24 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "Gateway", POLL_GATEWAY)
         self.mac = mac
+        self._generation = 0
+
+    def invalidate(self) -> None:
+        """Drop cached data and reject refreshes started before the removal."""
+        self._generation += 1
+        self.data = {}
+
+    @override
+    async def _async_update_data(self) -> dict[str, OmadaGateway]:
+        """Fetch gateway data, discarding a result from before an invalidation."""
+        generation = self._generation
+        data = await super()._async_update_data()
+        if generation != self._generation:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            )
+        return data
 
     @override
     async def poll_update(self) -> dict[str, OmadaGateway]:
@@ -209,6 +229,19 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
+
+    @override
+    async def _async_update_data(self) -> dict[str, OmadaListDevice]:
+        """Fetch the device list and remove devices the controller dropped."""
+        devices = await super()._async_update_data()
+        if not devices:
+            # A successful but empty response is a controller glitch, not proof
+            # that every device is gone: keep the cached list so nothing is
+            # removed and entities keep their data.
+            return self.data or {}
+
+        await async_cleanup_devices(self.hass, self.config_entry.runtime_data, devices)
+        return devices
 
     @override
     async def poll_update(self) -> dict[str, OmadaListDevice]:
@@ -302,3 +335,38 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         self._config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
         )
+
+
+async def async_cleanup_devices(
+    hass: HomeAssistant,
+    controller: OmadaSiteController,
+    devices: dict[str, OmadaListDevice] | None = None,
+) -> None:
+    """Remove registry entries for devices missing from the controller list."""
+    if devices is None:
+        devices = controller.devices_coordinator.data
+    if not devices:
+        return
+
+    known_devices = set(devices)
+    # The controller device is not part of the site's device list.
+    controller_mac = controller.controller_status_coordinator.data.mac
+    device_registry = dr.async_get(hass)
+    entry_id = controller.devices_coordinator.config_entry.entry_id
+
+    for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
+        mac = next(
+            (
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            ),
+            None,
+        )
+        if mac and mac not in known_devices and mac != controller_mac:
+            _LOGGER.debug(
+                "Removing stale Omada device %s from entry %s",
+                mac,
+                entry_id,
+            )
+            await controller.async_remove_device(mac, device_entry)
