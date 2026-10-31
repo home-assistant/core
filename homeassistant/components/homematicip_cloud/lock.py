@@ -59,8 +59,27 @@ class HomematicipDoorLockDrive(HomematicipGenericEntity, LockEntity):
     @override
     def is_locked(self) -> bool | None:
         """Return true if device is locked."""
+        lock_state = getattr(self._device, "lockState", None)
+        motor_state = getattr(self._device, "motorState", None)
+        # A missing/NONE/unknown raw state is not proof of "unlocked".
+        if motor_state not in (
+            MotorState.STOPPED,
+            MotorState.CLOSING,
+            MotorState.OPENING,
+        ):
+            return None
+        if lock_state is LockState.LOCKED:
+            return motor_state == MotorState.STOPPED
+        if lock_state is LockState.UNLOCKED:
+            return False
+        return None
+
+    @property
+    @override
+    def is_open(self) -> bool | None:
+        """Return true if the latch is reported open."""
         return (
-            self._device.lockState == LockState.LOCKED
+            getattr(self._device, "lockState", None) is LockState.OPEN
             and self._device.motorState == MotorState.STOPPED
         )
 
