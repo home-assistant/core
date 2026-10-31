@@ -1,0 +1,27 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "required": "Please select at least one location."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "locations": "Locations"
+        },
+        "data_description": {
+          "locations": "Select the London boroughs to track."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "Configuring {integration_title} using a YAML sensor platform is deprecated.\n\nWhile importing your configuration, an error occurred when trying to connect to the air quality API. Please restart Home Assistant to try again, or remove the `{domain}` sensor platform from your `configuration.yaml` and set the integration up via the UI.",
+      "title": "{integration_title} YAML configuration deprecated"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 """Sensor for checking the status of London air."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import Any, override
 
@@ -18,53 +18,23 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
+from .const import AUTHORITIES, CONF_LOCATIONS, DOMAIN, INTEGRATION_TITLE, SCAN_INTERVAL
+
+BREAKS_IN_HA_VERSION = "2027.6.0"
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_LOCATIONS = "locations"
-
-SCAN_INTERVAL = timedelta(minutes=30)
-
-AUTHORITIES = [
-    "Barking and Dagenham",
-    "Barnet",
-    "Bexley",
-    "Brent",
-    "Bromley",
-    "Camden",
-    "City of London",
-    "Croydon",
-    "Ealing",
-    "Enfield",
-    "Greenwich",
-    "Hackney",
-    "Hammersmith and Fulham",
-    "Haringey",
-    "Harrow",
-    "Havering",
-    "Hillingdon",
-    "Hounslow",
-    "Islington",
-    "Kensington and Chelsea",
-    "Kingston",
-    "Lambeth",
-    "Lewisham",
-    "Merton",
-    "Newham",
-    "Redbridge",
-    "Richmond",
-    "Southwark",
-    "Sutton",
-    "Tower Hamlets",
-    "Waltham Forest",
-    "Wandsworth",
-    "Westminster",
-]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -81,11 +51,57 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the London Air sensor."""
-    data = APIData(hass)
-    await data.async_update()
+    """Set up the London Air sensor platform from YAML."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result["type"] is FlowResultType.ABORT
+        and (reason := result["reason"]) != "single_instance_allowed"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
 
-    async_add_entities((AirSensor(name, data) for name in config[CONF_LOCATIONS]), True)
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry[APIData],
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up London Air sensors from a config entry."""
+    api_data = entry.runtime_data
+    async_add_entities(
+        (AirSensor(name, api_data) for name in entry.data[CONF_LOCATIONS]),
+        update_before_add=True,
+    )
 
 
 class APIData:
@@ -122,11 +138,6 @@ class AirSensor(SensorEntity):
         self._api_data = api_data
         self._site_data: list[dict[str, Any]] | None = None
         self._updated: str | None = None
-
-    @property
-    def site_data(self) -> list[dict[str, Any]] | None:
-        """Return the dict of sites data."""
-        return self._site_data
 
     @property
     @override
