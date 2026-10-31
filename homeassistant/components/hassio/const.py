@@ -206,6 +206,7 @@ ISSUE_KEY_SYSTEM_REBOOT_REQUIRED = "issue_system_reboot_required"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
 ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER = "legacy_homeassistant_folder"
+ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE = "core_auto_update_choose"
 
 ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
