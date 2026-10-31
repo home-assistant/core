@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_rpc_ledstrip_palette_select[select.test_name_ledstrip_0_effect_palette-entry]
+# name: test_rpc_ledstrip_palette_select[select.test_name_effect_palette-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16,11 +16,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('shelly', '123456789ABC-ledstrip:0')]>,
+    'device_id': <DeviceEntry identifiers=[('shelly', '123456789ABC')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.test_name_ledstrip_0_effect_palette',
+    'entity_id': 'select.test_name_effect_palette',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -43,10 +43,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_rpc_ledstrip_palette_select[select.test_name_ledstrip_0_effect_palette-state]
+# name: test_rpc_ledstrip_palette_select[select.test_name_effect_palette-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Ledstrip 0 Effect palette',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Effect palette',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'rainbow',
         'fire',
@@ -55,7 +55,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.test_name_ledstrip_0_effect_palette',
+    'entity_id': 'select.test_name_effect_palette',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
