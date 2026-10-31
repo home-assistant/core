@@ -101,3 +101,38 @@ def test_async_discover_entities_filters_by_cluster_revision(
     endpoint = node.endpoints[1]
 
     assert bool(list(async_discover_entities(endpoint, 1))) is expected_discovered
+
+
+@pytest.mark.parametrize(
+    ("removed_clusters", "expected"),
+    [
+        pytest.param(
+            (),
+            {(Platform.MEDIA_PLAYER, "MatterBasicVideoPlayer")},
+            id="media_player",
+        ),
+        pytest.param(
+            (clusters.MediaPlayback.id,),
+            {(Platform.SWITCH, "MatterPowerToggle")},
+            id="no_media_playback",
+        ),
+    ],
+)
+def test_async_discover_entities_video_player_power(
+    removed_clusters: tuple[int, ...],
+    expected: set[tuple[Platform, str]],
+) -> None:
+    """Test video players only get a Power switch when there is no media player."""
+    node = create_node_from_fixture("mock_basic_video_player")
+    for path in [
+        path
+        for path in node.node_data.attributes
+        if int(path.split("/")[1]) in removed_clusters
+    ]:
+        del node.node_data.attributes[path]
+
+    assert {
+        (info.platform, info.entity_description.key)
+        for info in async_discover_entities(node.endpoints[1], 1)
+        if clusters.OnOff.Attributes.OnOff in info.discovery_schema.required_attributes
+    } == expected

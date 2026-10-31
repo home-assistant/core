@@ -1,0 +1,71 @@
+# serializer version: 1
+# name: test_media_players[mock_basic_video_player][media_player.mock_basic_video_player-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'Live TV',
+        'HDMI 1',
+        'HDMI 2',
+        'HDMI 3',
+        'USB',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000C8-MatterNodeDevice'), ('matter', 'serial_serial_200')]>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.mock_basic_video_player',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 22963>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-00000000000000C8-MatterNodeDevice-1-MatterBasicVideoPlayer-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_players[mock_basic_video_player][media_player.mock_basic_video_player-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Basic Video Player',
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 7200.0,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 0.0,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: datetime.datetime(2026, 10, 13, 13, 0, 8, 656000, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Live TV',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'Live TV',
+        'HDMI 1',
+        'HDMI 2',
+        'HDMI 3',
+        'USB',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 22963>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.mock_basic_video_player',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
