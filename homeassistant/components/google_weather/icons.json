@@ -20,5 +20,10 @@
         "default": "mdi:card-text-outline"
       }
     }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "service": "mdi:weather-pouring"
+    }
   }
 }
