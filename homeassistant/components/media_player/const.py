@@ -167,6 +167,7 @@ class MediaPlayerEntityCapabilityAttribute(StrEnum):
 
     INPUT_SOURCE_LIST = "source_list"
     SOUND_MODE_LIST = "sound_mode_list"
+    SUPPORTED_NAVIGATION = "supported_navigation"
 
 
 class MediaPlayerEntityStateAttribute(StrEnum):
@@ -225,6 +226,7 @@ class MediaPlayerEntityFeature(IntFlag):
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
     SEARCH_MEDIA = 4194304
+    NAVIGATE = 8388608
 
 
 class MediaPlayerDeviceClass(StrEnum):
@@ -257,6 +259,19 @@ class MediaPlayerEnqueue(StrEnum):
     REPLACE = "replace"
 
 
+class MediaPlayerNavigation(StrEnum):
+    """Navigation (d-pad) actions for media players."""
+
+    UP = "up"
+    DOWN = "down"
+    LEFT = "left"
+    RIGHT = "right"
+    SELECT = "select"
+    BACK = "back"
+    HOME = "home"
+    MENU = "menu"
+
+
 class MediaPlayerService(StrEnum):
     """Store keys for media player services."""
 
@@ -270,6 +285,7 @@ class MediaPlayerService(StrEnum):
     MEDIA_PREVIOUS_TRACK = "media_previous_track"
     MEDIA_SEEK = "media_seek"
     MEDIA_STOP = "media_stop"
+    NAVIGATE = "navigate"
     PLAY_MEDIA = "play_media"
     REPEAT_SET = "repeat_set"
     SEARCH_MEDIA = "search_media"
@@ -290,6 +306,7 @@ class MediaPlayerServiceArgument(StrEnum):
     """Store keys for media player service arguments."""
 
     ANNOUNCE = "announce"
+    DIRECTION = "direction"
     ENQUEUE = "enqueue"
     EXTRA = "extra"
     GROUP_MEMBERS = "group_members"

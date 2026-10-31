@@ -6,19 +6,23 @@ from typing import Any
 
 import probatio
 
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     DATA_COMPONENT,
+    DOMAIN,
     MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
     MediaClass,
     MediaPlayerEnqueue,
     MediaPlayerEntityFeature,
+    MediaPlayerNavigation,
     MediaPlayerService,
     MediaPlayerServiceArgument,
     RepeatMode,
 )
+from .entity import MediaPlayerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +90,21 @@ def _rewrite_enqueue(value: dict[str, Any]) -> dict[str, Any]:
         )
 
     return value
+
+
+async def _async_navigate(entity: MediaPlayerEntity, call: ServiceCall) -> None:
+    """Send a navigation action if the player supports it."""
+    direction: MediaPlayerNavigation = call.data[MediaPlayerServiceArgument.DIRECTION]
+    if direction not in entity.supported_navigation:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="navigation_not_supported",
+            translation_placeholders={
+                "entity_id": entity.entity_id,
+                "direction": direction,
+            },
+        )
+    await entity.async_navigate(direction)
 
 
 @callback
@@ -225,6 +244,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
         {probatio.Required(MediaPlayerServiceArgument.SOURCE): cv.string},
         "async_select_source",
         [MediaPlayerEntityFeature.SELECT_SOURCE],
+    )
+    component.async_register_entity_service(
+        MediaPlayerService.NAVIGATE,
+        {
+            probatio.Required(MediaPlayerServiceArgument.DIRECTION): probatio.Coerce(
+                MediaPlayerNavigation
+            )
+        },
+        _async_navigate,
+        [MediaPlayerEntityFeature.NAVIGATE],
     )
     component.async_register_entity_service(
         MediaPlayerService.SELECT_SOUND_MODE,
