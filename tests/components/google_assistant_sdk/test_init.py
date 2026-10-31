@@ -24,6 +24,7 @@ from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUA
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import chat_session, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -389,7 +390,7 @@ async def test_conversation_agent(
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test GoogleAssistantConversationAgent."""
+    """Test the Google Assistant SDK conversation agent."""
     await setup_integration()
 
     assert await async_setup_component(hass, "homeassistant", {})
@@ -403,7 +404,7 @@ async def test_conversation_agent(
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        "homeassistant.components.google_assistant_sdk.conversation.TextAssistantAsync",
         autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
@@ -420,13 +421,50 @@ async def test_conversation_agent(
     mock_text_assistant.assert_has_calls([call().assist(text2)])
 
 
+async def test_conversation_entity_chat_log(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the conversation entity stores the answer in the chat log."""
+    await setup_integration()
+    assert await async_setup_component(hass, "conversation", {})
+
+    entity_id = entity_registry.async_get_entity_id(
+        "conversation", DOMAIN, config_entry.entry_id
+    )
+    assert entity_id is not None
+
+    with patch(
+        "homeassistant.components.google_assistant_sdk.conversation.TextAssistantAsync",
+        autospec=True,
+    ) as mock_text_assistant:
+        mock_text_assistant.return_value.assist.return_value = ("A joke", None, None)
+        result = await conversation.async_converse(
+            hass, "tell me a joke", None, Context(), "en-US", entity_id
+        )
+
+    assert result.response.speech["plain"]["speech"] == "A joke"
+    with (
+        chat_session.async_get_chat_session(
+            hass, result.conversation_id, context=None
+        ) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert [(c.role, c.content) for c in chat_log.content[1:]] == [
+            ("user", "tell me a joke"),
+            ("assistant", "A joke"),
+        ]
+
+
 async def test_conversation_agent_refresh_token(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test GoogleAssistantConversationAgent when token is expired."""
+    """Test the Google Assistant SDK conversation agent when token is expired."""
     await setup_integration()
 
     assert await async_setup_component(hass, "homeassistant", {})
@@ -437,7 +475,7 @@ async def test_conversation_agent_refresh_token(
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        "homeassistant.components.google_assistant_sdk.conversation.TextAssistantAsync",
         autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
@@ -478,7 +516,7 @@ async def test_conversation_agent_language_changed(
     config_entry: MockConfigEntry,
     setup_integration: ComponentSetup,
 ) -> None:
-    """Test GoogleAssistantConversationAgent when language is changed."""
+    """Test the Google Assistant SDK conversation agent when language is changed."""
     await setup_integration()
 
     assert await async_setup_component(hass, "homeassistant", {})
@@ -489,7 +527,7 @@ async def test_conversation_agent_language_changed(
     text1 = "tell me a joke"
     text2 = "cuéntame un chiste"
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        "homeassistant.components.google_assistant_sdk.conversation.TextAssistantAsync",
         autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
@@ -539,7 +577,7 @@ async def test_conversation_agent_serializes_requests(
         events.append("close")
 
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        "homeassistant.components.google_assistant_sdk.conversation.TextAssistantAsync",
         autospec=True,
     ) as mock_text_assistant:
         mock_text_assistant.return_value.assist.side_effect = assist
@@ -578,7 +616,7 @@ async def test_conversation_agent_closed_on_unload(
     assert config_entry.state is ConfigEntryState.LOADED
 
     with patch(
-        "homeassistant.components.google_assistant_sdk.TextAssistantAsync",
+        "homeassistant.components.google_assistant_sdk.conversation.TextAssistantAsync",
         autospec=True,
     ) as mock_text_assistant:
         await conversation.async_converse(
