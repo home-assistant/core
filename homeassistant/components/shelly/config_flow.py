@@ -72,7 +72,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from homeassistant.util.network import is_ip_address
+from homeassistant.util.network import is_ip_address, is_ipv4_address
 
 from .ble_provisioning import (
     ProvisioningState,
@@ -729,7 +729,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     async def _async_handle_zeroconf_mac_discovery(
-        self, mac: str, host: str, port: int
+        self,
+        mac: str,
+        host: str,
+        port: int,
+        ip_addresses: list[str],
     ) -> None:
         """Handle MAC address discovery from zeroconf.
 
@@ -743,18 +747,31 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         # device is already on WiFi (discovered via zeroconf)
         self._abort_idle_ble_flows(mac)
 
-        await self._async_discovered_mac(mac, host)
+        await self._async_discovered_mac(mac, host, ip_addresses)
 
-    async def _async_discovered_mac(self, mac: str, host: str) -> None:
+    async def _async_discovered_mac(
+        self,
+        mac: str,
+        host: str,
+        ip_addresses: list[str],
+    ) -> None:
         """Abort and reconnect soon if the device with the mac is already configured."""
         current_entry = await self.async_set_unique_id(mac)
         current_host = current_entry.data.get(CONF_HOST) if current_entry else None
         # A user-configured hostname must not be replaced by the resolved IP
         keep_hostname = current_host is not None and not is_ip_address(current_host)
-        if current_entry and (current_host == host or keep_hostname):
+        # The first advertised address can be stale while the configured one remains
+        keep_listed_host = (
+            current_host is not None
+            and is_ipv4_address(current_host)
+            and current_host in ip_addresses
+        )
+        if current_entry and (
+            current_host == host or keep_hostname or keep_listed_host
+        ):
             LOGGER.debug("async_reconnect_soon: host: %s, mac: %s", host, mac)
             await async_reconnect_soon(self.hass, current_entry)
-        if keep_hostname:
+        if keep_hostname or keep_listed_host:
             self._abort_if_unique_id_configured()
         elif host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip
@@ -1189,7 +1206,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         # so we can avoid making another connection to the
         # device if we already have it configured
         if mac := mac_address_from_name(discovery_info.name):
-            await self._async_handle_zeroconf_mac_discovery(mac, host, port)
+            await self._async_handle_zeroconf_mac_discovery(
+                mac, host, port, discovery_info.addresses
+            )
 
         try:
             # Devices behind range extender doesn't generate zeroconf packets
@@ -1202,7 +1221,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # We could not get the mac address from the name
             # so need to check here since we just got the info
             mac = self.info[CONF_MAC]
-            await self._async_handle_zeroconf_mac_discovery(mac, host, port)
+            await self._async_handle_zeroconf_mac_discovery(
+                mac, host, port, discovery_info.addresses
+            )
 
         if not is_device_supported(self.info):
             return self.async_abort(

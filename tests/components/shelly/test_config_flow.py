@@ -2718,6 +2718,35 @@ async def test_zeroconf_already_configured(
     assert entry.data[CONF_HOST] == expected_host
 
 
+async def test_zeroconf_keeps_configured_host_still_advertised(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf keeps a configured IP when a stale address is listed first."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: "1.1.1.1"}
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "type": MODEL_1, "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=replace(
+                DISCOVERY_INFO,
+                ip_address=ip_address("10.10.10.10"),
+                ip_addresses=[ip_address("10.10.10.10"), ip_address("1.1.1.1")],
+            ),
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+
+
 async def test_zeroconf_ignored(hass: HomeAssistant) -> None:
     """Test zeroconf when the device was previously ignored."""
 
