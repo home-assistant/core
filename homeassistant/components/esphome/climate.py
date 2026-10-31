@@ -106,6 +106,24 @@ _FAN_MODES: EsphomeEnumMapper[ClimateFanMode, str] = EsphomeEnumMapper(
         ClimateFanMode.QUIET: FAN_QUIET,
     }
 )
+# ESPHome sends fan modes in enum order, which puts MIDDLE after HIGH
+_FAN_MODE_ORDER: dict[ClimateFanMode, int] = {
+    mode: index
+    for index, mode in enumerate(
+        (
+            ClimateFanMode.ON,
+            ClimateFanMode.OFF,
+            ClimateFanMode.AUTO,
+            ClimateFanMode.LOW,
+            ClimateFanMode.MEDIUM,
+            ClimateFanMode.MIDDLE,
+            ClimateFanMode.HIGH,
+            ClimateFanMode.FOCUS,
+            ClimateFanMode.DIFFUSE,
+            ClimateFanMode.QUIET,
+        )
+    )
+}
 _SWING_MODES: EsphomeEnumMapper[ClimateSwingMode, str] = EsphomeEnumMapper(
     {
         ClimateSwingMode.OFF: SWING_OFF,
@@ -149,7 +167,10 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             _CLIMATE_MODES.from_esphome(mode) for mode in static_info.supported_modes
         ]
         self._attr_fan_modes = [
-            _FAN_MODES.from_esphome(mode) for mode in static_info.supported_fan_modes
+            _FAN_MODES.from_esphome(mode)
+            for mode in sorted(
+                static_info.supported_fan_modes, key=_FAN_MODE_ORDER.__getitem__
+            )
         ] + static_info.supported_custom_fan_modes
         self._attr_preset_modes = [
             _PRESETS.from_esphome(preset)
