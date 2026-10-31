@@ -30,6 +30,7 @@ from homeassistant.helpers.storage import Store
 from .auth_util import async_user_not_allowed_do_auth
 from .const import (
     DATA_SUPERVISOR_USER,
+    KEY_EXPIRED_SIGNED_REQUEST,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     is_supervisor_unix_socket_request,
@@ -93,6 +94,62 @@ def async_sign_path(
     return f"{url.path}?{url.query_string}"
 
 
+@callback
+def _async_validate_signed_request(hass: HomeAssistant, request: Request) -> bool:
+    """Validate a signed request."""
+    if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
+        return False
+
+    if (signature := request.query.get(SIGN_QUERY_PARAM)) is None:
+        return False
+
+    expired = False
+    try:
+        claims = jwt_wrapper.verify_and_decode(
+            signature, secret, algorithms=["HS256"], options={"verify_iss": False}
+        )
+    except jwt.ExpiredSignatureError:
+        # Only raised for a valid signature
+        expired = True
+        claims = jwt_wrapper.verify_and_decode(
+            signature,
+            secret,
+            algorithms=["HS256"],
+            options={"verify_iss": False, "verify_exp": False},
+        )
+    except jwt.InvalidTokenError:
+        return False
+
+    if claims["path"] != request.path:
+        return False
+
+    params = [
+        list(itm)  # claims stores tuples as lists
+        for itm in request.query.items()
+        if itm[0] not in SAFE_QUERY_PARAMS and itm[0] != SIGN_QUERY_PARAM
+    ]
+    if claims["params"] != params:
+        return False
+
+    if expired:
+        # A URL we issued is not a login attempt, unless a token was sent too
+        if hdrs.AUTHORIZATION not in request.headers:
+            request[KEY_EXPIRED_SIGNED_REQUEST] = True
+        return False
+
+    refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
+
+    if refresh_token is None:
+        return False
+
+    if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
+        return False
+
+    request[KEY_HASS_USER] = refresh_token.user
+    request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
+    return True
+
+
 async def async_setup_auth(
     hass: HomeAssistant,
     app: Application,
@@ -136,45 +193,6 @@ async def async_setup_auth(
             return False
 
         refresh_token = hass.auth.async_validate_access_token(auth_val)
-
-        if refresh_token is None:
-            return False
-
-        if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
-            return False
-
-        request[KEY_HASS_USER] = refresh_token.user
-        request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
-        return True
-
-    @callback
-    def async_validate_signed_request(request: Request) -> bool:
-        """Validate a signed request."""
-        if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
-            return False
-
-        if (signature := request.query.get(SIGN_QUERY_PARAM)) is None:
-            return False
-
-        try:
-            claims = jwt_wrapper.verify_and_decode(
-                signature, secret, algorithms=["HS256"], options={"verify_iss": False}
-            )
-        except jwt.InvalidTokenError:
-            return False
-
-        if claims["path"] != request.path:
-            return False
-
-        params = [
-            list(itm)  # claims stores tuples as lists
-            for itm in request.query.items()
-            if itm[0] not in SAFE_QUERY_PARAMS and itm[0] != SIGN_QUERY_PARAM
-        ]
-        if claims["params"] != params:
-            return False
-
-        refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
 
         if refresh_token is None:
             return False
@@ -233,7 +251,7 @@ async def async_setup_auth(
         elif (
             request.method in ["GET", "HEAD"]
             and SIGN_QUERY_PARAM in request.query_string
-            and async_validate_signed_request(request)
+            and _async_validate_signed_request(hass, request)
         ):
             authenticated = True
             auth_type = "signed request"
