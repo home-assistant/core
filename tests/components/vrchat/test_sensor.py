@@ -456,10 +456,10 @@ async def test_entity_world_data_helpers(hass: HomeAssistant) -> None:
         pytest.param(VRChatUserLocationSensor, id="location"),
     ],
 )
-def test_removed_user_is_unavailable_and_safe(
+def test_user_access_requires_a_live_coordinator_entry(
     hass: HomeAssistant, sensor_class: type[VRChatUserDataSensorEntity]
 ) -> None:
-    """A user disappearing before entity removal must not break state properties."""
+    """User access enforces the lifecycle invariant without a fallback snapshot."""
     coordinator = _coordinator(
         hass,
         cast(
@@ -473,14 +473,70 @@ def test_removed_user_is_unavailable_and_safe(
     )
     sensor = sensor_class(coordinator, USER_ID)
     unique_id = sensor.unique_id
+    assert sensor.device_info["identifiers"] == {(DOMAIN, f"{USER_ID}:{USER_ID}")}
     coordinator.data.clear()
 
     assert not sensor.available
-    assert sensor.user is None
-    assert sensor.user_data == {}
-    assert sensor.world is None
-    assert sensor.destination_world is None
-    assert sensor.native_value is None
-    assert sensor.entity_picture is None
+    with pytest.raises(KeyError, match=USER_ID):
+        _ = sensor.user
     assert sensor.unique_id == unique_id
-    assert sensor.device_info["identifiers"] == {(DOMAIN, f"{USER_ID}:{USER_ID}")}
+
+
+@pytest.mark.parametrize(
+    ("sensor_class", "expected_state"),
+    [
+        pytest.param(VRChatUserStatusSensor, "busy", id="status"),
+        pytest.param(
+            VRChatUserStatusDescriptionSensor, "New description", id="description"
+        ),
+        pytest.param(VRChatUserStateSensor, "busy", id="state"),
+        pytest.param(VRChatUserLocationSensor, "private", id="location"),
+    ],
+)
+def test_removed_then_readded_user_uses_fresh_snapshot(
+    hass: HomeAssistant,
+    sensor_class: type[VRChatUserDataSensorEntity],
+    expected_state: str,
+) -> None:
+    """Re-adding the same ID cannot retain a removed user's snapshot."""
+    original_user = cast(
+        VRChatUser,
+        SimpleNamespace(
+            data={
+                "status": "active",
+                "statusDescription": "Old",
+                "location": "private",
+            },
+            world=None,
+            destination_world=None,
+        ),
+    )
+    coordinator = _coordinator(hass, original_user)
+    coordinator.client = cast(VRChatAccount, SimpleNamespace(available=True))
+    sensor = sensor_class(coordinator, USER_ID)
+    unique_id = sensor.unique_id
+    assert sensor.available
+    assert sensor.user is original_user
+
+    coordinator.data.clear()
+    assert not sensor.available
+    with pytest.raises(KeyError, match=USER_ID):
+        _ = sensor.user
+
+    replacement_user = cast(
+        VRChatUser,
+        SimpleNamespace(
+            data={
+                "status": "busy",
+                "statusDescription": "New description",
+                "location": "private",
+            },
+            world=None,
+            destination_world=None,
+        ),
+    )
+    coordinator.data[USER_ID] = replacement_user
+    assert sensor.available
+    assert sensor.user is replacement_user
+    assert sensor.native_value == expected_state
+    assert sensor.unique_id == unique_id

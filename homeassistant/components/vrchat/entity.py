@@ -35,24 +35,24 @@ class VRChatUserDataEntity(CoordinatorEntity[VRChatAccountDataCoordinator]):
         self.user_id = user_id
 
     @property
-    def user(self) -> VRChatUser | None:
-        """Return the current library user, if still present."""
-        return self.coordinator.data.get(self.user_id)
+    def user(self) -> VRChatUser:
+        """Return the current library user."""
+        return self.coordinator.data[self.user_id]
 
     @property
     def user_data(self) -> HighLevelUserData:
         """Return the current user snapshot."""
-        return self.user.data if self.user is not None else {}
+        return self.user.data
 
     @property
     def world(self) -> VRChatWorldData | None:
         """Return the current world."""
-        return self.user.world if self.user is not None else None
+        return self.user.world
 
     @property
     def destination_world(self) -> VRChatWorldData | None:
         """Return the destination world."""
-        return self.user.destination_world if self.user is not None else None
+        return self.user.destination_world
 
     @callback
     @override
