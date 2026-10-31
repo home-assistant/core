@@ -68,10 +68,10 @@ MAX_CONCURRENT_FETCHES: Final = 16
 VECTOR_MAX_ZOOM: Final = 14
 RASTER_MAX_ZOOM: Final = 19
 
-# OSM's own TileJSON omits "contributors", which their guidelines ask for.
+# Simplify OSM attribution
+# See https://osmfoundation.org/wiki/Licence/Attribution_Guidelines
 ATTRIBUTION: Final = (
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    " contributors"
+    '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 )
 
 FONTSTACK_RE: Final = re.compile(
