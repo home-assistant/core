@@ -529,6 +529,7 @@ class _RestoreStoreManager:
             RESTORE_SCOPE_DOMAINS: {},
         }
         self._active_keys: set[tuple[RestoreScope, str]] = set()
+        self._save_deadline = 0.0
 
     async def async_load(self, *, load_empty: bool = False) -> None:
         """Load the store.
@@ -583,7 +584,7 @@ class _RestoreStoreManager:
         bucket, scope_id = scope
         # Another coordinator's save must not persist in-place changes to this data.
         self._data[bucket].setdefault(scope_id, {})[storage_key] = deepcopy(data)
-        self._store.async_delay_save(self._data_to_save, delay)
+        self._async_delay_save(delay)
 
     @callback
     def async_remove_data(self, scope: RestoreScope, storage_key: str) -> None:
@@ -595,7 +596,7 @@ class _RestoreStoreManager:
         del scope_data[storage_key]
         if not scope_data:
             del self._data[bucket][scope_id]
-        self._store.async_delay_save(self._data_to_save)
+        self._async_delay_save()
 
     @callback
     def async_clear_config_entry(self, entry_id: str) -> None:
@@ -604,7 +605,18 @@ class _RestoreStoreManager:
         self._active_keys = {key for key in self._active_keys if key[0] != scope}
         if self._data[RESTORE_SCOPE_CONFIG_ENTRIES].pop(entry_id, None) is None:
             return
-        self._store.async_delay_save(self._data_to_save)
+        self._async_delay_save()
+
+    @callback
+    def _async_delay_save(self, delay: float = 0) -> None:
+        """Save by the earliest requested deadline."""
+        now = self._hass.loop.time()
+        # The pending write reads the latest data, and rescheduling it would let a
+        # steady stream of updates postpone it indefinitely.
+        if now < self._save_deadline <= now + delay:
+            return
+        self._save_deadline = now + delay
+        self._store.async_delay_save(self._data_to_save, delay)
 
     @callback
     def _data_to_save(self) -> dict[str, dict[str, dict[str, Any]]]:

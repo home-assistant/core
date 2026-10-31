@@ -2468,3 +2468,66 @@ async def test_repeated_shutdown_keeps_new_registration(
 
     with pytest.raises(ValueError, match="already in use"):
         get_restore_crd(hass, config_entry=restore_entry)
+
+
+async def test_interleaved_coordinators_cannot_postpone_save(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test updates from another coordinator do not keep moving the save deadline."""
+    crd = get_restore_crd(hass, config_entry=restore_entry, save_delay=10)
+    other_crd = get_restore_crd(
+        hass, config_entry=restore_entry, storage_key="other", save_delay=10
+    )
+
+    for update in range(4):
+        (crd if update % 2 else other_crd).async_set_updated_data({"update": update})
+        freezer.tick(timedelta(seconds=7.5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert restore_state.RESTORE_STORAGE_KEY in hass_storage
+
+
+async def test_shorter_save_delay_moves_deadline_earlier(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test a shorter delay brings forward a save pending with a longer delay."""
+    slow_crd = get_restore_crd(hass, config_entry=restore_entry, save_delay=30)
+    fast_crd = get_restore_crd(
+        hass, config_entry=restore_entry, storage_key="other", save_delay=10
+    )
+    slow_crd.async_set_updated_data({"value": "slow"})
+    fast_crd.async_set_updated_data({"value": "fast"})
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "slow"}
+
+
+async def test_save_after_immediate_removal_not_skipped(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test a removal that writes at once leaves no deadline to skip the next save."""
+    crd = get_restore_crd(hass, config_entry=restore_entry, save_delay=30)
+    crd.async_set_updated_data({"value": "first"})
+    crd.async_remove_stored_data()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    crd.async_set_updated_data({"value": "second"})
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "second"}
