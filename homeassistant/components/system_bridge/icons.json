@@ -26,13 +26,27 @@
       }
     },
     "media_player": {
+      "audio": {
+        "default": "mdi:speaker"
+      },
+      "audio_output": {
+        "default": "mdi:speaker"
+      },
       "media": {
         "default": "mdi:volume-high"
       }
     },
     "number": {
+      "audio_input_volume": {
+        "default": "mdi:microphone"
+      },
       "display_brightness": {
         "default": "mdi:brightness-6"
+      }
+    },
+    "select": {
+      "audio_input": {
+        "default": "mdi:microphone-settings"
       }
     },
     "sensor": {
@@ -161,6 +175,12 @@
       }
     },
     "switch": {
+      "audio_input_mute": {
+        "default": "mdi:microphone-off",
+        "state": {
+          "off": "mdi:microphone"
+        }
+      },
       "display_power": {
         "default": "mdi:monitor",
         "state": {

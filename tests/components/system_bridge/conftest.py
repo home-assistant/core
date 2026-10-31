@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.const import EventKey, EventType
+from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
@@ -107,6 +108,7 @@ def mock_websocket_client(
         websocket_client = mock_websocket_client.return_value
         websocket_client.connected = False
         websocket_client.get_data.return_value = ModulesData(
+            audio=FIXTURE_AUDIO,
             battery=FIXTURE_BATTERY,
             cpu=FIXTURE_CPU,
             disks=FIXTURE_DISKS,
@@ -159,6 +161,18 @@ def mock_websocket_client(
             id=FIXTURE_REQUEST_ID,
             type=EventType.DISPLAY_CONTROLLED,
             message="Display controlled",
+            data={},
+        )
+        websocket_client.media_control.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.MEDIA_CONTROLLED,
+            message="Media controlled",
+            data={},
+        )
+        websocket_client.audio_control.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.AUDIO_CONTROLLED,
+            message="Audio controlled",
             data={},
         )
         # Trigger callback when listener is registered

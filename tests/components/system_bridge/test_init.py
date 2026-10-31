@@ -1,7 +1,8 @@
 """Test the System Bridge integration."""
 
+from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -12,10 +13,11 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
     DataMissingException,
 )
-from systembridgeconnector.models.modules import ModulesData
+from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
+from systembridgeconnector.models.modules import GetData, Module, ModulesData
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
-from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.components.system_bridge.const import DOMAIN, GET_DATA_WAIT_TIMEOUT
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
@@ -53,6 +55,62 @@ async def test_entry_setup_unload(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_websocket_client.close.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("version", "requests_audio"),
+    [
+        pytest.param("5.15.0", False, id="before_audio"),
+        pytest.param("5.16.0", True, id="audio"),
+        pytest.param("5.22.1.dev0+abc1234", True, id="dev_build"),
+    ],
+)
+@pytest.mark.usefixtures("mock_version")
+async def test_setup_requests_audio_when_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    version: str,
+    requests_audio: bool,
+) -> None:
+    """Test audio is only requested from backends that answer for it."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value,
+        system=replace(FIXTURE_SYSTEM, version=version),
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        call(GetData(modules=[Module.AUDIO]), timeout=GET_DATA_WAIT_TIMEOUT)
+        in mock_websocket_client.get_data.await_args_list
+    ) is requests_audio
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_setup_without_audio_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test setup carries on when the backend has no audio data yet."""
+    modules_data = replace(
+        mock_websocket_client.get_data.return_value,
+        system=replace(FIXTURE_SYSTEM, version="5.16.0"),
+    )
+    mock_websocket_client.get_data.return_value = None
+    mock_websocket_client.get_data.side_effect = [
+        modules_data,
+        DataMissingException("No data received for modules: ['audio']"),
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
