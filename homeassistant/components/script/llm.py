@@ -1,12 +1,20 @@
 """LLM tools for the script integration."""
 
 from operator import attrgetter
+from typing import override
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.llm import LLM_API_ASSIST, ActionTool, LLMContext, Tool
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    ActionTool,
+    LLMContext,
+    Tool,
+    ToolInput,
+)
+from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN
 
@@ -43,6 +51,22 @@ class ScriptTool(ActionTool):
             self.description = (
                 f"{self.description}. {alias_text}" if self.description else alias_text
             )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Call the script, forwarding the calling device_id by default.
+
+        Skipped only when the script declares its own device_id field
+        and the LLM already supplied a value for it.
+        """
+        if llm_context.device_id and not (
+            "device_id" in self.parameters.schema
+            and "device_id" in tool_input.tool_args
+        ):
+            tool_input.tool_args["device_id"] = llm_context.device_id
+        return await super().async_call(hass, tool_input, llm_context)
 
 
 @callback
