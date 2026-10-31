@@ -619,6 +619,25 @@ async def test_join_already_grouped(hass: HomeAssistant, mock_atv: AsyncMock) ->
 
 
 @pytest.mark.usefixtures("mock_homepod")
+async def test_join_leader_without_output_device_id(
+    hass: HomeAssistant, mock_atv: AsyncMock
+) -> None:
+    """A leader that reports no output device ID can't start a group."""
+    mock_atv.device_info.output_device_id = None
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_JOIN,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_GROUP_MEMBERS: [HOMEPOD_ENTITY_ID]},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "grouping_unavailable"
+    mock_atv.audio.add_output_devices.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_homepod")
 async def test_join_device_error(hass: HomeAssistant, mock_atv: AsyncMock) -> None:
     """A pyatv error during join is raised as a command failure."""
     mock_atv.audio.add_output_devices.side_effect = ProtocolError

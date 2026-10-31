@@ -839,7 +839,9 @@ class AppleTvMediaPlayer(
     @_catch_command_errors
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add other players to the group of this player."""
-        if (atv := self.grouping_atv) is None:
+        if (
+            atv := self.grouping_atv
+        ) is None or atv.device_info.output_device_id is None:
             raise _grouping_unavailable(self.entity_id)
         players_by_entity_id = {
             player.entity_id: output_device_id
