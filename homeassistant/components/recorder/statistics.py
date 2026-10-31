@@ -414,6 +414,21 @@ def _get_statistic_to_display_unit_converter(
     )
 
 
+def _convert_change(
+    convert: Callable[[float | None], float | None], change: float | None
+) -> float | None:
+    """Convert a change, which must not get the offset of the converter.
+
+    For example, a change of 10 °C is a change of 18 °F, not of 50 °F.
+    """
+    if change is None or (converted := convert(change)) is None:
+        return None
+    # Zero has no value in an inverse unit, such as km/kWh
+    if (offset := convert(0)) is None:
+        return converted
+    return converted - offset
+
+
 def _get_display_to_statistic_unit_converter_func(
     unit_class: str | None,
     display_unit: str | None,
@@ -1984,7 +1999,10 @@ def statistic_during_period(
 
     if not convert:
         return result
-    return {key: convert(value) for key, value in result.items()}
+    return {
+        key: _convert_change(convert, value) if key == "change" else convert(value)
+        for key, value in result.items()
+    }
 
 
 _type_column_mapping = {
@@ -2049,7 +2067,17 @@ def _augment_result_with_change(
 ) -> None:
     """Add change to the result."""
     drop_sum = "sum" not in _types
-    prev_sums = {}
+    converters: dict[str, Callable[[float | None], float | None] | None] = {}
+    for statistic_id in result:
+        metadata_by_id = metadata[statistic_id][1]
+        state_unit = unit = metadata_by_id["unit_of_measurement"]
+        if state := hass.states.get(statistic_id):
+            state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        converters[statistic_id] = _get_statistic_to_display_unit_converter(
+            metadata_by_id["unit_class"], unit, state_unit, units
+        )
+
+    prev_sums: dict[str, float | None] = {}
     if tmp := _statistics_at_time(
         get_instance(hass),
         session,
@@ -2060,26 +2088,16 @@ def _augment_result_with_change(
     ):
         _metadata = dict(metadata.values())
         for row in tmp:
-            metadata_by_id = _metadata[row.metadata_id]
-            statistic_id = metadata_by_id["statistic_id"]
-
-            unit_class = metadata_by_id["unit_class"]
-            state_unit = unit = metadata_by_id["unit_of_measurement"]
-            if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(
-                    EntityStateAttribute.UNIT_OF_MEASUREMENT
-                )
-            convert = _get_statistic_to_display_unit_converter(
-                unit_class, unit, state_unit, units
-            )
-
-            if convert is not None:
-                prev_sums[statistic_id] = convert(row.sum)
-            else:
-                prev_sums[statistic_id] = row.sum
+            prev_sums[_metadata[row.metadata_id]["statistic_id"]] = row.sum
 
     for statistic_id, rows in result.items():
+        # A statistic without an earlier row starts from a sum of 0
         prev_sum = prev_sums.get(statistic_id) or 0
+        # The sums of the rows are converted already
+        if (convert := converters[statistic_id]) is not None and (
+            converted_prev_sum := convert(prev_sum)
+        ) is not None:
+            prev_sum = converted_prev_sum
         for statistics_row in rows:
             if "sum" not in statistics_row:
                 continue
