@@ -220,9 +220,27 @@ def gpu_core_clock_speed(gpu: GPU) -> float | None:
 
 
 @with_gpu
+def gpu_decoder_usage_percentage(gpu: GPU) -> float | None:
+    """Return the GPU decoder usage percentage."""
+    return gpu.decoder_load
+
+
+@with_gpu
+def gpu_encoder_usage_percentage(gpu: GPU) -> float | None:
+    """Return the GPU encoder usage percentage."""
+    return gpu.encoder_load
+
+
+@with_gpu
 def gpu_fan_speed(gpu: GPU) -> float | None:
     """Return the GPU fan speed."""
     return gpu.fan_speed
+
+
+@with_gpu
+def gpu_fan_speed_percentage(gpu: GPU) -> float | None:
+    """Return the GPU fan speed percentage."""
+    return gpu.fan_speed_percent
 
 
 @with_gpu
@@ -238,6 +256,12 @@ def gpu_memory_free(gpu: GPU) -> float | None:
 
 
 @with_gpu
+def gpu_memory_total(gpu: GPU) -> float | None:
+    """Return the total GPU memory."""
+    return gpu.memory_total
+
+
+@with_gpu
 def gpu_memory_used(gpu: GPU) -> float | None:
     """Return the used GPU memory."""
     return gpu.memory_used
@@ -249,6 +273,18 @@ def gpu_memory_used_percentage(gpu: GPU) -> float | None:
     if (gpu.memory_used) is not None and (gpu.memory_total) is not None:
         return round(gpu.memory_used / gpu.memory_total * 100, 2)
     return None
+
+
+@with_gpu
+def gpu_performance_state(gpu: GPU) -> str | None:
+    """Return the GPU performance state."""
+    return gpu.performance_state
+
+
+@with_gpu
+def gpu_power_limit(gpu: GPU) -> float | None:
+    """Return the GPU power limit."""
+    return gpu.power_limit
 
 
 @with_gpu
@@ -983,6 +1019,21 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{gpu.id}_memory_total",
+                        translation_key="gpu_memory_total",
+                        translation_placeholders={"gpu_name": gpu.name},
+                        entity_registry_enabled_default=False,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+                        device_class=SensorDeviceClass.DATA_SIZE,
+                        suggested_display_precision=0,
+                        value=lambda data, k=index: gpu_memory_total(data, k),
+                    ),
+                    entry.data[CONF_PORT],
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
                         key=f"gpu_{gpu.id}_fan_speed",
                         translation_key="gpu_fan_speed",
                         translation_placeholders={"gpu_name": gpu.name},
@@ -990,6 +1041,46 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
                         value=lambda data, k=index: gpu_fan_speed(data, k),
+                    ),
+                    entry.data[CONF_PORT],
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{gpu.id}_fan_speed_percentage",
+                        translation_key="gpu_fan_speed_percentage",
+                        translation_placeholders={"gpu_name": gpu.name},
+                        entity_registry_enabled_default=False,
+                        state_class=SensorStateClass.MEASUREMENT,
+                        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+                        suggested_display_precision=0,
+                        value=lambda data, k=index: gpu_fan_speed_percentage(data, k),
+                    ),
+                    entry.data[CONF_PORT],
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{gpu.id}_power_limit",
+                        translation_key="gpu_power_limit",
+                        translation_placeholders={"gpu_name": gpu.name},
+                        entity_registry_enabled_default=False,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                        device_class=SensorDeviceClass.POWER,
+                        native_unit_of_measurement=UnitOfPower.WATT,
+                        suggested_display_precision=0,
+                        value=lambda data, k=index: gpu_power_limit(data, k),
+                    ),
+                    entry.data[CONF_PORT],
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{gpu.id}_performance_state",
+                        translation_key="gpu_performance_state",
+                        translation_placeholders={"gpu_name": gpu.name},
+                        entity_registry_enabled_default=False,
+                        value=lambda data, k=index: gpu_performance_state(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1031,6 +1122,38 @@ async def async_setup_entry(
                         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                         suggested_display_precision=2,
                         value=lambda data, k=index: gpu_usage_percentage(data, k),
+                    ),
+                    entry.data[CONF_PORT],
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{gpu.id}_encoder_usage_percentage",
+                        translation_key="gpu_encoder_usage_percentage",
+                        translation_placeholders={"gpu_name": gpu.name},
+                        entity_registry_enabled_default=False,
+                        state_class=SensorStateClass.MEASUREMENT,
+                        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+                        suggested_display_precision=0,
+                        value=lambda data, k=index: gpu_encoder_usage_percentage(
+                            data, k
+                        ),
+                    ),
+                    entry.data[CONF_PORT],
+                ),
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"gpu_{gpu.id}_decoder_usage_percentage",
+                        translation_key="gpu_decoder_usage_percentage",
+                        translation_placeholders={"gpu_name": gpu.name},
+                        entity_registry_enabled_default=False,
+                        state_class=SensorStateClass.MEASUREMENT,
+                        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+                        suggested_display_precision=0,
+                        value=lambda data, k=index: gpu_decoder_usage_percentage(
+                            data, k
+                        ),
                     ),
                     entry.data[CONF_PORT],
                 ),

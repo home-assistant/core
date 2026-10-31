@@ -58,7 +58,9 @@ class TypeCastExtension(BaseTemplateExtension):
         )
 
     @staticmethod
-    def forgiving_float(value: Any, default: Any = _SENTINEL) -> Any:
+    def forgiving_float[_T](
+        value: Any, default: _T | _SENTINEL = _SENTINEL
+    ) -> float | _T:
         """Try to convert value to a float."""
         try:
             return float(value)
@@ -68,11 +70,14 @@ class TypeCastExtension(BaseTemplateExtension):
             return default
 
     @staticmethod
-    def forgiving_int(value: Any, default: Any = _SENTINEL, base: int = 10) -> Any:
+    def forgiving_int[_T](
+        value: Any, default: _T | _SENTINEL = _SENTINEL, base: int = 10
+    ) -> int | _T:
         """Try to convert value to an int, and raise if it fails."""
-        result: int | _SENTINEL
+        result: int | _T | _SENTINEL
         try:
-            result = jinja2.filters.do_int(value, default=default, base=base)
+            # do_int annotates default as int but returns it unchanged
+            result = jinja2.filters.do_int(value, default=default, base=base)  # type: ignore[arg-type]
         except OverflowError:
             # Jinja's do_int doesn't catch this for an infinite float
             result = default

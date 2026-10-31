@@ -96,12 +96,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(10):
                 auth_url = await self.hass.async_add_executor_job(self._get_auth_url)
-            if not auth_url:
-                return self.async_abort(reason="unknown_authorize_url_generation")
         except TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
         except Exception:
             _LOGGER.exception("Unexpected error generating auth url")
+            return self.async_abort(reason="unknown_authorize_url_generation")
+        if not auth_url:
             return self.async_abort(reason="unknown_authorize_url_generation")
 
         _LOGGER.debug("Got authorization URL %s", auth_url)

@@ -107,11 +107,17 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the Seafile server."
+    },
     "cannot_connect": {
       "message": "An error occurred while retrieving data from the Seafile server."
     },
     "invalid_auth": {
       "message": "The access token of the Seafile account is no longer valid."
+    },
+    "permission_denied": {
+      "message": "The Seafile account is not allowed to perform this action on the library."
     },
     "timeout_connect": {
       "message": "Timed out while connecting to the Seafile server."

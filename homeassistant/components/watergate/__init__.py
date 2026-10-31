@@ -36,6 +36,7 @@ CLEAR_WEBHOOK_TIMEOUT = 10
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.EVENT,
     Platform.NUMBER,
     Platform.SENSOR,
