@@ -1,6 +1,6 @@
 """Queries for the recorder."""
 
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from datetime import datetime
 
 from sqlalchemy import and_, bindparam, delete, func, lambda_stmt, select, update
@@ -282,15 +282,28 @@ def find_events_to_purge(
 
 
 def find_states_to_purge(
-    purge_before: float, max_bind_vars: int
-) -> StatementLambdaElement:
-    """Find states to purge."""
-    return lambda_stmt(
-        lambda: (
-            select(States.state_id, States.attributes_id)
-            .filter(States.last_updated_ts < purge_before)
-            .limit(max_bind_vars)
+    purge_before: float, max_bind_vars: int, keep_state_ids: Collection[int]
+) -> Select:
+    """Find states to purge, except the states in keep_state_ids.
+
+    This query is intentionally not a lambda statement since keep_state_ids
+    changes on every call.
+    """
+    return (
+        select(States.state_id, States.attributes_id)
+        .filter(States.last_updated_ts < purge_before)
+        .filter(
+            # Rendered inline since there can be more ids than max_bind_vars
+            States.state_id.not_in(
+                bindparam(
+                    "keep_state_ids",
+                    list(keep_state_ids),
+                    expanding=True,
+                    literal_execute=True,
+                )
+            )
         )
+        .limit(max_bind_vars)
     )
 
 

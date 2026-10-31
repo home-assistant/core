@@ -196,9 +196,12 @@ def _purge_states_and_attributes_ids(
     # max_bind_vars
     attributes_ids_batch: set[int] = set()
     max_bind_vars = instance.max_bind_vars
+    # Keep the current state of each recorded entity so the next state change
+    # can link its old_state_id to it, the logbook needs that link
+    keep_state_ids = instance.states_manager.committed_state_ids()
     for _ in range(states_batch_size):
         state_ids, attributes_ids = _select_state_attributes_ids_to_purge(
-            session, purge_before, max_bind_vars
+            session, purge_before, max_bind_vars, keep_state_ids
         )
         if not state_ids:
             has_remaining_state_ids_to_purge = False
@@ -250,13 +253,16 @@ def _purge_events_and_data_ids(
 
 
 def _select_state_attributes_ids_to_purge(
-    session: Session, purge_before: datetime, max_bind_vars: int
+    session: Session,
+    purge_before: datetime,
+    max_bind_vars: int,
+    keep_state_ids: set[int],
 ) -> tuple[set[int], set[int]]:
     """Return sets of state and attribute ids to purge."""
     state_ids = set()
     attributes_ids = set()
     for state_id, attributes_id in session.execute(
-        find_states_to_purge(purge_before.timestamp(), max_bind_vars)
+        find_states_to_purge(purge_before.timestamp(), max_bind_vars, keep_state_ids)
     ).all():
         state_ids.add(state_id)
         if attributes_id:

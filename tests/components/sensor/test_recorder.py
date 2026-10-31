@@ -1197,9 +1197,11 @@ async def test_compile_hourly_statistics_purged_state_changes(
 
     mean = min_value = max_value = float(hist["sensor.test1"][-1].state)
 
-    # Purge all states from the database
+    # Purge all states from the database, the regular purge keeps the current state
     with freeze_time(four):
-        await hass.services.async_call("recorder", "purge", {"keep_days": 0})
+        await hass.services.async_call(
+            "recorder", "purge_entities", {"entity_id": "sensor.test1"}
+        )
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
     hist = history.get_significant_states(
