@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_discovery_info": "The discovery data from the controller is invalid",
+      "invalid_response": "The controller returned an invalid response"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_response": "[%key:component::trimlight::config::abort::invalid_response%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Trimlight controller."
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Add {name} at {host} to Home Assistant?",
+        "title": "Add Trimlight controller"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to control {name}: {error}"
+    },
+    "setup_failed": {
+      "message": "Failed to set up {name}: {error}"
+    },
+    "update_failed": {
+      "message": "Unable to update the state of {name}: {error}"
+    }
+  }
+}
