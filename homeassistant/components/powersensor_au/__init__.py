@@ -6,6 +6,7 @@ from powersensor_local import VirtualHousehold
 from powersensor_local.zeroconf_devices import PowersensorZeroconfDevices
 
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -73,7 +74,9 @@ async def async_remove_config_entry_device(
 
     A device still on the network is refused: it would only come back with its
     next reading.  A plug or sensor counts as gone once it has been unplugged or
-    switched off for a few minutes.
+    switched off for a few minutes.  While the integration isn't loaded, nothing
+    tracks the network, so any plug or sensor can be deleted.  A plug or sensor
+    that is still active comes back when the integration loads again.
 
     The household view is never deleted.  It belongs to the installation as a
     whole rather than to one device, and a household that has genuinely changed
@@ -87,9 +90,13 @@ async def async_remove_config_entry_device(
     flag exists to prevent.  The role also serves as the fallback if the sensor
     returns.
     """
-    dispatcher = config_entry.runtime_data.dispatcher
     ids = {id_ for domain, id_ in device_entry.identifiers if domain == DOMAIN}
-    if VHH_DEVICE_ID in ids or any(dispatcher.is_present(mac) for mac in ids):
+    if VHH_DEVICE_ID in ids:
+        return False
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return True
+    dispatcher = config_entry.runtime_data.dispatcher
+    if any(dispatcher.is_present(mac) for mac in ids):
         return False
     for mac in ids:
         dispatcher.forget(mac)
