@@ -34,6 +34,7 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
+from homeassistant.components.unifi.sensor import TELEMETRY_UPDATE_INTERVAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -1420,6 +1421,7 @@ async def test_device_state(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_device_system_stats(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
@@ -1431,12 +1433,94 @@ async def test_device_system_stats(
     assert hass.states.get("sensor.device_memory_utilization").state == "31.1"
 
     # Verify new event change system-stats
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     device = device_payload[0]
     device["system-stats"] = {"cpu": 7.7, "mem": 33.3, "uptime": 7316}
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get("sensor.device_cpu_utilization").state == "7.7"
     assert hass.states.get("sensor.device_memory_utilization").state == "33.3"
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id",
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "state": 1,
+                "version": "4.0.42.10433",
+                "system-stats": {"cpu": 5.8, "mem": 31.1, "uptime": 7316},
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_system_stats_update_interval(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message: WebsocketMessageMock,
+    mock_websocket_state: WebsocketStateManager,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify device stats sensors limit how often their value changes."""
+
+    async def send(cpu: float | None, mem: float | None, **changes: Any) -> None:
+        device = deepcopy(device_payload[0])
+        if cpu is None:
+            device.pop("system-stats")
+        else:
+            device["system-stats"] = {"cpu": cpu, "mem": mem, "uptime": 7316}
+        device.update(changes)
+        mock_websocket_message(message=MessageKey.DEVICE, data=device)
+        await hass.async_block_till_done()
+
+    def assert_states(cpu: str, mem: str) -> None:
+        assert hass.states.get("sensor.device_cpu_utilization").state == cpu
+        assert hass.states.get("sensor.device_memory_utilization").state == mem
+
+    assert_states("5.8", "31.1")
+
+    # Changed value within the interval is held
+    freezer.tick(timedelta(seconds=1))
+    await send(7.7, 33.3)
+    assert_states("5.8", "31.1")
+
+    # After the interval the current value is shown, not the held one
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL - timedelta(seconds=1))
+    await send(9.9, 35.5)
+    assert_states("9.9", "35.5")
+
+    freezer.tick(timedelta(seconds=1))
+    await send(9.9, 35.5)
+    assert_states("9.9", "35.5")
+    await send(11.1, 37.7)
+    assert_states("9.9", "35.5")
+
+    # Unavailable is shown at once, and so is the first value afterwards
+    await send(12.2, 38.8, disabled=True)
+    assert_states(STATE_UNAVAILABLE, STATE_UNAVAILABLE)
+    freezer.tick(timedelta(seconds=1))
+    await send(13.3, 39.9)
+    assert_states("13.3", "39.9")
+
+    # Telemetry gaps are shown at once, and so is the value afterwards
+    freezer.tick(timedelta(seconds=1))
+    await send(None, None)
+    assert_states(STATE_UNKNOWN, STATE_UNKNOWN)
+    freezer.tick(timedelta(seconds=1))
+    await send(15.5, 41.1)
+    assert_states("15.5", "41.1")
+
+    # The refetched value is shown at once after a reconnect
+    freezer.tick(timedelta(seconds=1))
+    await mock_websocket_state.disconnect()
+    assert_states(STATE_UNAVAILABLE, STATE_UNAVAILABLE)
+    await mock_websocket_state.reconnect()
+    assert_states("5.8", "31.1")
 
 
 @pytest.mark.parametrize(
@@ -2340,6 +2424,7 @@ async def test_wan_monitor_latency_without_monitors_key(
 async def test_device_temperatures(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     mock_websocket_message,
     device_payload: list[dict[str, Any]],
     temperature_id: str,
@@ -2375,12 +2460,63 @@ async def test_device_temperatures(
     assert hass.states.get(entity_id).state == state
 
     # # Verify state update
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     device = device_payload[0]
     device["temperatures"][index_to_update]["value"] = updated_state
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get(entity_id).state == updated_state
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id",
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+                "temperatures": [{"name": "CPU", "type": "cpu", "value": 66.0}],
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_temperature_update_interval(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify device temperature sensors limit how often their value changes."""
+    entity_id = "sensor.device_cpu_temperature"
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "66.0"
+
+    device = device_payload[0]
+    freezer.tick(timedelta(seconds=1))
+    device["temperatures"][0]["value"] = 70.0
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "66.0"
+
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL - timedelta(seconds=1))
+    device["temperatures"][0]["value"] = 72.0
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "72.0"
 
 
 @pytest.mark.parametrize(
