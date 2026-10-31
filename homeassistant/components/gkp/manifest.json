@@ -1,0 +1,14 @@
+{
+  "domain": "gkp",
+  "name": "GKP Home",
+  "categories": ["climate.thermostats_heating"],
+  "codeowners": ["@theobld-ww", "@AnthonyPerrier-FRRO"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "cloud"],
+  "documentation": "https://www.home-assistant.io/integrations/gkp",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["gkphomepython"],
+  "quality_scale": "bronze",
+  "requirements": ["gkphomepython==0.3.0"]
+}

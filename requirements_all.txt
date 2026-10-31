@@ -1188,6 +1188,9 @@ getmac==0.9.6
 # homeassistant.components.gios
 gios==7.1.1
 
+# homeassistant.components.gkp
+gkphomepython==0.3.0
+
 # homeassistant.components.glances
 glances-api==0.10.0
 

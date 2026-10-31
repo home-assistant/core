@@ -1,0 +1,23 @@
+[
+  {
+    "id": "installation-1",
+    "Il": "Home",
+    "rooms": [
+      {
+        "Zn": "room-1",
+        "Rn": "Living room",
+        "devices": [{ "Id_deviceId": "AABBCCDDEE01" }]
+      },
+      {
+        "Zn": "room-2",
+        "Rn": "Bedroom",
+        "devices": [{ "Id_deviceId": "AABBCCDDEE02" }]
+      },
+      {
+        "Zn": "room-3",
+        "Rn": "Garage",
+        "devices": []
+      }
+    ]
+  }
+]
