@@ -38,6 +38,8 @@ from .const import (
     DOMAIN,
     DOMAIN_DATA,
     LOGGER,
+    MAX_BROWSE_ATTEMPTS,
+    MAX_BROWSE_CHILDREN,
     MEDIA_CLASS_MAP,
     PATH_OBJECT_ID_FLAG,
     PATH_SEARCH_FLAG,
@@ -452,7 +454,7 @@ class DmsDeviceSource:
                     continue
 
             # Nothing was found via search, fall back to iterating children
-            result = await self._device.async_browse_direct_children(
+            result = await self._async_browse_direct_children_paged(
                 object_id, metadata_filter=DLNA_PATH_FILTER
             )
 
@@ -501,13 +503,47 @@ class DmsDeviceSource:
             object_id, metadata_filter=DLNA_BROWSE_FILTER
         )
 
-        children = await self._device.async_browse_direct_children(
+        children = await self._async_browse_direct_children_paged(
             object_id,
             metadata_filter=DLNA_BROWSE_FILTER,
             sort_criteria=self._sort_criteria,
         )
 
-        return self._didl_to_media_source(base_object, children)
+        media = self._didl_to_media_source(base_object, children)
+        media.not_shown = max(0, children.total_matches - len(children.result))
+        return media
+
+    async def _async_browse_direct_children_paged(
+        self, object_id: str, **kwargs: Any
+    ) -> DmsDevice.BrowseResult:
+        """Browse direct children, requesting more pages if the server limits them."""
+        assert self._device
+
+        for _ in range(MAX_BROWSE_ATTEMPTS):
+            children = await self._device.async_browse_direct_children(
+                object_id, requested_count=MAX_BROWSE_CHILDREN, **kwargs
+            )
+            wanted = min(children.total_matches, MAX_BROWSE_CHILDREN)
+            returned = page_returned = children.number_returned
+            while page_returned > 0 and returned < wanted:
+                page = await self._device.async_browse_direct_children(
+                    object_id,
+                    starting_index=returned,
+                    requested_count=wanted - returned,
+                    **kwargs,
+                )
+                if page.update_id != children.update_id:
+                    # Container changed while paging, so start again
+                    break
+                page_returned = page.number_returned
+                returned += page_returned
+                children.result.extend(page.result)
+            else:
+                break
+
+        # Servers may return more than requested
+        del children.result[MAX_BROWSE_CHILDREN:]
+        return children
 
     @catch_request_errors
     async def async_browse_search(self, query: str) -> BrowseMediaSource:
