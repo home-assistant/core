@@ -237,6 +237,7 @@ FLOWS = {
         "escea",
         "esphome",
         "essent",
+        "eufy_robovac",
         "eufylife_ble",
         "eurotronic_cometblue",
         "evil_genius_labs",
