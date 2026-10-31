@@ -15,6 +15,7 @@ from pylamarzocco.const import MachineMode, WidgetType
 from pylamarzocco.exceptions import (
     AuthFail,
     BluetoothConnectionFailed,
+    PolicyAcceptanceRequired,
     RequestNotSuccessful,
 )
 from pylamarzocco.models import BluetoothMachineTelemetry, MachineStatus
@@ -103,6 +104,13 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             self.update_success = False
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from ex
+        except PolicyAcceptanceRequired as ex:
+            _LOGGER.debug("Privacy policy acceptance required", exc_info=True)
+            self.update_success = False
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="policy_acceptance_required",
             ) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)

@@ -8,7 +8,7 @@ import requests
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 
 from . import create_client
 from .const import (
@@ -114,7 +114,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
             # Each platform owns its keys; the other platform's keys are kept.
             return self.async_update_reload_and_abort(
                 entry,
-                title=name or UNDEFINED,
+                title=name or Undefined,
                 options={**entry.options, **options},
                 reason="already_configured",
                 reload_even_if_entry_is_unchanged=False,

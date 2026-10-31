@@ -111,23 +111,46 @@ async def test_reauth_successful(
     assert result["reason"] == "reauth_successful"
 
 
-async def test_reauth_unsuccessful(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nam: MagicMock
+@pytest.mark.parametrize(
+    ("exc", "base_error"),
+    [
+        (ApiError("API Error"), "cannot_connect"),
+        (AuthFailedError("Auth Error"), "invalid_auth"),
+        (TimeoutError, "cannot_connect"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry", "mock_nam_client")
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nam: MagicMock,
+    exc: Exception | type[Exception],
+    base_error: str,
 ) -> None:
-    """Test starting a reauthentication flow."""
+    """Test the reauth form is shown again on errors and recovers."""
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    mock_nam.create.side_effect = ApiError("API Error")
+    mock_nam.create.side_effect = exc
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=VALID_AUTH,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": base_error}
+
+    mock_nam.create.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=VALID_AUTH,
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_unsuccessful"
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(

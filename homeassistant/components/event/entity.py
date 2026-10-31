@@ -164,7 +164,15 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
             and state.state is not None
             and (event_data := await self.async_get_last_event_data())
         ):
-            self.__last_event_triggered = dt_util.parse_datetime(state.state)
+            restored = dt_util.parse_datetime(state.state)
+            if restored is not None and restored.tzinfo is None:
+                _LOGGER.warning(
+                    "%s restored timestamp without timezone: %s",
+                    self.entity_id,
+                    state.state,
+                )
+                restored = None
+            self.__last_event_triggered = restored
             self.__last_event_type = event_data.last_event_type
             self.__last_event_attributes = event_data.last_event_attributes
 

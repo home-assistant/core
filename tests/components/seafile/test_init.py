@@ -10,7 +10,7 @@ from aioseafile import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -74,6 +74,21 @@ async def test_setup_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is state
+
+
+async def test_setup_starts_reauth(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a revoked token starts a reauth flow."""
+    mock_seafile_client.get_libraries.side_effect = SeafileAuthenticationError
+    await setup_integration(hass, mock_config_entry)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.usefixtures("mock_seafile_client")

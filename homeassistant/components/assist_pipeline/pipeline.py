@@ -16,7 +16,7 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType, VolDictType
+from homeassistant.helpers.typing import Undefined, VolDictType
 from homeassistant.util import language as language_util, ulid as ulid_util
 
 from . import error as _error, models as _models, run as _run, runtime as _runtime
@@ -279,18 +279,18 @@ async def async_update_pipeline(
     hass: HomeAssistant,
     pipeline: Pipeline,
     *,
-    conversation_engine: str | UndefinedType = UNDEFINED,
-    conversation_language: str | UndefinedType = UNDEFINED,
-    language: str | UndefinedType = UNDEFINED,
-    name: str | UndefinedType = UNDEFINED,
-    stt_engine: str | UndefinedType | None = UNDEFINED,
-    stt_language: str | UndefinedType | None = UNDEFINED,
-    tts_engine: str | UndefinedType | None = UNDEFINED,
-    tts_language: str | UndefinedType | None = UNDEFINED,
-    tts_voice: str | UndefinedType | None = UNDEFINED,
-    wake_word_entity: str | UndefinedType | None = UNDEFINED,
-    wake_word_id: str | UndefinedType | None = UNDEFINED,
-    prefer_local_intents: bool | UndefinedType = UNDEFINED,
+    conversation_engine: str | Undefined = Undefined,
+    conversation_language: str | Undefined = Undefined,
+    language: str | Undefined = Undefined,
+    name: str | Undefined = Undefined,
+    stt_engine: str | Undefined | None = Undefined,
+    stt_language: str | Undefined | None = Undefined,
+    tts_engine: str | Undefined | None = Undefined,
+    tts_language: str | Undefined | None = Undefined,
+    tts_voice: str | Undefined | None = Undefined,
+    wake_word_entity: str | Undefined | None = Undefined,
+    wake_word_id: str | Undefined | None = Undefined,
+    prefer_local_intents: bool | Undefined = Undefined,
 ) -> None:
     """Update a pipeline."""
     pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
@@ -316,7 +316,7 @@ async def async_update_pipeline(
                 ("wake_word_id", wake_word_id),
                 ("prefer_local_intents", prefer_local_intents),
             )
-            if val is not UNDEFINED
+            if val is not Undefined
         }
     )
 

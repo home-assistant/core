@@ -37,7 +37,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     frame,
 )
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utcnow
 
 
@@ -602,7 +602,7 @@ async def test_migration_from_1_1(
     assert entry.id == "abcdefghijklm"
 
     deleted_entry = registry._deleted_devices["deletedid"]
-    assert deleted_entry.disabled_by is UNDEFINED
+    assert deleted_entry.disabled_by is Undefined
 
     # Update to trigger a store
     entry = registry.async_get_or_create(
@@ -6059,7 +6059,7 @@ async def test_create_reflects_config_entry_disabled_state(
     device_registry.async_remove_device(device.id)
     deleted_entry = device_registry._deleted_devices[device.id]
     device_registry._deleted_devices[device.id] = attr.evolve(
-        deleted_entry, disabled_by=UNDEFINED
+        deleted_entry, disabled_by=Undefined
     )
     restored = device_registry.async_get_or_create(
         config_entry_id=disabled_entry.entry_id, identifiers={("test", "1")}
@@ -7181,7 +7181,7 @@ async def test_deleted_device_to_device_entry_uses_reregistered_identity(
         (dr.DeviceEntryDisabler.CONFIG_ENTRY, None),
         (dr.DeviceEntryDisabler.INTEGRATION, dr.DeviceEntryDisabler.INTEGRATION),
         (dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER),
-        (UNDEFINED, None),
+        (Undefined, None),
     ],
 )
 @pytest.mark.usefixtures("freezer")
@@ -7189,7 +7189,7 @@ async def test_restore_migrated_device_disabled_by(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    device_disabled_by: dr.DeviceEntryDisabler | UndefinedType | None,
+    device_disabled_by: dr.DeviceEntryDisabler | Undefined | None,
     expected_disabled_by: dr.DeviceEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring a device."""
@@ -7224,7 +7224,7 @@ async def test_restore_migrated_device_disabled_by(
 
     deleted_entry = device_registry._deleted_devices[entry.id]
     device_registry._deleted_devices[entry.id] = attr.evolve(
-        deleted_entry, disabled_by=UNDEFINED
+        deleted_entry, disabled_by=Undefined
     )
 
     # This will restore the original device, user customizations of
@@ -10612,7 +10612,7 @@ def _create_parent_and_child(
     device_registry: dr.DeviceRegistry,
     config_entry_id: str,
     *,
-    config_subentry_id: str | UndefinedType = UNDEFINED,
+    config_subentry_id: str | Undefined = Undefined,
 ) -> tuple[dr.DeviceEntry, dr.ChildDeviceEntry]:
     """Create a parent device with one child device."""
     parent = device_registry.async_get_or_create(
@@ -11135,7 +11135,7 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
 ) -> None:
     """Test disabled_by=DEVICE matching a deleted device restores nothing.
 
-    A legacy deleted device (its stored disabled_by is UNDEFINED) restores with the
+    A legacy deleted device (its stored disabled_by is Undefined) restores with the
     caller's disabled_by verbatim, so without an early guard a caller-passed DEVICE
     would restore a main device disabled by DEVICE. The rejection must run before the
     restore.
@@ -11143,12 +11143,12 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
     match = "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child device"
     identifiers = {("test", "restore")}
     device_id = "restore-device-id"
-    # A legacy deleted device carries no recorded disabled_by (UNDEFINED), so restore
+    # A legacy deleted device carries no recorded disabled_by (Undefined), so restore
     # returns the caller's disabled_by verbatim - no config-entry reconciliation clears
     # a DEVICE value.
     device_registry._deleted_devices[device_id] = attr.evolve(
         _mock_deleted_device(device_id, mock_config_entry.entry_id, identifiers),
-        disabled_by=UNDEFINED,
+        disabled_by=Undefined,
     )
 
     with pytest.raises(HomeAssistantError, match=match):
@@ -11161,7 +11161,7 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
     # Nothing was restored: no main device exists and the deleted entry is untouched
     assert len(device_registry.devices) == 0
     assert device_id in device_registry._deleted_devices
-    assert device_registry._deleted_devices[device_id].disabled_by is UNDEFINED
+    assert device_registry._deleted_devices[device_id].disabled_by is Undefined
 
 
 @pytest.mark.usefixtures("hass")

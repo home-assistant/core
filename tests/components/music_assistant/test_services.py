@@ -194,13 +194,42 @@ async def test_get_library_action(
         SERVICE_GET_LIBRARY,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-            ATTR_FAVORITE: False,
             ATTR_MEDIA_TYPE: media_type,
         },
         blocking=True,
         return_response=True,
     )
     assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("favorite", "expected"),
+    [(True, True), (False, False), (None, None)],
+)
+async def test_get_library_action_favorite_filter(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    favorite: bool | None,
+    expected: bool | None,
+) -> None:
+    """Test the favorite filter is forwarded as given: a like, a dislike or absent."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    data = {ATTR_CONFIG_ENTRY_ID: entry.entry_id, ATTR_MEDIA_TYPE: "album"}
+    if favorite is not None:
+        data[ATTR_FAVORITE] = favorite
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_LIBRARY,
+        data,
+        blocking=True,
+        return_response=True,
+    )
+
+    assert (
+        music_assistant_client.music.get_library_albums.call_args.kwargs["favorite"]
+        is expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -231,7 +260,6 @@ async def test_get_library_action_with_username(
         SERVICE_GET_LIBRARY,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-            ATTR_FAVORITE: False,
             ATTR_MEDIA_TYPE: media_type,
             ATTR_USERNAME: "user_user",
         },

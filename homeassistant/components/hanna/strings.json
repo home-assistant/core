@@ -27,14 +27,14 @@
       "air_temperature": {
         "name": "Air temperature"
       },
-      "chlorine_flow_rate": {
-        "name": "Chlorine flow rate"
+      "chlorine_injection": {
+        "name": "Chlorine injection"
       },
       "chlorine_orp_value": {
         "name": "Chlorine ORP value"
       },
-      "ph_acid_base_flow_rate": {
-        "name": "pH Acid/Base flow rate"
+      "ph_acid_base_injection": {
+        "name": "pH acid/base injection"
       },
       "water_temperature": {
         "name": "Water temperature"

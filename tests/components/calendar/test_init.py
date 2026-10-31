@@ -23,7 +23,7 @@ from homeassistant.components.calendar import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
@@ -675,13 +675,13 @@ async def test_calendar_initial_color_none(
     ("description_color", "attr_color", "expected_color"),
     [
         # no description and no attr_initial_color
-        (UNDEFINED, UNDEFINED, None),
+        (Undefined, Undefined, None),
         # no description and attr_initial_color "A"
-        (UNDEFINED, "#AAAAAA", "#AAAAAA"),
+        (Undefined, "#AAAAAA", "#AAAAAA"),
         # no description and attr_initial_color None
-        (UNDEFINED, None, None),
+        (Undefined, None, None),
         # description setting the color "B", and no attr_initial_color
-        ("#BBBBBB", UNDEFINED, "#BBBBBB"),
+        ("#BBBBBB", Undefined, "#BBBBBB"),
         # description setting the color "B", but overridden by attr_initial_color "A"
         ("#BBBBBB", "#AAAAAA", "#AAAAAA"),
         # description setting the color "B", but overridden by attr_initial_color None
@@ -709,15 +709,15 @@ async def test_calendar_initial_color_precedence(
             self._attr_name = "Test"
             self._attr_unique_id = "test_precedence"
 
-            # Only set entity_description if description_color is not UNDEFINED
-            if description_color is not UNDEFINED:
+            # Only set entity_description if description_color is not Undefined
+            if description_color is not Undefined:
                 self.entity_description = CalendarEntityDescription(
                     key="test",
                     initial_color=description_color,
                 )
 
-            # Only set _attr_initial_color if attr_color is not UNDEFINED
-            if attr_color is not UNDEFINED:
+            # Only set _attr_initial_color if attr_color is not Undefined
+            if attr_color is not Undefined:
                 self._attr_initial_color = attr_color
 
     entity = TestCalendarEntity(description_color, attr_color)
