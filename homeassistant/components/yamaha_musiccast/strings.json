@@ -25,6 +25,18 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "displayed_sources": "Displayed sources"
+        },
+        "data_description": {
+          "displayed_sources": "Inputs selected here appear in the source list on this receiver's media players. Unselect an input to hide it."
+        }
+      }
+    }
+  },
   "entity": {
     "media_player": {
       "zone": {

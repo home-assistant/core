@@ -28,6 +28,7 @@ from homeassistant.util import uuid as uuid_util
 from .const import (
     ATTR_MAIN_SYNC,
     ATTR_MC_LINK,
+    CONF_HIDDEN_SOURCES,
     DEFAULT_ZONE,
     DOMAIN,
     HA_REPEAT_MODE_TO_MC_MAPPING,
@@ -561,7 +562,14 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @override
     def source_list(self):
         """List of available input sources."""
-        return list(self.source_mapping.values())
+        hidden_sources = self.coordinator.config_entry.options.get(
+            CONF_HIDDEN_SOURCES, []
+        )
+        return [
+            label
+            for inp, label in self.source_mapping.items()
+            if inp not in hidden_sources
+        ]
 
     @property
     @override
