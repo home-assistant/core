@@ -18,6 +18,7 @@ import homeassistant.util.dt as dt_util
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
     fake_post_request,
+    selected_platforms,
     simulate_webhook,
     snapshot_platform_entities,
 )
@@ -340,3 +341,53 @@ async def test_doortag_opening_category(
         + " "
         + expected_key.replace("_", " ").capitalize()
     )
+
+
+async def test_boiler_status_change(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a boiler status change is picked up by the boiler binary sensor."""
+    boiler_module_id = "12:34:56:00:01:ae"
+    boiler_status = False
+
+    def set_boiler_status(payload: dict[str, Any]) -> None:
+        """Set the livingroom thermostat's boiler status in the backend response."""
+        if not isinstance(payload.get("body"), dict):
+            return
+
+        for module in payload["body"].get("home", {}).get("modules", []):
+            if module["id"] == boiler_module_id:
+                module["boiler_status"] = boiler_status
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data with the livingroom thermostat's boiler status."""
+        kwargs["msg_callback"] = set_boiler_status
+        return await fake_post_request(hass, *args, **kwargs)
+
+    entity_id = "binary_sensor.livingroom_boiler"
+
+    with (
+        selected_platforms([Platform.BINARY_SENSOR]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "off"
+
+    boiler_status = True
+    # Poll several times so the coordinator's API throttling does not hide the update
+    for _ in range(11):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "on"
