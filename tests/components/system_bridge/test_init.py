@@ -1,6 +1,7 @@
 """Test the System Bridge integration."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -370,6 +371,65 @@ async def test_listener_disconnect_marks_unavailable(
     state = hass.states.get("update.hostname")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_reconnect_backoff_and_logging(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reconnects back off while the host is away and log once each way."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    register = mock_websocket_client.register_data_listener
+    register.side_effect = ConnectionErrorException
+    calls = register.await_count
+
+    # Each failed reconnect doubles the wait, up to 2 minutes
+    for wait, expected_calls in (
+        (30, calls + 1),
+        (30, calls + 1),
+        (30, calls + 2),
+        (60, calls + 2),
+        (60, calls + 3),
+        (120, calls + 4),
+    ):
+        freezer.tick(timedelta(seconds=wait))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert register.await_count == expected_calls
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert caplog.text.count("TestSystem is unavailable") == 1
+    assert not [
+        record
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.system_bridge")
+        and record.levelno >= logging.WARNING
+    ]
+
+    register.side_effect = None
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert caplog.text.count("Fetching system_bridge data recovered") == 1
+    assert caplog.text.count("TestSystem is unavailable") == 1
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 6
 
 
 @pytest.mark.usefixtures("init_integration")

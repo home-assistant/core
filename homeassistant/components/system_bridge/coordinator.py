@@ -36,6 +36,9 @@ from .data import SystemBridgeData
 
 type SystemBridgeConfigEntry = ConfigEntry[SystemBridgeDataUpdateCoordinator]
 
+UPDATE_INTERVAL = timedelta(seconds=30)
+MAX_UPDATE_INTERVAL = timedelta(minutes=2)
+
 
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
     """Class to manage fetching System Bridge data from single endpoint."""
@@ -63,13 +66,14 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
 
         self._host = entry.data[CONF_HOST]
+        self._failed_reconnects = 0
 
         super().__init__(
             hass,
             LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=UPDATE_INTERVAL,
         )
 
         self.data = SystemBridgeData()
@@ -85,7 +89,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             try:
                 await self.websocket_client.connect()
             except ConnectionErrorException as exception:
-                self.logger.warning(
+                self.logger.debug(
                     "[check_websocket_connected] Connection error occurred for %s: %s",
                     self.title,
                     exception,
@@ -116,6 +120,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         if self.unsub:
             self.unsub()
             self.unsub = None
+        # Setup failures are reported through ConfigEntryNotReady instead
+        if self.last_update_success and self.listen_task is not None:
+            self.logger.info("%s is unavailable", self.title)
         self.last_update_success = False
         self.async_update_listeners()
         if self.listen_task is not None:
@@ -209,14 +216,17 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 ) from exception
             except (ConnectionClosedException, ConnectionErrorException) as exception:
                 await self.clean_disconnect()
+                self._failed_reconnects += 1
                 raise UpdateFailed(
-                    f"Connection error occurred for {self.title}: {exception}"
+                    f"Connection error occurred for {self.title}: {exception}",
+                    retry_after=min(
+                        UPDATE_INTERVAL * 2**self._failed_reconnects,
+                        MAX_UPDATE_INTERVAL,
+                    ).total_seconds(),
                 ) from exception
 
             self.logger.debug("Registered data listener for %s", self.title)
-
-            self.last_update_success = True
-            self.async_update_listeners()
+            self._failed_reconnects = 0
 
             # Clean disconnect WebSocket on Home Assistant shutdown
             self.unsub = self.hass.bus.async_listen_once(
