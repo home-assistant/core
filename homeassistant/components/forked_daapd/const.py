@@ -90,6 +90,7 @@ SUPPORTED_FEATURES_ZONE = (
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.GROUPING
 )
 TTS_TIMEOUT = 20  # max time to wait between TTS getting sent and starting to play
 URI_SCHEMA = "owntone"

@@ -96,7 +96,8 @@ async def async_setup_entry(
     @callback
     def async_add_zones(api, outputs):
         async_add_entities(
-            ForkedDaapdZone(api, output, config_entry.entry_id) for output in outputs
+            ForkedDaapdZone(api, output, config_entry.entry_id, forked_daapd_master)
+            for output in outputs
         )
 
     config_entry.async_on_unload(
@@ -123,7 +124,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, api, output, entry_id):
+    def __init__(self, api, output, entry_id, master: ForkedDaapdMaster) -> None:
         """Initialize the ForkedDaapd Zone."""
         self._api = api
         self._output = output
@@ -131,6 +132,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
         self._last_volume = DEFAULT_UNMUTE_VOLUME  # used for mute/unmute
         self._available = True
         self._entry_id = entry_id
+        self._master = master
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -142,6 +144,18 @@ class ForkedDaapdZone(MediaPlayerEntity):
                 self._async_update_output_callback,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_MASTER.format(self._entry_id),
+                self._async_update_group_callback,
+            )
+        )
+
+    @callback
+    def _async_update_group_callback(self, available: bool) -> None:
+        """Refresh group membership after new outputs have been registered."""
+        self.async_write_ha_state()
 
     @callback
     def _async_update_output_callback(self, outputs, _event=None):
@@ -183,6 +197,22 @@ class ForkedDaapdZone(MediaPlayerEntity):
         """Disable the output."""
         await self._api.change_output(self._output_id, selected=False)
 
+    @override
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join outputs to the server's current playback."""
+        await self._master.async_join_players([self.entity_id, *group_members])
+
+    @override
+    async def async_unjoin_player(self) -> None:
+        """Remove this output from the current playback."""
+        await self.async_turn_off()
+
+    @property
+    @override
+    def group_members(self) -> list[str]:
+        """Return the playback group when this output is selected."""
+        return self._master.group_members if self._output["selected"] else []
+
     @property
     @override
     def name(self) -> str:
@@ -216,7 +246,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
             if self.volume_level == 0:
                 return
             self._last_volume = self.volume_level  # store volume level to restore later
-            target_volume = 0
+            target_volume = 0.0
         else:
             target_volume = self._last_volume  # restore volume level
         await self.async_set_volume_level(volume=target_volume)
