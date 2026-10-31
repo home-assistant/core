@@ -39,6 +39,19 @@
         },
         "description": "Enter the Ecovacs password for {username} to reconnect the integration."
       },
+      "reconfigure": {
+        "data": {
+          "country": "[%key:common::config_flow::data::country%]",
+          "override_mqtt_url": "[%key:component::ecovacs::config::step::auth::data::override_mqtt_url%]",
+          "override_rest_url": "[%key:component::ecovacs::config::step::auth::data::override_rest_url%]",
+          "verify_mqtt_certificate": "[%key:component::ecovacs::config::step::auth::data::verify_mqtt_certificate%]"
+        },
+        "data_description": {
+          "override_mqtt_url": "[%key:component::ecovacs::config::step::auth::data_description::override_mqtt_url%]",
+          "override_rest_url": "[%key:component::ecovacs::config::step::auth::data_description::override_rest_url%]"
+        },
+        "description": "Update the connection settings of the Ecovacs account {username}."
+      },
       "user": {
         "data": {
           "mode": "[%key:common::config_flow::data::mode%]"
