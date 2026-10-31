@@ -5,12 +5,15 @@ from unittest.mock import patch
 
 from airpatrol.api import AirPatrolAPI
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

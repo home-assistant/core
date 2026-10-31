@@ -64,6 +64,8 @@ async def test_intent(
             assert intent_obj.slots.get("entity", {}).get("value") == "value"
             assert intent_obj.satellite_id == satellite_id
             assert intent_obj.device_id == device_id
+            # Entities must be filtered by exposure to the conversation assistant
+            assert intent_obj.assistant == conversation.DOMAIN
             response = intent_obj.create_response()
 
             # Add parts to test response rendering
@@ -377,6 +379,42 @@ async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> 
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "success"
     assert result.conversation_id == conversation_id
+
+
+async def test_handle_other_user(
+    hass: HomeAssistant, init_wyoming_handle: ConfigEntry
+) -> None:
+    """Test the text of a refused user is not sent to the service."""
+    agent_id = "conversation.test_handle"
+    conversation_id = "conversation-1234"
+
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        MockAsyncTcpClient([Handled(text="success").event()]),
+    ):
+        await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=conversation_id,
+            context=Context(user_id="owner-user-id"),
+            agent_id=agent_id,
+        )
+
+    client = MockAsyncTcpClient([Handled(text="success").event()])
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        client,
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="other text",
+            conversation_id=conversation_id,
+            context=Context(user_id="other-user-id"),
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert not client.written
 
 
 async def test_not_handled(

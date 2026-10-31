@@ -416,7 +416,7 @@ def report_non_thread_safe_operation(what: str) -> None:
         f"calls {what} from a thread other than the event loop, "
         "which may cause Home Assistant to crash or data to corrupt. "
         "For more information, see "
-        "https://developers.home-assistant.io/docs/asyncio_thread_safety/"
+        "https://contributors.home-assistant.io/core/internals/thread-safety/"
         f"#{what.replace('.', '')}",
         core_behavior=ReportBehavior.ERROR,
         core_integration_behavior=ReportBehavior.ERROR,

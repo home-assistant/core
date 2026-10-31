@@ -1,14 +1,13 @@
 """Test the buienradar2 config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.buienradar.const import DOMAIN
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_LATITUDE = 51.5288504
 TEST_LONGITUDE = 5.4002156
@@ -28,7 +27,7 @@ async def test_config_flow_setup_(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
+        {CONF_LOCATION: {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -37,6 +36,7 @@ async def test_config_flow_setup_(hass: HomeAssistant) -> None:
         CONF_LATITUDE: TEST_LATITUDE,
         CONF_LONGITUDE: TEST_LONGITUDE,
     }
+    assert result["result"].unique_id == f"{TEST_LATITUDE}-{TEST_LONGITUDE}"
 
 
 async def test_config_flow_already_configured_weather(hass: HomeAssistant) -> None:
@@ -44,8 +44,10 @@ async def test_config_flow_already_configured_weather(hass: HomeAssistant) -> No
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_LATITUDE: TEST_LATITUDE,
-            CONF_LONGITUDE: TEST_LONGITUDE,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE,
+                CONF_LONGITUDE: TEST_LONGITUDE,
+            }
         },
         unique_id=f"{TEST_LATITUDE}-{TEST_LONGITUDE}",
     )
@@ -61,7 +63,7 @@ async def test_config_flow_already_configured_weather(hass: HomeAssistant) -> No
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
+        {CONF_LOCATION: {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -73,8 +75,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_LATITUDE: TEST_LATITUDE,
-            CONF_LONGITUDE: TEST_LONGITUDE,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE,
+                CONF_LONGITUDE: TEST_LONGITUDE,
+            }
         },
         unique_id=DOMAIN,
     )

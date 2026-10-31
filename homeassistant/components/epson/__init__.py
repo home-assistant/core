@@ -57,7 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EpsonConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EpsonConfigEntry) -> None:
     """Set up epson from a config entry."""
     projector = await validate_projector(
         hass=hass,
@@ -70,17 +70,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EpsonConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(projector.close)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EpsonConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EpsonConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: EpsonConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -99,5 +97,3 @@ async def async_migrate_entry(
     _LOGGER.debug(
         "Migration to configuration version %s successful", config_entry.version
     )
-
-    return True

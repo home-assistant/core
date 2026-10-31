@@ -3,9 +3,9 @@
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 import json
 import logging
+import time
 from typing import TYPE_CHECKING, Any, override
 
 from nice_go import (
@@ -95,6 +95,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 self.hass,
                 DOMAIN,
                 f"firmware_update_required_{device_id}",
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="firmware_update_required",
@@ -174,16 +175,18 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             self.refresh_token_creation_time + REFRESH_TOKEN_EXPIRY_TIME.total_seconds()
         )
         try:
-            if datetime.now().timestamp() >= expiry_time:  # pylint: disable=home-assistant-enforce-naive-now
+            if time.time() >= expiry_time:
                 await self.update_refresh_token()
             else:
                 await self.api.authenticate_refresh(
                     self.refresh_token, async_get_clientsession(self.hass)
                 )
         except AuthFailedError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Authentication failed")
             raise ConfigEntryAuthFailed from e
         except ApiError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("API error")
             raise UpdateFailed from e
 
@@ -195,9 +198,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 self.email, self.password, async_get_clientsession(self.hass)
             )
         except AuthFailedError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Authentication failed")
             raise ConfigEntryAuthFailed from e
         except ApiError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("API error")
             raise UpdateFailed from e
 
@@ -205,7 +210,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         data = {
             **self.config_entry.data,
             CONF_REFRESH_TOKEN: refresh_token,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
+            CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
         }
         self.hass.config_entries.async_update_entry(self.config_entry, data=data)
 

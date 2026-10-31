@@ -3,6 +3,8 @@
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dwd_weather_warnings.const import (
     API_ATTR_WARNING_COLOR,
     API_ATTR_WARNING_DESCRIPTION,
@@ -31,8 +33,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 def _warning(level: int, end_time: datetime) -> dict[str, object]:
@@ -132,7 +132,7 @@ async def test_load_missing_required_attribute(
     hass.states.async_set(
         mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LONGITUDE: 7.610263},
     )
 
     await hass.config_entries.async_setup(mock_tracker_entry.entry_id)
@@ -159,7 +159,7 @@ async def test_load_valid_device_tracker(
     hass.states.async_set(
         mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
     )
 
     await hass.config_entries.async_setup(mock_tracker_entry.entry_id)

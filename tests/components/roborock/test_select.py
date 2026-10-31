@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import (
     CleanPathPreferenceMapping,
@@ -12,6 +13,7 @@ from roborock.data import (
     WaterLevelMapping,
     ZeoProgram,
 )
+from roborock.data.b01_q7.b01_q7_code_mappings import CleanRepeatMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXCleanType
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
@@ -28,8 +30,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -52,6 +52,18 @@ def platforms() -> list[Platform]:
             "mild",
             RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
             [201],
+        ),
+        (
+            "select.roborock_s7_maxv_dock_empty_mode",
+            "light",
+            RoborockCommand.SET_DUST_COLLECTION_MODE,
+            {"mode": 1},
+        ),
+        (
+            "select.roborock_s7_maxv_dock_empty_mode",
+            "smart",
+            RoborockCommand.SET_DUST_COLLECTION_MODE,
+            {"mode": RoborockDockDustCollectionModeCode.as_dict()["smart"]},
         ),
     ],
 )
@@ -407,6 +419,64 @@ async def test_update_success_q7_cleaning_mode(
     assert q7_device.b01_q7_properties.set_mode.call_count == 1
 
     q7_device.b01_q7_properties.set_mode.assert_called_with(CleanTypeMapping.VACUUM)
+
+
+async def test_update_success_q7_cleaning_cycles(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test allowed changing values for Q7 cleaning cycles select entity."""
+    entity_id = "select.roborock_q7_cleaning_cycles"
+    assert hass.states.get(entity_id) is not None
+
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": "two"},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert q7_device.b01_q7_properties
+    assert q7_device.b01_q7_properties.set_repeat_state.call_count == 1
+    q7_device.b01_q7_properties.set_repeat_state.assert_called_with(
+        CleanRepeatMapping.TWO
+    )
+
+
+async def test_update_failure_q7_cleaning_cycles(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test failure when setting Q7 cleaning cycles."""
+    assert q7_device.b01_q7_properties
+    q7_device.b01_q7_properties.set_repeat_state.side_effect = RoborockException
+    entity_id = "select.roborock_q7_cleaning_cycles"
+    assert hass.states.get(entity_id) is not None
+
+    with pytest.raises(HomeAssistantError, match="Error while calling cleaning_cycles"):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": "two"},
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
+
+
+async def test_q7_cleaning_cycles_state(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test Q7 cleaning cycles select state and options."""
+    entity_id = "select.roborock_q7_cleaning_cycles"
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+    assert state.state == "one"
+    assert state.attributes["options"] == ["one", "two"]
 
 
 @pytest.fixture

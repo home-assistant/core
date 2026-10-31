@@ -1,6 +1,7 @@
 {
   "domain": "ukraine_alarm",
   "name": "Ukraine Alarm",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@PaulAnnekov"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ukraine_alarm",

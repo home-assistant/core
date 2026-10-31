@@ -5,6 +5,8 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.greencell.const import GREENCELL_DISC_TOPIC
 from homeassistant.components.mqtt import ReceiveMessage
@@ -12,9 +14,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_SERIAL_NUMBER, TEST_VOLTAGE_TOPIC
-
-from tests.common import MockConfigEntry
-from tests.typing import MqttMockHAClient
 
 
 def _make_message(topic: str, payload: str) -> ReceiveMessage:

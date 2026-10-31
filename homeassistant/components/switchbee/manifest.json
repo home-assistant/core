@@ -1,6 +1,7 @@
 {
   "domain": "switchbee",
   "name": "SwitchBee",
+  "categories": ["hubs_protocols.smart_home_hubs", "plugs_switches"],
   "codeowners": ["@jafar-atili"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/switchbee",

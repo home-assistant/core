@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The serial number of the device does not match the previous serial number"
     },
     "error": {
@@ -309,6 +308,12 @@
       },
       "battery_discharge_phase": {
         "name": "Current battery discharge {phase_name}"
+      },
+      "comm_level_2_4_ghz": {
+        "name": "Communication level 2.4 GHz"
+      },
+      "comm_level_sub_ghz": {
+        "name": "Communication level sub-GHz"
       },
       "configured_reserve_soc": {
         "name": "Configured reserve battery level"

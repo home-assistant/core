@@ -4,7 +4,7 @@ from typing import Any, Final, override
 
 import aiohttp
 from lunatone_rest_api_client import Auth, Info
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import (
@@ -19,8 +19,8 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
-DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
-    {vol.Required(CONF_URL, default="http://"): cv.string},
+DATA_SCHEMA: Final[probatio.Schema] = probatio.Schema(
+    {probatio.Required(CONF_URL, default="http://"): cv.string},
 )
 
 
@@ -127,8 +127,8 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_URL, default=entry.data[CONF_URL]): cv.string},
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_URL, default=entry.data[CONF_URL]): cv.string},
             ),
             description_placeholders={CONF_NAME: entry.title},
         )

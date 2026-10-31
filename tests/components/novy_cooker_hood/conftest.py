@@ -4,14 +4,15 @@ from collections.abc import Iterator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 
 from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
 
@@ -34,8 +35,9 @@ def mock_config_entry(
     return MockConfigEntry(
         domain=DOMAIN,
         title="Novy Cooker Hood",
-        data={CONF_TRANSMITTER: entity_entry.id, CONF_CODE: 1},
+        data={CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID, CONF_CODE: 1},
         unique_id=f"{entity_entry.id}_1",
+        minor_version=2,
     )
 
 

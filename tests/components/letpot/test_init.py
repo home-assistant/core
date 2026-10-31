@@ -8,13 +8,12 @@ from letpot.exceptions import (
     LetPotException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.freeze_time("2025-01-31 00:00:00")

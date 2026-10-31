@@ -7,7 +7,7 @@ from typing import Any, override
 from aiopyarr import ArrAuthenticationException, ArrException
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.config_entries import (
@@ -54,6 +54,28 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     await sonarr.async_get_system_status()
 
 
+def _normalize_url(url: str) -> str:
+    """Add an explicit port to the URL.
+
+    This ensures aiopyarr does not fall back to its own service-port
+    default (which differs from the standard HTTP/HTTPS ports).
+    """
+    parsed = yarl.URL(url)
+    if parsed.explicit_port is None:
+        parsed = parsed.with_port(parsed.port)
+    return parsed.human_repr()
+
+
+def _normalize_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Flatten the more options section and add an explicit port to the URL."""
+    more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+    user_input[CONF_VERIFY_SSL] = more_options.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+    if CONF_URL in user_input:
+        user_input[CONF_URL] = _normalize_url(user_input[CONF_URL])
+
+    return user_input
+
+
 class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sonarr."""
 
@@ -95,19 +117,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
-            user_input[CONF_VERIFY_SSL] = more_options.get(
-                CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
-            )
-
-            # Ensure an explicit port is present in the URL so that
-            # aiopyarr does not fall back to its own service-port default
-            # (which differs from the standard HTTP/HTTPS ports).
-            if CONF_URL in user_input:
-                url = yarl.URL(user_input[CONF_URL])
-                if url.explicit_port is None:
-                    url = url.with_port(url.port)
-                user_input[CONF_URL] = url.human_repr()
+            user_input = _normalize_user_input(user_input)
 
             if self.source == SOURCE_REAUTH:
                 user_input = {**self._get_reauth_entry().data, **user_input}
@@ -139,19 +149,65 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _get_user_data_schema(self) -> vol.Schema:
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Sonarr connection."""
+        errors = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            user_input = _normalize_user_input(user_input)
+            # Stored URLs may predate normalization, e.g. migrated entries.
+            if any(
+                other.entry_id != entry.entry_id
+                and (url := other.data.get(CONF_URL)) is not None
+                and _normalize_url(url) == user_input[CONF_URL]
+                for other in self._async_current_entries(include_ignore=False)
+            ):
+                return self.async_abort(reason="already_configured")
+
+            try:
+                await _validate_input(self.hass, user_input)
+            except ArrAuthenticationException:
+                errors = {"base": "invalid_auth"}
+            except ArrException:
+                errors = {"base": "cannot_connect"}
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors = {"base": "unknown"}
+            else:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._get_user_data_schema(),
+                {
+                    CONF_URL: entry.data[CONF_URL],
+                    CONF_MORE_OPTIONS: {CONF_VERIFY_SSL: entry.data[CONF_VERIFY_SSL]},
+                },
+            ),
+            errors=errors,
+        )
+
+    def _get_user_data_schema(self) -> probatio.Schema:
         """Get the data schema to display user form."""
         if self.source == SOURCE_REAUTH:
-            return vol.Schema({vol.Required(CONF_API_KEY): str})
+            return probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            )
 
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_URL): str,
-                vol.Required(CONF_API_KEY): str,
-                vol.Required(CONF_MORE_OPTIONS): section(
-                    vol.Schema(
+                probatio.Required(CONF_URL): str,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                probatio.Required(CONF_MORE_OPTIONS): section(
+                    probatio.Schema(
                         {
-                            vol.Optional(
+                            probatio.Optional(
                                 CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                             ): bool,
                         }
@@ -173,13 +229,13 @@ class SonarrOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_UPCOMING_DAYS,
                 default=self.config_entry.options.get(
                     CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
                 ),
             ): int,
-            vol.Optional(
+            probatio.Optional(
                 CONF_WANTED_MAX_ITEMS,
                 default=self.config_entry.options.get(
                     CONF_WANTED_MAX_ITEMS, DEFAULT_WANTED_MAX_ITEMS
@@ -187,4 +243,6 @@ class SonarrOptionsFlowHandler(OptionsFlowWithReload):
             ): int,
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=probatio.Schema(options)
+        )

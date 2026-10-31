@@ -4,7 +4,7 @@ from contextlib import suppress
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import valve
 from homeassistant.components.valve import (
@@ -93,7 +93,7 @@ RESET_CLOSING_OPENING = "reset_opening_closing"
 def _validate_and_add_defaults(config: ConfigType) -> ConfigType:
     """Validate config options and set defaults."""
     if config[CONF_REPORTS_POSITION] and any(key in config for key in NO_POSITION_KEYS):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "Options `payload_open`, `payload_close`, `state_open` and "
             "`state_closed` are not allowed if the valve reports a position."
         )
@@ -102,35 +102,35 @@ def _validate_and_add_defaults(config: ConfigType) -> ConfigType:
 
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAYLOAD_CLOSE): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_OPEN): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_STOP): vol.Any(cv.string, None),
-        vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): vol.Coerce(
-            int
-        ),
-        vol.Optional(CONF_REPORTS_POSITION, default=False): cv.boolean,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_STATE_CLOSED): cv.string,
-        vol.Optional(CONF_STATE_CLOSING, default=ValveState.CLOSING): cv.string,
-        vol.Optional(CONF_STATE_OPEN): cv.string,
-        vol.Optional(CONF_STATE_OPENING, default=ValveState.OPENING): cv.string,
-        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        probatio.Optional(CONF_PAYLOAD_CLOSE): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_OPEN): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_STOP): probatio.Any(cv.string, None),
+        probatio.Optional(
+            CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED
+        ): probatio.Coerce(int),
+        probatio.Optional(
+            CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN
+        ): probatio.Coerce(int),
+        probatio.Optional(CONF_REPORTS_POSITION, default=False): cv.boolean,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_STATE_CLOSED): cv.string,
+        probatio.Optional(CONF_STATE_CLOSING, default=ValveState.CLOSING): cv.string,
+        probatio.Optional(CONF_STATE_OPEN): cv.string,
+        probatio.Optional(CONF_STATE_OPENING, default=ValveState.OPENING): cv.string,
+        probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(_PLATFORM_SCHEMA_BASE, _validate_and_add_defaults)
+PLATFORM_SCHEMA_MODERN = probatio.All(_PLATFORM_SCHEMA_BASE, _validate_and_add_defaults)
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     _validate_and_add_defaults,
 )
 

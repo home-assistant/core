@@ -1,6 +1,7 @@
 """Test SkyConnect firmware update entity."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_notify_firmware_info,
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_ZBT1
-
-from tests.common import MockConfigEntry
 
 UPDATE_ENTITY_ID = "update.home_assistant_connect_zbt_1_9e2adbd7_firmware"
 

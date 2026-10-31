@@ -1,0 +1,1170 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "Please reconfigure the same inverter you originally set up."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: {error}",
+      "inverter_silent": "The adapter is reachable, but the inverter behind it did not answer. A PV inverter switches off without sunlight, so try again in daylight. Otherwise, check the unit ID and the adapter's serial settings.",
+      "unrecognized_inverter": "The device answered, but neither its serial number nor its register masks identify a known Sofar model."
+    },
+    "step": {
+      "reconfigure": {
+        "description": "Update where this inverter is reached, for example after it moved to another address or its RS485 bus was rewired. Moving it between a network and a serial connection keeps this entry and its history.\n\nIt has to stay the same inverter: the serial number that answers is checked against the one this entry was set up with.",
+        "menu_options": {
+          "reconfigure_serial": "[%key:component::sofar::config::step::user::menu_options::serial%]",
+          "reconfigure_tcp": "[%key:component::sofar::config::step::user::menu_options::tcp%]"
+        }
+      },
+      "reconfigure_serial": {
+        "data": {
+          "baudrate": "[%key:component::sofar::config::step::serial::data::baudrate%]",
+          "device": "[%key:component::sofar::config::step::serial::data::device%]",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
+        },
+        "data_description": {
+          "baudrate": "[%key:component::sofar::config::step::serial::data_description::baudrate%]",
+          "device": "[%key:component::sofar::config::step::serial::data_description::device%]",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
+        },
+        "description": "Reach this inverter over a serial port wired to its RS485 terminals."
+      },
+      "reconfigure_tcp": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
+        },
+        "data_description": {
+          "host": "[%key:component::sofar::config::step::tcp::data_description::host%]",
+          "port": "[%key:component::sofar::config::step::tcp::data_description::port%]",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
+        },
+        "description": "Reach this inverter over the network, either directly or through a Modbus TCP bridge."
+      },
+      "serial": {
+        "data": {
+          "baudrate": "Baud rate",
+          "device": "Serial port",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
+        },
+        "data_description": {
+          "baudrate": "The speed of the RS485 bus, as set on the inverter. The Sofar default is 9600.",
+          "device": "The serial port the inverter's RS485 bus is wired to. Ports shared over the network by a serial proxy, such as an ESPHome device, are listed here alongside the local ones.",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
+        },
+        "description": "Set up an inverter wired to a serial port over RS485. The inverter model and register map are detected automatically from its serial number."
+      },
+      "tcp": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the inverter, or of the Modbus TCP bridge it's connected through.",
+          "port": "The Modbus TCP port to connect on.",
+          "unit_id": "The inverter's Modbus unit ID, also called its Modbus device address."
+        },
+        "description": "Set up an inverter reached over the network, either directly or through a Modbus TCP bridge. The inverter model and register map are detected automatically from its serial number."
+      },
+      "user": {
+        "description": "A Sofar inverter can be set up in Home Assistant in two different ways.\n\nYou can reach it over the network, which covers a Modbus TCP bridge or a stick that speaks Modbus TCP, or over a serial port its RS485 terminals are wired to, which covers ports shared over the network by a serial proxy.",
+        "menu_options": {
+          "serial": "Serial port (Modbus RTU)",
+          "tcp": "Network (Modbus TCP)"
+        }
+      }
+    }
+  },
+  "device": {
+    "battery": {
+      "name": "Battery {number}"
+    },
+    "pv_string": {
+      "name": "PV string {number}"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "active_power_limit_enabled": {
+        "name": "Active power limit enabled"
+      },
+      "fault_ac_output": {
+        "name": "AC output fault"
+      },
+      "fault_arc_fault": {
+        "name": "Arc fault (AFCI)"
+      },
+      "fault_battery": {
+        "name": "Battery fault"
+      },
+      "fault_battery_pack": {
+        "name": "Battery pack communication fault"
+      },
+      "fault_combiner_box": {
+        "name": "Combiner box fault"
+      },
+      "fault_communication": {
+        "name": "Communication fault"
+      },
+      "fault_dc_bus": {
+        "name": "DC bus fault"
+      },
+      "fault_derating": {
+        "name": "Derating"
+      },
+      "fault_fan": {
+        "name": "Fan fault"
+      },
+      "fault_grid": {
+        "name": "Grid fault"
+      },
+      "fault_input_fuse": {
+        "name": "Input fuse open"
+      },
+      "fault_insulation": {
+        "name": "Insulation fault"
+      },
+      "fault_internal": {
+        "name": "Internal fault"
+      },
+      "fault_pv": {
+        "name": "PV fault"
+      },
+      "fault_shutdown": {
+        "name": "Shutdown"
+      },
+      "fault_string_fuse": {
+        "name": "String fuse open"
+      },
+      "fault_thermal": {
+        "name": "Thermal fault"
+      }
+    },
+    "button": {
+      "iv_curve_scan": {
+        "name": "IV curve scan"
+      },
+      "rtc_sync": {
+        "name": "RTC sync"
+      }
+    },
+    "event": {
+      "fault": {
+        "name": "Fault",
+        "state_attributes": {
+          "category": {
+            "name": "Category",
+            "state": {
+              "ac_output": "AC output",
+              "arc_fault": "Arc fault",
+              "battery": "Battery",
+              "battery_pack": "Battery pack",
+              "combiner_box": "Combiner box",
+              "communication": "Communication",
+              "dc_bus": "DC bus",
+              "derating": "Derating",
+              "fan": "Fan",
+              "grid": "Grid",
+              "input_fuse": "Input fuse",
+              "insulation": "Insulation",
+              "internal": "Internal",
+              "pv": "PV",
+              "shutdown": "Shutdown",
+              "string_fuse": "String fuse",
+              "thermal": "Thermal"
+            }
+          },
+          "event_type": {
+            "state": {
+              "ac_current_unbalance_fault": "AC current unbalance fault",
+              "ac_hardware_overcurrent_fault": "AC hardware overcurrent fault",
+              "ac_output_hardware_overcurrent": "AC output hardware overcurrent",
+              "afci_0": "Arc fault 0",
+              "afci_1": "Arc fault 1",
+              "afci_10": "Arc fault 10",
+              "afci_11": "Arc fault 11",
+              "afci_12": "Arc fault 12",
+              "afci_13": "Arc fault 13",
+              "afci_14": "Arc fault 14",
+              "afci_15": "Arc fault 15",
+              "afci_16": "Arc fault 16",
+              "afci_17": "Arc fault 17",
+              "afci_18": "Arc fault 18",
+              "afci_19": "Arc fault 19",
+              "afci_2": "Arc fault 2",
+              "afci_20": "Arc fault 20",
+              "afci_21": "Arc fault 21",
+              "afci_22": "Arc fault 22",
+              "afci_23": "Arc fault 23",
+              "afci_24": "Arc fault 24",
+              "afci_25": "Arc fault 25",
+              "afci_26": "Arc fault 26",
+              "afci_27": "Arc fault 27",
+              "afci_28": "Arc fault 28",
+              "afci_29": "Arc fault 29",
+              "afci_3": "Arc fault 3",
+              "afci_30": "Arc fault 30",
+              "afci_31": "Arc fault 31",
+              "afci_4": "Arc fault 4",
+              "afci_5": "Arc fault 5",
+              "afci_6": "Arc fault 6",
+              "afci_7": "Arc fault 7",
+              "afci_8": "Arc fault 8",
+              "afci_9": "Arc fault 9",
+              "ambient_temperature_1_protection": "Ambient temperature 1 protection",
+              "ambient_temperature_2_protection": "Ambient temperature 2 protection",
+              "anti_backflow_overload": "Feed-in limit exceeded",
+              "arc_device_communication_failure": "Arc device communication failure",
+              "arc_shutdown_protection": "Arc shutdown protection",
+              "auxiliary_power_error": "Auxiliary power error",
+              "balanced_circuit_overcurrent_protection": "Balancing circuit overcurrent protection",
+              "battery_charging_low_temperature_protection": "Battery charging low temperature protection",
+              "battery_charging_over_temperature_protection": "Battery charging overtemperature protection",
+              "battery_discharge_low_temperature_protection": "Battery discharge low temperature protection",
+              "battery_discharge_over_temperature_protection": "Battery discharge overtemperature protection",
+              "battery_hardware_overcurrent": "Battery hardware overcurrent",
+              "battery_lockout_protection": "Battery lockout protection",
+              "battery_low_voltage_shutdown": "Battery low voltage shutdown",
+              "battery_over_voltage": "Battery overvoltage",
+              "battery_overcurrent_software_protection": "Battery overcurrent software protection",
+              "battery_partially_disconnected": "Battery partially disconnected",
+              "battery_temperature_protection": "Battery temperature protection",
+              "bckbst_hardware_overcurrent": "Buck-boost hardware overcurrent",
+              "bckbst_software_overcurrent": "Buck-boost software overcurrent",
+              "bcu_fault": "BCU fault",
+              "bluetooth_fault": "Bluetooth fault",
+              "bms_can_version_inconsistency": "BMS CAN version inconsistency",
+              "bms_can_version_too_low": "BMS CAN version too low",
+              "bms_high_temperature_protection": "BMS high temperature protection",
+              "bms_low_temperature_protection": "BMS low temperature protection",
+              "bms_over_voltage_protection": "BMS overvoltage protection",
+              "bms_overcurrent_protection": "BMS overcurrent protection",
+              "bms_short_circuit_protection": "BMS short circuit protection",
+              "bms_undervoltage_protection": "BMS undervoltage protection",
+              "bms_version_inconsistency": "BMS version inconsistency",
+              "bmu_fault": "BMU fault",
+              "branch_current_sampling_error": "Branch current sampling error",
+              "bus_hardware_over_voltage_fault": "Bus hardware overvoltage fault",
+              "bus_overvoltage_fault": "Bus overvoltage fault",
+              "bus_unbalance_fault": "Bus unbalance fault",
+              "busbar_instantaneous_value_unbalance": "DC bus instantaneous unbalance",
+              "busbar_low_voltage": "DC bus low voltage",
+              "busbar_rms_software_overvoltage": "DC bus RMS software overvoltage",
+              "busbar_rms_unbalance": "DC bus RMS unbalance",
+              "busbar_transient_software_overvoltage": "DC bus transient software overvoltage",
+              "busbar_undervoltage_during_grid_connection": "DC bus undervoltage during grid connection",
+              "chip_error_ac": "Chip error (AC)",
+              "chip_error_dc": "Chip error (DC)",
+              "combiner_oc_1": "Combiner string 1 overcurrent",
+              "combiner_oc_10": "Combiner string 10 overcurrent",
+              "combiner_oc_11": "Combiner string 11 overcurrent",
+              "combiner_oc_12": "Combiner string 12 overcurrent",
+              "combiner_oc_13": "Combiner string 13 overcurrent",
+              "combiner_oc_14": "Combiner string 14 overcurrent",
+              "combiner_oc_15": "Combiner string 15 overcurrent",
+              "combiner_oc_16": "Combiner string 16 overcurrent",
+              "combiner_oc_17": "Combiner string 17 overcurrent",
+              "combiner_oc_18": "Combiner string 18 overcurrent",
+              "combiner_oc_19": "Combiner string 19 overcurrent",
+              "combiner_oc_2": "Combiner string 2 overcurrent",
+              "combiner_oc_20": "Combiner string 20 overcurrent",
+              "combiner_oc_21": "Combiner string 21 overcurrent",
+              "combiner_oc_22": "Combiner string 22 overcurrent",
+              "combiner_oc_23": "Combiner string 23 overcurrent",
+              "combiner_oc_24": "Combiner string 24 overcurrent",
+              "combiner_oc_25": "Combiner string 25 overcurrent",
+              "combiner_oc_26": "Combiner string 26 overcurrent",
+              "combiner_oc_27": "Combiner string 27 overcurrent",
+              "combiner_oc_28": "Combiner string 28 overcurrent",
+              "combiner_oc_29": "Combiner string 29 overcurrent",
+              "combiner_oc_3": "Combiner string 3 overcurrent",
+              "combiner_oc_30": "Combiner string 30 overcurrent",
+              "combiner_oc_31": "Combiner string 31 overcurrent",
+              "combiner_oc_32": "Combiner string 32 overcurrent",
+              "combiner_oc_4": "Combiner string 4 overcurrent",
+              "combiner_oc_5": "Combiner string 5 overcurrent",
+              "combiner_oc_6": "Combiner string 6 overcurrent",
+              "combiner_oc_7": "Combiner string 7 overcurrent",
+              "combiner_oc_8": "Combiner string 8 overcurrent",
+              "combiner_oc_9": "Combiner string 9 overcurrent",
+              "combiner_ov_gp_1": "Combiner group 1 overvoltage",
+              "combiner_ov_gp_10": "Combiner group 10 overvoltage",
+              "combiner_ov_gp_11": "Combiner group 11 overvoltage",
+              "combiner_ov_gp_12": "Combiner group 12 overvoltage",
+              "combiner_ov_gp_13": "Combiner group 13 overvoltage",
+              "combiner_ov_gp_14": "Combiner group 14 overvoltage",
+              "combiner_ov_gp_15": "Combiner group 15 overvoltage",
+              "combiner_ov_gp_16": "Combiner group 16 overvoltage",
+              "combiner_ov_gp_2": "Combiner group 2 overvoltage",
+              "combiner_ov_gp_3": "Combiner group 3 overvoltage",
+              "combiner_ov_gp_4": "Combiner group 4 overvoltage",
+              "combiner_ov_gp_5": "Combiner group 5 overvoltage",
+              "combiner_ov_gp_6": "Combiner group 6 overvoltage",
+              "combiner_ov_gp_7": "Combiner group 7 overvoltage",
+              "combiner_ov_gp_8": "Combiner group 8 overvoltage",
+              "combiner_ov_gp_9": "Combiner group 9 overvoltage",
+              "combiner_reflux_fault_1": "Combiner string 1 reverse current",
+              "combiner_reflux_fault_10": "Combiner string 10 reverse current",
+              "combiner_reflux_fault_11": "Combiner string 11 reverse current",
+              "combiner_reflux_fault_12": "Combiner string 12 reverse current",
+              "combiner_reflux_fault_13": "Combiner string 13 reverse current",
+              "combiner_reflux_fault_14": "Combiner string 14 reverse current",
+              "combiner_reflux_fault_15": "Combiner string 15 reverse current",
+              "combiner_reflux_fault_16": "Combiner string 16 reverse current",
+              "combiner_reflux_fault_17": "Combiner string 17 reverse current",
+              "combiner_reflux_fault_18": "Combiner string 18 reverse current",
+              "combiner_reflux_fault_19": "Combiner string 19 reverse current",
+              "combiner_reflux_fault_2": "Combiner string 2 reverse current",
+              "combiner_reflux_fault_20": "Combiner string 20 reverse current",
+              "combiner_reflux_fault_21": "Combiner string 21 reverse current",
+              "combiner_reflux_fault_22": "Combiner string 22 reverse current",
+              "combiner_reflux_fault_23": "Combiner string 23 reverse current",
+              "combiner_reflux_fault_24": "Combiner string 24 reverse current",
+              "combiner_reflux_fault_25": "Combiner string 25 reverse current",
+              "combiner_reflux_fault_26": "Combiner string 26 reverse current",
+              "combiner_reflux_fault_27": "Combiner string 27 reverse current",
+              "combiner_reflux_fault_28": "Combiner string 28 reverse current",
+              "combiner_reflux_fault_29": "Combiner string 29 reverse current",
+              "combiner_reflux_fault_3": "Combiner string 3 reverse current",
+              "combiner_reflux_fault_30": "Combiner string 30 reverse current",
+              "combiner_reflux_fault_31": "Combiner string 31 reverse current",
+              "combiner_reflux_fault_32": "Combiner string 32 reverse current",
+              "combiner_reflux_fault_4": "Combiner string 4 reverse current",
+              "combiner_reflux_fault_5": "Combiner string 5 reverse current",
+              "combiner_reflux_fault_6": "Combiner string 6 reverse current",
+              "combiner_reflux_fault_7": "Combiner string 7 reverse current",
+              "combiner_reflux_fault_8": "Combiner string 8 reverse current",
+              "combiner_reflux_fault_9": "Combiner string 9 reverse current",
+              "combiner_uv_gp_1": "Combiner group 1 undervoltage",
+              "combiner_uv_gp_10": "Combiner group 10 undervoltage",
+              "combiner_uv_gp_11": "Combiner group 11 undervoltage",
+              "combiner_uv_gp_12": "Combiner group 12 undervoltage",
+              "combiner_uv_gp_13": "Combiner group 13 undervoltage",
+              "combiner_uv_gp_14": "Combiner group 14 undervoltage",
+              "combiner_uv_gp_15": "Combiner group 15 undervoltage",
+              "combiner_uv_gp_16": "Combiner group 16 undervoltage",
+              "combiner_uv_gp_2": "Combiner group 2 undervoltage",
+              "combiner_uv_gp_3": "Combiner group 3 undervoltage",
+              "combiner_uv_gp_4": "Combiner group 4 undervoltage",
+              "combiner_uv_gp_5": "Combiner group 5 undervoltage",
+              "combiner_uv_gp_6": "Combiner group 6 undervoltage",
+              "combiner_uv_gp_7": "Combiner group 7 undervoltage",
+              "combiner_uv_gp_8": "Combiner group 8 undervoltage",
+              "combiner_uv_gp_9": "Combiner group 9 undervoltage",
+              "communication_board_eeprom_error": "Communication board EEPROM error",
+              "communication_board_flash_error": "Communication board flash error",
+              "ct_error": "CT error",
+              "dcdc_fault": "DC/DC fault",
+              "dci_consistency_error": "DCI consistency error",
+              "dci_overcurrent_protection": "DCI overcurrent protection",
+              "dci_sampling_error_ac": "DCI sampling error (AC)",
+              "dci_sampling_error_dc": "DCI sampling error (DC)",
+              "dcv_sampling_error": "DCV sampling error",
+              "drms0_shutdown": "DRM0 shutdown",
+              "eps_battery_overcurrent_fault": "EPS battery overcurrent fault",
+              "fan_1_fault": "Fan 1 fault",
+              "fan_2_fault": "Fan 2 fault",
+              "fan_3_fault": "Fan 3 fault",
+              "fan_4_fault": "Fan 4 fault",
+              "fan_5_fault": "Fan 5 fault",
+              "fan_6_fault": "Fan 6 fault",
+              "fan_7_fault": "Fan 7 fault",
+              "fly_span_capacitor_overvoltage_protection": "Flying capacitor overvoltage protection",
+              "fly_span_capacitor_under_voltage_protection": "Flying capacitor undervoltage protection",
+              "forced_shutdown": "Forced shutdown",
+              "frequency_down_load": "Frequency derating",
+              "frequency_loading": "Frequency load increase",
+              "gfci_sampling_error_ac": "GFCI sampling error (AC)",
+              "gfci_sampling_error_dc": "GFCI sampling error (DC)",
+              "grid_current_sampling_error": "Grid current sampling error",
+              "grid_frequency_change_protection": "Grid frequency change protection",
+              "grid_instantaneous_value_overvoltage_1": "Grid instantaneous overvoltage 1",
+              "grid_instantaneous_value_overvoltage_2": "Grid instantaneous overvoltage 2",
+              "grid_line_voltage_error": "Grid line voltage error",
+              "grid_over_voltage": "Grid overvoltage",
+              "grid_overfrequency": "Grid overfrequency",
+              "grid_relay_fault": "Grid relay fault",
+              "grid_underfrequency": "Grid underfrequency",
+              "grid_undervoltage": "Grid undervoltage",
+              "grid_voltage_unbalance": "Grid voltage unbalance",
+              "ground_zero_voltage_too_high": "Neutral-to-ground voltage too high",
+              "grounding_error": "Grounding error",
+              "hardware_differential_overcurrent": "Hardware differential overcurrent",
+              "hardware_version_mismatch": "Hardware version mismatch",
+              "heatsink_1_temperature_protection": "Heatsink 1 temperature protection",
+              "heatsink_2_temperature_protection": "Heatsink 2 temperature protection",
+              "heatsink_3_temperature_protection": "Heatsink 3 temperature protection",
+              "heatsink_4_temperature_protection": "Heatsink 4 temperature protection",
+              "heatsink_5_temperature_protection": "Heatsink 5 temperature protection",
+              "heatsink_6_temperature_protection": "Heatsink 6 temperature protection",
+              "high_penetration_error": "High voltage ride-through error",
+              "input_current_sampling_error": "Input current sampling error",
+              "input_fuse_open_circuit_0": "Input fuse 0 open circuit",
+              "input_fuse_open_circuit_1": "Input fuse 1 open circuit",
+              "input_fuse_open_circuit_10": "Input fuse 10 open circuit",
+              "input_fuse_open_circuit_11": "Input fuse 11 open circuit",
+              "input_fuse_open_circuit_12": "Input fuse 12 open circuit",
+              "input_fuse_open_circuit_13": "Input fuse 13 open circuit",
+              "input_fuse_open_circuit_14": "Input fuse 14 open circuit",
+              "input_fuse_open_circuit_15": "Input fuse 15 open circuit",
+              "input_fuse_open_circuit_2": "Input fuse 2 open circuit",
+              "input_fuse_open_circuit_3": "Input fuse 3 open circuit",
+              "input_fuse_open_circuit_4": "Input fuse 4 open circuit",
+              "input_fuse_open_circuit_5": "Input fuse 5 open circuit",
+              "input_fuse_open_circuit_6": "Input fuse 6 open circuit",
+              "input_fuse_open_circuit_7": "Input fuse 7 open circuit",
+              "input_fuse_open_circuit_8": "Input fuse 8 open circuit",
+              "input_fuse_open_circuit_9": "Input fuse 9 open circuit",
+              "input_hardware_overcurrent_fault": "Input hardware overcurrent fault",
+              "input_mode_setting_fault": "Input mode setting fault",
+              "input_overcurrent_fault": "Input overcurrent fault",
+              "input_reversal_error": "Input reversal error",
+              "inverter_bus_hardware_overvoltage": "Inverter bus hardware overvoltage",
+              "inverter_rms_current_protection": "Inverter RMS current protection",
+              "inverter_soft_start_failure": "Inverter soft start failure",
+              "inverter_soft_start_failure_fault": "Inverter soft start failure fault",
+              "inverter_transient_overvoltage": "Inverter transient overvoltage",
+              "inverter_voltage_error": "Inverter voltage error",
+              "islanding_error": "Islanding error",
+              "leakage_current_consistency_error": "Leakage current consistency error",
+              "leakage_current_faults": "Leakage current fault",
+              "lightning_protection_ac": "Lightning protection (AC)",
+              "lightning_protection_ac_permanent": "Lightning protection permanent fault (AC)",
+              "lightning_protection_dc": "Lightning protection (DC)",
+              "lightning_protection_dc_permanent": "Lightning protection permanent fault (DC)",
+              "lithium_battery_1_communication_failure": "Lithium battery 1 communication failure",
+              "lithium_battery_2_communication_failure": "Lithium battery 2 communication failure",
+              "lithium_battery_3_communication_failure": "Lithium battery 3 communication failure",
+              "lithium_battery_4_communication_failure": "Lithium battery 4 communication failure",
+              "llc_busbar_hardware_overvoltage": "LLC bus hardware overvoltage",
+              "llcbus_overvoltage_protection": "LLC bus overvoltage protection",
+              "low_insulation_impedance": "Low insulation impedance",
+              "low_penetration_error": "Low voltage ride-through error",
+              "low_temperature_load_shedding": "Low temperature derating",
+              "meter_communication_error": "Meter communication error",
+              "modify_ovp": "OVP modified",
+              "module_1_temperature_protection": "Module 1 temperature protection",
+              "module_2_temperature_protection": "Module 2 temperature protection",
+              "module_3_temperature_protection": "Module 3 temperature protection",
+              "module_temperature_difference_too_large": "Module temperature difference too large",
+              "n_line_open_circuit_fault": "Neutral line open circuit",
+              "net_voltage_consistency_error": "Grid voltage consistency error",
+              "network_voltage_sampling_error_ac": "Grid voltage sampling error (AC)",
+              "network_voltage_sampling_error_dc": "Grid voltage sampling error (DC)",
+              "neutral_ground_fault": "Neutral ground fault",
+              "output_current_unbalance": "Output current unbalance",
+              "output_transient_current_protection": "Output transient current protection",
+              "output_transient_overcurrent_fault": "Output transient overcurrent fault",
+              "over_temperature_load_shedding": "Overtemperature derating",
+              "overload_protection_1": "Overload protection 1",
+              "overload_protection_2": "Overload protection 2",
+              "overload_protection_3": "Overload protection 3",
+              "parallel_error": "Parallel error",
+              "phase_loss_failure": "Phase loss failure",
+              "pid_abnormal_output": "PID abnormal output",
+              "pid_repair_failure": "PID repair failure",
+              "plc_module_heartbeat_lost": "PLC module heartbeat lost",
+              "power_station_communication_failure_shutdown": "Power station communication failure shutdown",
+              "pv_branch_overcurrent_default_off": "PV string overcurrent (default off)",
+              "pv_branch_overcurrent_default_on": "PV string overcurrent (default on)",
+              "pv_hardware_overcurrent": "PV hardware overcurrent",
+              "pv_low_impedance_to_ground": "PV low impedance to ground",
+              "pv_overvoltage": "PV overvoltage",
+              "pv_parallel_uneven_current": "PV parallel uneven current",
+              "pv_software_overcurrent_protection": "PV software overcurrent protection",
+              "pv_transient_software_overcurrent": "PV transient software overcurrent",
+              "pv_undervoltage": "PV undervoltage",
+              "pv_uneven_flow_fault": "PV uneven current fault",
+              "relay_detection_failure": "Relay detection failure",
+              "relay_permanent_failure": "Relay permanent failure",
+              "remote_shutdown": "Remote shutdown",
+              "resonance_protection": "Resonance protection",
+              "rtc_clock_fault": "RTC clock fault",
+              "safety_version_error": "Safety version error",
+              "sci_error_ac": "SCI error (AC)",
+              "sci_error_dc": "SCI error (DC)",
+              "sci_error_fuse": "SCI error (fuse)",
+              "serial_number_error": "Serial number error",
+              "serial_number_model_error": "Serial number model error",
+              "software_version_inconsistency": "Software version inconsistency",
+              "spi_communication_error_ac": "SPI communication error (AC)",
+              "spi_communication_error_dc": "SPI communication error (DC)",
+              "string_fuse_open_circuit_10_1": "String 10 fuse 1 open circuit",
+              "string_fuse_open_circuit_10_2": "String 10 fuse 2 open circuit",
+              "string_fuse_open_circuit_11_1": "String 11 fuse 1 open circuit",
+              "string_fuse_open_circuit_11_2": "String 11 fuse 2 open circuit",
+              "string_fuse_open_circuit_12_1": "String 12 fuse 1 open circuit",
+              "string_fuse_open_circuit_12_2": "String 12 fuse 2 open circuit",
+              "string_fuse_open_circuit_13_1": "String 13 fuse 1 open circuit",
+              "string_fuse_open_circuit_13_2": "String 13 fuse 2 open circuit",
+              "string_fuse_open_circuit_14_1": "String 14 fuse 1 open circuit",
+              "string_fuse_open_circuit_14_2": "String 14 fuse 2 open circuit",
+              "string_fuse_open_circuit_15_1": "String 15 fuse 1 open circuit",
+              "string_fuse_open_circuit_15_2": "String 15 fuse 2 open circuit",
+              "string_fuse_open_circuit_16_1": "String 16 fuse 1 open circuit",
+              "string_fuse_open_circuit_16_2": "String 16 fuse 2 open circuit",
+              "string_fuse_open_circuit_1_1": "String 1 fuse 1 open circuit",
+              "string_fuse_open_circuit_1_2": "String 1 fuse 2 open circuit",
+              "string_fuse_open_circuit_2_1": "String 2 fuse 1 open circuit",
+              "string_fuse_open_circuit_2_2": "String 2 fuse 2 open circuit",
+              "string_fuse_open_circuit_3_1": "String 3 fuse 1 open circuit",
+              "string_fuse_open_circuit_3_2": "String 3 fuse 2 open circuit",
+              "string_fuse_open_circuit_4_1": "String 4 fuse 1 open circuit",
+              "string_fuse_open_circuit_4_2": "String 4 fuse 2 open circuit",
+              "string_fuse_open_circuit_5_1": "String 5 fuse 1 open circuit",
+              "string_fuse_open_circuit_5_2": "String 5 fuse 2 open circuit",
+              "string_fuse_open_circuit_6_1": "String 6 fuse 1 open circuit",
+              "string_fuse_open_circuit_6_2": "String 6 fuse 2 open circuit",
+              "string_fuse_open_circuit_7_1": "String 7 fuse 1 open circuit",
+              "string_fuse_open_circuit_7_2": "String 7 fuse 2 open circuit",
+              "string_fuse_open_circuit_8_1": "String 8 fuse 1 open circuit",
+              "string_fuse_open_circuit_8_2": "String 8 fuse 2 open circuit",
+              "string_fuse_open_circuit_9_1": "String 9 fuse 1 open circuit",
+              "string_fuse_open_circuit_9_2": "String 9 fuse 2 open circuit",
+              "sudden_grid_phase_change": "Grid phase jump",
+              "usb_fault": "USB fault",
+              "voltage_down_load": "Voltage derating",
+              "voltage_loading": "Voltage load increase",
+              "wave_by_wave_current_limit": "Wave-by-wave current limit",
+              "weak_light_detection_failure": "Low light detection failure",
+              "wifi_fault": "Wi-Fi fault",
+              "wrong_input_mode_setting": "Wrong input mode setting"
+            }
+          },
+          "fault_id": {
+            "name": "Fault ID"
+          },
+          "occurred_at": {
+            "name": "Occurred at"
+          }
+        }
+      }
+    },
+    "select": {
+      "charger_use_mode": {
+        "name": "Charger use mode",
+        "state": {
+          "feed_in_priority_mode": "Feed-in priority mode",
+          "generator_mode": "Generator mode",
+          "off_grid_mode": "Off-grid mode",
+          "passive_mode": "Passive mode",
+          "peak_cut_mode": "Peak cut mode",
+          "self_use": "Self use",
+          "time_of_use": "Time of use",
+          "timing_mode": "Timing mode"
+        }
+      },
+      "eps_control": {
+        "name": "EPS mode",
+        "state": {
+          "turn_off": "Turn off",
+          "turn_on_enable_cold_start": "Turn on, enable cold start",
+          "turn_on_prohibit_cold_start": "Turn on, prohibit cold start"
+        }
+      }
+    },
+    "sensor": {
+      "active_power_export_limit": {
+        "name": "Active power limit"
+      },
+      "active_power_load_sys": {
+        "name": "Active power load system"
+      },
+      "active_power_offgrid_total": {
+        "name": "Active power off-grid total"
+      },
+      "active_power_output_l1": {
+        "name": "Active power output L1"
+      },
+      "active_power_output_l1n": {
+        "name": "Active power output L1N"
+      },
+      "active_power_output_l2": {
+        "name": "Active power output L2"
+      },
+      "active_power_output_l2n": {
+        "name": "Active power output L2N"
+      },
+      "active_power_output_l3": {
+        "name": "Active power output L3"
+      },
+      "active_power_output_total": {
+        "name": "Active power output total"
+      },
+      "active_power_pcc_l1": {
+        "name": "Active power PCC L1"
+      },
+      "active_power_pcc_l1n": {
+        "name": "Active power PCC L1N"
+      },
+      "active_power_pcc_l2": {
+        "name": "Active power PCC L2"
+      },
+      "active_power_pcc_l2n": {
+        "name": "Active power PCC L2N"
+      },
+      "active_power_pcc_l3": {
+        "name": "Active power PCC L3"
+      },
+      "active_power_pcc_total": {
+        "name": "Active power PCC total"
+      },
+      "active_power_pv_ext": {
+        "name": "Active power PV external"
+      },
+      "apparent_power_offgrid_total": {
+        "name": "Apparent power off-grid total"
+      },
+      "apparent_power_output_total": {
+        "name": "Apparent power output total"
+      },
+      "apparent_power_pcc_total": {
+        "name": "Apparent power PCC total"
+      },
+      "bat_config_capacity": {
+        "name": "Battery config capacity"
+      },
+      "bat_config_cell_type": {
+        "name": "Battery config cell type",
+        "state": {
+          "agm": "AGM",
+          "flooded": "Flooded",
+          "gel": "Gel",
+          "lead_acid": "Lead acid",
+          "lithium_iron_phosphate": "Lithium iron phosphate",
+          "lithium_titanate": "Lithium titanate",
+          "ternary": "Ternary"
+        }
+      },
+      "bat_config_charge_cutoff_soc": {
+        "name": "Charge cut-off state of charge"
+      },
+      "bat_config_charging_voltage": {
+        "name": "Battery config charging voltage"
+      },
+      "bat_config_depth_of_discharge": {
+        "name": "Battery config depth of discharge"
+      },
+      "bat_config_end_of_discharge": {
+        "name": "Battery config end of discharge"
+      },
+      "bat_config_eps_buffer": {
+        "name": "Battery config EPS buffer"
+      },
+      "bat_config_maximum_charge_current_limit": {
+        "name": "Battery config maximum charge current limit"
+      },
+      "bat_config_maximum_discharge_current_limit": {
+        "name": "Battery config maximum discharge current limit"
+      },
+      "bat_config_minimum_discharge_voltage": {
+        "name": "Battery config minimum discharge voltage"
+      },
+      "bat_config_overvoltage_protection": {
+        "name": "Battery config overvoltage protection"
+      },
+      "bat_config_protocol": {
+        "name": "Battery config protocol",
+        "state": {
+          "alphaess": "AlphaESS",
+          "amass": "Amass",
+          "bts_5k": "BTS 5K",
+          "catl": "CATL",
+          "ems": "EMS",
+          "first_flight_built_in_bms_default": "First Flight built-in BMS (default)",
+          "first_flight_protocol_general": "First Flight protocol (general)",
+          "fronus": "Fronus",
+          "lg": "LG",
+          "move_for": "Move For",
+          "nilar": "Nilar",
+          "pie_energy_protocol_pylon": "Pie Energy protocol (Pylon)",
+          "weco": "WeCo"
+        }
+      },
+      "bat_config_rated_battery_voltage": {
+        "name": "Battery config rated voltage"
+      },
+      "bat_config_tempco": {
+        "name": "Battery config lead acid temperature compensation factor"
+      },
+      "bat_config_undervoltage_protection": {
+        "name": "Battery config undervoltage protection"
+      },
+      "bat_config_voltage_float": {
+        "name": "Battery config lead acid float voltage"
+      },
+      "battery_input_energy_today": {
+        "name": "Battery input energy today"
+      },
+      "battery_input_energy_total": {
+        "name": "Battery input energy total"
+      },
+      "battery_output_energy_today": {
+        "name": "Battery output energy today"
+      },
+      "battery_output_energy_total": {
+        "name": "Battery output energy total"
+      },
+      "battery_power_total": {
+        "name": "Battery power total"
+      },
+      "battery_state_of_charge_total": {
+        "name": "Battery state of charge total"
+      },
+      "battery_state_of_health_total": {
+        "name": "Battery state of health total"
+      },
+      "charge_cycle": {
+        "name": "Charge cycle"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "current_output_l1": {
+        "name": "Current output L1"
+      },
+      "current_output_l1n": {
+        "name": "Current output L1N"
+      },
+      "current_output_l2": {
+        "name": "Current output L2"
+      },
+      "current_output_l2n": {
+        "name": "Current output L2N"
+      },
+      "current_output_l3": {
+        "name": "Current output L3"
+      },
+      "current_pcc_l1": {
+        "name": "Current PCC L1"
+      },
+      "current_pcc_l1n": {
+        "name": "Current PCC L1N"
+      },
+      "current_pcc_l2": {
+        "name": "Current PCC L2"
+      },
+      "current_pcc_l2n": {
+        "name": "Current PCC L2N"
+      },
+      "current_pcc_l3": {
+        "name": "Current PCC L3"
+      },
+      "export_energy_today": {
+        "name": "Export energy today"
+      },
+      "export_energy_total": {
+        "name": "Export energy total"
+      },
+      "feedin_limitation_mode": {
+        "name": "Feed-in limitation mode",
+        "state": {
+          "disabled": "[%key:component::sofar::selector::feedin_limitation_mode::options::disabled%]",
+          "enabled_3_phase_limit": "[%key:component::sofar::selector::feedin_limitation_mode::options::enabled_3_phase_limit%]",
+          "enabled_feed_in_limitation": "[%key:component::sofar::selector::feedin_limitation_mode::options::enabled_feed_in_limitation%]"
+        }
+      },
+      "feedin_max_power": {
+        "name": "Feed-in maximum power"
+      },
+      "grid_frequency": {
+        "name": "Grid frequency"
+      },
+      "heatsink_temperature_1": {
+        "name": "Heatsink temperature 1"
+      },
+      "heatsink_temperature_2": {
+        "name": "Heatsink temperature 2"
+      },
+      "import_energy_today": {
+        "name": "Import energy today"
+      },
+      "import_energy_total": {
+        "name": "Import energy total"
+      },
+      "inverter_temperature_1": {
+        "name": "Inverter temperature 1"
+      },
+      "inverter_temperature_2": {
+        "name": "Inverter temperature 2"
+      },
+      "load_consumption_today": {
+        "name": "Load consumption today"
+      },
+      "load_consumption_total": {
+        "name": "Load consumption total"
+      },
+      "module_temperature_1": {
+        "name": "Module temperature 1"
+      },
+      "module_temperature_2": {
+        "name": "Module temperature 2"
+      },
+      "off_grid_discharge_cutoff_soc": {
+        "name": "Off-grid discharge cut-off state of charge"
+      },
+      "off_grid_recovery_soc": {
+        "name": "Off-grid discharge recovery state of charge"
+      },
+      "offgrid_active_power_output": {
+        "name": "Off-grid active power output"
+      },
+      "offgrid_active_power_output_l1": {
+        "name": "Off-grid active power output L1"
+      },
+      "offgrid_active_power_output_l1n": {
+        "name": "Off-grid active power output L1N"
+      },
+      "offgrid_active_power_output_l2": {
+        "name": "Off-grid active power output L2"
+      },
+      "offgrid_active_power_output_l2n": {
+        "name": "Off-grid active power output L2N"
+      },
+      "offgrid_active_power_output_l3": {
+        "name": "Off-grid active power output L3"
+      },
+      "offgrid_apparent_power_output": {
+        "name": "Off-grid apparent power output"
+      },
+      "offgrid_apparent_power_output_l1": {
+        "name": "Off-grid apparent power output L1"
+      },
+      "offgrid_apparent_power_output_l2": {
+        "name": "Off-grid apparent power output L2"
+      },
+      "offgrid_apparent_power_output_l3": {
+        "name": "Off-grid apparent power output L3"
+      },
+      "offgrid_current_output": {
+        "name": "Off-grid current output"
+      },
+      "offgrid_current_output_l1": {
+        "name": "Off-grid current output L1"
+      },
+      "offgrid_current_output_l1n": {
+        "name": "Off-grid current output L1N"
+      },
+      "offgrid_current_output_l2": {
+        "name": "Off-grid current output L2"
+      },
+      "offgrid_current_output_l2n": {
+        "name": "Off-grid current output L2N"
+      },
+      "offgrid_current_output_l3": {
+        "name": "Off-grid current output L3"
+      },
+      "offgrid_frequency": {
+        "name": "Off-grid frequency"
+      },
+      "offgrid_load_peak_ratio": {
+        "name": "Off-grid load peak ratio"
+      },
+      "offgrid_load_peak_ratio_l1": {
+        "name": "Off-grid load peak ratio L1"
+      },
+      "offgrid_load_peak_ratio_l2": {
+        "name": "Off-grid load peak ratio L2"
+      },
+      "offgrid_load_peak_ratio_l3": {
+        "name": "Off-grid load peak ratio L3"
+      },
+      "offgrid_reactive_power_output": {
+        "name": "Off-grid reactive power output"
+      },
+      "offgrid_reactive_power_output_l1": {
+        "name": "Off-grid reactive power output L1"
+      },
+      "offgrid_reactive_power_output_l2": {
+        "name": "Off-grid reactive power output L2"
+      },
+      "offgrid_reactive_power_output_l3": {
+        "name": "Off-grid reactive power output L3"
+      },
+      "offgrid_voltage": {
+        "name": "Off-grid voltage"
+      },
+      "offgrid_voltage_l1": {
+        "name": "Off-grid voltage L1"
+      },
+      "offgrid_voltage_l2": {
+        "name": "Off-grid voltage L2"
+      },
+      "offgrid_voltage_l3": {
+        "name": "Off-grid voltage L3"
+      },
+      "offgrid_voltage_output_l1n": {
+        "name": "Off-grid voltage output L1N"
+      },
+      "offgrid_voltage_output_l2n": {
+        "name": "Off-grid voltage output L2N"
+      },
+      "on_grid_discharge_cutoff_soc": {
+        "name": "On-grid discharge cut-off state of charge"
+      },
+      "passive_eps_wait_time": {
+        "name": "EPS wait time"
+      },
+      "passive_mode_battery_power_max": {
+        "name": "Passive mode maximum battery power"
+      },
+      "passive_mode_battery_power_min": {
+        "name": "Passive mode minimum battery power"
+      },
+      "passive_mode_grid_power": {
+        "name": "Passive mode grid power"
+      },
+      "passive_mode_timeout": {
+        "name": "Passive mode timeout"
+      },
+      "passive_mode_timeout_action": {
+        "name": "Passive mode timeout action",
+        "state": {
+          "force_standby": "[%key:component::sofar::selector::passive_mode_timeout_action::options::force_standby%]",
+          "return_to_previous_mode": "[%key:component::sofar::selector::passive_mode_timeout_action::options::return_to_previous_mode%]"
+        }
+      },
+      "power": {
+        "name": "Power"
+      },
+      "power_factor_output_l1": {
+        "name": "Power factor output L1"
+      },
+      "power_factor_output_l2": {
+        "name": "Power factor output L2"
+      },
+      "power_factor_output_l3": {
+        "name": "Power factor output L3"
+      },
+      "power_factor_pcc_l1": {
+        "name": "Power factor PCC L1"
+      },
+      "power_factor_pcc_l2": {
+        "name": "Power factor PCC L2"
+      },
+      "power_factor_pcc_l3": {
+        "name": "Power factor PCC L3"
+      },
+      "pv_power_total": {
+        "name": "PV power total"
+      },
+      "reactive_power_offgrid_total": {
+        "name": "Reactive power off-grid total"
+      },
+      "reactive_power_output_l1": {
+        "name": "Reactive power output L1"
+      },
+      "reactive_power_output_l2": {
+        "name": "Reactive power output L2"
+      },
+      "reactive_power_output_l3": {
+        "name": "Reactive power output L3"
+      },
+      "reactive_power_output_total": {
+        "name": "Reactive power output total"
+      },
+      "reactive_power_pcc_l1": {
+        "name": "Reactive power PCC L1"
+      },
+      "reactive_power_pcc_l2": {
+        "name": "Reactive power PCC L2"
+      },
+      "reactive_power_pcc_l3": {
+        "name": "Reactive power PCC L3"
+      },
+      "reactive_power_pcc_total": {
+        "name": "Reactive power PCC total"
+      },
+      "solar_generation_today": {
+        "name": "Solar generation today"
+      },
+      "solar_generation_total": {
+        "name": "Solar generation total"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "state_of_health": {
+        "name": "State of health"
+      },
+      "sync_rtc_result": {
+        "name": "Update system time operation result",
+        "state": {
+          "disabled": "Disabled",
+          "enabled_discharging": "Enabled discharging",
+          "operation_failed_controller_refused_to_respond": "Operation failed: controller refused to respond",
+          "operation_failed_current_function_disabled": "Operation failed: current function disabled",
+          "operation_failed_input_parameters_incorrect": "Operation failed: input parameters incorrect",
+          "operation_failed_no_response_from_the_controller": "Operation failed: no response from the controller",
+          "operation_failed_parameter_access_failed": "Operation failed: parameter access failed",
+          "operation_in_progress": "Operation in progress",
+          "successful": "Successful"
+        }
+      },
+      "system_state": {
+        "name": "System state",
+        "state": {
+          "checking": "Checking",
+          "emergency_power_supply": "Emergency power supply",
+          "grid_connected": "Grid connected",
+          "permanent_fault": "Permanent fault",
+          "pid_state": "PID",
+          "recoverable_fault": "Recoverable fault",
+          "self_charging": "Self charging",
+          "svg_state": "SVG",
+          "upgrading": "Upgrading",
+          "waiting": "Waiting"
+        }
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage L3"
+      },
+      "voltage_line_l1": {
+        "name": "Voltage line L1"
+      },
+      "voltage_line_l2": {
+        "name": "Voltage line L2"
+      },
+      "voltage_line_l3": {
+        "name": "Voltage line L3"
+      },
+      "voltage_phase_l1n": {
+        "name": "Voltage phase L1N"
+      },
+      "voltage_phase_l2n": {
+        "name": "Voltage phase L2N"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_action_value": {
+      "message": "The provided value is not valid for this action."
+    },
+    "max_power_not_a_multiple_of_100": {
+      "message": "Maximum power must be a multiple of 100 W."
+    },
+    "modbus_error": {
+      "message": "Error communicating with the inverter."
+    },
+    "no_component_answered": {
+      "message": "No component answered."
+    },
+    "unrecognized_inverter_model": {
+      "message": "Neither the serial number nor the register masks identify the Sofar inverter model."
+    },
+    "unsupported_action": {
+      "message": "{title} does not support this action."
+    },
+    "write_failed": {
+      "message": "Failed to write to the inverter."
+    }
+  },
+  "selector": {
+    "feedin_limitation_mode": {
+      "options": {
+        "disabled": "Disabled",
+        "enabled_3_phase_limit": "Enabled, three-phase limit",
+        "enabled_feed_in_limitation": "Enabled"
+      }
+    },
+    "passive_mode_timeout_action": {
+      "options": {
+        "force_standby": "Force standby",
+        "return_to_previous_mode": "Return to previous mode"
+      }
+    }
+  },
+  "services": {
+    "set_active_power_limit": {
+      "description": "Caps the inverter's own output as a percentage of its rated power, which is the power rating on the inverter's nameplate, usually also in its model name.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "enabled": {
+          "description": "Whether the inverter applies the limit. Limit is required either way: disabling still writes it, but the device ignores it until re-enabled.",
+          "name": "Enabled"
+        },
+        "limit": {
+          "description": "The output ceiling, as a percentage of rated power. On a 4.4 kW inverter, 50% caps it at 2.2 kW.",
+          "name": "Limit"
+        }
+      },
+      "name": "Set active power limit"
+    },
+    "set_feed_in_limit": {
+      "description": "Limits how much power the inverter exports to the grid.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "max_power": {
+          "description": "The export ceiling in watts. The inverter only accepts multiples of 100 W.",
+          "name": "Maximum power"
+        },
+        "mode": {
+          "description": "Whether to limit the total exported power, or per phase.",
+          "name": "Mode"
+        }
+      },
+      "name": "Set feed-in limit"
+    },
+    "set_passive_mode_power": {
+      "description": "Commands the passive-mode setpoints. Only for inverters with battery storage.",
+      "fields": {
+        "battery_power_max": {
+          "description": "The upper end of the battery power window.",
+          "name": "Maximum battery power"
+        },
+        "battery_power_min": {
+          "description": "The lower end of the battery power window.",
+          "name": "Minimum battery power"
+        },
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "grid_power": {
+          "description": "The power to draw from the grid, or to export when negative.",
+          "name": "Grid power"
+        }
+      },
+      "name": "Set passive mode power"
+    },
+    "set_passive_mode_timeout": {
+      "description": "Sets how long a passive-mode command holds, and what the inverter does when it expires. Only for inverters with battery storage.",
+      "fields": {
+        "action": {
+          "description": "What the inverter does once the timeout expires.",
+          "name": "Timeout action"
+        },
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "timeout": {
+          "description": "How long a passive-mode command holds, in seconds.",
+          "name": "Timeout"
+        }
+      },
+      "name": "Set passive mode timeout"
+    }
+  }
+}

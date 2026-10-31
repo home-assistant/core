@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from fullykiosk import FullyKioskError
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.sensor import (
@@ -21,8 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensors_sensors(

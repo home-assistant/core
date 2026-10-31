@@ -6,10 +6,14 @@ from typing import Any
 
 from pyheos import HeosError
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import ATTR_PASSWORD, ATTR_USERNAME, DOMAIN
 from .coordinator import HeosConfigEntry
@@ -66,7 +70,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: HeosConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: HeosConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     entity_registry = er.async_get(hass)
@@ -76,10 +80,10 @@ async def async_get_device_diagnostics(
     )
     player = config_entry.runtime_data.heos.players.get(player_id)
     return {
-        "device": async_redact_data(device.dict_repr, TO_REDACT),
+        "device": async_redact_data(device_entry_as_dict(device), TO_REDACT),
         "entities": [
             {
-                "entity": entity.as_partial_dict,
+                "entity": entity_entry_as_dict(entity),
                 "state": state.as_dict()
                 if (state := hass.states.get(entity.entity_id))
                 else None,

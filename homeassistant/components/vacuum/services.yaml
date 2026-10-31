@@ -1,27 +1,5 @@
 # Describes the format for available vacuum services
 
-turn_on:
-  target:
-    entity:
-      domain: vacuum
-      supported_features:
-        - vacuum.VacuumEntityFeature.TURN_ON
-
-turn_off:
-  target:
-    entity:
-      domain: vacuum
-      supported_features:
-        - vacuum.VacuumEntityFeature.TURN_OFF
-
-toggle:
-  target:
-    entity:
-      domain: vacuum
-      supported_features:
-        - vacuum.VacuumEntityFeature.TURN_OFF
-        - vacuum.VacuumEntityFeature.TURN_ON
-
 stop:
   target:
     entity:
@@ -35,13 +13,6 @@ locate:
       domain: vacuum
       supported_features:
         - vacuum.VacuumEntityFeature.LOCATE
-
-start_pause:
-  target:
-    entity:
-      domain: vacuum
-      supported_features:
-        - vacuum.VacuumEntityFeature.PAUSE
 
 start:
   target:

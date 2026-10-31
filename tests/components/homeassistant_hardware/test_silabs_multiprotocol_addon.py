@@ -8,18 +8,7 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
 from aiohttp import ClientError
 import pytest
-
-from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
-from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult, FlowResultType
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import ATTR_COMPONENT
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockPlatform,
     flush_store,
@@ -27,6 +16,17 @@ from tests.common import (
     mock_config_flow,
     mock_platform,
 )
+
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
+from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
+from homeassistant.components.homeassistant_hardware.util import FlasherType
+from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import ATTR_COMPONENT
 
 TEST_DOMAIN = "test"
 TEST_DOMAIN_2 = "test_2"
@@ -106,9 +106,9 @@ class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
         return "test_zigbee_ncp"
 
     @property
-    def _flasher_cls(self) -> type:
-        """Return the hardware-specific flasher class."""
-        return Mock
+    def _flasher_type(self) -> FlasherType:
+        """Return the hardware-specific flasher type."""
+        return FlasherType.ZBT1
 
 
 @pytest.fixture(autouse=True)
@@ -200,7 +200,7 @@ def mock_multiprotocol_platform(
 
 
 def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
+    """Get suggested value for key in probatio schema."""
     for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:

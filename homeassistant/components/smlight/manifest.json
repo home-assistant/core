@@ -1,6 +1,7 @@
 {
   "domain": "smlight",
   "name": "SMLIGHT SLZB",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@tl-sl"],
   "config_flow": true,
   "dependencies": ["bluetooth"],

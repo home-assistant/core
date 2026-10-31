@@ -5,14 +5,13 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aqualogic import AquaLogicProcessor
 from homeassistant.components.aqualogic.const import DOMAIN, UPDATE_TOPIC
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

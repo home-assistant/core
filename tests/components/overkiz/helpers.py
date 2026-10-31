@@ -6,6 +6,8 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import DataType, EventName, ExecutionState
 from pyoverkiz.models import (
+    Action,
+    Command,
     DeviceAvailableEvent,
     DeviceCreatedEvent,
     DeviceRemovedEvent,
@@ -13,15 +15,17 @@ from pyoverkiz.models import (
     DeviceUnavailableEvent,
     Event,
     EventState,
+    ExecutionRegisteredEvent,
     ExecutionStateChangedEvent,
+    GatewayAliveEvent,
+    GatewayDownEvent,
 )
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.overkiz.const import UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockOverkizClient
-
-from tests.common import async_fire_time_changed
 
 
 def assert_command_call(
@@ -103,6 +107,24 @@ def device_created_event(device_url: str) -> DeviceCreatedEvent:
     return DeviceCreatedEvent(name=EventName.DEVICE_CREATED, device_url=device_url)
 
 
+def execution_registered_event(
+    exec_id: str,
+    device_url: str,
+    command_name: str,
+    *,
+    label: str = "Home Assistant",
+    source: str | None = None,
+) -> ExecutionRegisteredEvent:
+    """Build an EXECUTION_REGISTERED event for a single device command."""
+    return ExecutionRegisteredEvent(
+        name=EventName.EXECUTION_REGISTERED,
+        exec_id=exec_id,
+        label=label,
+        source=source,
+        actions=[Action(device_url=device_url, commands=[Command(name=command_name)])],
+    )
+
+
 def execution_state_changed_event(
     exec_id: str, new_state: ExecutionState, old_state: ExecutionState
 ) -> ExecutionStateChangedEvent:
@@ -113,6 +135,16 @@ def execution_state_changed_event(
         new_state=new_state,
         old_state=old_state,
     )
+
+
+def gateway_down_event(gateway_id: str) -> GatewayDownEvent:
+    """Build a GATEWAY_DOWN event for the given gateway."""
+    return GatewayDownEvent(name=EventName.GATEWAY_DOWN, gateway_id=gateway_id)
+
+
+def gateway_alive_event(gateway_id: str) -> GatewayAliveEvent:
+    """Build a GATEWAY_ALIVE event for the given gateway."""
+    return GatewayAliveEvent(name=EventName.GATEWAY_ALIVE, gateway_id=gateway_id)
 
 
 async def async_deliver_events(

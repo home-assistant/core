@@ -14,7 +14,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .const import CONF_STATION_NUMBER, DOMAIN, SUBENTRY_TYPE_STATION
 from .coordinator import WAQIConfigEntry, WAQIDataUpdateCoordinator
@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> None:
     """Set up World Air Quality Index (WAQI) from a config entry."""
 
     client = WAQIClient(session=async_get_clientsession(hass))
@@ -48,17 +48,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_update_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> None:
     """Update entry."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WAQIConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:
@@ -129,7 +127,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # The device registry will set the disabled_by flag to None when
             # moving a device disabled by CONFIG_ENTRY to an enabled config
             # entry, but we want to set it to USER instead.
-            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
+            device_disabled_by: dr.DeviceEntryDisabler | Undefined = Undefined
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled

@@ -36,9 +36,8 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
-    comment: |
-      This integration is read-only and doesn't provide any actions.
+    status: todo
+    comment: get_forecast action returns an empty list instead of raising when no data is available
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo

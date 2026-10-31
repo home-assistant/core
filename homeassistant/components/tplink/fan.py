@@ -22,8 +22,8 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import TPLinkConfigEntry, legacy_device_id
-from .coordinator import TPLinkDataUpdateCoordinator
+from . import legacy_device_id
+from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
     TPLinkModuleEntityDescription,

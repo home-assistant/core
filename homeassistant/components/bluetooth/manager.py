@@ -21,6 +21,7 @@ from habluetooth import (
     BluetoothScanningMode,
     HaScanner,
 )
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -55,12 +56,7 @@ from .match import (
     IntegrationMatcher,
     ble_device_matches,
 )
-from .models import (
-    BluetoothCallback,
-    BluetoothCallbackReplay,
-    BluetoothChange,
-    BluetoothServiceInfoBleak,
-)
+from .models import BluetoothCallback, BluetoothCallbackReplay, BluetoothChange
 from .storage import BluetoothStorage
 from .util import async_load_history_from_system
 
@@ -180,11 +176,10 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     def _address_disappeared(self, address: str) -> None:
         """Dismiss all discoveries for the given address."""
         self._integration_matcher.async_clear_address(address)
-        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+        self.hass.config_entries.flow.async_dismiss_discovery_flows(
             BluetoothServiceInfoBleak,
             lambda service_info: bool(service_info.address == address),
-        ):
-            self.hass.config_entries.flow.async_abort(flow["flow_id"])
+        )
 
     @override
     async def async_setup(self) -> None:
@@ -407,6 +402,14 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self.async_check_scanning_mode(scanner)
 
     @hass_callback
+    def _async_scanner_config_entry_id(self, scanner: HaScanner) -> str | None:
+        """Return the id of the config entry owning a local scanner."""
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, scanner.source
+        )
+        return entry.entry_id if entry else None
+
+    @hass_callback
     def async_check_scanning_mode(self, scanner: HaScanner) -> None:
         """Check if scanner is in passive mode when active is requested."""
         passive_mode_issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
@@ -445,6 +448,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                 "adapter": adapter_name,
                 "model": model or "Unknown",
             },
+            config_entry_id=self._async_scanner_config_entry_id(scanner),
         )
 
     @hass_callback
@@ -485,4 +489,5 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                 "model": model or "Unknown",
                 "docs_url": "https://www.home-assistant.io/integrations/bluetooth/#additional-details-for-container",
             },
+            config_entry_id=self._async_scanner_config_entry_id(scanner),
         )

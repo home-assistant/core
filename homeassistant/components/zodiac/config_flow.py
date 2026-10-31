@@ -3,6 +3,7 @@
 from typing import Any, override
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -18,7 +19,10 @@ class ZodiacConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         if user_input is not None:
             return self.async_create_entry(title=DEFAULT_NAME, data={})

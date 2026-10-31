@@ -1,6 +1,6 @@
 """Tests for sensor platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
@@ -10,20 +10,26 @@ from aioautomower.model import (
     MowerModes,
     MowerStates,
     RestrictedReasons,
+    WorkArea,
+    WorkAreaType,
 )
+from aioautomower.model.model_mower import UNKNOWN_ERROR
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensor_unknown_states(
@@ -63,7 +69,7 @@ async def test_cutting_blade_usage_time_sensor(
 
 
 @pytest.mark.freeze_time(
-    datetime.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
+    dt.datetime(2023, 6, 5, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))
 )
 async def test_next_start_sensor(
     hass: HomeAssistant,
@@ -144,6 +150,68 @@ async def test_work_area_sensor(
         assert state.state == STATE_UNAVAILABLE
 
 
+async def test_work_area_sensor_creation(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
+) -> None:
+    """Test the work area sensor depending on mower pattern."""
+    values[TEST_MOWER_ID].work_area_names.append("new systematic work area")
+    values[TEST_MOWER_ID].work_area_dict.update({1: "new systematic work area"})
+    values[TEST_MOWER_ID].work_areas.update(
+        {
+            1: WorkArea(
+                name="new systematic work area",
+                cutting_height=12,
+                enabled=True,
+                type=WorkAreaType.SYSTEMATIC,
+                use_global_cutting_height=False,
+            )
+        }
+    )
+    mock_automower_client.get_status.return_value = values
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(
+        "sensor.garden_test_mower_1_new_systematic_work_area_progress"
+    )
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get(
+        "sensor.garden_test_mower_1_new_systematic_work_area_last_time_completed"
+    )
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    values[TEST_MOWER_ID].work_area_names.append("new random work area")
+    values[TEST_MOWER_ID].work_area_dict.update({2: "new random work area"})
+    values[TEST_MOWER_ID].work_areas.update(
+        {
+            2: WorkArea(
+                name="new random work area",
+                cutting_height=12,
+                enabled=True,
+                type=WorkAreaType.RANDOM,
+                use_global_cutting_height=False,
+            )
+        }
+    )
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.garden_test_mower_1_new_random_work_area_progress")
+    assert state is None
+    state = hass.states.get(
+        "sensor.garden_test_mower_1_new_random_work_area_last_time_completed"
+    )
+    assert state is None
+
+
 async def test_restricted_reason_sensor(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
@@ -222,9 +290,11 @@ async def test_error_sensor(
     for state, error_key, expected_state in (
         (MowerStates.IN_OPERATION, None, "no_error"),
         (MowerStates.ERROR, "can_error", "can_error"),
+        (MowerStates.ERROR, "destination_blocked", "destination_blocked"),
         (MowerStates.ERROR, None, MowerStates.ERROR.lower()),
         (MowerStates.ERROR_AT_POWER_UP, None, MowerStates.ERROR_AT_POWER_UP.lower()),
         (MowerStates.FATAL_ERROR, None, MowerStates.FATAL_ERROR.lower()),
+        (MowerStates.ERROR, UNKNOWN_ERROR, STATE_UNKNOWN),
     ):
         values[TEST_MOWER_ID].mower.state = state
         values[TEST_MOWER_ID].mower.error_key = error_key
@@ -233,6 +303,7 @@ async def test_error_sensor(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         state = hass.states.get("sensor.garden_test_mower_1_error")
+        assert state is not None
         assert state.state == expected_state
 
 

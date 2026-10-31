@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homeworks.const import (
     CONF_ADDR,
@@ -24,8 +25,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_OPTIONS = {
     CONF_CONTROLLER_ID: "main_controller",
@@ -125,6 +124,6 @@ def mock_homeworks() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.homeworks.async_setup_entry", return_value=True
+        "homeassistant.components.homeworks.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

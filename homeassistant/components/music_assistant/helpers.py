@@ -5,18 +5,25 @@ from contextlib import contextmanager
 import functools
 from typing import TYPE_CHECKING, Any
 
+from music_assistant_client.helpers import LinkedUser
+from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.errors import MusicAssistantError, UserNotFoundError
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from .const import DOMAIN
+from .const import DASHBOARD_ID_PREFIX, DOMAIN
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
 
     from . import MusicAssistantConfigEntry
+
+
+def dashboard_identifier(dashboard_id: str) -> str:
+    """Return the device identifier and entity unique id of a dashboard display."""
+    return f"{DASHBOARD_ID_PREFIX}{dashboard_id}"
 
 
 def catch_musicassistant_error[**_P, _R](
@@ -50,6 +57,18 @@ def catch_user_not_found(username: str | None) -> Generator[None]:
             translation_key="invalid_username",
             translation_placeholders={"username": username},
         ) from err
+
+
+def user_from_context(context: Context | None) -> LinkedUser | None:
+    """Return the Music Assistant user to act as for the Home Assistant caller."""
+    if context is None or context.user_id is None:
+        return None
+    # required=False: fall back to the default account if the user has no link
+    return LinkedUser(
+        provider=AuthProviderType.HOME_ASSISTANT,
+        user_id=context.user_id,
+        required=False,
+    )
 
 
 @callback

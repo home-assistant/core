@@ -1,0 +1,74 @@
+"""Base entity for the Binary sensor platform."""
+
+from typing import final, override
+
+from propcache.api import cached_property
+
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import Entity, EntityDescription
+
+from .const import BinarySensorDeviceClass
+
+
+class BinarySensorEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes binary sensor entities."""
+
+    device_class: BinarySensorDeviceClass | None = None
+
+
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+    "is_on",
+}
+
+
+class BinarySensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
+    """Represent a binary sensor."""
+
+    entity_description: BinarySensorEntityDescription
+    _attr_device_class: BinarySensorDeviceClass | None
+    _attr_is_on: bool | None = None
+    _attr_state: None = None
+
+    @override
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the binary sensor entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if self.entity_category == EntityCategory.CONFIG:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added as"
+                " the entity category is set to config"
+            )
+
+    @override
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For binary sensors this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
+    @cached_property
+    @override
+    def device_class(self) -> BinarySensorDeviceClass | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
+
+    @cached_property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        return self._attr_is_on
+
+    @final
+    @property
+    @override
+    def state(self) -> str | None:
+        """Return the state of the binary sensor."""
+        if (is_on := self.is_on) is None:
+            return None
+        return STATE_ON if is_on else STATE_OFF

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiohttp.client_exceptions import ServerTimeoutError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bang_olufsen import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .const import TEST_FRIENDLY_NAME, TEST_MODEL_BALANCE, TEST_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

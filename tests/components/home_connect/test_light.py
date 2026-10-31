@@ -17,6 +17,7 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.home_connect.const import (
     BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
@@ -41,8 +42,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 TEST_HC_APP = "Hood"
 

@@ -1,6 +1,10 @@
 {
   "domain": "cielo_home",
   "name": "Cielo Home",
+  "categories": [
+    "climate.heat_pumps_air_conditioning",
+    "climate.thermostats_heating"
+  ],
   "codeowners": ["@ihsan-cielo", "@mudasar-cielo"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cielo_home",

@@ -6,12 +6,11 @@ from unittest.mock import patch
 from aioflo.errors import RequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
@@ -25,6 +24,13 @@ async def test_device(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    consumption_macs = {
+        call[1].query.get("macAddress")
+        for call in aioclient_mock.mock_calls
+        if call[0] == "get" and call[1].path == "/api/v2/water/consumption"
+    }
+    assert consumption_macs == {"111111111111", "1a2b3c4d5e6f"}
 
     call_count = aioclient_mock.call_count
 

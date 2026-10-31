@@ -5,15 +5,14 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
 import pytest
+from pytest_homeassistant.common import get_system_health_info, mock_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import system_health
 from homeassistant.components.system_health import DOMAIN, async_register_info
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_system_health_info, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 async def gather_system_health_info(

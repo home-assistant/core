@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from api.soma_api import SomaApi
+from pytest_homeassistant.common import MockConfigEntry
 from requests import RequestException
 
 from homeassistant.components.soma import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "123.45.67.89"
 MOCK_PORT = 3000
@@ -87,8 +86,14 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     hass.data[DOMAIN] = {}
     with patch.object(SomaApi, "list_devices", return_value={"result": "success"}):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={"host": MOCK_HOST, "port": MOCK_PORT},
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": MOCK_HOST, "port": MOCK_PORT},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY

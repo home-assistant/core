@@ -68,7 +68,7 @@
     'media_class': 'directory',
     'media_content_id': 'media-source://media_source/local/.',
     'media_content_type': '',
-    'not_shown': 1,
+    'not_shown': 2,
     'search_media_classes': None,
     'thumbnail': None,
     'title': 'media',

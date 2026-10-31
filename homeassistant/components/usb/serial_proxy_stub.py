@@ -4,7 +4,7 @@ from collections.abc import Buffer, Callable
 from typing import Unpack, override
 
 from serialx import BaseSerial, BaseSerialTransport, ModemPins, register_uri_handler
-from serialx.common import ConnectKwargs
+from serialx.common import ConnectKwargs, PortSettingsUpdate
 
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -21,8 +21,8 @@ class HassESPHomeSerialStub(BaseSerial):
         raise ConfigEntryNotReady(_NOT_READY)
 
     @override
-    def _configure_port(self) -> None:
-        """Configure the serial port settings."""
+    def _reconfigure_port(self, update: PortSettingsUpdate) -> None:
+        """Apply a settings update to the open port."""
 
     @override
     def _close(self) -> None:
@@ -115,6 +115,10 @@ class HassESPHomeSerialStubTransport(BaseSerialTransport):
     @override
     async def _set_modem_pins(self, modem_pins: ModemPins) -> None:
         """Set modem control bits."""
+
+    @override
+    async def _reconfigure_port(self, update: PortSettingsUpdate) -> None:
+        """Apply a settings update to the open port."""
 
 
 def register_serialx_transport() -> Callable[[Event], None]:

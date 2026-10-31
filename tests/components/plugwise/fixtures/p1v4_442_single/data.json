@@ -12,7 +12,8 @@
     "model_id": "smile",
     "name": "Smile P1",
     "notifications": {},
-    "vendor": "Plugwise"
+    "vendor": "Plugwise",
+    "wifi_mac_address": "012345670002"
   },
   "ba4de7613517478da82dd9b6abea36af": {
     "available": true,

@@ -48,6 +48,7 @@ from aioairzone.const import (
     API_SYSTEM_ID,
     API_SYSTEM_TYPE,
     API_SYSTEMS,
+    API_TEMP_STEP,
     API_THERMOS_FIRMWARE,
     API_THERMOS_RADIO,
     API_THERMOS_TYPE,
@@ -60,12 +61,11 @@ from aioairzone.const import (
     API_ZONE_ID,
     DEFAULT_SYSTEM_ID,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_HOST: "192.168.1.100",
@@ -96,6 +96,7 @@ HVAC_MOCK = {
                     API_ON: 0,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
+                    API_TEMP_STEP: 1,
                     API_SET_POINT: 19.1,
                     API_ROOM_TEMP: 19.6,
                     API_SLEEP: 0,

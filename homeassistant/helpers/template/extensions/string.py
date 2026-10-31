@@ -51,6 +51,6 @@ class StringExtension(BaseTemplateExtension):
         """Convert a string into a slug, such as what is used for entity ids."""
         return slugify_util(str(value), separator=separator)
 
-    def urlencode(self, value: Any) -> bytes:
-        """Urlencode dictionary and return as UTF-8 string."""
-        return urllib_urlencode(value).encode("utf-8")
+    def urlencode(self, value: Any) -> str:
+        """Urlencode dictionary and return as string."""
+        return urllib_urlencode(value)

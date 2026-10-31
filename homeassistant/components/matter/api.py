@@ -9,7 +9,7 @@ from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_to_dict
 from matter_server.common.models import EventType, NetworkTopology
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ActiveConnection
@@ -137,9 +137,9 @@ def async_handle_failed_command[**_P](
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/commission",
-        vol.Required("code"): str,
-        vol.Optional("network_only"): bool,
+        probatio.Required(TYPE): "matter/commission",
+        probatio.Required("code"): str,
+        probatio.Optional("network_only"): bool,
     }
 )
 @websocket_api.async_response
@@ -161,9 +161,9 @@ async def websocket_commission(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/commission_on_network",
-        vol.Required("pin"): int,
-        vol.Optional("ip_addr"): str,
+        probatio.Required(TYPE): "matter/commission_on_network",
+        probatio.Required("pin"): int,
+        probatio.Optional("ip_addr"): str,
     }
 )
 @websocket_api.async_response
@@ -185,8 +185,8 @@ async def websocket_commission_on_network(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/set_thread",
-        vol.Required("thread_operation_dataset"): str,
+        probatio.Required(TYPE): "matter/set_thread",
+        probatio.Required("thread_operation_dataset"): str,
     }
 )
 @websocket_api.async_response
@@ -208,9 +208,9 @@ async def websocket_set_thread_dataset(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/set_wifi_credentials",
-        vol.Required("network_name"): str,
-        vol.Required("password"): str,
+        probatio.Required(TYPE): "matter/set_wifi_credentials",
+        probatio.Required("network_name"): str,
+        probatio.Required("password"): str,
     }
 )
 @websocket_api.async_response
@@ -231,8 +231,8 @@ async def websocket_set_wifi_credentials(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/node_diagnostics",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "matter/node_diagnostics",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -253,8 +253,8 @@ async def websocket_node_diagnostics(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/ping_node",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "matter/ping_node",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -276,8 +276,8 @@ async def websocket_ping_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/open_commissioning_window",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "matter/open_commissioning_window",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -299,9 +299,9 @@ async def websocket_open_commissioning_window(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/remove_matter_fabric",
-        vol.Required(DEVICE_ID): str,
-        vol.Required("fabric_index"): int,
+        probatio.Required(TYPE): "matter/remove_matter_fabric",
+        probatio.Required(DEVICE_ID): str,
+        probatio.Required("fabric_index"): int,
     }
 )
 @websocket_api.async_response
@@ -325,8 +325,8 @@ async def websocket_remove_matter_fabric(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/interview_node",
-        vol.Required(DEVICE_ID): str,
+        probatio.Required(TYPE): "matter/interview_node",
+        probatio.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -384,8 +384,8 @@ def _serialize_topology(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/network_topology",
-        vol.Optional("refresh", default=False): bool,
+        probatio.Required(TYPE): "matter/network_topology",
+        probatio.Optional("refresh", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -407,7 +407,7 @@ async def websocket_network_topology(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/subscribe_network_topology",
+        probatio.Required(TYPE): "matter/subscribe_network_topology",
     }
 )
 @websocket_api.async_response

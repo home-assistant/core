@@ -1,6 +1,6 @@
 """The NZBGet integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -16,8 +16,8 @@ from .const import (
 )
 from .coordinator import NZBGetDataUpdateCoordinator
 
-SPEED_LIMIT_SCHEMA = vol.Schema(
-    {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.positive_int}
+SPEED_LIMIT_SCHEMA = probatio.Schema(
+    {probatio.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.positive_int}
 )
 
 
@@ -51,8 +51,12 @@ def set_speed(call: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration-level services."""
 
-    hass.services.async_register(DOMAIN, SERVICE_PAUSE, pause, schema=vol.Schema({}))
-    hass.services.async_register(DOMAIN, SERVICE_RESUME, resume, schema=vol.Schema({}))
+    hass.services.async_register(
+        DOMAIN, SERVICE_PAUSE, pause, schema=probatio.Schema({})
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_RESUME, resume, schema=probatio.Schema({})
+    )
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SPEED, set_speed, schema=SPEED_LIMIT_SCHEMA
     )

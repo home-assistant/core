@@ -1,11 +1,12 @@
-"""Config flow for Flow-it integration."""
+"""Config flow for AriaQ integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -42,12 +43,27 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
-class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Flow-it."""
+class AriaQConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for AriaQ."""
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovery_info: dict[str, Any] = {}
+
+    async def _async_validate(
+        self, data: dict[str, Any]
+    ) -> tuple[dict[str, Any] | None, dict[str, str]]:
+        """Validate the input and return the device info and any errors."""
+        try:
+            info = await validate_input(self.hass, data)
+        except FlowItAuthError:
+            return None, {"base": "invalid_auth"}
+        except FlowItConnectionError:
+            return None, {"base": "cannot_connect"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return None, {"base": "unknown"}
+        return info, {}
 
     @override
     async def async_step_user(
@@ -62,31 +78,25 @@ class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
                 host = str(URL.build(scheme="http", host=host))
                 user_input[CONF_HOST] = host
 
-            try:
-                info = await validate_input(self.hass, user_input)
-            except FlowItAuthError:
-                errors["base"] = "invalid_auth"
-            except FlowItConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            info, errors = await self._async_validate(user_input)
+            if info is not None:
                 await self.async_set_unique_id(info["mac_address"])
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(
+                        CONF_USERNAME, default=DEFAULT_USERNAME
+                    ): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -113,16 +123,8 @@ class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
-            try:
-                info = await validate_input(self.hass, data)
-            except FlowItAuthError:
-                errors["base"] = "invalid_auth"
-            except FlowItConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            info, errors = await self._async_validate(data)
+            if info is not None:
                 await self.async_set_unique_id(info["mac_address"])
                 self._abort_if_unique_id_configured(updates=data)
                 return self.async_create_entry(
@@ -130,14 +132,16 @@ class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=data,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
+                probatio.Required(
+                    CONF_USERNAME, default=DEFAULT_USERNAME
+                ): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.TEXT, autocomplete="username"
                     )
                 ),
-                vol.Required(CONF_PASSWORD): TextSelector(
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.PASSWORD, autocomplete="current-password"
                     )
@@ -179,3 +183,47 @@ class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update({"title_placeholders": {"name": friendly_name}})
 
         return await self.async_step_zeroconf_confirm()
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new password."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            info, errors = await self._async_validate(
+                {**reauth_entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
+            )
+            if info is not None:
+                await self.async_set_unique_id(info["mac_address"])
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "name": reauth_entry.title,
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+            },
+        )

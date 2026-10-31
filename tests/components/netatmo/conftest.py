@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 from pyatmo.const import ALL_SCOPES
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import fake_get_image, fake_post_request
-
-from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

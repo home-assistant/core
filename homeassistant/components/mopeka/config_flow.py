@@ -3,8 +3,8 @@
 from enum import Enum
 from typing import Any, override
 
-from mopeka_iot_ble import MopekaIOTBluetoothDeviceData as DeviceData
-import voluptuous as vol
+from mopeka_iot_ble import MediumType, MopekaIOTBluetoothDeviceData as DeviceData
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 
-from .const import CONF_MEDIUM_TYPE, DEFAULT_MEDIUM_TYPE, DOMAIN, MediumType
+from .const import CONF_MEDIUM_TYPE, DEFAULT_MEDIUM_TYPE, DOMAIN
 
 
 def format_medium_type(medium_type: Enum) -> str:
@@ -28,13 +28,13 @@ MEDIUM_TYPES_BY_NAME = {
 }
 
 
-def async_generate_schema(medium_type: str | None = None) -> vol.Schema:
+def async_generate_schema(medium_type: str | None = None) -> probatio.Schema:
     """Return the base schema with formatted medium types."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_MEDIUM_TYPE, default=medium_type or DEFAULT_MEDIUM_TYPE
-            ): vol.In(MEDIUM_TYPES_BY_NAME)
+            ): probatio.In(MEDIUM_TYPES_BY_NAME)
         }
     )
 
@@ -89,7 +89,6 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_MEDIUM_TYPE: user_input[CONF_MEDIUM_TYPE]},
             )
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -128,9 +127,11 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
+                    probatio.Required(CONF_ADDRESS): probatio.In(
+                        self._discovered_devices
+                    ),
                     **async_generate_schema().schema,
                 }
             ),

@@ -9,6 +9,14 @@ from pypaperless.exceptions import (
 )
 from pypaperless.models import Statistic
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    SnapshotAssertion,
+    async_fire_time_changed,
+    patch,
+    snapshot_platform,
+)
 
 from homeassistant.components.paperless_ngx.coordinator import (
     UPDATE_INTERVAL_STATISTICS,
@@ -18,15 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    AsyncMock,
-    MockConfigEntry,
-    SnapshotAssertion,
-    async_fire_time_changed,
-    patch,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

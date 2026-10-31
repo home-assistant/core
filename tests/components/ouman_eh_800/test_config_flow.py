@@ -7,6 +7,7 @@ from ouman_eh_800_api import (
     OumanClientCommunicationError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ouman_eh_800.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

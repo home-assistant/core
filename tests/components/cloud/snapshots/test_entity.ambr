@@ -1,0 +1,392 @@
+# serializer version: 1
+# name: test_format_structured_output_nested_objects[all-of]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'allOf': list([
+          dict({
+            'additionalProperties': False,
+            'properties': dict({
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'type': 'object',
+          }),
+          dict({
+            'additionalProperties': True,
+            'type': 'object',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_nested_objects[any-of]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'type': 'null',
+          }),
+          dict({
+            'additionalProperties': False,
+            'properties': dict({
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'type': 'object',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_nested_objects[nullable-prefix-items]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'anyOf': list([
+          dict({
+            'type': 'null',
+          }),
+          dict({
+            'items': False,
+            'prefixItems': list([
+              dict({
+                'additionalProperties': False,
+                'properties': dict({
+                  'name': dict({
+                    'type': 'string',
+                  }),
+                }),
+                'type': 'object',
+              }),
+            ]),
+            'type': 'array',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_nested_objects[one-of]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'oneOf': list([
+          dict({
+            'additionalProperties': False,
+            'properties': dict({
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'type': 'object',
+          }),
+          dict({
+            'type': 'string',
+          }),
+        ]),
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_nested_objects[prefix-items]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'value': dict({
+        'items': False,
+        'prefixItems': list([
+          dict({
+            'additionalProperties': False,
+            'properties': dict({
+              'name': dict({
+                'type': 'string',
+              }),
+            }),
+            'type': 'object',
+          }),
+        ]),
+        'type': 'array',
+      }),
+    }),
+    'required': list([
+      'value',
+    ]),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_openapi_31[exclusive-bounds]
+  dict({
+    'exclusiveMaximum': 10,
+    'exclusiveMinimum': 0,
+    'type': 'number',
+  })
+# ---
+# name: test_format_structured_output_openapi_31[null]
+  dict({
+    'type': 'null',
+  })
+# ---
+# name: test_format_structured_output_openapi_31[nullable-enum]
+  dict({
+    'enum': list([
+      'on',
+      'off',
+      None,
+    ]),
+    'type': list([
+      'string',
+      'null',
+    ]),
+  })
+# ---
+# name: test_format_structured_output_openapi_31[nullable-string]
+  dict({
+    'anyOf': list([
+      dict({
+        'type': 'null',
+      }),
+      dict({
+        'type': 'string',
+      }),
+    ]),
+  })
+# ---
+# name: test_format_structured_output_openapi_31[prefix-items]
+  dict({
+    'items': False,
+    'prefixItems': list([
+      dict({
+        'type': 'string',
+      }),
+      dict({
+        'type': 'integer',
+      }),
+    ]),
+    'type': 'array',
+  })
+# ---
+# name: test_format_structured_output_type_arrays[null-first]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'mapping': dict({
+        'additionalProperties': True,
+        'type': list([
+          'null',
+          'object',
+        ]),
+      }),
+      'objects': dict({
+        'items': dict({
+          'additionalProperties': False,
+          'type': list([
+            'null',
+            'object',
+          ]),
+        }),
+        'type': list([
+          'null',
+          'array',
+        ]),
+      }),
+      'untyped': dict({
+      }),
+      'value': dict({
+        'type': list([
+          'string',
+          'null',
+        ]),
+      }),
+    }),
+    'type': list([
+      'null',
+      'object',
+    ]),
+  })
+# ---
+# name: test_format_structured_output_type_arrays[nullable-types]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'mapping': dict({
+        'additionalProperties': True,
+        'type': list([
+          'object',
+          'null',
+        ]),
+      }),
+      'objects': dict({
+        'items': dict({
+          'additionalProperties': False,
+          'type': list([
+            'object',
+            'null',
+          ]),
+        }),
+        'type': list([
+          'array',
+          'null',
+        ]),
+      }),
+      'untyped': dict({
+      }),
+      'value': dict({
+        'type': list([
+          'string',
+          'null',
+        ]),
+      }),
+    }),
+    'type': list([
+      'object',
+      'null',
+    ]),
+  })
+# ---
+# name: test_format_structured_output_type_arrays[object-array-union]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'mapping': dict({
+        'additionalProperties': True,
+        'type': 'object',
+      }),
+      'objects': dict({
+        'additionalProperties': False,
+        'items': dict({
+          'additionalProperties': False,
+          'type': 'object',
+        }),
+        'type': list([
+          'object',
+          'array',
+        ]),
+      }),
+      'untyped': dict({
+      }),
+      'value': dict({
+        'type': list([
+          'string',
+          'null',
+        ]),
+      }),
+    }),
+    'type': 'object',
+  })
+# ---
+# name: test_format_structured_output_type_arrays[single-type-arrays]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'mapping': dict({
+        'additionalProperties': True,
+        'type': list([
+          'object',
+        ]),
+      }),
+      'objects': dict({
+        'items': dict({
+          'additionalProperties': False,
+          'type': list([
+            'object',
+          ]),
+        }),
+        'type': list([
+          'array',
+        ]),
+      }),
+      'untyped': dict({
+      }),
+      'value': dict({
+        'type': list([
+          'string',
+          'null',
+        ]),
+      }),
+    }),
+    'type': list([
+      'object',
+    ]),
+  })
+# ---
+# name: test_format_structured_output_type_arrays[single-types]
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'mapping': dict({
+        'additionalProperties': True,
+        'type': 'object',
+      }),
+      'objects': dict({
+        'items': dict({
+          'additionalProperties': False,
+          'type': 'object',
+        }),
+        'type': 'array',
+      }),
+      'untyped': dict({
+      }),
+      'value': dict({
+        'type': list([
+          'string',
+          'null',
+        ]),
+      }),
+    }),
+    'type': 'object',
+  })
+# ---
+# name: test_format_tool_openapi_31
+  dict({
+    'description': 'Test tool',
+    'name': 'do_something',
+    'parameters': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'value': dict({
+          'enum': list([
+            'on',
+            'off',
+            None,
+          ]),
+          'type': list([
+            'string',
+            'null',
+          ]),
+        }),
+      }),
+      'required': list([
+        'value',
+      ]),
+      'type': 'object',
+    }),
+    'strict': False,
+    'type': 'function',
+  })
+# ---

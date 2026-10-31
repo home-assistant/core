@@ -31,7 +31,7 @@ def create_picnic_client(entry: PicnicConfigEntry):
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PicnicConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PicnicConfigEntry) -> None:
     """Set up Picnic from a config entry."""
     picnic_client = await hass.async_add_executor_job(create_picnic_client, entry)
     picnic_coordinator = PicnicUpdateCoordinator(hass, picnic_client, entry)
@@ -43,9 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PicnicConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PicnicConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PicnicConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

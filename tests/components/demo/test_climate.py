@@ -3,8 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -104,7 +104,7 @@ async def test_set_only_target_temp_bad_attr(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get(ATTR_TEMPERATURE) == 21
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -179,7 +179,7 @@ async def test_set_target_temp_range_bad_attr(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 21.0
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 24.0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -224,7 +224,7 @@ async def test_set_target_humidity_bad_attr(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get(ATTR_HUMIDITY) == 67.4
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HUMIDITY,
@@ -257,7 +257,7 @@ async def test_set_fan_mode_bad_attr(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get(ATTR_FAN_MODE) == "on_high"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -290,7 +290,7 @@ async def test_set_swing_mode_bad_attr(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_MODE,
@@ -327,7 +327,7 @@ async def test_set_hvac_bad_attr_and_state(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.COOLING
     assert state.state == HVACMode.COOL
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,

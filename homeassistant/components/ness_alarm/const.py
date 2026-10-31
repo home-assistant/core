@@ -12,10 +12,7 @@ PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
 # Configuration constants
 CONF_INFER_ARMING_STATE = "infer_arming_state"
-CONF_ZONES = "zones"
 CONF_ZONE_NAME = "name"
-CONF_ZONE_TYPE = "type"
-CONF_ZONE_ID = "id"
 CONF_ZONE_NUMBER = "zone_number"
 CONF_SHOW_HOME_MODE = "show_home_mode"
 
@@ -24,7 +21,7 @@ SUBENTRY_TYPE_ZONE = "zone"
 
 # Defaults
 DEFAULT_PORT = 4999
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_INFER_ARMING_STATE = False
 DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
 

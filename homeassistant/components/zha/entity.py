@@ -12,15 +12,14 @@ from propcache.api import cached_property
 from zha.application.platforms import EntityStateChangedEvent
 from zha.mixins import LogMixin
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import State, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN
 from .helpers import (
@@ -83,7 +82,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     @cached_property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity.
 
         Built-in quirks have translations in HA, so those are used.
@@ -92,6 +91,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         If a device class is set but no translation key,
         the device class name is used.
         """
+        # Group entities take the name of their group device
+        if self.entity_data.is_group_entity:
+            return None
+
         meta = self._zha_state
         if meta.primary:
             self._attr_name = None
@@ -104,7 +107,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         # If we do not have a translation key, only use fallback_name
         # if device class is also missing
         if meta.translation_key is None:
-            if super().name in (UNDEFINED, None):
+            if super().name in (Undefined, None):
                 self._attr_name = meta.fallback_name
             return super().name
 
@@ -127,28 +130,22 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
+        # Group entities have their own device linked via the coordinator
+        if self.entity_data.is_group_entity:
+            group_proxy = self.entity_data.group_proxy
+            assert group_proxy is not None
+            return group_proxy.device_info
+
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
-        gateway_proxy = self.entity_data.device_proxy.gateway_proxy
-        zha_gateway = gateway_proxy.gateway
 
-        device_info = DeviceInfo(
+        return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
-            manufacturer=zha_device_info[ATTR_MANUFACTURER],
-            model=zha_device_info[ATTR_MODEL],
-            name=zha_device_info[ATTR_NAME],
+            manufacturer=zha_device_info["manufacturer"],
+            model=zha_device_info["model"],
+            name=zha_device_info["name"],
         )
-        coordinator_ieee = str(zha_gateway.state.node_info.ieee)
-        if ieee != coordinator_ieee:
-            # The coordinator device is registered before platforms are set up,
-            # so it is always present when a child entity's device_info is built.
-            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
-                gateway_proxy.hass,
-                (DOMAIN, coordinator_ieee),
-                config_entry_id=gateway_proxy.config_entry.entry_id,
-            )
-        return device_info
 
     def _update_capability_attrs(self) -> None:
         """Re-derive capability `_attr_*` attributes from the cached state."""
@@ -191,7 +188,6 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
             self.entity_id,
             self.entity_data,
-            self.device_info,
             self.remove_future,
         )
 
@@ -204,6 +200,15 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self.entity_data.entity.subscribe_state(
                 self._handle_zha_entity_state_changed
             )
+        )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the gateway entity reference to the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self.entity_data.device_proxy.gateway_proxy.update_entity_reference(
+            self, old_entity_id
         )
 
     @callback

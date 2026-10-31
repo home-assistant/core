@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.shelly.const import ATTR_KEY, ATTR_VALUE, DOMAIN
 from homeassistant.components.shelly.services import (
@@ -12,13 +13,11 @@ from homeassistant.components.shelly.services import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_service_get_kvs_value(
@@ -61,8 +60,8 @@ async def test_service_get_kvs_value_invalid_device(hass: HomeAssistant) -> None
             return_response=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "invalid_device_id"
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_device_not_found"
     assert exc_info.value.translation_placeholders == {
         ATTR_DEVICE_ID: "invalid_device_id"
     }
@@ -149,9 +148,12 @@ async def test_config_entry_not_loaded(
             return_response=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "entry_not_loaded"
-    assert exc_info.value.translation_placeholders == {"device": entry.title}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"
+    assert exc_info.value.translation_placeholders == {
+        "domain": DOMAIN,
+        "entry_title": entry.title,
+    }
 
 
 async def test_service_get_kvs_value_sleeping_device(
@@ -258,6 +260,9 @@ async def test_service_get_kvs_value_wrong_domain(
             return_response=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "config_entry_not_found"
-    assert exc_info.value.translation_placeholders == {"device_id": device.id}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_device_wrong_domain"
+    assert exc_info.value.translation_placeholders == {
+        "device_name": device.name,
+        "domain": DOMAIN,
+    }

@@ -12,14 +12,13 @@ from pyecobee import (
     MfaChallenge,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 def _mfa_challenge() -> MfaChallenge:
@@ -37,7 +36,7 @@ def _mfa_challenge() -> MfaChallenge:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent the actual integration from being set up."""
     with patch(
-        "homeassistant.components.ecobee.async_setup_entry", return_value=True
+        "homeassistant.components.ecobee.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 

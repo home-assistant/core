@@ -1,10 +1,11 @@
 """Tests for LCN device triggers."""
 
+from probatio import to_field_list
 from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
+from pytest_homeassistant.common import async_get_device_automations
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -16,8 +17,6 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockConfigEntry, get_device, init_integration
-
-from tests.common import async_get_device_automations
 
 
 async def test_get_triggers_module_device(
@@ -366,7 +365,7 @@ async def test_get_transponder_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -398,7 +397,7 @@ async def test_get_fingerprint_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -430,7 +429,7 @@ async def test_get_transmitter_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -483,7 +482,7 @@ async def test_get_send_keys_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

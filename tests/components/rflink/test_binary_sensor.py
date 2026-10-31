@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
 
 from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
 from homeassistant.const import (
@@ -21,8 +22,6 @@ from homeassistant.core import CoreState, HomeAssistant, State, callback
 from homeassistant.util import dt as dt_util
 
 from .test_init import mock_rflink
-
-from tests.common import async_fire_time_changed, mock_restore_cache
 
 DOMAIN = "binary_sensor"
 

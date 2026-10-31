@@ -1,6 +1,11 @@
 """Test the BTHome events."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    inject_bluetooth_service_info,
+)
 
 from homeassistant.components.bthome.const import DOMAIN
 from homeassistant.components.event import ATTR_EVENT_TYPE
@@ -8,12 +13,6 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import make_bthome_v2_adv
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    BluetoothServiceInfoBleak,
-    inject_bluetooth_service_info,
-)
 
 
 @pytest.mark.parametrize(
@@ -51,6 +50,21 @@ from tests.components.bluetooth import (
                     "entity": "event.test_device_18b2_button",
                     ATTR_FRIENDLY_NAME: "Test Device 18B2 Button",
                     ATTR_EVENT_TYPE: "long_press",
+                }
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x3a\x81",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.test_device_18b2_button",
+                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Button",
+                    ATTR_EVENT_TYPE: "hold_release",
                 }
             ],
         ),

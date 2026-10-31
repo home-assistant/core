@@ -3,6 +3,10 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 import switchbot_api
 from switchbot_api import Device, SwitchBotAPI
 from syrupy.assertion import SnapshotAssertion
@@ -36,8 +40,6 @@ from . import (
     STANDING_FAN_INFO,
     configure_integration,
 )
-
-from tests.common import async_load_json_object_fixture, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -306,6 +308,29 @@ async def test_air_purifier(
         entry = await configure_integration(hass)
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
+async def test_air_purifier_unknown_mode(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+) -> None:
+    """Test an air purifier reporting a mode that is not one of its presets.
+
+    An unplugged purifier reports mode 0, which no preset maps to.
+    """
+    mock_list_devices.return_value = [AIR_PURIFIER_INFO]
+    status = await async_load_json_object_fixture(
+        hass, "air_purifier_status.json", DOMAIN
+    )
+    mock_get_status.return_value = {**status, "power": "OFF", "mode": 0}
+
+    with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.FAN]):
+        await configure_integration(hass)
+
+    state = hass.states.get("fan.air_purifier_1")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_PRESET_MODE] is None
 
 
 @pytest.mark.parametrize(

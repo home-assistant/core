@@ -5,14 +5,13 @@ import logging
 from typing import Any
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
-from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .common import (
@@ -22,50 +21,30 @@ from .common import (
     _get_shopping_data,
 )
 from .const import DOMAIN
-from .services import async_register_services
+from .services import async_setup_services
 
 PLATFORMS = [Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+    "ShoppingData",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the shopping list."""
-    async_register_services(hass)
-
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(_async_setup(hass))
+    async_setup_services(hass)
 
     return True
 
 
-async def _async_setup(hass: HomeAssistant) -> None:
-    await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2026.11.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Shopping List",
-        },
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ShoppingListConfigEntry
-) -> bool:
+) -> None:
     """Set up shopping list from config flow."""
     data = config_entry.runtime_data = ShoppingData(hass)
     await data.async_load()
@@ -83,8 +62,6 @@ async def async_setup_entry(
     websocket_api.async_register_command(hass, websocket_handle_reorder)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
 
 
 class ShoppingListView(http.HomeAssistantView):
@@ -115,7 +92,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
             return self.json(item)
         except NoMatchingShoppingListItem:
             return self.json_message("Item not found", HTTPStatus.NOT_FOUND)
-        except vol.Invalid:
+        except probatio.Invalid:
             return self.json_message("Item not found", HTTPStatus.BAD_REQUEST)
 
 
@@ -125,7 +102,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     url = "/api/shopping_list/item"
     name = "api:shopping_list:item"
 
-    @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
+    @RequestDataValidator(probatio.Schema({probatio.Required("name"): str}))
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Create a new shopping list item."""
         shopping_data = _get_shopping_data(request.app[http.KEY_HASS])
@@ -147,7 +124,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "shopping_list/items"})
+@websocket_api.websocket_command({probatio.Required("type"): "shopping_list/items"})
 def websocket_handle_items(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -160,7 +137,10 @@ def websocket_handle_items(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "shopping_list/items/add", vol.Required("name"): str}
+    {
+        probatio.Required("type"): "shopping_list/items/add",
+        probatio.Required("name"): str,
+    }
 )
 @websocket_api.async_response
 async def websocket_handle_add(
@@ -176,7 +156,10 @@ async def websocket_handle_add(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "shopping_list/items/remove", vol.Required("item_id"): str}
+    {
+        probatio.Required("type"): "shopping_list/items/remove",
+        probatio.Required("item_id"): str,
+    }
 )
 @websocket_api.async_response
 async def websocket_handle_remove(
@@ -204,10 +187,10 @@ async def websocket_handle_remove(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "shopping_list/items/update",
-        vol.Required("item_id"): str,
-        vol.Optional("name"): str,
-        vol.Optional("complete"): bool,
+        probatio.Required("type"): "shopping_list/items/update",
+        probatio.Required("item_id"): str,
+        probatio.Optional("name"): str,
+        probatio.Optional("complete"): bool,
     }
 )
 @websocket_api.async_response
@@ -235,7 +218,9 @@ async def websocket_handle_update(
     connection.send_message(websocket_api.result_message(msg_id, item))
 
 
-@websocket_api.websocket_command({vol.Required("type"): "shopping_list/items/clear"})
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "shopping_list/items/clear"}
+)
 @websocket_api.async_response
 async def websocket_handle_clear(
     hass: HomeAssistant,
@@ -250,8 +235,8 @@ async def websocket_handle_clear(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "shopping_list/items/reorder",
-        vol.Required("item_ids"): [str],
+        probatio.Required("type"): "shopping_list/items/reorder",
+        probatio.Required("item_ids"): [str],
     }
 )
 @websocket_api.async_response
@@ -272,7 +257,7 @@ async def websocket_handle_reorder(
             "One or more item id(s) not found.",
         )
         return
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, f"{err}")
         return
 

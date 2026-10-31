@@ -7,6 +7,7 @@ from pypck.inputs import ModStatusLedsAndLogicOps, ModStatusVar
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import LedStatus, LogicOpStatus, Var, VarValue
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lcn.helpers import get_device_connection
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 SENSOR_VAR1 = "sensor.testmodule_sensor_var1"
 SENSOR_SETPOINT1 = "sensor.testmodule_sensor_setpoint1"

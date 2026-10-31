@@ -1,6 +1,7 @@
 {
   "domain": "ecoal_boiler",
   "name": "eSterownik eCoal.pl Boiler",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/ecoal_boiler",
   "iot_class": "local_polling",

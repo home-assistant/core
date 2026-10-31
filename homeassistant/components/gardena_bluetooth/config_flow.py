@@ -7,7 +7,7 @@ from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import PRODUCT_NAMES, DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound, CommunicationFailure
 from gardena_bluetooth.parse import ManufacturerData, ProductType
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -97,7 +97,6 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             data = await self.async_read_data()
             return self.async_create_entry(title=title, data=data)
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -136,9 +135,9 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(devices),
+                    probatio.Required(CONF_ADDRESS): probatio.In(devices),
                 },
             ),
         )

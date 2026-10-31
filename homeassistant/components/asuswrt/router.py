@@ -403,9 +403,9 @@ class AsusWrtRouter:
             manufacturer="Asus",
         )
         if label_mac := self._api.label_mac:
-            info["connections"] = {(CONNECTION_NETWORK_MAC, label_mac)}
+            info.connections = {(CONNECTION_NETWORK_MAC, label_mac)}
         if self._api.firmware:
-            info["sw_version"] = self._api.firmware
+            info.sw_version = self._api.firmware
 
         return info
 

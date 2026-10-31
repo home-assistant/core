@@ -36,17 +36,6 @@ CONF_FILTER_CORONA: str = "corona_filter"  # deprecated
 CONF_HEADLINE_FILTER: str = "headline_filter"
 CONF_AREA_FILTER: str = "area_filter"
 
-ATTR_HEADLINE: str = "headline"
-ATTR_DESCRIPTION: str = "description"
-ATTR_SENDER: str = "sender"
-ATTR_SEVERITY: str = "severity"
-ATTR_RECOMMENDED_ACTIONS: str = "recommended_actions"
-ATTR_AFFECTED_AREAS: str = "affected_areas"
-ATTR_WEB: str = "web"
-ATTR_SENT: str = "sent"
-ATTR_START: str = "start"
-ATTR_EXPIRES: str = "expires"
-
 SENSOR_SUFFIXES: list[str] = [
     "headline",
     "sender",

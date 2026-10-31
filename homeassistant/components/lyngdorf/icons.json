@@ -20,12 +20,23 @@
         "default": "mdi:music-clef-treble"
       }
     },
+    "select": {
+      "room_perfect_position": {
+        "default": "mdi:home-sound-out"
+      },
+      "voicing": {
+        "default": "mdi:equalizer"
+      }
+    },
     "sensor": {
       "audio_information": {
         "default": "mdi:surround-sound"
       },
       "audio_input": {
         "default": "mdi:audio-input-stereo-minijack"
+      },
+      "maximum_volume": {
+        "default": "mdi:volume-high"
       },
       "streaming_source": {
         "default": "mdi:cast-audio"

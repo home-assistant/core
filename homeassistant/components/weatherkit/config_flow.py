@@ -9,7 +9,7 @@ from apple_weatherkit.client import (
     WeatherKitApiClientCommunicationError,
     WeatherKitApiClientError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
@@ -30,16 +30,16 @@ from .const import (
     LOGGER,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LOCATION): LocationSelector(
+        probatio.Required(CONF_LOCATION): LocationSelector(
             LocationSelectorConfig(radius=False, icon="")
         ),
         # Auth
-        vol.Required(CONF_KEY_ID): str,
-        vol.Required(CONF_SERVICE_ID): str,
-        vol.Required(CONF_TEAM_ID): str,
-        vol.Required(CONF_KEY_PEM): TextSelector(
+        probatio.Required(CONF_KEY_ID): str,
+        probatio.Required(CONF_SERVICE_ID): str,
+        probatio.Required(CONF_TEAM_ID): str,
+        probatio.Required(CONF_KEY_PEM): TextSelector(
             TextSelectorConfig(
                 multiline=True,
             )

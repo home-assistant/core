@@ -50,6 +50,7 @@ async def async_setup_entry(
         """Add entities for newly discovered devices."""
         new_entities: list[AlexaDevicesMediaPlayer] = []
 
+        known_devices.intersection_update(coordinator.data)
         for serial_num, device in coordinator.data.items():
             if serial_num in known_devices or not device.media_player_supported:
                 continue

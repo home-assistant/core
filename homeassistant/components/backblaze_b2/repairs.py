@@ -43,6 +43,7 @@ def _create_issue(
             "bucket_name": bucket_name,
             "entry_id": entry.entry_id,
         },
+        config_entry_id=entry.entry_id,
     )
 
 

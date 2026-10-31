@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -24,8 +25,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import ENTRY_OPTIONS, init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_download_switch(

@@ -1,90 +1,61 @@
 """A entity class for Tractive integration."""
 
-from typing import Any, override
+from aiotractive import PetStatus, Trackable, TrackerStatus
 
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TractiveClient, TractiveConfigEntry
-from .const import DOMAIN, SERVER_UNAVAILABLE
+from .const import DOMAIN
+from .coordinator import TractiveCoordinator
 
 
-class TractiveEntity(Entity):
+class TractiveEntity(CoordinatorEntity[TractiveCoordinator]):
     """Tractive entity class."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        entry: TractiveConfigEntry,
-        client: TractiveClient,
-        trackable: dict[str, Any],
-        tracker_details: dict[str, Any],
-        dispatcher_signal: str,
+        coordinator: TractiveCoordinator,
+        trackable: Trackable,
         hardware_entity: bool = True,
     ) -> None:
         """Initialize tracker entity."""
+        super().__init__(coordinator)
+
+        self._pet_id = trackable.pet_id
+        self._tracker_id = trackable.tracker_id
+
         if hardware_entity:
             self._attr_device_info = DeviceInfo(
                 configuration_url="https://my.tractive.com/",
-                identifiers={(DOMAIN, tracker_details["_id"])},
+                identifiers={(DOMAIN, trackable.tracker_id)},
                 translation_key="tracker",
-                translation_placeholders={"id": tracker_details["_id"]},
+                translation_placeholders={"id": trackable.tracker_id},
                 manufacturer="Tractive GmbH",
-                sw_version=tracker_details["fw_version"],
-                model_id=tracker_details["model_number"],
+                sw_version=trackable.tracker_details["fw_version"],
+                model_id=trackable.tracker_details["model_number"],
             )
         else:
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, trackable["_id"])},
-                name=trackable["details"]["name"],
+                identifiers={(DOMAIN, trackable.pet_id)},
+                name=trackable.name,
                 via_device_id=dr.async_get_device_id_by_identifier(
-                    hass,
-                    (DOMAIN, tracker_details["_id"]),
-                    config_entry_id=entry.entry_id,
+                    coordinator.hass,
+                    (DOMAIN, trackable.tracker_id),
+                    config_entry_id=coordinator.config_entry.entry_id,
                 ),
                 entry_type=DeviceEntryType.SERVICE,
             )
 
-        self._user_id = client.user_id
-        self._tracker_id = tracker_details["_id"]
-        self._client = client
-        self._dispatcher_signal = dispatcher_signal
+    @property
+    def _tracker_status(self) -> TrackerStatus:
+        """Return the live status of the tracker."""
+        return self.coordinator.data.trackers[self._tracker_id]
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        if not self._client.subscribed:
-            self._client.subscribe()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._dispatcher_signal,
-                self.handle_status_update,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self.handle_server_unavailable,
-            )
-        )
-
-    @callback
-    def handle_status_update(self, event: dict[str, Any]) -> None:
-        """Handle status update."""
-        self._attr_available = event[self.entity_description.key] is not None
-        self.async_write_ha_state()
-
-    @callback
-    def handle_server_unavailable(self) -> None:
-        """Handle server unavailable."""
-        self._attr_available = False
-        self.async_write_ha_state()
+    @property
+    def _pet_status(self) -> PetStatus:
+        """Return the live status of the pet."""
+        # Pets without health data have no status entry until the first event
+        return self.coordinator.data.pets.get(self._pet_id, PetStatus())

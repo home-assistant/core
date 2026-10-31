@@ -256,13 +256,18 @@ class DevoloPlcDataRateSensorEntity(
 
     @property
     @override
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """State of the sensor."""
-        return self.entity_description.value_func(
-            next(
-                data_rate
-                for data_rate in self.coordinator.data.data_rates
-                if data_rate.mac_address_from == self.device.mac
-                and data_rate.mac_address_to == self._peer
+        if (
+            data_rate := next(
+                (
+                    data_rate
+                    for data_rate in self.coordinator.data.data_rates
+                    if data_rate.mac_address_from == self.device.mac
+                    and data_rate.mac_address_to == self._peer
+                ),
+                None,
             )
-        )
+        ) is None:
+            return None
+        return self.entity_description.value_func(data_rate)

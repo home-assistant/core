@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from sense_energy import SenseAuthenticationException, SenseMFARequiredException
 
 from homeassistant.components.sense.const import DOMAIN, TREND_UPDATE_RATE
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_platform
 from .const import MONITOR_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

@@ -1,9 +1,9 @@
 """Tests for derivative diagnostics."""
 
-from homeassistant.core import HomeAssistant
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
+from homeassistant.core import HomeAssistant
 
 
 async def test_diagnostics(

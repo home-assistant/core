@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import WizConfigEntry, WizData
-from .entity import WizEntity
+from .entity import WizEntity, wiz_exception_handler
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -129,6 +129,7 @@ class WizSpeedNumber(WizEntity, NumberEntity):
             self._attr_native_value = float(value)
 
     @override
+    @wiz_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set the speed value."""
         await self.entity_description.set_value_fn(self._device, int(value))

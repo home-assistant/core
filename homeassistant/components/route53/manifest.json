@@ -1,6 +1,7 @@
 {
   "domain": "route53",
   "name": "AWS Route53",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/route53",
   "iot_class": "cloud_push",

@@ -2,32 +2,35 @@
 
 from typing import override
 
-from aiolifx_themes.themes import ThemeLibrary
+from lifx import ThemeLibrary
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_THEME, INFRARED_BRIGHTNESS, INFRARED_BRIGHTNESS_VALUES_MAP
+from .const import ATTR_THEME, INFRARED_BRIGHTNESS, INFRARED_LEVELS
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
-from .util import lifx_features
 
-THEME_NAMES = [theme_name.lower() for theme_name in ThemeLibrary().themes]
+PARALLEL_UPDATES = 1
+
+THEME_NAMES = {
+    theme_name.lower(): theme_name for theme_name in ThemeLibrary.get_available_themes()
+}
 
 INFRARED_BRIGHTNESS_ENTITY = SelectEntityDescription(
     key=INFRARED_BRIGHTNESS,
     translation_key="infrared_brightness",
     entity_category=EntityCategory.CONFIG,
-    options=list(INFRARED_BRIGHTNESS_VALUES_MAP.values()),
+    options=list(INFRARED_LEVELS),
 )
 
 THEME_ENTITY = SelectEntityDescription(
     key=ATTR_THEME,
     translation_key="theme",
     entity_category=EntityCategory.CONFIG,
-    options=THEME_NAMES,
+    options=list(THEME_NAMES),
 )
 
 
@@ -41,14 +44,14 @@ async def async_setup_entry(
 
     entities: list[LIFXEntity] = []
 
-    if lifx_features(coordinator.device)["infrared"]:
+    if coordinator.data.capabilities.has_infrared:
         entities.append(
             LIFXInfraredBrightnessSelectEntity(coordinator, INFRARED_BRIGHTNESS_ENTITY)
         )
 
     if (
-        lifx_features(coordinator.device)["multizone"] is True
-        or lifx_features(coordinator.device)["matrix"] is True
+        coordinator.data.capabilities.has_multizone
+        or coordinator.data.capabilities.has_matrix
     ):
         entities.append(LIFXThemeSelectEntity(coordinator, THEME_ENTITY))
 
@@ -64,19 +67,11 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
         description: SelectEntityDescription,
     ) -> None:
         """Initialise the IR brightness config entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        super().__init__(coordinator, description)
         self._attr_current_option = coordinator.current_infrared_brightness
 
     @callback
     @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
-    @callback
     def _async_update_attrs(self) -> None:
         """Handle coordinator updates."""
         self._attr_current_option = self.coordinator.current_infrared_brightness
@@ -97,19 +92,11 @@ class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
     ) -> None:
         """Initialise the theme selection entity."""
 
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        super().__init__(coordinator, description)
         self._attr_current_option = None
 
     @callback
     @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
-    @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from coordinator data."""
         self._attr_current_option = self.coordinator.last_used_theme
@@ -117,4 +104,7 @@ class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Paint the selected theme onto the device."""
-        await self.coordinator.async_apply_theme(option.lower())
+        option = option.lower()
+        await self.coordinator.async_apply_theme(THEME_NAMES[option])
+        self._attr_current_option = option
+        self.async_write_ha_state()

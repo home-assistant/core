@@ -64,17 +64,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "user": {
-        "data": {
-          "scan_interval": "Scan interval (seconds)"
-        },
-        "description": "Update the scan interval to poll for data more often.",
-        "title": "Options for Hive"
-      }
-    }
-  },
   "services": {
     "boost_heating_off": {
       "description": "Sets the boost mode OFF.",

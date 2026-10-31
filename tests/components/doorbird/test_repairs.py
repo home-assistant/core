@@ -1,5 +1,11 @@
 """Test repairs for doorbird."""
 
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.doorbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -9,12 +15,10 @@ from homeassistant.setup import async_setup_component
 from . import mock_not_found_exception
 from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
 
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
-
 
 async def test_change_schedule_fails(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     doorbird_mocker: DoorbirdMockerType,
     hass_client: ClientSessionGenerator,
 ) -> None:
@@ -24,11 +28,11 @@ async def test_change_schedule_fails(
         favorites_side_effect=mock_not_found_exception()
     )
     assert doorbird_entry.entry.state is ConfigEntryState.SETUP_RETRY
-    issue_reg = ir.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    assert len(issue_reg.issues) == 1
-    issue = list(issue_reg.issues.values())[0]
+    assert len(issue_registry.issues) == 1
+    issue = list(issue_registry.issues.values())[0]
     issue_id = issue.issue_id
     assert issue.domain == DOMAIN
+    assert issue.config_entry_id == doorbird_entry.entry.entry_id
 
     client = await hass_client()
 

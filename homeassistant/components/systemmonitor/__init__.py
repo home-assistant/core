@@ -29,15 +29,22 @@ class SystemMonitorData:
     psutil_wrapper: ha_psutil.PsutilWrapper
 
 
+def _create_psutil_wrapper_and_get_disk_mounts(
+    hass: HomeAssistant,
+) -> tuple[ha_psutil.PsutilWrapper, set[str]]:
+    """Create the psutil wrapper and return all disk mounts."""
+    psutil_wrapper = ha_psutil.PsutilWrapper()
+    return psutil_wrapper, get_all_disk_mounts(hass, psutil_wrapper)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: SystemMonitorConfigEntry
-) -> bool:
+) -> None:
     """Set up System Monitor from a config entry."""
-    psutil_wrapper = await hass.async_add_executor_job(ha_psutil.PsutilWrapper)
-
-    disk_arguments = list(
-        await hass.async_add_executor_job(get_all_disk_mounts, hass, psutil_wrapper)
+    psutil_wrapper, disk_mounts = await hass.async_add_executor_job(
+        _create_psutil_wrapper_and_get_disk_mounts, hass
     )
+    disk_arguments = list(disk_mounts)
     legacy_resources: set[str] = set(entry.options.get("resources", []))
     for resource in legacy_resources:
         if resource.startswith("disk_"):
@@ -59,19 +66,18 @@ async def async_setup_entry(
     entry.runtime_data = SystemMonitorData(coordinator, psutil_wrapper)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SystemMonitorConfigEntry
-) -> bool:
+) -> None:
     """Unload System Monitor config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: SystemMonitorConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if entry.version == 1 and entry.minor_version < 3:
@@ -96,5 +102,3 @@ async def async_migrate_entry(
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
-
-    return True
