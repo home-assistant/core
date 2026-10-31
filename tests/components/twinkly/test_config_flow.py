@@ -2,11 +2,12 @@
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.twinkly.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -188,3 +189,162 @@ async def test_user_flow_works_discovery(hass: HomeAssistant) -> None:
 
     # Verify the discovery flow was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+
+@pytest.mark.usefixtures("mock_twinkly_client", "mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the device host."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.0.124"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "192.168.0.124",
+        CONF_ID: "497dcba3-ecbf-4587-a2dd-5eb0665e6880",
+        CONF_NAME: TEST_NAME,
+        CONF_MODEL: TEST_MODEL,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(ClientError, id="client_error"),
+    ],
+)
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_twinkly_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
+) -> None:
+    """Test reconfigure flow recovers from connection errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_twinkly_client.get_details.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.0.124"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    mock_twinkly_client.get_details.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.0.124"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.0.124"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_twinkly_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow aborts when pointed at a different device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_twinkly_client.get_details.return_value = {
+        **mock_twinkly_client.get_details.return_value,
+        "mac": "aa:bb:cc:dd:ee:ff",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.0.124"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.0.123"
+
+
+LEGACY_DEVICE_ID = "00000000-0000-0000-0000-000000000000"
+
+
+@pytest.mark.parametrize(
+    ("device_id", "reason", "state", "unique_id", "host"),
+    [
+        pytest.param(
+            LEGACY_DEVICE_ID,
+            "reconfigure_successful",
+            ConfigEntryState.LOADED,
+            TEST_MAC,
+            "192.168.0.124",
+            id="same_device",
+        ),
+        pytest.param(
+            "11111111-1111-1111-1111-111111111111",
+            "unique_id_mismatch",
+            ConfigEntryState.SETUP_RETRY,
+            "11111111-1111-1111-1111-111111111111",
+            "192.168.0.123",
+            id="other_device",
+        ),
+    ],
+)
+async def test_reconfigure_flow_before_mac_migration(
+    hass: HomeAssistant,
+    mock_twinkly_client: AsyncMock,
+    device_id: str,
+    reason: str,
+    state: ConfigEntryState,
+    unique_id: str,
+    host: str,
+) -> None:
+    """Test reconfiguring an entry that still has its legacy unique ID."""
+    # The device is unreachable at its old address, so the migration is pending
+    mock_twinkly_client.get_details.side_effect = TimeoutError
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        minor_version=1,
+        unique_id=device_id,
+        data={
+            CONF_HOST: "192.168.0.123",
+            CONF_ID: device_id,
+            CONF_NAME: TEST_NAME,
+            CONF_MODEL: TEST_MODEL,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_twinkly_client.get_details.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.0.124"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert entry.state is state
+    assert entry.unique_id == unique_id
+    assert entry.data[CONF_HOST] == host
