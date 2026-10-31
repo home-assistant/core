@@ -317,7 +317,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service_schema = probatio.Schema(
         {
             ATTR_ENTITY_ID: cv.entity_ids,
-            probatio.Optional(CONF_EXCLUDE): cv.ENTITY_SERVICE_EXCLUDE_SCHEMA,
+            probatio.Optional(CONF_EXCLUDE): cv.TARGET_EXCLUDE_SCHEMA,
         },
         extra=probatio.ALLOW_EXTRA,
     )

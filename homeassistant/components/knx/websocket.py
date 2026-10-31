@@ -25,7 +25,7 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
@@ -50,6 +50,8 @@ from .storage.entity_store_validation import (
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
+from .storage.entity_suggestions import async_get_entity_suggestions
+from .storage.entity_suggestions.const import SuggestionFilter
 from .storage.expose_controller import validate_expose_data
 from .storage.serialize import get_serialized_schema
 from .storage.time_server import validate_time_server_data
@@ -74,6 +76,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_query_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
+    websocket_api.async_register_command(hass, ws_get_entity_suggestions)
     websocket_api.async_register_command(hass, ws_validate_entity)
     websocket_api.async_register_command(hass, ws_create_entity)
     websocket_api.async_register_command(hass, ws_update_entity)
@@ -255,6 +258,36 @@ async def ws_get_knx_project(
         msg["id"],
         knxproject,
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "knx/get_entity_suggestions",
+        probatio.Optional("platform"): probatio.In(SUPPORTED_PLATFORMS_UI),
+        probatio.Optional("group_id"): str,
+        probatio.Optional("include_configured", default=True): bool,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_get_entity_suggestions(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get entity suggestions."""
+    result = await async_get_entity_suggestions(
+        hass,
+        knx,
+        SuggestionFilter(
+            platform=msg.get("platform"),
+            group_id=msg.get("group_id"),
+            include_configured=msg["include_configured"],
+        ),
+    )
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
@@ -737,7 +770,7 @@ def ws_create_device(
     )
     device_registry.async_update_device(
         _device.id,
-        area_id=msg.get("area_id") or UNDEFINED,
+        area_id=msg.get("area_id") or Undefined,
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)

@@ -4,7 +4,6 @@ import logging
 from typing import Any, override
 
 from pyControl4.blind import C4Blind
-from pyControl4.error_handling import C4Exception
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,30 +13,20 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE, SCAN_INTERVAL
-from .director_utils import update_variables_for_config_entry
+from .const import (
+    CONTROL4_CLOSING,
+    CONTROL4_ENTITY_TYPE,
+    CONTROL4_FULLY_CLOSED,
+    CONTROL4_LEVEL,
+    CONTROL4_OPENING,
+)
 from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 CONTROL4_CATEGORY = "blinds_shades"
-
-CONTROL4_LEVEL = "Level"
-CONTROL4_FULLY_CLOSED = "Fully Closed"
-CONTROL4_FULLY_OPEN = "Fully Open"
-CONTROL4_OPENING = "Opening"
-CONTROL4_CLOSING = "Closing"
-
-VARIABLES_OF_INTEREST = {
-    CONTROL4_LEVEL,
-    CONTROL4_FULLY_CLOSED,
-    CONTROL4_FULLY_OPEN,
-    CONTROL4_OPENING,
-    CONTROL4_CLOSING,
-}
 
 
 async def async_setup_entry(
@@ -48,25 +37,7 @@ async def async_setup_entry(
     """Set up Control4 covers from a config entry."""
     runtime_data = entry.runtime_data
 
-    async def async_update_data() -> dict[int, dict[str, Any]]:
-        """Fetch data from Control4 director for blinds."""
-        try:
-            return await update_variables_for_config_entry(
-                hass, entry, VARIABLES_OF_INTEREST
-            )
-        except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-    coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
-        hass,
-        _LOGGER,
-        name="cover",
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-        config_entry=entry,
-    )
-
-    await coordinator.async_refresh()
+    coordinator = runtime_data.cover_coordinator
 
     items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
     entity_list = []

@@ -1,14 +1,20 @@
 """Test bluesound integration."""
 
+from freezegun.api import FrozenDateTimeFactory
 from pyblu.errors import PlayerUnreachableError
-from pytest_homeassistant.common import MockConfigEntry
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bluesound import DOMAIN
+from homeassistant.components.bluesound.coordinator import NODE_OFFLINE_CHECK_TIMEOUT
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_PLAYING, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import PlayerMocks
+
+ENTITY_ID = "media_player.player_name1111"
 
 
 async def test_setup_entry(
@@ -93,3 +99,41 @@ async def test_non_default_port_without_leader_has_no_via_device_id(
     )
     assert child_device is not None
     assert child_device.via_device_id is None
+
+
+async def test_log_when_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unavailability and recovery are each logged once."""
+    status_mock = player_mocks.player_data.status_long_polling_mock
+    sync_status_mock = player_mocks.player_data.sync_status_long_polling_mock
+
+    status_mock.set_error(PlayerUnreachableError("Player not reachable"))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert (
+        caplog.text.count("Error requesting player-name1111 data: Player not reachable")
+        == 1
+    )
+
+    sync_status_mock.set_error(PlayerUnreachableError("Still not reachable"))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert "Still not reachable" not in caplog.text
+    assert "Fetching player-name1111 data recovered" not in caplog.text
+
+    # Both loops retry after the offline check timeout and succeed.
+    status_mock.set_error(None)
+    sync_status_mock.set_error(None)
+    freezer.tick(NODE_OFFLINE_CHECK_TIMEOUT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
+    assert caplog.text.count("Fetching player-name1111 data recovered") == 1

@@ -9,13 +9,14 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .config import ScriptConfig
-from .const import DOMAIN, EVENT_SCRIPT_STARTED, LOGGER
+from .const import ATTR_LAST_TRIGGERED, DOMAIN, EVENT_SCRIPT_STARTED, LOGGER
 from .entity import BaseScriptEntity, UnavailableScriptEntity
 from .helpers import async_get_blueprints
 from .services import async_setup_services
 from .util import async_process_config
 
 __all__ = [
+    "ATTR_LAST_TRIGGERED",
     "CONF_MODE",
     "DOMAIN",
     "EVENT_SCRIPT_STARTED",

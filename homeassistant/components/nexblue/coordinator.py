@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_REFRESH_TOKEN, LOGGER, UPDATE_INTERVAL
 
-type NexBlueConfigEntry = ConfigEntry["NexBlueDataUpdateCoordinator"]
+type NexBlueConfigEntry = ConfigEntry[NexBlueDataUpdateCoordinator]
 
 INITIAL_COMMAND_REFRESH_DELAY = 3
 FINAL_COMMAND_REFRESH_DELAY = 20

@@ -9850,6 +9850,211 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.patio_screen_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'io://1234-5678-1516/3959838')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.patio_screen_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/3959838-startIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.patio_screen_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Screen Identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.patio_screen_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.patio_screen_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'io://1234-5678-1516/3959838')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.patio_screen_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:star',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/3959838-my',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.patio_screen_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Screen My position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:star',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.patio_screen_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.patio_screen_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'io://1234-5678-1516/3959838')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.patio_screen_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/3959838-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.patio_screen_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Screen Start identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.patio_screen_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.patio_screen_stop_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'io://1234-5678-1516/3959838')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.patio_screen_stop_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Stop identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/3959838-stopIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.patio_screen_stop_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Screen Stop identify',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.patio_screen_stop_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][button.roof_window_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

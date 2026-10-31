@@ -57,7 +57,7 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .addon import get_addon_manager
 from .api import async_register_api
@@ -781,7 +781,7 @@ class ControllerEvents:
             name=node.name or node.device_config.description or f"Node {node.node_id}",
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
-            suggested_area=node.location or UNDEFINED,
+            suggested_area=node.location or Undefined,
             via_device_id=via_device_id,
         )
 

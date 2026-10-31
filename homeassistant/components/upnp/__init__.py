@@ -69,7 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None
         async with asyncio.timeout(10):
             await device_discovered_event.wait()
     except TimeoutError as err:
-        raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_not_discovered",
+            translation_placeholders={"usn": usn},
+        ) from err
     finally:
         cancel_discovered_callback()
 
@@ -83,7 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None
         device = await async_create_device(hass, location, force_poll)
     except UpnpConnectionError as err:
         raise ConfigEntryNotReady(
-            f"Error connecting to device at location: {location}, err: {err}"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"location": location},
         ) from err
 
     # Try to subscribe, if configured.

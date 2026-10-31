@@ -58,12 +58,20 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             lhm_data = await self._api.get_data()
         except LibreHardwareMonitorConnectionError as err:
             raise UpdateFailed(
-                "LibreHardwareMonitor connection failed, will retry", retry_after=25
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                retry_after=25,
             ) from err
         except LibreHardwareMonitorUnauthorizedError as err:
-            raise ConfigEntryAuthFailed("Authentication failed") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except LibreHardwareMonitorNoDevicesError as err:
-            raise UpdateFailed("No sensor data available, will retry") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_devices",
+            ) from err
 
         if lhm_data.is_deprecated_version:
             if self.config_entry.state is ConfigEntryState.LOADED:

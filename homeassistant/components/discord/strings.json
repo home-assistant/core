@@ -23,9 +23,42 @@
       }
     }
   },
+  "config_subentries": {
+    "target": {
+      "abort": {
+        "already_configured": "This target is already configured"
+      },
+      "entry_type": "Target",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "invalid_target": "The target ID must be a number",
+        "target_not_found": "Target not found",
+        "unknown": "[%key:common::config_flow::error::unknown%]",
+        "unsupported_target": "This channel type cannot receive messages. Choose a text channel, user or DM."
+      },
+      "initiate_flow": {
+        "user": "Add target"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "target_id": "Target ID"
+          },
+          "data_description": {
+            "target_id": "ID of the channel, user or DM to send notifications to."
+          },
+          "title": "Add target"
+        }
+      }
+    }
+  },
   "exceptions": {
     "communication_error": {
       "message": "Error communicating with Discord."
+    },
+    "target_not_found": {
+      "message": "Target not found for ID: {target}"
     }
   }
 }

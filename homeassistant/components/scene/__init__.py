@@ -14,7 +14,13 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_COMPONENT, DOMAIN, SceneService, SceneServiceArgument
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    SceneEntityStateAttribute,
+    SceneService,
+    SceneServiceArgument,
+)
 from .entity import BaseScene, Scene
 from .services import async_setup_services
 
@@ -64,6 +70,7 @@ __all__ = [
     "STATES",
     "BaseScene",
     "Scene",
+    "SceneEntityStateAttribute",
     "SceneService",
     "SceneServiceArgument",
 ]

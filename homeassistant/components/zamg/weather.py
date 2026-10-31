@@ -30,7 +30,7 @@ async def async_setup_entry(
     )
 
 
-class ZamgWeather(CoordinatorEntity, WeatherEntity):
+class ZamgWeather(CoordinatorEntity[ZamgDataUpdateCoordinator], WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION

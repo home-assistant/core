@@ -89,8 +89,13 @@ async def energy_usage(
     mock_equipment: Equipment,
 ) -> None:
     """Populate water heater energy usage from a mocked API response."""
+    unit, usage = request.param
     response = await async_load_json_object_fixture(hass, "energy_usage.json", DOMAIN)
-    response["results"]["energy_usage"]["message"] = f"Energy usage in {request.param}"
+    response["results"]["energy_usage"]["message"] = f"Energy usage in {unit}"
+    if usage is None:
+        response["results"]["energy_usage"]["data"] = []
+    else:
+        response["results"]["energy_usage"]["data"][0]["value"] = usage
     mock_api.get_dynamic_action.return_value = response
     assert isinstance(mock_equipment, WaterHeater)
     await mock_equipment.get_energy_usage()

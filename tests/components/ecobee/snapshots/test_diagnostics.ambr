@@ -1,0 +1,300 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'thermostats': list([
+      dict({
+        'equipmentStatus': 'fan,humidifier',
+        'events': list([
+          dict({
+            'endDate': '2022-01-01',
+            'endTime': '10:00:00',
+            'holdClimateRef': 'away',
+            'name': 'Event1',
+            'running': True,
+            'startDate': '2022-02-02',
+            'startTime': '11:00:00',
+            'type': 'hold',
+          }),
+        ]),
+        'identifier': '**REDACTED**',
+        'location': dict({
+          'timeZone': 'America/Toronto',
+        }),
+        'modelNumber': 'athenaSmart',
+        'name': 'ecobee',
+        'program': dict({
+          'climates': list([
+            dict({
+              'climateRef': 'home',
+              'name': 'Home',
+              'sensors': list([
+                dict({
+                  'name': 'ecobee',
+                }),
+              ]),
+            }),
+            dict({
+              'climateRef': 'c1',
+              'name': 'Climate1',
+              'sensors': list([
+                dict({
+                  'name': 'ecobee',
+                }),
+              ]),
+            }),
+            dict({
+              'climateRef': 'c2',
+              'name': 'Climate2',
+              'sensors': list([
+                dict({
+                  'name': 'ecobee',
+                }),
+              ]),
+            }),
+          ]),
+          'currentClimateRef': 'c1',
+        }),
+        'remoteSensors': list([
+          dict({
+            'capability': list([
+              dict({
+                'id': '1',
+                'type': 'temperature',
+                'value': '782',
+              }),
+              dict({
+                'id': '2',
+                'type': 'humidity',
+                'value': '54',
+              }),
+            ]),
+            'id': 'ei:0',
+            'inUse': True,
+            'name': 'ecobee',
+            'type': 'thermostat',
+          }),
+          dict({
+            'capability': list([
+              dict({
+                'id': '1',
+                'type': 'temperature',
+                'value': '782',
+              }),
+              dict({
+                'id': '2',
+                'type': 'occupancy',
+                'value': 'false',
+              }),
+            ]),
+            'code': '**REDACTED**',
+            'id': 'rs:100',
+            'inUse': False,
+            'name': 'Remote Sensor 1',
+            'type': 'ecobee3_remote_sensor',
+          }),
+        ]),
+        'runtime': dict({
+          'actualHumidity': 15,
+          'actualTemperature': 300,
+          'connected': True,
+          'desiredCool': 200,
+          'desiredFanMode': 'on',
+          'desiredHeat': 400,
+          'desiredHumidity': 40,
+        }),
+        'settings': dict({
+          'coolStages': 1,
+          'fanMinOnTime': 10,
+          'hasHeatPump': False,
+          'hasHumidifier': True,
+          'heatCoolMinDelta': 50,
+          'heatStages': 1,
+          'holdAction': 'nextTransition',
+          'humidifierMode': 'manual',
+          'humidity': '30',
+          'hvacMode': 'auto',
+          'isVentilatorTimerOn': False,
+          'ventilatorMinOnTimeAway': 10,
+          'ventilatorMinOnTimeHome': 20,
+          'ventilatorOffDateTime': '2022-01-01 6:00:00',
+          'ventilatorType': 'hrv',
+        }),
+        'thermostatTime': '2022-01-01 6:00:00',
+        'utcTime': '2022-01-01 10:00:00',
+      }),
+      dict({
+        'equipmentStatus': 'fan',
+        'events': list([
+          dict({
+            'endDate': '2022-01-01',
+            'endTime': '10:00:00',
+            'holdClimateRef': 'away',
+            'name': 'Event1',
+            'running': True,
+            'startDate': '2022-02-02',
+            'startTime': '11:00:00',
+            'type': 'hold',
+          }),
+        ]),
+        'identifier': '**REDACTED**',
+        'modelNumber': 'athenaSmart',
+        'name': 'ecobee2',
+        'program': dict({
+          'climates': list([
+            dict({
+              'climateRef': 'c1',
+              'name': 'Climate1',
+            }),
+            dict({
+              'climateRef': 'c2',
+              'name': 'Climate2',
+            }),
+          ]),
+          'currentClimateRef': 'c1',
+        }),
+        'remoteSensors': list([
+          dict({
+            'capability': list([
+              dict({
+                'id': '1',
+                'type': 'temperature',
+                'value': '782',
+              }),
+              dict({
+                'id': '2',
+                'type': 'occupancy',
+                'value': 'false',
+              }),
+            ]),
+            'code': '**REDACTED**',
+            'id': 'rs:100',
+            'inUse': False,
+            'name': 'Remote Sensor 1',
+            'type': 'ecobee3_remote_sensor',
+          }),
+          dict({
+            'capability': list([
+              dict({
+                'id': '1',
+                'type': 'temperature',
+                'value': '782',
+              }),
+              dict({
+                'id': '2',
+                'type': 'occupancy',
+                'value': 'false',
+              }),
+            ]),
+            'code': '**REDACTED**',
+            'id': 'rs:101',
+            'inUse': False,
+            'name': 'Remote Sensor 2',
+            'type': 'ecobee3_remote_sensor',
+          }),
+        ]),
+        'runtime': dict({
+          'actualHumidity': 15,
+          'actualTemperature': 300,
+          'connected': True,
+          'desiredCool': 200,
+          'desiredFanMode': 'on',
+          'desiredHeat': 400,
+          'desiredHumidity': 40,
+        }),
+        'settings': dict({
+          'compressorProtectionMinTemp': 100,
+          'coolStages': 1,
+          'fanMinOnTime': 10,
+          'hasHeatPump': True,
+          'hasHumidifier': True,
+          'heatCoolMinDelta': 50,
+          'heatStages': 1,
+          'holdAction': 'nextTransition',
+          'humidifierMode': 'manual',
+          'humidity': '30',
+          'hvacMode': 'auto',
+          'isVentilatorTimerOn': False,
+          'ventilatorMinOnTimeAway': 10,
+          'ventilatorMinOnTimeHome': 20,
+          'ventilatorType': 'none',
+        }),
+      }),
+      dict({
+        'equipmentStatus': 'fan',
+        'events': list([
+          dict({
+            'endDate': '2022-01-01',
+            'endTime': '10:00:00',
+            'holdClimateRef': 'away',
+            'name': 'Event1',
+            'running': True,
+            'startDate': '2022-02-02',
+            'startTime': '11:00:00',
+            'type': 'hold',
+          }),
+        ]),
+        'identifier': '**REDACTED**',
+        'modelNumber': 'unknownEcobeeModel',
+        'name': 'unknownEcobeeName',
+        'program': dict({
+          'climates': list([
+            dict({
+              'climateRef': 'c1',
+              'name': 'Climate1',
+            }),
+            dict({
+              'climateRef': 'c2',
+              'name': 'Climate2',
+            }),
+          ]),
+          'currentClimateRef': 'c1',
+        }),
+        'remoteSensors': list([
+          dict({
+            'capability': list([
+              dict({
+                'id': '1',
+                'type': 'temperature',
+                'value': '782',
+              }),
+              dict({
+                'id': '2',
+                'type': 'occupancy',
+                'value': 'false',
+              }),
+            ]),
+            'code': '**REDACTED**',
+            'id': 'rs:100',
+            'inUse': False,
+            'name': 'Remote Sensor 1',
+            'type': 'ecobee3_remote_sensor',
+          }),
+        ]),
+        'runtime': dict({
+          'actualTemperature': 300,
+          'connected': True,
+          'desiredCool': 200,
+          'desiredFanMode': 'on',
+          'desiredHeat': 400,
+          'desiredHumidity': 40,
+        }),
+        'settings': dict({
+          'coolStages': 1,
+          'fanMinOnTime': 10,
+          'hasHeatPump': False,
+          'hasHumidifier': True,
+          'heatCoolMinDelta': 50,
+          'heatStages': 1,
+          'holdAction': 'nextTransition',
+          'humidifierMode': 'manual',
+          'humidity': '30',
+          'hvacMode': 'auto',
+          'isVentilatorTimerOn': False,
+          'ventilatorMinOnTimeAway': 10,
+          'ventilatorMinOnTimeHome': 20,
+          'ventilatorType': 'none',
+        }),
+      }),
+    ]),
+  })
+# ---
