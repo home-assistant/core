@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import chain
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from pyportainer import StackType
 from pyportainer.models.docker import DockerContainerState, DockerSystemDF
@@ -30,6 +30,7 @@ from .coordinator import (
 )
 from .entity import (
     PortainerContainerEntity,
+    PortainerDockerDiskSpaceVolumeEntity,
     PortainerDockerSystemDiskSpaceEndpointEntity,
     PortainerEndpointEntity,
     PortainerStackEntity,
@@ -74,6 +75,13 @@ class PortainerVolumeSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer volume sensor description."""
 
     value_fn: Callable[[PortainerVolumeData], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PortainerVolumeDiskSpaceSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Portainer volume disk space sensor description."""
+
+    value_fn: Callable[[dict[str, Any]], StateType]
 
 
 CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
@@ -410,11 +418,16 @@ VOLUME_SENSORS: tuple[PortainerVolumeSensorEntityDescription, ...] = (
         translation_key="volume_driver",
         value_fn=lambda data: data.volume.driver,
     ),
-    PortainerVolumeSensorEntityDescription(
+)
+VOLUME_DISK_SPACE_SENSORS: tuple[
+    PortainerVolumeDiskSpaceSensorEntityDescription, ...
+] = (
+    PortainerVolumeDiskSpaceSensorEntityDescription(
         key="volume_size",
         translation_key="volume_size",
-        value_fn=lambda data: (
-            data.volume.usage_data.size if data.volume.usage_data else None
+        # Docker reports -1 for volumes of non-local drivers
+        value_fn=lambda usage: (
+            size if (size := usage["UsageData"]["Size"]) >= 0 else None
         ),
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -519,18 +532,33 @@ async def async_setup_entry(
         async_add_entities_by_subentry(
             async_add_entities,
             coordinator.subentry_id_for_endpoint,
-            (
+            chain(
                 (
-                    PortainerVolumeSensor(
-                        coordinator,
-                        entity_description,
-                        volume.volume,
-                        endpoint,
-                    ),
-                    endpoint.id,
-                )
-                for (endpoint, volume) in volumes
-                for entity_description in VOLUME_SENSORS
+                    (
+                        PortainerVolumeSensor(
+                            coordinator,
+                            entity_description,
+                            volume.volume,
+                            endpoint,
+                        ),
+                        endpoint.id,
+                    )
+                    for (endpoint, volume) in volumes
+                    for entity_description in VOLUME_SENSORS
+                ),
+                (
+                    (
+                        PortainerVolumeDiskSpaceSensor(
+                            ds_coordinator,
+                            entity_description,
+                            volume.volume,
+                            endpoint,
+                        ),
+                        endpoint.id,
+                    )
+                    for (endpoint, volume) in volumes
+                    for entity_description in VOLUME_DISK_SPACE_SENSORS
+                ),
             ),
         )
 
@@ -631,3 +659,19 @@ class PortainerVolumeSensor(PortainerVolumeEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.volume_data)
+
+
+class PortainerVolumeDiskSpaceSensor(
+    PortainerDockerDiskSpaceVolumeEntity, SensorEntity
+):
+    """Representation of a Portainer volume disk space sensor."""
+
+    entity_description: PortainerVolumeDiskSpaceSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        if TYPE_CHECKING:
+            assert self.volume_usage is not None
+        return self.entity_description.value_fn(self.volume_usage)
