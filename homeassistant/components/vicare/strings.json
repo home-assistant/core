@@ -721,6 +721,18 @@
     "circulation_schedule_not_supported": {
       "message": "This device does not support a domestic hot water circulation schedule"
     },
+    "holiday_end_before_start": {
+      "message": "The holiday end date must not be before the start date"
+    },
+    "holiday_not_cancelled": {
+      "message": "Unable to cancel the holiday program: {error}"
+    },
+    "holiday_not_scheduled": {
+      "message": "Unable to schedule the holiday program: {error}"
+    },
+    "holiday_not_supported": {
+      "message": "This device does not support the {program} program"
+    },
     "program_not_activated": {
       "message": "Unable to activate ViCare program {program}"
     },
@@ -747,12 +759,46 @@
         "cycles_5_25": "5/25 cycles",
         "on": "[%key:common::state::on%]"
       }
+    },
+    "holiday_program": {
+      "options": {
+        "holiday": "[%key:component::vicare::entity::binary_sensor::holiday::name%]",
+        "holiday_at_home": "[%key:component::vicare::entity::binary_sensor::holiday_at_home::name%]"
+      }
     }
   },
   "services": {
+    "cancel_holiday": {
+      "description": "Cancels a scheduled or running holiday program of the heating device.",
+      "fields": {
+        "program": {
+          "description": "[%key:component::vicare::services::schedule_holiday::fields::program::description%]",
+          "name": "[%key:component::vicare::services::schedule_holiday::fields::program::name%]"
+        }
+      },
+      "name": "Cancel holiday"
+    },
     "get_circulation_schedule": {
       "description": "Gets the domestic hot water circulation pump schedule.",
       "name": "Get circulation schedule"
+    },
+    "schedule_holiday": {
+      "description": "Schedules a holiday program of the heating device. It applies to all heating circuits of the device.",
+      "fields": {
+        "end_date": {
+          "description": "Last day of the holiday.",
+          "name": "End date"
+        },
+        "program": {
+          "description": "The holiday program to use. Not every device supports holiday at home.",
+          "name": "Program"
+        },
+        "start_date": {
+          "description": "First day of the holiday.",
+          "name": "Start date"
+        }
+      },
+      "name": "Schedule holiday"
     },
     "set_circulation_schedule": {
       "description": "Sets the domestic hot water circulation pump schedule.",

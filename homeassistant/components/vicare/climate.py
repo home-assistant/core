@@ -1,6 +1,8 @@
 """Viessmann ViCare climate device."""
 
+from collections.abc import Callable
 from contextlib import suppress
+from datetime import date
 import logging
 from typing import Any, override
 
@@ -25,13 +27,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import ViCareEntity
+from .services import HOLIDAY_PROGRAM_AT_HOME
 from .types import HeatingProgram, ViCareConfigEntry, ViCareDevice
-from .utils import get_burners, get_circuits, get_compressors
+from .utils import VICARE_API_ERRORS, get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -354,3 +357,62 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             raise ValueError(f"Cannot set invalid vicare mode: {vicare_mode}.")
 
         self._api.setMode(vicare_mode)
+
+    def _holiday_commands(
+        self, program: str
+    ) -> tuple[Callable[[str, str], Any], Callable[[], Any]]:
+        """Return the schedule and cancel commands of a holiday program."""
+        device = self._device
+        try:
+            if program == HOLIDAY_PROGRAM_AT_HOME:
+                device.getHolidayAtHomeActive()
+                return device.scheduleHolidayAtHome, device.unscheduleHolidayAtHome
+            device.getHolidayActive()
+        except PyViCareNotSupportedFeatureError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="holiday_not_supported",
+                translation_placeholders={"program": program},
+            ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from err
+        return device.scheduleHoliday, device.unscheduleHoliday
+
+    def schedule_holiday(self, program: str, start_date: date, end_date: date) -> None:
+        """Schedule a holiday program, which applies to the whole device."""
+        if end_date < start_date:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="holiday_end_before_start",
+            )
+        schedule, _ = self._holiday_commands(program)
+        try:
+            schedule(start_date.isoformat(), end_date.isoformat())
+        except PyViCareCommandError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="holiday_not_scheduled",
+                translation_placeholders={"error": err.message},
+            ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from err
+
+    def cancel_holiday(self, program: str) -> None:
+        """Cancel a scheduled or running holiday program."""
+        _, cancel = self._holiday_commands(program)
+        try:
+            cancel()
+        except PyViCareCommandError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="holiday_not_cancelled",
+                translation_placeholders={"error": err.message},
+            ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from err
