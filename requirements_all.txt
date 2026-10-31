@@ -1002,7 +1002,7 @@ energyzero==5.1.1
 enocean-async==0.4.2
 
 # homeassistant.components.entur_public_transport
-enturclient==0.2.4
+enturclient==0.4.0
 
 # homeassistant.components.environment_canada
 env-canada==0.20.3
