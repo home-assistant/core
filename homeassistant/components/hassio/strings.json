@@ -247,8 +247,8 @@
       "title": "Unhealthy system - {reason}"
     },
     "unhealthy_data_filesystem_check_error": {
-      "description": "System is currently unhealthy because a filesystem integrity check failed on the data partition. This can be caused by unexpected power loss or failing storage and may affect configuration, apps, or backups. For troubleshooting information, select Learn more.",
-      "title": "Unhealthy system - Data partition filesystem check failed"
+      "description": "System is currently unhealthy because the filesystem check on the data partition did not complete successfully at boot. This can happen after an unexpected power loss, even when nothing is damaged. Reboot the system to run the check again. If the issue persists, the filesystem may be damaged or the storage may be failing, which can affect configuration, apps, or backups. For troubleshooting information, select Learn more.",
+      "title": "Unhealthy system - Data partition filesystem check did not pass"
     },
     "unhealthy_docker": {
       "description": "System is currently unhealthy because Docker is configured incorrectly. For troubleshooting information, select Learn more.",
@@ -263,8 +263,8 @@
       "title": "Unhealthy system - Duplicate Home Assistant OS installation"
     },
     "unhealthy_os_filesystem_check_error": {
-      "description": "System is currently unhealthy because a filesystem integrity check failed on an operating system partition. This can be caused by unexpected power loss or failing storage. For troubleshooting information, select Learn more.",
-      "title": "Unhealthy system - OS partition filesystem check failed"
+      "description": "System is currently unhealthy because the filesystem check on an operating system partition did not complete successfully at boot. This can happen after an unexpected power loss, even when nothing is damaged. Reboot the system to run the check again. If the issue persists, the filesystem may be damaged or the storage may be failing. For troubleshooting information, select Learn more.",
+      "title": "Unhealthy system - OS partition filesystem check did not pass"
     },
     "unhealthy_oserror_bad_message": {
       "description": "System is currently unhealthy because the operating system has reported an OS error: Bad message. For troubleshooting information, select Learn more.",
