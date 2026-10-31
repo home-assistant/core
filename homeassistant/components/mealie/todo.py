@@ -44,18 +44,26 @@ TODO_STATUS_MAP = {
 TODO_STATUS_MAP_INV = {v: k for k, v in TODO_STATUS_MAP.items()}
 
 
+def _todo_summary(item: ShoppingItem) -> str:
+    """Return a concise summary for a shopping item."""
+    if item.food:
+        return item.food.plural_name or item.food.name
+    return item.display
+
+
 def _convert_api_item(item: ShoppingItem) -> TodoItem:
     """Convert Mealie shopping list items into a TodoItem."""
 
+    summary = _todo_summary(item)
     return TodoItem(
-        summary=item.display,
+        summary=summary,
         uid=item.item_id,
         status=TODO_STATUS_MAP.get(
             item.checked,
             TodoItemStatus.NEEDS_ACTION,
         ),
         due=None,
-        description=None,
+        description=item.display if summary != item.display else None,
     )
 
 
@@ -269,7 +277,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         if (
             item.summary
             and self.parse_todo_edit
-            and list_item.display.strip() != item.summary.strip()
+            and _todo_summary(list_item).strip() != item.summary.strip()
         ):
             update_shopping_item = await self.async_parse_todo_item(item.summary)
 
@@ -290,7 +298,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 item.summary.strip() if item.summary else item.summary
             )
 
-            if list_item.display.strip() != stripped_item_summary:
+            if _todo_summary(list_item).strip() != stripped_item_summary:
                 update_shopping_item.note = stripped_item_summary
                 update_shopping_item.position = position
                 if update_shopping_item.is_food is not None:
