@@ -88,6 +88,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._device_name = str(info.hostname)
 
                     if info.model not in Devices:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_abort(reason="unsupported_device")
 
                     return await self._async_complete_entry(user_input)
@@ -113,11 +114,15 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._device_name = str(info.hostname)
 
                     if info.model not in Devices:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_abort(reason="unsupported_device")
 
                     if self.source == SOURCE_RECONFIGURE:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         await self.async_set_unique_id(format_mac(info.MAC))
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         self._abort_if_unique_id_mismatch()
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(),
                             data_updates={
@@ -174,6 +179,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     info = await self.client.get_info()
 
                     if info.model not in Devices:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_abort(reason="unsupported_device")
 
                 return await self._async_complete_entry(user_input)
