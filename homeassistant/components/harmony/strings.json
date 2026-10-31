@@ -34,6 +34,17 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "{name}: Unable to connect to hub at {address}:8088"
+    },
+    "connection_error": {
+      "message": "{name}: An error occurred while connecting to hub at {address}:8088"
+    },
+    "connection_timeout": {
+      "message": "{name}: Connection timed out to hub at {address}:8088"
+    }
+  },
   "options": {
     "abort": {
       "entry_not_loaded": "The options can be changed once the hub has been set up."

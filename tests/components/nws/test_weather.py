@@ -168,7 +168,10 @@ async def test_data_caching_error_observation(
     state = hass.states.get("weather.nws_35_75_abc")
     assert state.state == STATE_UNAVAILABLE
 
-    assert "Error fetching NWS observation station ABC data: Test" in caplog.text
+    assert (
+        "Error fetching NWS observation station ABC data: "
+        "An error occurred while updating the observation data" in caplog.text
+    )
 
 
 async def test_no_data_error_observation(
@@ -187,7 +190,10 @@ async def test_no_data_error_observation(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert "Error fetching NWS observation station ABC data: Test" in caplog.text
+    assert (
+        "Error fetching NWS observation station ABC data: "
+        "An error occurred while updating the observation data" in caplog.text
+    )
 
 
 async def test_no_data_error_forecast(

@@ -77,6 +77,10 @@ def mock_infrared_code_to_command() -> Generator[None]:
             new=mock_to_command,
         ),
         patch(
+            "infrared_protocols.codes.generic.led.Generic10KeyB708Code.to_command",
+            new=mock_to_command,
+        ),
+        patch(
             "infrared_protocols.codes.generic.led.Generic21KeyCode.to_command",
             new=mock_to_command,
         ),

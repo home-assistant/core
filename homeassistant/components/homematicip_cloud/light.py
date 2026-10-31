@@ -13,7 +13,7 @@ from homematicip.base.functionalChannels import (
     NotificationLightChannel,
     NotificationMp3SoundChannel,
 )
-from homematicip.device import Device, WiredPushButton
+from homematicip.device import Device
 from packaging.version import Version
 
 from homeassistant.components.light import (
@@ -110,16 +110,14 @@ async def async_setup_entry(
             )
         )
 
-        # the LEDs are set through the device, the channel has no command for it
-        if isinstance(device, WiredPushButton):
-            optical_channels = sorted(
-                _channels(device, (FunctionalChannelType.OPTICAL_SIGNAL_CHANNEL,)),
-                key=lambda ch: ch.index,
-            )
-            entities.extend(
-                HomematicipOpticalSignalLight(hap, device, channel.index, led_number)
-                for led_number, channel in enumerate(optical_channels, start=1)
-            )
+        optical_channels = sorted(
+            _channels(device, (FunctionalChannelType.OPTICAL_SIGNAL_CHANNEL,)),
+            key=lambda ch: ch.index,
+        )
+        entities.extend(
+            HomematicipOpticalSignalLight(hap, device, channel.index, led_number)
+            for led_number, channel in enumerate(optical_channels, start=1)
+        )
 
     async_add_entities(entities)
 
@@ -508,7 +506,7 @@ def _convert_color(color: tuple) -> RGBColorState:
 
 
 class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
-    """Representation of HomematicIP WiredPushButton LED light."""
+    """Representation of a HomematicIP optical signal LED."""
 
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
@@ -540,7 +538,7 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
     def __init__(
         self,
         hap: HomematicipHAP,
-        device: WiredPushButton,
+        device: Device,
         channel_index: int,
         led_number: int,
     ) -> None:
@@ -620,8 +618,7 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
 
         behaviour = self._effect_to_behaviour.get(effect, OpticalSignalBehaviour.ON)
 
-        await self._device.set_optical_signal_async(
-            channelIndex=self._channel,
+        await self.get_channel_or_raise().async_set_optical_signal(
             opticalSignalBehaviour=behaviour,
             rgb=simple_rgb_color,
             dimLevel=dim_level,
@@ -633,8 +630,7 @@ class HomematicipOpticalSignalLight(HomematicipGenericEntity, LightEntity):
         channel = self.get_channel_or_raise()
         simple_rgb_color = channel.simpleRGBColorState
 
-        await self._device.set_optical_signal_async(
-            channelIndex=self._channel,
+        await channel.async_set_optical_signal(
             opticalSignalBehaviour=OpticalSignalBehaviour.OFF,
             rgb=simple_rgb_color,
             dimLevel=0.0,

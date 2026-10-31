@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_get_device_automa
 from zha.application.const import ATTR_ENDPOINT_ID, RadioType
 from zha.quirks import DEVICE_REGISTRY
 from zigpy.application import ControllerApplication
-from zigpy.device import Device as ZigpyDevice
+from zigpy.device import ZigbeeDevice as ZigpyDevice
 import zigpy.profiles.zha
 import zigpy.types
 

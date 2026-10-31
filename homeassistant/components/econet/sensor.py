@@ -123,9 +123,13 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
     def native_value(self):
         """Return sensors state."""
         value = getattr(self._econet, self.entity_description.key)
-        if self.entity_description.key == "todays_energy_usage":
-            if self._econet.energy_type == "KBTU":
-                value = value * 0.2930710702  # Convert kBtu to kWh
+        if value is None:
+            return None
+        if (
+            self.entity_description.key == "todays_energy_usage"
+            and self._econet.energy_type == "KBTU"
+        ):
+            value = value * 0.2930710702  # Convert kBtu to kWh
         if isinstance(value, float):
             value = round(value, 2)
         return value

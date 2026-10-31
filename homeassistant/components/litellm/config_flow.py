@@ -305,7 +305,11 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             ),

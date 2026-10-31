@@ -164,6 +164,9 @@
     "no_listening_addresses": {
       "message": "No enabled network adapter has an IPv4 address to listen on"
     },
+    "no_live_endpoints": {
+      "message": "Lost every network listener, reloading"
+    },
     "port_in_use": {
       "message": "Port {port} is already in use"
     }

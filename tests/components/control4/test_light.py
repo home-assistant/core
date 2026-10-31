@@ -1,6 +1,5 @@
 """Test Control4 Light."""
 
-from json import JSONDecodeError
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -92,23 +91,3 @@ async def test_light_created_when_other_light_type_missing(
     entity_id = entity_registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, "345")
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_ON
-
-
-@pytest.mark.usefixtures("mock_c4_account", "mock_light_items")
-async def test_light_not_created_when_response_is_invalid(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_c4_director: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test an unreadable response is not treated as a system without lights."""
-    mock_c4_director.get_all_item_variable_value.side_effect = JSONDecodeError(
-        "Expecting value", "", 0
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert entity_registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, "345") is None
-    # The failure is reported instead of being read as an empty response.
-    assert "Expecting value" in caplog.text

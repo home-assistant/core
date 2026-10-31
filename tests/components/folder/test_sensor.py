@@ -63,7 +63,7 @@ async def test_sensor_update(
     Path(folder_path, "second.txt").write_text("more data", encoding="utf8")
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state
