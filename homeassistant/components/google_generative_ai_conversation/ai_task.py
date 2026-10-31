@@ -66,8 +66,10 @@ class GoogleGenerativeAITaskEntity(
             | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
         )
 
-        if subentry.data.get(CONF_RECOMMENDED) or "-image" in subentry.data.get(
-            CONF_CHAT_MODEL, ""
+        if (
+            subentry.data.get(CONF_RECOMMENDED)
+            or "-image" in subentry.data.get(CONF_CHAT_MODEL, "")
+            or "-nano-banana" in subentry.data.get(CONF_CHAT_MODEL, "")
         ):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 

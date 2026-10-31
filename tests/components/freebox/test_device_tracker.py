@@ -9,6 +9,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
 
@@ -74,3 +75,28 @@ async def test_update_timeout(
     await hass.async_block_till_done()
 
     assert "Updating the Freebox works again" in caplog.text
+
+
+@pytest.mark.usefixtures("router")
+@pytest.mark.parametrize(
+    ("mac", "expected_name"),
+    [
+        pytest.param("8c:97:ea:00:00:00", "Freebox Player POP", id="named"),
+        pytest.param("de:00:b0:00:00:00", "Unknown device", id="unnamed"),
+        pytest.param("68:a3:78:00:00:00", "Freebox Server (r2)", id="router"),
+    ],
+)
+async def test_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mac: str,
+    expected_name: str,
+) -> None:
+    """Test each tracked client gets a device with its MAC address and name."""
+    entry = await setup_platform(hass, DEVICE_TRACKER_DOMAIN)
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
+    )
+    assert device is not None
+    assert device.name == expected_name

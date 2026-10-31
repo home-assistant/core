@@ -47,7 +47,7 @@ from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
 )
-from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
+from homeassistant.helpers.typing import TemplateVarsType, Undefined
 from homeassistant.util.yaml import load_yaml_dict
 from pytest_homeassistant.common import MockConfigEntry, mock_device_registry
 
@@ -881,7 +881,7 @@ def parametrize_trigger_states(
         state: str | tuple[str | None, dict] | None,
         count: int,
         *,
-        others_state: str | tuple[str | None, dict] | UndefinedType | None = UNDEFINED,
+        others_state: str | tuple[str | None, dict] | Undefined | None = Undefined,
     ) -> TriggerStateDescription:
         """Return TriggerStateDescription dict."""
         included = _included_state_desc(state)
@@ -890,7 +890,7 @@ def parametrize_trigger_states(
             "excluded_state": _excluded_state_desc(state),
             "others_state": (
                 included
-                if isinstance(others_state, UndefinedType)
+                if others_state is Undefined
                 else _included_state_desc(others_state)
             ),
             "count": count,
@@ -1108,10 +1108,10 @@ def parametrize_trigger_states(
 
 
 def _add_threshold_unit(
-    options: dict[str, Any], threshold_unit: str | UndefinedType | None
+    options: dict[str, Any], threshold_unit: str | Undefined | None
 ) -> dict[str, Any]:
     """Add unit to trigger thresholds if threshold_unit is provided."""
-    if threshold_unit is UNDEFINED:
+    if threshold_unit is Undefined:
         return options
     options = copy.deepcopy(options)
     threshold_options = options["threshold"]
@@ -1127,7 +1127,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
     state: str,
     attribute: str,
     *,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
@@ -1155,7 +1155,7 @@ def parametrize_numerical_attribute_changed_trigger_states(
             generates target/other/excluded states by varying this attribute.
         threshold_unit: When set, the threshold values in `trigger_options`
             get this unit attached (`unit_of_measurement`). Defaults to
-            UNDEFINED, meaning no unit is added.
+            Undefined, meaning no unit is added.
         trigger_options: Extra keys merged into the generated `options` dict
             for each threshold-type variant.
         required_filter_attributes: Attributes that must be present on the
@@ -1273,7 +1273,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     state: str,
     attribute: str,
     *,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     trigger_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
     unit_attributes: dict | None = None,
@@ -1303,7 +1303,7 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
             generates target/other/excluded states by varying this attribute.
         threshold_unit: When set, the threshold values in `trigger_options`
             get this unit attached (`unit_of_measurement`). Defaults to
-            UNDEFINED, meaning no unit is added.
+            Undefined, meaning no unit is added.
         trigger_options: Extra keys merged into the generated `options` dict
             for each threshold-type variant.
         required_filter_attributes: Attributes that must be present on the
@@ -1444,7 +1444,7 @@ def parametrize_numerical_state_value_changed_trigger_states(
     trigger: str,
     *,
     device_class: str,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
@@ -1525,7 +1525,7 @@ def parametrize_numerical_state_value_crossed_threshold_trigger_states(
     trigger: str,
     *,
     device_class: str,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     trigger_options: dict[str, Any] | None = None,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
@@ -2172,7 +2172,7 @@ def parametrize_numerical_condition_above_below_any(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize threshold cases for state-value numerical conditions.
@@ -2205,7 +2205,7 @@ def parametrize_numerical_condition_above_below_any(
             helper).
         threshold_unit: When set, the threshold values in
             `condition_options` get this unit attached
-            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no unit
+            (`unit_of_measurement`). Defaults to Undefined, meaning no unit
             is added.
         unit_attributes: Attributes (typically
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
@@ -2295,7 +2295,7 @@ def parametrize_numerical_condition_above_below_all(
     *,
     device_class: str,
     condition_options: dict[str, Any] | None = None,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     unit_attributes: dict | None = None,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize threshold cases for state-value numerical conditions.
@@ -2323,7 +2323,7 @@ def parametrize_numerical_condition_above_below_all(
             helper).
         threshold_unit: When set, the threshold values in
             `condition_options` get this unit attached
-            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no unit
+            (`unit_of_measurement`). Defaults to Undefined, meaning no unit
             is added.
         unit_attributes: Attributes (typically
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
@@ -2415,7 +2415,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
     attribute_value_scale: float = 1.0,
@@ -2453,7 +2453,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
             same state value but *without* these attributes.
         threshold_unit: When set, the threshold values in
             `condition_options` get this unit attached
-            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no
+            (`unit_of_measurement`). Defaults to Undefined, meaning no
             unit is added.
         unit_attributes: Attributes (typically
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated
@@ -2563,7 +2563,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     *,
     condition_options: dict[str, Any] | None = None,
     required_filter_attributes: dict | None = None,
-    threshold_unit: str | UndefinedType | None = UNDEFINED,
+    threshold_unit: str | Undefined | None = Undefined,
     unit_attributes: dict | None = None,
     attribute_required: bool = False,
     attribute_value_scale: float = 1.0,
@@ -2600,7 +2600,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
             same state value but *without* these attributes.
         threshold_unit: When set, the threshold values in
             `condition_options` get this unit attached
-            (`unit_of_measurement`). Defaults to UNDEFINED, meaning no
+            (`unit_of_measurement`). Defaults to Undefined, meaning no
             unit is added.
         unit_attributes: Attributes (typically
             `{ATTR_UNIT_OF_MEASUREMENT: ...}`) merged into every generated

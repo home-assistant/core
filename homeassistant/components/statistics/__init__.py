@@ -16,6 +16,10 @@ PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Statistics from a config entry."""

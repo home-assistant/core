@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .utils import MockUFPFixture, init_entry
+from .utils import MockUFPFixture, init_entry, set_active_rtsps_qualities
 
 _ACTIVE_STREAMS = RTSPSStreams(high="rtsps://example.test:7441/abc?enableSrtp")
 _NO_STREAMS = RTSPSStreams()
@@ -76,8 +76,7 @@ async def _raise_and_assert_repair(
     hass_ws_client: WebSocketGenerator,
 ) -> tuple[TestClient, str]:
     """Set up a streamless camera, assert its repair exists, return (client, issue_id)."""
-    for channel in doorbell.channels:
-        channel.is_rtsp_enabled = False
+    set_active_rtsps_qualities(ufp, doorbell)
 
     await init_entry(hass, ufp, [doorbell])
     assert await async_setup_component(hass, "repairs", {})
@@ -243,8 +242,7 @@ async def test_rtsp_no_repair_when_suppressed(
     extra_options: dict[str, bool],
 ) -> None:
     """No repair for third-party cameras or when RTSP is globally disabled."""
-    for channel in doorbell.channels:
-        channel.is_rtsp_enabled = False
+    set_active_rtsps_qualities(ufp, doorbell)
     doorbell.is_third_party_camera = third_party
     hass.config_entries.async_update_entry(
         ufp.entry, options={**ufp.entry.options, **extra_options}

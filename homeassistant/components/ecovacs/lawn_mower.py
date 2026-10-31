@@ -59,6 +59,7 @@ class EcovacsMower(
         LawnMowerEntityFeature.DOCK
         | LawnMowerEntityFeature.PAUSE
         | LawnMowerEntityFeature.START_MOWING
+        | LawnMowerEntityFeature.STOP
     )
 
     entity_description = LawnMowerEntityEntityDescription(key="mower", name=None)
@@ -92,6 +93,11 @@ class EcovacsMower(
     async def async_pause(self) -> None:
         """Pauses the mower."""
         await self._clean_command(CleanAction.PAUSE)
+
+    @override
+    async def async_stop(self) -> None:
+        """Stop the mower."""
+        await self._clean_command(CleanAction.STOP)
 
     @override
     async def async_dock(self) -> None:

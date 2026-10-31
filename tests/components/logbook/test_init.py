@@ -31,6 +31,10 @@ from homeassistant.components.logbook.const import ATTR_MESSAGE
 from homeassistant.components.logbook.models import EventAsRow, LazyEventPartialState
 from homeassistant.components.logbook.processor import EventProcessor
 from homeassistant.components.logbook.queries.common import PSEUDO_EVENT_STATE_CHANGED
+from homeassistant.components.logbook.services import (
+    LogbookService,
+    LogbookServiceArgument,
+)
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.models import ulid_to_bytes_or_none
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
@@ -91,21 +95,21 @@ async def test_service_call_create_logbook_entry(hass_: HomeAssistant) -> None:
 
     await hass_.services.async_call(
         logbook.DOMAIN,
-        "log",
+        LogbookService.LOG,
         {
-            ATTR_NAME: "Alarm",
-            ATTR_MESSAGE: "is triggered",
-            ATTR_DOMAIN: "switch",
+            LogbookServiceArgument.NAME: "Alarm",
+            LogbookServiceArgument.MESSAGE: "is triggered",
+            LogbookServiceArgument.DOMAIN: "switch",
             ATTR_ENTITY_ID: "switch.test_switch",
         },
         True,
     )
     await hass_.services.async_call(
         logbook.DOMAIN,
-        "log",
+        LogbookService.LOG,
         {
-            ATTR_NAME: "This entry",
-            ATTR_MESSAGE: "has no domain or entity_id",
+            LogbookServiceArgument.NAME: "This entry",
+            LogbookServiceArgument.MESSAGE: "has no domain or entity_id",
         },
         True,
     )
@@ -176,7 +180,7 @@ async def test_service_call_create_log_book_entry_no_message(
     calls = async_capture_events(hass_, EVENT_LOGBOOK_ENTRY)
 
     with pytest.raises(probatio.Invalid):
-        await hass_.services.async_call(logbook.DOMAIN, "log", {}, True)
+        await hass_.services.async_call(logbook.DOMAIN, LogbookService.LOG, {}, True)
 
     # Logbook entry service call results in firing an event.
     # Our service call will unblock when the event listeners have been

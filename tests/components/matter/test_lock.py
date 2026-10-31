@@ -80,6 +80,12 @@ def _get_user_calls(node_id: int, indexes: Iterable[int]) -> list[call]:
     ]
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.LOCK
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_locks(
     hass: HomeAssistant,

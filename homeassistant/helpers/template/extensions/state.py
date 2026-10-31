@@ -4,6 +4,8 @@ from collections.abc import Iterable
 import logging
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Sentinel as sentinel
+
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_PERSONS,
@@ -30,7 +32,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class StateExtension(BaseTemplateExtension):
@@ -66,10 +68,16 @@ class StateExtension(BaseTemplateExtension):
                     "states",
                     AllStates(hass),
                     as_global=True,
-                    as_filter=True,
                     requires_hass=True,
                     limited_ok=False,
                     pass_context=False,
+                ),
+                TemplateFunction(
+                    "states",
+                    AllStates(hass).__call__,
+                    as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
                 ),
             ]
 

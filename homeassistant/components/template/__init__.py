@@ -60,7 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if (
         device_id is not None
         and device_registry.async_get(
-            device_id, include_main_devices=False, include_child_devices=False
+            device_id,
+            include_main_devices=False,
+            include_child_devices=False,
+            include_composite_devices=True,
         )
         is not None
     ):

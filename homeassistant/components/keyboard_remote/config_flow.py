@@ -19,7 +19,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_TYPE, UnitOfTime
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 
 from . import list_input_devices
 from .const import (
@@ -466,7 +466,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             title=(
                 device_name
                 if device_name and entry.title == entry.data[CONF_DEVICE_NAME]
-                else UNDEFINED
+                else Undefined
             ),
             data_updates=data_updates,
             reason="already_configured",

@@ -9,17 +9,26 @@ from pyoverkiz.action_queue import ActionQueueSettings
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
     RexelTokenCredentials,
+    SomfyTokenCredentials,
     UsernamePasswordCredentials,
 )
 from pyoverkiz.client import OverkizClient, OverkizClientSettings
 from pyoverkiz.const import REXEL_OAUTH_CLIENT_ID
-from pyoverkiz.enums import APIType, OverkizState, Server, UIClass, UIWidget
+from pyoverkiz.enums import (
+    APIType,
+    OverkizCommand,
+    OverkizState,
+    Server,
+    UIClass,
+    UIWidget,
+)
 from pyoverkiz.exceptions import (
     BadCredentialsError,
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
     ServiceUnavailableError,
+    SomfyServiceError,
     TooManyRequestsError,
 )
 from pyoverkiz.models import Device, PersistedActionGroup
@@ -33,6 +42,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -58,6 +68,8 @@ from .const import (
     CONF_API_TYPE,
     CONF_GATEWAY_ID,
     CONF_HUB,
+    CONF_REFRESH_TOKEN,
+    CONF_SITE_OID,
     DOMAIN,
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
@@ -97,14 +109,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> None:
-    """Set up Overkiz from a config entry."""
-    client: OverkizClient | None = None
-    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
-
+async def create_client(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
+) -> OverkizClient:
+    """Create the Overkiz client matching the API type of a config entry."""
     # Local API
-    if api_type == APIType.LOCAL:
-        client = create_local_client(
+    if entry.data.get(CONF_API_TYPE, APIType.CLOUD) == APIType.LOCAL:
+        return create_local_client(
             hass,
             host=entry.data[CONF_HOST],
             token=entry.data[CONF_TOKEN],
@@ -112,17 +123,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         )
 
     # Rexel Cloud API (OAuth2)
-    elif entry.data.get(CONF_HUB) == Server.REXEL:
-        client = await create_rexel_client(hass, entry)
+    if entry.data.get(CONF_HUB) == Server.REXEL:
+        return await create_rexel_client(hass, entry)
+
+    # Somfy multi-account Cloud API (resumable token)
+    if entry.data.get(CONF_HUB) == Server.SOMFY:
+        return await create_somfy_client(hass, entry)
 
     # Overkiz Cloud API
-    else:
-        client = create_cloud_client(
-            hass,
-            username=entry.data[CONF_USERNAME],
-            password=entry.data[CONF_PASSWORD],
-            server=entry.data[CONF_HUB],
-        )
+    return create_cloud_client(
+        hass,
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
+        server=entry.data[CONF_HUB],
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> None:
+    """Set up Overkiz from a config entry."""
+    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
+    client = await create_client(hass, entry)
 
     try:
         await client.login()
@@ -151,6 +171,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
     except ServiceUnavailableError as exception:
         raise ConfigEntryNotReady("Server is unavailable") from exception
+    except SomfyServiceError as exception:
+        raise ConfigEntryNotReady("Somfy service error") from exception
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -158,6 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         LOGGER,
         client=client,
         devices=setup.devices,
+        gateways=setup.gateways,
         places=setup.root_place,
     )
 
@@ -242,6 +265,86 @@ async def async_migrate_entry(
     if entry.version == 1 and entry.minor_version < 2:
         await _async_migrate_strenum_unique_ids(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    if entry.version == 1 and entry.minor_version < 3:
+        entity_registry = er.async_get(hass)
+        legacy_suffix = f"-{OverkizCommand.GO_TO_ALIAS}"
+        legacy_buttons = [
+            entity_entry
+            for entity_entry in er.async_entries_for_config_entry(
+                entity_registry, entry.entry_id
+            )
+            if entity_entry.domain == Platform.BUTTON
+            and entity_entry.unique_id.endswith(legacy_suffix)
+        ]
+
+        # The legacy button hardcoded alias id 1, which is the favorite1 ("My
+        # position") slot. Devices advertising any other type never had a working
+        # button, so those entities have no counterpart to migrate to.
+        devices_with_favorite: set[str] = set()
+        if legacy_buttons:
+            # Whether a legacy button has a counterpart depends on the aliases the
+            # device advertises, so this needs the devices from the API.
+            client = await create_client(hass, entry)
+            try:
+                await client.login(register_event_listener=False)
+                setup = await client.get_setup()
+            except (
+                BadCredentialsError,
+                NoSuchTokenError,
+                NotAuthenticatedError,
+                OAuth2TokenRequestReauthError,
+            ):
+                # Reauth is not started for a failed migration, so drop the legacy
+                # buttons instead of blocking setup, which then starts reauth.
+                LOGGER.warning(
+                    "Could not authenticate to migrate goToAlias buttons, removing them"
+                )
+            except (
+                TooManyRequestsError,
+                OAuth2TokenRequestError,
+                TimeoutError,
+                ClientError,
+                MaintenanceError,
+                ServiceUnavailableError,
+                SomfyServiceError,
+            ) as exception:
+                raise ConfigEntryNotReady(
+                    "Failed to fetch devices for migration"
+                ) from exception
+            else:
+                devices_with_favorite = {
+                    device.device_url
+                    for device in setup.devices
+                    if any(
+                        alias.type == "favorite1"
+                        for alias in device.get_supported_aliases()
+                    )
+                }
+
+        for entity_entry in legacy_buttons:
+            if entity_entry.unique_id.removesuffix(legacy_suffix) in (
+                devices_with_favorite
+            ):
+                new_unique_id = f"{entity_entry.unique_id}_favorite1"
+                LOGGER.debug(
+                    "Migrating entity '%s' unique_id from '%s' to '%s'",
+                    entity_entry.entity_id,
+                    entity_entry.unique_id,
+                    new_unique_id,
+                )
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=new_unique_id
+                )
+                continue
+
+            LOGGER.debug(
+                "Removing entity '%s', device does not expose a favorite1 alias",
+                entity_entry.entity_id,
+            )
+            entity_registry.async_remove(entity_entry.entity_id)
+
+        hass.config_entries.async_update_entry(entry, minor_version=3)
 
 
 async def _async_migrate_strenum_unique_ids(
@@ -365,6 +468,34 @@ async def create_rexel_client(
         credentials=RexelTokenCredentials(
             access_token_callback=async_get_token,
             gateway_id=entry.data[CONF_GATEWAY_ID],
+        ),
+        session=async_create_clientsession(hass),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
+    )
+
+
+async def create_somfy_client(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
+) -> OverkizClient:
+    """Create an Overkiz client for a Somfy multi-account, resumed from a token."""
+
+    async def on_token_refresh(refresh_token: str) -> None:
+        """Persist the rotated Somfy refresh token back to the config entry."""
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_REFRESH_TOKEN: refresh_token},
+        )
+
+    return OverkizClient(
+        server=Server.SOMFY,
+        credentials=SomfyTokenCredentials(
+            refresh_token=entry.data[CONF_REFRESH_TOKEN],
+            site_oid=entry.data[CONF_SITE_OID],
+            region=entry.data[CONF_REGION],
+            gateway_id=entry.data[CONF_GATEWAY_ID],
+            on_token_refresh=on_token_refresh,
         ),
         session=async_create_clientsession(hass),
         settings=OverkizClientSettings(

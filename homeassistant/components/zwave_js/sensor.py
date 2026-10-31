@@ -76,7 +76,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType
+from homeassistant.helpers.typing import StateType, Undefined
 
 from .binary_sensor import is_valid_notification_binary_sensor
 from .const import (
@@ -741,7 +741,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
 
         # Entity class attributes
         self._attr_force_update = True
-        if not entity_description.name or entity_description.name is UNDEFINED:
+        if not entity_description.name or entity_description.name is Undefined:
             self._attr_name = self.generate_name(include_value_name=True)
 
     @property
@@ -815,7 +815,7 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(config_entry, driver, info)
         entity_description = info.entity_description
-        if not entity_description.name or entity_description.name is UNDEFINED:
+        if not entity_description.name or entity_description.name is Undefined:
             self._attr_name = self.generate_name(include_value_name=True)
         self._scale_type = self._get_scale_type()
 

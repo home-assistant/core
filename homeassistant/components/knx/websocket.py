@@ -25,7 +25,7 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
@@ -54,6 +54,9 @@ from .storage.expose_controller import validate_expose_data
 from .storage.serialize import get_serialized_schema
 from .storage.time_server import validate_time_server_data
 from .telegrams import TelegramDict
+
+# Websocket error code while the telegram store is still being initialized.
+ERR_TELEGRAM_STORE_INITIALIZING = "telegram_store_initializing"
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -326,6 +329,16 @@ async def ws_group_monitor_info(
 
     query = TelegramQuery(start_time=start_time, order_descending=True)
     if knx.telegrams.store is None:
+        if knx.telegrams.store_initializing:
+            connection.send_result(
+                msg["id"],
+                {
+                    "project_loaded": knx.project.loaded,
+                    "telegram_store_status": "initializing",
+                    "recent_telegrams": [],
+                },
+            )
+            return
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
@@ -347,6 +360,7 @@ async def ws_group_monitor_info(
         msg["id"],
         {
             "project_loaded": knx.project.loaded,
+            "telegram_store_status": "ready",
             "recent_telegrams": [
                 knx.telegrams.model_to_dict(t) for t in result.telegrams
             ],
@@ -430,6 +444,13 @@ async def ws_query_telegrams(
         order_descending=msg.get("order_descending", True),
     )
     if knx.telegrams.store is None:
+        if knx.telegrams.store_initializing:
+            connection.send_error(
+                msg["id"],
+                ERR_TELEGRAM_STORE_INITIALIZING,
+                "Telegram storage backend is still initializing.",
+            )
+            return
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
@@ -716,7 +737,7 @@ def ws_create_device(
     )
     device_registry.async_update_device(
         _device.id,
-        area_id=msg.get("area_id") or UNDEFINED,
+        area_id=msg.get("area_id") or Undefined,
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)

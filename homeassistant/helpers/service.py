@@ -319,27 +319,13 @@ def async_prepare_call_from_config(
                 f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
             ) from ex
 
-        if (exclude := target.get(CONF_EXCLUDE)) and CONF_ENTITY_ID in exclude:
+        if exclude := target.get(CONF_EXCLUDE):
             try:
-                registry = entity_registry.async_get(hass)
-                excluded_entity_ids = [
-                    entity_id
-                    for entity_id_or_uuid in cv.entity_ids_or_uuids(
-                        exclude[CONF_ENTITY_ID]
-                    )
-                    if (
-                        entity_id := entity_registry.async_resolve_entity_id(
-                            registry, entity_id_or_uuid
-                        )
-                    )
-                    is not None
-                ]
+                target[CONF_EXCLUDE] = cv.TARGET_EXCLUDE_SCHEMA(exclude)
             except probatio.Invalid as ex:
                 raise HomeAssistantError(
-                    "Template rendered invalid excluded entity IDs: "
-                    f"{exclude[CONF_ENTITY_ID]}"
+                    f"Template rendered invalid exclude block: {exclude}"
                 ) from ex
-            target[CONF_EXCLUDE] = {**exclude, CONF_ENTITY_ID: excluded_entity_ids}
 
     service_data = {}
 
@@ -397,7 +383,7 @@ async def async_extract_entities[_EntityT: Entity](
 
     if data_ent_id == ENTITY_MATCH_ALL:
         excluded = target_helpers.async_extract_excluded_entity_ids(
-            service_call.hass, target_selection
+            service_call.hass, target_selection, expand_group
         )
         return [
             entity
@@ -1487,8 +1473,8 @@ def async_get_device_and_config_entry(
     domain: str,
     device_id: str,
     *,
-    include_child_devices: Literal[True] = True,
-    include_main_devices: Literal[True] = True,
+    include_child_devices: bool = True,
+    include_main_devices: bool = True,
 ) -> tuple[device_registry.AnyDeviceEntry, ConfigEntry]: ...
 
 
@@ -1511,10 +1497,7 @@ def async_get_device_and_config_entry(
     as does a composite-device id, because both the splits of a composite and the
     restored composite itself are main devices.
     """
-    device: device_registry.AnyDeviceEntry | None
-    config_entry: ConfigEntry | None
-    # The flags are plain bools here, which matches none of the Literal overloads
-    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(  # type: ignore[call-overload]
+    device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(
         hass,
         device_id,
         domain=domain,

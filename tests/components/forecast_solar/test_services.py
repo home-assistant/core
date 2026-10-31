@@ -25,8 +25,28 @@ from homeassistant.util import dt as dt_util
 async def test_get_forecast_raw(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_forecast_solar: MagicMock,
 ) -> None:
-    """Test the get_forecast service with native resolution."""
+    """Test the get_forecast service with native resolution.
+
+    The API keys each energy value by the end of its period; the service
+    returns it at the start of the period, so the last timestamp has none.
+    """
+    api_tz = ZoneInfo("Europe/Amsterdam")
+    estimate = mock_forecast_solar.estimate.return_value
+    estimate.watts = {
+        datetime(2026, 6, 19, 5, 20, tzinfo=api_tz): 0,
+        datetime(2026, 6, 19, 6, 0, tzinfo=api_tz): 200,
+        datetime(2026, 6, 19, 7, 0, tzinfo=api_tz): 600,
+        datetime(2026, 6, 19, 7, 20, tzinfo=api_tz): 0,
+    }
+    estimate.wh_period = {
+        datetime(2026, 6, 19, 5, 20, tzinfo=api_tz): 0,
+        datetime(2026, 6, 19, 6, 0, tzinfo=api_tz): 67,
+        datetime(2026, 6, 19, 7, 0, tzinfo=api_tz): 400,
+        datetime(2026, 6, 19, 7, 20, tzinfo=api_tz): 100,
+    }
+
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_FORECAST,
@@ -38,25 +58,21 @@ async def test_get_forecast_raw(
         return_response=True,
     )
 
-    # Response is two flat ``{ISO timestamp -> number}`` maps.
-    assert set(response.keys()) == {"watts", "wh_period"}
-    assert isinstance(response["watts"], dict)
-    assert isinstance(response["wh_period"], dict)
-
-    # The conftest mock seeds two timestamps in ``watts`` and
-    # ``wh_period``, both at 13:00 in HA's default timezone. The
-    # service emits ISO keys in the site/API timezone
-    # (``Europe/Amsterdam`` per the conftest mock).
-    api_tz = ZoneInfo("Europe/Amsterdam")
-    default_tz = dt_util.get_default_time_zone()
-    ts_2021 = (
-        datetime(2021, 6, 27, 13, 0, tzinfo=default_tz).astimezone(api_tz).isoformat()
-    )
-    ts_2022 = (
-        datetime(2022, 6, 27, 13, 0, tzinfo=default_tz).astimezone(api_tz).isoformat()
-    )
-    assert response["watts"] == {ts_2021: 10, ts_2022: 100}
-    assert response["wh_period"] == {ts_2021: 30, ts_2022: 300}
+    # Response is two flat ``{ISO timestamp -> number}`` maps, with ISO
+    # keys in the site/API timezone (``Europe/Amsterdam``).
+    assert response == {
+        "watts": {
+            "2026-06-19T05:20:00+02:00": 0,
+            "2026-06-19T06:00:00+02:00": 200,
+            "2026-06-19T07:00:00+02:00": 600,
+            "2026-06-19T07:20:00+02:00": 0,
+        },
+        "wh_period": {
+            "2026-06-19T05:20:00+02:00": 67,
+            "2026-06-19T06:00:00+02:00": 400,
+            "2026-06-19T07:00:00+02:00": 100,
+        },
+    }
 
 
 async def test_get_forecast_hourly_aggregation(
@@ -65,24 +81,29 @@ async def test_get_forecast_hourly_aggregation(
     mock_forecast_solar: MagicMock,
 ) -> None:
     """Test the get_forecast service aggregates to whole hours."""
-    # Add some 15-min-resolution entries within a single hour so we can
-    # observe that power gets averaged and energy gets summed.
+    # 15-min-resolution entries, as on paid accounts: power gets averaged
+    # and energy summed per hour. Each energy value is keyed by the end of
+    # its period, so 08:00-09:00 is the sum of the 08:15 to 09:00 values.
     api_tz = ZoneInfo("Europe/Amsterdam")
     estimate = mock_forecast_solar.estimate.return_value
     base = datetime(2026, 6, 19, 8, 0, tzinfo=api_tz)
     estimate.watts = {
+        base - timedelta(minutes=15): 600,
         base: 1000,
         base + timedelta(minutes=15): 2000,
         base + timedelta(minutes=30): 3000,
         base + timedelta(minutes=45): 4000,
         base + timedelta(hours=1): 5000,
+        base + timedelta(hours=1, minutes=15): 4000,
     }
     estimate.wh_period = {
-        base: 250,
-        base + timedelta(minutes=15): 500,
-        base + timedelta(minutes=30): 750,
-        base + timedelta(minutes=45): 1000,
-        base + timedelta(hours=1): 1250,
+        base - timedelta(minutes=15): 150,
+        base: 200,
+        base + timedelta(minutes=15): 375,
+        base + timedelta(minutes=30): 625,
+        base + timedelta(minutes=45): 875,
+        base + timedelta(hours=1): 1125,
+        base + timedelta(hours=1, minutes=15): 1125,
     }
 
     response = await hass.services.async_call(
@@ -98,12 +119,11 @@ async def test_get_forecast_hourly_aggregation(
 
     watts = response["watts"]
     wh = response["wh_period"]
-    hour_0_iso = base.isoformat()
-    hour_1_iso = (base + timedelta(hours=1)).isoformat()
-    assert watts[hour_0_iso] == pytest.approx(2500.0)
-    assert wh[hour_0_iso] == 2500
-    assert watts[hour_1_iso] == pytest.approx(5000.0)
-    assert wh[hour_1_iso] == 1250
+    hour_7_iso = (base - timedelta(hours=1)).isoformat()
+    hour_8_iso = base.isoformat()
+    hour_9_iso = (base + timedelta(hours=1)).isoformat()
+    assert watts[hour_8_iso] == pytest.approx(2500.0)
+    assert wh == {hour_7_iso: 200, hour_8_iso: 3000, hour_9_iso: 1125}
 
 
 async def test_get_forecast_filters_by_time_range(

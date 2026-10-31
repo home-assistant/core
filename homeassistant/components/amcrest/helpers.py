@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.helpers.typing import UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN
 
@@ -15,7 +15,7 @@ def service_signal(service: str, *args: str) -> str:
 def log_update_error(
     logger: logging.Logger,
     action: str,
-    name: str | UndefinedType | None,
+    name: str | Undefined | None,
     entity_type: str,
     error: Exception,
     level: int = logging.ERROR,

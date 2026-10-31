@@ -10,7 +10,12 @@ import requests_mock
 
 from homeassistant import config_entries
 from homeassistant.components.metoffice.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -49,24 +54,26 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
         return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"api_key": TEST_API_KEY}
+            result["flow_id"],
+            {
+                CONF_API_KEY: TEST_API_KEY,
+                CONF_LOCATION: {
+                    "latitude": TEST_LATITUDE_WAVERTREE,
+                    "longitude": TEST_LONGITUDE_WAVERTREE,
+                },
+            },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_SITE_NAME_WAVERTREE
-    assert result2["data"] == {
-        "api_key": TEST_API_KEY,
-        "latitude": TEST_LATITUDE_WAVERTREE,
-        "longitude": TEST_LONGITUDE_WAVERTREE,
-        "name": TEST_SITE_NAME_WAVERTREE,
-    }
+    assert result2["data"] == METOFFICE_CONFIG_WAVERTREE
     assert result2["result"].unique_id == TEST_COORDINATES_WAVERTREE
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_already_configured(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, entry: MockConfigEntry
 ) -> None:
     """Test we handle duplicate entries."""
     hass.config.latitude = TEST_LATITUDE_WAVERTREE
@@ -80,11 +87,7 @@ async def test_form_already_configured(
         text=wavertree_daily,
     )
 
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=f"{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}",
-        data=METOFFICE_CONFIG_WAVERTREE,
-    ).add_to_hass(hass)
+    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -97,8 +100,10 @@ async def test_form_already_configured(
         result["flow_id"],
         user_input={
             CONF_API_KEY: TEST_API_KEY,
-            CONF_LATITUDE: TEST_LATITUDE_WAVERTREE,
-            CONF_LONGITUDE: TEST_LONGITUDE_WAVERTREE,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE_WAVERTREE,
+                CONF_LONGITUDE: TEST_LONGITUDE_WAVERTREE,
+            },
         },
     )
 
@@ -123,7 +128,13 @@ async def test_form_cannot_connect(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"api_key": TEST_API_KEY},
+        {
+            "api_key": TEST_API_KEY,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE_WAVERTREE,
+                CONF_LONGITUDE: TEST_LONGITUDE_WAVERTREE,
+            },
+        },
     )
 
     assert result2["type"] is FlowResultType.FORM
@@ -140,7 +151,13 @@ async def test_form_cannot_connect(
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"api_key": TEST_API_KEY},
+            {
+                "api_key": TEST_API_KEY,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: TEST_LATITUDE_WAVERTREE,
+                    CONF_LONGITUDE: TEST_LONGITUDE_WAVERTREE,
+                },
+            },
         )
         await hass.async_block_till_done()
 
@@ -160,7 +177,13 @@ async def test_form_unknown_error(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"api_key": TEST_API_KEY},
+        {
+            "api_key": TEST_API_KEY,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE_WAVERTREE,
+                CONF_LONGITUDE: TEST_LONGITUDE_WAVERTREE,
+            },
+        },
     )
 
     assert result2["type"] is FlowResultType.FORM
@@ -174,7 +197,13 @@ async def test_form_unknown_error(
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"api_key": TEST_API_KEY},
+            {
+                "api_key": TEST_API_KEY,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: TEST_LATITUDE_WAVERTREE,
+                    CONF_LONGITUDE: TEST_LONGITUDE_WAVERTREE,
+                },
+            },
         )
         await hass.async_block_till_done()
 
@@ -186,6 +215,7 @@ async def test_reauth_flow(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     device_registry: dr.DeviceRegistry,
+    entry: MockConfigEntry,
 ) -> None:
     """Test handling authentication errors and reauth flow."""
     mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
@@ -200,10 +230,6 @@ async def test_reauth_flow(
         text=wavertree_hourly,
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

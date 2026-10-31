@@ -1,0 +1,42 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'connected': True,
+    'current_state': 'Charging',
+    'error_code': 0,
+    'error_message': None,
+    'reported_state': dict({
+      'bin': dict({
+        'full': False,
+        'present': True,
+      }),
+      'cap': dict({
+        'pose': 1,
+      }),
+      'cleanMissionStatus': dict({
+        'cycle': 'none',
+        'phase': 'charge',
+      }),
+      'dock': dict({
+        'tankLvl': 99,
+      }),
+      'hardwareRev': '1.0',
+      'hwPartsRev': dict({
+      }),
+      'pose': dict({
+        'point': dict({
+          'x': 1,
+          'y': 2,
+        }),
+        'theta': 90,
+      }),
+      'signal': dict({
+        'noise': -68,
+        'rssi': -47,
+        'snr': 21,
+      }),
+      'sku': '980',
+      'softwareVer': '3.2.1',
+    }),
+  })
+# ---

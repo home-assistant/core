@@ -29,6 +29,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Switch Group"
@@ -120,7 +121,9 @@ class SwitchGroup(GroupEntity, SwitchEntity):
         self._entity_ids = entity_ids
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
         self.mode = any
         if mode:

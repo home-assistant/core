@@ -2421,7 +2421,6 @@ async def test_zeroconf(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
-        assert context["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -2484,7 +2483,6 @@ async def test_zeroconf_enhanced_security(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
-        assert context["confirm_only"] is True
         assert context["configuration_url"] == "http://1.1.1.1"
         assert result["step_id"] == "confirm_discovery"
 
@@ -2537,7 +2535,6 @@ async def test_zeroconf_enhanced_security_with_https_port(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "shelly1pm-12345"
-        assert context["confirm_only"] is True
         assert context["configuration_url"] == "https://1.1.1.1"
         assert result["step_id"] == "confirm_discovery"
 
@@ -3073,6 +3070,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.DISABLED
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -3088,6 +3086,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.ACTIVE
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -3103,6 +3102,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.PASSIVE
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -3118,6 +3118,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.AUTO
+    await hass.async_block_till_done()
 
     # Initial setup plus one reload per options change
     await hass.async_block_till_done()
@@ -3786,7 +3787,6 @@ async def test_zeroconf_wrong_device_name(
             if flow["flow_id"] == result["flow_id"]
         )
         assert context["title_placeholders"]["name"] == "Shelly Plus 2PM [DDEEFF]"
-        assert context["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

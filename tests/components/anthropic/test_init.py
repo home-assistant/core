@@ -20,30 +20,35 @@ from httpx2 import URL, Request, Response
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components import conversation
 from homeassistant.components.anthropic.config_flow import AnthropicConfigFlow
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
+    CONF_EFFORT,
     CONF_RECOMMENDED,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_TYPE,
     DOMAIN,
 )
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
-    ConfigSubentryData,
+    ConfigSubentryDataWithId,
 )
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
+    intent,
     issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
-from . import model_list
+from . import create_content_block, model_list
 
 MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
 
@@ -233,10 +238,8 @@ async def test_reconfigure_deprecated_model_repair(
         hass, subentry.subentry_id
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: deprecated_model.id}
+        result["flow_id"],
+        {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: deprecated_model.id},
     )
     assert result["step_id"] == "model"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
@@ -300,14 +303,12 @@ async def test_reconfigure_clears_model_repair(
     result = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    assert result["step_id"] == "additional"
+    assert result["step_id"] == "init"
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: replacement_model.id}
+        result["flow_id"],
+        {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: replacement_model.id},
     )
     assert result["step_id"] == "model"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
@@ -389,13 +390,10 @@ async def test_model_repair_retained_for_other_subentries(
     result = await healthy_entry.start_subentry_reconfigure_flow(
         hass, healthy_subentry.subentry_id
     )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    assert result["step_id"] == "additional"
+    assert result["step_id"] == "init"
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: active_model.id}
+        result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: active_model.id}
     )
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
     assert result["reason"] == "reconfigure_successful"
@@ -410,10 +408,8 @@ async def test_model_repair_retained_for_other_subentries(
             hass, subentry.subentry_id
         )
         result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_RECOMMENDED: False}
-        )
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_CHAT_MODEL: active_model.id}
+            result["flow_id"],
+            {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: active_model.id},
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
@@ -982,28 +978,29 @@ async def test_migration_from_v2_1_to_v2_2(
         "prompt": "You are a helpful assistant",
         "chat_model": "claude-haiku-4-5",
     }
+    subentries_data: list[ConfigSubentryDataWithId] = [
+        {
+            "data": options,
+            "subentry_id": "mock_id_1",
+            "subentry_type": "conversation",
+            "title": "Claude",
+            "unique_id": None,
+        },
+        {
+            "data": options,
+            "subentry_id": "mock_id_2",
+            "subentry_type": "conversation",
+            "title": "Claude 2",
+            "unique_id": None,
+        },
+    ]
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"api_key": "1234"},
         entry_id="mock_entry_id",
         version=2,
         minor_version=1,
-        subentries_data=[
-            ConfigSubentryData(
-                data=options,
-                subentry_id="mock_id_1",
-                subentry_type="conversation",
-                title="Claude",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data=options,
-                subentry_id="mock_id_2",
-                subentry_type="conversation",
-                title="Claude 2",
-                unique_id=None,
-            ),
-        ],
+        subentries_data=subentries_data,
         title="Claude",
     )
     mock_config_entry.add_to_hass(hass)
@@ -1377,3 +1374,145 @@ async def test_migrate_entry_to_v2_4(
         "prompt": "You are a helpful assistant",
         "chat_model": "claude-haiku-4-5",
     }
+
+
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("subentry_options", "expected_options"),
+    [
+        pytest.param({}, {}, id="defaults"),
+        pytest.param(
+            {"thinking_effort": "high", CONF_THINKING_BUDGET: 0},
+            {CONF_EFFORT: "high", CONF_THINKING_BUDGET: 0},
+            id="effort_with_disabled_manual_thinking",
+        ),
+        pytest.param(
+            {CONF_RECOMMENDED: True, "thinking_effort": "none"},
+            {
+                CONF_RECOMMENDED: True,
+                CONF_THINKING_TYPE: "disabled",
+            },
+            id="recommended_with_disabled_thinking",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_migrate_entry_to_v2_5(
+    hass: HomeAssistant,
+    subentry_type: str,
+    subentry_options: dict[str, str | int | bool],
+    expected_options: dict[str, str | int | bool],
+) -> None:
+    """Migrate effort independently from the selected thinking type."""
+    common_options = {
+        CONF_CHAT_MODEL: "claude-test-model",
+        CONF_RECOMMENDED: False,
+        "max_tokens": 4096,
+        "prompt": "You are a helpful assistant",
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=2,
+        minor_version=4,
+        subentries_data=[
+            {
+                "data": common_options | subentry_options,
+                "subentry_id": "mock_id",
+                "subentry_type": subentry_type,
+                "title": "Claude",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 2
+    assert entry.minor_version == MINOR_VERSION
+    assert entry.subentries["mock_id"].data == common_options | expected_options
+
+
+@pytest.mark.parametrize(
+    ("model", "legacy_options", "expected_options", "expected_effort"),
+    [
+        pytest.param(
+            "claude-haiku-4-5",
+            {CONF_THINKING_BUDGET: 0},
+            {CONF_THINKING_BUDGET: 0},
+            None,
+            id="manual_without_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            {CONF_THINKING_BUDGET: 0},
+            {CONF_THINKING_BUDGET: 0},
+            {"effort": "low"},
+            id="manual_with_effort",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            {"thinking_effort": "none"},
+            {CONF_THINKING_TYPE: "disabled"},
+            {"effort": "low"},
+            id="adaptive",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_model_list")
+async def test_migrate_disabled_thinking_request(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    model: str,
+    legacy_options: dict[str, str | int],
+    expected_options: dict[str, str | int],
+    expected_effort: dict[str, str] | None,
+) -> None:
+    """Preserve disabled thinking through migration, setup, and the first request."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=2,
+        minor_version=4,
+        subentries_data=[
+            {
+                "data": {CONF_CHAT_MODEL: model} | legacy_options,
+                "subentry_id": "mock_id",
+                "subentry_type": "conversation",
+                "title": "Claude conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        entry.subentries["mock_id"].data == {CONF_CHAT_MODEL: model} | expected_options
+    )
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])]
+
+    result = await conversation.async_converse(
+        hass,
+        "hello",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert entry.minor_version == MINOR_VERSION
+    assert (
+        entry.subentries["mock_id"].data == {CONF_CHAT_MODEL: model} | expected_options
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    request = mock_create_stream.call_args.kwargs
+    assert request["thinking"] == {"type": "disabled"}
+    assert request.get("output_config") == expected_effort

@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import sun
 from homeassistant.components.sun import entity
+from homeassistant.components.sun.const import SunEntityStateAttribute
 from homeassistant.const import EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -88,22 +89,22 @@ async def test_setting_rising(hass: HomeAssistant) -> None:
         mod += 1
 
     assert next_dawn == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_DAWN]
+        state.attributes[SunEntityStateAttribute.NEXT_DAWN]
     )
     assert next_dusk == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_DUSK]
+        state.attributes[SunEntityStateAttribute.NEXT_DUSK]
     )
     assert next_midnight == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_MIDNIGHT]
+        state.attributes[SunEntityStateAttribute.NEXT_MIDNIGHT]
     )
     assert next_noon == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_NOON]
+        state.attributes[SunEntityStateAttribute.NEXT_NOON]
     )
     assert next_rising == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_RISING]
+        state.attributes[SunEntityStateAttribute.NEXT_RISING]
     )
     assert next_setting == dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_SETTING]
+        state.attributes[SunEntityStateAttribute.NEXT_SETTING]
     )
 
 
@@ -118,7 +119,9 @@ async def test_state_change(
     await hass.async_block_till_done()
 
     test_time = dt_util.parse_datetime(
-        hass.states.get(entity.ENTITY_ID).attributes[entity.STATE_ATTR_NEXT_RISING]
+        hass.states.get(entity.ENTITY_ID).attributes[
+            SunEntityStateAttribute.NEXT_RISING
+        ]
     )
     assert test_time is not None
 
@@ -142,7 +145,7 @@ async def test_state_change(
 
     # Test listeners are not duplicated after a core configuration change
     test_time = dt_util.parse_datetime(
-        hass.states.get(entity.ENTITY_ID).attributes[entity.STATE_ATTR_NEXT_DUSK]
+        hass.states.get(entity.ENTITY_ID).attributes[SunEntityStateAttribute.NEXT_DUSK]
     )
     assert test_time is not None
 
@@ -176,10 +179,10 @@ async def test_norway_in_june(hass: HomeAssistant) -> None:
     assert state is not None
 
     assert dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_RISING]
+        state.attributes[SunEntityStateAttribute.NEXT_RISING]
     ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC)
     assert dt_util.parse_datetime(
-        state.attributes[entity.STATE_ATTR_NEXT_SETTING]
+        state.attributes[SunEntityStateAttribute.NEXT_SETTING]
     ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC)
 
     assert state.state == sun.STATE_ABOVE_HORIZON
@@ -231,7 +234,9 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
     assert state is not None
 
     test_time = dt_util.parse_datetime(
-        hass.states.get(entity.ENTITY_ID).attributes[entity.STATE_ATTR_NEXT_RISING]
+        hass.states.get(entity.ENTITY_ID).attributes[
+            SunEntityStateAttribute.NEXT_RISING
+        ]
     )
     assert test_time is not None
     assert hass.states.get(entity.ENTITY_ID).state == sun.STATE_BELOW_HORIZON

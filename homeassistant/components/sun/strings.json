@@ -4,10 +4,8 @@
     "period_description": "The time of day to consider: the morning, the evening, or either.",
     "period_name": "Period",
     "trigger_for_name": "For at least",
-    "trigger_offset_description": "Time to offset the trigger from the solar event.",
+    "trigger_offset_description": "Time to trigger before or after the solar event.",
     "trigger_offset_name": "Offset",
-    "trigger_offset_type_description": "Whether to trigger before or after the solar event.",
-    "trigger_offset_type_name": "Offset type",
     "trigger_threshold_name": "Threshold type",
     "twilight_type_description": "The phase of twilight.",
     "twilight_type_name": "Twilight type"
@@ -136,12 +134,6 @@
         "morning": "Morning"
       }
     },
-    "trigger_offset_type": {
-      "options": {
-        "after": "After",
-        "before": "Before"
-      }
-    },
     "twilight_type": {
       "options": {
         "any": "Any",
@@ -160,10 +152,6 @@
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
         },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
-        },
         "period": {
           "description": "[%key:component::sun::common::period_description%]",
           "name": "[%key:component::sun::common::period_name%]"
@@ -177,10 +165,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         },
         "period": {
           "description": "[%key:component::sun::common::period_description%]",
@@ -196,10 +180,6 @@
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
         },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
-        },
         "type": {
           "description": "[%key:component::sun::common::twilight_type_description%]",
           "name": "[%key:component::sun::common::twilight_type_name%]"
@@ -213,10 +193,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         },
         "type": {
           "description": "[%key:component::sun::common::twilight_type_description%]",
@@ -253,10 +229,6 @@
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
         },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
-        },
         "period": {
           "description": "[%key:component::sun::common::period_description%]",
           "name": "[%key:component::sun::common::period_name%]"
@@ -271,10 +243,6 @@
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
         },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
-        },
         "period": {
           "description": "[%key:component::sun::common::period_description%]",
           "name": "[%key:component::sun::common::period_name%]"
@@ -288,10 +256,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         }
       },
       "name": "Midnight sun ended"
@@ -302,10 +266,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         }
       },
       "name": "Midnight sun started"
@@ -316,10 +276,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         }
       },
       "name": "Polar night ended"
@@ -330,10 +286,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         }
       },
       "name": "Polar night started"
@@ -344,10 +296,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         }
       },
       "name": "Solar midnight"
@@ -358,10 +306,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         }
       },
       "name": "Solar noon"
@@ -372,10 +316,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         }
       },
       "name": "Sunrise"
@@ -386,10 +326,6 @@
         "offset": {
           "description": "[%key:component::sun::common::trigger_offset_description%]",
           "name": "[%key:component::sun::common::trigger_offset_name%]"
-        },
-        "offset_type": {
-          "description": "[%key:component::sun::common::trigger_offset_type_description%]",
-          "name": "[%key:component::sun::common::trigger_offset_type_name%]"
         }
       },
       "name": "Sunset"

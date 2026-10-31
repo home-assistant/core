@@ -34,7 +34,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
 # SQLAlchemy Schema
@@ -110,13 +110,11 @@ class Events(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def from_event(
-        event: Event, event_data: UndefinedType | None = UNDEFINED
-    ) -> Events:
+    def from_event(event: Event, event_data: Undefined | None = Undefined) -> Events:
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=JSON_DUMP(event.data) if event_data is UNDEFINED else event_data,
+            event_data=JSON_DUMP(event.data) if event_data is Undefined else event_data,
             origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,

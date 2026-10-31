@@ -26,6 +26,19 @@
     }
   },
   "entity": {
+    "select": {
+      "channel": {
+        "name": "Channel"
+      },
+      "power_mode": {
+        "name": "Power mode",
+        "state": {
+          "on": "[%key:common::state::on%]",
+          "sleep": "Sleep",
+          "standby": "[%key:common::state::standby%]"
+        }
+      }
+    },
     "sensor": {
       "power_state": {
         "name": "Power state",
@@ -44,6 +57,9 @@
     },
     "device_not_found": {
       "message": "{name} is not reachable yet: {reason}"
+    },
+    "not_supported": {
+      "message": "{name} does not support this command."
     }
   }
 }

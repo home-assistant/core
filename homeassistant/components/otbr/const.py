@@ -1,4 +1,4 @@
-"""Constants for the Open Thread Border Router integration."""
+"""Constants for the OpenThread Border Router integration."""
 
 DOMAIN = "otbr"
 

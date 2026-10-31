@@ -29,6 +29,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bonnet": {
+        "name": "Hood"
+      },
+      "doors": {
+        "name": "Doors"
+      },
+      "lights": {
+        "name": "Lights"
+      },
+      "sunroof": {
+        "name": "Sunroof"
+      },
+      "trunk": {
+        "name": "Trunk"
+      },
+      "windows": {
+        "name": "Windows"
+      }
+    },
     "sensor": {
       "aux_heating_duration": {
         "name": "Auxiliary heating remaining duration"
@@ -60,7 +80,7 @@
         "state": {
           "charging": "Charging",
           "charging_interrupted": "Charging interrupted",
-          "connect_cable": "Connect cable",
+          "connect_cable": "Cable not connected",
           "conserving": "Conserving",
           "discharging": "Discharging",
           "ready_for_charging": "Ready for charging"

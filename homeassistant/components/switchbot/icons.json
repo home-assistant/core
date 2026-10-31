@@ -15,6 +15,9 @@
       "previous_image": {
         "default": "mdi:skip-previous"
       },
+      "random_image": {
+        "default": "mdi:shuffle-variant"
+      },
       "reset_filter_usage": {
         "default": "mdi:restart"
       }

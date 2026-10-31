@@ -244,7 +244,6 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_public_value="lcd_message_text",
         ufp_options_fn=_get_doorbell_options,
         ufp_set_method_fn=_set_doorbell_message,
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription(
         key="chime_type",
@@ -265,7 +264,6 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options=HDR_MODES,
         ufp_public_value="hdr_mode_display",
         ufp_set_method_fn=_set_hdr_mode,
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 

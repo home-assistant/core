@@ -27,6 +27,7 @@ dependencies = [
   "orjson",
   "pylint>=4.0",
   "PyYAML",
+  "typing-extensions>=4.16.0,<5.0",
 ]
 
 [project.urls]

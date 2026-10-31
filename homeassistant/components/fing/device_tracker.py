@@ -6,7 +6,8 @@ from fing_agent_api.models import Device
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,6 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for passed config_entry in HA."""
     coordinator = config_entry.runtime_data
+    device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     tracked_devices: set[str] = set()
 
@@ -38,12 +40,18 @@ async def async_setup_entry(
             try:
                 _, mac = entity_entry.unique_id.rsplit("-", 1)
                 if mac in devices_to_remove:
-                    entities_to_remove.append(entity_entry.entity_id)
+                    entities_to_remove.append(entity_entry)
             except ValueError:
                 continue
 
-        for entity_id in entities_to_remove:
-            entity_registry.async_remove(entity_id)
+        for entity_entry in entities_to_remove:
+            entity_registry.async_remove(entity_entry.entity_id)
+            if (
+                device_id := entity_entry.device_id
+            ) is not None and not er.async_entries_for_device(
+                entity_registry, device_id, include_disabled_entities=True
+            ):
+                device_registry.async_remove_device(device_id)
 
         entities_to_add = []
         for mac_addr in devices_to_add:
@@ -74,7 +82,10 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
 
         self._attr_mac_address = self._device.mac
         self._attr_unique_id = f"{agent_id}-{self._attr_mac_address}"
-        self._attr_name = self._device.name
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device.mac)},
+            name=self._device.name or self._device.mac,
+        )
         self._attr_icon = get_icon_from_type(self._device.type)
 
     @property
@@ -110,7 +121,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             current_device_ip != new_device_ip
             or self._device.active != new_device.active
             or self._device.type != new_device.type
-            or self._attr_name != new_device.name
+            or self._device.name != new_device.name
             or self._attr_icon != get_icon_from_type(new_device.type)
         )
 
@@ -123,11 +134,17 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             updated_device_data
         ):
             self._device = updated_device_data
-            self._attr_name = updated_device_data.name
             self._attr_icon = get_icon_from_type(updated_device_data.type)
             er.async_get(self.hass).async_update_entity(
                 entity_id=self.entity_id,
-                original_name=self._attr_name,
                 original_icon=self._attr_icon,
             )
+            if (
+                (new_name := updated_device_data.name) is not None
+                and (device_entry := self.device_entry) is not None
+                and device_entry.name != new_name
+            ):
+                dr.async_get(self.hass).async_update_device(
+                    device_entry.id, name=new_name
+                )
             self.async_write_ha_state()

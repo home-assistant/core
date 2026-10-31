@@ -83,6 +83,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 tracker_id=TRACKER_ID,
                 pet_details=trackable_object,
                 tracker_details=tracker_details,
+                health_available=True,
             )
         ]
         client.async_fetch_status.return_value = status

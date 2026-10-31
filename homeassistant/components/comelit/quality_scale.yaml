@@ -34,9 +34,7 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: no configuration parameters
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done

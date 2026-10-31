@@ -120,7 +120,10 @@ async def async_pipeline_from_audio_stream(
 
     Raises PipelineNotFound if no pipeline is found.
     """
-    with chat_session.async_get_chat_session(hass, conversation_id) as session:
+    # The intent stage checks the owner with the input of the user.
+    with chat_session.async_get_chat_session(
+        hass, conversation_id, context=None
+    ) as session:
         pipeline_input = PipelineInput(
             session=session,
             device_id=device_id,

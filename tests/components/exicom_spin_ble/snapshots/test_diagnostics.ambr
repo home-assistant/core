@@ -1,0 +1,59 @@
+# serializer version: 1
+# name: test_diagnostics[alarms]
+  dict({
+    'entry': dict({
+      'data': dict({
+        'address': '**REDACTED**',
+        'serial': '**REDACTED**',
+      }),
+      'options': dict({
+        'connection_mode': 'per_poll',
+      }),
+    }),
+    'status': dict({
+      'alarms': list([
+        'Mains Low',
+        'Earth Wire Open',
+      ]),
+      'current_a': 32.0,
+      'current_limit_a': 32.0,
+      'firmware_version': '35.24.4.32',
+      'lifetime_energy_kwh': 1234.5,
+      'lifetime_seconds': 360000,
+      'power_w': 7360.0,
+      'session_energy_kwh': 12.5,
+      'session_seconds': 3600,
+      'state': 'CHARGING',
+      'state_value': 4,
+      'voltage_v': 230.0,
+    }),
+  })
+# ---
+# name: test_diagnostics[unrecognised]
+  dict({
+    'entry': dict({
+      'data': dict({
+        'address': '**REDACTED**',
+        'serial': '**REDACTED**',
+      }),
+      'options': dict({
+        'connection_mode': 'per_poll',
+      }),
+    }),
+    'status': dict({
+      'alarms': list([
+      ]),
+      'current_a': 32.0,
+      'current_limit_a': 32.0,
+      'firmware_version': '35.24.4.32',
+      'lifetime_energy_kwh': 1234.5,
+      'lifetime_seconds': 360000,
+      'power_w': 7360.0,
+      'session_energy_kwh': 12.5,
+      'session_seconds': 3600,
+      'state': None,
+      'state_value': 99,
+      'voltage_v': 230.0,
+    }),
+  })
+# ---

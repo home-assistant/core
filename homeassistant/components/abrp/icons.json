@@ -1,0 +1,31 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_capacity": {
+        "default": "mdi:battery"
+      },
+      "calibrated_ref_cons": {
+        "default": "mdi:car-electric"
+      },
+      "charging_state": {
+        "default": "mdi:ev-station",
+        "state": {
+          "charging_ac": "mdi:battery-charging",
+          "charging_dc": "mdi:battery-charging",
+          "charging_unknown": "mdi:battery-charging",
+          "not_charging": "mdi:power-plug-off",
+          "plugged_in": "mdi:power-plug"
+        }
+      },
+      "odometer": {
+        "default": "mdi:counter"
+      },
+      "soe": {
+        "default": "mdi:battery-charging-50"
+      },
+      "soh": {
+        "default": "mdi:battery-heart-variant"
+      }
+    }
+  }
+}

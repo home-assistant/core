@@ -1,9 +1,10 @@
 """Constants for Google Travel Time."""
 
-from google.maps.routing_v2 import (
-    RouteTravelMode,
+from google_maps_routing_api import (
     TrafficModel,
-    TransitPreferences,
+    TransitRoutingPreference,
+    TransitTravelMode,
+    TravelMode,
     Units,
 )
 
@@ -84,28 +85,28 @@ ALL_LANGUAGES = [
 
 AVOID_OPTIONS = ["tolls", "highways", "ferries", "indoor"]
 TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
-TRANSIT_PREFS_TO_GOOGLE_SDK_ENUM = {
-    "less_walking": TransitPreferences.TransitRoutingPreference.LESS_WALKING,
-    "fewer_transfers": TransitPreferences.TransitRoutingPreference.FEWER_TRANSFERS,
+TRANSIT_PREFS_TO_API_ENUM = {
+    "less_walking": TransitRoutingPreference.LESS_WALKING,
+    "fewer_transfers": TransitRoutingPreference.FEWER_TRANSFERS,
 }
 TRANSPORT_TYPES = ["bus", "subway", "train", "tram", "rail"]
-TRANSPORT_TYPES_TO_GOOGLE_SDK_ENUM = {
-    "bus": TransitPreferences.TransitTravelMode.BUS,
-    "subway": TransitPreferences.TransitTravelMode.SUBWAY,
-    "train": TransitPreferences.TransitTravelMode.TRAIN,
-    "tram": TransitPreferences.TransitTravelMode.LIGHT_RAIL,
-    "rail": TransitPreferences.TransitTravelMode.RAIL,
+TRANSPORT_TYPES_TO_API_ENUM = {
+    "bus": TransitTravelMode.BUS,
+    "subway": TransitTravelMode.SUBWAY,
+    "train": TransitTravelMode.TRAIN,
+    "tram": TransitTravelMode.LIGHT_RAIL,
+    "rail": TransitTravelMode.RAIL,
 }
 TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
 TRAVEL_MODES_WITHOUT_TRANSIT = ["driving", "walking", "bicycling"]
-TRAVEL_MODES_TO_GOOGLE_SDK_ENUM = {
-    "driving": RouteTravelMode.DRIVE,
-    "walking": RouteTravelMode.WALK,
-    "bicycling": RouteTravelMode.BICYCLE,
-    "transit": RouteTravelMode.TRANSIT,
+TRAVEL_MODES_TO_API_ENUM = {
+    "driving": TravelMode.DRIVE,
+    "walking": TravelMode.WALK,
+    "bicycling": TravelMode.BICYCLE,
+    "transit": TravelMode.TRANSIT,
 }
 TRAFFIC_MODELS = ["best_guess", "pessimistic", "optimistic"]
-TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM = {
+TRAFFIC_MODELS_TO_API_ENUM = {
     "best_guess": TrafficModel.BEST_GUESS,
     "pessimistic": TrafficModel.PESSIMISTIC,
     "optimistic": TrafficModel.OPTIMISTIC,
@@ -115,7 +116,7 @@ TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM = {
 UNITS_METRIC = "metric"
 UNITS_IMPERIAL = "imperial"
 UNITS = [UNITS_METRIC, UNITS_IMPERIAL]
-UNITS_TO_GOOGLE_SDK_ENUM = {
+UNITS_TO_API_ENUM = {
     UNITS_METRIC: Units.METRIC,
     UNITS_IMPERIAL: Units.IMPERIAL,
 }

@@ -26,7 +26,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.util.ssl import get_default_context
 
 from .const import (
@@ -188,7 +188,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # Device and entity registries will set the disabled_by flag to None
             # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
             # config entry, but we want to set it to USER instead,
-            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
+            device_disabled_by: dr.DeviceEntryDisabler | Undefined = Undefined
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled

@@ -149,12 +149,17 @@ class KNXTestKit:
         add_entry_to_hass: bool = True,
         state_updater: bool = True,
         real_telegram_store: bool = False,
+        wait_for_telegram_store: bool = True,
     ) -> None:
         """Create the KNX integration.
 
         By default a fast in-memory telegram store is used. Tests that exercise
         the SQLite/PostgreSQL telegram backends pass ``real_telegram_store=True``
         to build the real SQLite store (kept in-memory).
+
+        The telegram store initializes in a background task. By default setup
+        waits for it so tests see an initialized store; tests that exercise
+        that window pass ``wait_for_telegram_store=False``.
         """
 
         async def patch_xknx_start():
@@ -217,7 +222,9 @@ class KNXTestKit:
                 state_updater_patcher.start()
 
             await async_setup_component(self.hass, DOMAIN, knx_config)
-            await self.hass.async_block_till_done()
+            await self.hass.async_block_till_done(
+                wait_background_tasks=wait_for_telegram_store
+            )
             # remove patch after setup so state_updater can be tested
             state_updater_patcher.stop()
 

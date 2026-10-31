@@ -7,6 +7,14 @@
       "mileageInKm": 9618,
       "carCapturedTimestamp": "2024-01-10T11:55:00Z"
     },
+    "parkingPosition": {
+      "state": "PARKED",
+      "gpsCoordinates": {
+        "latitude": 50.4126,
+        "longitude": 14.9095
+      },
+      "formattedAddress": "tř. Václava Klementa 869, 293 01 Mladá Boleslav, Czechia"
+    },
     "status": {
       "overall": {
         "doorsLocked": "NO",

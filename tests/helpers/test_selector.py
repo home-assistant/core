@@ -2504,6 +2504,22 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
                 {},
                 {"latitude": 1.0},
                 {"longitude": 1.0},
+                {
+                    "latitude": 91.0,
+                    "longitude": 1.0,
+                },
+                {
+                    "latitude": -91.0,
+                    "longitude": 1.0,
+                },
+                {
+                    "latitude": 1.0,
+                    "longitude": 181.0,
+                },
+                {
+                    "latitude": 1.0,
+                    "longitude": -181.0,
+                },
             ),
         ),
     ],

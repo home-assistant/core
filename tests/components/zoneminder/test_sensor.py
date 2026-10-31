@@ -93,6 +93,31 @@ async def test_monitor_status_sensor_value(
     assert state.state == "Record"
 
 
+async def test_monitor_status_sensor_follows_server_change(
+    hass: HomeAssistant,
+    mock_zoneminder_client: MagicMock,
+    single_server_config: dict,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test monitor status sensor refreshes the monitor on each poll."""
+    monitor = create_mock_monitor(name="Front Door", function=MonitorState.MONITOR)
+    await _setup_zm_with_sensors(
+        hass, mock_zoneminder_client, single_server_config, [monitor], freezer
+    )
+    assert hass.states.get("sensor.front_door_status").state == "Monitor"
+
+    def change_on_server() -> None:
+        monitor.function = MonitorState.RECORD
+
+    # zm-py only fetches new monitor data in update_monitor
+    monitor.update_monitor.side_effect = change_on_server
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.front_door_status").state == "Record"
+
+
 @pytest.mark.parametrize(
     ("monitor_state", "expected_value"),
     [

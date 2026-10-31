@@ -20,6 +20,7 @@ from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
@@ -44,7 +45,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.recorder import DATA_RECORDER, session_scope
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.event_type import EventType
@@ -124,7 +125,7 @@ _LOGGER = logging.getLogger(__name__)
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
 
-SHUTDOWN_TASK = object()
+SHUTDOWN_TASK = sentinel("SHUTDOWN_TASK")
 
 COMMIT_TASK = CommitTask()
 KEEP_ALIVE_TASK = KeepAliveTask()
@@ -171,7 +172,9 @@ class Recorder(threading.Thread):
         self.auto_repack = auto_repack
         self.keep_days = keep_days
         self.is_running: bool = False
-        self._hass_started: asyncio.Future[object] = hass.loop.create_future()
+        self._hass_started: asyncio.Future[SHUTDOWN_TASK | None] = (
+            hass.loop.create_future()
+        )
         self.commit_interval = commit_interval
         self._queue: queue.SimpleQueue[RecorderTask | Event] = queue.SimpleQueue()
         self.db_url = uri
@@ -632,9 +635,9 @@ class Recorder(threading.Thread):
         self,
         statistic_id: str,
         *,
-        new_statistic_id: str | UndefinedType = UNDEFINED,
-        new_unit_class: str | UndefinedType | None = UNDEFINED,
-        new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
+        new_statistic_id: str | Undefined = Undefined,
+        new_unit_class: str | Undefined | None = Undefined,
+        new_unit_of_measurement: str | Undefined | None = Undefined,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""

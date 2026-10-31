@@ -75,5 +75,16 @@
         "name": "Mute"
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to {host}:{port}"
+    },
+    "service_error": {
+      "message": "Error from Wyoming service: {error}"
+    },
+    "update_error": {
+      "message": "Unable to get info from {host}:{port}"
+    }
   }
 }

@@ -235,14 +235,14 @@ async def _setup_chime_pairing(
     await init_entry(hass, ufp, [camera1, camera2, chime])
 
     chime_entry = entity_registry.async_get("button.test_chime_play_chime")
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_2_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_2_doorbell")
     assert chime_entry is not None
     assert camera_entry is not None
 
     data = {
         ATTR_DEVICE_ID: chime_entry.device_id,
         "doorbells": {
-            ATTR_ENTITY_ID: ["binary_sensor.test_camera_1_doorbell"],
+            ATTR_ENTITY_ID: ["event.test_camera_1_doorbell"],
             ATTR_DEVICE_ID: [camera_entry.device_id],
         },
     }
@@ -270,6 +270,66 @@ async def test_set_chime_paired_doorbells(
     public = ufp.api.public_bootstrap.chimes[chime.id]
     public.set_camera_ids.assert_awaited_once_with(sorted([camera1.id, camera2.id]))
     ufp.api.update_device.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_private_only_entities_registered")
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("event.test_camera_1_doorbell", id="event"),
+        pytest.param("binary_sensor.test_camera_1_doorbell", id="binary_sensor"),
+    ],
+)
+async def test_set_chime_paired_doorbells_entity_target(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+    entity_id: str,
+) -> None:
+    """The doorbell event entity and the deprecated binary sensor both pick a doorbell."""
+    setup_public_chime(ufp)
+    data, camera1, _ = await _setup_chime_pairing(
+        hass, entity_registry, ufp, chime, doorbell
+    )
+    data["doorbells"] = {ATTR_ENTITY_ID: [entity_id]}
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+    )
+
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.assert_awaited_once_with([camera1.id])
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("event.test_camera_1_motion_detection", id="other_event"),
+        pytest.param("binary_sensor.test_camera_1_motion", id="other_binary_sensor"),
+    ],
+)
+async def test_set_chime_paired_doorbells_ignores_other_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+    entity_id: str,
+) -> None:
+    """Other entities of a doorbell do not pick it."""
+    setup_public_chime(ufp)
+    data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
+    assert entity_registry.async_get(entity_id) is not None
+    data["doorbells"] = {ATTR_ENTITY_ID: [entity_id]}
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_CHIME_PAIRED, data, blocking=True
+    )
+
+    public = ufp.api.public_bootstrap.chimes[chime.id]
+    public.set_camera_ids.assert_awaited_once_with([])
 
 
 async def test_set_chime_paired_doorbells_with_foreign_entity(
@@ -418,7 +478,7 @@ async def test_set_chime_paired_doorbells_public_nvr_without_mac(
     """A public NVR without a mac does not break the not-a-chime check."""
     setup_public_chime(ufp)
     data, _, _ = await _setup_chime_pairing(hass, entity_registry, ufp, chime, doorbell)
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_2_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_2_doorbell")
     assert camera_entry is not None
     data[ATTR_DEVICE_ID] = camera_entry.device_id
     ufp.api.public_bootstrap.nvr.mac = None
@@ -531,7 +591,7 @@ async def test_remove_privacy_zone_no_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -558,7 +618,7 @@ async def test_remove_privacy_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     await hass.services.async_call(
         DOMAIN,
@@ -594,7 +654,7 @@ async def get_user_keyring_info(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -638,7 +698,7 @@ async def test_get_user_keyring_info_no_users(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     with pytest.raises(
         HomeAssistantError, match="No users found, please check Protect permissions"
@@ -758,7 +818,7 @@ async def test_ptz_goto_preset_not_ptz_camera(
     """Test ptz_goto_preset service on a non-PTZ camera."""
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_doorbell")
 
     with pytest.raises(ServiceValidationError, match="does not support PTZ"):
         await hass.services.async_call(
@@ -881,7 +941,7 @@ async def test_public_only_action_rejected(
     )
     assert device is not None
 
-    with pytest.raises(HomeAssistantError, match="requires full access"):
+    with pytest.raises(HomeAssistantError, match="requires a local user"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_DOORBELL_TEXT,

@@ -117,6 +117,9 @@
       "reset_side_brush_consumable": {
         "name": "Reset side brush consumable"
       },
+      "resolve_dock_error": {
+        "name": "Resolve dock error"
+      },
       "shutdown": {
         "name": "Shut down"
       },
@@ -758,6 +761,9 @@
     },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
+    },
+    "no_dock_error_to_resolve": {
+      "message": "There is no dock error to resolve"
     },
     "no_user_agreement": {
       "message": "You have not valid user agreement. Open your Roborock app and accept the agreement."

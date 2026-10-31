@@ -28,9 +28,18 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.setup import async_setup_component
 
@@ -42,6 +51,7 @@ from . import (
     WAVE_ENHANCE_SERVICE_INFO,
     WAVE_SERVICE_INFO,
     BluetoothServiceInfoBleak,
+    create_device,
     patch_airthings_ble,
     patch_async_ble_device_from_address,
 )
@@ -331,6 +341,52 @@ async def test_no_migration_when_device_model_exists(
     # Should have only 1 call for initial refresh (no migration call)
     assert mock_update.call_count == 1
     assert entry.data[DEVICE_MODEL] == WAVE_DEVICE_INFO.model.value
+
+
+async def test_migration_removes_device_without_address(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration removes the device and entities of an incomplete read."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={DEVICE_MODEL: WAVE_DEVICE_INFO.model.value},
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+    device = create_device(entry, device_registry, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
+    empty_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_BLUETOOTH, "")},
+        name="",
+        manufacturer="",
+        model="Unknown",
+    )
+    empty_entity = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        "_battery",
+        config_entry=entry,
+        device_id=empty_device.id,
+    )
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(WAVE_DEVICE_INFO),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert [registered.id for registered in devices] == [device.id]
+    assert entity_registry.async_get(empty_entity.entity_id) is None
+    assert hass.states.get("sensor.airthings_wave_123456_battery").state == "85"
 
 
 async def test_scan_interval_corentium_home_2(

@@ -27,7 +27,6 @@ from homeassistant.components.ruckus_unleashed.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 DEFAULT_SYSTEM_INFO = {
     API_SYS_IDENTITY: {API_SYS_IDENTITY_NAME: "RuckusUnleashed"},
@@ -101,14 +100,6 @@ async def init_integration(
     """Set up the Ruckus integration in Home Assistant."""
     entry = mock_config_entry(options=options)
     entry.add_to_hass(hass)
-    # Make device tied to other integration so device tracker entities get enabled
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    dr.async_get(hass).async_get_or_create(
-        name="Device from other integration",
-        config_entry_id=other_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, TEST_CLIENT[API_CLIENT_MAC])},
-    )
 
     with RuckusAjaxApiPatchContext():
         await hass.config_entries.async_setup(entry.entry_id)

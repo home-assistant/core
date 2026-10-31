@@ -121,7 +121,11 @@ async def async_setup_platform(
             "Add http:// or https:// to your URL"
         )
     except (TimeoutError, httpx2.RequestError) as exc:
-        raise PlatformNotReady(f"No route to resource/endpoint: {resource}") from exc
+        raise PlatformNotReady(
+            translation_domain=DOMAIN,
+            translation_key="no_route",
+            translation_placeholders={"resource": resource},
+        ) from exc
 
 
 class RestSwitch(ManualTriggerEntity, SwitchEntity):

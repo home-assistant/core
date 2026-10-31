@@ -18,3 +18,9 @@ class InputButtonService(StrEnum):
 
     PRESS = "press"
     RELOAD = "reload"
+
+
+class InputButtonEntityStateAttribute(StrEnum):
+    """State attributes for input button entities."""
+
+    EDITABLE = "editable"

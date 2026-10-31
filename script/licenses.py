@@ -194,6 +194,7 @@ EXCEPTIONS = {
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
+    "pyelftools",  # Public domain (Unlicense)
     "pymitv",  # MIT
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6

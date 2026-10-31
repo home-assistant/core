@@ -8,8 +8,12 @@ from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.schedule.const import ATTR_NEXT_EVENT, DOMAIN
-from homeassistant.const import ATTR_EDITABLE, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.components.schedule.const import (
+    DOMAIN,
+    ScheduleEntityCapabilityAttribute,
+    ScheduleEntityStateAttribute,
+)
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -48,10 +52,10 @@ async def test_exclude_attributes(
 
     state = hass.states.get("schedule.test")
     assert state
-    assert state.attributes[ATTR_EDITABLE] is False
-    assert state.attributes[ATTR_FRIENDLY_NAME]
-    assert state.attributes[ATTR_ICON]
-    assert state.attributes[ATTR_NEXT_EVENT]
+    assert state.attributes[ScheduleEntityCapabilityAttribute.EDITABLE] is False
+    assert state.attributes[EntityStateAttribute.FRIENDLY_NAME]
+    assert state.attributes[EntityStateAttribute.ICON]
+    assert state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT]
 
     # Move to during Friday event
     freezer.move_to("2024-08-02 07:30:00-07:00")
@@ -81,9 +85,9 @@ async def test_exclude_attributes(
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:
-            assert ATTR_EDITABLE not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
-            assert ATTR_ICON in state.attributes
-            assert ATTR_NEXT_EVENT not in state.attributes
+            assert ScheduleEntityCapabilityAttribute.EDITABLE not in state.attributes
+            assert EntityStateAttribute.FRIENDLY_NAME in state.attributes
+            assert EntityStateAttribute.ICON in state.attributes
+            assert ScheduleEntityStateAttribute.NEXT_EVENT not in state.attributes
             assert "entry" not in state.attributes
             assert "party_level" not in state.attributes

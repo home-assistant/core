@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
+    HourlyReadingsUnavailableError,
     InteractionRequiredError,
     InvalidGrantError,
     SelfAssertedError,
@@ -20,6 +21,28 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .const import CONSENT_REQUIRED_ISSUE_ID
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_setup_hourly_readings_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test setup fails with a translated error when hourly readings are unavailable."""
+    mock_anglian_water_client.update.side_effect = HourlyReadingsUnavailableError(
+        status=500, response="mock"
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
+    assert (
+        mock_config_entry.error_reason_translation_key == "hourly_readings_unavailable"
+    )
 
 
 async def test_setup_unload_entry(

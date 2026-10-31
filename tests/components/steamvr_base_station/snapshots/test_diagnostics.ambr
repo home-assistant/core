@@ -1,0 +1,44 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': True,
+    'device_info': dict({
+      'firmware': 'R: 2.9.2004771 M: 1.8.2004742 B: 3.4.3782793',
+      'hardware': '0.0',
+      'manufacturer': 'Valve Corp.',
+      'model': '1004',
+      'serial': '**REDACTED**',
+    }),
+    'entry': dict({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'discovery_keys': '**REDACTED**',
+      'domain': 'steamvr_base_station',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'last_advertisement': dict({
+      'manufacturer_data': dict({
+        '1373': '000201010b0600',
+      }),
+      'rssi': -60,
+    }),
+    'state': dict({
+      'assumed': False,
+      'channel': 1,
+      'faulty': False,
+      'power': 'on',
+    }),
+    'supports_standby': None,
+  })
+# ---

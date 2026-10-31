@@ -16,7 +16,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ecosmart.const import SPOT_SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -112,6 +112,26 @@ async def test_identity_failures(
 
     assert mock_config_entry.state is expected_state
     assert mock_config_entry.error_reason_translation_key == expected_translation_key
+
+
+@pytest.mark.parametrize("failing_call", ["me", "spot"])
+async def test_rejected_key_asks_for_a_new_one(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    failing_call: str,
+) -> None:
+    """Test a rejected key starts the reauth flow for this entry."""
+    getattr(mock_ecosmart_client, failing_call).side_effect = EcosmartAuthError("nope")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize("failing_call", ["me", "spot"])

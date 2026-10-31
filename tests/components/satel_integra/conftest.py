@@ -10,7 +10,9 @@ from satel_integra import (
     SatelFirmwareVersion,
     SatelPanelInfo,
     SatelPanelModel,
+    SatelRtcAndStatus,
     SatelState,
+    SatelSystemTroubles,
 )
 
 from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
@@ -27,6 +29,7 @@ from . import (
     MOCK_ZONE_TEMPERATURE_SUBENTRY,
     get_alarm_status_callback,
     get_output_changed_callback,
+    get_system_status_callback,
     get_zone_changed_callback,
 )
 
@@ -72,11 +75,21 @@ def mock_satel() -> Generator[AsyncMock]:
         client.state = SatelState()
         client.state.zones[1].violated = False
         client.state.outputs[1].active = False
+        client.state.system_status = SatelRtcAndStatus(
+            service_mode=False,
+            troubles=False,
+            acu_100_present=False,
+            int_rx_present=False,
+            troubles_memory=False,
+            grade_2_or_3=False,
+        )
+        client.state.system_troubles = SatelSystemTroubles(troubles=frozenset())
 
         for callback_method in (
             client.add_alarm_status_callback,
             client.add_zone_changed_callback,
             client.add_output_changed_callback,
+            client.add_system_status_callback,
         ):
             callback_method.return_value = MagicMock(return_value=None)
 
@@ -101,6 +114,7 @@ def mock_satel() -> Generator[AsyncMock]:
             get_alarm_status_callback(client)()
             get_zone_changed_callback(client)()
             get_output_changed_callback(client)()
+            get_system_status_callback(client)()
 
         client.start = AsyncMock(side_effect=_start)
 

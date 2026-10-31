@@ -138,8 +138,6 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
-
         name = f"{self.model} ({self.device_sn})"
         self.context["title_placeholders"] = {"name": name}
 

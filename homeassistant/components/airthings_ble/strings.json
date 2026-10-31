@@ -61,6 +61,39 @@
           "good": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::good%]",
           "poor": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::poor%]"
         }
+      },
+      "radon_month_avg": {
+        "name": "Radon 30-day average"
+      },
+      "radon_month_level": {
+        "name": "Radon 30-day level",
+        "state": {
+          "fair": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::fair%]",
+          "good": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::good%]",
+          "poor": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::poor%]"
+        }
+      },
+      "radon_week_avg": {
+        "name": "Radon 7-day average"
+      },
+      "radon_week_level": {
+        "name": "Radon 7-day level",
+        "state": {
+          "fair": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::fair%]",
+          "good": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::good%]",
+          "poor": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::poor%]"
+        }
+      },
+      "radon_year_avg": {
+        "name": "Radon 1-year average"
+      },
+      "radon_year_level": {
+        "name": "Radon 1-year level",
+        "state": {
+          "fair": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::fair%]",
+          "good": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::good%]",
+          "poor": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::poor%]"
+        }
       }
     }
   },

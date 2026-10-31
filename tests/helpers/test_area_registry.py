@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
+    entity_registry as er,
     floor_registry as fr,
     label_registry as lr,
 )
@@ -723,6 +724,67 @@ async def test_removing_labels(
 
     assert not area_registry.async_get_area(kitchen.id).labels
     assert not area_registry.async_get_area(bedroom.id).labels
+
+
+@pytest.mark.parametrize(
+    ("attribute", "device_class"),
+    [
+        pytest.param(
+            "temperature_entity_id", SensorDeviceClass.TEMPERATURE, id="temperature"
+        ),
+        pytest.param("humidity_entity_id", SensorDeviceClass.HUMIDITY, id="humidity"),
+    ],
+)
+async def test_entity_renamed(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    attribute: str,
+    device_class: SensorDeviceClass,
+) -> None:
+    """Test area sensor references follow entity_id renames."""
+    entry = entity_registry.async_get_or_create("sensor", "test", "1234")
+    hass.states.async_set(entry.entity_id, "20", {ATTR_DEVICE_CLASS: device_class})
+    kitchen = area_registry.async_create("Kitchen", **{attribute: entry.entity_id})
+    bedroom = area_registry.async_create("Bedroom")
+    update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
+
+    entity_registry.async_update_entity(entry.entity_id, new_entity_id="sensor.renamed")
+    await hass.async_block_till_done()
+
+    assert getattr(area_registry.async_get_area(kitchen.id), attribute) == (
+        "sensor.renamed"
+    )
+    assert getattr(area_registry.async_get_area(bedroom.id), attribute) is None
+    assert [event.data for event in update_events] == [
+        {"action": "update", "area_id": kitchen.id}
+    ]
+
+
+async def test_entity_removed_or_unrelated_entity_renamed(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test area sensor references are kept on removal and unrelated renames."""
+    referenced = entity_registry.async_get_or_create("sensor", "test", "1")
+    unrelated = entity_registry.async_get_or_create("sensor", "test", "2")
+    hass.states.async_set(
+        referenced.entity_id,
+        "20",
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE},
+    )
+    kitchen = area_registry.async_create(
+        "Kitchen", temperature_entity_id=referenced.entity_id
+    )
+    update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
+
+    entity_registry.async_update_entity(unrelated.entity_id, new_entity_id="sensor.new")
+    entity_registry.async_remove(referenced.entity_id)
+    await hass.async_block_till_done()
+
+    assert area_registry.async_get_area(kitchen.id) == kitchen
+    assert not update_events
 
 
 @pytest.mark.usefixtures("hass")

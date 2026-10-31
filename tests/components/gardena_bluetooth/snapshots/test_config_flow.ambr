@@ -2,7 +2,6 @@
 # name: test_bluetooth[service_info0]
   FlowResultSnapshot({
     'context': dict({
-      'confirm_only': True,
       'discovery_key': dict({
         'domain': 'bluetooth',
         'key': '00000000-0000-0000-0000-000000000001',
@@ -23,7 +22,6 @@
 # name: test_bluetooth[service_info0].1
   FlowResultSnapshot({
     'context': dict({
-      'confirm_only': True,
       'discovery_key': dict({
         'domain': 'bluetooth',
         'key': '00000000-0000-0000-0000-000000000001',
@@ -87,7 +85,6 @@
 # name: test_bluetooth[service_info1]
   FlowResultSnapshot({
     'context': dict({
-      'confirm_only': True,
       'discovery_key': dict({
         'domain': 'bluetooth',
         'key': '00000000-0000-0000-0000-000000000002',
@@ -108,7 +105,6 @@
 # name: test_bluetooth[service_info1].1
   FlowResultSnapshot({
     'context': dict({
-      'confirm_only': True,
       'discovery_key': dict({
         'domain': 'bluetooth',
         'key': '00000000-0000-0000-0000-000000000002',
@@ -278,7 +274,6 @@
 # name: test_user_selection.2
   FlowResultSnapshot({
     'context': dict({
-      'confirm_only': True,
       'source': 'user',
       'title_placeholders': dict({
         'identifier': '00000000-0000-0000-0000-000000000001',

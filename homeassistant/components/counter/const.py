@@ -19,7 +19,6 @@ CONF_STEP = "step"
 
 DATA_COMPONENT: HassKey[EntityComponent[Counter]] = HassKey(DOMAIN)
 
-VALUE: Final = "value"
 
 SERVICE_DECREMENT: Final = "decrement"
 SERVICE_INCREMENT: Final = "increment"

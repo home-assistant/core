@@ -7,5 +7,5 @@
   "iot_class": "local_polling",
   "loggers": ["pydoods"],
   "quality_scale": "legacy",
-  "requirements": ["pydoods==1.0.2", "Pillow==12.3.0"]
+  "requirements": ["pydoods==1.0.2", "Pillow==13.0.0"]
 }

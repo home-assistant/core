@@ -26,7 +26,10 @@ from .const import (
     EVENT_SYSTEM_LOG,
 )
 from .services import async_setup_services
-from .stream import async_setup_raw_log_stream
+from .stream import (
+    async_register_log_reader as async_register_log_reader,
+    async_setup_raw_log_stream,
+)
 
 type KeyType = tuple[str, tuple[str, int], tuple[str, int, str] | None]
 

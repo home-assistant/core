@@ -198,7 +198,7 @@ async def test_setup_services(hass: HomeAssistant) -> None:
 
     # Check services are created
     hmipc_services = hass.services.async_services()[DOMAIN]
-    assert len(hmipc_services) == 10
+    assert len(hmipc_services) == 11
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1

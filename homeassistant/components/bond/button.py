@@ -24,7 +24,7 @@ STEP_SIZE = 10
 class BondButtonEntityDescription(ButtonEntityDescription):
     """Class to describe a Bond Button entity."""
 
-    # BondEntity does not support UNDEFINED,
+    # BondEntity does not support Undefined,
     # restrict the type to str | None
     name: str | None = None
     mutually_exclusive: Action | None

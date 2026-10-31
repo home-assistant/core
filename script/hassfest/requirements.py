@@ -14,6 +14,8 @@ import sys
 from typing import Any, TypedDict
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+from hassfest.model import Config, Integration
+from hassfest.requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.utils import canonicalize_name
@@ -21,9 +23,6 @@ from packaging.version import InvalidVersion, Version
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
-
-from .model import Config, Integration
-from .requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
@@ -180,7 +179,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
-    "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
     "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
     "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
@@ -229,7 +227,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "sense": {"sense-energy": {"async-timeout"}},
     "simplefin": {"simplefin4py": {"dataclasses-json"}},
     "simplisafe": {"simplisafe-python": {"backoff"}},
-    "slimproto": {"aioslimproto": {"async-timeout"}},
     "tailwind": {"gotailwind": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
@@ -300,11 +297,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "google_maps": {
         # Coloredlogs, unmaintained - coloredlogs.pth
         "locationsharinglib": {"coloredlogs"},
-    },
-    # https://github.com/NabuCasa/universal-silabs-flasher
-    "homeassistant_hardware": {
-        # Coloredlogs, unmaintained - coloredlogs.pth
-        "universal-silabs-flasher": {"coloredlogs"},
     },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
@@ -666,7 +658,7 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
 
     for item in json.loads(
         subprocess.run(
-            ["pipdeptree", "-w", "silence", "--json"],
+            [sys.executable, "-m", "pipdeptree", "-w", "silence", "--json"],
             check=True,
             capture_output=True,
             text=True,
@@ -979,7 +971,16 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         if is_installed:
             continue
 
-        args = ["uv", "pip", "install", "--quiet"]
+        args = [
+            sys.executable,
+            "-m",
+            "uv",
+            "pip",
+            "install",
+            "--python",
+            sys.executable,
+            "--quiet",
+        ]
         if install_args:
             args.append(install_args)
         args.append(requirement_arg)

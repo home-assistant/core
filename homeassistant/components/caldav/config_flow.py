@@ -28,6 +28,14 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_URL): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): cv.string,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
+
 
 class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for caldav."""
@@ -94,6 +102,43 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return "unknown"
         return None
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the server connection."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            data = {**reconfigure_entry.data, **user_input}
+            self._async_abort_entries_match(
+                {
+                    CONF_URL: data[CONF_URL],
+                    CONF_USERNAME: data[CONF_USERNAME],
+                }
+            )
+            if error := await self._test_connection(data):
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_RECONFIGURE_DATA_SCHEMA,
+                {
+                    key: value
+                    for key, value in (user_input or reconfigure_entry.data).items()
+                    if key != CONF_PASSWORD
+                },
+            ),
+            description_placeholders={
+                CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME],
+            },
+            errors=errors,
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

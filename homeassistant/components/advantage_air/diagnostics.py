@@ -13,6 +13,7 @@ TO_REDACT = [
     "logoPIN",
     "longitude",
     "postCode",
+    "mid",
     "rid",
     "deviceNames",
     "deviceIds",

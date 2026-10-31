@@ -21,6 +21,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     UnitOfLength,
     UnitOfPressure,
@@ -36,8 +37,10 @@ from homeassistant.util.unit_conversion import (
 
 NWS_CONFIG = {
     CONF_API_KEY: "test",
-    CONF_LATITUDE: 35,
-    CONF_LONGITUDE: -75,
+    CONF_LOCATION: {
+        CONF_LATITUDE: 35,
+        CONF_LONGITUDE: -75,
+    },
     CONF_STATION: "ABC",
 }
 

@@ -5,6 +5,7 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, override
 
+from aiohttp import ClientResponseError
 from aiosolaredge import SolarEdge
 from solaredge_web import EnergyData, SolarEdgeWeb
 
@@ -104,7 +105,20 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
             data = await self.api.get_overview(self.site_id)
             overview = data["overview"]
         except KeyError as ex:
-            raise UpdateFailed("Missing overview data, skipping update") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="missing_data",
+                translation_placeholders={"service": "overview"},
+            ) from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_request_failed",
+                translation_placeholders={
+                    "service": "overview",
+                    "status": str(ex.status),
+                },
+            ) from None
 
         self.data = {}
 
@@ -151,7 +165,20 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
             data = await self.api.get_details(self.site_id)
             details = data["details"]
         except KeyError as ex:
-            raise UpdateFailed("Missing details data, skipping update") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="missing_data",
+                translation_placeholders={"service": "details"},
+            ) from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_request_failed",
+                translation_placeholders={
+                    "service": "details",
+                    "status": str(ex.status),
+                },
+            ) from None
 
         self.data = {}
         self.attributes = {}
@@ -196,7 +223,20 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
             data = await self.api.get_inventory(self.site_id)
             inventory = data["Inventory"]
         except KeyError as ex:
-            raise UpdateFailed("Missing inventory data, skipping update") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="missing_data",
+                translation_placeholders={"service": "inventory"},
+            ) from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_request_failed",
+                translation_placeholders={
+                    "service": "inventory",
+                    "status": str(ex.status),
+                },
+            ) from None
 
         self.data = {}
         self.attributes = {}
@@ -243,7 +283,20 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
             )
             energy_details = data["energyDetails"]
         except KeyError as ex:
-            raise UpdateFailed("Missing power flow data, skipping update") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="missing_data",
+                translation_placeholders={"service": "power flow"},
+            ) from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_request_failed",
+                translation_placeholders={
+                    "service": "energy details",
+                    "status": str(ex.status),
+                },
+            ) from None
 
         if "meters" not in energy_details:
             LOGGER.debug(
@@ -303,7 +356,27 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
             data = await self.api.get_current_power_flow(self.site_id)
             power_flow = data["siteCurrentPowerFlow"]
         except KeyError as ex:
-            raise UpdateFailed("Missing power flow data, skipping update") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="missing_data",
+                translation_placeholders={"service": "power flow"},
+            ) from ex
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_request_failed",
+                translation_placeholders={
+                    "service": "power flow",
+                    "status": str(ex.status),
+                },
+            ) from None
+
+        if power_flow is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="missing_data",
+                translation_placeholders={"service": "power flow"},
+            )
 
         power_from = []
         power_to = []
@@ -360,18 +433,36 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
         """Update the data from the SolarEdge Monitoring API."""
         now = dt_util.now()
         start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        data = await self.api.get_storage_data(
-            self.site_id,
-            start_of_day,
-            now,
-        )
+        try:
+            data = await self.api.get_storage_data(
+                self.site_id,
+                start_of_day,
+                now,
+            )
+        except ClientResponseError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_request_failed",
+                translation_placeholders={
+                    "service": "storage",
+                    "status": str(ex.status),
+                },
+            ) from None
         storage_data = data.get("storageData")
         if storage_data is None:
-            raise UpdateFailed("Storage data not available from API")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="data_unavailable",
+                translation_placeholders={"service": "storage"},
+            )
 
         batteries = storage_data.get("batteries")
         if batteries is None:
-            raise UpdateFailed("Battery data not available from API")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="data_unavailable",
+                translation_placeholders={"service": "battery"},
+            )
 
         self.data = {}
         self.attributes = {}

@@ -184,7 +184,7 @@ async def async_generate_data(
         attachments,
     )
 
-    with async_get_chat_session(hass) as session:
+    with async_get_chat_session(hass, context=context) as session:
         resolved_attachments = await _resolve_attachments(hass, session, attachments)
 
         return await entity.internal_async_generate_data(
@@ -220,7 +220,7 @@ async def async_generate_image(
         attachments,
     )
 
-    with async_get_chat_session(hass) as session:
+    with async_get_chat_session(hass, context=context) as session:
         resolved_attachments = await _resolve_attachments(hass, session, attachments)
 
         task_result = await entity.internal_async_generate_image(
@@ -404,7 +404,7 @@ async def async_evaluate(
         AITaskEntityFeature.EVALUATE,
         attachments,
     )
-    with async_get_chat_session(hass) as session:
+    with async_get_chat_session(hass, context=context) as session:
         resolved_attachments = await _resolve_attachments(hass, session, attachments)
         return await entity.internal_async_evaluate(
             EvaluationTask(

@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-import pysaj
+import aiosaj
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 type SAJConfigEntry = ConfigEntry[SAJDataUpdateCoordinator]
 
 
-class SAJDataUpdateCoordinator(DataUpdateCoordinator[pysaj.Sensors]):
+class SAJDataUpdateCoordinator(DataUpdateCoordinator[aiosaj.Sensors]):
     """Coordinator to poll a SAJ inverter and share data with all sensors."""
 
     config_entry: SAJConfigEntry
@@ -29,8 +29,8 @@ class SAJDataUpdateCoordinator(DataUpdateCoordinator[pysaj.Sensors]):
         self,
         hass: HomeAssistant,
         config_entry: SAJConfigEntry,
-        saj: pysaj.SAJ,
-        sensor_def: pysaj.Sensors,
+        saj: aiosaj.SAJ,
+        sensor_def: aiosaj.Sensors,
         *,
         wifi: bool,
     ) -> None:
@@ -47,17 +47,17 @@ class SAJDataUpdateCoordinator(DataUpdateCoordinator[pysaj.Sensors]):
         self._wifi = wifi
 
     @override
-    async def _async_update_data(self) -> pysaj.Sensors:
+    async def _async_update_data(self) -> aiosaj.Sensors:
         """Fetch the latest data from the inverter."""
         try:
             success = await self.saj.read(self.sensor_def)
-        except pysaj.UnauthorizedException as err:
+        except aiosaj.UnauthorizedException as err:
             # On ethernet an unauthorized response usually means a wrong
             # connection type, which is a recoverable connection problem.
             if self._wifi:
                 raise ConfigEntryAuthFailed("Authentication failed") from err
             raise UpdateFailed("Wrong connection type or cannot connect") from err
-        except (pysaj.UnexpectedResponseException, TimeoutError, OSError) as err:
+        except (aiosaj.UnexpectedResponseException, TimeoutError, OSError) as err:
             raise UpdateFailed(f"Error communicating with the inverter: {err}") from err
 
         if not success:

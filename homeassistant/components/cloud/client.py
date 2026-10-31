@@ -33,7 +33,12 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.util.aiohttp import MockRequest, serialize_response
 
 from . import alexa_config, google_config
-from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN, PREF_ENABLE_CLOUD_ICE_SERVERS
+from .const import (
+    DISPATCHER_REMOTE_UPDATE,
+    DOMAIN,
+    EVENT_CLOUD_EVENT,
+    PREF_ENABLE_CLOUD_ICE_SERVERS,
+)
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
@@ -299,6 +304,10 @@ class CloudClient(Interface):
         if self._cloud_ice_servers_listener:
             self._cloud_ice_servers_listener()
             self._cloud_ice_servers_listener = None
+
+        # Sent from here so logouts started by hass_nabucasa are included, and
+        # listeners see the user as logged out because the tokens are cleared.
+        async_dispatcher_send(self._hass, EVENT_CLOUD_EVENT, {"type": "logout"})
 
     @callback
     @override

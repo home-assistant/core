@@ -1,14 +1,15 @@
 """Test the Dropbox backup platform."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from dataclasses import replace
 from io import StringIO
 import json
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import mock_stream
@@ -25,7 +26,6 @@ from homeassistant.components.dropbox.backup import (
     METADATA_DOWNLOAD_CONCURRENCY,
     DropboxFileOrFolderNotFoundException,
     DropboxUnknownException,
-    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.dropbox.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
@@ -34,6 +34,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID
+
+from tests.components.backup.common import (
+    collect_upload_events,
+    flush_upload_progress,
+    upload_backup_via_http,
+)
 
 TEST_AGENT_BACKUP = AgentBackup(
     addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
@@ -113,7 +119,7 @@ async def test_agents_info(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test listing available backup agents."""
+    """Test listing available backup agents following config entry unload and setup."""
 
     client = await hass_ws_client(hass)
 
@@ -137,6 +143,20 @@ async def test_agents_info(
     assert response["success"]
     assert response["result"] == {
         "agents": [{"agent_id": "backup.local", "name": "local"}]
+    }
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agents": [
+            {"agent_id": "backup.local", "name": "local"},
+            {"agent_id": TEST_AGENT_ID, "name": CONFIG_ENTRY_TITLE},
+        ]
     }
 
 
@@ -547,30 +567,49 @@ async def test_agents_upload_fail(
 
 async def test_agents_upload_progress(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     mock_dropbox_client: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that upload progress reported by the client is forwarded."""
-    open_stream = AsyncMock()
-    on_progress = Mock()
-    (agent,) = await async_get_backup_agents(hass)
+    """Test that upload progress reported by the client reaches the backup manager."""
+    tar_name, metadata_name = _suggested_filenames(TEST_AGENT_BACKUP)
+    uploaded: dict[str, bytes] = {}
 
-    await agent.async_upload_backup(
-        open_stream=open_stream,
-        backup=TEST_AGENT_BACKUP,
-        on_progress=on_progress,
-    )
+    async def _upload_tar(
+        path: str,
+        stream: AsyncIterator[bytes],
+        progress_callback: Callable[[int], None],
+    ) -> None:
+        uploaded[path] = b"".join([chunk async for chunk in stream])
+        # The client calls the callback after each chunk it sends
+        progress_callback(3)
+        # Report each value in its own event
+        flush_upload_progress(hass, freezer)
+        progress_callback(8)
 
-    backup_filename = suggested_filename(TEST_AGENT_BACKUP).rsplit(".", 1)[0]
-    upload_call = mock_dropbox_client.upload_file.call_args_list[0]
-    assert upload_call.args == (f"/{backup_filename}.tar", open_stream.return_value)
-    # The client calls the callback after each chunk it sends
-    progress_callback = upload_call.kwargs["progress_callback"]
-    progress_callback(3)
-    progress_callback(8)
-    assert on_progress.call_args_list == [
-        call(bytes_uploaded=3),
-        call(bytes_uploaded=8),
-    ]
+    # No progress_callback parameter: the metadata upload must not get one
+    async def _upload_metadata(path: str, stream: AsyncIterator[bytes]) -> None:
+        uploaded[path] = b"".join([chunk async for chunk in stream])
+
+    handlers = {f"/{tar_name}": _upload_tar, f"/{metadata_name}": _upload_metadata}
+
+    async def _upload_file(path: str, *args: Any, **kwargs: Any) -> None:
+        await handlers[path](path, *args, **kwargs)
+
+    mock_dropbox_client.upload_file = AsyncMock(side_effect=_upload_file)
+
+    with collect_upload_events(hass, TEST_AGENT_ID) as events:
+        resp = await upload_backup_via_http(
+            await hass_client(), TEST_AGENT_ID, TEST_AGENT_BACKUP
+        )
+
+    assert resp.status == 201
+    assert uploaded == {
+        f"/{tar_name}": b"test",
+        f"/{metadata_name}": json.dumps(TEST_AGENT_BACKUP.as_dict()).encode(),
+    }
+    # The manager emits the first (0) and last (backup size) events
+    assert [e.uploaded_bytes for e in events] == [0, 3, 8, TEST_AGENT_BACKUP.size]
 
 
 async def test_agents_delete(
@@ -652,7 +691,7 @@ async def test_agents_delete_not_found(
     assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
-async def test_remove_backup_agents_listener(
+async def test_listeners_get_cleaned_up(
     hass: HomeAssistant,
 ) -> None:
     """Test removing a backup agent listener."""

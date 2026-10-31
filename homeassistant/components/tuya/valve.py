@@ -38,6 +38,16 @@ VALVES: dict[DeviceCategory, tuple[TuyaValveEntityDescription, ...]] = {
             translation_key="valve",
             device_class=ValveDeviceClass.WATER,
         ),
+        *(
+            TuyaValveEntityDescription(
+                key=DPCode(f"switch_{channel}"),
+                translation_key="valve",
+                device_class=ValveDeviceClass.WATER,
+                channel_index=channel,
+                channel_condition=lambda device: DPCode.SWITCH_2 in device.status_range,
+            )
+            for channel in range(1, 9)
+        ),
     ),
     DeviceCategory.SFKZQ: (
         TuyaValveEntityDescription(

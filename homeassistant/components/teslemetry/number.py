@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, override
 
-from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
@@ -13,6 +12,7 @@ from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.number import (
+    DEFAULT_MAX_VALUE,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -26,18 +26,24 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
+from .const import CHARGE_LIMIT_SOC_KEY, CHARGE_ON_SOLAR_LOWER_LIMIT_KEY
 from .entity import (
+    TeslemetryChargeOnSolarEntity,
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_command, handle_vehicle_command
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_command
+from .models import (
+    TeslemetryChargeOnSolarStore,
+    TeslemetryEnergyData,
+    TeslemetryVehicleData,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -80,7 +86,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberVehicleEntityDescription, ...] = (
         max_listener=lambda x, y: x.listen_ChargeCurrentRequestMax(y),
     ),
     TeslemetryNumberVehicleEntityDescription(
-        key="charge_state_charge_limit_soc",
+        key=CHARGE_LIMIT_SOC_KEY,
         native_step=PRECISION_WHOLE,
         native_min_value=50,
         native_max_value=100,
@@ -92,6 +98,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberVehicleEntityDescription, ...] = (
         scopes=[Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS],
         value_listener=lambda x, y: x.listen_ChargeLimitSoc(y),
     ),
+)
+
+
+CHARGE_ON_SOLAR_LOWER_LIMIT_DESCRIPTION = NumberEntityDescription(
+    key=CHARGE_ON_SOLAR_LOWER_LIMIT_KEY,
+    native_step=PRECISION_WHOLE,
+    native_min_value=0,
+    native_unit_of_measurement=PERCENTAGE,
+    device_class=NumberDeviceClass.BATTERY,
+    mode=NumberMode.AUTO,
 )
 
 
@@ -137,19 +153,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry number platform from a config entry."""
 
-    async_add_entities(
+    entities: list[NumberEntity] = list(
         chain(
             (
                 TeslemetryVehiclePollingNumberEntity(
                     vehicle,
                     description,
                     entry.runtime_data.scopes,
+                    entry.runtime_data.charge_on_solar_store,
                 )
-                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.26")
+                if vehicle.polls_charge_limit
                 else TeslemetryStreamingNumberEntity(
                     vehicle,
                     description,
                     entry.runtime_data.scopes,
+                    entry.runtime_data.charge_on_solar_store,
                 )
                 for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
@@ -168,12 +186,26 @@ async def async_setup_entry(
         )
     )
 
+    if (store := entry.runtime_data.charge_on_solar_store) is not None:
+        entities.extend(
+            TeslemetryChargeOnSolarLowerLimitNumberEntity(
+                vehicle,
+                CHARGE_ON_SOLAR_LOWER_LIMIT_DESCRIPTION,
+                store,
+            )
+            for vehicle in entry.runtime_data.vehicles
+        )
+
+    async_add_entities(entities)
+
 
 class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
     """Vehicle number entity base class."""
 
     api: Vehicle | VehicleRouter
     entity_description: TeslemetryNumberVehicleEntityDescription
+    vehicle: TeslemetryVehicleData
+    _charge_on_solar_store: TeslemetryChargeOnSolarStore | None
 
     @override
     async def async_set_native_value(self, value: float) -> None:
@@ -181,6 +213,10 @@ class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
         value = int(value)
         self.raise_for_scope(self.entity_description.scopes[0])
         await handle_vehicle_command(self.entity_description.func(self.api, value))
+        if self.entity_description.key == CHARGE_LIMIT_SOC_KEY:
+            self.vehicle.charge_limit_soc = value
+            if self._charge_on_solar_store is not None:
+                self._charge_on_solar_store.async_save(self.vehicle)
         self._attr_native_value = value
         self.async_write_ha_state()
 
@@ -195,9 +231,11 @@ class TeslemetryVehiclePollingNumberEntity(
         data: TeslemetryVehicleData,
         description: TeslemetryNumberVehicleEntityDescription,
         scopes: list[Scope],
+        charge_on_solar_store: TeslemetryChargeOnSolarStore | None,
     ) -> None:
         """Initialize the number entity."""
         self.scoped = any(scope in scopes for scope in description.scopes)
+        self._charge_on_solar_store = charge_on_solar_store
         self.entity_description = description
         super().__init__(
             data,
@@ -227,9 +265,11 @@ class TeslemetryStreamingNumberEntity(
         data: TeslemetryVehicleData,
         description: TeslemetryNumberVehicleEntityDescription,
         scopes: list[Scope],
+        charge_on_solar_store: TeslemetryChargeOnSolarStore | None,
     ) -> None:
         """Initialize the Number entity."""
         self.scoped = any(scope in scopes for scope in description.scopes)
+        self._charge_on_solar_store = charge_on_solar_store
         self.entity_description = description
         self._attr_native_max_value = self.entity_description.native_max_value
         super().__init__(data, description.key)
@@ -310,3 +350,59 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
         self._attr_native_value = value
         self.coordinator.async_set_command_value(self.key, value)
         self.async_write_ha_state()
+
+
+class TeslemetryChargeOnSolarLowerLimitNumberEntity(
+    TeslemetryChargeOnSolarEntity, NumberEntity
+):
+    """Number entity for the lower charge limit of Tesla's charge-on-solar mode."""
+
+    @property
+    @override
+    def native_max_value(self) -> float:
+        """Bound the lower limit by the charge limit."""
+        value = self.vehicle.charge_limit_soc
+        return value if value is not None else DEFAULT_MAX_VALUE
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        self._attr_native_value = self.vehicle.charge_on_solar_lower_limit
+        await super().async_added_to_hass()
+
+    @callback
+    @override
+    def _async_handle_charge_limit_soc(self, value: int | None) -> None:
+        """Store the latest charge limit and cap the lower limit to it."""
+        super()._async_handle_charge_limit_soc(value)
+        upper_limit = int(self.native_max_value)
+        if self.vehicle.charge_on_solar_lower_limit > upper_limit:
+            self._async_store_lower_limit(upper_limit)
+        self.async_write_ha_state()
+
+    def _async_store_lower_limit(self, value: int) -> None:
+        """Share the lower limit with the switch and persist it."""
+        self._attr_native_value = value
+        self.vehicle.charge_on_solar_lower_limit = value
+        self._store.async_save(self.vehicle)
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set new value."""
+        value = int(value)
+
+        async with self.vehicle.charge_on_solar_lock:
+            if not self.vehicle.charge_on_solar_enabled:
+                self._async_store_lower_limit(value)
+                self.async_write_ha_state()
+                return
+
+            sent_value = await async_set_charge_on_solar(
+                handle_vehicle_command,
+                self.api,
+                enabled=True,
+                lower_charge_limit=value,
+                charge_limit_soc=self.vehicle.charge_limit_soc,
+            )
+            self._async_store_lower_limit(sent_value)
+            self.async_write_ha_state()

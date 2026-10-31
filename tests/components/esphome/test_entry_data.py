@@ -148,6 +148,7 @@ async def test_discover_zwave() -> None:
     )
     device_info = Mock(
         mac_address="mock-device-info-mac",
+        devices=[],
         zwave_proxy_feature_flags=1,
         zwave_home_id=1234,
     )
@@ -196,6 +197,7 @@ async def test_discover_zwave_without_home_id() -> None:
     )
     device_info = Mock(
         mac_address="mock-device-info-mac",
+        devices=[],
         zwave_proxy_feature_flags=1,
         zwave_home_id=0,  # No home ID (fresh adapter or unplugged)
     )

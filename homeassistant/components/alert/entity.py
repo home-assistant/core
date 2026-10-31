@@ -22,7 +22,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.util.dt import now
+from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, LOGGER
 
@@ -140,7 +140,7 @@ class AlertEntity(Entity):
     async def _schedule_notify(self) -> None:
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
-        next_msg = now() + delay
+        next_msg = utcnow() + delay
         self._cancel = async_track_point_in_time(
             self.hass,
             HassJob(

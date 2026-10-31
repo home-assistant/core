@@ -48,7 +48,7 @@ from homeassistant.helpers.target import (
     async_extract_referenced_entity_ids,
     async_track_target_selector_state_change_event,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import BaseUnitConverter
@@ -614,7 +614,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
     """Condition for numerical state comparisons with above/below thresholds."""
 
     _schema = NUMERICAL_CONDITION_SCHEMA
-    _valid_unit: str | UndefinedType | None = UNDEFINED
+    _valid_unit: str | Undefined | None = Undefined
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the numerical condition."""
@@ -661,7 +661,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
     def _is_valid_unit(self, unit: str | None) -> bool:
         """Check if the given unit is valid for this condition."""
-        if isinstance(self._valid_unit, UndefinedType):
+        if self._valid_unit is Undefined:
             return True
         return unit == self._valid_unit
 
@@ -733,7 +733,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
 def make_entity_numerical_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
-    valid_unit: str | UndefinedType | None = UNDEFINED,
+    valid_unit: str | Undefined | None = Undefined,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalConditionBase]:

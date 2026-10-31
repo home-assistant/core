@@ -300,8 +300,7 @@ async def test_light_added_during_gap_public_only(
 ) -> None:
     """A light added while the websocket was down enumerates on reconnect.
 
-    No add frame arrives for a light that appeared during the gap, so the
-    reconnect resync must dispatch it for enumeration itself.
+    The library's reconnect resync announces it with a synthetic add frame.
     """
 
     first = make_public_light(light)
@@ -309,24 +308,27 @@ async def test_light_added_during_gap_public_only(
 
     await init_entry(hass, ufp, [])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+    ufp.api.update_public.reset_mock()
 
-    # A second light appears during the gap; the reconnect resync includes it.
+    # A second light appears during the gap; the library resync adds it.
     second = make_public_light(light)
     second.id = "gap-light"
     second.mac = "FFEEDDCCBB02"
     second.name = "Gap Light"
     second.display_name = "Gap Light"
 
-    _use_public_only_bootstrap(ufp, first, second)
     ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    ufp.api.public_bootstrap.lights[second.id] = second
+    ufp.public_resync(added=[second])
     await hass.async_block_till_done()
 
     assert_entity_counts(hass, Platform.LIGHT, 2, 2)
     assert hass.states.get("light.gap_light") is not None
-    # The resync re-offers the first light too; the dedup must drop it.
     assert "already exists" not in caplog.text
+    # The library owns the resync; the integration does not refresh again.
+    ufp.api.update_public.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

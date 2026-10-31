@@ -102,7 +102,7 @@ runs:
         python --version
         uv pip install -r requirements.txt
         uv pip install -r requirements_all.txt -r requirements_test.txt
-        uv pip install -e . -e packages/pytest-home-assistant --config-settings editable_mode=compat
+        uv pip install -e . -e packages/hassfest -e packages/pytest-home-assistant --config-settings editable_mode=compat
     - name: Prune uv cache
       if: inputs.save == 'true' && steps.cache-venv.outputs.cache-hit != 'true'
       shell: bash

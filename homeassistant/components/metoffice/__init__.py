@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     Platform,
@@ -29,8 +30,8 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 async def async_setup_entry(hass: HomeAssistant, entry: MetOfficeConfigEntry) -> None:
     """Set up a Met Office entry."""
 
-    latitude: float = entry.data[CONF_LATITUDE]
-    longitude: float = entry.data[CONF_LONGITUDE]
+    latitude: float = entry.data[CONF_LOCATION][CONF_LATITUDE]
+    longitude: float = entry.data[CONF_LOCATION][CONF_LONGITUDE]
     api_key: str = entry.data[CONF_API_KEY]
     site_name: str = entry.data[CONF_NAME]
 
@@ -96,3 +97,14 @@ def get_device_info(coordinates: str, name: str) -> DeviceInfo:
         manufacturer="Met Office",
         name=f"Met Office {name}",
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate old config entry."""
+
+    if entry.version < 2:
+        data = dict(entry.data)
+        long = data.pop(CONF_LONGITUDE)
+        lat = data.pop(CONF_LATITUDE)
+        data[CONF_LOCATION] = {CONF_LATITUDE: lat, CONF_LONGITUDE: long}
+        hass.config_entries.async_update_entry(entry, data=data, version=2)

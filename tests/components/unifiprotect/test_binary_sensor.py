@@ -15,8 +15,13 @@ from uiprotect.data import (
     Light,
     ModelType,
     MountType,
+    Permission,
+    PublicHdrMode,
+    RecordingMode,
     Sensor,
     SmartDetectAudioType,
+    SmartDetectObjectType,
+    VideoMode,
     WSAction,
 )
 from uiprotect.data.public_devices import SensorFeatureCapability
@@ -62,6 +67,8 @@ from .utils import (
     setup_public_light,
     setup_public_sensor,
 )
+
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
 
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]
@@ -289,7 +296,13 @@ async def test_binary_sensor_setup_sensor_leak(
     """Test binary_sensor entity setup for sensor with most leak mounting type."""
 
     sensor.mount_type = MountType.LEAK
-    setup_public_sensor(ufp)
+    setup_public_sensor(
+        ufp,
+        motion_enabled=False,
+        temperature_enabled=False,
+        humidity_enabled=False,
+        light_enabled=False,
+    )
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
@@ -1232,3 +1245,90 @@ async def test_object_detected_needs_advertised_types(
     keys = registered_keys(entity_registry, Platform.BINARY_SENSOR, doorbell.mac)
     assert "motion" in keys
     assert "smart_obj_any" not in keys
+
+
+_CAMERA_BINARY_MIRRORS = (
+    "status_light",
+    "hdr_mode",
+    "high_fps",
+    "osd_name",
+    "osd_date",
+    "osd_logo",
+    "osd_bitrate",
+    "smart_person",
+    "smart_vehicle",
+    "smart_animal",
+    "smart_package",
+    "smart_licenseplate",
+    "smart_smoke",
+    "smart_cmonx",
+    "smart_siren",
+    "smart_baby_cry",
+    "smart_speak",
+    "smart_bark",
+    "smart_car_alarm",
+    "smart_car_horn",
+    "smart_glass_break",
+)
+
+
+def _set_private_mirrors_on(camera: Camera) -> None:
+    """Turn every mirrored setting on in the private camera."""
+    object_types = [t for t in SmartDetectObjectType if t.audio_type is None]
+    audio_types = list(SmartDetectAudioType)
+    camera.feature_flags.smart_detect_types = object_types
+    camera.feature_flags.smart_detect_audio_types = audio_types
+    camera.smart_detect_settings.object_types = object_types
+    camera.smart_detect_settings.audio_types = audio_types
+    camera.recording_settings.mode = RecordingMode.ALWAYS
+    camera.led_settings.is_enabled = True
+
+
+@pytest.mark.parametrize("key", _CAMERA_BINARY_MIRRORS)
+async def test_binary_sensor_camera_mirror_reads_public(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+) -> None:
+    """A read-only user's camera setting mirror shows the public value."""
+    _set_private_mirrors_on(doorbell)
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(
+        ufp,
+        hdr_type=PublicHdrMode.OFF,
+        video_mode=VideoMode.DEFAULT,
+        object_types=[],
+        audio_types=[],
+    )
+
+    await init_entry(hass, ufp, [doorbell])
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{doorbell.mac}_{key}"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_binary_sensor_camera_hdr_mirror_on_for_auto(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """The HDR mirror is on for the auto mode as well."""
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp, hdr_type=PublicHdrMode.AUTO)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, f"{doorbell.mac}_hdr_mode"
+    )
+    assert hass.states.get(entity_id).state == STATE_ON

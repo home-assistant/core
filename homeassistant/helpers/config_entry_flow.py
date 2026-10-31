@@ -61,7 +61,6 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Confirm setup."""
         if user_input is None and onboarding.async_is_onboarded(self.hass):
-            self._set_confirm_only()
             return self.async_show_form(step_id="confirm")
 
         if self.source == config_entries.SOURCE_USER:

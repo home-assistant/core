@@ -6,7 +6,6 @@ import logging
 from typing import Any, override
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     EntityCapabilityAttribute,
@@ -27,7 +26,13 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import ATTR_AUTO, ATTR_ORDER, DATA_COMPONENT, DOMAIN, GROUP_ORDER, REG_KEY
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    GROUP_ORDER,
+    REG_KEY,
+    GroupEntityStateAttribute,
+)
 from .registry import GroupIntegrationRegistry, SingleStateType
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -41,7 +46,7 @@ class GroupEntity(Entity):
     """Representation of a Group of entities."""
 
     _unrecorded_attributes = frozenset(
-        {ATTR_ENTITY_ID, EntityCapabilityAttribute.GROUP_ENTITIES}
+        {GroupEntityStateAttribute.ENTITY_ID, EntityCapabilityAttribute.GROUP_ENTITIES}
     )
 
     _attr_should_poll = False
@@ -148,7 +153,13 @@ class GroupEntity(Entity):
 class Group(Entity):
     """Track a group of entity ids."""
 
-    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID, ATTR_ORDER, ATTR_AUTO})
+    _unrecorded_attributes = frozenset(
+        {
+            GroupEntityStateAttribute.ENTITY_ID,
+            GroupEntityStateAttribute.ORDER,
+            GroupEntityStateAttribute.AUTO,
+        }
+    )
 
     _attr_should_poll = False
     tracking: tuple[str, ...]
@@ -278,9 +289,12 @@ class Group(Entity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes for the group."""
-        data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
+        data: dict[str, Any] = {
+            GroupEntityStateAttribute.ENTITY_ID: self.tracking,
+            GroupEntityStateAttribute.ORDER: self._order,
+        }
         if self.created_by_service:
-            data[ATTR_AUTO] = True
+            data[GroupEntityStateAttribute.AUTO] = True
 
         return data
 

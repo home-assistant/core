@@ -61,6 +61,7 @@ class PingDataICMPLib(PingData):
         except NameLookupError:
             _LOGGER.debug("Error resolving host: %s", self.ip_address)
             self.is_alive = False
+            self.data = None
             return
 
         _LOGGER.debug(
@@ -73,7 +74,8 @@ class PingDataICMPLib(PingData):
 
         self.is_alive = data.is_alive
         if not self.is_alive:
-            self.data = None
+            # No replies is still a measurement: report 100% packet loss
+            self.data = {"loss": data.packet_loss * 100}
             return
 
         self.data = {

@@ -14,7 +14,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 
-from . import (
+from .const import (
     CONF_DRY_TOLERANCE,
     CONF_HUMIDIFIER,
     CONF_MIN_DUR,

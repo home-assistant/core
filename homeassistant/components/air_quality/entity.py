@@ -6,32 +6,20 @@ from homeassistant.const import UnitOfDensity
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    ATTR_AQI,
-    ATTR_CO,
-    ATTR_CO2,
-    ATTR_N2O,
-    ATTR_NO,
-    ATTR_NO2,
-    ATTR_OZONE,
-    ATTR_PM_0_1,
-    ATTR_PM_2_5,
-    ATTR_PM_10,
-    ATTR_SO2,
-)
+from .const import AirQualityEntityStateAttribute
 
-PROP_TO_ATTR: Final[dict[str, str]] = {
-    "air_quality_index": ATTR_AQI,
-    "carbon_dioxide": ATTR_CO2,
-    "carbon_monoxide": ATTR_CO,
-    "nitrogen_oxide": ATTR_N2O,
-    "nitrogen_monoxide": ATTR_NO,
-    "nitrogen_dioxide": ATTR_NO2,
-    "ozone": ATTR_OZONE,
-    "particulate_matter_0_1": ATTR_PM_0_1,
-    "particulate_matter_10": ATTR_PM_10,
-    "particulate_matter_2_5": ATTR_PM_2_5,
-    "sulphur_dioxide": ATTR_SO2,
+PROP_TO_ATTR: Final[dict[str, AirQualityEntityStateAttribute]] = {
+    "air_quality_index": AirQualityEntityStateAttribute.AIR_QUALITY_INDEX,
+    "carbon_dioxide": AirQualityEntityStateAttribute.CARBON_DIOXIDE,
+    "carbon_monoxide": AirQualityEntityStateAttribute.CARBON_MONOXIDE,
+    "nitrogen_oxide": AirQualityEntityStateAttribute.NITROGEN_OXIDE,
+    "nitrogen_monoxide": AirQualityEntityStateAttribute.NITROGEN_MONOXIDE,
+    "nitrogen_dioxide": AirQualityEntityStateAttribute.NITROGEN_DIOXIDE,
+    "ozone": AirQualityEntityStateAttribute.OZONE,
+    "particulate_matter_0_1": AirQualityEntityStateAttribute.PARTICULATE_MATTER_0_1,
+    "particulate_matter_10": AirQualityEntityStateAttribute.PARTICULATE_MATTER_10,
+    "particulate_matter_2_5": AirQualityEntityStateAttribute.PARTICULATE_MATTER_2_5,
+    "sulphur_dioxide": AirQualityEntityStateAttribute.SULPHUR_DIOXIDE,
 }
 
 

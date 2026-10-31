@@ -21,6 +21,7 @@ from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -31,7 +32,7 @@ from homeassistant.helpers.trace import (
     trace_stack_cv,
     trace_stack_top,
 )
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import TemplateVarsType, Undefined
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -86,7 +87,7 @@ if TYPE_CHECKING:
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _ENVIRONMENT: HassKey[TemplateEnvironment] = HassKey("template.environment")
@@ -624,10 +625,13 @@ class Template:
         error_value: Any = _SENTINEL,
         variables: dict[str, Any] | None = None,
         parse_result: bool = False,
+        *,
+        value_json: Any = _SENTINEL,
     ) -> Any:
         """Render template with value exposed.
 
-        If valid JSON will expose value_json too.
+        If valid JSON will expose value_json too. A caller that has parsed the
+        value already passes it as value_json, or Undefined if it is not JSON.
 
         This method must be run in the event loop.
         """
@@ -641,10 +645,13 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        try:  # noqa: SIM105 - suppress is much slower
-            variables["value_json"] = json_loads(value)
-        except JSON_DECODE_EXCEPTIONS:
-            pass
+        if value_json is _SENTINEL:
+            try:  # noqa: SIM105 - suppress is much slower
+                variables["value_json"] = json_loads(value)
+            except JSON_DECODE_EXCEPTIONS:
+                pass
+        elif value_json is not Undefined:
+            variables["value_json"] = value_json
 
         try:
             render_result = render_with_context(

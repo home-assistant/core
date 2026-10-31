@@ -1,0 +1,134 @@
+[
+  {
+    "slug": "bluetooth",
+    "name": "Bluetooth",
+    "description": "Bluetooth devices, through a Bluetooth adapter or proxy.",
+    "icon": "mdi:bluetooth"
+  },
+  {
+    "slug": "cloud",
+    "name": "Cloud",
+    "description": "Services on the internet, like a manufacturer's cloud.",
+    "icon": "mdi:cloud"
+  },
+  {
+    "slug": "dali",
+    "name": "DALI",
+    "description": "DALI lighting control devices.",
+    "icon": "mdi:lightbulb-group"
+  },
+  {
+    "slug": "dect",
+    "name": "DECT",
+    "description": "DECT ULE devices, like those connected to a FRITZ!Box.",
+    "icon": "mdi:phone-classic"
+  },
+  {
+    "slug": "enocean",
+    "name": "EnOcean",
+    "description": "Battery-free EnOcean radio devices.",
+    "icon": "mdi:leaf"
+  },
+  {
+    "slug": "esphome",
+    "name": "ESPHome",
+    "description": "Devices running ESPHome, using its native API.",
+    "icon": "mdi:esphome"
+  },
+  {
+    "slug": "homekit",
+    "name": "HomeKit",
+    "description": "Devices that use Apple's HomeKit protocol, over Wi-Fi, Thread or Bluetooth.",
+    "icon": "mdi:apple"
+  },
+  {
+    "slug": "host",
+    "name": "This machine",
+    "description": "The machine Home Assistant runs on, like its CPU, disks and files.",
+    "icon": "mdi:server"
+  },
+  {
+    "slug": "infrared",
+    "name": "Infrared",
+    "description": "Devices controlled with infrared signals, like TVs and air conditioners.",
+    "icon": "mdi:remote"
+  },
+  {
+    "slug": "insteon",
+    "name": "Insteon",
+    "description": "Insteon devices, through an Insteon hub or modem.",
+    "icon": "mdi:home-lightning-bolt"
+  },
+  {
+    "slug": "knx",
+    "name": "KNX",
+    "description": "KNX building automation devices.",
+    "icon": "mdi:office-building-cog"
+  },
+  {
+    "slug": "lorawan",
+    "name": "LoRaWAN",
+    "description": "Long-range, low-power sensors on a LoRaWAN network.",
+    "icon": "mdi:access-point-network"
+  },
+  {
+    "slug": "matter",
+    "name": "Matter",
+    "description": "Matter devices, over Thread, Wi-Fi or Ethernet.",
+    "icon": "mdi:matter"
+  },
+  {
+    "slug": "modbus",
+    "name": "Modbus",
+    "description": "Devices that use Modbus, over a serial line or the network.",
+    "icon": "mdi:connection"
+  },
+  {
+    "slug": "mqtt",
+    "name": "MQTT",
+    "description": "Devices and services that talk through an MQTT broker.",
+    "icon": "mdi:mqtt"
+  },
+  {
+    "slug": "network",
+    "name": "Local network",
+    "description": "Devices and services on your network, using their own or a standard protocol over IP.",
+    "icon": "mdi:lan"
+  },
+  {
+    "slug": "onewire",
+    "name": "1-Wire",
+    "description": "1-Wire sensors, like temperature sensors.",
+    "icon": "mdi:thermometer"
+  },
+  {
+    "slug": "rf",
+    "name": "Radio frequency",
+    "description": "Devices controlled with sub-GHz radio signals, like 433 MHz remotes and sensors.",
+    "icon": "mdi:radio-tower"
+  },
+  {
+    "slug": "serial",
+    "name": "Serial",
+    "description": "Devices connected with a serial or USB cable.",
+    "icon": "mdi:serial-port"
+  },
+  {
+    "slug": "x10",
+    "name": "X10",
+    "description": "X10 powerline and radio devices.",
+    "icon": "mdi:power-plug"
+  },
+  {
+    "slug": "zigbee",
+    "name": "Zigbee",
+    "description": "Zigbee devices, through a Zigbee radio or a bridge.",
+    "icon": "mdi:zigbee"
+  },
+  {
+    "slug": "zwave",
+    "name": "Z-Wave",
+    "description": "Z-Wave devices, through a Z-Wave radio or a bridge.",
+    "icon": "mdi:z-wave"
+  }
+]

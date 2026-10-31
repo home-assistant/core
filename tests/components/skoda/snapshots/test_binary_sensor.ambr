@@ -1,0 +1,664 @@
+# serializer version: 1
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_doors-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_doors',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Doors',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Doors',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doors',
+    'unique_id': 'TMBJM7NP2M1TMP511_doors',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_doors-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Doors',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_doors',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hood',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Hood',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bonnet',
+    'unique_id': 'TMBJM7NP2M1TMP511_bonnet',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Hood',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_lights-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_lights',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lights',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
+    'original_icon': None,
+    'original_name': 'Lights',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lights',
+    'unique_id': 'TMBJM7NP2M1TMP511_lights',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_lights-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Lights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Lock',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'TMBJM7NP2M1TMP511_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sunroof',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunroof',
+    'unique_id': 'TMBJM7NP2M1TMP511_sunroof',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Sunroof',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_trunk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_trunk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Trunk',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Trunk',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trunk',
+    'unique_id': 'TMBJM7NP2M1TMP511_trunk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_trunk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Trunk',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_trunk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_windows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enyaq_coupe_windows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Windows',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Windows',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windows',
+    'unique_id': 'TMBJM7NP2M1TMP511_windows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_electric.json][binary_sensor.enyaq_coupe_windows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enyaq Coupé Windows',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enyaq_coupe_windows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_doors-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.superb_doors',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Doors',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Doors',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doors',
+    'unique_id': 'TMBJM7NP2M1TMP511_doors',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_doors-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Superb Doors',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.superb_doors',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.superb_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hood',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Hood',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bonnet',
+    'unique_id': 'TMBJM7NP2M1TMP511_bonnet',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Superb Hood',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.superb_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_lights-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.superb_lights',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lights',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
+    'original_icon': None,
+    'original_name': 'Lights',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lights',
+    'unique_id': 'TMBJM7NP2M1TMP511_lights',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_lights-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Superb Lights',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.superb_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.superb_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Lock',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'TMBJM7NP2M1TMP511_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Superb Lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.superb_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_trunk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.superb_trunk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Trunk',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Trunk',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'trunk',
+    'unique_id': 'TMBJM7NP2M1TMP511_trunk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_trunk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Superb Trunk',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.superb_trunk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_windows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('skoda', 'TMBJM7NP2M1TMP511')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.superb_windows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Windows',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Windows',
+    'platform': 'skoda',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'windows',
+    'unique_id': 'TMBJM7NP2M1TMP511_windows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[vehicle_hybrid.json][binary_sensor.superb_windows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Superb Windows',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.superb_windows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

@@ -259,7 +259,6 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             if user_input is None:
-                self._set_confirm_only()
                 return self.async_show_form(
                     step_id="hassio_confirm",
                     description_placeholders=self._hassio_discovery.config,

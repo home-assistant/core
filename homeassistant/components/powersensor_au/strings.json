@@ -1,0 +1,112 @@
+{
+  "config": {
+    "abort": {
+      "entry_not_loaded": "The Powersensor integration must be loaded before sensor roles can be reconfigured.",
+      "no_sensors_found": "No Powersensor sensors have been discovered yet. Sensor roles can be set once a sensor reports to a plug."
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to add Powersensor to Home Assistant?",
+        "title": "Powersensor plugs discovered"
+      },
+      "manual_confirm": {
+        "description": "No Powersensor plugs were discovered on your network. You can still add the integration and if plugs are later discovered they will be added to Home Assistant. Do you want to add Powersensor to Home Assistant?",
+        "title": "No Powersensor plugs discovered"
+      },
+      "sensor_role": {
+        "data": {
+          "role": "Role"
+        },
+        "data_description": {
+          "role": "Decides which entities the sensor has, and whether the household view uses it."
+        },
+        "description": "Select what {sensor} measures. If the sensor reports a role itself, that role replaces the one you set here. To change a role the sensor reports, use the Powersensor app. [Learn more]({docs_url})",
+        "title": "Set sensor role"
+      }
+    }
+  },
+  "device": {
+    "appliance_sensor": {
+      "name": "Appliance sensor ({id})"
+    },
+    "mains_sensor": {
+      "name": "Mains sensor ({id})"
+    },
+    "plug": {
+      "name": "Plug ({id})"
+    },
+    "solar_sensor": {
+      "name": "Solar sensor ({id})"
+    },
+    "unknown_sensor": {
+      "name": "Sensor ({id})"
+    },
+    "virtual_household_view": {
+      "name": "Household view"
+    },
+    "water_sensor": {
+      "name": "Water sensor ({id})"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "active_current": {
+        "name": "Active current"
+      },
+      "apparent_current": {
+        "name": "Apparent current"
+      },
+      "device_role": {
+        "name": "Device role",
+        "state": {
+          "appliance": "Appliance",
+          "house_net": "Mains / house net",
+          "solar": "Solar",
+          "unknown": "Unknown",
+          "water": "Water"
+        }
+      },
+      "energy_from_grid": {
+        "name": "Energy - from grid"
+      },
+      "energy_home_use": {
+        "name": "Energy - home usage"
+      },
+      "energy_solar_generation": {
+        "name": "Energy - solar generation"
+      },
+      "energy_to_grid": {
+        "name": "Energy - to grid"
+      },
+      "power_from_grid": {
+        "name": "Power - from grid"
+      },
+      "power_home_use": {
+        "name": "Power - home use"
+      },
+      "power_solar_generation": {
+        "name": "Power - solar generation"
+      },
+      "power_to_grid": {
+        "name": "Power - to grid"
+      },
+      "reactive_current": {
+        "name": "Reactive current"
+      },
+      "rssi_ble": {
+        "name": "Signal strength (Bluetooth)"
+      }
+    }
+  },
+  "selector": {
+    "sensor_role": {
+      "options": {
+        "appliance": "Appliance",
+        "house-net": "Mains / house net",
+        "solar": "Solar",
+        "unknown": "Not yet assigned",
+        "water": "Water"
+      }
+    }
+  }
+}

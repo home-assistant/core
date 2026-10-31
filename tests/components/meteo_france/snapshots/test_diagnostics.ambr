@@ -1,0 +1,174 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'alert': dict({
+      'domain_id': '32',
+      'end_validity_time': 1591365600,
+      'phenomenons_max_colors': list([
+        dict({
+          'phenomenon_id': '6',
+          'phenomenon_max_color_id': 1,
+        }),
+        dict({
+          'phenomenon_id': '4',
+          'phenomenon_max_color_id': 1,
+        }),
+        dict({
+          'phenomenon_id': '5',
+          'phenomenon_max_color_id': 3,
+        }),
+        dict({
+          'phenomenon_id': '2',
+          'phenomenon_max_color_id': 1,
+        }),
+        dict({
+          'phenomenon_id': '1',
+          'phenomenon_max_color_id': 1,
+        }),
+        dict({
+          'phenomenon_id': '3',
+          'phenomenon_max_color_id': 2,
+        }),
+      ]),
+      'update_time': 1591279200,
+    }),
+    'forecast': dict({
+      'daily_forecast': list([
+        dict({
+          'T': dict({
+            'max': 10.4,
+            'min': 6.9,
+            'sea': None,
+          }),
+          'dt': 1737936000,
+          'humidity': dict({
+            'max': 90,
+            'min': 65,
+          }),
+          'precipitation': dict({
+            '24h': 1.3,
+          }),
+          'sun': dict({
+            'rise': 1737963392,
+            'set': 1737996163,
+          }),
+          'uv': 1,
+          'weather12H': dict({
+            'desc': 'Eclaircies',
+            'icon': 'p2j',
+          }),
+        }),
+      ]),
+      'forecast': list([
+        dict({
+          'T': dict({
+            'value': 9.1,
+            'windchill': 5.4,
+          }),
+          'clouds': 70,
+          'dt': 1737990000,
+          'humidity': 75,
+          'iso0': 1250,
+          'rain': dict({
+            '1h': 0,
+          }),
+          'rain snow limit': 'Non pertinent',
+          'sea_level': 988.7,
+          'snow': dict({
+            '1h': 0,
+          }),
+          'uv': 1,
+          'weather': dict({
+            'desc': 'Eclaircies',
+            'icon': 'p2j',
+          }),
+          'wind': dict({
+            'direction': 200,
+            'gust': 18,
+            'icon': 'SSO',
+            'speed': 8,
+          }),
+        }),
+      ]),
+      'position': dict({
+        'country': 'FR - France',
+        'dept': '74',
+        'rain_product_available': 1,
+        'timezone': 'Europe/Paris',
+      }),
+      'probability_forecast': list([
+        dict({
+          'dt': 1737990000,
+          'freezing': 0,
+          'rain': dict({
+            '3h': None,
+            '6h': None,
+          }),
+          'snow': dict({
+            '3h': None,
+            '6h': None,
+          }),
+        }),
+      ]),
+      'updated_on': 1737995400,
+    }),
+    'options': dict({
+    }),
+    'rain': dict({
+      'forecast': list([
+        dict({
+          'desc': 'Temps sec',
+          'dt': 1589996100,
+          'rain': 1,
+        }),
+        dict({
+          'desc': 'Temps sec',
+          'dt': 1589996400,
+          'rain': 1,
+        }),
+        dict({
+          'desc': 'Temps sec',
+          'dt': 1589996700,
+          'rain': 1,
+        }),
+        dict({
+          'desc': 'Pluie faible',
+          'dt': 1589997000,
+          'rain': 2,
+        }),
+        dict({
+          'desc': 'Pluie modérée',
+          'dt': 1589997300,
+          'rain': 3,
+        }),
+        dict({
+          'desc': 'Pluie faible',
+          'dt': 1589997600,
+          'rain': 2,
+        }),
+        dict({
+          'desc': 'Temps sec',
+          'dt': 1589998200,
+          'rain': 1,
+        }),
+        dict({
+          'desc': 'Temps sec',
+          'dt': 1589998800,
+          'rain': 1,
+        }),
+        dict({
+          'desc': 'Temps sec',
+          'dt': 1589999400,
+          'rain': 1,
+        }),
+      ]),
+      'position': dict({
+        'country': 'FR - France',
+        'dept': '92',
+        'timezone': 'Europe/Paris',
+      }),
+      'quality': 0,
+      'updated_on': 1589995200,
+    }),
+  })
+# ---

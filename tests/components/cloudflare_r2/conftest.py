@@ -1,8 +1,8 @@
 """Common fixtures for the Cloudflare R2 tests."""
 
-from collections.abc import AsyncIterator, Generator
+from collections.abc import Generator
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -13,16 +13,28 @@ from homeassistant.components.cloudflare_r2.backup import (
     suggested_filenames,
 )
 from homeassistant.components.cloudflare_r2.const import DOMAIN
-from homeassistant.const import CONF_PREFIX
 
+from . import mock_streaming_body
 from .const import USER_INPUT
+
+
+@pytest.fixture
+def backup_data() -> bytes:
+    """Backup data, override in tests to change defaults."""
+    return b"backup data"
+
+
+@pytest.fixture
+def backup_protected() -> bool:
+    """Backup protected, override in tests to change defaults."""
+    return False
 
 
 @pytest.fixture(
     params=[2**20, MULTIPART_MIN_PART_SIZE_BYTES],
     ids=["small", "large"],
 )
-def test_backup(request: pytest.FixtureRequest) -> None:
+def test_backup(request: pytest.FixtureRequest, backup_protected: bool) -> None:
     """Test backup fixture."""
     return AgentBackup(
         addons=[],
@@ -34,13 +46,13 @@ def test_backup(request: pytest.FixtureRequest) -> None:
         homeassistant_included=True,
         homeassistant_version="2024.12.0.dev0",
         name="Core 2024.12.0.dev0",
-        protected=False,
+        protected=backup_protected,
         size=request.param,
     )
 
 
 @pytest.fixture(autouse=True)
-def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
+def mock_client(test_backup: AgentBackup, backup_data: bytes) -> Generator[AsyncMock]:
     """Mock the R2 client (S3-compatible)."""
     with patch(
         "aiobotocore.session.AioSession.create_client",
@@ -50,20 +62,22 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
         client = create_client.return_value
 
         tar_file, metadata_file = suggested_filenames(test_backup)
-        client.list_objects_v2.return_value = {
-            "Contents": [{"Key": tar_file}, {"Key": metadata_file}]
-        }
+        # Mock the paginator for list_objects_v2
+        client.get_paginator = MagicMock()
+        paginate = client.get_paginator.return_value.paginate
+        paginate.return_value.__aiter__.return_value = [
+            {"Contents": [{"Key": tar_file}, {"Key": metadata_file}]}
+        ]
         client.create_multipart_upload.return_value = {"UploadId": "upload_id"}
         client.upload_part.return_value = {"ETag": "etag"}
 
-        class MockStream:
-            async def iter_chunks(self) -> AsyncIterator[bytes]:
-                yield b"backup data"
-
-            async def read(self) -> bytes:
-                return json.dumps(test_backup.as_dict()).encode()
-
-        client.get_object.return_value = {"Body": MockStream()}
+        objects = {
+            tar_file: backup_data,
+            metadata_file: json.dumps(test_backup.as_dict()).encode(),
+        }
+        client.get_object.side_effect = lambda **kwargs: {
+            "Body": mock_streaming_body(objects[kwargs["Key"].rsplit("/", 1)[-1]])
+        }
         client.head_bucket.return_value = {}
 
         create_client.return_value.__aenter__.return_value = client
@@ -71,27 +85,17 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def config_entry_extra_data() -> dict:
+    """Extra config entry data, override in tests to change defaults."""
+    return {}
+
+
+@pytest.fixture
+def mock_config_entry(config_entry_extra_data: dict) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         entry_id="test",
         title="test",
         domain=DOMAIN,
-        data=USER_INPUT,
-    )
-
-
-@pytest.fixture
-def mock_config_entry_with_prefix(
-    mock_config_entry: MockConfigEntry,
-) -> MockConfigEntry:
-    """Return a mocked config entry with a prefix configured."""
-    data = dict(mock_config_entry.data)
-    data[CONF_PREFIX] = "ha/backups"
-
-    return MockConfigEntry(
-        entry_id=mock_config_entry.entry_id,
-        title=mock_config_entry.title,
-        domain=mock_config_entry.domain,
-        data=data,
+        data=USER_INPUT | config_entry_extra_data,
     )

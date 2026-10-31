@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine, Generator
 from unittest.mock import patch
 
 import pytest
-from zha.application.platforms import ENTITY_REGISTRY, ClusterMatch
+from zha.application.platforms import ENTITY_REGISTRY, ClusterMatch, ZclPlatformEntity
 from zha.application.platforms.valve import BaseValve
 from zha.application.platforms.valve.const import (
     ValveDeviceClass as ZHAValveDeviceClass,
@@ -47,7 +47,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .common import find_entity_id
 
 
-class FakeValve(BaseValve):
+class FakeValve(ZclPlatformEntity, BaseValve):
     """Valve entity that only opens and closes."""
 
     _unique_id_suffix = "fake"

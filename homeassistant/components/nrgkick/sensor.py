@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, cast, override
 
-from nrgkick_api import ChargingStatus
+from nrgkick_api import ChargingStatus, ConnectorType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -53,6 +53,7 @@ class NRGkickSensorEntityDescription(SensorEntityDescription):
     """Class describing NRGkick sensor entities."""
 
     value_fn: Callable[[NRGkickData], StateType | datetime | None]
+    available_fn: Callable[[NRGkickData], bool] | None = None
     requires_sim_module: bool = False
 
 
@@ -64,6 +65,31 @@ def _seconds_to_datetime(value: int) -> datetime:
 _seconds_to_stable_datetime = ignore_variance(
     _seconds_to_datetime, timedelta(minutes=1)
 )
+
+
+def _ratio_to_percent(value: StateType) -> float | None:
+    """Convert a ratio reported by the device (-1 to 1) to a percentage."""
+    if value is None:
+        return None
+    return round(float(value) * 100, 1)
+
+
+def _has_domestic_attachment(data: NRGkickData) -> bool:
+    """Return True if the domestic attachment with plug temperatures is connected."""
+    connector_type: int | None = get_nested_dict_value(data.info, "connector", "type")
+    return connector_type == ConnectorType.DOMESTIC
+
+
+def _attachment_has_phase(phase: int) -> Callable[[NRGkickData], bool]:
+    """Return a check whether the connected attachment has the given phase."""
+
+    def check(data: NRGkickData) -> bool:
+        phase_count: int | None = get_nested_dict_value(
+            data.info, "connector", "phase_count"
+        )
+        return phase_count is None or phase_count >= phase
+
+    return check
 
 
 def _seconds_to_stable_timestamp(value: StateType) -> datetime | None:
@@ -373,8 +399,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: get_nested_dict_value(
-            data.values, "powerflow", "total_power_factor"
+        value_fn=lambda data: _ratio_to_percent(
+            get_nested_dict_value(data.values, "powerflow", "total_power_factor")
         ),
     ),
     # VALUES - Powerflow L1
@@ -445,8 +471,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: get_nested_dict_value(
-            data.values, "powerflow", "l1", "power_factor"
+        value_fn=lambda data: _ratio_to_percent(
+            get_nested_dict_value(data.values, "powerflow", "l1", "power_factor")
         ),
     ),
     # VALUES - Powerflow L2
@@ -517,8 +543,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: get_nested_dict_value(
-            data.values, "powerflow", "l2", "power_factor"
+        value_fn=lambda data: _ratio_to_percent(
+            get_nested_dict_value(data.values, "powerflow", "l2", "power_factor")
         ),
     ),
     # VALUES - Powerflow L3
@@ -589,8 +615,8 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: get_nested_dict_value(
-            data.values, "powerflow", "l3", "power_factor"
+        value_fn=lambda data: _ratio_to_percent(
+            get_nested_dict_value(data.values, "powerflow", "l3", "power_factor")
         ),
     ),
     # VALUES - Powerflow Neutral
@@ -738,6 +764,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "connector_l2"
         ),
+        available_fn=_attachment_has_phase(2),
     ),
     NRGkickSensorEntityDescription(
         key="connector_l3_temperature",
@@ -749,6 +776,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "connector_l3"
         ),
+        available_fn=_attachment_has_phase(3),
     ),
     NRGkickSensorEntityDescription(
         key="domestic_plug_1_temperature",
@@ -760,6 +788,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "domestic_plug_1"
         ),
+        available_fn=_has_domestic_attachment,
     ),
     NRGkickSensorEntityDescription(
         key="domestic_plug_2_temperature",
@@ -771,6 +800,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         value_fn=lambda data: get_nested_dict_value(
             data.values, "temperatures", "domestic_plug_2"
         ),
+        available_fn=_has_domestic_attachment,
     ),
 )
 
@@ -788,6 +818,15 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the sensor is available for the connected attachment."""
+        available_fn = self.entity_description.available_fn
+        return super().available and (
+            available_fn is None or available_fn(self.coordinator.data)
+        )
 
     @property
     @override

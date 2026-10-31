@@ -19,6 +19,10 @@ from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 @callback
 def async_get_parent_device_id(hass: HomeAssistant, entity_id: str) -> str | None:

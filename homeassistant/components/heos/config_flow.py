@@ -174,7 +174,6 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=ENTRY_TITLE, data={CONF_HOST: self._discovered_host}
             )
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="confirm_discovery")
 
     @override

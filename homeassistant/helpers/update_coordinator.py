@@ -37,7 +37,7 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
@@ -82,7 +82,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry | UndefinedType | None = UNDEFINED,
+        config_entry: config_entries.ConfigEntry | Undefined | None = Undefined,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
@@ -99,7 +99,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
-        if config_entry is UNDEFINED:
+        if config_entry is Undefined:
             # late import to avoid circular imports
             from . import frame  # noqa: PLC0415
 

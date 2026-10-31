@@ -1,15 +1,21 @@
 """Teslemetry helper functions."""
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
+from aiopowerwall import (
+    PowerwallAuthenticationError,
+    PowerwallClient,
+    PowerwallCommandError,
+    PowerwallError,
+    PowerwallNotSupportedError,
+)
 from tesla_fleet_api.exceptions import TeslaFleetError
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
-from tesla_fleet_api.teslemetry import EnergySite
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 
 from homeassistant.core import HomeAssistant, callback
@@ -18,6 +24,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
+
+GATEWAY_OUT_OF_RANGE = 11
 
 
 class PowerwallKeyRejectedError(Exception):
@@ -119,6 +127,36 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
+async def handle_local_command(command: Awaitable[None]) -> None:
+    """Handle a command sent to a local Powerwall gateway."""
+    try:
+        await command
+    except PowerwallNotSupportedError as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="local_command_not_supported",
+        ) from e
+    except PowerwallCommandError as e:
+        # pylint: disable-next=home-assistant-log-and-raise
+        LOGGER.error("Local Powerwall gateway command failed: %s", e)
+        if e.code == GATEWAY_OUT_OF_RANGE:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="local_command_out_of_range",
+            ) from e
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="local_command_failed",
+        ) from e
+    except PowerwallError as e:
+        # pylint: disable-next=home-assistant-log-and-raise
+        LOGGER.error("Local Powerwall gateway command failed: %s", e)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="local_command_failed",
+        ) from e
+
+
 async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
     """Handle a vehicle command."""
     result = await handle_command(command)
@@ -151,6 +189,30 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     # Response with result of true
     return result
+
+
+async def async_set_charge_on_solar(
+    send: Callable[[Awaitable[dict[str, Any]]], Awaitable[Any]],
+    api: Vehicle,
+    *,
+    enabled: bool,
+    lower_charge_limit: int,
+    charge_limit_soc: int | None,
+) -> int:
+    """Send a charge-on-solar command, omitting the upper bound if it isn't known yet.
+
+    Returns the lower limit actually sent, clamped to the upper bound if it is known.
+    """
+    if charge_limit_soc is not None:
+        lower_charge_limit = min(lower_charge_limit, charge_limit_soc)
+    await send(
+        api.charge_on_solar(
+            enabled=enabled,
+            lower_charge_limit=lower_charge_limit,
+            upper_charge_limit=charge_limit_soc,
+        )
+    )
+    return lower_charge_limit
 
 
 @callback

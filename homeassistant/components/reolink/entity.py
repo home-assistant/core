@@ -8,7 +8,11 @@ from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, Chime, Host
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    ChildDeviceInfo,
+    DeviceInfo,
+)
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -233,20 +237,18 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             and self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS
         ):
             # Dual lens cameras with separate sensors per lens
-            # use a sub-device per lens
+            # use a child device per lens
             parent_dev_id = self._dev_id
             self._dev_id = f"{self._host.unique_id}_lens{channel}"
-            self._attr_device_info = DeviceInfo(
+            self._attr_device_info = ChildDeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
-                via_device_id=dr.async_get_device_id_by_identifier(
+                parent_device_id=dr.async_get_device_id_by_identifier(
                     self.coordinator.hass,
                     (DOMAIN, parent_dev_id),
                     config_entry_id=self.coordinator.config_entry.entry_id,
                 ),
-                name=f"{self._host.api.camera_name(0)} lens {channel}",
-                model=self._host.api.camera_model(0),
-                manufacturer=self._host.api.manufacturer,
-                configuration_url=self._conf_url,
+                translation_key="lens",
+                translation_placeholders={"lens": str(channel)},
             )
 
     @property

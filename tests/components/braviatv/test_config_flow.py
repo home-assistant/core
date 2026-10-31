@@ -92,16 +92,6 @@ FAKE_BRAVIA_SSDP = SsdpServiceInfo(
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
-    """Test that the form is served with no input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
 async def test_ssdp_discovery(hass: HomeAssistant) -> None:
     """Test that the device is discovered."""
     uuid = await instance_id.async_get(hass)
@@ -507,6 +497,65 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert config_entry.data[CONF_PIN] == new_pin
+
+
+@pytest.mark.parametrize("use_psk", [True, False])
+@pytest.mark.parametrize(
+    ("side_effect", "error_message"),
+    [
+        (BraviaAuthError, "invalid_auth"),
+        (BraviaNotSupported, "unsupported_model"),
+        (BraviaConnectionError, "cannot_connect"),
+    ],
+)
+async def test_reauth_error(
+    hass: HomeAssistant,
+    use_psk: bool,
+    side_effect: type[Exception],
+    error_message: str,
+) -> None:
+    """Test that the reauthorization recovers from errors."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="very_unique_string",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        },
+        title="TV-Model",
+    )
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authorize"
+
+    with (
+        patch(
+            "pybravia.BraviaClient.connect",
+            side_effect=side_effect,
+        ) as mock_connect,
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_USE_PSK: use_psk, CONF_USE_SSL: False}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "wrong"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": error_message}
+
+        mock_connect.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "7777"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_PIN] == "7777"
 
 
 @pytest.mark.parametrize(

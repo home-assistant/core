@@ -6,9 +6,16 @@
     "step": {
       "user": {
         "data": {
-          "radius": "Radius"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "title": "Fill in your filter details."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "alerts": {
+        "unit_of_measurement": "alerts"
       }
     }
   }

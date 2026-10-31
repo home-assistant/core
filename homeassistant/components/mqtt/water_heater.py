@@ -39,7 +39,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, VolSchemaType
+from homeassistant.helpers.typing import ConfigType, Undefined, VolSchemaType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .climate import MqttTemperatureControlEntity
@@ -295,7 +295,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_STATE_TEMPLATE, "target temperature"
             )
-        ) is not UNDEFINED:
+        ) is not Undefined:
             self._attr_native_target_temperature = value
 
     @callback

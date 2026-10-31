@@ -356,6 +356,11 @@ class DmsDeviceSource:
         return self.config_entry.data[CONF_SOURCE_ID]  # type: ignore[no-any-return]
 
     @property
+    def device(self) -> DmsDevice | None:
+        """Return the connected DMS device, if any."""
+        return self._device
+
+    @property
     def icon(self) -> str | None:
         """Return an URL to an icon for the media server."""
         return self._device.icon if self._device else None

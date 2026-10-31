@@ -14,7 +14,8 @@ from aioesphomeapi.model import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from serialx.platforms.serial_esphome import InvalidSettingsError
+import serialx
+from serialx.platforms.serial_esphome import InvalidSettingsError, SerialProxyModeName
 from yarl import URL
 
 from homeassistant.components.esphome import _async_scan_serial_ports, serial_proxy
@@ -46,6 +47,19 @@ async def test_async_setup_stores_event_loop(
     """async_setup registers hass.loop on the serial_proxy module."""
     assert await async_setup_component(hass, DOMAIN, {})
     assert serial_proxy._HASS_LOOP is hass.loop
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_connect_kwargs_reach_serial(hass: HomeAssistant) -> None:
+    """Backend kwargs like `mode` are passed through to `HassESPHomeSerial`."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    port = serialx.serial_for_url(
+        "esphome-hass://esphome/abc123?port_name=uart0", mode="protocol"
+    )
+
+    assert isinstance(port, serial_proxy.HassESPHomeSerial)
+    assert port._mode is SerialProxyModeName.PROTOCOL
 
 
 async def test_resolve_client_unknown_entry(hass: HomeAssistant) -> None:
@@ -355,6 +369,85 @@ async def test_scan_serial_ports_usb_vendor_specific_interface(
             manufacturer="Nabu Casa",
             description="SkyConnect v1.0",
             bcd_device=0x0100,
+            interface_description=None,
+            interface_num=0,
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    ("serial_number", "product", "vid", "pid", "port_udev_id"),
+    [
+        pytest.param(
+            "",
+            "USB Serial",
+            0x1A86,
+            0x7523,
+            "usb-1a86_USB_Serial-if00-port0",
+            id="no_serial_number",
+        ),
+        pytest.param(
+            "0001",
+            "CP2102 USB to UART Bridge Controller",
+            0x10C4,
+            0xEA60,
+            "usb-10c4_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
+            id="placeholder_serial_number",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_scan_serial_ports_usb_non_unique_serial_number(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    serial_number: str,
+    product: str,
+    vid: int,
+    pid: int,
+    port_udev_id: str,
+) -> None:
+    """An adapter without a unique serial number is also matched on its port name."""
+    _mock_identities(
+        mock_client,
+        [
+            SerialProxyIdentity(
+                instance=0,
+                source=SerialProxyIdentitySource.USB,
+                flags=SerialProxyIdentityFlag.CONNECTED,
+                product=product,
+                serial_number=serial_number,
+                usb=UsbDeviceDescriptor(
+                    vendor_id=vid,
+                    product_id=pid,
+                    bcd_device=0x0264,
+                    interface_number=0,
+                    interface_class=0xFF,
+                    port_number=0,
+                ),
+            )
+        ],
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"serial_proxies": USB_PROXIES[:1]},
+    )
+
+    url = str(
+        serial_proxy.build_url(
+            device.entry.entry_id, port_udev_id=port_udev_id, port_name="USB (Zigbee)"
+        )
+    )
+    assert _async_scan_serial_ports(hass) == [
+        USBDevice(
+            device=url,
+            resolved_device=url,
+            vid=f"{vid:04X}",
+            pid=f"{pid:04X}",
+            serial_number=serial_number or None,
+            manufacturer=None,
+            description=product,
+            bcd_device=0x0264,
             interface_description=None,
             interface_num=0,
         )

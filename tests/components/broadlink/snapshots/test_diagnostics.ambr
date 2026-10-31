@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': True,
+    'data': dict({
+      'active': 1,
+      'auto_mode': 0,
+      'external_temp': 30,
+      'power': 1,
+      'room_temp': 22,
+      'sensor': 0,
+      'thermostat_temp': 23,
+    }),
+    'device': dict({
+      'devtype': 20141,
+      'fw_version': 10024,
+      'is_locked': False,
+      'manufacturer': 'Hysen',
+      'model': 'HY02/HY03',
+      'timeout': 5,
+      'type': 'HYS',
+    }),
+    'update_manager': 'BroadlinkThermostatUpdateManager',
+  })
+# ---

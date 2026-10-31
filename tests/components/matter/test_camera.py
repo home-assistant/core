@@ -209,6 +209,12 @@ async def _unsubscribe(client: MockHAClientWebSocket, subscription_id: int) -> N
     assert response["success"] is True
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.CAMERA
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_cameras(
     hass: HomeAssistant,

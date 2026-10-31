@@ -56,7 +56,6 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=user_input.get(CONF_NAME, DEFAULT_NAME),
                 data={CONF_DEVICE: self._device},
             )
-        self._set_confirm_only()
         return self.async_show_form(step_id="usb_confirm")
 
     @override

@@ -11,6 +11,7 @@ ATTR_TYPE_CAMERA = "CAMERA_ACCOUNT"
 CONF_SESSION_ID = "session_id"
 CONF_RFSESSION_ID = "rf_session_id"
 CONF_EZVIZ_ACCOUNT = "ezviz_account"
+CONF_ENCRYPTION_PASSWORD = "encryption_password"
 
 # Services data
 DIR_UP = "up"

@@ -293,6 +293,12 @@ CORENTIUM_HOME_2_DEVICE_INFO = AirthingsDevice(
         "humidity": 55.0,
         "radon_1day_avg": 45,
         "radon_1day_level": "good",
+        "radon_week_avg": 50,
+        "radon_week_level": "good",
+        "radon_month_avg": 110,
+        "radon_month_level": "fair",
+        "radon_year_avg": 160,
+        "radon_year_level": "poor",
     },
     address="cc:cc:cc:cc:cc:cc",
 )

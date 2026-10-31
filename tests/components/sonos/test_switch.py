@@ -3,6 +3,7 @@
 from collections.abc import Callable, Coroutine
 from copy import copy
 from datetime import timedelta
+import logging
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
@@ -415,6 +416,55 @@ async def test_tv_autoplay_poll_state(
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("attribute", "method_name"),
+    [
+        (ATTR_TV_AUTOPLAY, "GetAutoplayRoomUUID"),
+        (ATTR_TV_UNGROUP_AUTOPLAY, "GetAutoplayLinkedZones"),
+    ],
+)
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(OSError("Host is down"), id="connection_error"),
+        pytest.param(SoCoUPnPException("Poll failed", 500, ""), id="upnp_error"),
+    ],
+)
+async def test_tv_autoplay_poll_error(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+    attribute: str,
+    method_name: str,
+    error: OSError | SoCoUPnPException,
+) -> None:
+    """Test that polling errors can be logged from the entity worker thread."""
+    entity_id = f"switch.zone_a_{attribute}"
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID.side_effect = None
+    soco.deviceProperties.GetAutoplayRoomUUID.return_value = {
+        "RoomUUID": "",
+        "Source": "TV",
+    }
+    soco.deviceProperties.GetAutoplayLinkedZones.side_effect = None
+    soco.deviceProperties.GetAutoplayLinkedZones.return_value = {
+        "IncludeLinkedZones": "1",
+        "Source": "TV",
+    }
+    await async_setup_sonos()
+
+    caplog.clear()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.sonos.entity")
+    getattr(soco.deviceProperties, method_name).side_effect = error
+    await async_update_entity(hass, entity_id)
+
+    assert f"Could not poll: {error}" in caplog.text
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_tv_autoplay_not_created_for_non_ht(

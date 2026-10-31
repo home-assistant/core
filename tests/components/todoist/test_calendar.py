@@ -385,6 +385,24 @@ async def test_create_task_service_call_with_section(
     )
 
 
+async def test_create_task_service_call_with_none_section(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test a `None` section is ignored rather than raising an error."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            CONTENT: "task",
+            PROJECT_NAME: "Name",
+            SECTION_NAME: None,
+        },
+        blocking=True,
+    )
+
+    api.add_task.assert_called_with("task", project_id=PROJECT_ID)
+
+
 @pytest.mark.parametrize(
     ("due"),
     [

@@ -1,5 +1,6 @@
 """Defines a base Alexa Devices entity."""
 
+from collections.abc import Callable
 from typing import override
 
 from aioamazondevices.structures import AmazonDevice
@@ -11,6 +12,8 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import AmazonDevicesCoordinator
+
+type DescriptionFn[T] = Callable[[AmazonDevice, str, AmazonDevicesCoordinator], T]
 
 
 class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):

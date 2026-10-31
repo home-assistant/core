@@ -1,0 +1,10 @@
+{
+  "device_name": "thermostat_1",
+  "device_type": "HVAC",
+  "serial_number": "serial_2",
+  "@NAME": { "value": "Thermostat" },
+  "@CONNECTED": true,
+  "@RUNNINGSTATUS": "",
+  "@BEEP": { "value": 1 },
+  "@SCREENLOCK": { "value": 0 }
+}

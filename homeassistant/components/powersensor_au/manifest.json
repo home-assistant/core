@@ -1,0 +1,15 @@
+{
+  "domain": "powersensor_au",
+  "name": "Powersensor",
+  "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
+  "codeowners": ["@bookman-dius", "@jmattsson"],
+  "config_flow": true,
+  "dependencies": ["zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/powersensor_au",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["powersensor-local==2.4.1"],
+  "single_config_entry": true,
+  "zeroconf": ["_powersensor._udp.local."]
+}

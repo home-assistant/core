@@ -5,7 +5,13 @@ from unittest.mock import patch
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.met_eireann.const import DOMAIN
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 
 
@@ -13,11 +19,13 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Met Éireann integration in Home Assistant."""
     entry_data = {
         CONF_NAME: "test",
-        CONF_LATITUDE: 0,
-        CONF_LONGITUDE: 0,
+        CONF_LOCATION: {
+            CONF_LATITUDE: 0,
+            CONF_LONGITUDE: 0,
+        },
         CONF_ELEVATION: 0,
     }
-    entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, version=2)
     with patch(
         "homeassistant.components.met_eireann.coordinator.meteireann.WeatherData.fetching_data",
         return_value=True,

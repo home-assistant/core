@@ -3,7 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': 'https://onedrive.live.com/?id=root&cid=mock_drive_id',
     'connections': set({
     }),
@@ -14,7 +14,7 @@
     'identifiers': set({
       tuple(
         'onedrive',
-        'mock_drive_id',
+        'MOCK_DRIVE_ID',
       ),
     }),
     'labels': set({

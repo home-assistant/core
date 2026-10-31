@@ -146,6 +146,8 @@ def strenum[T: StrEnum](
     state_enum: type[T],
     state_on: T | None = None,
     state_off: T | None = None,
+    *,
+    deprecated_enums: tuple[T, ...] | None = None,
     **kwargs: Any,
 ) -> Callable[[Any], T | None]:
     """Converts the template result to an StrEnum.
@@ -165,9 +167,12 @@ def strenum[T: StrEnum](
         if isinstance(result, str):
             value = result.lower().strip()
             try:
-                return state_enum(value)
+                enum_value = state_enum(value)
             except ValueError:
                 pass
+            else:
+                if enum_value not in (deprecated_enums or ()):
+                    return enum_value
 
         if state_on or state_off:
             try:
@@ -181,7 +186,9 @@ def strenum[T: StrEnum](
             except probatio.Invalid:
                 pass
 
-        expected = tuple(s.value for s in state_enum)
+        expected = tuple(
+            s.value for s in state_enum if s.value not in (deprecated_enums or ())
+        )
         if state_on:
             expected += RESULT_ON
         if state_off:

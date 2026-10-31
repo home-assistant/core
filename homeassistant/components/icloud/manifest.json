@@ -6,7 +6,7 @@
     "productivity_information.calendars_todos",
     "productivity_information.documents_photos"
   ],
-  "codeowners": ["@Quentame", "@nzapponi"],
+  "codeowners": ["@Quentame", "@nzapponi", "@timlaing"],
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/icloud",

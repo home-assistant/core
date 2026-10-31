@@ -6,6 +6,7 @@ from typing import NotRequired, TypedDict, Unpack, cast, override
 
 from aioesphomeapi import APIClient
 from serialx import register_uri_handler
+from serialx.common import BACKEND_CONNECT_KWARGS
 from serialx.platforms.serial_esphome import (
     ESPHomeSerial,
     ESPHomeSerialTransport,
@@ -128,6 +129,8 @@ def register_serialx_transport(
         unique_scheme="esphome-hass-internal://",  # The unique scheme must differ
         sync_cls=HassESPHomeSerial,
         async_transport_cls=HassESPHomeSerialTransport,
+        # Without these, serialx drops kwargs like `mode` before they reach us
+        connect_kwargs=BACKEND_CONNECT_KWARGS["esphome://"],
     )
 
     @callback

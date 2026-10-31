@@ -11,6 +11,7 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
@@ -89,11 +90,15 @@ class OAuth2FlowHandler(
     @property
     def _calendar_access(self) -> FeatureAccess:
         """Return the access the entry being authorized asks for."""
-        if self.source == SOURCE_REAUTH and (
-            reauth_options := self._get_reauth_entry().options
-        ):
-            return FeatureAccess[reauth_options[CONF_CALENDAR_ACCESS]]
+        if self.source == SOURCE_REAUTH:
+            entry_options = self._get_reauth_entry().options
+        elif self.source == SOURCE_RECONFIGURE:
+            entry_options = self._get_reconfigure_entry().options
+        else:
+            return DEFAULT_FEATURE_ACCESS
 
+        if entry_options:
+            return FeatureAccess[entry_options[CONF_CALENDAR_ACCESS]]
         return DEFAULT_FEATURE_ACCESS
 
     @property
@@ -217,6 +222,17 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(primary_calendar.id)
 
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_entry = self._get_reconfigure_entry()
+            # Legacy entries get their unique ID on a successful setup
+            if reconfigure_entry.unique_id:
+                self._abort_if_unique_id_mismatch()
+            else:
+                self._abort_if_unique_id_configured()
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, unique_id=primary_calendar.id, data=data
+            )
+
         if found := self.hass.config_entries.async_entry_for_domain_unique_id(
             self.handler, primary_calendar.id
         ):
@@ -244,6 +260,16 @@ class OAuth2FlowHandler(
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration by re-running the OAuth flow."""
+        self._web_auth = (
+            self._get_reconfigure_entry().data.get(CONF_CREDENTIAL_TYPE)
+            == CredentialType.WEB_AUTH
+        )
         return await self.async_step_user()
 
     @staticmethod

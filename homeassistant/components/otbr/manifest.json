@@ -1,6 +1,6 @@
 {
   "domain": "otbr",
-  "name": "Open Thread Border Router",
+  "name": "OpenThread Border Router",
   "after_dependencies": ["hassio", "homeassistant_yellow", "zha"],
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/core"],

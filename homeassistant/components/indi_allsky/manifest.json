@@ -9,5 +9,10 @@
   "iot_class": "local_push",
   "loggers": ["aioindiallsky"],
   "quality_scale": "bronze",
-  "requirements": ["aioindiallsky==0.1.7"]
+  "requirements": ["aioindiallsky==0.1.7"],
+  "zeroconf": [
+    {
+      "type": "_indi-allsky._tcp.local."
+    }
+  ]
 }

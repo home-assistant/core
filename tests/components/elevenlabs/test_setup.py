@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from elevenlabs.core import ApiError
+from httpx2 import ConnectError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -34,6 +35,21 @@ async def test_setup_connect_error(
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
     # Ensure is not ready
+    assert mock_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_voices_connect_error_retries(
+    hass: HomeAssistant,
+    mock_async_client: MagicMock,
+    mock_entry: MockConfigEntry,
+) -> None:
+    """Test a connection error while fetching voices retries setup."""
+    mock_async_client.return_value.voices.get_all.side_effect = ConnectError(
+        "Failed to connect"
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+
     assert mock_entry.state is ConfigEntryState.SETUP_RETRY
 
 

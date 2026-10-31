@@ -85,4 +85,4 @@ rules:
   inject-websession: done
   strict-typing:
     status: todo
-    comment: Requirements 'getmac==0.9.5' and 'samsungctl[websocket]==0.7.1' appear untyped
+    comment: Requirements 'samsungctl[websocket]==0.7.1' appear untyped

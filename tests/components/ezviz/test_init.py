@@ -9,8 +9,23 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import image
-from homeassistant.components.ezviz.const import ATTR_TYPE_CLOUD
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.ezviz.const import (
+    ATTR_TYPE_CAMERA,
+    ATTR_TYPE_CLOUD,
+    CONF_ENCRYPTION_PASSWORD,
+    CONF_FFMPEG_ARGUMENTS,
+    DEFAULT_FFMPEG_ARGUMENTS,
+    DEFAULT_TIMEOUT,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+    CONF_TYPE,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -374,3 +389,68 @@ async def test_entity_unavailable_on_update_failure(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "85"
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_password"),
+    [
+        pytest.param({}, "verification-code", id="verification_code"),
+        pytest.param(
+            {CONF_ENCRYPTION_PASSWORD: "encryption-password"},
+            "encryption-password",
+            id="encryption_password",
+        ),
+    ],
+)
+async def test_image_entity_decrypts_with_camera_password(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    options: dict[str, str],
+    expected_password: str,
+) -> None:
+    """Test encrypted alarm pictures use the encryption password when set."""
+    mock_ezviz_client.load_cameras.return_value = {
+        "C123456789": _mock_camera_data(
+            encrypted=True,
+            last_alarm_time="2023-01-01T12:00:00Z",
+            last_alarm_pic="https://example.com/image.jpg",
+        )
+    }
+    MockConfigEntry(
+        domain="ezviz",
+        unique_id="C123456789",
+        title="C123456789",
+        data={
+            CONF_TYPE: ATTR_TYPE_CAMERA,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "verification-code",
+        },
+        options={
+            CONF_FFMPEG_ARGUMENTS: DEFAULT_FFMPEG_ARGUMENTS,
+            CONF_TIMEOUT: DEFAULT_TIMEOUT,
+            **options,
+        },
+    ).add_to_hass(hass)
+
+    with patch("homeassistant.components.ezviz.camera.get_ffmpeg_manager"):
+        await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "homeassistant.components.ezviz.image.EzvizLastMotion._fetch_url",
+            new_callable=AsyncMock,
+            return_value=Mock(content=b"encrypted"),
+        ),
+        patch(
+            "homeassistant.components.ezviz.image.decrypt_image",
+            return_value=b"decrypted",
+        ) as mock_decrypt,
+    ):
+        image_data = await image.async_get_image(
+            hass, "image.camera_1_last_motion_image"
+        )
+
+    mock_decrypt.assert_called_once_with(b"encrypted", expected_password)
+    assert image_data.content == b"decrypted"

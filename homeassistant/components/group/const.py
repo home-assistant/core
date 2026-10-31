@@ -20,11 +20,6 @@ DATA_COMPONENT: HassKey[EntityComponent[Group]] = HassKey(DOMAIN)
 REG_KEY: HassKey[GroupIntegrationRegistry] = HassKey(f"{DOMAIN}_registry")
 GROUP_ORDER: HassKey[int] = HassKey("group_order")
 
-ATTR_ADD_ENTITIES = "add_entities"
-ATTR_REMOVE_ENTITIES = "remove_entities"
-ATTR_AUTO = "auto"
-ATTR_ENTITIES = "entities"
-
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
@@ -43,9 +38,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VALVE,
 ]
-ATTR_OBJECT_ID = "object_id"
-ATTR_ORDER = "order"
-ATTR_ALL = "all"
 
 
 class GroupService(StrEnum):
@@ -66,3 +58,11 @@ class GroupServiceArgument(StrEnum):
     NAME = "name"
     OBJECT_ID = "object_id"
     REMOVE_ENTITIES = "remove_entities"
+
+
+class GroupEntityStateAttribute(StrEnum):
+    """State attributes for group entities."""
+
+    AUTO = "auto"
+    ENTITY_ID = "entity_id"
+    ORDER = "order"

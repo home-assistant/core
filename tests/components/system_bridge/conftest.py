@@ -155,6 +155,12 @@ def mock_websocket_client(
             message="Keyboard text sent",
             data={"text": "Hello world"},
         )
+        websocket_client.display_control.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.DISPLAY_CONTROLLED,
+            message="Display controlled",
+            data={},
+        )
         # Trigger callback when listener is registered
         websocket_client.listen.side_effect = mock_data_listener
 

@@ -228,8 +228,9 @@ async def websocket_run(
         audio_settings=audio_settings or AudioSettings(),
     )
 
+    # The intent stage checks the owner with the input of the user.
     with chat_session.async_get_chat_session(
-        hass, msg.get("conversation_id")
+        hass, msg.get("conversation_id"), context=None
     ) as session:
         input_args["session"] = session
         pipeline_input = PipelineInput(**input_args)

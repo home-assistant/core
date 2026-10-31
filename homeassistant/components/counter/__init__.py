@@ -37,10 +37,6 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_INITIAL = "initial"
-ATTR_STEP = "step"
-ATTR_MINIMUM = "minimum"
-ATTR_MAXIMUM = "maximum"
 
 DEFAULT_INITIAL = 0
 DEFAULT_STEP = 1

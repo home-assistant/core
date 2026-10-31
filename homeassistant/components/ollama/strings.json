@@ -94,6 +94,7 @@
           },
           "data_description": {
             "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never.",
+            "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
             "num_ctx": "Maximum number of text tokens the model can process. Lower to reduce Ollama RAM, or increase for a large number of exposed entities.",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "think": "If enabled, the LLM will think before responding. This can improve response quality but may increase latency."

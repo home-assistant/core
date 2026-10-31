@@ -1,12 +1,15 @@
 """Tests for the Alexa Devices binary sensor platform."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.const.sensors import SENSOR_STATE_OFF
 from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
 )
+from aioamazondevices.structures import AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -18,12 +21,21 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import assert_device_removed_and_readded, setup_integration
-from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
+from .const import (
+    TEST_DEVICE_1,
+    TEST_DEVICE_1_SENSORS,
+    TEST_DEVICE_1_SN,
+    TEST_DEVICE_2,
+    TEST_DEVICE_2_SN,
+)
+
+MOTION_ENTITY_ID = "binary_sensor.echo_test_motion"
+DETECTION_STATE = TEST_DEVICE_1_SENSORS["detectionState"]
 
 
 async def test_all_entities(
@@ -209,3 +221,74 @@ async def test_deprecated_sensor_removal(
 
     entity2 = entity_registry.async_get(entity.entity_id)
     assert entity2 is None
+
+
+@pytest.mark.parametrize(
+    ("sensors", "expected_state"),
+    [
+        pytest.param({"detectionState": DETECTION_STATE}, STATE_ON, id="detected"),
+        pytest.param(
+            {"detectionState": replace(DETECTION_STATE, value=SENSOR_STATE_OFF)},
+            STATE_OFF,
+            id="not_detected",
+        ),
+        pytest.param(
+            {"detectionState": replace(DETECTION_STATE, error=True)},
+            STATE_UNAVAILABLE,
+            id="error",
+        ),
+        pytest.param({}, STATE_UNAVAILABLE, id="no_value_yet"),
+    ],
+)
+async def test_detection_state(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    sensors: dict[str, AmazonDeviceSensor],
+    expected_state: str,
+) -> None:
+    """Test the motion binary sensor state from the sensor store."""
+    mock_amazon_devices_client.sensors = {TEST_DEVICE_1_SN: sensors}
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(MOTION_ENTITY_ID))
+    assert state.state == expected_state
+
+
+async def test_detection_state_unsupported(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no motion binary sensor is created without the feature."""
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_DEVICE_1_SN
+    ].features.pop("motionSensor")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert not hass.states.get(MOTION_ENTITY_ID)
+
+
+async def test_detection_state_pushed(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a pushed sensor event updates the motion binary sensor."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(MOTION_ENTITY_ID))
+    assert state.state == STATE_ON
+
+    # The library mutates its store in place before signalling
+    mock_amazon_devices_client.sensors[TEST_DEVICE_1_SN]["detectionState"] = replace(
+        DETECTION_STATE, value=SENSOR_STATE_OFF
+    )
+    on_sensor_event = mock_amazon_devices_client.on_sensor_event.append.call_args[0][0]
+    await on_sensor_event()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(MOTION_ENTITY_ID))
+    assert state.state == STATE_OFF

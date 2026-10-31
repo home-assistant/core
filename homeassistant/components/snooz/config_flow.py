@@ -75,7 +75,6 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self._create_snooz_entry(self._discovery)
 
-        self._set_confirm_only()
         placeholders = {"name": self._discovery.display_name}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -176,7 +175,6 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_wait_for_pairing_mode()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="pairing_timeout")
 
     def _create_snooz_entry(self, discovery: DiscoveredSnooz) -> ConfigFlowResult:

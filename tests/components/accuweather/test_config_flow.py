@@ -2,13 +2,18 @@
 
 from unittest.mock import AsyncMock
 
-from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
+from accuweather.exceptions import ApiError, InvalidApiKeyError, RequestsExceededError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -16,8 +21,10 @@ from . import init_integration
 
 VALID_CONFIG = {
     CONF_API_KEY: "32-character-string-1234567890qw",
-    CONF_LATITUDE: 55.55,
-    CONF_LONGITUDE: 122.12,
+    CONF_LOCATION: {
+        CONF_LATITUDE: 55.55,
+        CONF_LONGITUDE: 122.12,
+    },
 }
 
 

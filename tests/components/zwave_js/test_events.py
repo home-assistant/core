@@ -7,8 +7,10 @@ from pytest_homeassistant.common import async_capture_events
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 
 @pytest.fixture
@@ -279,7 +281,11 @@ async def test_notifications(
 
 @pytest.mark.parametrize("platforms", [[Platform.SWITCH]])
 async def test_value_updated(
-    hass: HomeAssistant, vision_security_zl7432, integration, client
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    vision_security_zl7432,
+    integration,
+    client,
 ) -> None:
     """Test value updated events."""
     node = vision_security_zl7432
@@ -311,6 +317,13 @@ async def test_value_updated(
     assert len(events) == 1
     assert events[0].data["home_id"] == client.driver.controller.home_id
     assert events[0].data["node_id"] == 7
+    # The event always carries the node device_id for backward compatibility.
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, vision_security_zl7432),
+        integration.entry_id,
+    )
+    assert node_device
+    assert events[0].data["device_id"] == node_device.id
     assert events[0].data["entity_id"] == "switch.in_wall_dual_relay_switch"
     assert events[0].data["command_class"] == CommandClass.SWITCH_BINARY
     assert events[0].data["command_class_name"] == "Switch Binary"

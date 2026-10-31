@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_RECOMMENDED,
     CONF_THINKING_LEVEL,
     RECOMMENDED_IMAGE_MODEL,
 )
@@ -343,6 +344,37 @@ async def test_data_wire_parameters(
     assert config["maxOutputTokens"] == 3000
     assert ("responseSchema" in config) is structured
     assert result.data == ({"value": "Done"} if structured else '{"value": "Done"}')
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("model", "expected_image_support"),
+    [
+        ("models/gemini-2.5-flash-image", True),
+        ("gemini-nano-banana-2.1", True),
+        ("gemini-2.5-flash", False),
+    ],
+)
+async def test_image_support_without_recommended_settings(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    expected_image_support: bool,
+) -> None:
+    """Test image generation support is derived from the model name."""
+    subentry = mock_config_entry.subentries["ulid-ai-task"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_RECOMMENDED: False, CONF_CHAT_MODEL: model},
+    )
+    await hass.async_block_till_done()
+
+    entity = hass.data[ai_task.DATA_COMPONENT].get_entity("ai_task.google_ai_task")
+    assert (
+        bool(entity.supported_features & ai_task.AITaskEntityFeature.GENERATE_IMAGE)
+        is expected_image_support
+    )
 
 
 @pytest.mark.usefixtures("mock_init_component")

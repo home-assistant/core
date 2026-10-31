@@ -3,7 +3,6 @@
 import json
 from unittest.mock import patch
 
-from aiohttp import ClientConnectionError
 from py_nightscout.models import SGV, ServerStatus
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -84,29 +83,6 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
         patch(
             "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
             return_value=GLUCOSE_READINGS,
-        ),
-        patch(
-            "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
-            return_value=SERVER_STATUS,
-        ),
-    ):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    return entry
-
-
-async def init_integration_unavailable(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the Nightscout integration in Home Assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: "https://some.url:1234"},
-    )
-    with (
-        patch(
-            "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
-            side_effect=ClientConnectionError(),
         ),
         patch(
             "homeassistant.components.nightscout.NightscoutAPI.get_server_status",

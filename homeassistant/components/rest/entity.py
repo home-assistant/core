@@ -23,6 +23,7 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import async_get_config_and_coordinator
+from .const import DOMAIN
 from .coordinator import RestCoordinator
 from .data import RestData
 from .util import create_rest_data_from_config
@@ -61,7 +62,9 @@ async def async_get_config_rest_data_and_coordinator(
         if rest.last_exception:
             if isinstance(rest.last_exception, ssl.SSLError):
                 raise HomeAssistantError(
-                    f"Error connecting {rest.url} failed with {rest.last_exception}"
+                    translation_domain=DOMAIN,
+                    translation_key="ssl_error",
+                    translation_placeholders={"resource": rest.url},
                 ) from rest.last_exception
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady

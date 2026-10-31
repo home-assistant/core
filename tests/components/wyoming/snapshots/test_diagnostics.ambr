@@ -1,0 +1,106 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'info': dict({
+      'asr': list([
+        dict({
+          'attribution': dict({
+            'name': 'Test',
+            'url': 'http://www.test.com',
+          }),
+          'description': 'Test ASR',
+          'installed': True,
+          'models': list([
+            dict({
+              'attribution': dict({
+                'name': 'Test',
+                'url': 'http://www.test.com',
+              }),
+              'description': 'Test Model',
+              'installed': True,
+              'languages': list([
+                'en-US',
+              ]),
+              'name': 'Test Model',
+              'version': None,
+            }),
+          ]),
+          'name': 'Test ASR',
+          'prefers_auto_gain_enabled': True,
+          'prefers_noise_reduction_enabled': True,
+          'requires_external_vad': True,
+          'supports_transcript_streaming': False,
+          'version': None,
+        }),
+      ]),
+      'handle': list([
+      ]),
+      'intent': list([
+      ]),
+      'mic': list([
+      ]),
+      'snd': list([
+      ]),
+      'tts': list([
+      ]),
+      'wake': list([
+      ]),
+    }),
+    'last_update_success': True,
+    'platforms': list([
+      'stt',
+    ]),
+  })
+# ---
+# name: test_diagnostics_satellite
+  dict({
+    'info': dict({
+      'asr': list([
+      ]),
+      'handle': list([
+      ]),
+      'intent': list([
+      ]),
+      'mic': list([
+      ]),
+      'satellite': dict({
+        'active_wake_words': None,
+        'area': 'Office',
+        'attribution': dict({
+          'name': 'Test',
+          'url': 'http://www.test.com',
+        }),
+        'description': 'Test Satellite',
+        'has_vad': None,
+        'installed': True,
+        'max_active_wake_words': None,
+        'name': 'Test Satellite',
+        'supports_trigger': None,
+        'version': None,
+      }),
+      'snd': list([
+      ]),
+      'tts': list([
+      ]),
+      'wake': list([
+      ]),
+    }),
+    'last_update_success': True,
+    'platforms': list([
+      'assist_satellite',
+      'binary_sensor',
+      'select',
+      'switch',
+      'number',
+    ]),
+    'satellite': dict({
+      'auto_gain': 0,
+      'is_active': False,
+      'is_muted': False,
+      'noise_suppression_level': 0,
+      'pipeline_name': None,
+      'vad_sensitivity': 'default',
+      'volume_multiplier': 1.0,
+    }),
+  })
+# ---

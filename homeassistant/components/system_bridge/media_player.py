@@ -46,12 +46,6 @@ MEDIA_REPEAT_MAP: Final[dict[str, RepeatMode]] = {
     REPEAT_LIST: RepeatMode.ALL,
 }
 
-MEDIA_SET_REPEAT_MAP: Final[dict[RepeatMode, int]] = {
-    RepeatMode.OFF: 0,
-    RepeatMode.ONE: 1,
-    RepeatMode.ALL: 2,
-}
-
 MEDIA_PLAYER_DESCRIPTION: Final[MediaPlayerEntityDescription] = (
     MediaPlayerEntityDescription(
         key="media",
@@ -111,9 +105,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        features = (
-            MediaPlayerEntityFeature.REPEAT_SET | MediaPlayerEntityFeature.SHUFFLE_SET
-        )
+        features = MediaPlayerEntityFeature(0)
 
         data = self._systembridge_data
         if data.media.is_previous_enabled:
@@ -253,31 +245,5 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         await self.coordinator.websocket_client.media_control(
             MediaControl(
                 action=MediaAction.NEXT.value,
-            )
-        )
-
-    @override
-    async def async_set_shuffle(
-        self,
-        shuffle: bool,
-    ) -> None:
-        """Enable/disable shuffle mode."""
-        await self.coordinator.websocket_client.media_control(
-            MediaControl(
-                action=MediaAction.SHUFFLE.value,
-                value=shuffle,
-            )
-        )
-
-    @override
-    async def async_set_repeat(
-        self,
-        repeat: RepeatMode,
-    ) -> None:
-        """Set repeat mode."""
-        await self.coordinator.websocket_client.media_control(
-            MediaControl(
-                action=MediaAction.REPEAT.value,
-                value=MEDIA_SET_REPEAT_MAP.get(repeat),
             )
         )

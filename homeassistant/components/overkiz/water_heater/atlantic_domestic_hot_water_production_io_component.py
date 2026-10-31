@@ -145,36 +145,36 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
+        commands: list[Command] = []
+
         if operation_mode == STATE_PERFORMANCE:
             if self.is_away_mode_on:
-                await self.async_turn_away_mode_off(refresh_afterwards=False)
+                commands.extend(self._away_mode_off_commands())
 
-            await self._async_turn_boost_mode_on()
-            await self.coordinator.async_refresh()
+            commands.extend(self._boost_mode_on_commands())
+            await self.executor.async_execute_commands(commands)
             return
 
-        previous_operation = self.current_operation
-
         if self.is_boost_mode_on:
-            await self._async_turn_boost_mode_off()
+            commands.extend(self._boost_mode_off_commands())
 
         if self.is_away_mode_on:
-            await self.async_turn_away_mode_off(refresh_afterwards=False)
+            commands.extend(self._away_mode_off_commands())
 
-        commands = [
+        commands.append(
             Command(
                 name=OverkizCommand.SET_DHW_MODE,
                 parameters=[OPERATION_MODE_TO_OVERKIZ[operation_mode]],
             )
-        ]
+        )
         # Leaving auto changes the target temperature, so refresh it.
-        if previous_operation == STATE_AUTO:
+        if self.current_operation == STATE_AUTO:
             commands.append(Command(name=OverkizCommand.REFRESH_TARGET_TEMPERATURE))
 
         await self.executor.async_execute_commands(commands)
 
     @override
-    async def async_turn_away_mode_on(self, refresh_afterwards: bool = True) -> None:
+    async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self.executor.async_execute_commands(
             [
@@ -189,64 +189,58 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
                 ),
                 Command(name=OverkizCommand.REFRESH_AWAY_MODE_DURATION),
             ],
-            refresh_afterwards=refresh_afterwards,
         )
 
     @override
-    async def async_turn_away_mode_off(self, refresh_afterwards: bool = True) -> None:
+    async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
-        await self.executor.async_execute_commands(
-            [
-                Command(
-                    name=OverkizCommand.SET_CURRENT_OPERATING_MODE,
-                    parameters=[
-                        {
-                            OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
-                            OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
-                        }
-                    ],
-                ),
-                Command(name=OverkizCommand.REFRESH_AWAY_MODE_DURATION),
-            ],
-            refresh_afterwards=refresh_afterwards,
-        )
+        await self.executor.async_execute_commands(self._away_mode_off_commands())
 
-    async def _async_turn_boost_mode_on(self) -> None:
-        """Turn boost mode on."""
-        await self.executor.async_execute_commands(
-            [
-                Command(
-                    name=OverkizCommand.SET_BOOST_MODE_DURATION,
-                    parameters=[BOOST_MODE_DURATION],
-                ),
-                Command(
-                    name=OverkizCommand.SET_CURRENT_OPERATING_MODE,
-                    parameters=[
-                        {
-                            OverkizCommandParam.RELAUNCH: OverkizCommandParam.ON,
-                            OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
-                        }
-                    ],
-                ),
-                Command(name=OverkizCommand.REFRESH_BOOST_MODE_DURATION),
-            ],
-            refresh_afterwards=False,
-        )
+    def _away_mode_off_commands(self) -> list[Command]:
+        """Return the commands that turn away mode off."""
+        return [
+            Command(
+                name=OverkizCommand.SET_CURRENT_OPERATING_MODE,
+                parameters=[
+                    {
+                        OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                        OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+                    }
+                ],
+            ),
+            Command(name=OverkizCommand.REFRESH_AWAY_MODE_DURATION),
+        ]
 
-    async def _async_turn_boost_mode_off(self) -> None:
-        """Turn boost mode off."""
-        await self.executor.async_execute_commands(
-            [
-                Command(
-                    name=OverkizCommand.SET_CURRENT_OPERATING_MODE,
-                    parameters=[
-                        {
-                            OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
-                            OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
-                        }
-                    ],
-                ),
-                Command(name=OverkizCommand.REFRESH_BOOST_MODE_DURATION),
-            ],
-            refresh_afterwards=False,
-        )
+    def _boost_mode_on_commands(self) -> list[Command]:
+        """Return the commands that turn boost mode on."""
+        return [
+            Command(
+                name=OverkizCommand.SET_BOOST_MODE_DURATION,
+                parameters=[BOOST_MODE_DURATION],
+            ),
+            Command(
+                name=OverkizCommand.SET_CURRENT_OPERATING_MODE,
+                parameters=[
+                    {
+                        OverkizCommandParam.RELAUNCH: OverkizCommandParam.ON,
+                        OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+                    }
+                ],
+            ),
+            Command(name=OverkizCommand.REFRESH_BOOST_MODE_DURATION),
+        ]
+
+    def _boost_mode_off_commands(self) -> list[Command]:
+        """Return the commands that turn boost mode off."""
+        return [
+            Command(
+                name=OverkizCommand.SET_CURRENT_OPERATING_MODE,
+                parameters=[
+                    {
+                        OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                        OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+                    }
+                ],
+            ),
+            Command(name=OverkizCommand.REFRESH_BOOST_MODE_DURATION),
+        ]

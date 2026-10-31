@@ -2,10 +2,11 @@
 
 from collections.abc import AsyncGenerator, Generator
 import json
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from google.genai._api_client import HttpRequest, HttpResponse
 from google.genai.types import HttpOptionsOrDict
+from google.genai.voices import VoiceListResponse
 import httpx
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -214,3 +215,11 @@ def mock_genai_interactions_transport() -> Generator[Mock]:
 
     with patch("httpx.AsyncClient.send", send):
         yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_genai_voices() -> Generator[Mock]:
+    """Avoid loading the voice library from the real API."""
+    with patch("google.genai.Client.voices", new_callable=PropertyMock) as mock:
+        mock.return_value.list.return_value = VoiceListResponse(voices=[])
+        yield mock.return_value.list

@@ -19,7 +19,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 FIXTURES = [
     "air_quality_sensor",
+    "aqara_camera_hub_g350",
     "aqara_door_window_p2",
+    "aqara_led_strip_t2",
     "aqara_light_switch_h2_us_4099",
     "aqara_light_switch_h2_us_4100",
     "aqara_light_switch_h2_us_4101",
@@ -278,14 +280,12 @@ async def set_node_attribute_and_notify(
 
 
 @cache
-def _get_fixture_name(node_id: int) -> dict[int, str]:
-    """Get the fixture name for a given node ID."""
-    for fixture_name in FIXTURES:
-        fixture_data = load_and_parse_node_fixture(fixture_name)
-        if fixture_data["node_id"] == node_id:
-            return fixture_name
-
-    raise KeyError(f"Fixture for node id {node_id} not found")
+def _get_fixture_names() -> dict[int, str]:
+    """Get the fixture name for each node ID."""
+    return {
+        load_and_parse_node_fixture(fixture_name)["node_id"]: fixture_name
+        for fixture_name in FIXTURES
+    }
 
 
 def snapshot_matter_entities(
@@ -299,7 +299,7 @@ def snapshot_matter_entities(
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
         node_id = int(entity_entry.unique_id.split("-")[1], 16)
-        fixture_name = _get_fixture_name(node_id)
+        fixture_name = _get_fixture_names()[node_id]
         assert entity_entry == snapshot(
             name=f"{fixture_name}][{entity_entry.entity_id}-entry"
         )

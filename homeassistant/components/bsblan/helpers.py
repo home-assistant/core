@@ -24,11 +24,10 @@ async def async_sync_device_time(client: BSBLAN, device_name: str) -> None:
     try:
         device_time = await client.time()
         current_time = dt_util.now()
-        current_time_str = current_time.strftime("%d.%m.%Y %H:%M:%S")
 
         # Only sync if device time differs from HA time
-        if device_time.time.value != current_time_str:
-            await client.set_time(current_time_str)
+        if device_time.time.value != current_time.strftime("%d.%m.%Y %H:%M:%S"):
+            await client.set_time(current_time)
     except BSBLANError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

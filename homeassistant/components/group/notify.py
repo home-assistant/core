@@ -30,6 +30,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 CONF_SERVICES = "services"
@@ -167,7 +168,9 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         """Initialize a NotifyGroup."""
         self._entity_ids = entity_ids
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
 
     @override

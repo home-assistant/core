@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import CONF_ENCRYPTION_PASSWORD, DOMAIN
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
@@ -68,7 +68,7 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         )
         camera = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, serial)
         self.alarm_image_password = (
-            camera.data[CONF_PASSWORD]
+            camera.options.get(CONF_ENCRYPTION_PASSWORD) or camera.data[CONF_PASSWORD]
             if camera and camera.source != SOURCE_IGNORE
             else None
         )

@@ -19,7 +19,12 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
+from . import (
+    TuyaNotificationHelper,
+    add_indexed_switches,
+    check_selective_state_update,
+    initialize_entry,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -59,6 +64,78 @@ async def test_single_channel_device_has_no_child_devices(
     )
     assert device_entry
     assert entity_entry.device_id == device_entry.id
+
+
+@pytest.mark.parametrize("mock_device_code", ["ggq_7ytb3h8u"])
+@pytest.mark.parametrize(
+    ("channels", "expected_children", "expected_parent_valves"),
+    [
+        pytest.param(1, 0, 2, id="single_channel"),
+        pytest.param(2, 2, 1, id="multi_channel"),
+    ],
+)
+async def test_ggq_indexed_valve_child_devices(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    channels: int,
+    expected_children: int,
+    expected_parent_valves: int,
+) -> None:
+    """Test indexed GGQ valves only move to child devices for multi-channel devices."""
+    # The fixture only exposes the unindexed "switch" DP
+    add_indexed_switches(mock_device, channels)
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), mock_config_entry.entry_id
+    )
+    assert parent is not None
+    assert (
+        len(dr.async_entries_for_parent_device(device_registry, parent.id))
+        == expected_children
+    )
+    assert (
+        len(er.async_entries_for_device(entity_registry, parent.id))
+        == expected_parent_valves
+    )
+
+
+@pytest.mark.parametrize("mock_device_code", ["ggq_7ytb3h8u"])
+@pytest.mark.parametrize("code", ["switch_1", "switch_2"])
+@pytest.mark.parametrize(
+    ("service", "value"),
+    [(SERVICE_OPEN_VALVE, True), (SERVICE_CLOSE_VALVE, False)],
+)
+async def test_ggq_indexed_valve_action(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    code: str,
+    service: str,
+    value: bool,
+) -> None:
+    """Test indexed GGQ valve actions target the corresponding DP."""
+    add_indexed_switches(mock_device, 2)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    entity_id = entity_registry.async_get_entity_id(
+        VALVE_DOMAIN, DOMAIN, f"tuya.{mock_device.id}{code}"
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        VALVE_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": code, "value": value}]
+    )
 
 
 @pytest.mark.usefixtures("no_quirk")

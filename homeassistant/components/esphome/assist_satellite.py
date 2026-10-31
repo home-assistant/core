@@ -695,12 +695,12 @@ class EsphomeAssistSatellite(
                         supported_format.sample_rate
                     )
 
-                if supported_format.sample_rate > 0:
+                if supported_format.num_channels > 0:
                     self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = (
                         supported_format.num_channels
                     )
 
-                if supported_format.sample_rate > 0:
+                if supported_format.sample_bytes > 0:
                     self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = (
                         supported_format.sample_bytes
                     )

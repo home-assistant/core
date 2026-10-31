@@ -102,6 +102,16 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         value_getter=lambda api: api.getOneTimeCharge(),
     ),
     ViCareBinarySensorEntityDescription(
+        key="holiday_active",
+        translation_key="holiday",
+        value_getter=lambda api: api.getHolidayActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="holiday_at_home_active",
+        translation_key="holiday_at_home",
+        value_getter=lambda api: api.getHolidayAtHomeActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
         key="device_error",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_getter=lambda api: len(api.getDeviceErrors()) > 0,

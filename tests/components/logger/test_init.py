@@ -15,6 +15,7 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components import logger
 from homeassistant.components.logger import DOMAIN, LOGSEVERITY
+from homeassistant.components.logger.const import LoggerService, LoggerServiceArgument
 from homeassistant.components.logger.helpers import SAVE_DELAY_LONG
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
@@ -144,7 +145,10 @@ async def test_setting_level(hass: HomeAssistant) -> None:
     # Test set default level
     with patch("logging.getLogger", mocks.__getitem__):
         await hass.services.async_call(
-            DOMAIN, "set_default_level", {"level": "fatal"}, blocking=True
+            DOMAIN,
+            LoggerService.SET_DEFAULT_LEVEL,
+            {LoggerServiceArgument.LEVEL: "fatal"},
+            blocking=True,
         )
     assert len(mocks[""].orig_setLevel.mock_calls) == 2
     assert mocks[""].orig_setLevel.mock_calls[1][1][0] == LOGSEVERITY["FATAL"]
@@ -153,7 +157,7 @@ async def test_setting_level(hass: HomeAssistant) -> None:
     with patch("logging.getLogger", mocks.__getitem__):
         await hass.services.async_call(
             DOMAIN,
-            "set_level",
+            LoggerService.SET_LEVEL,
             {"test.child": "info", "new_logger": "notset"},
             blocking=True,
         )
@@ -284,7 +288,10 @@ async def _assert_log_levels(hass: HomeAssistant) -> None:
     assert logging.getLogger(f"{ZONE_NS}.any").isEnabledFor(logging.DEBUG) is True
 
     await hass.services.async_call(
-        logger.DOMAIN, "set_level", {f"{UNCONFIG_NS}.any": "debug"}, blocking=True
+        logger.DOMAIN,
+        LoggerService.SET_LEVEL,
+        {f"{UNCONFIG_NS}.any": "debug"},
+        blocking=True,
     )
 
     assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
@@ -292,7 +299,10 @@ async def _assert_log_levels(hass: HomeAssistant) -> None:
     assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
 
     await hass.services.async_call(
-        logger.DOMAIN, "set_default_level", {"level": "debug"}, blocking=True
+        logger.DOMAIN,
+        LoggerService.SET_DEFAULT_LEVEL,
+        {LoggerServiceArgument.LEVEL: "debug"},
+        blocking=True,
     )
 
     assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.DEBUG) is True

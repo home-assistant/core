@@ -8,14 +8,16 @@ from deebot_client.capabilities import CapabilityNumber, CapabilitySet
 from deebot_client.device import Device
 from deebot_client.events import CleanCountEvent, CutDirectionEvent, VolumeEvent
 from deebot_client.events.base import Event
+from deebot_client.events.mop_auto_wash_frequency import MopAutoWashFrequencyEvent
 from deebot_client.events.water_info import WaterCustomAmountEvent
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import DEGREE, EntityCategory
+from homeassistant.const import DEGREE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -86,6 +88,18 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         key="water_amount",
         translation_key="water_amount",
         entity_category=EntityCategory.CONFIG,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+    ),
+    EcovacsNumberEntityDescription[MopAutoWashFrequencyEvent](
+        capability_fn=lambda caps: caps.settings.mop_auto_wash_frequency,
+        value_fn=lambda e: e.value,
+        key="mop_wash_interval",
+        translation_key="mop_wash_interval",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         native_step=1.0,
         mode=NumberMode.BOX,
     ),

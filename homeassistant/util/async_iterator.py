@@ -1,8 +1,9 @@
 """Async iterator utilities."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from concurrent.futures import CancelledError, Future
+import contextlib
 import logging
 from typing import Any, Self
 
@@ -174,3 +175,122 @@ class AsyncIteratorWriter:
             raise Abort from err
         self._pos += len(s)
         return len(s)
+
+
+class ResourceChunkIterator:
+    """Async iterator over chunks read from a resource, which closes the resource.
+
+    A resource which is not fully read, for example an HTTP response, may hold a
+    connection until it is closed. The resource is closed when it is fully read,
+    when reading fails, when close() or aclose() is called, or when the iterator is
+    garbage collected, whether or not iteration has started.
+
+    read returns the next chunk, or empty bytes at the end of the resource. close
+    closes the resource without waiting, aclose, if given, closes it gracefully and
+    is used by aclose() and at the end of the resource. They are called from the
+    event loop thread, also when the iterator is garbage collected in another
+    thread, and must be safe to call while a read is in progress.
+
+    close() and aclose() must be called from the event loop thread. Once the
+    resource is closed, iteration stops. If reading failed, further reads raise the
+    same error, so a truncated resource is not mistaken for a complete one.
+    """
+
+    __slots__ = (
+        "_aclose",
+        "_close",
+        "_closed",
+        "_error",
+        "_exhausted",
+        "_loop",
+        "_read",
+    )
+
+    def __init__(
+        self,
+        read: Callable[[], Awaitable[bytes]],
+        *,
+        close: Callable[[], object],
+        aclose: Callable[[], Awaitable[None]] | None = None,
+    ) -> None:
+        """Initialize."""
+        self._read = read
+        self._close = close
+        self._aclose = aclose
+        self._loop = asyncio.get_running_loop()
+        self._closed = False
+        self._error: BaseException | None = None
+        self._exhausted = False
+
+    def __aiter__(self) -> Self:
+        """Return self."""
+        return self
+
+    async def __anext__(self) -> bytes:
+        """Return the next chunk."""
+        if self._error is not None:
+            raise self._error
+        if self._exhausted:
+            raise StopAsyncIteration
+        try:
+            chunk = await self._read()
+        except BaseException as err:
+            if not self._exhausted:
+                # Don't raise a cancellation in a task which was not cancelled
+                self._error = (
+                    err
+                    if isinstance(err, Exception)
+                    else RuntimeError("Reading the resource was interrupted")
+                )
+            self._close_resource()
+            raise
+        if not chunk:
+            await self.aclose()
+            raise StopAsyncIteration
+        return chunk
+
+    def _close_resource(self) -> None:
+        """Close the resource without waiting, unless already closed."""
+        if not self._closed:
+            self._closed = True
+            self._close()
+
+    def close(self) -> None:
+        """Close the resource without waiting, and stop iteration."""
+        self._exhausted = True
+        self._close_resource()
+
+    async def aclose(self) -> None:
+        """Close the resource, and stop iteration."""
+        self._exhausted = True
+        if self._aclose is None:
+            self._close_resource()
+            return
+        if self._closed:
+            return
+        self._closed = True
+        try:
+            await self._aclose()
+        except BaseException:
+            # Don't leave the resource open if closing it gracefully failed
+            self._close()
+            raise
+
+    def __del__(self) -> None:
+        """Close the resource on the event loop when garbage collected."""
+        if self._closed:
+            return
+        self._closed = True
+        loop = self._loop
+        if loop.is_closed():
+            return
+        try:
+            running_loop: asyncio.AbstractEventLoop | None = asyncio.get_running_loop()
+        except RuntimeError:
+            running_loop = None
+        if running_loop is loop:
+            self._close()
+            return
+        # The loop may be closed concurrently
+        with contextlib.suppress(RuntimeError):
+            loop.call_soon_threadsafe(self._close)

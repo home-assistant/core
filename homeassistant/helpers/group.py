@@ -165,8 +165,13 @@ def get_group_entities(hass: HomeAssistant) -> dict[str, Entity]:
     return {}
 
 
-def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[str]:
+def expand_entity_ids(
+    hass: HomeAssistant, entity_ids: Iterable[Any], *, include_groups: bool = False
+) -> list[str]:
     """Return entity_ids with group entity ids replaced by their members.
+
+    With include_groups, the group entity ids are kept alongside their members,
+    nested groups included.
 
     Async friendly.
     """
@@ -190,9 +195,13 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
             if entity_id in child_entities:
                 child_entities = list(child_entities)
                 child_entities.remove(entity_id)
+            if include_groups and entity_id not in found_ids:
+                found_ids.append(entity_id)
             found_ids.extend(
                 ent_id
-                for ent_id in expand_entity_ids(hass, child_entities)
+                for ent_id in expand_entity_ids(
+                    hass, child_entities, include_groups=include_groups
+                )
                 if ent_id not in found_ids
             )
         # If entity_id points at an old-style group, expand it
@@ -201,9 +210,13 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
             if entity_id in child_entities:
                 child_entities = list(child_entities)
                 child_entities.remove(entity_id)
+            if include_groups and entity_id not in found_ids:
+                found_ids.append(entity_id)
             found_ids.extend(
                 ent_id
-                for ent_id in expand_entity_ids(hass, child_entities)
+                for ent_id in expand_entity_ids(
+                    hass, child_entities, include_groups=include_groups
+                )
                 if ent_id not in found_ids
             )
         elif entity_id not in found_ids:

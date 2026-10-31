@@ -133,7 +133,9 @@ class PingSensor(PingEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.coordinator.data.is_alive
+        return super().available and self.entity_description.has_fn(
+            self.coordinator.data
+        )
 
     @property
     @override

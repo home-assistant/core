@@ -14,9 +14,10 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import ATTR_OPTIONS
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, Platform
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
@@ -243,3 +244,426 @@ async def test_setup_when_modules_absent(
     with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_aggregates_timer_countdowns(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """FILTRATION_REMAINING reports the largest positive filtration countdown.
+
+    The aggregation lives in the library; the coordinator stores the countdown
+    seconds under FILTRATION_REMAINING and the sensor renders them as the
+    absolute end timestamp (now + remaining).
+    """
+
+    def _timers(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        countdowns = {"filtration1": 1800, "filtration2": 3600, "filtration3": 0}
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": countdowns.get(name, 0),
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _timers
+    await setup_integration(hass, mock_config_entry)
+    # The sensor's context registers after setup; poll again so the coordinator
+    # reads the filtration blocks and aggregates their countdown.
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert state is not None
+    # Largest countdown (3600s) as an end time, truncated to whole seconds.
+    expected = (dt_util.utcnow() + timedelta(seconds=3600)).replace(microsecond=0)
+    assert state.state == expected.isoformat()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_unknown_when_not_counting_down(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """With no positive countdown, the end time is unknown, not a stale value."""
+
+    def _timers(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": 0,
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _timers
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_holds_steady_within_variance(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A countdown ticking down in step with the clock keeps one stable end time.
+
+    Per-second drift stays within tolerance, so the end time only moves on a
+    real change.
+    """
+    countdown = {"value": 3600}
+
+    def _timers(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": countdown["value"],
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _timers
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    first = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert first is not None
+
+    # 20s later the device reports 20s less, landing on the same end. Hold it.
+    countdown["value"] = 3580
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    second = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert second is not None
+    assert second.state == first.state
+
+    # A real jump beyond the tolerance (pump restarted) moves the end time.
+    countdown["value"] = 7200
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    third = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert third is not None
+    assert third.state != first.state
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_resets_after_countdown_stops(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A new countdown after a stop is not masked by the held end time.
+
+    A short new countdown can land within the tolerance of the stopped one, so
+    the held end time must be dropped on the stop, not reused.
+    """
+    countdown = {"value": 20}
+
+    def _timers(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": countdown["value"],
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _timers
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.neopool_filtration_time_remaining") is not None
+
+    # Countdown stops.
+    countdown["value"] = 0
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    stopped = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert stopped is not None
+    assert stopped.state == STATE_UNKNOWN
+
+    # A new short countdown whose end falls within the tolerance of the stopped
+    # one must be reported fresh, not held over.
+    countdown["value"] = 5
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    restarted = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert restarted is not None
+    expected = (dt_util.utcnow() + timedelta(seconds=5)).replace(microsecond=0)
+    assert restarted.state == expected.isoformat()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_takes_new_end_when_held_one_expired(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A restart without a zero reading is not masked by an expired end time.
+
+    A countdown that restarts between polls can report the same short value
+    twice; the held end time has expired by then and must not be held over,
+    even though the new end falls within the tolerance.
+    """
+    countdown = {"value": 10}
+
+    def _timers(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": countdown["value"],
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _timers
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    first = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert first is not None
+
+    # 20s later the same 10s countdown is reported again (a restart). The held
+    # end time is now 10s in the past, so the new one must be taken.
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    second = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert second is not None
+    expected = (dt_util.utcnow() + timedelta(seconds=10)).replace(microsecond=0)
+    assert second.state == expected.isoformat()
+    assert second.state != first.state
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_polls_filtration_blocks_when_enabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Enabling the sensor registers all three filtration blocks for polling.
+
+    Only the sensor platform is loaded, so no filtration time entity registers
+    a block context. The three blocks can only reach the read through the
+    sensor's own context, which makes this test catch the context plumbing
+    being dropped.
+    """
+    calls: list[list[str] | None] = []
+
+    def _capture(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        calls.append(enabled_timers)
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": 0,
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _capture
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    enabled_timers = calls[-1]
+    assert enabled_timers is not None
+    assert "filtration1" in enabled_timers
+    assert "filtration2" in enabled_timers
+    assert "filtration3" in enabled_timers
+
+
+def _capture_force_read(
+    mock_neopool_client: MagicMock,
+    countdown: int = 0,
+) -> list[tuple[str, ...] | None]:
+    """Record the force_read argument of every read_all_timers call."""
+    calls: list[tuple[str, ...] | None] = []
+
+    def _capture(
+        enabled_timers: list[str] | None = None,
+        force_read: tuple[str, ...] | None = None,
+    ) -> dict[str, dict[str, object]]:
+        calls.append(force_read)
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": countdown,
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _capture
+    return calls
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_force_reads_blocks_while_pump_runs(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """With the sensor enabled and the pump on, filtration blocks bypass the cache."""
+    calls = _capture_force_read(mock_neopool_client)
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "Filtration Pump": True,
+    }
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    force_read = calls[-1]
+    assert force_read is not None
+    assert set(force_read) == {"filtration1", "filtration2", "filtration3"}
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_force_reads_after_pump_off_with_countdown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A positive previous countdown keeps blocks force-read after the pump stops."""
+    # First poll with the pump on and a positive countdown seeds FILTRATION_REMAINING.
+    calls = _capture_force_read(mock_neopool_client, countdown=600)
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "Filtration Pump": True,
+    }
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Pump turns off, but the previous countdown was positive, so the next poll
+    # still force-reads to catch the final tick.
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "Filtration Pump": False,
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    force_read = calls[-1]
+    assert force_read is not None
+    assert set(force_read) == {"filtration1", "filtration2", "filtration3"}
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_no_force_read_when_idle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """With the sensor enabled but pump off and no countdown, nothing is force-read."""
+    calls = _capture_force_read(mock_neopool_client, countdown=0)
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "Filtration Pump": False,
+    }
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert calls[-1] is None
+
+
+async def test_filtration_remaining_disabled_keeps_cached_reads(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A time-only context does not force-read, even with the pump running.
+
+    The sensor is disabled by default, so only the default-enabled filtration1
+    time entities register a block context. That context must not trigger a
+    cache-bypassing force-read.
+    """
+    calls = _capture_force_read(mock_neopool_client)
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "Filtration Pump": True,
+    }
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert calls[-1] is None
