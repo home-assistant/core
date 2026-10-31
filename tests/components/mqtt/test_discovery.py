@@ -2114,11 +2114,13 @@ DESIRED_STATE_SWITCH_2 = {
 }
 
 
-def _desired_state_payload(components: dict[str, Any]) -> str:
+def _desired_state_payload(
+    components: dict[str, Any], device: dict[str, Any] | None = None
+) -> str:
     """Return a device discovery payload with the components."""
     return json.dumps(
         {
-            "dev": {"ids": ["parent"], "name": "Parent"},
+            "dev": device or {"ids": ["parent"], "name": "Parent"},
             "o": {"name": "Foo2Mqtt"},
             "cmps": components,
         }
@@ -2150,7 +2152,11 @@ async def test_device_discovery_replace_all_components(
     caplog: pytest.LogCaptureFixture,
     switch_1: dict[str, Any],
 ) -> None:
-    """Test replacing all components, including a device trigger, keeps the device."""
+    """Test replacing all components, including a device trigger, keeps the device.
+
+    The device is kept while the platform of the new component is set up. It is
+    identified by its MAC address, which is sent in another notation.
+    """
     mqtt_mock = await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
@@ -2165,27 +2171,56 @@ async def test_device_discovery_replace_all_components(
                     "subtype": "button_1",
                 },
                 "sw1": switch_1,
-            }
+            },
+            {"cns": [["mac", "AA:BB:CC:DD:EE:FF"]], "name": "Parent"},
         ),
     )
     await hass.async_block_till_done()
-    device_id = _desired_state_device_id(hass, device_registry)
-    assert device_id is not None
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
+    )
+    assert device is not None
+    device_id = device.id
     assert await mqtt.device_trigger.async_get_triggers(hass, device_id)
     assert entity_registry.async_is_registered("switch.parent_switch_1")
     mqtt_mock.async_publish.reset_mock()
 
-    # The omitted components are removed before the new switch is added
-    async_fire_mqtt_message(
-        hass,
-        DESIRED_STATE_DEVICE_TOPIC,
-        _desired_state_payload({"sw2": DESIRED_STATE_SWITCH_2}),
-    )
-    await hass.async_block_till_done()
-    assert _desired_state_device_id(hass, device_registry) == device_id
-    assert not await mqtt.device_trigger.async_get_triggers(hass, device_id)
-    assert not entity_registry.async_is_registered("switch.parent_switch_1")
-    entity_entry = entity_registry.async_get("switch.parent_switch_2")
+    platform_setup = asyncio.Event()
+    forward_entry_setup = mqtt.discovery.async_forward_entry_setup_and_setup_discovery
+
+    async def _wait_for_platform_setup(*args: Any) -> None:
+        await platform_setup.wait()
+        await forward_entry_setup(*args)
+
+    with patch(
+        "homeassistant.components.mqtt.discovery.async_forward_entry_setup_and_setup_discovery",
+        side_effect=_wait_for_platform_setup,
+    ):
+        async_fire_mqtt_message(
+            hass,
+            DESIRED_STATE_DEVICE_TOPIC,
+            _desired_state_payload(
+                {
+                    "sensor": {
+                        "p": "sensor",
+                        "name": "Sensor",
+                        "stat_t": "sensor/state",
+                        "uniq_id": "sensor",
+                    }
+                },
+                {"cns": [["mac", "aabbccddeeff"]], "name": "Parent"},
+            ),
+        )
+        # The omitted components are removed before the sensor platform is set up
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert not entity_registry.async_is_registered("switch.parent_switch_1")
+        assert not await mqtt.device_trigger.async_get_triggers(hass, device_id)
+        assert device_registry.async_get(device_id) is not None
+        platform_setup.set()
+        await hass.async_block_till_done()
+    entity_entry = entity_registry.async_get("sensor.parent_sensor")
     assert entity_entry is not None
     assert entity_entry.device_id == device_id
     assert (

@@ -193,6 +193,15 @@ class PendingDiscovered(TypedDict):
 
 
 @dataclass(slots=True, frozen=True)
+class KeptDevices:
+    """The devices a device discovery payload keeps when it omits a component."""
+
+    # None when the parent device of the payload is not registered
+    parent_device_id: str | None
+    child_identifiers: frozenset[str]
+
+
+@dataclass(slots=True, frozen=True)
 class DiscoveredDisabledEntity:
     """Discovered entity that is disabled in the entity registry."""
 

@@ -20,7 +20,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
-from homeassistant.helpers import discovery_flow, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    discovery_flow,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -52,6 +56,7 @@ from .const import (
 from .models import (
     DATA_MQTT,
     DiscoveredDisabledEntity,
+    KeptDevices,
     MqttChildDeviceConfig,
     MqttComponentConfig,
     MqttDiscoveryChildDevice,
@@ -65,7 +70,7 @@ from .schemas import (
     validate_device_discovery_components,
 )
 from .util import (
-    async_cleanup_device_registry,
+    async_cleanup_removed_component_device,
     async_forward_entry_setup_and_setup_discovery,
 )
 
@@ -104,10 +109,8 @@ class MQTTDiscoveryPayload(dict[str, Any]):
 
     device_discovery: bool = False
     migrate_discovery: bool = False
-    # A component omitted from a device discovery payload only cleans up its device
-    # when the payload omits its child device too, the parent device is kept
-    cleanup_device: bool = True
-    cleanup_parent_device: bool = True
+    # Set when a device discovery payload omits the component
+    kept_devices: KeptDevices | None = None
     discovery_data: DiscoveryInfoType
 
 
@@ -122,11 +125,11 @@ class _DeviceDiscoveryComponent:
 
 @dataclass(frozen=True, slots=True)
 class _DeviceDiscoveryDiff:
-    """The known components and child devices a device discovery payload removes."""
+    """The known components a device discovery payload removes."""
 
     desired_components: set[tuple[str, str]]
-    removed_components: dict[tuple[str, str], MQTTDiscoveryPayload]
-    removed_child_devices: set[frozenset[str]]
+    desired_child_identifiers: frozenset[str]
+    removed_components: set[tuple[str, str]]
 
 
 @dataclass(frozen=True)
@@ -434,22 +437,11 @@ def _child_device_identifiers(
     )
 
 
-def _device_keys(device_config: Mapping[str, Any]) -> set[tuple[str, ...]]:
-    """Return the identifiers and connections that link a device config."""
-    return {
-        (CONF_IDENTIFIERS, str(identifier))
-        for identifier in probatio.EnsureList()(device_config.get(CONF_IDENTIFIERS))
-    } | {
-        (CONF_CONNECTIONS, *map(str, connection))
-        for connection in device_config.get(CONF_CONNECTIONS, [])
-    }
-
-
 @callback
 def _async_get_known_device_components(
     hass: HomeAssistant, topic: str
-) -> dict[tuple[str, str], MQTTDiscoveryPayload]:
-    """Return the payloads of the known components of a device discovery topic.
+) -> set[tuple[str, str]]:
+    """Return the discovery hashes of the known components of a device topic.
 
     A pending payload is processed after the payload being processed, which is
     processed after the payload of a discovered component.
@@ -479,7 +471,7 @@ def _async_get_known_device_components(
                 known_components[discovery_hash] = payload
                 break
     return {
-        discovery_hash: payload
+        discovery_hash
         for discovery_hash, payload in known_components.items()
         if payload
     }
@@ -493,17 +485,15 @@ def _async_diff_device_discovery(
     node_id: str | None,
     device_payload: MQTTDiscoveryPayload,
 ) -> _DeviceDiscoveryDiff:
-    """Return the known components and child devices a device payload removes.
+    """Return the known components a device payload removes.
 
     The payload is the desired state of the device, a known component is removed
     when it is omitted. A component with only a platform is ignored, a known one
-    is kept as is. A known child device is removed when none of its identifiers is
-    in a child device with desired components.
+    is kept as is.
     """
     known_components = _async_get_known_device_components(hass, topic)
     desired_components: set[tuple[str, str]] = set()
     desired_child_identifiers: set[str] = set()
-    child_device: Mapping[str, Any] | None
     for device_component in _device_discovery_components(device_payload):
         discovery_hash = (
             device_component.config[CONF_PLATFORM],
@@ -512,35 +502,43 @@ def _async_diff_device_discovery(
             ),
         )
         if len(device_component.config) > 1:
-            child_device = device_component.child_device
-        elif (known_payload := known_components.get(discovery_hash)) is not None:
-            child_device = known_payload[CONF_DEVICE].get(CONF_CHILD_DEVICE)
-        else:
+            desired_child_identifiers.update(
+                _child_device_identifiers(device_component.child_device)
+            )
+        elif discovery_hash not in known_components:
             continue
         desired_components.add(discovery_hash)
-        desired_child_identifiers.update(_child_device_identifiers(child_device))
     return _DeviceDiscoveryDiff(
         desired_components,
-        {
-            discovery_hash: payload
-            for discovery_hash, payload in known_components.items()
-            if discovery_hash not in desired_components
-        },
-        {
-            identifiers
-            for payload in known_components.values()
-            if (
-                identifiers := _child_device_identifiers(
-                    payload[CONF_DEVICE].get(CONF_CHILD_DEVICE)
-                )
-            )
-            and identifiers.isdisjoint(desired_child_identifiers)
-        },
+        frozenset(desired_child_identifiers),
+        known_components - desired_components,
     )
 
 
 @callback
+def _async_get_main_device_id(
+    hass: HomeAssistant, config_entry_id: str, device_config: Mapping[str, Any]
+) -> str | None:
+    """Return the ID of the registered main device of a device config."""
+    device_registry = dr.async_get(hass)
+    for identifier in probatio.EnsureList()(device_config.get(CONF_IDENTIFIERS)):
+        if device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(identifier)), config_entry_id
+        ):
+            return device.id
+    for connection_type, value in device_config.get(CONF_CONNECTIONS, []):
+        # The device registry normalizes the MAC address of the connection
+        if device := device_registry.async_get_device_by_connection(
+            (connection_type, value), config_entry_id
+        ):
+            return device.id
+    return None
+
+
+@callback
 def _async_remove_omitted_device_components(
+    hass: HomeAssistant,
+    config_entry_id: str,
     topic: str,
     object_id: str,
     device_payload: MQTTDiscoveryPayload,
@@ -550,23 +548,22 @@ def _async_remove_omitted_device_components(
     """Add the removal of the components a device discovery payload omits.
 
     The removals are done first, so a renamed component can keep its unique ID.
-    They only clean up the omitted child devices, so a device that is kept is never
-    removed and created again while the components are processed. Without
-    components in the payload, or when the payload has another parent device, the
-    removals clean up all devices left empty.
+    Without components in the payload, the removals clean up all devices left
+    empty, otherwise they keep the devices of the payload.
     """
     origin_info = get_origin_log_string(device_payload, include_url=False)
-    parent_device_keys = _device_keys(device_payload[CONF_DEVICE])
-    for identifiers in diff.removed_child_devices:
-        _LOGGER.warning(
-            "Removing child device %s, omitted from the MQTT device discovery "
-            "payload on topic %s%s",
-            ", ".join(sorted(identifiers)),
-            topic,
-            origin_info,
+    kept_devices = (
+        KeptDevices(
+            _async_get_main_device_id(
+                hass, config_entry_id, device_payload[CONF_DEVICE]
+            ),
+            diff.desired_child_identifiers,
         )
+        if diff.desired_components
+        else None
+    )
     removals: list[MqttComponentConfig] = []
-    for discovery_hash, known_payload in diff.removed_components.items():
+    for discovery_hash in diff.removed_components:
         _LOGGER.warning(
             "Removing %s '%s', omitted from the MQTT device discovery payload "
             "on topic %s%s",
@@ -577,16 +574,7 @@ def _async_remove_omitted_device_components(
         )
         removal_payload = MQTTDiscoveryPayload()
         removal_payload.device_discovery = True
-        if diff.desired_components and not parent_device_keys.isdisjoint(
-            _device_keys(known_payload[CONF_DEVICE])
-        ):
-            removal_payload.cleanup_device = (
-                _child_device_identifiers(
-                    known_payload[CONF_DEVICE].get(CONF_CHILD_DEVICE)
-                )
-                in diff.removed_child_devices
-            )
-            removal_payload.cleanup_parent_device = False
+        removal_payload.kept_devices = kept_devices
         removals.append(
             MqttComponentConfig(
                 discovery_hash[0],
@@ -758,14 +746,12 @@ def _async_cleanup_disabled_entity(
         )
     ) and (entity_entry := entity_registry.async_get(entity_id)):
         entity_registry.async_remove(entity_id)
-        if not payload.cleanup_device:
-            return
         hass.async_create_task(
-            async_cleanup_device_registry(
+            async_cleanup_removed_component_device(
                 hass,
-                device_id=entity_entry.device_id,
-                config_entry_id=entity_entry.config_entry_id,
-                cleanup_parent_device=payload.cleanup_parent_device,
+                entity_entry.device_id,
+                entity_entry.config_entry_id,
+                payload.kept_devices,
             ),
             name=f"Check for cleanup device registry for {entity_id}",
         )
@@ -923,6 +909,8 @@ async def async_start(  # noqa: C901
                 )
             if device_discovery_diff is not None:
                 _async_remove_omitted_device_components(
+                    hass,
+                    config_entry.entry_id,
                     topic,
                     object_id,
                     device_discovery_payload,

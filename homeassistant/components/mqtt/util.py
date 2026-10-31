@@ -47,7 +47,7 @@ from .const import (
     DOMAIN,
     INVALID_PLATFORM_CONFIG_ISSUE_PREFIX,
 )
-from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, KeptDevices, ReceiveMessage
 
 AVAILABILITY_TIMEOUT = 50.0
 
@@ -494,6 +494,41 @@ async def async_cleanup_device_registry(
             await async_cleanup_device_registry(
                 hass, device.parent_device_id, config_entry_id
             )
+
+
+async def async_cleanup_removed_component_device(
+    hass: HomeAssistant,
+    device_id: str | None,
+    config_entry_id: str | None,
+    kept_devices: KeptDevices | None,
+) -> None:
+    """Clean up the device of a component removed through MQTT discovery.
+
+    A component omitted from a device discovery payload only cleans up its child
+    device when the payload omits it too, and keeps the parent device, so a device
+    that is kept is never removed and created again while the components of the
+    payload are processed. The registered device is used, as the component may
+    not have accepted its last discovery payload.
+    """
+    if (
+        kept_devices is None
+        or device_id is None
+        or (device := dr.async_get(hass).async_get(device_id)) is None
+    ):
+        await async_cleanup_device_registry(hass, device_id, config_entry_id)
+        return
+    if not isinstance(device, dr.ChildDeviceEntry):
+        if device.id != kept_devices.parent_device_id:
+            await async_cleanup_device_registry(hass, device_id, config_entry_id)
+        return
+    if device.parent_device_id != kept_devices.parent_device_id:
+        await async_cleanup_device_registry(hass, device_id, config_entry_id)
+    elif kept_devices.child_identifiers.isdisjoint(
+        id_ for domain, id_ in device.identifiers if domain == DOMAIN
+    ):
+        await async_cleanup_device_registry(
+            hass, device_id, config_entry_id, cleanup_parent_device=False
+        )
 
 
 @callback

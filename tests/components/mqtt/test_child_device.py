@@ -600,7 +600,6 @@ async def test_device_discovery_replace_child_device(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
     component_id: str,
     removed_components: set[tuple[str, str]],
     entity_id: str,
@@ -633,7 +632,6 @@ async def test_device_discovery_replace_child_device(
     diff = _diff_device_payload(hass, payload)
     assert diff.desired_components == {("switch", f"parent {component_id}")}
     assert set(diff.removed_components) == removed_components
-    assert diff.removed_child_devices == {frozenset({"sub1"})}
 
     await _discover_device(hass, payload)
     assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
@@ -646,10 +644,6 @@ async def test_device_discovery_replace_child_device(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.device_id == child_2.id
-    assert (
-        "Removing child device sub1, omitted from the MQTT device discovery payload "
-        f"on topic {DEVICE_TOPIC} from external application Foo2Mqtt" in caplog.text
-    )
     # Clearing the device discovery topic would remove all device components
     mqtt_mock.async_publish.assert_not_called()
 
@@ -697,7 +691,6 @@ async def test_device_discovery_ignores_platform_only_component(
     )
     diff = _diff_device_payload(hass, payload)
     assert not diff.removed_components
-    assert not diff.removed_child_devices
 
     await _discover_device(hass, payload)
     assert entity_registry.async_is_registered("switch.parent_sub_2_switch")
@@ -712,7 +705,6 @@ async def test_device_discovery_ignores_platform_only_component(
     payload = _device_payload(components, [child_device_1])
     diff = _diff_device_payload(hass, payload)
     assert set(diff.removed_components) == {("switch", "parent sw2")}
-    assert diff.removed_child_devices == {frozenset({"sub2"})}
 
     await _discover_device(hass, payload)
     assert not entity_registry.async_is_registered("switch.parent_sub_2_switch")
@@ -752,7 +744,6 @@ async def test_device_discovery_omitted_child_device_with_numeric_identifier(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test omitting a child device with a numeric identifier removes it."""
     await mqtt_mock_entry()
@@ -769,7 +760,6 @@ async def test_device_discovery_omitted_child_device_with_numeric_identifier(
     await _discover_device(hass, _device_payload(components))
     assert _get_child_device(hass, device_registry, "1") is None
     assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is None
-    assert "Removing child device 1, omitted" in caplog.text
 
 
 async def test_device_discovery_parent_change_removes_old_parent_device(
@@ -1139,7 +1129,6 @@ async def test_device_discovery_keeps_single_component_child_device(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
     enabled_by_default: bool,
 ) -> None:
     """Test device discovery keeps a child device of single component discovery.
@@ -1180,7 +1169,6 @@ async def test_device_discovery_keeps_single_component_child_device(
     payload = _device_payload(components)
     diff = _diff_device_payload(hass, payload)
     assert set(diff.removed_components) == {("switch", "parent sw1")}
-    assert diff.removed_child_devices == {frozenset({"sub1"})}
 
     await _discover_device(hass, payload)
     assert _get_child_device(hass, device_registry, "sub1") is None
@@ -1190,7 +1178,6 @@ async def test_device_discovery_keeps_single_component_child_device(
         == single_child_device.id
     )
     assert entity_registry.async_get_entity_id("switch", DOMAIN, "single") is not None
-    assert "Removing child device single_sub" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1329,7 +1316,6 @@ async def test_device_discovery_known_state_ignores_rejected_update(
     )
     diff = _diff_device_payload(hass, payload)
     assert set(diff.removed_components) == {("switch", "parent sw1")}
-    assert diff.removed_child_devices == {frozenset({"sub1"})}
 
     await _discover_device(hass, payload)
     assert not entity_registry.async_is_registered("switch.parent_sub_1_switch")
