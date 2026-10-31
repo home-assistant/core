@@ -1772,6 +1772,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "synology_dsm",
     "synology_srm",
     "syslog",
+    "system_bridge",
     "systemmonitor",
     "tado",
     "tailscale",
