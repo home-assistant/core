@@ -1,0 +1,6 @@
+{
+  "domain": "brilix_neopool",
+  "name": "Brilix",
+  "integration_type": "virtual",
+  "supported_by": "neopool"
+}

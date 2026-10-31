@@ -1,0 +1,6 @@
+{
+  "domain": "bayrol_neopool",
+  "name": "Bayrol",
+  "integration_type": "virtual",
+  "supported_by": "neopool"
+}
