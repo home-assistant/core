@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import attr
-from httpx2 import ConnectError
+from httpx2 import ConnectError, Timeout
 from ollama import ResponseError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -99,6 +99,21 @@ async def test_init_without_api_key(
         assert all(
             call.kwargs["headers"] is None for call in mock_client.call_args_list
         )
+
+
+async def test_init_connect_timeout(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the client bounds the connect but not the read."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert mock_client.call_args.kwargs["timeout"] == Timeout(None, connect=5.0)
 
 
 @pytest.mark.parametrize(

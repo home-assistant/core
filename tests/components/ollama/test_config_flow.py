@@ -827,6 +827,7 @@ async def test_user_step_async_client_headers(
         host="http://localhost:11434",
         headers=expected_headers,
         verify=ANY,
+        timeout=ANY,
     )
 
 
@@ -937,4 +938,5 @@ async def test_user_step_trim_url(hass: HomeAssistant) -> None:
         host="http://localhost:11434",
         headers=None,
         verify=ANY,
+        timeout=ANY,
     )
