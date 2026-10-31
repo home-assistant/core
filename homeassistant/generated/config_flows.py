@@ -239,6 +239,7 @@ FLOWS = {
         "essent",
         "eufylife_ble",
         "eurotronic_cometblue",
+        "everhome",
         "evil_genius_labs",
         "exicom_spin_ble",
         "ezviz",
