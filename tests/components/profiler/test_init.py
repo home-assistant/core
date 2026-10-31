@@ -802,7 +802,7 @@ def test_loop_timing_counts_a_callback_it_cannot_attribute(
     assert "do not look at me" in caplog.text
 
 
-def test_loop_timing_caps_the_rows() -> None:
+def test_loop_timing_caps_the_rows(caplog: pytest.LogCaptureFixture) -> None:
     """Past the cap, new callbacks share one row instead of growing the table."""
     loop = asyncio.new_event_loop()
     timing = LoopTiming(loop, DEFAULT_THRESHOLD_MS)
@@ -818,12 +818,16 @@ def test_loop_timing_caps_the_rows() -> None:
     finally:
         timing.stop()
         loop.close()
-    rows = {row["callback"]: row["count"] for row in timing.report()["callbacks"]}
+    report = timing.report()
+    rows = {row["callback"]: row["count"] for row in report["callbacks"]}
     assert rows["zlib.crc32"] == 1
     assert rows["binascii.crc32"] == 1
     # int, str and loop.stop, none of which fit any more
     assert rows["other callbacks"] == 3
     assert len(rows) == 3
+    assert report["overflowed"] == 3
+    assert "table full: 3" in format_report(report)
+    assert caplog.text.count("keeps 2 callbacks apart") == 1
 
 
 def test_loop_timing_keeps_alike_functions_apart() -> None:
@@ -876,3 +880,29 @@ def test_loop_timing_left_under_another_wrapper_passes_through(
     finally:
         Handle._run = original_run  # type: ignore[method-assign]
         loop.close()
+
+
+def test_loop_timing_log_says_when_rows_are_left_out() -> None:
+    """The log shows the busiest callbacks and says how many it left out."""
+    report = {
+        "since": "now",
+        "threshold_ms": 100.0,
+        "errors": 0,
+        "overflowed": 0,
+        "slow": [],
+        "callbacks": [
+            {
+                "callback": f"cb{i}",
+                "config_entry": None,
+                "count": 1,
+                "total_ms": 0.1,
+                "max_ms": 0.1,
+                "max_at": "now",
+            }
+            for i in range(52)
+        ],
+    }
+    text = format_report(report)
+    assert "cb49:" in text
+    assert "cb50:" not in text
+    assert "... and 2 more callbacks" in text

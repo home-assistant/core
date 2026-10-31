@@ -5,7 +5,9 @@ asyncio.events.Handle._run. While timing is on, a wrapper around it charges
 the wall time of each callback to what ran: a task step to its coroutine
 and the class of its `self`, a HassJob to its target, anything else to its
 function or method and class, each split by the config entry whose context
-it runs in. While timing is off, Handle._run is the original.
+it runs in. The first step of an eager task runs inside the callback that
+created it and counts for that callback. While timing is off, Handle._run is
+the original.
 """
 
 import asyncio
@@ -29,6 +31,8 @@ DEFAULT_THRESHOLD_MS = 100.0
 MAX_SLOW_CALLBACKS = 100
 # Only code compiled at runtime can add rows without bound
 MAX_ROWS = 10_000
+# The log shows the busiest ones; the service response has all
+MAX_LOGGED_CALLBACKS = 50
 
 type _Key = tuple[Any, type | None, str | None]
 _OTHER: _Key = ("other", None, None)
@@ -78,6 +82,8 @@ class LoopTiming:
         # Cleared on stop, so a wrapper left under another one passes through
         self._active = [False]
         self.errors = 0
+        # Callbacks counted under "other callbacks" because the table was full
+        self.overflowed = 0
         self.started_at = 0.0
 
     def start(self) -> None:
@@ -94,6 +100,11 @@ class LoopTiming:
         wall = time.time
         task_type = asyncio.Task
 
+        def _other_row() -> _Row:
+            if (row := rows.get(_OTHER)) is None:
+                row = rows[_OTHER] = _Row("other callbacks")
+            return row
+
         # One function with everything inline: it runs once per callback
         def _run(handle: Any) -> None:
             # Once stopped, a wrapper that something else wrapped in turn
@@ -101,7 +112,7 @@ class LoopTiming:
             if not active[0] or handle._loop is not loop:  # noqa: SLF001
                 original(handle)
                 return
-            row = None
+            row: _Row
             key: _Key = _OTHER
             # Nothing in here may escape into the loop, hence one wide try
             try:
@@ -156,23 +167,25 @@ class LoopTiming:
                     cls,
                     entry.entry_id if entry is not None else None,
                 )
-                if (row := rows.get(key)) is None:
-                    if len(rows) >= MAX_ROWS:
-                        key = _OTHER
-                        row = rows.get(key)
-                    if row is None:
-                        label = (
-                            "other callbacks"
-                            if key is _OTHER
-                            else _label(func, code, cls, module)
+                if (found := rows.get(key)) is not None:
+                    row = found
+                elif len(rows) < MAX_ROWS:
+                    row = rows[key] = _Row(_label(func, code, cls, module), code)
+                else:
+                    key = _OTHER
+                    row = _other_row()
+                    self.overflowed += 1
+                    if self.overflowed == 1:
+                        _LOGGER.warning(
+                            "Event loop timing keeps %s callbacks apart; the"
+                            " rest count under other callbacks",
+                            MAX_ROWS,
                         )
-                        row = rows[key] = _Row(label, code)
             except Exception:
                 # The time still counts, under the row for everything else
                 self.errors += 1
                 key = _OTHER
-                if (row := rows.get(key)) is None:
-                    row = rows[key] = _Row("other callbacks")
+                row = _other_row()
                 if self.errors == 1:
                     _LOGGER.warning(
                         "Could not attribute a callback of the event loop",
@@ -182,18 +195,15 @@ class LoopTiming:
             try:
                 original(handle)
             finally:
-                if row is not None:
-                    elapsed = perf() - start
-                    row.count += 1
-                    row.total_ns += elapsed
-                    if elapsed > row.max_ns:
-                        row.max_ns = elapsed
-                        row.max_at = wall()
-                    if elapsed >= threshold:
-                        self._slow_seq += 1
-                        slow.append(
-                            (self._slow_seq, wall(), elapsed, row.label, key[2])
-                        )
+                elapsed = perf() - start
+                row.count += 1
+                row.total_ns += elapsed
+                if elapsed > row.max_ns:
+                    row.max_ns = elapsed
+                    row.max_at = wall()
+                if elapsed >= threshold:
+                    self._slow_seq += 1
+                    slow.append((self._slow_seq, wall(), elapsed, row.label, key[2]))
 
         self._original = original
         self._wrapper = _run
@@ -222,6 +232,7 @@ class LoopTiming:
             "since": dt_util.utc_from_timestamp(self.started_at).isoformat(),
             "threshold_ms": self._threshold_ns / 1_000_000,
             "errors": self.errors,
+            "overflowed": self.overflowed,
             "callbacks": [
                 {
                     "callback": row.label,
@@ -261,8 +272,10 @@ def format_report(report: dict[str, Any]) -> str:
     lines.extend(
         f"  {row['callback']}{where(row)}: {row['count']} calls,"
         f" {row['total_ms']} ms total, longest {row['max_ms']} ms at {row['max_at']}"
-        for row in report["callbacks"][:50]
+        for row in report["callbacks"][:MAX_LOGGED_CALLBACKS]
     )
+    if (more := len(report["callbacks"]) - MAX_LOGGED_CALLBACKS) > 0:
+        lines.append(f"  ... and {more} more callbacks")
     if report["slow"]:
         lines.append(f"Callbacks over {report['threshold_ms']} ms:")
         lines.extend(
@@ -271,4 +284,8 @@ def format_report(report: dict[str, Any]) -> str:
         )
     if report["errors"]:
         lines.append(f"Callbacks that could not be attributed: {report['errors']}")
+    if report["overflowed"]:
+        lines.append(
+            f"Callbacks counted under other callbacks, table full: {report['overflowed']}"
+        )
     return "\n".join(lines)

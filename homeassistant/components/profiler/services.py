@@ -291,12 +291,14 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     @callback
     def _async_unload_loop_timing() -> None:
         """End the timing with the entry; what it recorded goes to the log."""
-        if (ended := loop_timing) is not None:
+        # Restore Handle._run first: the report must not be able to stop that
+        ended = loop_timing
+        _async_end_loop_timing()
+        if ended is not None:
             _LOGGER.critical(
                 "Event loop timing stopped by unload\n%s",
                 format_report(_loop_timing_report(ended)),
             )
-        _async_end_loop_timing()
 
     def _loop_timing_report(timing: LoopTiming) -> dict[str, Any]:
         """Return the report with the integration behind each config entry."""
