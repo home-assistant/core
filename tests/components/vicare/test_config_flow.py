@@ -133,6 +133,33 @@ async def test_reauth_preserves_existing_data(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow updates the token of the existing entry."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "token": {"access_token": "old-access-token"},
+        },
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await _do_oauth_flow(hass, hass_client_no_auth, aioclient_mock, result)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert mock_config_entry.data["auth_implementation"] == DOMAIN
+    assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_dhcp_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
