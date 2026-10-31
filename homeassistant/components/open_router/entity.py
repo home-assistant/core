@@ -35,7 +35,7 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
 from . import OpenRouterConfigEntry
-from .const import CONF_WEB_SEARCH, DOMAIN, LOGGER
+from .const import CONF_REASONING, CONF_WEB_SEARCH, DOMAIN, LOGGER
 from .schema import adjust_schema
 
 MAX_TOOL_ITERATIONS = 10
@@ -293,6 +293,15 @@ class OpenRouterEntity(Entity):
         extra_body: dict[str, Any] = {"provider": {"require_parameters": True}}
         if force_image:
             extra_body["modalities"] = ["image", "text"]
+        match self.subentry.data.get(CONF_REASONING):
+            case "off":
+                extra_body["reasoning"] = {"enabled": False}
+            case "on":
+                extra_body["reasoning"] = {"enabled": True}
+            case None | "auto":
+                pass
+            case effort:
+                extra_body["reasoning"] = {"effort": effort}
 
         tools: list[ChatCompletionFunctionToolParam | dict[str, Any]] = []
         if chat_log.llm_api:
