@@ -48,7 +48,6 @@ from .const import (
     DOMAIN,
     LEGACY_HACS_INTEGRATION_REPOSITORY,
     RESTART_ISSUE_PREFIX,
-    TV,
     WARNING_VERSION,
 )
 from .coordinator import MarketplaceUpdateCoordinator
@@ -602,30 +601,30 @@ class MarketplaceManager:
         return 0
 
     @overload
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: Literal[True] = True,
         **kwargs: Any,
-    ) -> TV: ...
+    ) -> T: ...
 
     @overload
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: bool,
         **kwargs: Any,
-    ) -> TV | None: ...
+    ) -> T | None: ...
 
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: bool = True,
         **kwargs: Any,
-    ) -> Any:
+    ) -> T | None:
         """Call a GitHub API method.
 
         Without a connected account the call is anonymous, a refusal then only
