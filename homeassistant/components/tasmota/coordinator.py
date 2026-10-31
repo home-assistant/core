@@ -23,7 +23,7 @@ type TasmotaConfigEntry = ConfigEntry[TasmotaLatestReleaseUpdateCoordinator]
 class TasmotaLatestReleaseUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
     """Data update coordinator for Tasmota latest release info."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TasmotaConfigEntry) -> None:
         """Initialize the coordinator."""
         self.client = GitHubAPI(session=async_get_clientsession(hass))
         super().__init__(
@@ -45,7 +45,6 @@ class TasmotaLatestReleaseUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseM
             # Expected/transient, just wrap as failure
             raise UpdateFailed(ex) from ex
         except GitHubException as ex:
-            self.logger.exception("Unexpected GitHub exception")
             raise UpdateFailed(ex) from ex
         else:
             return response.data
