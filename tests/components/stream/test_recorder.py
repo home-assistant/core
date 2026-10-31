@@ -22,19 +22,28 @@ from homeassistant.components.stream.const import (
     OUTPUT_IDLE_TIMEOUT,
     RECORDER_PROVIDER,
 )
-from homeassistant.components.stream.core import Orientation, Part
+from homeassistant.components.stream.core import (
+    Orientation,
+    Part,
+    Segment as StreamSegment,
+)
 from homeassistant.components.stream.fmp4utils import find_box
+from homeassistant.components.stream.recorder import RecorderOutput
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    AUDIO_SAMPLE_RATE,
     DefaultSegment as Segment,
     assert_mp4_has_transform_matrix,
     dynamic_stream_settings,
+    generate_audio_frame,
     generate_h264_video,
     generate_h265_video,
+    generate_video,
+    generate_video_with_size_change,
     remux_with_audio,
 )
 
@@ -170,6 +179,223 @@ async def test_record_stream_h265_is_hvc1(hass: HomeAssistant, filename: str) ->
         assert recording.streams.video[0].codec_tag == "hvc1"
 
 
+SIZE_CHANGE = partial(
+    generate_video_with_size_change, "libx265", [(480, 320), (640, 480)], 3
+)
+
+
+# Keyframes at least every half second; the segments' first frames have
+# different composition offsets once read back
+H264_B_FRAMES = partial(
+    generate_video, "libx264", "mpegts", 6, options={"g": "12", "keyint_min": "12"}
+)
+
+
+def generate_h264_with_audio() -> BytesIO:
+    """Generate an MPEG-TS with B-frames and AAC audio.
+
+    The audio frames (1024 samples, the first one before the video) do not
+    line up with the keyframes.
+    """
+    video_source = av.open(H264_B_FRAMES())
+    video_packets = [
+        packet for packet in video_source.demux(video=0) if packet.dts is not None
+    ]
+    output = BytesIO()
+    container = av.open(output, mode="w", format="mpegts")
+    video_stream = container.add_stream_from_template(video_source.streams.video[0])
+    audio_stream = container.add_stream("aac", AUDIO_SAMPLE_RATE)
+    audio_packets = []
+    for index in range(round(6 * AUDIO_SAMPLE_RATE / 1024)):
+        frame = generate_audio_frame()
+        frame.pts = index * 1024
+        audio_packets.extend(audio_stream.encode(frame))
+    audio_packets.extend(audio_stream.encode(None))
+    start = video_packets[0].dts * video_packets[0].time_base
+    for packet in video_packets:
+        packet.stream = video_stream
+    for packet in audio_packets:
+        packet.pts = packet.dts = packet.pts + round(start / packet.time_base)
+        packet.stream = audio_stream
+    for packet in sorted(
+        video_packets + audio_packets, key=lambda packet: packet.dts * packet.time_base
+    ):
+        container.mux(packet)
+    container.close()
+    video_source.close()
+    output.seek(0)
+    return output
+
+
+def put_from_sequence(
+    first_sequence: int,
+) -> Callable[[RecorderOutput, StreamSegment], None]:
+    """Return a RecorderOutput.put that drops the segments before first_sequence."""
+    put = RecorderOutput.put
+
+    def put_segment(output: RecorderOutput, segment: StreamSegment) -> None:
+        if segment.sequence >= first_sequence:
+            put(output, segment)
+
+    return put_segment
+
+
+def recording_offsets(
+    source: bytes, recording: str
+) -> tuple[set[tuple[float, float]], list[float]]:
+    """Return how far the recording moved the source's video, in seconds.
+
+    The recorded video frames are matched to the source frames from the
+    source keyframe whose following frames have the same PTS - DTS. The set
+    holds the (PTS, DTS) offsets of the matched frames after the first one,
+    whose PTS the worker may change. The list holds the recorded audio times
+    that are not a source audio time moved by the first of those offsets.
+    """
+    timestamps = []
+    for data in (BytesIO(source), recording):
+        with av.open(data) as container:
+            timestamps.append(
+                [
+                    (
+                        packet.stream.type,
+                        packet.is_keyframe,
+                        packet.pts * packet.time_base,
+                        packet.dts * packet.time_base,
+                    )
+                    for packet in container.demux()
+                    if packet.size
+                ]
+            )
+    source_video, recorded_video = (
+        [packet[1:] for packet in packets if packet[0] == "video"]
+        for packets in timestamps
+    )
+    source_audio, recorded_audio = (
+        [pts for kind, _, pts, _ in packets if kind == "audio"]
+        for packets in timestamps
+    )
+    window = len(recorded_video) - 1
+    pattern = [pts - dts for _, pts, dts in recorded_video[1:]]
+    start = next(
+        (
+            index
+            for index, (key, _, _) in enumerate(source_video)
+            if key
+            and [
+                pts - dts
+                for _, pts, dts in source_video[index + 1 : index + 1 + window]
+            ]
+            == pattern
+        ),
+        None,
+    )
+    assert start is not None, "recorded video does not match the source"
+    video = {
+        (round(float(pts - src_pts), 4), round(float(dts - src_dts), 4))
+        for (_, pts, dts), (_, src_pts, src_dts) in zip(
+            recorded_video[1:], source_video[start + 1 :], strict=False
+        )
+    }
+    offset = recorded_video[1][1] - source_video[start + 1][1]
+    audio = [
+        float(pts)
+        for pts in recorded_audio
+        if not any(abs(pts - offset - src_pts) < 0.001 for src_pts in source_audio)
+    ]
+    return video, audio
+
+
+@pytest.mark.parametrize(
+    ("generate_source", "min_segment_duration", "first_sequence"),
+    [
+        pytest.param(SIZE_CHANGE, 5.9, 0, id="h265-size-change"),
+        pytest.param(
+            partial(SIZE_CHANGE, change_at_dts_zero=True),
+            5.9,
+            0,
+            id="h265-size-change-negative-start",
+        ),
+        pytest.param(SIZE_CHANGE, 1.9, 0, id="h265-segment-before-size-change"),
+        pytest.param(
+            partial(SIZE_CHANGE, change_at_dts_zero=True),
+            1.9,
+            0,
+            id="h265-segment-before-size-change-negative-start",
+        ),
+        pytest.param(H264_B_FRAMES, 0.9, 0, id="h264-b-frames"),
+        pytest.param(generate_h264_with_audio, 0.9, 0, id="h264-b-frames-audio"),
+        # The first recorded keyframe has a composition offset
+        pytest.param(H264_B_FRAMES, 0.9, 1, id="h264-b-frames-later-start"),
+        # Audio also starts before the first recorded keyframe
+        pytest.param(
+            generate_h264_with_audio, 0.9, 1, id="h264-b-frames-audio-later-start"
+        ),
+    ],
+)
+async def test_record_stream_decode_times(
+    hass: HomeAssistant,
+    filename: str,
+    generate_source: Callable[[], BytesIO],
+    min_segment_duration: float,
+    first_sequence: int,
+) -> None:
+    """Test a recording keeps the source's timestamps across segments.
+
+    The worker gives the first keyframe a PTS equal to its DTS, unlike the
+    later keyframes, and a size change starts a new init.
+    """
+    worker_finished = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
+
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
+
+    source = await hass.async_add_executor_job(generate_source)
+    source_data = source.getvalue()
+    with (
+        patch("homeassistant.components.stream.Stream", wraps=MockStream),
+        patch.object(
+            hass.data[DOMAIN][ATTR_SETTINGS],
+            "min_segment_duration",
+            min_segment_duration,
+        ),
+    ):
+        stream = create_stream(hass, source, {}, dynamic_stream_settings())
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch.object(RecorderOutput, "put", put_from_sequence(first_sequence)),
+    ):
+        make_recording = hass.async_create_task(stream.async_record(filename))
+        await worker_finished.wait()
+
+        # Fire the IdleTimer
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+
+        await make_recording
+
+    # The recording continues past its first segment
+    with av.open(filename) as recording:
+        assert recording.start_time == 0
+        assert recording.duration / av.time_base > 3
+        dts = [packet.dts for packet in recording.demux(video=0) if packet.size]
+    # Decode times advance by one frame (24 fps, 90 kHz) across segments
+    assert {later - earlier for earlier, later in itertools.pairwise(dts)} == {3750}
+    video, audio = await hass.async_add_executor_job(
+        recording_offsets, source_data, filename
+    )
+    # Video presentation and decode times and audio move by one offset
+    assert len(video) == 1
+    ((offset, dts_offset),) = video
+    assert dts_offset == offset
+    assert audio == []
+
+
 async def test_record_lookback(hass: HomeAssistant, filename, h264_video) -> None:
     """Exercise record with lookback."""
 
@@ -233,15 +459,16 @@ def add_parts_to_segment(segment, source):
 
 
 async def test_recorder_discontinuity(
-    hass: HomeAssistant, filename, h264_video
+    hass: HomeAssistant, filename: str, h264_video: BytesIO
 ) -> None:
     """Test recorder save across a discontinuity."""
 
     # Run
-    segment_1 = Segment(sequence=1, stream_id=0)
+    # The worker records the PTS - DTS of the first frame, 2 frames in h264_video
+    segment_1 = Segment(sequence=1, stream_id=0, video_dts_shift=1024)
     add_parts_to_segment(segment_1, h264_video)
     segment_1.duration = 4
-    segment_2 = Segment(sequence=2, stream_id=1)
+    segment_2 = Segment(sequence=2, stream_id=1, video_dts_shift=1024)
     add_parts_to_segment(segment_2, h264_video)
     segment_2.duration = 4
 
@@ -280,6 +507,12 @@ async def test_recorder_discontinuity(
         await make_recording
     # Assert
     assert os.path.exists(filename)
+    with av.open(filename) as recording:
+        packets = [packet for packet in recording.demux(video=0) if packet.size]
+    # Each segment has 5 seconds of frames
+    first, second = packets[0], packets[len(packets) // 2]
+    assert (second.pts - first.pts) * first.time_base == 5
+    assert (second.dts - first.dts) * first.time_base == 5
 
 
 async def test_recorder_no_segments(hass: HomeAssistant, filename) -> None:

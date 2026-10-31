@@ -85,14 +85,18 @@ class HlsStreamOutput(StreamOutput):
     def _async_put(self, segment: Segment) -> None:
         """Async put and also update the target duration.
 
-        The target duration is calculated as the max duration of any given segment.
-        Technically it should not change per the hls spec, but some cameras adjust
-        their GOPs periodically so we need to account for this change.
+        The target duration is calculated as the max duration of any given segment,
+        at least the minimum segment duration: a segment cut at a parameter set
+        change can be shorter. Technically it should not change per the hls spec,
+        but some cameras adjust their GOPs periodically so we need to account for
+        this change.
         """
         super()._async_put(segment)
-        self._target_duration = (
-            max((s.duration for s in self._segments), default=segment.duration)
-            or self.stream_settings.min_segment_duration
+        self._target_duration = max(
+            [
+                self.stream_settings.min_segment_duration,
+                *(s.duration for s in self._segments),
+            ]
         )
 
     def discontinuity(self) -> None:
@@ -112,6 +116,32 @@ class HlsStreamOutput(StreamOutput):
                 self._segments.pop()
 
 
+def peak_bit_rate(segments: list[Segment], target_duration: float) -> float:
+    """Return the peak segment bit rate of complete segments (RFC 8216 4.1).
+
+    The peak is the highest bit rate of contiguous segments lasting 0.5 to 1.5
+    target durations; without such segments, the bit rate over all of them.
+    """
+    peak = 0.0
+    for start in range(len(segments)):
+        size = 0
+        duration = 0.0
+        for segment in segments[start:]:
+            size += segment.data_size_with_init
+            duration += segment.duration
+            if duration > 1.5 * target_duration:
+                break
+            if duration >= 0.5 * target_duration:
+                peak = max(peak, size * 8 / duration)
+    if peak:
+        return peak
+    return (
+        sum(s.data_size_with_init for s in segments)
+        * 8
+        / sum(s.duration for s in segments)
+    )
+
+
 class HlsMasterPlaylistView(StreamView):
     """Stream view used only for Chromecast compatibility."""
 
@@ -120,7 +150,7 @@ class HlsMasterPlaylistView(StreamView):
     cors_allowed = True
 
     @staticmethod
-    def render(track: StreamOutput) -> str:
+    def render(track: HlsStreamOutput) -> str:
         """Render M3U8 file."""
         # Need to calculate max bandwidth as
         # input_container.bit_rate doesn't seem to work.
@@ -129,7 +159,9 @@ class HlsMasterPlaylistView(StreamView):
         # hls spec already allows for 25% variation
         if not (segment := track.get_segment(track.sequences[-2])):
             return ""
-        bandwidth = round(segment.data_size_with_init * 8 / segment.duration * 1.2)
+        if not (complete := [s for s in track.get_segments() if s.complete]):
+            return ""
+        bandwidth = round(peak_bit_rate(complete, track.target_duration) * 1.2)
         codecs = get_codec_string(segment.init)
         lines = [
             "#EXTM3U",
@@ -143,7 +175,9 @@ class HlsMasterPlaylistView(StreamView):
         self, request: web.Request, stream: Stream, sequence: str, part_num: str
     ) -> web.Response:
         """Return m3u8 playlist."""
-        track = stream.add_provider(HLS_PROVIDER)
+        track: HlsStreamOutput = cast(
+            HlsStreamOutput, stream.add_provider(HLS_PROVIDER)
+        )
         await stream.start()
         # Make sure at least two segments are ready (last one may not be complete)
         if not track.sequences and not await track.recv():
@@ -183,7 +217,7 @@ class HlsPlaylistView(StreamView):
             "#EXTM3U",
             "#EXT-X-VERSION:6",
             "#EXT-X-INDEPENDENT-SEGMENTS",
-            '#EXT-X-MAP:URI="init.mp4"',
+            first_segment.render_hls_map(),
             f"#EXT-X-TARGETDURATION:{track.target_duration:.0f}",
             f"#EXT-X-MEDIA-SEQUENCE:{first_segment.sequence}",
             f"#EXT-X-DISCONTINUITY-SEQUENCE:{first_segment.stream_id}",
@@ -349,6 +383,7 @@ class HlsInitView(StreamView):
     """Stream view to serve HLS init.mp4."""
 
     url = r"/api/hls/{token:[a-f0-9]+}/init.mp4"
+    extra_urls = [r"/api/hls/{token:[a-f0-9]+}/init/{sequence:\d+}.mp4"]
     name = "api:stream:hls:init"
     cors_allowed = True
 
@@ -356,10 +391,15 @@ class HlsInitView(StreamView):
     async def handle(
         self, request: web.Request, stream: Stream, sequence: str, part_num: str
     ) -> web.Response:
-        """Return init.mp4."""
+        """Return init.mp4, or the init of a discontinuity sequence number."""
         track = stream.add_provider(HLS_PROVIDER)
-        if not (segments := track.get_segments()) or not (body := segments[0].init):
-            return web.HTTPNotFound()
+        segments = track.get_segments()
+        segment = next(
+            (s for s in segments if not sequence or s.stream_id == int(sequence)),
+            None,
+        )
+        if not segment or not (body := segment.init):
+            return web.Response(status=HTTPStatus.NOT_FOUND)
         return web.Response(
             body=transform_init(body, stream.dynamic_stream_settings.orientation),
             headers={"Content-Type": "video/mp4"},
