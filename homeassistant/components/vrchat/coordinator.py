@@ -1,5 +1,6 @@
 """Adapt library account updates to Home Assistant entities and devices."""
 
+from collections.abc import Awaitable, Callable
 import logging
 
 from vrchatapi.exceptions import UnauthorizedException
@@ -35,6 +36,7 @@ class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]])
         assert entry.unique_id is not None
         self.cookie_store = get_vrchat_auth_cookie_store(hass, entry.unique_id)
         self.client: VRChatAccount | None = None
+        self._prepare_user_removal: Callable[[str], Awaitable[None]] | None = None
 
     @property
     def available(self) -> bool:
@@ -53,6 +55,7 @@ class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]])
             entry.unique_id,
             on_user=self._user_updated,
             on_remove=self._user_removed,
+            before_user_remove=self._async_user_removing,
             on_available=self._availability_updated,
             on_auth_error=self._auth_error,
             on_authenticated=self._save_cookie,
@@ -88,9 +91,27 @@ class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]])
         self.async_set_updated_data(self.data)
 
     @callback
-    def _user_removed(self, user_id: str) -> None:
+    def async_register_user_removal_callback(
+        self, prepare: Callable[[str], Awaitable[None]]
+    ) -> Callable[[], None]:
+        """Register platform cleanup before committing SDK user removal."""
+        self._prepare_user_removal = prepare
+
+        @callback
+        def unsubscribe() -> None:
+            self._prepare_user_removal = None
+
+        return unsubscribe
+
+    async def _async_user_removing(self, user_id: str) -> None:
+        """Remove the device while entity access to the SDK user remains valid."""
+        if self._prepare_user_removal is not None:
+            await self._prepare_user_removal(user_id)
         if (device := self._device_entry(user_id)) is not None:
             self.device_registry.async_remove_device(device.id)
+
+    @callback
+    def _user_removed(self, user_id: str) -> None:
         self.async_set_updated_data(self.data)
 
     @callback

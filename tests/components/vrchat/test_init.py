@@ -894,7 +894,7 @@ async def test_device_rename_during_pending_entity_add(
 
     client = loaded_entry.runtime_data.client
     with patch.object(VRChatUserLocationSensor, "async_update", delayed_update):
-        client.set_user(NEW_FRIEND_USER.copy())
+        await client.async_set_user(NEW_FRIEND_USER.copy())
         await started.wait()
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, f"{CURRENT_USER_ID}:{NEW_FRIEND_USER_ID}"), loaded_entry.entry_id
@@ -952,10 +952,11 @@ async def test_delete_during_pending_entity_add(
 
     client = loaded_entry.runtime_data.client
     with patch.object(VRChatUserLocationSensor, "async_update", delayed_update):
-        client.set_user(NEW_FRIEND_USER.copy())
+        await client.async_set_user(NEW_FRIEND_USER.copy())
         await started.wait()
-        client.remove_user(NEW_FRIEND_USER_ID)
+        removal = client.request_remove_user(NEW_FRIEND_USER_ID)
         released.set()
+        await removal
         await hass.async_block_till_done()
     assert (
         device_registry.async_get_device_by_identifier(
@@ -989,10 +990,10 @@ async def test_immediate_readd_during_pending_entity_add(
 
     client = loaded_entry.runtime_data.client
     with patch.object(VRChatUserLocationSensor, "async_update", delayed_update):
-        client.set_user(NEW_FRIEND_USER.copy())
+        await client.async_set_user(NEW_FRIEND_USER.copy())
         await started.wait()
-        client.remove_user(NEW_FRIEND_USER_ID)
-        client.set_user(
+        client.request_remove_user(NEW_FRIEND_USER_ID)
+        await client.async_set_user(
             {**NEW_FRIEND_USER, "displayName": "Replacement", "status": "ask me"}
         )
         released.set()
@@ -1047,7 +1048,7 @@ async def test_hundred_friend_pushes_write_once_without_fetches(
     """Standard push notifications stay bounded and never poll user/world APIs."""
     client = loaded_entry.runtime_data.client
     for index in range(100):
-        client.set_user(
+        await client.async_set_user(
             {**FRIEND_USER, "id": f"usr_bulk_{index}", "displayName": f"Friend {index}"}
         )
     await hass.async_block_till_done()
@@ -1155,8 +1156,9 @@ async def test_friend_deleted_while_platform_setup_is_pending(
     ):
         setup = hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
         await started.wait()
-        entry.runtime_data.client.remove_user(FRIEND_USER_ID)
+        removal = entry.runtime_data.client.request_remove_user(FRIEND_USER_ID)
         released.set()
+        await removal
         assert await setup
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.LOADED
@@ -1197,7 +1199,7 @@ async def test_unload_cancels_pending_entity_registration(
 
     coordinator = loaded_entry.runtime_data
     with patch.object(VRChatUserLocationSensor, "async_update", delayed_update):
-        coordinator.client.set_user(NEW_FRIEND_USER.copy())
+        await coordinator.client.async_set_user(NEW_FRIEND_USER.copy())
         await started.wait()
         assert await hass.config_entries.async_unload(loaded_entry.entry_id)
         assert cancelled.is_set()
@@ -1249,7 +1251,7 @@ async def test_late_field_registers_while_location_add_is_pending(
             VRChatUserStatusDescriptionSensor, "async_added_to_hass", description_added
         ),
     ):
-        client.set_user(user)
+        await client.async_set_user(user)
         await started.wait()
         await client.handle_event(
             VRChatEvent(
@@ -1368,10 +1370,14 @@ async def test_friend_deleted_during_state_update(
         entity_registry, f"status.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
     )
 
+    removal: asyncio.Task[None] | None = None
+
     @callback
     def remove_friend(event: Event) -> None:
+        nonlocal removal
         remove_listener()
-        client.remove_user(FRIEND_USER_ID)
+        removal = client.request_remove_user(FRIEND_USER_ID)
+        assert FRIEND_USER_ID in client.users
 
     remove_listener = async_track_state_change_event(
         hass, status_entity_id, remove_friend
@@ -1382,12 +1388,179 @@ async def test_friend_deleted_during_state_update(
             {"userId": FRIEND_USER_ID, "user": {"status": "busy"}},
         )
     )
+    assert removal is not None
+    await removal
     await hass.async_block_till_done()
 
     assert FRIEND_USER_ID not in loaded_entry.runtime_data.data
     assert hass.states.get(status_entity_id) is None
     assert "Unexpected error updating listener" not in caplog.text
     assert "KeyError" not in caplog.text
-    client.set_user(FRIEND_USER.copy())
+    await client.async_set_user(FRIEND_USER.copy())
     await hass.async_block_till_done()
     assert hass.states.get(status_entity_id).state == "active"
+
+
+async def test_removal_cleans_framework_before_sdk_commit(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Cancel pending registration and remove the device before dropping user data."""
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+    prepared = asyncio.Event()
+    released = asyncio.Event()
+    client = loaded_entry.runtime_data.client
+    prepare = client.before_user_remove
+    original_update = VRChatUserLocationSensor.async_update
+
+    async def delayed_update(entity: VRChatUserLocationSensor) -> None:
+        started.set()
+        try:
+            await released.wait()
+            await original_update(entity)
+        finally:
+            cancelled.set()
+
+    async def assert_pre_commit(user_id: str) -> None:
+        assert user_id in client.users
+        await prepare(user_id)
+        assert cancelled.is_set()
+        assert not released.is_set()
+        assert user_id in client.users
+        assert not [
+            entry
+            for entry in entity_registry.entities.values()
+            if user_id in entry.unique_id
+        ]
+        assert (
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, f"{CURRENT_USER_ID}:{user_id}"), loaded_entry.entry_id
+            )
+            is None
+        )
+        assert len(hass.states.async_all(SENSOR_DOMAIN)) == 8
+        prepared.set()
+
+    with (
+        patch.object(VRChatUserLocationSensor, "async_update", delayed_update),
+        patch.object(client, "before_user_remove", assert_pre_commit),
+        patch.object(
+            device_registry,
+            "async_remove_device",
+            wraps=device_registry.async_remove_device,
+        ) as remove_device,
+    ):
+        await client.async_set_user(NEW_FRIEND_USER.copy())
+        await started.wait()
+        await client.async_remove_user(NEW_FRIEND_USER_ID)
+        remove_device.assert_called_once()
+        assert prepared.is_set()
+        assert NEW_FRIEND_USER_ID not in client.users
+    released.set()
+    await hass.async_block_till_done()
+
+
+async def test_removing_pending_friend_preserves_shared_world_fetch(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Cancelling one pending location must not cancel another friend's world fetch."""
+    fetch_started = asyncio.Event()
+    fetch_released = asyncio.Event()
+    location_started = asyncio.Event()
+    client = loaded_entry.runtime_data.client
+    original_update = VRChatUserLocationSensor.async_update
+
+    async def fetch_world(world_id: str) -> World:
+        fetch_started.set()
+        await fetch_released.wait()
+        return {"id": world_id, "name": "Shared world"}
+
+    async def track_location(entity: VRChatUserLocationSensor) -> None:
+        location_started.set()
+        await original_update(entity)
+
+    with (
+        patch.object(client.api, "get_world", fetch_world),
+        patch.object(VRChatUserLocationSensor, "async_update", track_location),
+    ):
+        await client.handle_event(
+            VRChatEvent(
+                "friend-location",
+                {
+                    "userId": FRIEND_USER_ID,
+                    "user": {"status": "active"},
+                    "location": "wrld_shared:instance",
+                },
+            )
+        )
+        await fetch_started.wait()
+        await client.async_set_user(
+            {
+                **NEW_FRIEND_USER,
+                "location": "wrld_shared:instance",
+                "worldId": "wrld_shared",
+                "instanceId": "instance",
+            }
+        )
+        await location_started.wait()
+        world = client.users[FRIEND_USER_ID].world
+        assert client.users[NEW_FRIEND_USER_ID].world is world
+        await client.async_remove_user(NEW_FRIEND_USER_ID)
+        assert not world.task.done()
+        fetch_released.set()
+        await hass.async_block_till_done()
+
+    entity_id = _entity_id(
+        entity_registry, f"location.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
+    )
+    assert hass.states.get(entity_id).state == "Shared world"
+    assert not [
+        entry
+        for entry in entity_registry.entities.values()
+        if NEW_FRIEND_USER_ID in entry.unique_id
+    ]
+
+
+async def test_unload_during_pending_user_removal(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Unload finishes cleanup even while SDK removal awaits a cancelled add."""
+    started = asyncio.Event()
+    cancelling = asyncio.Event()
+    released = asyncio.Event()
+    coordinator = loaded_entry.runtime_data
+    client = coordinator.client
+
+    async def delayed_update(entity: VRChatUserLocationSensor) -> None:
+        started.set()
+        try:
+            await released.wait()
+        except asyncio.CancelledError:
+            cancelling.set()
+            await released.wait()
+            raise
+
+    with patch.object(VRChatUserLocationSensor, "async_update", delayed_update):
+        await client.async_set_user(NEW_FRIEND_USER.copy())
+        await started.wait()
+        removal = client.request_remove_user(NEW_FRIEND_USER_ID)
+        await cancelling.wait()
+        assert NEW_FRIEND_USER_ID in client.users
+        assert not removal.done()
+        assert await hass.config_entries.async_unload(loaded_entry.entry_id)
+        released.set()
+        await asyncio.gather(removal, return_exceptions=True)
+        await hass.async_block_till_done()
+
+    assert loaded_entry.state is ConfigEntryState.NOT_LOADED
+    assert not coordinator._listeners
+    assert coordinator._prepare_user_removal is None
+    assert not loaded_entry._tasks
+    assert client.closed
+    assert removal.done()

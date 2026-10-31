@@ -3,7 +3,6 @@
 import asyncio
 from typing import cast, override
 
-from vrchatapi.highlevel import VRChatUser
 from vrchatapi.highlevel.presence import (
     VRCHAT_WORLD_ID_PREFIX,
     VRChatSpecialLocationString,
@@ -17,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
@@ -51,96 +49,51 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     coordinator.async_register_account_device()
     platform = async_get_current_platform()
-    entity_registry = er.async_get(hass)
-    known_users: dict[str, VRChatUser] = {}
-    known_entities: dict[
-        str, dict[type[VRChatUserDataSensorEntity], VRChatUserDataSensorEntity]
-    ] = {}
+    known_sensor_types: dict[str, set[type[VRChatUserDataSensorEntity]]] = {}
     pending: set[asyncio.Task[None]] = set()
     user_tasks: dict[str, set[asyncio.Task[None]]] = {}
-    retiring: set[str] = set()
+    removing: set[str] = set()
     stopped = False
 
     async def async_add_user_entities(
         user_id: str,
-        user: VRChatUser,
         entities: list[VRChatUserDataSensorEntity],
     ) -> None:
-        """Add independent sensor batches without waiting for location metadata."""
+        """Add a batch independently of other pending location metadata."""
         try:
-            if coordinator.data.get(user_id) is user and user_id not in retiring:
-                await platform.async_add_entities(entities, update_before_add=True)
+            await platform.async_add_entities(entities, update_before_add=True)
         except asyncio.CancelledError:
-            if user_id not in retiring:
+            if user_id not in removing:
                 raise
 
-    async def async_remove_user_entities(
-        user_id: str,
-        tasks: tuple[asyncio.Task[None], ...],
-        removals: list[asyncio.Task[None]],
-    ) -> None:
-        """Finish a deleted generation before the same user can be discovered again."""
-        try:
-            await _async_cancel_discovery_tasks(tasks)
-            await asyncio.gather(*removals)
-            for entity in known_entities.pop(user_id).values():
-                if entity_registry.async_get(entity.entity_id) is not None:
-                    entity_registry.async_remove(entity.entity_id)
-                if platform.entities.get(entity.entity_id) is entity:
-                    await entity.async_remove(force_remove=True)
-            known_users.pop(user_id)
-        finally:
-            retiring.discard(user_id)
-        async_add_new_entities()
+    async def async_prepare_user_removal(user_id: str) -> None:
+        """Finish pending registration before the SDK commits removal."""
+        removing.add(user_id)
+        await _async_cancel_discovery_tasks(tuple(user_tasks.pop(user_id, ())))
+        known_sensor_types.pop(user_id, None)
 
     @callback
     def async_add_new_entities() -> None:
         if stopped:
             return
-        for user_id, user in list(known_users.items()):
-            if user_id in retiring or coordinator.data.get(user_id) is user:
-                continue
-            retiring.add(user_id)
-            add_tasks = tuple(user_tasks.pop(user_id, ()))
-            for task in add_tasks:
-                task.cancel()
-            # Retire live entities before the coordinator invokes remaining listeners.
-            removals = [
-                config_entry.async_create_task(
-                    hass,
-                    entity.async_remove(force_remove=True),
-                    f"Remove VRChat entity {entity.entity_id}",
-                    eager_start=True,
-                )
-                for entity in known_entities[user_id].values()
-                if platform.entities.get(entity.entity_id) is entity
-            ]
-            task = config_entry.async_create_task(
-                hass,
-                async_remove_user_entities(user_id, add_tasks, removals),
-                f"Remove VRChat entities for {user_id}",
-                eager_start=False,
-            )
-            pending.add(task)
-            task.add_done_callback(pending.discard)
-
+        removing.intersection_update(coordinator.data)
+        for user_id in known_sensor_types.keys() - coordinator.data.keys():
+            known_sensor_types.pop(user_id)
         for user_id, user in coordinator.data.items():
-            if user_id in retiring:
+            if user_id in removing:
                 continue
-            known_users[user_id] = user
-            entities = known_entities.setdefault(user_id, {})
+            sensor_types = known_sensor_types.setdefault(user_id, set())
             new_entities: list[VRChatUserDataSensorEntity] = []
             for sensor_class in SENSOR_CLASSES:
-                if sensor_class not in entities and sensor_class.should_add(
+                if sensor_class not in sensor_types and sensor_class.should_add(
                     user, user_id == config_entry.unique_id
                 ):
-                    entity = sensor_class(coordinator, user_id)
-                    entities[sensor_class] = entity
-                    new_entities.append(entity)
+                    sensor_types.add(sensor_class)
+                    new_entities.append(sensor_class(coordinator, user_id))
             if new_entities:
                 task = config_entry.async_create_task(
                     hass,
-                    async_add_user_entities(user_id, user, new_entities),
+                    async_add_user_entities(user_id, new_entities),
                     f"Add VRChat entities for {user_id}",
                     eager_start=False,
                 )
@@ -157,6 +110,9 @@ async def async_setup_entry(
         await _async_cancel_discovery_tasks(tuple(pending))
         pending.clear()
 
+    config_entry.async_on_unload(
+        coordinator.async_register_user_removal_callback(async_prepare_user_removal)
+    )
     config_entry.async_on_unload(coordinator.async_add_listener(async_add_new_entities))
     config_entry.async_on_unload(async_stop_discovery)
     async_add_new_entities()
