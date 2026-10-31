@@ -75,3 +75,16 @@ fetch_part:
       example: "0,1"
       selector:
         text:
+
+search:
+  fields:
+    entry:
+      required: true
+      selector:
+        config_entry:
+          integration: "imap"
+    search_command:
+      required: true
+      example: "Unseen Undeleted"
+      selector:
+        text:
