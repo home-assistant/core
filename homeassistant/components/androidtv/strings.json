@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_unique_id": "Impossible to determine a valid unique ID for the device"
+      "invalid_unique_id": "Impossible to determine a valid unique ID for the device",
+      "unique_id_mismatch": "The device at this address is not the device configured for this entry."
     },
     "error": {
       "adbkey_not_file": "ADB key file not found",
@@ -12,6 +13,22 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "adb_server_ip": "[%key:component::androidtv::config::step::user::sections::more_options::data::adb_server_ip%]",
+              "adb_server_port": "[%key:component::androidtv::config::step::user::sections::more_options::data::adb_server_port%]",
+              "adbkey": "[%key:component::androidtv::config::step::user::sections::more_options::data::adbkey%]"
+            },
+            "name": "[%key:component::androidtv::config::step::user::sections::more_options::name%]"
+          }
+        }
+      },
       "user": {
         "data": {
           "device_class": "The type of device",
