@@ -69,3 +69,19 @@ async def test_options_flow_reflects_previously_hidden_sources(
 
     (field,) = result["data_schema"].schema
     assert field.default() == ["net_radio"]
+
+
+async def test_options_flow_aborts_when_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_musiccast_device,
+) -> None:
+    """Test the options flow aborts if the entry is not loaded."""
+    await _setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"

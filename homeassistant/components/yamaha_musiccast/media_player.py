@@ -37,7 +37,7 @@ from .const import (
     NULL_GROUP,
 )
 from .coordinator import MusicCastConfigEntry
-from .entity import MusicCastDeviceEntity
+from .entity import MusicCastDeviceEntity, get_source_label
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,18 +161,11 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def source_mapping(self):
         """Return a mapping of source names to MusicCast App labels."""
-        ret = {}
-        for inp in self.coordinator.data.zones[self._zone_id].input_list:
-            label = self.coordinator.data.input_names.get(inp, "")
-            if inp != label and (
-                label in self.coordinator.data.zones[self._zone_id].input_list
-                or list(self.coordinator.data.input_names.values()).count(label) > 1
-            ):
-                label += f" ({inp})"
-            if label == "":
-                label = inp
-            ret[inp] = label
-        return ret
+        input_list = self.coordinator.data.zones[self._zone_id].input_list
+        return {
+            inp: get_source_label(self.coordinator.data.input_names, input_list, inp)
+            for inp in input_list
+        }
 
     @property
     def reverse_source_mapping(self):

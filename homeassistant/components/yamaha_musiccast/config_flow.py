@@ -10,6 +10,7 @@ import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -32,6 +33,7 @@ from .const import (
     CONF_UPNP_DESC,
     DOMAIN,
 )
+from .entity import get_source_label
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,13 +164,19 @@ class MusicCastOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage which sources are displayed."""
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
         coordinator = self.config_entry.runtime_data
 
         source_labels: dict[str, str] = {}
         for zone in coordinator.data.zones.values():
             for inp in zone.input_list:
                 source_labels.setdefault(
-                    inp, coordinator.data.input_names.get(inp, inp)
+                    inp,
+                    get_source_label(
+                        coordinator.data.input_names, zone.input_list, inp
+                    ),
                 )
 
         if user_input is not None:

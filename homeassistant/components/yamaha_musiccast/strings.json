@@ -25,18 +25,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "displayed_sources": "Displayed sources"
-        },
-        "data_description": {
-          "displayed_sources": "Inputs selected here appear in the source list on this receiver's media players. Unselect an input to hide it."
-        }
-      }
-    }
-  },
   "entity": {
     "media_player": {
       "zone": {
@@ -164,6 +152,21 @@
           "auto": "[%key:common::state::auto%]",
           "bypass": "Bypass",
           "manual": "[%key:common::state::manual%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "entry_not_loaded": "The options can be changed once the device has been set up."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "displayed_sources": "Displayed sources"
+        },
+        "data_description": {
+          "displayed_sources": "Inputs selected here appear in the source list on this receiver's media players. Unselect an input to hide it."
         }
       }
     }
