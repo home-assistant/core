@@ -1,5 +1,6 @@
 """Define tests for the GeoNet NZ Volcano config flow."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.geonetnz_volcano import DOMAIN
@@ -52,7 +53,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: "metric",
-        CONF_SCAN_INTERVAL: 240,
+        CONF_SCAN_INTERVAL: timedelta(minutes=4),
     }
 
     with (
@@ -105,4 +106,5 @@ async def test_step_user(hass: HomeAssistant) -> None:
             CONF_LONGITUDE: 174.7,
             CONF_RADIUS: 25,
             CONF_UNIT_SYSTEM: "metric",
+            CONF_SCAN_INTERVAL: 300.0,
         }

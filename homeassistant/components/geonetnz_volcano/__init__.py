@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
     UnitOfLength,
 )
@@ -41,6 +42,9 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): probatio.Coerce(
                     float
                 ),
+                probatio.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): cv.time_period,
             }
         )
     },
@@ -59,6 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
+    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     identifier = f"{latitude}, {longitude}"
     if identifier in configured_instances(hass):
@@ -72,6 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
                 CONF_RADIUS: conf[CONF_RADIUS],
+                CONF_SCAN_INTERVAL: scan_interval,
             },
         )
     )
