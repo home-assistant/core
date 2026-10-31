@@ -1,12 +1,18 @@
 """Tests for the Tasmota update platform."""
 
 import copy
+from datetime import timedelta
 import json
 from unittest.mock import AsyncMock, patch
 
-from aiogithubapi import GitHubReleaseModel
+from aiogithubapi import (
+    GitHubConnectionException,
+    GitHubRatelimitException,
+    GitHubReleaseModel,
+)
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
 from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
@@ -16,7 +22,7 @@ from homeassistant.components.update import (
     ATTR_RELEASE_URL,
     DATA_COMPONENT,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -115,3 +121,85 @@ async def test_device_update_entity(
     assert result
     assert "<picture>" not in result
     assert "# RELEASE NOTES" in result
+
+
+@pytest.fixture
+def mock_github_latest_release_failure(request: pytest.FixtureRequest) -> AsyncMock:
+    """Mock the GitHub release API to fail or return an empty response."""
+    mock: AsyncMock = AsyncMock(**request.param)
+
+    with patch(
+        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.latest",
+        new=mock,
+    ):
+        yield mock
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release_failure",
+    [
+        pytest.param(
+            {"side_effect": GitHubConnectionException("Unable to connect")},
+            id="connection_error",
+        ),
+        pytest.param(
+            {"side_effect": GitHubRatelimitException("Rate limit exceeded")},
+            id="ratelimit_error",
+        ),
+        pytest.param({"return_value": AsyncMock(data=None)}, id="empty_response"),
+    ],
+    indirect=["mock_github_latest_release_failure"],
+)
+async def test_device_update_entity_github_failure(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_github_latest_release_failure: AsyncMock,
+) -> None:
+    """Test the update entity handles GitHub outages, rate limits and empty responses."""
+    await setup_tasmota_helper(hass)
+
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.UPDATE, DOMAIN, dr.format_mac(mac)
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # When the API recovers, the entity becomes available again
+    mock_github_latest_release_failure.side_effect = None
+    mock_github_latest_release_failure.return_value = AsyncMock(
+        data=GitHubReleaseModel(
+            {
+                "tag_name": "v14.6.0",
+                "name": "Tasmota 14.6.0",
+                "html_url": "https://github.com/arendst/Tasmota/releases/tag/v14.6.0",
+                "body": "",
+            }
+        )
+    )
+    freezer.tick(timedelta(days=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == DEFAULT_CONFIG["sw"]
+    assert state.attributes[ATTR_LATEST_VERSION] == "14.6.0"
+    assert state.attributes[ATTR_RELEASE_URL] == (
+        "https://github.com/arendst/Tasmota/releases/tag/v14.6.0"
+    )
