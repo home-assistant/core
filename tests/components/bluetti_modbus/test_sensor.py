@@ -1,8 +1,8 @@
 """Tests for the BLUETTI Modbus sensor entities."""
 
-from bluetti_modbus_lib import PvType, get_device
+from bluetti_modbus_lib import AGGREGATE_SLAVE_ID, PvType, get_device
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -21,6 +21,9 @@ from . import setup_integration
 INVERTER_POWER_ENTITY = "sensor.balco_260_total_inverter_power"
 PV_AC_ENERGY_ENTITY = "sensor.balco_260_pv_ac_energy"
 PV_1_TYPE_ENTITY = "sensor.balco_260_pv_1_input_type"
+BATTERY_STATUS_ENTITY = "sensor.balco_260_battery_status"
+TIME_TO_FULL_ENTITY = "sensor.balco_260_time_to_full_charge"
+TIME_TO_EMPTY_ENTITY = "sensor.balco_260_time_to_empty"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -115,3 +118,62 @@ async def test_pv_input_type_states(
 def test_pv_input_type_states_cover_the_library_enum() -> None:
     """A PV input type added to the library needs a state here first."""
     assert sorted(member.value for member in PvType) == [0, 1, 2, 3, 100, 101]
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        pytest.param(0, "idle", id="idle"),
+        pytest.param(1, "charging", id="charging"),
+        pytest.param(2, "discharging", id="discharging"),
+        pytest.param(7, STATE_UNKNOWN, id="undecoded"),
+    ],
+)
+async def test_battery_status_states(
+    hass: HomeAssistant,
+    mock_modbus_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    raw: int,
+    expected: str,
+) -> None:
+    """Every battery status the pack summary reports maps to a declared state."""
+    field = get_device("balco260").get_field("b_status")
+    assert field is not None
+    mock_modbus_connection.for_unit(AGGREGATE_SLAVE_ID).holding[field.address] = raw
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(BATTERY_STATUS_ENTITY)
+    assert state is not None
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("status", "time_to_full", "time_to_empty"),
+    [
+        pytest.param(1, "120", STATE_UNKNOWN, id="charging"),
+        pytest.param(2, STATE_UNKNOWN, "4446", id="discharging"),
+        pytest.param(0, STATE_UNKNOWN, STATE_UNKNOWN, id="idle"),
+    ],
+)
+async def test_time_estimates_follow_the_battery_status(
+    hass: HomeAssistant,
+    mock_modbus_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    status: int,
+    time_to_full: str,
+    time_to_empty: str,
+) -> None:
+    """Each time estimate is only shown in the status the device updates it in."""
+    field = get_device("balco260").get_field("b_status")
+    assert field is not None
+    mock_modbus_connection.for_unit(AGGREGATE_SLAVE_ID).holding[field.address] = status
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(TIME_TO_FULL_ENTITY)
+    assert state is not None
+    assert state.state == time_to_full
+    state = hass.states.get(TIME_TO_EMPTY_ENTITY)
+    assert state is not None
+    assert state.state == time_to_empty
