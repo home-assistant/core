@@ -16,6 +16,7 @@ from pyecobee import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -49,14 +50,14 @@ def _credentials_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-_DEFAULT_THERMOSTATS = object()
+_DEFAULT_THERMOSTATS = sentinel("_DEFAULT_THERMOSTATS")
 
 
 def _build_mock_ecobee(
     *,
     refresh_returns: bool = True,
     config: dict | None = None,
-    thermostats: list | None = _DEFAULT_THERMOSTATS,
+    thermostats: list | _DEFAULT_THERMOSTATS | None = _DEFAULT_THERMOSTATS,
 ) -> MagicMock:
     """Return a MagicMock shaped like a successfully-refreshed pyecobee.Ecobee."""
     ecobee = MagicMock()
