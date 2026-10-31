@@ -23,6 +23,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_MAX_HUMIDITY,
     ATTR_MAX_TEMP,
@@ -42,6 +43,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     SWING_BOTH,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID
@@ -99,6 +101,47 @@ async def test_climate_entity(
         [call(key=1, target_temperature=25.0, device_id=0)]
     )
     mock_client.climate_command.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("action", "hvac_action"),
+    [
+        (ClimateAction.OFF, HVACAction.OFF),
+        (ClimateAction.COOLING, HVACAction.COOLING),
+        (ClimateAction.HEATING, HVACAction.HEATING),
+        (ClimateAction.IDLE, HVACAction.IDLE),
+        (ClimateAction.DRYING, HVACAction.DRYING),
+        (ClimateAction.FAN, HVACAction.FAN),
+        (ClimateAction.DEFROSTING, HVACAction.DEFROSTING),
+    ],
+)
+async def test_climate_entity_hvac_action(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    action: ClimateAction,
+    hvac_action: HVACAction,
+) -> None:
+    """Test every ESPHome climate action is mapped to an HVAC action."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            supported_modes=[ClimateMode.HEAT],
+            feature_flags=ClimateFeature.SUPPORTS_ACTION,
+        )
+    ]
+    states = [ClimateState(key=1, mode=ClimateMode.HEAT, action=action)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_HVAC_ACTION] == hvac_action
 
 
 async def test_climate_entity_with_step_and_two_point(
