@@ -4,7 +4,8 @@ from typing import Any
 
 import probatio
 
-from homeassistant.auth.models import User
+from homeassistant.auth.models import Group, User
+from homeassistant.auth.permissions import POLICY_SCHEMA
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
@@ -16,6 +17,10 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_delete)
     websocket_api.async_register_command(hass, websocket_create)
     websocket_api.async_register_command(hass, websocket_update)
+    websocket_api.async_register_command(hass, websocket_group_list)
+    websocket_api.async_register_command(hass, websocket_group_create)
+    websocket_api.async_register_command(hass, websocket_group_update)
+    websocket_api.async_register_command(hass, websocket_group_delete)
     return True
 
 
@@ -160,6 +165,127 @@ async def websocket_update(
     connection.send_message(
         websocket_api.result_message(msg_id, {"user": _user_info(user)})
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({probatio.Required("type"): "config/auth/group/list"})
+@websocket_api.async_response
+async def websocket_group_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return a list of groups."""
+    result = [_group_info(g) for g in await hass.auth.async_get_groups()]
+
+    connection.send_message(websocket_api.result_message(msg["id"], result))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "config/auth/group/create",
+        probatio.Required("name"): str,
+        probatio.Required("policy"): POLICY_SCHEMA,
+    }
+)
+@websocket_api.async_response
+async def websocket_group_create(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Create a group."""
+    group = await hass.auth.async_create_group(msg["name"], msg["policy"])
+
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"group": _group_info(group)})
+    )
+
+
+async def _async_get_custom_group(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> Group | None:
+    """Return the custom group of a message, or send an error."""
+    if not (group := await hass.auth.async_get_group(msg["group_id"])):
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], websocket_api.ERR_NOT_FOUND, "Group not found"
+            )
+        )
+        return None
+
+    if group.system_generated:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"],
+                "cannot_modify_system_generated",
+                "Unable to modify system generated groups.",
+            )
+        )
+        return None
+
+    return group
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "config/auth/group/update",
+        probatio.Required("group_id"): str,
+        probatio.Optional("name"): str,
+        probatio.Optional("policy"): POLICY_SCHEMA,
+    }
+)
+@websocket_api.async_response
+async def websocket_group_update(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Update a group."""
+    if not (group := await _async_get_custom_group(hass, connection, msg)):
+        return
+
+    await hass.auth.async_update_group(
+        group, name=msg.get("name"), policy=msg.get("policy")
+    )
+
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"group": _group_info(group)})
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "config/auth/group/delete",
+        probatio.Required("group_id"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_group_delete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Delete a group."""
+    if not (group := await _async_get_custom_group(hass, connection, msg)):
+        return
+
+    await hass.auth.async_remove_group(group)
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+def _group_info(group: Group) -> dict[str, Any]:
+    """Format a group."""
+    return {
+        "id": group.id,
+        "name": group.name,
+        "policy": group.policy,
+        "system_generated": group.system_generated,
+    }
 
 
 def _user_info(user: User) -> dict[str, Any]:

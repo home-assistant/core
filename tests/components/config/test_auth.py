@@ -430,3 +430,151 @@ async def test_deactivate_system_generated(
     result = await client.receive_json()
     assert not result["success"], result
     assert result["error"]["code"] == "cannot_modify_system_generated"
+
+
+# Policies only grant access, so cameras are hidden by not listing their domain.
+NO_CAMERA_POLICY = {"entities": {"domains": {"light": True, "switch": True}}}
+
+
+@pytest.mark.parametrize(
+    "msg",
+    [
+        {"type": "config/auth/group/list"},
+        {"type": "config/auth/group/create", "name": "Guests", "policy": {}},
+        {"type": "config/auth/group/update", "group_id": "abc", "name": "Guests"},
+        {"type": "config/auth/group/delete", "group_id": "abc"},
+    ],
+)
+async def test_group_commands_require_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    msg: dict,
+) -> None:
+    """Test group commands require an admin."""
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await client.send_json({"id": 5, **msg})
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "unauthorized"
+
+
+async def test_group_crud(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test creating, listing, updating and deleting a custom group."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth/group/create",
+            "name": "Guests",
+            "policy": NO_CAMERA_POLICY,
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"], result
+    group_info = result["result"]["group"]
+    assert group_info["name"] == "Guests"
+    assert group_info["policy"] == NO_CAMERA_POLICY
+    assert group_info["system_generated"] is False
+    group_id = group_info["id"]
+
+    await client.send_json({"id": 6, "type": "config/auth/group/list"})
+    result = await client.receive_json()
+    assert result["success"], result
+    groups = {group["id"]: group for group in result["result"]}
+    assert groups[group_id] == group_info
+    assert groups["system-admin"]["system_generated"] is True
+
+    # Existing user update accepts custom group ids.
+    user = await hass.auth.async_create_user("Guest")
+    await client.send_json(
+        {
+            "id": 7,
+            "type": "config/auth/update",
+            "user_id": user.id,
+            "group_ids": [group_id],
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"], result
+    assert result["result"]["user"]["group_ids"] == [group_id]
+    assert not user.permissions.check_entity("camera.front_door", "read")
+    assert user.permissions.check_entity("light.kitchen", "read")
+
+    await client.send_json(
+        {
+            "id": 8,
+            "type": "config/auth/group/update",
+            "group_id": group_id,
+            "name": "Visitors",
+            "policy": {"entities": {"all": True}},
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"], result
+    assert result["result"]["group"]["name"] == "Visitors"
+    assert user.permissions.check_entity("camera.front_door", "read")
+
+    await client.send_json(
+        {"id": 9, "type": "config/auth/group/delete", "group_id": group_id}
+    )
+    result = await client.receive_json()
+    assert result["success"], result
+    assert await hass.auth.async_get_group(group_id) is None
+    assert user.groups == []
+
+
+async def test_group_create_invalid_policy(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test creating a group with an invalid policy fails."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth/group/create",
+            "name": "Guests",
+            "policy": {"entities": {"domains": {"camera": False}}},
+        }
+    )
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "invalid_format"
+
+
+@pytest.mark.parametrize(
+    "msg",
+    [
+        {"type": "config/auth/group/update", "name": "Hacked"},
+        {"type": "config/auth/group/delete"},
+    ],
+)
+@pytest.mark.parametrize(
+    ("group_id", "error_code"),
+    [
+        ("system-admin", "cannot_modify_system_generated"),
+        ("system-read-only", "cannot_modify_system_generated"),
+        ("system-users", "cannot_modify_system_generated"),
+        ("unknown", "not_found"),
+    ],
+)
+async def test_group_update_delete_errors(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    msg: dict,
+    group_id: str,
+    error_code: str,
+) -> None:
+    """Test system or unknown groups cannot be updated or deleted."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "group_id": group_id, **msg})
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == error_code
