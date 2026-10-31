@@ -131,7 +131,11 @@ class RestoreStateData:
         """Initialize the restore state data class."""
         self.hass: HomeAssistant = hass
         self.store = Store[list[dict[str, Any]]](
-            hass, STORAGE_VERSION, STORAGE_KEY, encoder=JSONEncoder
+            hass,
+            STORAGE_VERSION,
+            STORAGE_KEY,
+            encoder=JSONEncoder,
+            serialize_in_event_loop=False,
         )
         # Stored states of entities without an entity registry entry, indexed
         # by entity_id
