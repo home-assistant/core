@@ -12,7 +12,7 @@ from tplink_omada_client import (
     OmadaSiteClient,
     OmadaSwitchPortDetails,
 )
-from tplink_omada_client.clients import OmadaWirelessClient
+from tplink_omada_client.clients import OmadaNetworkClient, OmadaWirelessClient
 from tplink_omada_client.devices import (
     OmadaFirmwareUpdate,
     OmadaGateway,
@@ -21,13 +21,17 @@ from tplink_omada_client.devices import (
 )
 from tplink_omada_client.exceptions import OmadaClientException
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .config_flow import CONF_SITE
 from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
+    from .controller import OmadaSiteController
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +42,7 @@ POLL_DEVICES = 300
 POLL_CONTROLLER = 300
 POLL_CONTROLLER_UPDATE = 3600
 POLL_UPGRADE = 60
+POLL_KNOWN_CLIENTS = 3600
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
@@ -238,6 +243,43 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
         }
 
 
+class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaNetworkClient]):
+    """Coordinator for getting details about all clients known to the controller."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
+        """Initialize my coordinator."""
+        super().__init__(
+            hass,
+            config_entry,
+            omada_client,
+            "KnownClientsList",
+            POLL_KNOWN_CLIENTS,
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, OmadaNetworkClient]:
+        """Fetch known clients and remove trackers the controller dropped."""
+        clients = await super()._async_update_data()
+        if not clients:
+            # A successful but empty response is a controller glitch, not proof
+            # that every client is gone; keep the trackers.
+            return clients
+        cleanup_client_trackers(self.hass, self.config_entry.runtime_data, clients)
+        return clients
+
+    @override
+    async def poll_update(self) -> dict[str, OmadaNetworkClient]:
+        """Poll the site's all-time known clients."""
+        return {
+            client.mac: client async for client in self.omada_client.get_known_clients()
+        }
+
+
 class FirmwareUpdateStatus(NamedTuple):
     """Firmware update information for Omada SDN devices."""
 
@@ -302,3 +344,50 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         self._config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
         )
+
+
+@callback
+def cleanup_client_trackers(
+    hass: HomeAssistant,
+    controller: OmadaSiteController,
+    known_clients: dict[str, OmadaNetworkClient],
+) -> None:
+    """Remove tracker entities for clients missing from the controller list."""
+    # Trackers are created as scanner_<site>_<client.mac>, with the MAC taken
+    # from the same client list, so comparing unique IDs avoids parsing them.
+    config_entry = controller.known_clients_coordinator.config_entry
+    prefix = f"scanner_{config_entry.data[CONF_SITE]}_"
+    known_unique_ids = {f"{prefix}{mac}" for mac in known_clients}
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    for entity in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        if entity.domain != DEVICE_TRACKER_DOMAIN:
+            continue
+        if not entity.unique_id.startswith(prefix):
+            continue
+        if entity.unique_id in known_unique_ids:
+            continue
+        if entity.disabled_by is not er.RegistryEntryDisabler.INTEGRATION:
+            continue
+
+        # The tracker has a device of its own, and removing the device also
+        # removes the tracker. Keep a device that other entities share so they
+        # are not detached.
+        if (
+            (device_id := entity.device_id) is not None
+            and device_registry.async_get(device_id) is not None
+            and len(
+                er.async_entries_for_device(
+                    entity_registry,
+                    device_id,
+                    include_disabled_entities=True,
+                )
+            )
+            == 1
+        ):
+            device_registry.async_remove_device(device_id)
+            continue
+        entity_registry.async_remove(entity.entity_id)
