@@ -171,6 +171,7 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7454` | [`home-assistant-sequential-add-entities`](#w7454-home-assistant-sequential-add-entities) | Sequential `async_add_entities` calls should be grouped |
 
 ## `home_assistant_logger` checker
 
@@ -1230,6 +1231,23 @@ statements (uninterrupted by control flow such as `if`/`try`/`with`/`for`)
 should be combined into a single executor job that performs all the work,
 avoiding unnecessary context switches back to the event loop between
 blocking calls. The rule applies to integration modules only.
+
+
+## `home_assistant_sequential_add_entities` checker
+
+Detects consecutive `async_add_entities` calls in integration modules that
+could be grouped into a single call.
+
+### `W7454`: `home-assistant-sequential-add-entities`
+
+Two or more `async_add_entities` (or `add_entities`) calls appearing as
+consecutive statements (uninterrupted by control flow such as
+`if`/`try`/`with`/`for`) should be combined into a single call that adds all
+entities at once. Calls with different keyword arguments, such as a
+different `config_subentry_id` when adding entities for multiple subentries,
+cannot be combined and are not flagged. Only calls to the callback passed to
+the platform setup function are checked. The rule applies to integration
+modules only.
 
 
 ## `home_assistant_has_entity_name` checker
