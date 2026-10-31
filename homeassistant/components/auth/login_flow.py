@@ -77,7 +77,7 @@ from aiohttp import web
 import probatio
 
 from homeassistant import data_entry_flow
-from homeassistant.auth import AuthManagerFlowManager
+from homeassistant.auth import AuthManagerFlowManager, TooManyRequestsError
 from homeassistant.auth.models import AuthFlowContext, AuthFlowResult
 from homeassistant.components import onboarding
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -89,7 +89,9 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.network import (
     NoURLAvailableError,
     get_url,
@@ -419,6 +421,12 @@ class LoginFlowIndexView(LoginFlowBaseView):
             return self.json_message(
                 "Handler does not support init", HTTPStatus.BAD_REQUEST
             )
+        except TooManyRequestsError as err:
+            # Raised so log_invalid_auth doesn't count it as a failed login.
+            raise web.HTTPTooManyRequests(
+                text=json_dumps({"message": "Too many login flows in progress"}),
+                content_type=CONTENT_TYPE_JSON,
+            ) from err
 
         return await self._async_flow_result_to_response(request, client_id, result)
 
@@ -477,12 +485,23 @@ class LoginFlowResourceView(LoginFlowBaseView):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
         try:
-            # do not allow change ip during login flow
             flow = self._flow_mgr.async_get(flow_id)
-            if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
-                return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
+        except data_entry_flow.UnknownFlow as err:
+            # A flow that is gone, like an expired one, can't be guessed, so
+            # it is raised to keep log_invalid_auth from counting a failed login.
+            raise web.HTTPNotFound(
+                text=json_dumps({"message": "Invalid flow specified"}),
+                content_type=CONTENT_TYPE_JSON,
+            ) from err
+
+        # do not allow change ip during login flow
+        if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
+            return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
+
+        try:
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
+            # Removed while the step ran, so a failed check still counts.
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except probatio.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
