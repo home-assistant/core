@@ -32,7 +32,7 @@ from .const import DOMAIN
 from .entity import ViCareEntity
 from .services import HOLIDAY_PROGRAM_AT_HOME
 from .types import HeatingProgram, ViCareConfigEntry, ViCareDevice
-from .utils import get_burners, get_circuits, get_compressors
+from .utils import VICARE_API_ERRORS, get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -366,6 +366,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 translation_key="holiday_not_supported",
                 translation_placeholders={"program": program},
             ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from err
         return device.scheduleHoliday, device.unscheduleHoliday
 
     def schedule_holiday(self, program: str, start_date: date, end_date: date) -> None:
@@ -384,6 +388,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 translation_key="holiday_not_scheduled",
                 translation_placeholders={"error": err.message},
             ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from err
 
     def cancel_holiday(self, program: str) -> None:
         """Cancel a scheduled or running holiday program."""
@@ -395,4 +403,8 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="holiday_not_cancelled",
                 translation_placeholders={"error": err.message},
+            ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_error"
             ) from err
