@@ -67,5 +67,10 @@
         "default": "mdi:timer"
       }
     }
+  },
+  "services": {
+    "set_contracted_power": {
+      "service": "mdi:transmission-tower"
+    }
   }
 }

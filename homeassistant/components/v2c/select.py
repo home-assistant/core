@@ -5,13 +5,14 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from pytrydan import Trydan, TrydanData
-from pytrydan.models.trydan import ChargeMode
+from pytrydan.models.trydan import ChargeMode, DynamicPowerMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONF_PV_AVAILABLE
 from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
@@ -31,6 +32,29 @@ class V2CSelectEntityDescription(SelectEntityDescription):
 
 
 CHARGE_MODE_OPTIONS = [charge_mode_value(mode) for mode in ChargeMode]
+OPTION_TO_DYNAMIC_POWER_MODE = {
+    "profile": DynamicPowerMode.TIMED_POWER_ENABLED,
+    "pv_minimum": DynamicPowerMode.TIMED_POWER_DISABLED_AND_FV_MIN_MODE_SETTED,
+    "pv_exclusive": DynamicPowerMode.TIMED_POWER_DISABLED_AND_FV_EXCL_MODE_SETTED,
+    "pv_grid": DynamicPowerMode.TIMED_POWER_DISABLED_AND_FV_GRID_MODE_SETTED,
+    "stop": DynamicPowerMode.TIMED_POWER_DISABLED_AND_STOP_MODE_SETTED,
+}
+DYNAMIC_POWER_MODE_TO_OPTION = {v: k for k, v in OPTION_TO_DYNAMIC_POWER_MODE.items()}
+
+DYNAMIC_POWER_MODE_SELECT = V2CSelectEntityDescription(
+    key="dynamic_power_mode",
+    translation_key="dynamic_power_mode",
+    entity_category=EntityCategory.CONFIG,
+    options=list(OPTION_TO_DYNAMIC_POWER_MODE),
+    current_option_fn=lambda data: (
+        DYNAMIC_POWER_MODE_TO_OPTION.get(data.dynamic_power_mode)
+        if data.dynamic_power_mode is not None
+        else None
+    ),
+    update_fn=lambda evse, option: evse.dynamic_power_mode(
+        OPTION_TO_DYNAMIC_POWER_MODE[option]
+    ),
+)
 
 TRYDAN_SELECTS = (
     V2CSelectEntityDescription(
@@ -67,6 +91,18 @@ async def async_setup_entry(
         for description in TRYDAN_SELECTS
         if description.current_option_fn(data) is not None
     )
+
+    if (
+        config_entry.options.get(CONF_PV_AVAILABLE, False)
+        and data.dynamic_power_mode is not None
+    ):
+        async_add_entities(
+            [
+                V2CSelectEntity(
+                    coordinator, DYNAMIC_POWER_MODE_SELECT, config_entry.entry_id
+                )
+            ]
+        )
 
 
 class V2CSelectEntity(V2CBaseEntity, SelectEntity):

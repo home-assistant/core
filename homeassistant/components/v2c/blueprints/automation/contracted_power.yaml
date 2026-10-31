@@ -1,0 +1,91 @@
+blueprint:
+  name: V2C photovoltaic contracted power
+  description: >-
+    Automatically update the V2C charger's contracted power when its dynamic
+    power mode changes.
+
+    The charger uses the same setting for two purposes. In PV-exclusive mode,
+    it is the target grid balance: a negative value exports power, zero targets
+    no grid exchange, and a positive value allows grid import. In the other
+    supported modes, it is the contracted grid power for the household and
+    charger.
+
+    Select a separate number helper for each value. The automation applies the
+    appropriate helper when the mode changes, when the active helper changes,
+    and when Home Assistant starts. Other automations can update the contracted
+    power helper for peak and valley tariffs. Profile mode is not managed by
+    this automation.
+  domain: automation
+  source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/v2c/blueprints/automation/contracted_power.yaml
+  input:
+    mode_entity:
+      name: Dynamic power mode
+      selector:
+        entity:
+          filter:
+            - integration: v2c
+              domain: select
+    contracted_power:
+      name: Contracted power helper
+      description: Grid power limit for non-exclusive modes, normally in W or kW.
+      selector:
+        entity:
+          filter:
+            - domain: input_number
+            - domain: number
+    pv_balance:
+      name: PV-exclusive grid balance helper
+      description: Negative values export power; positive values permit grid import.
+      selector:
+        entity:
+          filter:
+            - domain: input_number
+            - domain: number
+
+mode: queued
+max: 50
+
+triggers:
+  - trigger: state
+    entity_id: !input mode_entity
+    to:
+    id: mode
+  - trigger: state
+    entity_id: !input contracted_power
+    to:
+    id: contracted_power
+  - trigger: state
+    entity_id: !input pv_balance
+    to:
+    id: pv_balance
+  - trigger: homeassistant
+    event: start
+    id: start
+
+actions:
+  - variables:
+      mode_entity: !input mode_entity
+      contracted_power: !input contracted_power
+      pv_balance: !input pv_balance
+      trigger_id: "{{ trigger.id | default('start') }}"
+      current_mode: "{{ states(mode_entity) }}"
+      active_helper: "{{ pv_balance if current_mode == 'pv_exclusive' else contracted_power }}"
+      unit: "{{ state_attr(active_helper, 'unit_of_measurement') }}"
+      multiplier: >-
+        {{ {'None': 1, '': 1, 'W': 1, 'mW': 0.001, 'kW': 1000,
+            'MW': 1000000, 'GW': 1000000000, 'TW': 1000000000000,
+            'BTU/h': 0.29307107}.get(unit | string) }}
+      charger: "{{ device_id(mode_entity) }}"
+  - condition: template
+    value_template: >-
+      {{ current_mode in ['pv_exclusive', 'pv_minimum', 'pv_grid', 'stop']
+         and (trigger_id in ['mode', 'start']
+              or (trigger_id == 'pv_balance' and current_mode == 'pv_exclusive')
+              or (trigger_id == 'contracted_power' and current_mode != 'pv_exclusive'))
+         and charger is not none
+         and is_number(states(active_helper))
+         and multiplier is not none }}
+  - action: v2c.set_contracted_power
+    data:
+      device_id: "{{ charger }}"
+      power: "{{ (states(active_helper) | float * multiplier | float) | round(0) | int }}"
