@@ -83,6 +83,8 @@ async def validate_ws(hass: HomeAssistant, data):
         await kodi.ping()
     except CannotConnectError as error:
         raise WSCannotConnect from error
+    finally:
+        await kwc.close()
 
 
 class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -277,6 +279,55 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=schema,
             description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection settings."""
+        errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            # optional ints return 0 rather than None when empty
+            data_updates = {
+                **user_input,
+                CONF_WS_PORT: user_input.get(CONF_WS_PORT) or None,
+            }
+            data = {**reconfigure_entry.data, **data_updates}
+            try:
+                await validate_http(self.hass, data)
+                await validate_ws(self.hass, data)
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotConnect, WSCannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=data_updates
+                )
+
+        schema = probatio.Schema(
+            {
+                probatio.Required(CONF_HOST): str,
+                probatio.Required(CONF_PORT): int,
+                probatio.Required(CONF_SSL): bool,
+                probatio.Optional(CONF_WS_PORT): int,
+                probatio.Optional(CONF_USERNAME): str,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+            }
+        )
+        suggested_values = {
+            **(user_input or reconfigure_entry.data),
+            CONF_PASSWORD: None,
+        }
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(schema, suggested_values),
             errors=errors,
         )
 
