@@ -3,8 +3,10 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
+from datetime import datetime
 import functools
 from itertools import chain
+import math
 from typing import Any, cast
 
 import probatio
@@ -269,17 +271,29 @@ async def ws_get_fossil_energy_consumption(
     statistic_ids = set(msg["energy_statistic_ids"])
     statistic_ids.add(msg["co2_statistic_id"])
 
+    # One clock snapshot for both synthesis and the CO₂ skip so an hour rollover
+    # during the executor job cannot desync them.
+    now = dt_util.utcnow()
+
+    def _get_statistics() -> tuple[datetime | None, dict[str, list[StatisticsRow]]]:
+        # Read the compile progress first, so an hour compiled in between is
+        # never mistaken for an uncompiled one
+        first_uncompiled_hour = recorder.statistics.get_first_uncompiled_hour(hass)
+        return first_uncompiled_hour, recorder.statistics.statistics_during_period(
+            hass,
+            start_time,
+            end_time,
+            statistic_ids,
+            "hour",
+            {"energy": UnitOfEnergy.KILO_WATT_HOUR},
+            {"mean", "change"},
+            now=now,
+        )
+
     # Fetch energy + CO2 statistics
-    statistics = await recorder.get_instance(hass).async_add_executor_job(
-        recorder.statistics.statistics_during_period,
-        hass,
-        start_time,
-        end_time,
-        statistic_ids,
-        "hour",
-        {"energy": UnitOfEnergy.KILO_WATT_HOUR},
-        {"mean", "change"},
-    )
+    first_uncompiled_hour, statistics = await recorder.get_instance(
+        hass
+    ).async_add_executor_job(_get_statistics)
 
     def _combine_change_statistics(
         stats: dict[str, list[StatisticsRow]], statistic_ids: list[str]
@@ -339,14 +353,24 @@ async def ws_get_fossil_energy_consumption(
         {
             period["start"]: period["mean"]
             for period in statistics.get(msg["co2_statistic_id"], {})
+            if period.get("mean") is not None
         },
     )
 
-    # Calculate amount of fossil based energy, assume 100% fossil if missing
-    fossil_energy = [
-        {"start": start, "delta": delta * indexed_co2_statistics.get(start, 100) / 100}
-        for start, delta in merged_energy_statistics.items()
-    ]
+    # Calculate amount of fossil based energy, assume 100% fossil if missing.
+    # Hours not compiled yet have no CO₂ mean yet, so skip them instead.
+    uncompiled_hours_start = (
+        first_uncompiled_hour.timestamp() if first_uncompiled_hour else math.inf
+    )
+    uncompiled_hours_end = now.replace(minute=0, second=0, microsecond=0).timestamp()
+    fossil_energy: list[dict[str, Any]] = []
+    for start, delta in merged_energy_statistics.items():
+        co2_percentage = indexed_co2_statistics.get(start)
+        if co2_percentage is None:
+            if uncompiled_hours_start <= start <= uncompiled_hours_end:
+                continue
+            co2_percentage = 100
+        fossil_energy.append({"start": start, "delta": delta * co2_percentage / 100})
 
     if msg["period"] == "hour":
         reduced_fossil_energy = [

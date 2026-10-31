@@ -1,5 +1,6 @@
 """Statistics helper."""
 
+from bisect import bisect_left
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
 import dataclasses
@@ -502,6 +503,20 @@ def get_start_time() -> datetime:
     current_period_minutes = now.minute - now.minute % 5
     current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
     return current_period - timedelta(minutes=5)
+
+
+def get_first_uncompiled_hour(hass: HomeAssistant) -> datetime | None:
+    """Return the start of the first hour not yet compiled to long-term statistics."""
+    with session_scope(hass=hass, read_only=True) as session:
+        last_run: datetime | None = session.query(
+            func.max(StatisticsRuns.start)
+        ).scalar()
+    if last_run is None:
+        return None
+    # The hourly statistics are compiled with the last 5-minute period of the hour
+    return (process_timestamp(last_run) + StatisticsShortTerm.duration).replace(
+        minute=0, second=0, microsecond=0
+    )
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
@@ -2094,6 +2109,113 @@ def _augment_result_with_change(
             prev_sum = _sum
 
 
+def _last_short_term_sum_stmt(
+    start_time_ts: float,
+    end_time_ts: float,
+    metadata_ids: list[int],
+) -> StatementLambdaElement:
+    """Latest short-term sum row per metadata_id in [start_time_ts, end_time_ts)."""
+    return lambda_stmt(
+        lambda: (
+            select(
+                subquery := (
+                    select(*QUERY_STATISTICS_SUMMARY_SUM)
+                    .filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+                    .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+                    .filter(StatisticsShortTerm.start_ts < end_time_ts)
+                    .subquery()
+                )
+            )
+            .filter(subquery.c.rownum == 1)
+            .order_by(subquery.c.metadata_id)
+        )
+    )
+
+
+def _synthesize_open_hours_from_short_term(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime | None,
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+    units: dict[str, str] | None,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    now: datetime | None,
+) -> dict[str, list[StatisticsRow]]:
+    """Build hourly sum rows from short-term statistics for not yet compiled hours.
+
+    Covers the unfinished current hour and the previous hour, whose long-term row
+    is only compiled shortly after it ends. Only sum/state/last_reset are filled so
+    a partial hour does not skew reduced mean/min/max aggregates. Uses the same
+    last-sum rule as ``_compile_hourly_statistics``.
+    """
+    if not types & {"sum", "state", "last_reset"}:
+        return {}
+    query_ids = [meta_id for meta_id, meta in metadata.values() if meta["has_sum"]]
+    if not query_ids:
+        return {}
+
+    current_hour_start = (now or dt_util.utcnow()).replace(
+        minute=0, second=0, microsecond=0
+    )
+    metadata_by_id = dict(metadata.values())
+    result: dict[str, list[StatisticsRow]] = defaultdict(list)
+    for hour_start in (current_hour_start - Statistics.duration, current_hour_start):
+        hour_start_ts = hour_start.timestamp()
+        hour_end_ts = (hour_start + Statistics.duration).timestamp()
+        # Match the long-term query bounds on the row start
+        if start_time.timestamp() > hour_start_ts or (
+            end_time is not None and end_time.timestamp() <= hour_start_ts
+        ):
+            continue
+        stats = execute_stmt_lambda_element(
+            session,
+            _last_short_term_sum_stmt(hour_start_ts, hour_end_ts, query_ids),
+            orm_rows=False,
+        )
+        for metadata_id, _start, last_reset_ts, state, _sum, _ in stats:
+            metadata_by_id_row = metadata_by_id[metadata_id]
+            statistic_id = metadata_by_id_row["statistic_id"]
+            unit_class = metadata_by_id_row["unit_class"]
+            state_unit = unit = metadata_by_id_row["unit_of_measurement"]
+            if ha_state := hass.states.get(statistic_id):
+                state_unit = ha_state.attributes.get(
+                    EntityStateAttribute.UNIT_OF_MEASUREMENT
+                )
+            convert = _get_statistic_to_display_unit_converter(
+                unit_class, unit, state_unit, units
+            )
+
+            stats_row: StatisticsRow = {"start": hour_start_ts, "end": hour_end_ts}
+            if "last_reset" in types:
+                stats_row["last_reset"] = last_reset_ts
+            if "state" in types:
+                stats_row["state"] = (
+                    None if state is None else convert(state) if convert else state
+                )
+            if "sum" in types:
+                stats_row["sum"] = (
+                    None if _sum is None else convert(_sum) if convert else _sum
+                )
+            result[statistic_id].append(stats_row)
+
+    return result
+
+
+def _insert_open_hours(
+    statistic_id: str,
+    stat_list: list[StatisticsRow],
+    open_hours: dict[str, list[StatisticsRow]],
+    reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None,
+) -> list[StatisticsRow]:
+    """Insert synthesized hours missing from long-term statistics, then reduce."""
+    for row in open_hours.get(statistic_id, ()):
+        index = bisect_left(stat_list, row["start"], key=itemgetter("start"))
+        if index == len(stat_list) or stat_list[index]["start"] != row["start"]:
+            stat_list.insert(index, row)
+    return reducer(statistic_id, stat_list) if reducer else stat_list
+
+
 def _statistics_during_period_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -2103,11 +2225,15 @@ def _statistics_during_period_with_session(
     period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    now: datetime | None = None,
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
+
+    For periods based on hourly long-term statistics, hours not yet compiled are
+    filled from short-term sum statistics before they are reduced.
     """
     if statistic_ids is not None and not isinstance(statistic_ids, set):
         # This is for backwards compatibility to avoid a breaking change
@@ -2183,17 +2309,29 @@ def _statistics_during_period_with_session(
     stmt = _generate_statistics_during_period_stmt(
         start_time, end_time, metadata_ids, table, types
     )
-    reducer: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None = None
+    reduce_period: Callable[[str, list[StatisticsRow]], list[StatisticsRow]] | None = (
+        None
+    )
     if factory := _REDUCE_TS_FACTORIES.get(period):
         # Reduce each statistic as soon as its rows are built so the hourly
         # rows of all statistics never have to be kept in memory at once
         same_period, period_start_end = factory()
-        reducer = partial(
+        reduce_period = partial(
             _reduce_statistic,
             same_period=same_period,
             period_start_end=period_start_end,
             types=types,
             metadata=metadata,
+        )
+    reducer = reduce_period
+    open_hours: dict[str, list[StatisticsRow]] = {}
+    if table is Statistics:
+        open_hours = _synthesize_open_hours_from_short_term(
+            hass, session, start_time, end_time, metadata, units, types, now
+        )
+    if open_hours:
+        reducer = partial(
+            _insert_open_hours, open_hours=open_hours, reducer=reduce_period
         )
     to_dict = partial(
         _sorted_statistics_to_dict,
@@ -2220,6 +2358,11 @@ def _statistics_during_period_with_session(
             Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
         )
         result = to_dict(rows, fields=stats.keys())
+    for statistic_id, hour_rows in open_hours.items():
+        if statistic_id not in result:
+            result[statistic_id] = (
+                reduce_period(statistic_id, hour_rows) if reduce_period else hour_rows
+            )
     if not result:
         return {}
 
@@ -2246,11 +2389,16 @@ def statistics_during_period(
     period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    *,
+    now: datetime | None = None,
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.
+
+    Optional ``now`` pins the unfinished current-hour synthesis to one clock
+    snapshot so callers can match that hour without a rollover race.
     """
     with session_scope(hass=hass, read_only=True) as session:
         return _statistics_during_period_with_session(
@@ -2262,6 +2410,7 @@ def statistics_during_period(
             period,
             units,
             types,
+            now=now,
         )
 
 
