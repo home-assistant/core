@@ -3,11 +3,13 @@
 from unittest.mock import MagicMock
 
 from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
+from egauge_async.json.models import RegisterInfo, RegisterType
 from httpx2 import ConnectError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.egauge.const import DOMAIN
+from homeassistant.components.egauge import config_flow
+from homeassistant.components.egauge.const import CONF_INVERT_REGISTERS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -238,3 +240,158 @@ async def test_reauth_flow_unique_id_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_PASSWORD] == "secret"
+
+
+async def test_options_flow_selects_inverted_registers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that the options flow stores the registers to invert."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_INVERT_REGISTERS: ["Grid"]},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options[CONF_INVERT_REGISTERS] == ["Grid"]
+
+
+async def test_options_flow_aborts_when_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow aborts when the entry has no runtime data yet."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_loaded"
+
+
+async def test_options_flow_offers_only_power_registers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the picker only offers registers whose reading can be inverted."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    select = result["data_schema"].schema[CONF_INVERT_REGISTERS]
+    assert select.config["options"] == ["Grid", "Solar"]
+
+
+async def test_options_flow_ignores_a_register_no_longer_present(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a stored register absent from the device is dropped, not re-saved."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_INVERT_REGISTERS: ["Gone"]},
+    )
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    select = result["data_schema"].schema[CONF_INVERT_REGISTERS]
+    assert "Gone" not in select.config["options"]
+
+    # Submit without overriding: the saved value is the form's own default.
+    # If the stale name were not filtered out of that default, it would be
+    # either rejected by the selector or saved here.
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options[CONF_INVERT_REGISTERS] == []
+
+
+async def test_options_flow_reads_registers_through_its_own_client(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_egauge_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the flow builds a client rather than reusing the coordinator's.
+
+    EgaugeJsonClient memoises its first register list, so reusing the
+    coordinator's client would return the setup-time snapshot and a register
+    removed from the device would stay selectable.
+    """
+    client_cls = config_flow.EgaugeJsonClient
+    calls_before = client_cls.call_count
+    # The device no longer reports Solar, which setup did.
+    mock_egauge_client.get_register_info.return_value = {
+        "Grid": RegisterInfo(name="Grid", type=RegisterType.POWER, idx=0, did=None)
+    }
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert client_cls.call_count == calls_before + 1
+    assert result["type"] is FlowResultType.FORM
+    select = result["data_schema"].schema[CONF_INVERT_REGISTERS]
+    assert select.config["options"] == ["Grid"]
+
+
+async def test_options_flow_does_not_offer_a_register_without_a_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_egauge_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a register added after setup is not offered.
+
+    Sensors are built once from the setup snapshot, so inverting a register
+    that arrived later would change nothing until the entry reloads.
+    """
+    mock_egauge_client.get_register_info.return_value = {
+        "Grid": RegisterInfo(name="Grid", type=RegisterType.POWER, idx=0, did=None),
+        "Main": RegisterInfo(name="Main", type=RegisterType.POWER, idx=9, did=None),
+    }
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    select = result["data_schema"].schema[CONF_INVERT_REGISTERS]
+    assert select.config["options"] == ["Grid", "Solar"]
+
+
+async def test_options_flow_aborts_when_the_refresh_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_egauge_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test an unreachable device aborts rather than offering cached registers."""
+    mock_egauge_client.get_register_info.side_effect = ConnectError("unreachable")
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_fetch_registers"
+
+
+async def test_options_flow_aborts_unknown_on_an_unexpected_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_egauge_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test an unexpected failure is logged and reported, not swallowed."""
+    mock_egauge_client.get_register_info.side_effect = ValueError("boom")
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
