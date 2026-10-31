@@ -1,5 +1,10 @@
 {
   "entity": {
+    "number": {
+      "salt_output_level": {
+        "default": "mdi:shaker-outline"
+      }
+    },
     "select": {
       "heating_mode": {
         "default": "mdi:radiator"
