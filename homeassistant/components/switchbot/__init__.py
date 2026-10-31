@@ -51,7 +51,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.LIGHT_STRIP.value: [Platform.SENSOR, Platform.LIGHT],
     SupportedModels.CEILING_LIGHT.value: [Platform.SENSOR, Platform.LIGHT],
     SupportedModels.CEILING_LIGHT_PRO.value: [Platform.SENSOR, Platform.LIGHT],
-    SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.BOT.value: [Platform.BUTTON, Platform.SWITCH, Platform.SENSOR],
     SupportedModels.PLUG_MINI_US.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.PLUG_MINI_JP.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.CURTAIN.value: [
