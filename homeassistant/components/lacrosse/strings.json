@@ -1,0 +1,101 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:component::lacrosse::config::error::cannot_connect%]",
+      "unknown": "[%key:component::lacrosse::config::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the receiver.",
+      "unknown": "Unexpected error occurred."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "baud": "Baud rate",
+          "datarate": "Data rate",
+          "device": "Serial device",
+          "frequency": "Frequency (MHz)",
+          "led": "Jeelink LED",
+          "toggle_interval": "Toggle interval",
+          "toggle_mask": "Toggle mask"
+        },
+        "data_description": {
+          "baud": "The receiver communication speed.",
+          "datarate": "The receiver data rate.",
+          "device": "The serial device connected to the receiver.",
+          "frequency": "The receiver frequency.",
+          "led": "Whether the receiver LED is enabled.",
+          "toggle_interval": "The receiver toggle interval.",
+          "toggle_mask": "The receiver toggle mask."
+        }
+      },
+      "user": {
+        "data": {
+          "baud": "Baud rate",
+          "datarate": "Data rate",
+          "device": "Serial device",
+          "frequency": "Frequency (MHz)",
+          "led": "Jeelink LED",
+          "toggle_interval": "Toggle interval",
+          "toggle_mask": "Toggle mask"
+        },
+        "data_description": {
+          "baud": "The receiver communication speed.",
+          "datarate": "The receiver data rate.",
+          "device": "The serial device connected to the receiver.",
+          "frequency": "The receiver frequency.",
+          "led": "Whether the receiver LED is enabled.",
+          "toggle_interval": "The receiver toggle interval.",
+          "toggle_mask": "The receiver toggle mask."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "sensor": {
+      "entry_type": "Sensor",
+      "error": {
+        "sensor_already_configured": "This sensor is already configured."
+      },
+      "initiate_flow": {
+        "user": "Add sensor"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "id": "Sensor ID"
+          },
+          "data_description": {
+            "id": "The ID the sensor reports now, for example after a battery replacement."
+          },
+          "title": "Update sensor"
+        },
+        "user": {
+          "data": {
+            "id": "Sensor ID",
+            "name": "Name"
+          },
+          "title": "Add sensor"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "[%key:component::homeassistant::issues::deprecated_yaml::description%]",
+      "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Your {integration_title} YAML configuration could not be imported because the receiver at {device} could not be opened. YAML configuration is deprecated and will be removed in Home Assistant 2027.4.0. Check that the receiver is connected, the serial device path and baud rate in your YAML configuration are correct, and no other application is using the port. Then restart Home Assistant to retry the import. Alternatively, remove the LaCrosse sensor platform configuration from YAML and set up the integration in Settings > Devices & services.",
+      "title": "Unable to import {integration_title} YAML configuration"
+    }
+  }
+}

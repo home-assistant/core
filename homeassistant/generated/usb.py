@@ -10,6 +10,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "edl21",
     "flexit",
     "kaco_rs485",
+    "lacrosse",
     "landisgyr_heat_meter",
     "lg_tv_rs232",
     "marantz_rs232",
