@@ -35,3 +35,38 @@ call_method:
       example: "VideoLibrary.GetRecentlyAddedEpisodes"
       selector:
         text:
+
+send_message:
+  target:
+    entity:
+      integration: kodi
+      domain: notify
+  fields:
+    message:
+      required: true
+      example: "The front door was opened."
+      selector:
+        text:
+    title:
+      example: "Front door"
+      selector:
+        text:
+    icon:
+      default: info
+      selector:
+        select:
+          options:
+            - info
+            - warning
+            - error
+          custom_value: true
+          translation_key: icon
+    displaytime:
+      default: 10000
+      selector:
+        number:
+          min: 1500
+          max: 600000
+          step: 500
+          unit_of_measurement: ms
+          mode: box

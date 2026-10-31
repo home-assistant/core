@@ -22,10 +22,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_WS_PORT, DOMAIN
+from .issue import (
+    DATA_YAML_NOTIFY,
+    async_create_entry_disabled_issue,
+    async_create_no_entry_issue,
+    async_get_yaml_notify_configs,
+)
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NOTIFY]
 
 type KodiConfigEntry = ConfigEntry[KodiRuntimeData]
 
@@ -41,6 +47,16 @@ class KodiRuntimeData:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     async_setup_services(hass)
+    yaml_configs = async_get_yaml_notify_configs(config)
+    hass.data[DATA_YAML_NOTIFY] = yaml_configs
+    entries = hass.config_entries.async_entries(DOMAIN, include_ignore=False)
+    for yaml_config in yaml_configs:
+        matching = [entry for entry in entries if yaml_config.matches(entry.data)]
+        if not matching:
+            async_create_no_entry_issue(hass, yaml_config)
+        # Enabled entries create their issue when their notify entity is set up
+        elif all(entry.disabled_by for entry in matching):
+            async_create_entry_disabled_issue(hass, yaml_config, matching[0].title)
     return True
 
 
