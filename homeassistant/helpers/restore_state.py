@@ -106,12 +106,7 @@ class StoredState:
 
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
-    """Load the restore state and the restore coordinator store.
-
-    Called from bootstrap before config entries are set up, so stored coordinator
-    data is available when coordinators are created and is never overwritten by a
-    save happening before the load.
-    """
+    """Load the restore state and the restore coordinator store."""
     data = async_get(hass)
     if load_empty:
         data.set_load_empty()
