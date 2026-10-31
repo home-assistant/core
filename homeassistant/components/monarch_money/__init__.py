@@ -32,13 +32,11 @@ async def async_setup_entry(
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: MonarchMoneyConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entries."""
     if entry.version == 1 and entry.minor_version < 2:
         _async_migrate_statistics_currency(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
-
-    return True
 
 
 def _async_migrate_statistics_currency(
