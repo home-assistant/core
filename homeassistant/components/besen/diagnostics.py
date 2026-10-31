@@ -4,7 +4,7 @@ from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 
 from . import BesenConfigEntry
@@ -14,6 +14,7 @@ CONF_SERIAL = "serial"
 
 TO_REDACT = {
     CONF_ADDRESS,
+    CONF_HOST,
     CONF_NAME,
     CONF_PIN,
     "advertised_name",

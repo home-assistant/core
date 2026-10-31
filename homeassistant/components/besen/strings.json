@@ -2,16 +2,22 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "bluetooth_address_unknown": "This charger was added through LAN and has no saved Bluetooth address.",
       "not_supported": "This Bluetooth device is not a supported Besen charger."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "choose_connection": "Select a Bluetooth charger or enter its LAN address.",
+      "identity_unknown": "Connect this charger over Bluetooth once so Home Assistant can verify its serial before switching to LAN.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_device": "This is a different charger. Check that you are connecting to the charger already configured in this entry."
     },
     "flow_title": "{name}",
+    "progress": {
+      "connecting": "Connecting to the charger and checking its live status. The connection choice is saved only after verification."
+    },
     "step": {
       "bluetooth_confirm": {
         "data": {
@@ -23,33 +29,67 @@
         "description": "Enter the 6-digit Bluetooth PIN for this charger.",
         "title": "Set up Besen"
       },
+      "lan": {
+        "data": {
+          "host": "Charger address",
+          "pin": "Charger PIN"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of this charger on your local network.",
+          "pin": "The 6-digit PIN configured on the charger."
+        },
+        "description": "Enter this charger's IP address or hostname and its 6-digit PIN. Allow UDP port 28376 to Home Assistant and UDP traffic to the charger's port, normally 7248. The charger must already be connected to Wi-Fi. Only the selected connection is used.",
+        "title": "Use LAN"
+      },
       "reauth_confirm": {
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
-          "pin": "[%key:component::besen::config::step::user::data_description::pin%]"
+          "pin": "The 6-digit PIN configured on the charger."
         },
-        "description": "The charger rejected the saved Bluetooth PIN. Enter its current 6-digit PIN.",
-        "title": "[%key:common::config_flow::title::reauth%]"
+        "description": "The charger rejected its saved PIN. Enter its current 6-digit PIN. Network disconnections do not require reauthentication.",
+        "title": "Reauthenticate Besen"
+      },
+      "reconfigure": {
+        "description": "Choose the connection for this charger. Home Assistant checks the new connection before saving it. Existing entities and history are kept.",
+        "menu_options": {
+          "lan": "Use LAN",
+          "use_bluetooth": "Use Bluetooth"
+        },
+        "title": "Charger connection"
+      },
+      "use_bluetooth": {
+        "data": {
+          "pin": "Charger PIN"
+        },
+        "data_description": {
+          "pin": "The 6-digit PIN configured on the charger."
+        },
+        "description": "Enter the charger PIN to check Bluetooth before switching the connection.",
+        "title": "Use Bluetooth"
       },
       "user": {
         "data": {
           "address": "[%key:common::config_flow::data::device%]",
+          "host": "LAN address (optional)",
           "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "address": "The discovered Besen charger to set up.",
-          "pin": "The 6-digit Bluetooth PIN configured on the charger."
+          "host": "The IP address or hostname of a charger already connected to Wi-Fi. Leave empty to use Bluetooth.",
+          "pin": "The 6-digit PIN configured on the charger."
         },
-        "description": "Select the discovered charger and enter its Bluetooth PIN.",
+        "description": "Select a discovered Bluetooth charger or enter the IP address or hostname of a charger already connected to your LAN. Enter its 6-digit PIN.",
         "title": "Set up Besen"
       }
     }
   },
   "entity": {
     "number": {
-      "charging_current": { "name": "Charging current" }
+      "charging_current": {
+        "name": "Charging current"
+      }
     },
     "select": {
       "temperature_unit": {
@@ -75,7 +115,9 @@
           "waiting_for_swipe": "Waiting for a card swipe"
         }
       },
-      "charging_power": { "name": "Charging power" },
+      "charging_power": {
+        "name": "Charging power"
+      },
       "charging_status": {
         "name": "Charging status",
         "state": {
@@ -88,7 +130,9 @@
           "waiting": "Waiting"
         }
       },
-      "charging_time_limit": { "name": "Charging time limit" },
+      "charging_time_limit": {
+        "name": "Charging time limit"
+      },
       "current_state": {
         "name": "Current state",
         "state": {
@@ -130,14 +174,30 @@
           "ungrounded": "Ungrounded"
         }
       },
-      "external_temperature": { "name": "External temperature" },
-      "internal_temperature": { "name": "Internal temperature" },
-      "l1_current": { "name": "L1 current" },
-      "l1_voltage": { "name": "L1 voltage" },
-      "l2_current": { "name": "L2 current" },
-      "l2_voltage": { "name": "L2 voltage" },
-      "l3_current": { "name": "L3 current" },
-      "l3_voltage": { "name": "L3 voltage" },
+      "external_temperature": {
+        "name": "External temperature"
+      },
+      "internal_temperature": {
+        "name": "Internal temperature"
+      },
+      "l1_current": {
+        "name": "L1 current"
+      },
+      "l1_voltage": {
+        "name": "L1 voltage"
+      },
+      "l2_current": {
+        "name": "L2 current"
+      },
+      "l2_voltage": {
+        "name": "L2 voltage"
+      },
+      "l3_current": {
+        "name": "L3 current"
+      },
+      "l3_voltage": {
+        "name": "L3 voltage"
+      },
       "output_state": {
         "name": "Output state",
         "state": {
@@ -153,15 +213,29 @@
           "disconnected": "[%key:common::state::disconnected%]"
         }
       },
-      "scheduled_start": { "name": "Scheduled start" },
-      "session_current_limit": { "name": "Session current limit" },
-      "session_duration": { "name": "Session duration" },
-      "session_energy": { "name": "Session energy" },
-      "session_start": { "name": "Session start" },
-      "total_energy": { "name": "Total energy" }
+      "scheduled_start": {
+        "name": "Scheduled start"
+      },
+      "session_current_limit": {
+        "name": "Session current limit"
+      },
+      "session_duration": {
+        "name": "Session duration"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "session_start": {
+        "name": "Session start"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      }
     },
     "switch": {
-      "charging": { "name": "Charge" }
+      "charging": {
+        "name": "Charge"
+      }
     }
   },
   "exceptions": {
