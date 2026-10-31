@@ -6,7 +6,9 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: Duplicate-entry aborts and options flow error recovery are not tested.
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -17,7 +19,7 @@ rules:
     comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions: todo
   docs-triggers:
     status: exempt
     comment: This integration does not have any triggers.
@@ -27,12 +29,14 @@ rules:
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry: done
+  unique-config-entry:
+    status: todo
+    comment: The single-fireplace auto-create path does not set a unique ID on the entry.
 
   # Silver
   action-exceptions:
-    status: exempt
-    comment: This integration does not register any custom service actions.
+    status: todo
+    comment: Entity action methods do not raise HomeAssistantError when the device command fails.
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
@@ -44,7 +48,9 @@ rules:
   test-coverage: todo
 
   # Gold
-  devices: done
+  devices:
+    status: todo
+    comment: Device info is missing sw_version and serial_number, and the device name and identifier domain are hardcoded literals.
   diagnostics: todo
   discovery: done
   discovery-update-info: todo
@@ -52,7 +58,9 @@ rules:
   docs-examples: todo
   docs-known-limitations: todo
   docs-supported-devices: todo
-  docs-supported-functions: done
+  docs-supported-functions:
+    status: todo
+    comment: Docs are missing the read/control mode sensors and the connectivity binary sensors.
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: todo
