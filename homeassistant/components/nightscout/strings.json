@@ -22,6 +22,22 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "target_range_bottom": {
+        "name": "Target range bottom"
+      },
+      "target_range_top": {
+        "name": "Target range top"
+      },
+      "urgent_high_threshold": {
+        "name": "Urgent high threshold"
+      },
+      "urgent_low_threshold": {
+        "name": "Urgent low threshold"
+      }
+    }
+  },
   "exceptions": {
     "update_error": {
       "message": "Error communicating with the Nightscout server: {error}"
