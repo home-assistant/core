@@ -20,6 +20,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.COVER,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -70,6 +71,7 @@ class FreeboxHomeCategory(enum.StrEnum):
     OPENER = "opener"
     PIR = "pir"
     RTS = "rts"
+    SHUTTER = "shutter"
 
 
 CATEGORY_TO_MODEL = {
@@ -90,4 +92,5 @@ HOME_COMPATIBLE_CATEGORIES = [
     FreeboxHomeCategory.KFB,
     FreeboxHomeCategory.PIR,
     FreeboxHomeCategory.RTS,
+    FreeboxHomeCategory.SHUTTER,
 ]

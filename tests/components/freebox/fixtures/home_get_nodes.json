@@ -2173,7 +2173,78 @@
     "label": "Shutter 1",
     "name": "node_150",
     "type": {
-      "inherit": "node::trs"
+      "inherit": "node::trs",
+      "endpoints": [
+        {
+          "ep_type": "slot",
+          "id": 0,
+          "label": "Consigne ouverture",
+          "name": "position_set",
+          "value_type": "int",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "slot",
+          "id": 1,
+          "label": "Stop",
+          "name": "stop",
+          "value_type": "void",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "slot",
+          "id": 2,
+          "label": "Toggle",
+          "name": "toggle",
+          "value_type": "void",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "slot",
+          "id": 3,
+          "label": "Position",
+          "name": "position",
+          "value_type": "int",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "signal",
+          "id": 4,
+          "label": "Consigne ouverture",
+          "name": "position_set",
+          "param_type": "void",
+          "value_type": "int",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "signal",
+          "id": 5,
+          "label": "État",
+          "name": "state",
+          "param_type": "void",
+          "value_type": "string",
+          "visibility": "normal"
+        }
+      ]
+    },
+    "show_endpoints": [
+      {
+        "id": 4,
+        "name": "position_set",
+        "ep_type": "signal",
+        "value": 0,
+        "value_type": "int"
+      },
+      {
+        "id": 5,
+        "name": "state",
+        "ep_type": "signal",
+        "value": "stop",
+        "value_type": "string"
+      }
+    ],
+    "props": {
+      "FwVersion": 1
     }
   },
   {
@@ -2187,7 +2258,78 @@
     "label": "Shutter 2",
     "name": "node_151",
     "type": {
-      "inherit": "node::ios"
+      "inherit": "node::ios",
+      "endpoints": [
+        {
+          "ep_type": "slot",
+          "id": 0,
+          "label": "Consigne ouverture",
+          "name": "position_set",
+          "value_type": "int",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "slot",
+          "id": 1,
+          "label": "Stop",
+          "name": "stop",
+          "value_type": "void",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "slot",
+          "id": 2,
+          "label": "Toggle",
+          "name": "toggle",
+          "value_type": "void",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "slot",
+          "id": 3,
+          "label": "Position",
+          "name": "position",
+          "value_type": "int",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "signal",
+          "id": 4,
+          "label": "Consigne ouverture",
+          "name": "position_set",
+          "param_type": "void",
+          "value_type": "int",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "signal",
+          "id": 5,
+          "label": "État",
+          "name": "state",
+          "param_type": "void",
+          "value_type": "string",
+          "visibility": "normal"
+        }
+      ]
+    },
+    "show_endpoints": [
+      {
+        "id": 4,
+        "name": "position_set",
+        "ep_type": "signal",
+        "value": 0,
+        "value_type": "int"
+      },
+      {
+        "id": 5,
+        "name": "state",
+        "ep_type": "signal",
+        "value": "stop",
+        "value_type": "string"
+      }
+    ],
+    "props": {
+      "FwVersion": 1
     }
   },
   {
