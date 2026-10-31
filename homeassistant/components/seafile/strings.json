@@ -93,6 +93,11 @@
     }
   },
   "entity": {
+    "button": {
+      "empty_trash": {
+        "name": "Empty trash"
+      }
+    },
     "sensor": {
       "file_count": {
         "name": "Files",
