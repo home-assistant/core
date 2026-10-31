@@ -19,11 +19,25 @@ EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 DATA_COMPONENT: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)
 
-ATTR_VARIABLES = "variables"
-CONF_SKIP_CONDITION = "skip_condition"
-CONF_STOP_ACTIONS = "stop_actions"
 DEFAULT_STOP_ACTIONS = True
-SERVICE_TRIGGER = "trigger"
+
+
+class AutomationService(StrEnum):
+    """Store keys for automation services."""
+
+    RELOAD = "reload"
+    TOGGLE = "toggle"
+    TRIGGER = "trigger"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class AutomationServiceArgument(StrEnum):
+    """Store keys for automation service arguments."""
+
+    SKIP_CONDITION = "skip_condition"
+    STOP_ACTIONS = "stop_actions"
+    VARIABLES = "variables"
 
 
 class AutomationEntityCapabilityAttribute(StrEnum):
