@@ -1,11 +1,12 @@
 "Test SMLIGHT SLZB device integration initialization."
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
-from pysmlight import Info
+from pysmlight import Firmware, Info
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -27,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.issue_registry import IssueRegistry
 
 from .conftest import setup_integration
@@ -196,6 +197,7 @@ async def test_async_setup_no_internet(
     mock_smlight_client.get_firmware_version.side_effect = SmlightConnectionError
 
     await setup_integration(hass, mock_config_entry_host)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get("update.mock_title_core_firmware")
     assert entity is not None
@@ -203,7 +205,7 @@ async def test_async_setup_no_internet(
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get("update.mock_title_core_firmware")
     assert entity is not None
@@ -213,12 +215,79 @@ async def test_async_setup_no_internet(
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get("update.mock_title_core_firmware")
     assert entity is not None
     assert entity.state == STATE_ON
     assert entity.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+
+
+async def test_slow_firmware_catalog_does_not_block_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test local entities load while the firmware catalog is pending."""
+    catalog_ready = asyncio.Event()
+    get_firmware = mock_smlight_client.get_firmware_version.side_effect
+
+    async def slow_catalog(*args: object, **kwargs: object) -> list[Firmware]:
+        await catalog_ready.wait()
+        return get_firmware(*args, **kwargs)
+
+    mock_smlight_client.get_firmware_version.side_effect = slow_catalog
+    entry = await setup_integration(hass, mock_config_entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.mock_title_core_chip_temp") is not None
+    firmware = entry.runtime_data.firmware
+    assert firmware.unique_id == entry.runtime_data.data.unique_id
+    assert firmware.legacy_api == entry.runtime_data.data.legacy_api
+    entity = entity_registry.async_get("update.mock_title_core_firmware")
+    assert entity.unique_id == "aa:bb:cc:dd:ee:ff-core_update"
+    state = hass.states.get("update.mock_title_core_firmware")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+
+    catalog_ready.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("update.mock_title_core_firmware")
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+async def test_unload_cancels_firmware_catalog(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test unloading cancels a pending background firmware refresh."""
+    catalog_started = asyncio.Event()
+    catalog_cancelled = asyncio.Event()
+
+    async def pending_catalog(*args: object, **kwargs: object) -> list[Firmware]:
+        catalog_started.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            catalog_cancelled.set()
+        return []
+
+    mock_smlight_client.get_firmware_version.side_effect = pending_catalog
+    entry = await setup_integration(hass, mock_config_entry)
+    await catalog_started.wait()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert catalog_cancelled.is_set()
+    mock_smlight_client.get_firmware_version.assert_awaited_once()
 
 
 @pytest.mark.parametrize("error", [SmlightConnectionError, SmlightAuthError])

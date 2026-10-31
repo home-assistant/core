@@ -136,8 +136,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._firmware = self.entity_description.latest_version(
             self.coordinator.data, self.idx
         )
-        if self._firmware:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @property
     @override
