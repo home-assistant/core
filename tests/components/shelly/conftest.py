@@ -952,9 +952,14 @@ def mock_ledstrip_rpc_device(
     monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock
 ) -> Mock:
     """Set up mock RPC device with LED strip component data."""
-    monkeypatch.setattr(mock_rpc_device, "config", MOCK_CONFIG | MOCK_LEDSTRIP_CONFIG)
-    monkeypatch.setattr(
-        mock_rpc_device, "status", MOCK_STATUS_RPC | MOCK_LEDSTRIP_STATUS
-    )
+    config = MOCK_CONFIG | MOCK_LEDSTRIP_CONFIG
+    status = MOCK_STATUS_RPC | MOCK_LEDSTRIP_STATUS
+    # A real LED strip device has no other lights, all light types count as one
+    # set of channels so keeping them would turn the LED strip into a sub-device
+    for key in ("light:0", "light:1", "light:2", "light:3", "rgb:0", "rgbw:0"):
+        del config[key]
+        del status[key]
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    monkeypatch.setattr(mock_rpc_device, "status", status)
 
     return mock_rpc_device

@@ -229,26 +229,23 @@ async def test_service_get_kvs_value_device_not_initialized(
     assert exc_info.value.translation_placeholders == {"device": entry.title}
 
 
+@pytest.mark.usefixtures("mock_rpc_device")
 async def test_service_get_kvs_value_wrong_domain(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test get_kvs_value when device has config entries from different domains."""
-    entry = await init_integration(hass, 2)
+    """Test get_kvs_value when the device belongs to a different domain."""
+    await init_integration(hass, 2)
 
-    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
-
-    # Create a config entry with different domain and add it to the device
     other_entry = MockConfigEntry(
         domain="other_domain",
         data={},
     )
     other_entry.add_to_hass(hass)
-
-    # Move the device to the other domain's config entry
-    device_registry.async_update_device(
-        device.id, new_config_entry_id=other_entry.entry_id
+    device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other_domain", "other_device")},
+        name="Other device",
     )
 
     with pytest.raises(ServiceValidationError) as exc_info:

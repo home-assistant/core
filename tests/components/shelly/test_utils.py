@@ -324,14 +324,14 @@ async def test_shelly_receiver_get() -> None:
 @pytest.mark.parametrize(
     ("key", "expected"),
     [
-        ("switch:0", "Test name Output 0"),
-        ("switch:1", "Test name Output 1"),
-        ("cover:0", "Test name Cover 0"),
-        ("light:0", "Test name Light 0"),
-        ("rgb:0", "Test name RGB light 0"),
-        ("rgbw:1", "Test name RGBW light 1"),
-        ("cct:0", "Test name CCT light 0"),
-        ("em1:0", "Test name Energy Meter 0"),
+        ("switch:0", "Output 0"),
+        ("switch:1", "Output 1"),
+        ("cover:0", "Cover 0"),
+        ("light:0", "Light 0"),
+        ("rgb:0", "RGB light 0"),
+        ("rgbw:1", "RGBW light 1"),
+        ("cct:0", "CCT light 0"),
+        ("em1:0", "Energy Meter 0"),
     ],
 )
 async def test_get_rpc_sub_device_name(
@@ -367,5 +367,5 @@ async def test_get_rpc_sub_device_name_with_emeter_phase(
     config = {"em:0": {"name": None}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
-    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "A") == "Test name Phase A"
-    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "B") == "Test name Phase B"
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "A") == "Phase A"
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "B") == "Phase B"

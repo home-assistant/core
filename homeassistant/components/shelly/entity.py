@@ -11,7 +11,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -725,18 +725,14 @@ def get_entity_class(
 def get_entity_block_device_info(
     coordinator: ShellyBlockCoordinator,
     block: Block | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Get device info for block entities."""
     return get_block_device_info(
         coordinator.hass,
         coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
-        coordinator.configuration_url,
-        coordinator.model,
-        coordinator.model_name,
         block,
-        suggested_area=coordinator.suggested_area,
     )
 
 
@@ -744,19 +740,15 @@ def get_entity_rpc_device_info(
     coordinator: ShellyRpcCoordinator,
     key: str | None = None,
     emeter_phase: str | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Get device info for RPC entities."""
     return get_rpc_device_info(
         coordinator.hass,
         coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
-        coordinator.configuration_url,
-        coordinator.model,
-        coordinator.model_name,
         key,
         emeter_phase=emeter_phase,
-        suggested_area=coordinator.suggested_area,
     )
 
 
