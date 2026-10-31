@@ -191,6 +191,8 @@ class SleepIQSensorEntity(
 ):
     """Representation of a SleepIQ sensor."""
 
+    # Icons come from icons.json, which the inherited bed icon would override.
+    _attr_icon = None
     entity_description: SleepIQSensorEntityDescription
 
     def __init__(

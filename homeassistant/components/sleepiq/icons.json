@@ -13,6 +13,9 @@
       "out_of_bed": {
         "default": "mdi:bed-empty"
       },
+      "pressure": {
+        "default": "mdi:bed"
+      },
       "respiratory_rate_avg": {
         "default": "mdi:lungs"
       },
@@ -24,6 +27,9 @@
       },
       "sleep_duration": {
         "default": "mdi:sleep"
+      },
+      "sleep_number": {
+        "default": "mdi:bed"
       },
       "sleep_score": {
         "default": "mdi:sleep"
