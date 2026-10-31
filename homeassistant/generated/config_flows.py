@@ -714,6 +714,7 @@ FLOWS = {
         "romy",
         "roomba",
         "roon",
+        "rotarex",
         "route_b_smart_meter",
         "rova",
         "rpi_power",
