@@ -11695,12 +11695,26 @@
     },
     "tile": {
       "name": "Tile",
-      "integration_type": "hub",
-      "categories": [
-        "presence_location.trackers"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "tile": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "presence_location.trackers"
+          ],
+          "name": "Tile"
+        },
+        "tile_ble": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "presence_location.trackers"
+          ],
+          "name": "Tile BLE"
+        }
+      }
     },
     "tilt": {
       "name": "Tilt",

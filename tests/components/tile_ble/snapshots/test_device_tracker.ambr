@@ -1,0 +1,87 @@
+# serializer version: 1
+# name: test_entities.2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'bluetooth',
+        'AA:BB:CC:DD:EE:FF',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tile Inc.',
+    'model': None,
+    'model_id': None,
+    'name': 'Tile',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_entities[device_tracker.tile-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('bluetooth', 'AA:BB:CC:DD:EE:FF')]>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.tile',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tile_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'AA:BB:CC:DD:EE:FF',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[device_tracker.tile-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tile',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.BLUETOOTH_LE: 'bluetooth_le'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.tile',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---

@@ -854,6 +854,7 @@ FLOWS = {
         "threema",
         "tibber",
         "tile",
+        "tile_ble",
         "tilt_ble",
         "tilt_pi",
         "time_date",

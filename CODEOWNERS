@@ -2002,6 +2002,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/tibber/ @danielhiversen
 /homeassistant/components/tile/ @bachya
 /tests/components/tile/ @bachya
+/homeassistant/components/tile_ble/ @joostlek
+/tests/components/tile_ble/ @joostlek
 /homeassistant/components/tilt_ble/ @apt-itude
 /tests/components/tilt_ble/ @apt-itude
 /homeassistant/components/tilt_pi/ @michaelheyman

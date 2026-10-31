@@ -1,0 +1,60 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "no_tiles": "No Tiles were found in this Tile account."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "wrong_tile": "This is not the Tile you picked over Bluetooth. Pick another Tile."
+    },
+    "step": {
+      "account": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "The password of your Tile account.",
+          "username": "The email address of your Tile account."
+        },
+        "description": "Log in to your Tile account to get the key Home Assistant needs to ring your Tile. Only the key is stored, not your credentials."
+      },
+      "tile": {
+        "data": {
+          "tile": "Tile"
+        },
+        "data_description": {
+          "tile": "The Tile in your account that you picked over Bluetooth."
+        },
+        "description": "Pick which of your Tiles you are setting up."
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "The Tile you want to set up. Tiles with the strongest signal are listed first."
+        },
+        "description": "Hold your Tile close to a Bluetooth adapter or proxy so it appears at the top of the list."
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "ring": {
+        "name": "Ring"
+      }
+    }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "The Tile cannot be reached over Bluetooth: {reason}"
+    },
+    "ring_failed": {
+      "message": "Could not ring the Tile: {error}"
+    }
+  }
+}
