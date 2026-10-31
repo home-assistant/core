@@ -63,8 +63,14 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         self._attr_unique_id = f"{self.home.entity_id}-schedule-select"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._attr_current_option = self._selected_schedule_name()
-        self._attr_options = [
-            schedule.name for schedule in self.home.schedules.values() if schedule.name
+        self._attr_options = self._available_schedule_names()
+
+    def _available_schedule_names(self) -> list[str]:
+        """Return the schedules matching the home temperature control mode."""
+        return [
+            schedule.name
+            for schedule in self.home.get_available_schedules()
+            if schedule.name
         ]
 
     def _selected_schedule_name(self) -> str | None:
@@ -98,26 +104,25 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             return
 
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            if schedule := self.data_handler.schedules[self.home.entity_id].get(
+            schedule = self.data_handler.schedules[self.home.entity_id].get(
                 data["schedule_id"]
-            ):
+            )
+            if schedule is not None and schedule in self.home.get_available_schedules():
                 self._attr_current_option = schedule.name
                 self.async_write_ha_state()
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        for sid, schedule in self.data_handler.schedules[self.home.entity_id].items():
-            if schedule.name != option:
-                continue
-            _LOGGER.debug(
-                "Setting %s schedule to %s (%s)",
-                self.home.entity_id,
-                option,
-                sid,
-            )
-            await self.home.async_switch_schedule(schedule_id=sid)
-            break
+        schedule = self.home.get_schedule_by_name(option)
+        assert schedule
+        _LOGGER.debug(
+            "Setting %s schedule to %s (%s)",
+            self.home.entity_id,
+            option,
+            schedule.entity_id,
+        )
+        await self.home.async_switch_schedule(schedule_id=schedule.entity_id)
 
     @callback
     @override
@@ -125,7 +130,5 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         """Update the entity's state."""
         self._attr_current_option = self._selected_schedule_name()
         self.data_handler.schedules[self.home.entity_id] = self.home.schedules
-        self._attr_options = [
-            schedule.name for schedule in self.home.schedules.values() if schedule.name
-        ]
+        self._attr_options = self._available_schedule_names()
         self.async_write_ha_state()
