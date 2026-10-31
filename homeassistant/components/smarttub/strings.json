@@ -53,6 +53,18 @@
         "name": "Thermostat"
       }
     },
+    "event": {
+      "error": {
+        "name": "Error",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "error": "Error"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light_zone": {
         "name": "Light {zone}"
