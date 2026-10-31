@@ -1527,7 +1527,7 @@ class Entity(
         if (
             not force_remove
             and self.registry_entry
-            and not self.registry_entry.disabled
+            and self.registry_entry.in_state_machine
             # Check if entity is still in the entity registry
             # by checking self._removed_from_registry
             #
