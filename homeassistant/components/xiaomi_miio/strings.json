@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
       "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Home integration.",
+      "unique_id_mismatch": "The device at this address is not the device that was originally set up.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -11,6 +12,7 @@
       "cloud_credentials_incomplete": "Credentials incomplete, please fill in username, password and server region",
       "cloud_login_error": "Could not log in to Xiaomi Home, check the credentials.",
       "cloud_no_devices": "No devices found in this Xiaomi Home account.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_device": "The device model is not known, not able to set up the device using config flow.",
       "wrong_token": "Checksum error, wrong token"
     },
@@ -40,6 +42,13 @@
       "reauth_confirm": {
         "description": "The Xiaomi Home integration needs to re-authenticate your account in order to update the tokens or add missing credentials.",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "description": "[%key:component::xiaomi_miio::config::step::manual::description%]"
       },
       "select": {
         "data": {
