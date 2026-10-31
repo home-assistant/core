@@ -551,6 +551,8 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         # Reject before the result is used, a plain string type would bypass the
         # handling and filtering of results that compare the type by identity
         if not isinstance(result["type"], FlowResultType):
+            if flow.flow_id in self._progress:  # type: ignore[unreachable]
+                self._async_remove_flow_progress(flow.flow_id)
             raise TypeError(
                 f"Flow step {step_id} of {flow.handler} returned result type "
                 f"{result['type']!r}, which is not a FlowResultType"

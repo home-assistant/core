@@ -284,6 +284,7 @@ async def test_string_result_type_raises(
     with pytest.raises(TypeError, match="which is not a FlowResultType"):
         await manager.async_init("test")
     assert len(manager.mock_created_entries) == 0
+    assert manager.async_progress(include_uninitialized=True) == []
 
 
 @pytest.mark.parametrize(
