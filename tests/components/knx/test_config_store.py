@@ -1511,6 +1511,69 @@ def test_typed_config_storage_roundtrip(
     assert to_storage_dict(reloaded) == stored
 
 
+def _validate_reset_after(reset_after: Any) -> Any:
+    """Validate a binary sensor with the given reset_after and return the stored value."""
+    validated = validate_entity_data(
+        {
+            CONF_PLATFORM: Platform.BINARY_SENSOR,
+            CONF_DATA: {
+                "entity": {"name": "In operation"},
+                "knx": {"ga_sensor": {"state": "1/2/3"}, "reset_after": reset_after},
+            },
+        }
+    )[CONF_DATA]
+    return to_storage_dict(validated)["knx"]["reset_after"]
+
+
+@pytest.mark.parametrize(
+    ("reset_after", "stored"),
+    [
+        (90000, 90000),  # over one day, numeric seconds
+        (1.5, 1.5),  # fractional seconds
+        ({"days": 1, "hours": 1, "seconds": 1, "milliseconds": 500}, 90001.5),
+        ("00:10:00", 600),  # cv.time_period string form
+        (0, 0),
+    ],
+)
+def test_binary_sensor_reset_after_stores_seconds(
+    reset_after: Any, stored: float
+) -> None:
+    """Every cv.time_period input form is stored as seconds."""
+    assert _validate_reset_after(reset_after) == stored
+
+
+@pytest.mark.parametrize("reset_after", [-1, {"seconds": -1}, "-00:00:01"])
+def test_binary_sensor_reset_after_rejects_negative(reset_after: Any) -> None:
+    """Reset after is never a negative duration."""
+    with pytest.raises(EntityStoreValidationException):
+        _validate_reset_after(reset_after)
+
+
+@pytest.mark.parametrize(
+    "reset_after",
+    ["inf", 1e20, {"days": 1e10}, {"seconds": "nan"}, {"hours": "inf"}, "abc"],
+)
+def test_binary_sensor_reset_after_rejects_malformed(reset_after: Any) -> None:
+    """Overflowing or malformed durations are validation errors, not internal errors."""
+    with pytest.raises(EntityStoreValidationException):
+        _validate_reset_after(reset_after)
+
+
+def test_binary_sensor_reset_after_schema_is_ha_duration_selector() -> None:
+    """Expose a plain HA duration selector whose value is seconds."""
+    schema = get_serialized_schema(Platform.BINARY_SENSOR)
+    assert schema is not None
+    reset_after = next(field for field in schema if field["name"] == "reset_after")
+    assert reset_after["type"] == "ha_selector"
+    assert reset_after["selector"] == {
+        "duration": {
+            "enable_day": True,
+            "enable_millisecond": True,
+            "enable_second": True,
+        }
+    }
+
+
 @pytest.mark.parametrize(
     ("platform", "config_type", "knx_input", "knx_stored"), TYPED_CONFIG_CASES
 )
