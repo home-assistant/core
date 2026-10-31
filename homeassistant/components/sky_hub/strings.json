@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of your Sky Hub."
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_known_devices": {
+      "description": "Sky Hub now creates its own device tracker entities, but the following entries left over from the old YAML setup still exist in `{path}` for devices tracked by the router at `{host}`:\n\n{devices}\n\nThese legacy trackers can conflict with the new entities and prevent them from updating.\n\nRemove these entries from `{path}` and restart Home Assistant.",
+      "title": "Remove leftover known devices for Sky Hub"
+    },
+    "yaml_import_cannot_connect": {
+      "description": "The YAML configuration for Sky Hub at `{host}` could not be imported because the connection failed.\n\nCheck that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
+      "title": "YAML configuration import failed: cannot connect"
+    }
+  }
+}

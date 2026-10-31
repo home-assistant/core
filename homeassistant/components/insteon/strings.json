@@ -47,6 +47,11 @@
       }
     }
   },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Insteon is not loaded."
+    }
+  },
   "options": {
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

@@ -5,7 +5,7 @@ from functools import lru_cache
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
@@ -43,11 +43,13 @@ DEFAULT_TOPIC = "room_presence"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_AWAY_TIMEOUT, default=DEFAULT_AWAY_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_DEVICE_ID): cv.string,
+        probatio.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        probatio.Optional(
+            CONF_AWAY_TIMEOUT, default=DEFAULT_AWAY_TIMEOUT
+        ): cv.positive_int,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 ).extend(mqtt.MQTT_RO_SCHEMA.schema)
 
@@ -58,15 +60,15 @@ def _slugify_upper(string: str) -> str:
     return slugify(string).upper()
 
 
-MQTT_PAYLOAD = vol.Schema(
-    vol.All(
+MQTT_PAYLOAD = probatio.Schema(
+    probatio.All(
         json_loads,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_ID): cv.string,
-                vol.Required(ATTR_DISTANCE): vol.Coerce(float),
+                probatio.Required(ATTR_ID): cv.string,
+                probatio.Required(ATTR_DISTANCE): probatio.Coerce(float),
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         ),
     )
 )
@@ -143,7 +145,7 @@ class MQTTRoomSensor(SensorEntity):
             """Handle new MQTT messages."""
             try:
                 data = MQTT_PAYLOAD(msg.payload)
-            except vol.MultipleInvalid as error:
+            except probatio.MultipleInvalid as error:
                 _LOGGER.debug("Skipping update because of malformatted data: %s", error)
                 return
 

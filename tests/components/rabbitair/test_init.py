@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from rabbitair import Mode, Model, Speed
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.1.1.1"
 TEST_TOKEN = "0123456789abcdef0123456789abcdef"
@@ -69,5 +68,7 @@ async def test_device_registry(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MAC), entry.entry_id
+    )
     assert device_entry == snapshot

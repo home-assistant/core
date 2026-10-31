@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.emoncms.const import DOMAIN, FEED_ID, FEED_NAME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -10,8 +12,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import setup_integration
 from .conftest import EMONCMS_FAILURE, FEEDS
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

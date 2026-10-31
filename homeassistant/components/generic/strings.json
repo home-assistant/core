@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "already_exists": "A camera with these URL settings already exists.",
       "invalid_still_image": "URL did not return a valid still image",
@@ -15,7 +12,7 @@
       "stream_not_set_up": "The stream integration is not set up. Please ensure that you have 'default_config:' or 'stream:' in your configuration.yaml",
       "template_error": "Error rendering template. Review log for more info.",
       "timeout": "Timeout while loading URL",
-      "unable_still_load": "Unable to load valid image from still image URL (e.g. invalid host, URL or authentication failure).  Review log for more info.",
+      "unable_still_load": "Unable to load valid image from still image URL (e.g. invalid host, URL or authentication failure). Review log for more info.",
       "unable_still_load_auth": "Unable to load valid image from still image URL: The camera may require a user name and password, or they are not correct.",
       "unable_still_load_no_image": "Unable to load valid image from still image URL: No image was returned.",
       "unable_still_load_not_found": "Unable to load valid image from still image URL: The URL was not found on the server.",

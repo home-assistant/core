@@ -1,0 +1,13 @@
+{
+  "rollupDataPoints": [
+    {
+      "nutritionLog": {
+        "energy": {
+          "kcalSum": 1800.0
+        }
+      },
+      "civilStartTime": { "date": { "year": 2026, "month": 6, "day": 28 } },
+      "civilEndTime": { "date": { "year": 2026, "month": 6, "day": 29 } }
+    }
+  ]
+}

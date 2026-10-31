@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from huum.exceptions import Forbidden, NotAuthenticated, RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.huum.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -81,8 +80,8 @@ async def test_device_entry(
 ) -> None:
     """Test device registry entry."""
     assert (
-        device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_config_entry.entry_id)}
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
         )
     )
     assert device_entry == snapshot

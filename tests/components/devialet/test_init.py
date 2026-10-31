@@ -1,12 +1,12 @@
 """Test the Devialet init."""
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import NAME, setup_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_load_unload_config_entry(

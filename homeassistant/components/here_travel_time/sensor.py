@@ -11,10 +11,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_MODE,
-    CONF_NAME,
+    EntityStateAttribute,
     UnitOfLength,
     UnitOfTime,
 )
@@ -48,7 +46,6 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
     """Construct SensorEntityDescriptions."""
     return (
         SensorEntityDescription(
-            translation_key="duration",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION,
             state_class=SensorStateClass.MEASUREMENT,
@@ -66,7 +63,6 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             suggested_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
-            translation_key="distance",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -84,7 +80,7 @@ async def async_setup_entry(
     """Add HERE travel time entities from a config_entry."""
 
     entry_id = config_entry.entry_id
-    name = config_entry.data[CONF_NAME]
+    name = config_entry.title
     coordinator = config_entry.runtime_data
 
     sensors: list[HERETravelTimeSensor] = [
@@ -184,9 +180,10 @@ class OriginSensor(HERETravelTimeSensor):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """GPS coordinates."""
         if self.coordinator.data is not None:
+            latitude, longitude = self.coordinator.data[ATTR_ORIGIN].split(",")
             return {
-                ATTR_LATITUDE: self.coordinator.data[ATTR_ORIGIN].split(",")[0],
-                ATTR_LONGITUDE: self.coordinator.data[ATTR_ORIGIN].split(",")[1],
+                EntityStateAttribute.LATITUDE: latitude,
+                EntityStateAttribute.LONGITUDE: longitude,
             }
         return None
 
@@ -214,8 +211,9 @@ class DestinationSensor(HERETravelTimeSensor):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """GPS coordinates."""
         if self.coordinator.data is not None:
+            latitude, longitude = self.coordinator.data[ATTR_DESTINATION].split(",")
             return {
-                ATTR_LATITUDE: self.coordinator.data[ATTR_DESTINATION].split(",")[0],
-                ATTR_LONGITUDE: self.coordinator.data[ATTR_DESTINATION].split(",")[1],
+                EntityStateAttribute.LATITUDE: latitude,
+                EntityStateAttribute.LONGITUDE: longitude,
             }
         return None

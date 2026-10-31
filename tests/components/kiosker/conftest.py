@@ -5,18 +5,17 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.kiosker.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.kiosker.async_setup_entry", return_value=True
+        "homeassistant.components.kiosker.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

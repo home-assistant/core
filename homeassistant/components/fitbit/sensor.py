@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import Any, Final, cast, override
 
@@ -39,7 +39,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 _CONFIGURING: dict[str, str] = {}
 
-SCAN_INTERVAL: Final = datetime.timedelta(minutes=30)
+SCAN_INTERVAL: Final = dt.timedelta(minutes=30)
 
 FITBIT_TRACKER_SUBSTRING = "/tracker/"
 

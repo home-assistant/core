@@ -4,6 +4,8 @@ from typing import override
 
 from wmspro.destination import Destination
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -16,7 +18,9 @@ class WebControlProGenericEntity(Entity):
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
-    def __init__(self, config_entry_id: str, dest: Destination) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry_id: str, dest: Destination
+    ) -> None:
         """Initialize the entity with destination channel."""
         dest_id_str = str(dest.id)
         self._dest = dest
@@ -30,7 +34,9 @@ class WebControlProGenericEntity(Entity):
             name=dest.name,
             serial_number=dest_id_str,
             suggested_area=dest.room.name,
-            via_device=(DOMAIN, config_entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, config_entry_id), config_entry_id=config_entry_id
+            ),
             configuration_url=f"http://{dest.host}/control",
         )
 

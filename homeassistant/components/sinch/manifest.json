@@ -1,6 +1,7 @@
 {
   "domain": "sinch",
   "name": "Sinch SMS",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": ["@bendikrb"],
   "documentation": "https://www.home-assistant.io/integrations/sinch",
   "iot_class": "cloud_push",

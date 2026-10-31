@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.brother.const import DOMAIN, UPDATE_INTERVAL
@@ -13,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -39,13 +42,13 @@ async def test_availability(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when device is offline."""
-    entity_id = "sensor.hl_l2340dw_status"
+    entity_id = "sensor.hl_l2340dw"
     await init_integration(hass, mock_config_entry)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "waiting"
+    assert state.state == "idle"
 
     mock_brother_client.async_update.side_effect = ConnectionError
     freezer.tick(UPDATE_INTERVAL)
@@ -64,7 +67,7 @@ async def test_availability(
     state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "waiting"
+    assert state.state == "idle"
 
 
 async def test_unique_id_migration(

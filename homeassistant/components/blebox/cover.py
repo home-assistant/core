@@ -16,8 +16,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BleBoxConfigEntry
-from .coordinator import BleBoxCoordinator
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .entity import BleBoxEntity
 from .util import blebox_command
 

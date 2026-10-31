@@ -5,6 +5,7 @@ import hmac
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components import mailgun, webhook
@@ -14,8 +15,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 API_KEY = "abc123"
 

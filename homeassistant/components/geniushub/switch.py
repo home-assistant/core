@@ -3,27 +3,15 @@
 from datetime import timedelta
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
-from . import ATTR_DURATION, GeniusHubConfigEntry
+from . import GeniusHubConfigEntry
+from .const import ATTR_DURATION
 from .entity import GeniusZone
 
 GH_ON_OFF_ZONE = "on / off"
-
-SVC_SET_SWITCH_OVERRIDE = "set_switch_override"
-
-SET_SWITCH_OVERRIDE_SCHEMA: VolDictType = {
-    vol.Optional(ATTR_DURATION): vol.All(
-        cv.time_period,
-        vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
-    ),
-}
 
 
 async def async_setup_entry(
@@ -39,15 +27,6 @@ async def async_setup_entry(
         GeniusSwitch(broker, z)
         for z in broker.client.zone_objs
         if z.data.get("type") == GH_ON_OFF_ZONE
-    )
-
-    # Register custom services
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SVC_SET_SWITCH_OVERRIDE,
-        SET_SWITCH_OVERRIDE_SCHEMA,
-        "async_turn_on",
     )
 
 
@@ -83,4 +62,5 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set the zone to override/on ({'setpoint': true}) for x seconds."""
-        await self._zone.set_override(1, kwargs.get(ATTR_DURATION, 3600))
+        duration: timedelta = kwargs.get(ATTR_DURATION, timedelta(hours=1))
+        await self._zone.set_override(1, int(duration.total_seconds()))

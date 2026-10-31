@@ -2,14 +2,14 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.balboa.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import TEST_HOST
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

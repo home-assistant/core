@@ -51,8 +51,16 @@
     "reload": {
       "service": "mdi:reload"
     },
+    "save_scene": {
+      "service": "mdi:content-save-cog"
+    },
     "send": {
       "service": "mdi:email-arrow-right"
+    }
+  },
+  "triggers": {
+    "telegram": {
+      "trigger": "mdi:email-alert-outline"
     }
   }
 }

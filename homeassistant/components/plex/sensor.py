@@ -7,20 +7,14 @@ from plexapi.exceptions import NotFound
 import requests.exceptions
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_SERVER_IDENTIFIER,
-    DOMAIN,
-    PLEX_UPDATE_LIBRARY_SIGNAL,
-    PLEX_UPDATE_SENSOR_SIGNAL,
-)
-from .helpers import get_plex_server, pretty_title
+from .const import DOMAIN, PLEX_UPDATE_LIBRARY_SIGNAL, PLEX_UPDATE_SENSOR_SIGNAL
+from .helpers import PlexConfigEntry, pretty_title
 
 LIBRARY_ATTRIBUTE_TYPES = {
     "artist": ["artist", "album"],
@@ -50,12 +44,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PlexConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plex sensor from a config entry."""
-    server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    plexserver = get_plex_server(hass, server_id)
+    plexserver = config_entry.runtime_data.server
     sensors: list[SensorEntity] = [PlexSensor(hass, plexserver)]
 
     def create_library_sensors():
@@ -80,6 +73,7 @@ class PlexSensor(SensorEntity):
 
     def __init__(self, hass, plex_server):
         """Initialize the sensor."""
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"sensor-{plex_server.machine_identifier}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._server = plex_server

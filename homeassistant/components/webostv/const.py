@@ -1,6 +1,7 @@
 """Constants for the LG webOS TV integration."""
 
 import asyncio
+import logging
 
 import aiohttp
 from aiowebostv import WebOsTvCommandError
@@ -8,7 +9,8 @@ from aiowebostv import WebOsTvCommandError
 from homeassistant.const import Platform
 
 DOMAIN = "webostv"
-PLATFORMS = [Platform.MEDIA_PLAYER]
+LOGGER = logging.getLogger(__package__)
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 DEFAULT_NAME = "LG webOS TV"
 
 ATTR_PAYLOAD = "payload"

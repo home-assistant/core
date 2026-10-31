@@ -15,7 +15,7 @@ from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
+from .coordinator import TPLinkConfigEntry
 from .deprecate import DeprecatedInfo
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 

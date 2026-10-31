@@ -95,23 +95,22 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     @override
     async def _async_setup(self) -> None:
         """Authenticate if needed during initial setup."""
-        if await self.client.check_auth_needed():
+        try:
             if (
                 CONF_USERNAME in self.config_entry.data
                 and CONF_PASSWORD in self.config_entry.data
             ):
-                try:
-                    await self.client.authenticate(
-                        self.config_entry.data[CONF_USERNAME],
-                        self.config_entry.data[CONF_PASSWORD],
-                    )
-                except SmlightAuthError as err:
-                    raise ConfigEntryAuthFailed from err
-            else:
-                # Auth required but no credentials available
+                await self.client.authenticate(
+                    self.config_entry.data[CONF_USERNAME],
+                    self.config_entry.data[CONF_PASSWORD],
+                )
+            elif await self.client.check_auth_needed():
                 raise ConfigEntryAuthFailed
 
-        info = await self.client.get_info()
+            info = await self.client.get_info()
+        except SmlightAuthError as err:
+            raise ConfigEntryAuthFailed from err
+
         self.unique_id = format_mac(info.MAC)
         self.legacy_api = info.legacy_api
 
@@ -155,7 +154,11 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             return await command(*args, **kwargs)
         except SmlightAuthError as err:
-            raise ConfigEntryAuthFailed from err
+            self.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except SmlightConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

@@ -11,11 +11,11 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.os_error import os_write_error
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TIMESTAMP, DEFAULT_NAME, DOMAIN, FILE_ICON
+from .const import CONF_TIMESTAMP, DEFAULT_NAME, FILE_ICON
 
 
 async def async_setup_entry(
@@ -61,9 +61,5 @@ class FileNotifyEntity(NotifyEntity):
                 else:
                     text = f"{message}\n"
                 file.write(text)
-        except OSError as exc:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="write_access_failed",
-                translation_placeholders={"filename": filepath, "exc": f"{exc!r}"},
-            ) from exc
+        except OSError as err:
+            raise os_write_error(err, filepath) from err

@@ -8,6 +8,7 @@ from meteo_lt import Forecast as MeteoLtForecast, MeteoLtAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN
@@ -27,7 +28,7 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
         config_entry: MeteoLtConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
-        self.client = MeteoLtAPI()
+        self.client = MeteoLtAPI(session=async_get_clientsession(hass))
         self.place_code = place_code
 
         super().__init__(
@@ -42,7 +43,9 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
     async def _async_update_data(self) -> MeteoLtForecast:
         """Fetch data from Meteo.lt API."""
         try:
-            forecast = await self.client.get_forecast(self.place_code)
+            forecast = await self.client.get_forecast(
+                self.place_code, include_warnings=False
+            )
         except aiohttp.ClientResponseError as err:
             raise UpdateFailed(
                 f"API returned error status {err.status}: {err.message}"

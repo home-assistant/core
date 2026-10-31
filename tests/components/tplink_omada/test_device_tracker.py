@@ -5,16 +5,15 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.clients import OmadaConnectedClient
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_CLIENTS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 UPDATE_INTERVAL = timedelta(seconds=10)
 POLL_INTERVAL = timedelta(seconds=POLL_CLIENTS + 10)
@@ -52,6 +51,7 @@ async def test_device_scanner_created(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test gateway connected switches."""
@@ -60,6 +60,10 @@ async def test_device_scanner_created(
 
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
+    device = device_registry.async_get(updated_entity.device_id)
+    assert device is not None
+    assert device.name == "Banana"
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "2c:71:ff:ed:34:83")}
     async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done()
 

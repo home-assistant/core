@@ -1,7 +1,8 @@
 {
   "domain": "tesla_wall_connector",
   "name": "Tesla Wall Connector",
-  "codeowners": ["@einarhauks"],
+  "categories": ["energy.ev_charging"],
+  "codeowners": ["@einarhauks", "@sarabveer"],
   "config_flow": true,
   "dhcp": [
     {
@@ -21,5 +22,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["tesla_wall_connector"],
-  "requirements": ["tesla-wall-connector==1.1.0"]
+  "requirements": ["tesla-wall-connector==1.2.0"]
 }

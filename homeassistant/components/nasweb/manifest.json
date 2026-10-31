@@ -1,6 +1,7 @@
 {
   "domain": "nasweb",
   "name": "NASweb",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@nasWebio"],
   "config_flow": true,
   "dependencies": ["webhook"],

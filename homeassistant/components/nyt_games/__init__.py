@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NYTGamesConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NYTGamesConfigEntry) -> None:
     """Set up NYTGames from a config entry."""
 
     client = NYTGamesClient(
@@ -28,9 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NYTGamesConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NYTGamesConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NYTGamesConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

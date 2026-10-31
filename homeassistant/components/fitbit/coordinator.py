@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import Final, override
 
@@ -18,7 +18,7 @@ from .exceptions import FitbitApiException, FitbitAuthException
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL: Final = datetime.timedelta(minutes=30)
+UPDATE_INTERVAL: Final = dt.timedelta(minutes=30)
 TIMEOUT = 10
 
 type FitbitConfigEntry = ConfigEntry[FitbitData]

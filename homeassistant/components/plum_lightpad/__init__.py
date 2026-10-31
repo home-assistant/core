@@ -7,7 +7,7 @@ from homeassistant.helpers import issue_registry as ir
 DOMAIN = "plum_lightpad"
 
 
-async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> None:
     """Set up Plum Lightpad from a config entry."""
     ir.async_create_issue(
         hass,
@@ -21,10 +21,8 @@ async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
         },
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload config entry."""
     if all(
         config_entry.state is ConfigEntryState.NOT_LOADED
@@ -32,5 +30,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if config_entry.entry_id != entry.entry_id
     ):
         ir.async_delete_issue(hass, DOMAIN, DOMAIN)
-
-    return True

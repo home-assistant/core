@@ -9,13 +9,13 @@ from typing import TYPE_CHECKING, Any, Concatenate, overload, override
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
 
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AutomowerDataUpdateCoordinator
 from .const import DOMAIN, EXECUTION_TIME_DELAY
+from .coordinator import AutomowerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,14 +95,6 @@ def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     return decorator(_func)
 
 
-@callback
-def _work_area_translation_key(work_area_id: int, key: str) -> str:
-    """Return the translation key."""
-    if work_area_id == 0:
-        return f"my_lawn_{key}"
-    return f"work_area_{key}"
-
-
 class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     """Defining the Automower base Entity."""
 
@@ -168,24 +160,50 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         """Initialize AutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self.work_area_id = work_area_id
+        work_area_attributes = self.work_area_attributes
+        device_info = self._attr_device_info
+        if TYPE_CHECKING:
+            assert work_area_attributes is not None
+            assert isinstance(device_info, DeviceInfo)
+
+        parent_device = dr.async_get(coordinator.hass).async_get_or_create_from_info(
+            config_entry_id=coordinator.config_entry.entry_id,
+            device_info=device_info,
+        )
+        if work_area_id == 0:
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, f"{mower_id}_{work_area_id}")},
+                translation_key="my_lawn",
+                parent_device_id=parent_device.id,
+            )
+        else:
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, f"{mower_id}_{work_area_id}")},
+                name=work_area_attributes.name,
+                parent_device_id=parent_device.id,
+            )
 
     @property
-    def work_areas(self) -> dict[int, WorkArea]:
+    def work_areas(self) -> dict[int, WorkArea] | None:
         """Get the work areas from the mower attributes."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.work_areas is not None
         return self.mower_attributes.work_areas
 
     @property
-    def work_area_attributes(self) -> WorkArea:
+    def work_area_attributes(self) -> WorkArea | None:
         """Get the work area attributes of the current work area."""
-        return self.work_areas[self.work_area_id]
+        if (work_areas := self.work_areas) is None:
+            return None
+        return work_areas.get(self.work_area_id)
 
     @property
     @override
     def available(self) -> bool:
         """Return True if the work area is available and the mower has no errors."""
-        return super().available and self.work_area_id in self.work_areas
+        return (
+            super().available
+            and self.work_areas is not None
+            and self.work_area_id in self.work_areas
+        )
 
 
 class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):

@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pyfreshr.exceptions import ApiResponseError
 from pyfreshr.models import DeviceReadings, DeviceSummary
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.freshr.const import DOMAIN
@@ -18,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import DEVICE_ID, MOCK_DEVICE_CURRENT
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -33,7 +36,9 @@ async def test_entities(
     """Test the sensor entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+    )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
@@ -100,7 +105,9 @@ async def test_device_reappears_after_removal(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that entities are re-created when a previously removed device reappears."""
-    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+    )
 
     # Device disappears from the account
     mock_freshr_client.fetch_devices.return_value = []
@@ -108,7 +115,12 @@ async def test_device_reappears_after_removal(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+        )
+        is None
+    )
 
     # Device reappears
     mock_freshr_client.fetch_devices.return_value = [DeviceSummary(id=DEVICE_ID)]
@@ -117,7 +129,9 @@ async def test_device_reappears_after_removal(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+    )
     t1_entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{DEVICE_ID}_t1"
     )
@@ -135,7 +149,12 @@ async def test_dynamic_device_added(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that sensors are created for a device that appears after initial setup."""
-    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID_2)}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, DEVICE_ID_2), mock_config_entry.entry_id
+        )
+        is None
+    )
 
     mock_freshr_client.fetch_devices.return_value = [
         DeviceSummary(id=DEVICE_ID),
@@ -146,7 +165,9 @@ async def test_dynamic_device_added(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID_2)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID_2), mock_config_entry.entry_id
+    )
     t1_entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{DEVICE_ID_2}_t1"
     )

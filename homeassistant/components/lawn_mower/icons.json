@@ -6,6 +6,9 @@
     "is_encountering_an_error": {
       "condition": "mdi:alert-circle-outline"
     },
+    "is_idle": {
+      "condition": "mdi:stop"
+    },
     "is_mowing": {
       "condition": "mdi:play"
     },
@@ -30,9 +33,15 @@
     },
     "start_mowing": {
       "service": "mdi:play"
+    },
+    "stop": {
+      "service": "mdi:stop"
     }
   },
   "triggers": {
+    "became_idle": {
+      "trigger": "mdi:stop"
+    },
     "errored": {
       "trigger": "mdi:alert-circle-outline"
     },

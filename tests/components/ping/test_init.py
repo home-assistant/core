@@ -1,12 +1,11 @@
 """Test init of ping component."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("patch_setup")
@@ -45,5 +44,5 @@ async def test_device_migration(
 
     assert device is not None
     assert device.id == old_device.id
-    assert device.config_entries == {config_entry.entry_id}
+    assert device.config_entry_id == config_entry.entry_id
     assert config_entry.minor_version == 2

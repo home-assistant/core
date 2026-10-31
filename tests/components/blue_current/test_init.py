@@ -9,8 +9,9 @@ from bluecurrent_api.exceptions import (
     RequestLimitReached,
     WebsocketError,
 )
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.blue_current.const import (
     CHARGING_CARD_ID,
@@ -24,8 +25,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(
@@ -119,7 +118,7 @@ async def test_start_charging_action(
         DOMAIN,
         SERVICE_START_CHARGE_SESSION,
         {
-            CONF_DEVICE_ID: list(device_registry.devices)[0],
+            CONF_DEVICE_ID: list(device_registry._devices)[0],
             CHARGING_CARD_ID: "TEST_CARD",
         },
         blocking=True,
@@ -139,7 +138,7 @@ async def test_start_charging_action_without_card(
         DOMAIN,
         SERVICE_START_CHARGE_SESSION,
         {
-            CONF_DEVICE_ID: list(device_registry.devices)[0],
+            CONF_DEVICE_ID: list(device_registry._devices)[0],
         },
         blocking=True,
     )
@@ -187,7 +186,7 @@ async def test_start_charging_action_errors(
             DOMAIN,
             SERVICE_START_CHARGE_SESSION,
             {
-                CONF_DEVICE_ID: list(device_registry.devices)[0],
+                CONF_DEVICE_ID: list(device_registry._devices)[0],
             },
             blocking=True,
         )
@@ -207,7 +206,7 @@ async def test_start_charging_action_errors(
             DOMAIN,
             SERVICE_START_CHARGE_SESSION,
             {
-                CONF_DEVICE_ID: list(device_registry.devices)[0],
+                CONF_DEVICE_ID: list(device_registry._devices)[0],
             },
             blocking=True,
         )

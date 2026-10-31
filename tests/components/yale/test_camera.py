@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from pytest_homeassistant.typing import ClientSessionGenerator
 from yalexs.const import Brand
 from yalexs.doorbell import ContentTokenExpired
 
@@ -10,8 +11,6 @@ from homeassistant.components.camera import CameraState
 from homeassistant.core import HomeAssistant
 
 from .mocks import _create_yale_with_devices, _mock_doorbell_from_fixture
-
-from tests.typing import ClientSessionGenerator
 
 
 async def test_create_doorbell(

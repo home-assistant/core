@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import ConfigEntryState
@@ -28,8 +29,6 @@ from .conftest import (
     setup_product_mock,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(name="switchbox")
 def switchbox_fixture():
@@ -48,6 +47,7 @@ def switchbox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My switch box")
     type(product).model = PropertyMock(return_value="switchBox")
+    type(product).product = PropertyMock(return_value="switchBox")
     return (feature, "switch.my_switch_box")
 
 
@@ -106,13 +106,7 @@ async def test_switchbox_on(switchbox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = switchbox
 
-    feature_mock.is_on = False
     await async_setup_entity(hass, entity_id)
-
-    def turn_on():
-        feature_mock.is_on = True
-
-    feature_mock.async_turn_on = AsyncMock(side_effect=turn_on)
 
     await hass.services.async_call(
         "switch",
@@ -121,8 +115,7 @@ async def test_switchbox_on(switchbox, hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    feature_mock.async_turn_on.assert_called_once_with()
 
 
 async def test_switchbox_off(switchbox, hass: HomeAssistant) -> None:
@@ -130,13 +123,7 @@ async def test_switchbox_off(switchbox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = switchbox
 
-    feature_mock.is_on = True
     await async_setup_entity(hass, entity_id)
-
-    def turn_off():
-        feature_mock.is_on = False
-
-    feature_mock.async_turn_off = AsyncMock(side_effect=turn_off)
 
     await hass.services.async_call(
         "switch",
@@ -144,8 +131,8 @@ async def test_switchbox_off(switchbox, hass: HomeAssistant) -> None:
         {"entity_id": entity_id},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
+
+    feature_mock.async_turn_off.assert_called_once_with()
 
 
 def relay_mock(relay_id=0):
@@ -175,6 +162,7 @@ def switchbox_d_fixture():
 
     type(product).name = PropertyMock(return_value="My relays")
     type(product).model = PropertyMock(return_value="switchBoxD")
+    type(product).product = PropertyMock(return_value="switchBoxD")
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
     type(product).unique_id = PropertyMock(return_value="abcd0123ef5678")
@@ -263,14 +251,8 @@ async def test_switchbox_d_turn_first_on(switchbox_d, hass: HomeAssistant) -> No
 
     feature_mocks, entity_ids = switchbox_d
 
-    feature_mocks[0].is_on = False
-    feature_mocks[1].is_on = False
     await async_setup_entities(hass, entity_ids)
 
-    def turn_on0():
-        feature_mocks[0].is_on = True
-
-    feature_mocks[0].async_turn_on = AsyncMock(side_effect=turn_on0)
     await hass.services.async_call(
         "switch",
         SERVICE_TURN_ON,
@@ -278,8 +260,8 @@ async def test_switchbox_d_turn_first_on(switchbox_d, hass: HomeAssistant) -> No
         blocking=True,
     )
 
-    assert hass.states.get(entity_ids[0]).state == STATE_ON
-    assert hass.states.get(entity_ids[1]).state == STATE_OFF
+    feature_mocks[0].async_turn_on.assert_called_once_with()
+    feature_mocks[1].async_turn_on.assert_not_called()
 
 
 async def test_switchbox_d_second_on(switchbox_d, hass: HomeAssistant) -> None:
@@ -287,14 +269,8 @@ async def test_switchbox_d_second_on(switchbox_d, hass: HomeAssistant) -> None:
 
     feature_mocks, entity_ids = switchbox_d
 
-    feature_mocks[0].is_on = False
-    feature_mocks[1].is_on = False
     await async_setup_entities(hass, entity_ids)
 
-    def turn_on1():
-        feature_mocks[1].is_on = True
-
-    feature_mocks[1].async_turn_on = AsyncMock(side_effect=turn_on1)
     await hass.services.async_call(
         "switch",
         SERVICE_TURN_ON,
@@ -302,8 +278,8 @@ async def test_switchbox_d_second_on(switchbox_d, hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    assert hass.states.get(entity_ids[0]).state == STATE_OFF
-    assert hass.states.get(entity_ids[1]).state == STATE_ON
+    feature_mocks[0].async_turn_on.assert_not_called()
+    feature_mocks[1].async_turn_on.assert_called_once_with()
 
 
 async def test_switchbox_d_first_off(switchbox_d, hass: HomeAssistant) -> None:
@@ -311,14 +287,8 @@ async def test_switchbox_d_first_off(switchbox_d, hass: HomeAssistant) -> None:
 
     feature_mocks, entity_ids = switchbox_d
 
-    feature_mocks[0].is_on = True
-    feature_mocks[1].is_on = True
     await async_setup_entities(hass, entity_ids)
 
-    def turn_off0():
-        feature_mocks[0].is_on = False
-
-    feature_mocks[0].async_turn_off = AsyncMock(side_effect=turn_off0)
     await hass.services.async_call(
         "switch",
         SERVICE_TURN_OFF,
@@ -326,8 +296,8 @@ async def test_switchbox_d_first_off(switchbox_d, hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    assert hass.states.get(entity_ids[0]).state == STATE_OFF
-    assert hass.states.get(entity_ids[1]).state == STATE_ON
+    feature_mocks[0].async_turn_off.assert_called_once_with()
+    feature_mocks[1].async_turn_off.assert_not_called()
 
 
 async def test_switchbox_d_second_off(switchbox_d, hass: HomeAssistant) -> None:
@@ -335,22 +305,17 @@ async def test_switchbox_d_second_off(switchbox_d, hass: HomeAssistant) -> None:
 
     feature_mocks, entity_ids = switchbox_d
 
-    feature_mocks[0].is_on = True
-    feature_mocks[1].is_on = True
     await async_setup_entities(hass, entity_ids)
 
-    def turn_off1():
-        feature_mocks[1].is_on = False
-
-    feature_mocks[1].async_turn_off = AsyncMock(side_effect=turn_off1)
     await hass.services.async_call(
         "switch",
         SERVICE_TURN_OFF,
         {"entity_id": entity_ids[1]},
         blocking=True,
     )
-    assert hass.states.get(entity_ids[0]).state == STATE_ON
-    assert hass.states.get(entity_ids[1]).state == STATE_OFF
+
+    feature_mocks[0].async_turn_off.assert_not_called()
+    feature_mocks[1].async_turn_off.assert_called_once_with()
 
 
 async def test_switchbox_with_name(hass: HomeAssistant) -> None:
@@ -369,6 +334,7 @@ async def test_switchbox_with_name(hass: HomeAssistant) -> None:
     product = feature.product
     type(product).name = PropertyMock(return_value="My switch box")
     type(product).model = PropertyMock(return_value="switchBoxD")
+    type(product).product = PropertyMock(return_value="switchBoxD")
 
     await async_setup_entity(hass, "switch.my_switch_box_garden_lights")
     state = hass.states.get("switch.my_switch_box_garden_lights")

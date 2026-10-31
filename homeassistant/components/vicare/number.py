@@ -30,7 +30,7 @@ from .types import (
     ViCareDevice,
     ViCareRequiredKeysMixin,
 )
-from .utils import get_circuits, get_device_serial, is_supported
+from .utils import get_circuits, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -359,7 +359,7 @@ def _build_entities(
         entities.extend(
             ViCareNumber(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
             )
@@ -370,7 +370,7 @@ def _build_entities(
         entities.extend(
             ViCareNumber(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
                 circuit,

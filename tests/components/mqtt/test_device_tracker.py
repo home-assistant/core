@@ -4,6 +4,18 @@ from datetime import UTC, datetime
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
+    help_custom_config,
+    help_test_reloadable,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
+)
+from pytest_homeassistant.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 from homeassistant.components import device_tracker
 from homeassistant.components.mqtt.const import DOMAIN
@@ -11,20 +23,6 @@ from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from .common import (
-    help_custom_config,
-    help_test_reloadable,
-    help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_skipped_async_ha_write_state,
-)
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
 
 DEFAULT_CONFIG = {
     DOMAIN: {
@@ -265,32 +263,35 @@ async def test_cleanup_device_tracker(
     )
     await hass.async_block_till_done()
 
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), mqtt_config_entry.entry_id
+    )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
+    entity_entry = entity_registry.async_get("device_tracker.mqtt")
     assert entity_entry is not None
 
-    state = hass.states.get("device_tracker.mqtt_unique")
+    state = hass.states.get("device_tracker.mqtt")
     assert state is not None
 
     # Remove MQTT from the device
-    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    response = await ws_client.remove_device(
-        device_entry.id, mqtt_config_entry.entry_id
-    )
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), mqtt_config_entry.entry_id
+    )
     assert device_entry is None
-    entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
+    entity_entry = entity_registry.async_get("device_tracker.mqtt")
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("device_tracker.mqtt_unique")
+    state = hass.states.get("device_tracker.mqtt")
     assert state is None
     await hass.async_block_till_done()
 

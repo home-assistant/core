@@ -1,5 +1,8 @@
 {
   "services": {
+    "send_text": {
+      "service": "mdi:keyboard"
+    },
     "update_setting": {
       "service": "mdi:cog"
     }

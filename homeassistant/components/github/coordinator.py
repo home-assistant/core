@@ -88,6 +88,11 @@ query ($owner: String!, $repository: String!) {
       name
       url
       tag: tagName
+      assets: releaseAssets(first: 100) {
+        nodes {
+          download_count: downloadCount
+        }
+      }
     }
     refs(
       first: 1
@@ -148,6 +153,7 @@ class GitHubUserDataUpdateCoordinator(
         except (GitHubConnectionException, GitHubRatelimitException) as exception:
             raise UpdateFailed(exception) from exception
         except GitHubException as exception:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.exception(exception)
             raise UpdateFailed(exception) from exception
 
@@ -195,6 +201,7 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(exception) from exception
         except GitHubException as exception:
             # These are unexpected and we log the trace to help with troubleshooting
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.exception(exception)
             raise UpdateFailed(exception) from exception
 

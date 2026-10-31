@@ -1,6 +1,6 @@
 """The AirNow integration."""
 
-import datetime
+import datetime as dt
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,22 +21,19 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> None:
     """Set up AirNow from a config entry."""
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
-    # Station Radius is a user-configurable option
-    distance = entry.options[CONF_RADIUS]
-
     # Reports are published hourly but update twice per hour
-    update_interval = datetime.timedelta(minutes=30)
+    update_interval = dt.timedelta(minutes=30)
 
     # Setup the Coordinator
     session = async_get_clientsession(hass)
     coordinator = AirNowDataUpdateCoordinator(
-        hass, entry, session, api_key, latitude, longitude, distance, update_interval
+        hass, entry, session, api_key, latitude, longitude, update_interval
     )
 
     # Sync with Coordinator
@@ -61,27 +58,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bo
         if not dev_entities:
             device_registry.async_remove_device(dev.id)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if entry.version == 1:
-        new_options = {CONF_RADIUS: entry.data[CONF_RADIUS]}
-        new_data = entry.data.copy()
-        del new_data[CONF_RADIUS]
+    if entry.version < 3:
+        # The 2026 AirNow API dropped the distance parameter, so the radius
+        # option no longer affects lookups. Strip it from both older layouts:
+        # version 1 kept it in data, version 2 in options.
+        new_data = {k: v for k, v in entry.data.items() if k != CONF_RADIUS}
+        new_options = {k: v for k, v in entry.options.items() if k != CONF_RADIUS}
 
         hass.config_entries.async_update_entry(
-            entry, data=new_data, options=new_options, version=2
+            entry, data=new_data, options=new_options, version=3
         )
 
     _LOGGER.info("Migration to version %s successful", entry.version)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

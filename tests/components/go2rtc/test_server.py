@@ -5,7 +5,8 @@ from collections.abc import Generator
 import logging
 from pathlib import Path
 import subprocess
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import Any
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -111,6 +112,24 @@ def assert_server_output_not_logged(
 ) -> None:
     """Check server stdout was logged."""
     _assert_server_output_logged(server_stdout, caplog, loglevel, False)
+
+
+def _watch_spawn(mock_create_subprocess: AsyncMock) -> asyncio.Event:
+    """Return an event that is set when the next go2rtc process is spawned."""
+    spawned = asyncio.Event()
+
+    def _spawn(*args: Any, **kwargs: Any) -> Any:
+        spawned.set()
+        return DEFAULT
+
+    mock_create_subprocess.side_effect = _spawn
+    return spawned
+
+
+async def _wait_for_respawn(spawned: asyncio.Event) -> None:
+    """Wait for the watchdog, which runs outside the tasks Home Assistant tracks."""
+    async with asyncio.timeout(5):
+        await spawned.wait()
 
 
 @pytest.mark.parametrize(
@@ -278,9 +297,9 @@ async def test_log_level_mapping(
     mock_create_subprocess.return_value.wait.side_effect = wait_event
 
     await server.start()
+    spawned = _watch_spawn(mock_create_subprocess)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify go2rtc binary stdout was logged with default level
     for i, entry in enumerate(server_stdout):
@@ -291,8 +310,7 @@ async def test_log_level_mapping(
         ) in caplog.record_tuples
 
     evt.set()
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await _wait_for_respawn(spawned)
 
     assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
@@ -319,16 +337,16 @@ async def test_server_restart_process_exit(
     await server.start()
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
+    spawned = _watch_spawn(mock_create_subprocess)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     mock_create_subprocess.assert_not_awaited()
 
     # Verify go2rtc binary stdout was not yet logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
 
     evt.set()
-    await asyncio.sleep(0.1)
+    await _wait_for_respawn(spawned)
     mock_create_subprocess.assert_awaited_once()
 
     # Verify go2rtc binary stdout was logged with warning level
@@ -352,12 +370,12 @@ async def test_server_restart_process_error(
     await server.start()
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
+    spawned = _watch_spawn(mock_create_subprocess)
 
     # Verify go2rtc binary stdout was not yet logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await _wait_for_respawn(spawned)
     mock_create_subprocess.assert_awaited_once()
 
     # Verify go2rtc binary stdout was logged with warning level
@@ -381,12 +399,12 @@ async def test_server_restart_api_error(
     await server.start()
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
+    spawned = _watch_spawn(mock_create_subprocess)
 
     # Verify go2rtc binary stdout was not yet logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await _wait_for_respawn(spawned)
     mock_create_subprocess.assert_awaited_once()
 
     # Verify go2rtc binary stdout was logged with warning level
@@ -411,17 +429,62 @@ async def test_server_restart_error(
     await server.start()
     mock_create_subprocess.assert_awaited_once()
     mock_create_subprocess.reset_mock()
+    spawned = _watch_spawn(mock_create_subprocess)
 
     # Verify go2rtc binary stdout was not yet logged with warning level
     assert_server_output_not_logged(server_stdout, caplog, logging.WARNING)
 
-    await asyncio.sleep(0.1)
-    await hass.async_block_till_done()
+    await _wait_for_respawn(spawned)
     mock_create_subprocess.assert_awaited_once()
 
     # Verify go2rtc binary stdout was logged with warning level
     assert_server_output_logged(server_stdout, caplog, logging.WARNING)
 
     assert "Unexpected error when restarting go2rtc server" in caplog.text
+
+    await server.stop()
+
+
+@pytest.mark.parametrize(
+    ("server_stdout", "expected_stdout"),
+    [
+        (
+            [
+                "09:00:03.467 INF [api] listen addr=127.0.0.1:1984",
+                "10:27:02.622 WRN producer.go:170 >"
+                ' error="read tcp 192.168.1.96:42550->192.168.1.145:554: i/o timeout"'
+                " url=rtsp://admin:hunter2@192.168.1.145:554/Preview_01_sub",
+                "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
+                "?auth=token&channel=0&user=admin&password=hunter2",
+                "10:27:02.624 WRN [streams] url=http://camera.local"
+                "?user=alice@example.com",
+            ],
+            [
+                "10:27:02.622 WRN producer.go:170 >"
+                ' error="read tcp 192.168.1.96:42550->192.168.1.145:554: i/o timeout"'
+                " url=rtsp://****@192.168.1.145:554/Preview_01_sub",
+                "10:27:02.623 WRN [streams] url=http://192.168.1.145/snapshot"
+                "?auth=****&channel=0&user=****&password=****",
+                "10:27:02.624 WRN [streams] url=http://camera.local?user=****",
+            ],
+        )
+    ],
+)
+@pytest.mark.usefixtures("mock_tempfile", "rest_client")
+async def test_credentials_redacted_from_server_output(
+    hass: HomeAssistant,
+    mock_create_subprocess: MagicMock,
+    server: Server,
+    caplog: pytest.LogCaptureFixture,
+    expected_stdout: list[str],
+) -> None:
+    """Test credentials in urls are redacted from the logged server output."""
+    await server.start()
+    await hass.async_block_till_done()
+
+    assert_server_output_logged(expected_stdout, caplog, logging.WARNING)
+    assert "hunter2" not in caplog.text
+    assert "token" not in caplog.text
+    assert "alice@example.com" not in caplog.text
 
     await server.stop()

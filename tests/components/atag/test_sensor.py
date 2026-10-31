@@ -1,12 +1,12 @@
 """Tests for the Atag sensor platform."""
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.atag.sensor import SENSORS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import UID, init_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensors(

@@ -6,14 +6,13 @@ from typing import Any
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from pytest_homeassistant.common import flush_store
 
 from homeassistant.components.homekit_controller.const import ENTITY_MAP
 from homeassistant.components.homekit_controller.storage import EntityMapStorage
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform, setup_test_component
-
-from tests.common import flush_store
 
 
 async def test_load_from_storage(

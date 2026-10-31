@@ -1,7 +1,7 @@
 """Tests for the Sighthound integration."""
 
 from copy import deepcopy
-import datetime
+import datetime as dt
 import os
 from pathlib import Path
 from unittest import mock
@@ -49,7 +49,7 @@ MOCK_DETECTIONS = {
     "requestId": "545cec700eac4d389743e2266264e84b",
 }
 
-MOCK_NOW = datetime.datetime(2020, 2, 20, 10, 5, 3)
+MOCK_NOW = dt.datetime(2020, 2, 20, 10, 5, 3)
 
 
 @pytest.fixture(autouse=True)

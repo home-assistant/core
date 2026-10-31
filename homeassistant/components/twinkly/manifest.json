@@ -1,6 +1,7 @@
 {
   "domain": "twinkly",
   "name": "Twinkly",
+  "categories": ["lighting.led_strips_controllers"],
   "codeowners": ["@dr1rrb", "@Robbie1221", "@Olen"],
   "config_flow": true,
   "dhcp": [
@@ -15,5 +16,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["ttls"],
-  "requirements": ["ttls==1.8.3"]
+  "requirements": ["ttls==1.11.1"]
 }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
@@ -11,8 +12,6 @@ from homeassistant.components.homeassistant_hardware.repair_helpers import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 TEST_DOMAIN = "test_hardware"
 
@@ -37,6 +36,7 @@ async def test_create_and_delete_multi_pan_migration_issue(
     assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
     assert issue.translation_placeholders == {"hardware_name": "Test HW"}
     assert issue.data == {"entry_id": entry.entry_id}
+    assert issue.config_entry_id == entry.entry_id
     assert issue.is_fixable
     assert issue.severity is ir.IssueSeverity.WARNING
 

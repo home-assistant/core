@@ -36,10 +36,7 @@ rules:
 
   # Silver
   config-entry-unloading: done
-  action-exceptions:
-    status: exempt
-    comment: |
-      Integration has no actions and is a read-only platform.
+  action-exceptions: done
   docs-configuration-parameters: todo
   docs-installation-parameters: done
   entity-unavailable: done

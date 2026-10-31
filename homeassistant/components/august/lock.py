@@ -8,14 +8,19 @@ from yalexs.activity import ActivityType
 from yalexs.lock import Lock, LockOperation, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
-from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity, LockEntityFeature
+from homeassistant.components.lock import (
+    LockEntity,
+    LockEntityFeature,
+    LockEntityStateAttribute,
+)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
-from . import AugustConfigEntry, AugustData
+from . import AugustConfigEntry
+from .data import AugustData
 from .entity import AugustEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,7 +139,7 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Restore ATTR_CHANGED_BY on startup.
+        """Restore changed_by on startup.
 
         It is likely no longer in the activity log.
         """
@@ -143,5 +148,7 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
         if not (last_state := await self.async_get_last_state()):
             return
 
-        if ATTR_CHANGED_BY in last_state.attributes:
-            self._attr_changed_by = last_state.attributes[ATTR_CHANGED_BY]
+        if LockEntityStateAttribute.CHANGED_BY in last_state.attributes:
+            self._attr_changed_by = last_state.attributes[
+                LockEntityStateAttribute.CHANGED_BY
+            ]

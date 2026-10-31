@@ -1,0 +1,32 @@
+{
+  "1296269": {
+    "category": "integration",
+    "description": "This your first repo!",
+    "domain": "example",
+    "full_name": "hacs-test-org/integration-basic",
+    "installed": true,
+    "last_fetched": 1550000000.0,
+    "last_updated": "2020-01-20T09:34:52Z",
+    "last_version": "2.0.0",
+    "manifest_name": "Basic integration",
+    "repository_manifest": {
+      "name": "Basic integration"
+    },
+    "version_installed": "1.0.0"
+  },
+  "1296267": {
+    "category": "plugin",
+    "description": "This your first repo!",
+    "full_name": "hacs-test-org/plugin-basic",
+    "installed": true,
+    "last_fetched": 1550000000.0,
+    "last_updated": "2020-01-20T09:34:52Z",
+    "last_version": "2.0.0",
+    "repository_manifest": {
+      "filename": "plugin-basic.js",
+      "name": "Basic plugin"
+    },
+    "show_beta": true,
+    "version_installed": "1.0.0"
+  }
+}

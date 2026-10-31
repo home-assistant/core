@@ -16,6 +16,7 @@ from .const import (
     CONF_WAIT_FOR_PUSH,
     DEFAULT_WAIT_FOR_PUSH,
     KEY_GATEWAY,
+    UPDATE_DELAY_BLIND,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_FAST,
 )
@@ -26,7 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 type MotionBlindsConfigEntry = ConfigEntry[DataUpdateCoordinatorMotionBlinds]
 
 
-class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
+class DataUpdateCoordinatorMotionBlinds(
+    DataUpdateCoordinator[dict[str, dict[str, bool]]]
+):
     """Class to manage fetching data from single endpoint."""
 
     config_entry: MotionBlindsConfigEntry
@@ -79,7 +82,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         return {ATTR_AVAILABLE: True}
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, dict[str, bool]]:
         """Fetch the latest data from the gateway and blinds."""
         data = {}
 
@@ -89,7 +92,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
             )
 
         for blind in self.gateway.device_list.values():
-            await asyncio.sleep(1.5)
+            await asyncio.sleep(UPDATE_DELAY_BLIND)
             async with self.api_lock:
                 data[blind.mac] = await self.hass.async_add_executor_job(
                     self.update_blind, blind

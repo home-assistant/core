@@ -1,5 +1,7 @@
 """Common test utilities for sensor entity component tests."""
 
+from pytest_homeassistant.common import MockEntity
+
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
@@ -28,6 +30,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
@@ -39,8 +42,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
-
-from tests.common import MockEntity
 
 UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.ABSOLUTE_HUMIDITY: UnitOfDensity.GRAMS_PER_CUBIC_METER,
@@ -88,6 +89,7 @@ UNITS_OF_MEASUREMENT = {
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
     ),
     SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,
+    SensorDeviceClass.RADON: UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
     SensorDeviceClass.REACTIVE_ENERGY: UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     SensorDeviceClass.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     SensorDeviceClass.SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,

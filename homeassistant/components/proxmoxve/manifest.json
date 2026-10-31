@@ -1,12 +1,13 @@
 {
   "domain": "proxmoxve",
   "name": "Proxmox VE",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@Corbeno", "@erwindouna", "@CoMPaTech"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/proxmoxve",
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["proxmoxer"],
-  "quality_scale": "legacy",
+  "quality_scale": "gold",
   "requirements": ["proxmoxer==2.3.0"]
 }

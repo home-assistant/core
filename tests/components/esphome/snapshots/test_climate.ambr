@@ -33,6 +33,7 @@
       'off',
     ]),
     <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 2,
-    <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20,
+    <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 20,
+    <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---

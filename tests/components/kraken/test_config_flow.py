@@ -2,8 +2,9 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -13,14 +14,12 @@ from .const import (
     TRADEABLE_ASSET_PAIR_RESPONSE,
 )
 
-from tests.common import MockConfigEntry
-
 
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     with patch(
         "homeassistant.components.kraken.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
@@ -51,7 +50,6 @@ async def test_options(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         options={
-            CONF_SCAN_INTERVAL: 60,
             CONF_TRACKED_ASSET_PAIRS: [
                 "ADA/XBT",
                 "ADA/ETH",
@@ -86,10 +84,7 @@ async def test_options(hass: HomeAssistant) -> None:
         result = await hass.config_entries.options.async_init(entry.entry_id)
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            {
-                CONF_SCAN_INTERVAL: 10,
-                CONF_TRACKED_ASSET_PAIRS: ["ADA/ETH"],
-            },
+            {CONF_TRACKED_ASSET_PAIRS: ["ADA/ETH"]},
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         await hass.async_block_till_done()
@@ -105,7 +100,6 @@ async def test_deselect_removed_pair(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         options={
-            CONF_SCAN_INTERVAL: 60,
             CONF_TRACKED_ASSET_PAIRS: [
                 "XBT/USD",
             ],
@@ -149,10 +143,7 @@ async def test_deselect_removed_pair(hass: HomeAssistant) -> None:
         assert "XBT/USD" in schema.get(CONF_TRACKED_ASSET_PAIRS).options
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            {
-                CONF_SCAN_INTERVAL: 10,
-                CONF_TRACKED_ASSET_PAIRS: ["ADA/ETH"],
-            },
+            {CONF_TRACKED_ASSET_PAIRS: ["ADA/ETH"]},
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         await hass.async_block_till_done()

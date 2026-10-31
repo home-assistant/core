@@ -59,6 +59,7 @@ TEST_INVALID_DATE2 = (
 TEST_INVALID_DATE3 = (
     TEST_MESSAGE_HEADERS1 + DATE_HEADER_INVALID3 + TEST_MESSAGE_HEADERS2
 )
+TEST_MISSING_DATE = TEST_MESSAGE_HEADERS1 + TEST_MESSAGE_HEADERS2
 
 TEST_CONTENT_TEXT_BARE = b"\r\nTest body\r\n\r\n"
 
@@ -277,7 +278,17 @@ TEST_FETCH_RESPONSE_INVALID_DATE3 = (
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],
 )
-
+TEST_FETCH_RESPONSE_MISSING_DATE = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MISSING_DATE + TEST_CONTENT_TEXT_PLAIN)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MISSING_DATE + TEST_CONTENT_TEXT_PLAIN),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
 
 TEST_FETCH_RESPONSE_TEXT_OTHER = (
     "OK",

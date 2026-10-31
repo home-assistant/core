@@ -2,18 +2,15 @@
 
 from pyblu import Player
 from pyblu.errors import PlayerUnreachableError
-import voluptuous as vol
 
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_MASTER, DOMAIN, SERVICE_JOIN, SERVICE_UNJOIN
+from .const import DOMAIN
 from .coordinator import (
     BluesoundConfigEntry,
     BluesoundCoordinator,
@@ -28,30 +25,9 @@ PLATFORMS = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Bluesound."""
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        SERVICE_JOIN,
-        entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_MASTER): cv.entity_id},
-        func="async_bluesound_join",
-    )
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        SERVICE_UNJOIN,
-        entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema=None,
-        func="async_bluesound_unjoin",
-    )
-    return True
-
-
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: BluesoundConfigEntry
-) -> bool:
+) -> None:
     """Set up the Bluesound entry."""
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
@@ -69,9 +45,7 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

@@ -1,11 +1,18 @@
 """Tests for the Withings component."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiowithings import Goals
+from aiowithings import Goals, NotificationCategory
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.withings import DOMAIN
@@ -14,16 +21,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
+    call_webhook,
     load_activity_fixture,
     load_device_fixture,
     load_goals_fixture,
     load_measurements_fixture,
     load_sleep_fixture,
     load_workout_fixture,
+    prepare_webhook_setup,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from .conftest import USER_ID, WEBHOOK_ID
 
 
 @pytest.mark.freeze_time("2023-10-21 12:00:00")
@@ -104,6 +112,67 @@ async def test_update_updates_incrementally(
     assert state is not None
     assert state.state == "71"
     assert len(withings.get_measurement_in_period.call_args_list) == 1
+
+
+async def test_workout_sensor_keeps_latest_workout_after_webhook_updates(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test webhook updates accept newer/equal workouts and ignore older ones."""
+    initial = replace(load_workout_fixture()[0], distance=100)
+    newer = replace(
+        initial,
+        end_date=initial.end_date + timedelta(hours=1),
+        distance=200,
+    )
+    older = replace(
+        initial,
+        end_date=initial.end_date - timedelta(minutes=1),
+        distance=50,
+    )
+    equal = replace(newer, distance=250)
+    withings.get_workouts_in_period.return_value = [initial]
+    withings.get_workouts_since.side_effect = [[older, newer], [older], [equal]]
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+    client = await hass_client_no_auth()
+    sensor = "sensor.henk_distance_travelled_last_workout"
+    calendar = "calendar.henk_workouts"
+
+    async def _webhook_update(expected_distance: str) -> None:
+        response = await call_webhook(
+            hass,
+            WEBHOOK_ID,
+            {"userid": USER_ID, "appli": NotificationCategory.ACTIVITY},
+            client,
+        )
+        assert response.message_code == 0
+        state = hass.states.get(sensor)
+        assert state is not None
+        assert state.state == expected_distance
+        assert hass.states.get(calendar) is not None
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(sensor)
+    assert state is not None
+    assert state.state == "100"
+    assert hass.states.get(calendar) is not None
+
+    await _webhook_update("200")
+    await _webhook_update("200")
+    await _webhook_update("250")
+
+    assert [call.args[0] for call in withings.get_workouts_since.call_args_list] == [
+        initial.end_date,
+        newer.end_date,
+        newer.end_date,
+    ]
 
 
 async def test_update_new_measurement_creates_new_sensor(
@@ -397,8 +466,9 @@ async def test_device_sensors_created_when_device_data_received(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.body_battery")
-    assert device_registry.async_get_device(
-        {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
+        polling_config_entry.entry_id,
     )
 
     withings.get_devices.return_value = []
@@ -408,8 +478,9 @@ async def test_device_sensors_created_when_device_data_received(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.body_battery") is None
-    assert not device_registry.async_get_device(
-        {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
+        polling_config_entry.entry_id,
     )
 
 
@@ -449,3 +520,56 @@ async def test_device_two_config_entries(
     await hass.async_block_till_done()
 
     assert "Platform withings does not generate unique IDs" not in caplog.text
+
+
+async def test_old_device_removal_only_removes_own_device(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    second_polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Removing an old device only removes the processing entry's own device.
+
+    Two config entries can each own a device registry entry for the same shared sub-device.
+    When the sub-device disappears from one entry, it must remove its own device, not
+    another entry's device sharing the identifier.
+    """
+    identifiers = {(DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d")}
+
+    def _device_for_entry(entry: MockConfigEntry) -> dr.DeviceEntry | None:
+        return next(
+            (
+                device
+                for device in device_registry.async_get_devices(identifiers=identifiers)
+                if device.config_entry_id == entry.entry_id
+            ),
+            None,
+        )
+
+    # The first entry creates the sub-device and owns its device registry entry.
+    await setup_integration(hass, polling_config_entry, False)
+    assert _device_for_entry(polling_config_entry) is not None
+
+    # Unload it, then set up a second entry: with the first entry unloaded it no longer
+    # provides the sub-device, so the second entry creates and owns its own device.
+    await hass.config_entries.async_unload(polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_polling_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert _device_for_entry(polling_config_entry) is not None
+    assert _device_for_entry(second_polling_config_entry) is not None
+
+    # The sub-device disappears from the (still loaded) second entry's data.
+    withings.get_devices.return_value = []
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Only the second entry's own device was removed; the first entry's remains.
+    assert _device_for_entry(second_polling_config_entry) is None
+    assert _device_for_entry(polling_config_entry) is not None

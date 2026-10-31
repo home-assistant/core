@@ -19,7 +19,11 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -32,7 +36,7 @@ from .const import (
     CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DOMAIN,
-    NMAP_TRACKED_DEVICES,
+    NMAP_TRACKER_DATA,
     PLATFORMS,
     TRACKER_SCAN_INTERVAL,
 )
@@ -87,30 +91,26 @@ class NmapTrackedDevices:
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> None:
     """Set up Nmap Tracker from a config entry."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
+    if (devices := hass.data.get(NMAP_TRACKER_DATA)) is None:
+        devices = hass.data[NMAP_TRACKER_DATA] = NmapTrackedDevices()
     scanner = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
     entry.runtime_data = scanner
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: NmapTrackerConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        _async_untrack_devices(hass, entry)
-
-    return unload_ok
+    _async_untrack_devices(hass, entry)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate config entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
@@ -137,15 +137,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.minor_version,
     )
 
-    return True
-
 
 @callback
 def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove tracking for devices owned by this config entry."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    devices = hass.data[DOMAIN][NMAP_TRACKED_DEVICES]
+    devices = hass.data[NMAP_TRACKER_DATA]
     remove_mac_addresses = [
         mac_address
         for mac_address, entry_id in devices.config_entry_owner.items()
@@ -219,12 +215,19 @@ class NmapDeviceScanner:
             )
         )
         registry = er.async_get(self._hass)
-        self._known_mac_addresses = {
-            entry.unique_id: entry.original_name
-            for entry in registry.entities.get_entries_for_config_entry_id(
-                self._entry_id
-            )
-        }
+        device_registry = dr.async_get(self._hass)
+        self._known_mac_addresses = {}
+        for entry in registry.entities.get_entries_for_config_entry_id(self._entry_id):
+            # Only set for trackers not added since their device carries the client
+            # name, can be removed in HA Core 2027.5
+            name = entry.original_name
+            if (
+                name is None
+                and entry.device_id
+                and (device := device_registry.async_get(entry.device_id))
+            ):
+                name = device.name
+            self._known_mac_addresses[entry.unique_id] = name
 
     @property
     def signal_device_new(self) -> str:

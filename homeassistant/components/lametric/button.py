@@ -15,6 +15,8 @@ from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class LaMetricButtonEntityDescription(ButtonEntityDescription):

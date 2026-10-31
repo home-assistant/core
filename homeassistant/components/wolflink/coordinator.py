@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from httpx import RequestError
+from httpx2 import RequestError
 from wolf_comm.models import Device, Parameter
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type WolflinkConfigEntry = ConfigEntry[dict[int, "WolfLinkCoordinator"]]
+type WolflinkConfigEntry = ConfigEntry[dict[int, WolfLinkCoordinator]]
 
 
 class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):

@@ -2,7 +2,7 @@
 
 from typing import Any, Final, override
 
-from bsblan import BSBLANError, State, get_hvac_action_category
+from bsblan import BSBLANError, EntityInfo, get_hvac_action_category
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -54,6 +54,14 @@ BSBLAN_TO_HA_HVAC_MODE: Final[dict[int, HVACMode]] = {
 }
 
 
+def _resolve_temperature_bound(*sources: EntityInfo[float] | None) -> float | None:
+    """Return the first usable temperature bound from the given sources."""
+    for source in sources:
+        if source is not None and source.value is not None:
+            return source.value
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BSBLanConfigEntry,
@@ -88,31 +96,40 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
     ) -> None:
         """Initialize BSBLAN climate device."""
         super().__init__(data.fast_coordinator, data, circuit)
-        self._circuit = circuit
         mac = format_mac(data.device.MAC)
 
         # Backward compatible unique ID: circuit 1 keeps old format
         if circuit == 1:
+            # Legacy format, kept as migrating existing unique IDs is not worth the risk
             self._attr_unique_id = f"{mac}-climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         else:
+            # Legacy format, kept as migrating existing unique IDs is not worth the risk
             self._attr_unique_id = f"{mac}-climate-{circuit}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
-        # Set temperature range from per-circuit static data
+        # Set temperature range from per-circuit static data. Standard BSB/LPB
+        # circuits expose the bounds via heating_protective_setpoint (714) and
+        # comfort_setpoint_max (716); min_temp/max_temp (15006/15007) exist
+        # only on PPS devices. Inactive parameters ("---") have value None.
         if (static := data.static.get(circuit)) is not None:
-            if (min_temp := static.min_temp) is not None and min_temp.value is not None:
-                self._attr_min_temp = min_temp.value
-            if (max_temp := static.max_temp) is not None and max_temp.value is not None:
-                self._attr_max_temp = max_temp.value
-        self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
-
-    @property
-    def _circuit_state(self) -> State:
-        """Return the state for this circuit."""
-        return self.coordinator.data.states[self._circuit]
+            if (
+                min_temp := _resolve_temperature_bound(
+                    static.heating_protective_setpoint, static.min_temp
+                )
+            ) is not None:
+                self._attr_min_temp = min_temp
+            if (
+                max_temp := _resolve_temperature_bound(
+                    static.comfort_setpoint_max, static.max_temp
+                )
+            ) is not None:
+                self._attr_max_temp = max_temp
+        self._attr_native_temperature_unit = (
+            data.fast_coordinator.client.get_temperature_unit
+        )
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (current_temp := self._circuit_state.current_temperature) is None:
             return None
@@ -120,7 +137,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self._circuit_state.target_temperature) is None:
             return None
@@ -147,8 +164,11 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         """Return the current running hvac action."""
         if (action := self._circuit_state.hvac_action) is None or action.value is None:
             return None
-        category = get_hvac_action_category(action.value)
-        return HVACAction(category.name.lower())
+        hvac_action = HVACAction(get_hvac_action_category(action.value).name.lower())
+        # In protection mode the circuit is off unless frost protection heats
+        if hvac_action is HVACAction.IDLE and self.hvac_mode is HVACMode.OFF:
+            return HVACAction.OFF
+        return hvac_action
 
     @property
     @override
@@ -195,4 +215,4 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="set_data_error",
             ) from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_circuit(self._circuit)

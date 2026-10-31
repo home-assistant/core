@@ -5,9 +5,9 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
     DOMAIN as EVENT_DOMAIN,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -41,7 +41,7 @@ async def test_doorbell_event_entity_created_and_triggered(
 
     state = hass.states.get(event_entities[0])
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPES] == ["ring"]
+    assert state.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == ["ring"]
 
     mock_rtsp_event(
         topic="tns1:Device/tnsaxis:IO/Port",
@@ -55,7 +55,7 @@ async def test_doorbell_event_entity_created_and_triggered(
 
     state = hass.states.get(event_entities[0])
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "ring"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "ring"
 
 
 @pytest.mark.parametrize(

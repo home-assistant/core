@@ -7,11 +7,10 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from icmplib import Host
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

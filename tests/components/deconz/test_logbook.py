@@ -63,8 +63,8 @@ async def test_humanifying_deconz_alarm_event(
     """Test humanifying deCONZ alarm event."""
     keypad_event_id = slugify(sensor_payload["name"])
     keypad_serial = serial_from_unique_id(sensor_payload["uniqueid"])
-    keypad_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, keypad_serial)}
+    keypad_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, keypad_serial), hass.config_entries.async_entries(DOMAIN)[0].entry_id
     )
 
     removed_device_event_id = "removed_device"
@@ -156,26 +156,28 @@ async def test_humanifying_deconz_event(
     """Test humanifying deCONZ event."""
     switch_event_id = slugify(sensor_payload["1"]["name"])
     switch_serial = serial_from_unique_id(sensor_payload["1"]["uniqueid"])
-    switch_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, switch_serial)}
+    switch_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, switch_serial), hass.config_entries.async_entries(DOMAIN)[0].entry_id
     )
 
     hue_remote_event_id = slugify(sensor_payload["2"]["name"])
     hue_remote_serial = serial_from_unique_id(sensor_payload["2"]["uniqueid"])
-    hue_remote_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, hue_remote_serial)}
+    hue_remote_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, hue_remote_serial),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
 
     xiaomi_cube_event_id = slugify(sensor_payload["3"]["name"])
     xiaomi_cube_serial = serial_from_unique_id(sensor_payload["3"]["uniqueid"])
-    xiaomi_cube_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, xiaomi_cube_serial)}
+    xiaomi_cube_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, xiaomi_cube_serial),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
     )
 
     faulty_event_id = slugify(sensor_payload["4"]["name"])
     faulty_serial = serial_from_unique_id(sensor_payload["4"]["uniqueid"])
-    faulty_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, faulty_serial)}
+    faulty_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, faulty_serial), hass.config_entries.async_entries(DOMAIN)[0].entry_id
     )
 
     removed_device_event_id = "removed_device"

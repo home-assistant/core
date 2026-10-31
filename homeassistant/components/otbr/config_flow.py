@@ -1,14 +1,14 @@
-"""Config flow for the Open Thread Border Router integration."""
+"""Config flow for the OpenThread Border Router integration."""
 
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, cast, override
 
 import aiohttp
+import probatio
 import python_otbr_api
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
-import voluptuous as vol
 import yarl
 
 from homeassistant.components.hassio import AddonError, AddonManager
@@ -16,6 +16,8 @@ from homeassistant.components.homeassistant_yellow import hardware as yellow_har
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
+    SOURCE_RECONFIGURE,
+    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -34,7 +36,7 @@ from .util import (
 )
 
 if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+    from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +82,7 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
 
 
 class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Open Thread Border Router."""
+    """Handle a config flow for OpenThread Border Router."""
 
     VERSION = 1
 
@@ -120,6 +122,8 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return True if another config entry's OTBR has the same border agent id."""
         config_entry: OTBRConfigEntry
         for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            if config_entry.entry_id == self.context.get("entry_id"):
+                continue
             data = config_entry.runtime_data
             try:
                 other_border_agent_id = await data.get_border_agent_id()
@@ -146,6 +150,10 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         api = python_otbr_api.OTBR(otbr_url, async_get_clientsession(self.hass), 10)
         border_agent_id = await api.get_border_agent_id()
         _LOGGER.debug("border agent id for url %s: %s", otbr_url, border_agent_id.hex())
+
+        if self.source == SOURCE_RECONFIGURE:
+            await self.async_set_unique_id(border_agent_id.hex())
+            self._abort_if_unique_id_mismatch()
 
         if await self._is_border_agent_id_configured(border_agent_id):
             raise AlreadyConfigured
@@ -177,14 +185,71 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(border_agent_id.hex())
                 return self.async_create_entry(
-                    title="Open Thread Border Router",
+                    title="OpenThread Border Router",
                     data={CONF_URL: url},
                 )
 
-        data_schema = vol.Schema({CONF_URL: str})
+        data_schema = probatio.Schema({CONF_URL: str})
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the OTBR URL."""
+        errors = {}
+        entry = self._get_reconfigure_entry()
+
+        if entry.source == SOURCE_HASSIO:
+            return self.async_abort(reason="addon_managed")
+
+        if user_input is not None:
+            url = user_input[CONF_URL].rstrip("/")
+            try:
+                await self._connect_and_configure_router(url)
+            except AlreadyConfigured:
+                errors["base"] = "already_configured"
+            except (
+                python_otbr_api.OTBRError,
+                aiohttp.ClientError,
+                TimeoutError,
+            ) as exc:
+                _LOGGER.debug("Failed to communicate with OTBR@%s: %s", url, exc)
+                errors["base"] = "cannot_connect"
+            else:
+                # The update listener is only registered after a successful setup
+                if entry.update_listeners:
+                    return self.async_update_and_abort(
+                        entry, data_updates={CONF_URL: url}
+                    )
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_URL: url}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({CONF_URL: str}), user_input or entry.data
+            ),
+            errors=errors,
+        )
+
+    @callback
+    def _async_find_legacy_entry_by_host(self, host: str) -> ConfigEntry | None:
+        """Return an entry created by the first version of the integration.
+
+        Those entries have no unique id, they can only be matched by host.
+        This can be removed in HA Core 2027.3.
+        """
+        for entry in self._async_current_entries():
+            if (
+                entry.source == SOURCE_HASSIO
+                and entry.unique_id is None
+                and yarl.URL(entry.data["url"]).host == host
+            ):
+                return entry
+        return None
 
     @override
     async def async_step_hassio(
@@ -195,41 +260,34 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         url = f"http://{config['host']}:{config['port']}"
         config_entry_data = {"url": url}
 
-        if current_entries := self._async_current_entries():
-            for current_entry in current_entries:
-                if current_entry.source != SOURCE_HASSIO:
-                    continue
-                current_url = yarl.URL(current_entry.data["url"])
-                if not (unique_id := current_entry.unique_id):
-                    # The first version did not set a unique_id
-                    # so if the entry does not have a unique_id
-                    # we have to assume it's the first version
-                    # This check can be removed in HA Core 2025.9
-                    unique_id = discovery_info.uuid
+        matching_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, discovery_info.uuid
+        )
+        if matching_entry is None:
+            # Entries created by the first version of the integration have no unique
+            # id and can only be matched to this discovery by host
+            # This fallback can be removed in HA Core 2027.3
+            matching_entry = self._async_find_legacy_entry_by_host(config["host"])
 
-                if unique_id != discovery_info.uuid:
-                    continue
+        if matching_entry is not None:
+            # Update the URL in case the add-on moved, and set the unique id of
+            # entries created by the first version
+            # Remove the unique_id update in HA Core 2027.3
+            updated = self.hass.config_entries.async_update_entry(
+                matching_entry,
+                data=config_entry_data,
+                unique_id=discovery_info.uuid,
+            )
+            if matching_entry.state is ConfigEntryState.SETUP_RETRY:
+                # The discovery means the add-on is back, don't wait for the
+                # setup retry backoff to expire
+                self.hass.config_entries.async_schedule_reload(matching_entry.entry_id)
+            elif not updated and matching_entry.state is ConfigEntryState.LOADED:
+                # Reload the entry since OTBR has restarted, an entry which was
+                # updated is reloaded by its update listener
+                await self.hass.config_entries.async_reload(matching_entry.entry_id)
 
-                if (
-                    current_url.host != config["host"]
-                    or current_url.port == config["port"]
-                ):
-                    # Reload the entry since OTBR has restarted
-                    if current_entry.state is ConfigEntryState.LOADED:
-                        assert current_entry.unique_id is not None
-                        await self.hass.config_entries.async_reload(
-                            current_entry.entry_id
-                        )
-
-                    continue
-
-                # Update URL with the new port
-                self.hass.config_entries.async_update_entry(
-                    current_entry,
-                    data=config_entry_data,
-                    unique_id=unique_id,  # Remove in HA Core 2025.9
-                )
-                return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="already_configured")
 
         try:
             await self._connect_and_configure_router(url)

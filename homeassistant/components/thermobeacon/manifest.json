@@ -49,6 +49,7 @@
       "local_name": "ThermoBeacon"
     }
   ],
+  "categories": ["sensors.temperature_humidity"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

@@ -4,8 +4,10 @@ To update, run python3 -m script.hassfest
 """
 
 APPLICATION_CREDENTIALS = [
+    "abrp",
     "aladdin_connect",
     "august",
+    "bosch_smart_camera",
     "dropbox",
     "ekeybionyx",
     "electric_kiwi",
@@ -15,6 +17,7 @@ APPLICATION_CREDENTIALS = [
     "google",
     "google_assistant_sdk",
     "google_drive",
+    "google_health",
     "google_mail",
     "google_photos",
     "google_sheets",
@@ -48,6 +51,7 @@ APPLICATION_CREDENTIALS = [
     "volvo",
     "watts",
     "weheat",
+    "willow",
     "withings",
     "xbox",
     "yale",

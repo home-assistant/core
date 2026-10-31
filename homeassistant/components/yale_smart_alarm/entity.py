@@ -3,7 +3,8 @@
 from yalesmartalarmclient import YaleLock
 
 from homeassistant.const import CONF_USERNAME
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,7 +26,11 @@ class YaleEntity(CoordinatorEntity[YaleDataUpdateCoordinator]):
             manufacturer=MANUFACTURER,
             model=MODEL,
             identifiers={(DOMAIN, data["address"])},
-            via_device=(DOMAIN, coordinator.config_entry.data[CONF_USERNAME]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.data[CONF_USERNAME]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
 
@@ -43,7 +48,11 @@ class YaleLockEntity(CoordinatorEntity[YaleDataUpdateCoordinator]):
             manufacturer=MANUFACTURER,
             model=MODEL,
             identifiers={(DOMAIN, lock.sid())},
-            via_device=(DOMAIN, coordinator.config_entry.data[CONF_USERNAME]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.data[CONF_USERNAME]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
         self.lock_data = lock
 
@@ -56,12 +65,4 @@ class YaleAlarmEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize an Yale device."""
         super().__init__(coordinator)
-        panel_info = coordinator.data["panel_info"]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.data[CONF_USERNAME])},
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            name=coordinator.config_entry.title,
-            connections={(CONNECTION_NETWORK_MAC, panel_info["mac"])},
-            sw_version=panel_info["version"],
-        )
+        self._attr_device_info = coordinator.device_info

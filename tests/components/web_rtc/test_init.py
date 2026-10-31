@@ -1,5 +1,6 @@
 """Test the WebRTC integration."""
 
+from pytest_homeassistant.typing import WebSocketGenerator
 from webrtc_models import RTCIceServer
 
 from homeassistant.components.web_rtc import (
@@ -10,8 +11,6 @@ from homeassistant.components.web_rtc import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:

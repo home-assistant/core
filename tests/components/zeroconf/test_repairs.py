@@ -3,6 +3,11 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from zeroconf import ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -17,9 +22,6 @@ from homeassistant.helpers import instance_id, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .test_init import service_update_mock
-
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 
 def service_state_change_mock(

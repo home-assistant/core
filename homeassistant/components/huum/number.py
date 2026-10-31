@@ -6,6 +6,7 @@ from typing import override
 from huum.const import SaunaStatus
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
+from homeassistant.const import UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -36,7 +37,7 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
 
     _attr_translation_key = "humidity"
     _attr_device_class = NumberDeviceClass.HUMIDITY
-    _attr_native_unit_of_measurement = "%"
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
     _attr_native_max_value = 40
     _attr_native_min_value = 0
     _attr_native_step = 1

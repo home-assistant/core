@@ -2,16 +2,18 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pyvlx import PyVLXException
 from pyvlx.opening_device import OpeningDevice, Position
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    from . import VeluxConfigEntry
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -21,6 +23,7 @@ class VeluxLimitationData:
     """Data for one opening device's limitations."""
 
     limitation_min: Position
+    limitation_max: Position
 
 
 class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | None]):
@@ -29,7 +32,7 @@ class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | Non
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: VeluxConfigEntry,
         node: OpeningDevice,
     ) -> None:
         """Initialize the coordinator."""
@@ -44,9 +47,16 @@ class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | Non
 
     @override
     async def _async_update_data(self) -> VeluxLimitationData:
-        """Fetch limitation min data from the device."""
+        """Fetch limitation min and max from the device."""
         try:
             min_pos = await self.node.get_limitation_min()
+            max_pos = await self.node.get_limitation_max()
+            LOGGER.debug(
+                "Fetched limitations for %s: pyvlx_min=%s%% pyvlx_max=%s%%",
+                self.node.name,
+                min_pos.position_percent,
+                max_pos.position_percent,
+            )
         except (OSError, PyVLXException) as err:
             raise UpdateFailed(f"Error fetching limitations: {err}") from err
-        return VeluxLimitationData(limitation_min=min_pos)
+        return VeluxLimitationData(limitation_min=min_pos, limitation_max=max_pos)

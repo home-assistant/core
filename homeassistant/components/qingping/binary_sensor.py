@@ -24,6 +24,8 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 from . import QingpingConfigEntry
 from .device import device_key_to_bluetooth_entity_key
 
+PARALLEL_UPDATES = 0
+
 BINARY_SENSOR_DESCRIPTIONS = {
     QingpingBinarySensorDeviceClass.MOTION: BinarySensorEntityDescription(
         key=QingpingBinarySensorDeviceClass.MOTION,

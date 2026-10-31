@@ -1,6 +1,7 @@
 {
   "domain": "blockchain",
   "name": "Blockchain.com",
+  "categories": ["finance"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/blockchain",
   "iot_class": "cloud_polling",

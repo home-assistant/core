@@ -5,8 +5,8 @@ import logging
 from typing import Any, override
 
 import aiohttp
+import probatio
 import pyevilgenius
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
@@ -51,9 +51,9 @@ class EvilGeniusLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required("host"): str,
+                        probatio.Required("host"): str,
                     }
                 ),
             )
@@ -75,9 +75,9 @@ class EvilGeniusLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("host", default=user_input["host"]): str,
+                    probatio.Required("host", default=user_input["host"]): str,
                 }
             ),
             errors=errors,

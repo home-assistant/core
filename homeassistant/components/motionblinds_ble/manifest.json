@@ -7,6 +7,7 @@
       "local_name": "MOTION_*"
     }
   ],
+  "categories": ["blinds_curtains"],
   "codeowners": ["@LennP", "@jerrybboy"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
@@ -14,5 +15,5 @@
   "integration_type": "device",
   "iot_class": "assumed_state",
   "loggers": ["motionblindsble"],
-  "requirements": ["motionblindsble==0.1.3"]
+  "requirements": ["motionblindsble==0.1.4"]
 }

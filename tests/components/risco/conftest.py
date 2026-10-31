@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from pyrisco.cloud.event import Event
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.risco.const import DOMAIN, TYPE_LOCAL
 from homeassistant.const import (
@@ -19,8 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .util import TEST_SITE_NAME, TEST_SITE_UUID, system_mock, zone_mock
-
-from tests.common import MockConfigEntry
 
 TEST_CLOUD_CONFIG = {
     CONF_USERNAME: "test-username",

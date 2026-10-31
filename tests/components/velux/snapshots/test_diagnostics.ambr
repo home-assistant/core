@@ -31,7 +31,12 @@
                 'device_class': 'window',
                 'friendly_name': 'Test Window',
                 'is_closed': False,
-                'supported_features': 15,
+                'supported_features': 271,
+                'supported_speeds': list([
+                  'silent',
+                  'fast',
+                  'default',
+                ]),
               }),
               'entity_id': 'cover.test_window',
               'last_changed': '2025-01-01T00:00:00+00:00',

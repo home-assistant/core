@@ -15,7 +15,7 @@ from .coordinator import FGLairConfigEntry, FGLairCoordinator
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> None:
     """Set up Fujitsu HVAC (based on Ayla IOT) from a config entry."""
     app_id, app_secret = FGLAIR_APP_CREDENTIALS[entry.data[CONF_REGION]]
     api = new_ayla_api(
@@ -34,19 +34,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    with suppress(TimeoutError):
-        await entry.runtime_data.api.async_sign_out()
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        with suppress(TimeoutError):
+            await entry.runtime_data.api.async_sign_out()
 
-    return unload_ok
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version == 1:
@@ -61,5 +60,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> 
         hass.config_entries.async_update_entry(
             entry, data=new_data, minor_version=2, version=1
         )
-
-    return True

@@ -24,7 +24,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import slugify
@@ -264,17 +264,11 @@ async def test_control_device_fail(hass: HomeAssistant, mock_bridge, mock_api) -
         mock_control_device.assert_called_once_with(
             ANY, state=DeviceState.ON, mode=ThermostatMode.HEAT
         )
+        # A single failed command must not flap the entity unavailable.
         state = hass.states.get(ENTITY_ID)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == HVACMode.COOL
 
-    # Make device available again
-    mock_bridge.mock_callbacks([DEVICE])
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == HVACMode.COOL
-
-    # Test error response during turn on
+    # Test error response during turn on - the entity stays available.
     with patch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
         return_value=SwitcherBaseResponse(None),
@@ -292,7 +286,7 @@ async def test_control_device_fail(hass: HomeAssistant, mock_bridge, mock_api) -
             ANY, state=DeviceState.ON, mode=ThermostatMode.HEAT
         )
         state = hass.states.get(ENTITY_ID)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == HVACMode.COOL
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)

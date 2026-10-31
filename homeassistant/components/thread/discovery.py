@@ -26,9 +26,11 @@ KNOWN_BRANDS: dict[str | None, str] = {
     "Apple": "apple",
     "Apple Inc.": "apple",
     "Aqara": "aqara_gateway",
+    "AthomBV": "homey",
     "eero": "eero",
     "GL.iNET Inc.": "glinet",
     "Google Inc.": "google",
+    "Heffeix": "heffeix",
     "HomeAssistant": "homeassistant",
     "Home Assistant": "homeassistant",
     "IKEA": "ikea",
@@ -36,6 +38,7 @@ KNOWN_BRANDS: dict[str | None, str] = {
     "OpenThread": "openthread",
     "Samsung": "samsung",
     "SmartThings": "smartthings",
+    "SMLIGHT": "smlight",
     "Yeelight": "yeelight",
 }
 THREAD_TYPE = "_meshcop._udp.local."

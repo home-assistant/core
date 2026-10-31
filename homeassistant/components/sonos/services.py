@@ -1,6 +1,6 @@
 """Support to interface with Sonos players."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import ATTR_TIME
@@ -53,7 +53,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SNAPSHOT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
+        schema={probatio.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
         func=async_handle_snapshot_restore,
     )
 
@@ -62,7 +62,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_RESTORE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
+        schema={probatio.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
         func=async_handle_snapshot_restore,
     )
 
@@ -72,8 +72,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_TIMER,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_SLEEP_TIME): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=86399)
+            probatio.Required(ATTR_SLEEP_TIME): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=86399)
             )
         },
         func="set_sleep_timer",
@@ -94,11 +94,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_UPDATE_ALARM,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(ATTR_ALARM_ID): cv.positive_int,
-            vol.Optional(ATTR_TIME): cv.time,
-            vol.Optional(ATTR_VOLUME): cv.small_float,
-            vol.Optional(ATTR_ENABLED): cv.boolean,
-            vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
+            probatio.Required(ATTR_ALARM_ID): cv.positive_int,
+            probatio.Optional(ATTR_TIME): cv.time,
+            probatio.Optional(ATTR_VOLUME): cv.small_float,
+            probatio.Optional(ATTR_ENABLED): cv.boolean,
+            probatio.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
         },
         func="set_alarm",
     )
@@ -108,7 +108,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_PLAY_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        schema={probatio.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         func="play_queue",
     )
 
@@ -117,7 +117,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REMOVE_FROM_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        schema={probatio.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         func="remove_from_queue",
     )
 

@@ -1,4 +1,4 @@
-"""The Open Thread Border Router integration types."""
+"""The OpenThread Border Router integration types."""
 
 from homeassistant.config_entries import ConfigEntry
 

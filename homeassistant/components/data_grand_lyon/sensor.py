@@ -6,20 +6,29 @@ from datetime import datetime
 from typing import override
 from zoneinfo import ZoneInfo
 
-from data_grand_lyon_ha import TclPassage, TclPassageType, VelovStation
+from data_grand_lyon_ha import TclParkAndRide, TclPassage, TclPassageType, VelovStation
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import SUBENTRY_TYPE_STOP, SUBENTRY_TYPE_VELOV_STATION
+from .const import (
+    SUBENTRY_TYPE_PARK_AND_RIDE,
+    SUBENTRY_TYPE_STOP,
+    SUBENTRY_TYPE_VELOV_STATION,
+)
 from .coordinator import DataGrandLyonConfigEntry
-from .entity import DataGrandLyonTclEntity, DataGrandLyonVelovEntity
+from .entity import (
+    DataGrandLyonParkAndRideEntity,
+    DataGrandLyonTclEntity,
+    DataGrandLyonVelovEntity,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -164,6 +173,36 @@ VELOV_SENSOR_DESCRIPTIONS: tuple[DataGrandLyonVelovSensorEntityDescription, ...]
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class DataGrandLyonParkAndRideSensorEntityDescription(SensorEntityDescription):
+    """Describes a Data Grand Lyon park-and-ride sensor entity."""
+
+    value_fn: Callable[[TclParkAndRide], StateType]
+
+
+PARK_AND_RIDE_SENSOR_DESCRIPTIONS: tuple[
+    DataGrandLyonParkAndRideSensorEntityDescription, ...
+] = (
+    DataGrandLyonParkAndRideSensorEntityDescription(
+        key="available_spaces",
+        translation_key="available_spaces",
+        value_fn=lambda p: p.nb_tot_place_dispo,
+    ),
+    DataGrandLyonParkAndRideSensorEntityDescription(
+        key="capacity",
+        translation_key="park_and_ride_capacity",
+        value_fn=lambda p: p.capacite,
+    ),
+    DataGrandLyonParkAndRideSensorEntityDescription(
+        key="accessible_spaces",
+        translation_key="accessible_spaces",
+        value_fn=lambda p: p.place_handi,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DataGrandLyonConfigEntry,
@@ -172,6 +211,7 @@ async def async_setup_entry(
     """Set up Data Grand Lyon sensor entities."""
     tcl_coordinator = entry.runtime_data.tcl_coordinator
     velov_coordinator = entry.runtime_data.velov_coordinator
+    park_and_ride_coordinator = entry.runtime_data.park_and_ride_coordinator
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_STOP):
         async_add_entities(
@@ -187,6 +227,17 @@ async def async_setup_entry(
             (
                 DataGrandLyonVelovSensor(velov_coordinator, subentry, description)
                 for description in VELOV_SENSOR_DESCRIPTIONS
+            ),
+            config_subentry_id=subentry.subentry_id,
+        )
+
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_PARK_AND_RIDE):
+        async_add_entities(
+            (
+                DataGrandLyonParkAndRideSensor(
+                    park_and_ride_coordinator, subentry, description
+                )
+                for description in PARK_AND_RIDE_SENSOR_DESCRIPTIONS
             ),
             config_subentry_id=subentry.subentry_id,
         )
@@ -223,6 +274,20 @@ class DataGrandLyonVelovSensor(DataGrandLyonVelovEntity, SensorEntity):
     @property
     @override
     def native_value(self) -> StateType | datetime:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(
+            self.coordinator.data[self._subentry_id]
+        )
+
+
+class DataGrandLyonParkAndRideSensor(DataGrandLyonParkAndRideEntity, SensorEntity):
+    """Sensor for Data Grand Lyon park-and-ride facility."""
+
+    entity_description: DataGrandLyonParkAndRideSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(
             self.coordinator.data[self._subentry_id]

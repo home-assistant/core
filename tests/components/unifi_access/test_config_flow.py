@@ -4,6 +4,7 @@ import ssl
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from unifi_access_api import ApiAuthError, ApiConnectionError
 
 from homeassistant.components.unifi_access.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_API_TOKEN, MOCK_HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -40,6 +39,7 @@ async def test_user_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "UniFi Access"
     assert result["data"] == {
@@ -139,6 +139,7 @@ async def test_user_flow_different_host(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -449,6 +450,17 @@ async def test_user_flow_protect_api_key_unreachable(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
+    mock_client.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: MOCK_HOST,
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_protect_api_key_check_raises(
@@ -473,6 +485,17 @@ async def test_user_flow_protect_api_key_check_raises(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_client.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: MOCK_HOST,
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -605,6 +628,7 @@ async def test_discovery_confirm_success(
         CONF_API_TOKEN: MOCK_API_TOKEN,
         CONF_VERIFY_SSL: False,
     }
+    assert result["result"].unique_id == "AABBCCDDEEFF"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -742,6 +766,37 @@ async def test_discovery_sets_unique_id_on_manual_entry(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
         data=DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == "AABBCCDDEEFF"
+
+
+async def test_discovery_matches_other_announced_address(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test an entry on another interface of the same console is recognised.
+
+    A console answers on every VLAN interface but discovery reports only one of
+    them, so a manually configured entry on another one has to match too, which
+    is also what stamps its unique ID.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.2.5",
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert entry.unique_id is None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data={**DISCOVERY_INFO, "announced_ips": ["10.0.0.5", "192.168.2.5"]},
     )
 
     assert result["type"] is FlowResultType.ABORT

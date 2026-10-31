@@ -13,49 +13,49 @@ from tests.pylint import assert_no_messages, walk_checker
     [
         pytest.param(
             """
-        vol.Required(CONF_HOST)
+        probatio.Required(CONF_HOST)
         """,
             "homeassistant.components.test.config_flow",
             id="non_polling_field",
         ),
         pytest.param(
             """
-        vol.Optional("username")
+        probatio.Optional("username")
         """,
             "homeassistant.components.test.config_flow",
             id="non_polling_string_field",
         ),
         pytest.param(
             """
-        vol.Optional(CONF_SCAN_INTERVAL)
+        probatio.Optional(CONF_SCAN_INTERVAL)
         """,
             "homeassistant.components.test.sensor",
             id="polling_in_sensor_not_flagged",
         ),
         pytest.param(
             """
-        vol.Optional(CONF_SCAN_INTERVAL)
+        probatio.Optional(CONF_SCAN_INTERVAL)
         """,
             "some.other.module",
             id="outside_components",
         ),
         pytest.param(
             """
-        vol.Optional("scan_interval", default=30)
+        probatio.Optional("scan_interval", default=30)
         """,
             "homeassistant.components.test",
             id="polling_in_init_not_flagged",
         ),
         pytest.param(
             """
-        vol.Optional("check_interval")
+        probatio.Optional("check_interval")
         """,
             "homeassistant.components.test.config_flow",
             id="unknown_interval_field",
         ),
         pytest.param(
             """
-        vol.Optional("poll_frequency")
+        probatio.Optional("poll_frequency")
         """,
             "homeassistant.components.test.config_flow",
             id="unknown_frequency_field",
@@ -80,42 +80,42 @@ def test_enforce_config_flow_no_polling(
     [
         pytest.param(
             """
-        vol.Optional(CONF_SCAN_INTERVAL)
+        probatio.Optional(CONF_SCAN_INTERVAL)
         """,
             "homeassistant.components.test.config_flow",
             id="conf_scan_interval",
         ),
         pytest.param(
             """
-        vol.Optional("scan_interval", default=30)
+        probatio.Optional("scan_interval", default=30)
         """,
             "homeassistant.components.test.config_flow",
             id="string_scan_interval",
         ),
         pytest.param(
             """
-        vol.Required("update_interval")
+        probatio.Required("update_interval")
         """,
             "homeassistant.components.test.config_flow",
             id="update_interval",
         ),
         pytest.param(
             """
-        vol.Optional("update_frequency", default=60)
+        probatio.Optional("update_frequency", default=60)
         """,
             "homeassistant.components.test.config_flow",
             id="update_frequency",
         ),
         pytest.param(
             """
-        vol.Optional("refresh_interval")
+        probatio.Optional("refresh_interval")
         """,
             "homeassistant.components.test.config_flow",
             id="refresh_interval",
         ),
         pytest.param(
             """
-        vol.Optional(CONF_UPDATE_INTERVAL)
+        probatio.Optional(CONF_UPDATE_INTERVAL)
         """,
             "homeassistant.components.test.config_flow",
             id="conf_update_interval",

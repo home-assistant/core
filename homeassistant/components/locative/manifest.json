@@ -1,6 +1,7 @@
 {
   "domain": "locative",
   "name": "Locative",
+  "categories": ["presence_location.phones_companion_apps"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["webhook"],

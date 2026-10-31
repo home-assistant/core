@@ -1,6 +1,6 @@
 """Provides device automations for ZHA devices that emit events."""
 
-import voluptuous as vol
+import probatio
 from zha.application.const import ZHA_EVENT
 
 from homeassistant.components.device_automation import (
@@ -8,6 +8,7 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -15,14 +16,14 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .helpers import async_get_zha_device_proxy, get_zha_data
+from .helpers import async_get_zha_device_proxy, async_is_zha_group_device, get_zha_data
 
 CONF_SUBTYPE = "subtype"
 DEVICE = "device"
 DEVICE_IEEE = "device_ieee"
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
+    {probatio.Required(CONF_TYPE): str, probatio.Required(CONF_SUBTYPE): str}
 )
 
 
@@ -79,9 +80,12 @@ async def async_attach_trigger(
 
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
-            event_trigger.CONF_PLATFORM: "event",
-            event_trigger.CONF_EVENT_TYPE: ZHA_EVENT,
-            event_trigger.CONF_EVENT_DATA: {DEVICE_IEEE: ieee, **triggers[trigger_key]},
+            EventTriggerArgument.PLATFORM: "event",
+            EventTriggerArgument.EVENT_TYPE: ZHA_EVENT,
+            EventTriggerArgument.EVENT_DATA: {
+                DEVICE_IEEE: ieee,
+                **triggers[trigger_key],
+            },
         }
     )
     return await event_trigger.async_attach_trigger(
@@ -96,6 +100,9 @@ async def async_get_triggers(
 
     Make sure the device supports device automations and return the trigger list.
     """
+    if async_is_zha_group_device(hass, device_id):
+        return []
+
     try:
         _, triggers = _get_device_trigger_data(hass, device_id)
     except KeyError as err:

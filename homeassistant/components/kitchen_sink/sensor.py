@@ -8,11 +8,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
+from homeassistant.helpers.typing import StateType, Undefined
 
-from . import DOMAIN
+from .const import DOMAIN
 from .device import async_create_device
 
 
@@ -31,29 +32,33 @@ async def async_setup_entry(
         "2_ch_power_strip",
     )
 
+    parent_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, "2_ch_power_strip"), config_entry_id=config_entry.entry_id
+    )
+
     async_add_entities(
         [
             DemoSensor(
                 device_unique_id="outlet_1",
                 unique_id="outlet_1_power",
                 device_name="Outlet 1",
-                entity_name=UNDEFINED,
+                entity_name=Undefined,
                 state=50,
                 device_class=SensorDeviceClass.POWER,
                 state_class=SensorStateClass.MEASUREMENT,
                 unit_of_measurement=UnitOfPower.WATT,
-                via_device="2_ch_power_strip",
+                parent_device_id=parent_device_id,
             ),
             DemoSensor(
                 device_unique_id="outlet_2",
                 unique_id="outlet_2_power",
                 device_name="Outlet 2",
-                entity_name=UNDEFINED,
+                entity_name=Undefined,
                 state=1500,
                 device_class=SensorDeviceClass.POWER,
                 state_class=SensorStateClass.MEASUREMENT,
                 unit_of_measurement=UnitOfPower.WATT,
-                via_device="2_ch_power_strip",
+                parent_device_id=parent_device_id,
             ),
             DemoSensor(
                 device_unique_id="statistics_issues",
@@ -123,6 +128,7 @@ class DemoSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_device_info: DeviceInfo | ChildDeviceInfo
 
     def __init__(
         self,
@@ -130,25 +136,30 @@ class DemoSensor(SensorEntity):
         device_unique_id: str,
         unique_id: str,
         device_name: str,
-        entity_name: str | None | UndefinedType,
+        entity_name: str | Undefined | None,
         state: StateType,
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
-        via_device: str | None = None,
+        parent_device_id: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._attr_device_class = device_class
-        if entity_name is not UNDEFINED:
+        if entity_name is not Undefined:
             self._attr_name = entity_name
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_native_value = state
         self._attr_state_class = state_class
         self._attr_unique_id = unique_id
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_unique_id)},
-            name=device_name,
-        )
-        if via_device:
-            self._attr_device_info["via_device"] = (DOMAIN, via_device)
+        if parent_device_id is not None:
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, device_unique_id)},
+                name=device_name,
+                parent_device_id=parent_device_id,
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device_unique_id)},
+                name=device_name,
+            )

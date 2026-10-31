@@ -8,6 +8,7 @@ from jaraco.abode.exceptions import (
 )
 from jaraco.abode.helpers.errors import MFA_CODE_REQUIRED
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import ConnectTimeout
 
 from homeassistant.components.abode.const import CONF_POLLING, DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -88,10 +87,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Test success
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
     with patch("homeassistant.components.abode.config_flow.Abode"):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -152,6 +147,33 @@ async def test_step_mfa(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "password",
         CONF_POLLING: False,
     }
+
+
+async def test_step_reauth_with_a_different_account(hass: HomeAssistant) -> None:
+    """Test reauthenticating with an account other than the configured one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="user@email.com",
+        data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch("homeassistant.components.abode.config_flow.Abode"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "other@email.com",
+                CONF_PASSWORD: "password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+
+    assert len(hass.config_entries.async_entries()) == 1
+    assert entry.data[CONF_USERNAME] == "user@email.com"
 
 
 async def test_step_reauth(hass: HomeAssistant) -> None:

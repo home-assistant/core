@@ -47,6 +47,11 @@ IGNORED_SENSORS: Final = {
     "serialno",
 }
 
+# Sensors that only appear after an event since the last daemon restart: a self
+# test for "laststest", a transfer to or from the battery for "xonbatt" and
+# "xoffbatt". They are always added, and stay unknown until the event happens.
+EVENT_SENSORS: Final = {LAST_S_TEST, "xoffbatt", "xonbatt"}
+
 SENSORS: dict[str, SensorEntityDescription] = {
     "alarmdel": SensorEntityDescription(
         key="alarmdel",
@@ -430,16 +435,9 @@ async def async_setup_entry(
 
     entities = []
 
-    # "laststest" is a special sensor that only appears when
-    # the APC UPS daemon has done a periodical (or manual) self
-    # test since last daemon restart. It might not be available
-    # when we set up the integration, and we do not know if it
-    # would ever be available. Here we add it anyway and mark it
-    # as unknown initially.
-    #
-    # We also sort the resources to ensure the order of entities
-    # created is deterministic
-    for resource in sorted(available_resources | {LAST_S_TEST}):
+    # We sort the resources to ensure the order of entities created is
+    # deterministic
+    for resource in sorted(available_resources | EVENT_SENSORS):
         if resource in IGNORED_SENSORS:
             continue
         if resource not in SENSORS:

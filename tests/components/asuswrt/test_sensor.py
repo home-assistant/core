@@ -6,6 +6,7 @@ from asusrouter import AsusRouterError
 from asusrouter.modules.data import AsusData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import (
@@ -42,8 +43,6 @@ from .common import (
 )
 from .conftest import make_async_get_data_side_effect
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_LOAD_AVG, *SENSORS_RATES]
 
 SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_TEMPERATURES_LEGACY]
@@ -54,22 +53,6 @@ SENSORS_ALL_HTTP = [
     *SENSORS_TEMPERATURES,
     *SENSORS_UPTIME,
 ]
-
-
-@pytest.fixture(name="create_device_registry_devices")
-def create_device_registry_devices_fixture(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-):
-    """Create device registry devices so device tracker entities are enabled."""
-    config_entry = MockConfigEntry(domain="something_else")
-    config_entry.add_to_hass(hass)
-
-    for idx, device in enumerate((MOCK_MACS[2], MOCK_MACS[3])):
-        device_registry.async_get_or_create(
-            name=f"Device {idx}",
-            config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(device))},
-        )
 
 
 def _setup_entry(hass: HomeAssistant, config, sensors, unique_id=None):
@@ -183,8 +166,26 @@ async def _test_sensors(
     # consider home option set to 0, device "test" not home
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_NOT_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
-    assert hass.states.get(f"{device_tracker.DOMAIN}.testthree").state == STATE_HOME
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "3"
+
+    # trackers for new devices are disabled by default
+    entity_id = entity_reg.async_get_entity_id(
+        device_tracker.DOMAIN, DOMAIN, dr.format_mac(MOCK_MACS[2])
+    )
+    assert entity_id is not None
+    assert (
+        entity_reg.async_get(entity_id).disabled_by
+        is er.RegistryEntryDisabler.INTEGRATION
+    )
+    assert hass.states.get(entity_id) is None
+
+    # The tracker describes its device even when disabled
+    device = dr.async_get(hass).async_get(entity_reg.async_get(entity_id).device_id)
+    assert device is not None
+    assert device.name == "TestThree"
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MACS[2]))
+    }
 
 
 @pytest.mark.parametrize(
@@ -197,7 +198,6 @@ async def test_sensors_legacy(
     mock_devices_legacy,
     entry_unique_id,
     connect_legacy,
-    create_device_registry_devices,
 ) -> None:
     """Test creating AsusWRT default sensors and tracker with legacy protocol."""
     await _test_sensors(
@@ -215,7 +215,6 @@ async def test_sensors_http(
     mock_devices_http,
     entry_unique_id,
     connect_http,
-    create_device_registry_devices,
 ) -> None:
     """Test creating AsusWRT default sensors and tracker with http protocol."""
     await _test_sensors(

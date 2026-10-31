@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "camera_sqm": {
+        "default": "mdi:weather-night"
+      },
+      "camera_sqm_adu": {
+        "default": "mdi:counter"
+      },
+      "device_sqm": {
+        "default": "mdi:weather-night"
+      },
+      "dew_heater": {
+        "default": "mdi:heating-coil"
+      },
+      "fan_duty_cycle": {
+        "default": "mdi:fan"
+      }
+    }
+  }
+}

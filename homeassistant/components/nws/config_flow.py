@@ -4,23 +4,27 @@ import logging
 from typing import Any, override
 
 import aiohttp
+import probatio
 from pynws import SimpleNWS
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.location import has_location
-from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
+from homeassistant.helpers.location import get_state_coordinates
+from homeassistant.helpers.selector import (
+    EntitySelector,
+    EntitySelectorConfig,
+    LocationSelector,
+    LocationSelectorConfig,
+)
 
 from . import base_unique_id
 from .const import CONF_LOCATION_ENTITY, CONF_STATION, DOMAIN
@@ -33,8 +37,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    latitude = data[CONF_LATITUDE]
-    longitude = data[CONF_LONGITUDE]
+    latitude = data[CONF_LOCATION][CONF_LATITUDE]
+    longitude = data[CONF_LOCATION][CONF_LONGITUDE]
     api_key = data[CONF_API_KEY]
     station = data.get(CONF_STATION)
 
@@ -54,7 +58,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for National Weather Service (NWS)."""
 
-    VERSION = 1
+    VERSION = 2
 
     @override
     async def async_step_user(
@@ -72,31 +76,36 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the specific location configuration step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(
-                base_unique_id(user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
-            )
+            await self.async_set_unique_id(base_unique_id(**user_input[CONF_LOCATION]))
             self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
-                user_input[CONF_STATION] = info["title"]
-                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                user_input[CONF_STATION] = info["title"]
+                return self.async_create_entry(title=info["title"], data=user_input)
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): str,
-                vol.Required(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Required(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
-                vol.Optional(CONF_STATION): str,
-            }
+        data_schema = self.add_suggested_values_to_schema(
+            probatio.Schema(
+                {
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                    probatio.Required(CONF_LOCATION): LocationSelector(
+                        LocationSelectorConfig(radius=False)
+                    ),
+                    probatio.Optional(CONF_STATION): str,
+                }
+            ),
+            user_input
+            or {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                }
+            },
         )
 
         return self.async_show_form(
@@ -119,7 +128,10 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "entity_disabled"
             else:
                 state = self.hass.states.get(location_entity)
-                if state is None or not has_location(state):
+                if (
+                    state is None
+                    or (coordinates := get_state_coordinates(state)) is None
+                ):
                     errors["base"] = "entity_no_coordinates"
                 else:
                     data = {
@@ -134,21 +146,24 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                             self.hass,
                             {
                                 CONF_API_KEY: user_input[CONF_API_KEY],
-                                CONF_LATITUDE: state.attributes[ATTR_LATITUDE],
-                                CONF_LONGITUDE: state.attributes[ATTR_LONGITUDE],
+                                CONF_LOCATION: {
+                                    CONF_LATITUDE: coordinates.latitude,
+                                    CONF_LONGITUDE: coordinates.longitude,
+                                },
                             },
                         )
-                        return self.async_create_entry(title=location_entity, data=data)
                     except CannotConnect:
                         errors["base"] = "cannot_connect"
                     except Exception:
                         _LOGGER.exception("Unexpected exception")
                         errors["base"] = "unknown"
+                    else:
+                        return self.async_create_entry(title=location_entity, data=data)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): str,
-                vol.Required(CONF_LOCATION_ENTITY): EntitySelector(
+                probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                probatio.Required(CONF_LOCATION_ENTITY): EntitySelector(
                     EntitySelectorConfig(
                         domain=["person", "device_tracker", "zone"],
                     )

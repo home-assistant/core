@@ -1,12 +1,11 @@
 """Support for airthings ble sensors."""
 
 from collections.abc import Callable
-import dataclasses
 from dataclasses import dataclass
 import logging
 from typing import override
 
-from airthings_ble import AirthingsConnectivityMode, AirthingsDevice
+from airthings_ble import AirthingsDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,41 +16,22 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     LIGHT_LUX,
     EntityCategory,
-    Platform,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
-    async_entries_for_device,
-)
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
+from .const import CONNECTIVITY_MODE_MAP, get_connectivity_mode
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-CONNECTIVITY_MODE_MAP = {
-    AirthingsConnectivityMode.BLE.value: "bluetooth",
-    AirthingsConnectivityMode.SMARTLINK.value: "smartlink",
-    AirthingsConnectivityMode.NOT_CONFIGURED.value: "not_configured",
-}
-
-
-def get_connectivity_mode(value: str | float | None) -> str | None:
-    """Get connectivity mode."""
-    if not isinstance(value, str):
-        return None
-    return CONNECTIVITY_MODE_MAP.get(value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,15 +45,15 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
     "radon_1day_avg": AirthingsBLESensorEntityDescription(
         key="radon_1day_avg",
         translation_key="radon_1day_avg",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        suggested_display_precision=0,
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radon_longterm_avg": AirthingsBLESensorEntityDescription(
         key="radon_longterm_avg",
         translation_key="radon_longterm_avg",
-        native_unit_of_measurement=VOLUME_BECQUEREL,
-        suggested_display_precision=0,
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "radon_1day_level": AirthingsBLESensorEntityDescription(
@@ -86,6 +66,52 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
     "radon_longterm_level": AirthingsBLESensorEntityDescription(
         key="radon_longterm_level",
         translation_key="radon_longterm_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "fair", "poor"],
+        value_fn=lambda value: value if value != "unknown" else None,
+    ),
+    "radon_week_avg": AirthingsBLESensorEntityDescription(
+        key="radon_week_avg",
+        translation_key="radon_week_avg",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    "radon_week_level": AirthingsBLESensorEntityDescription(
+        key="radon_week_level",
+        translation_key="radon_week_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "fair", "poor"],
+        value_fn=lambda value: value if value != "unknown" else None,
+        entity_registry_enabled_default=False,
+    ),
+    "radon_month_avg": AirthingsBLESensorEntityDescription(
+        key="radon_month_avg",
+        translation_key="radon_month_avg",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    "radon_month_level": AirthingsBLESensorEntityDescription(
+        key="radon_month_level",
+        translation_key="radon_month_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "fair", "poor"],
+        value_fn=lambda value: value if value != "unknown" else None,
+        entity_registry_enabled_default=False,
+    ),
+    "radon_year_avg": AirthingsBLESensorEntityDescription(
+        key="radon_year_avg",
+        translation_key="radon_year_avg",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "radon_year_level": AirthingsBLESensorEntityDescription(
+        key="radon_year_level",
+        translation_key="radon_year_level",
         device_class=SensorDeviceClass.ENUM,
         options=["good", "fair", "poor"],
         value_fn=lambda value: value if value != "unknown" else None,
@@ -169,76 +195,28 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
 PARALLEL_UPDATES = 0
 
 
-@callback
-def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
-    """Migrate entities to new unique ids (with BLE Address)."""
-    ent_reg = er.async_get(hass)
-    unique_id_trailer = f"_{sensor_name}"
-    new_unique_id = f"{address}{unique_id_trailer}"
-    if ent_reg.async_get_entity_id(DOMAIN, Platform.SENSOR, new_unique_id):
-        # New unique id already exists
-        return
-    dev_reg = dr.async_get(hass)
-    if not (
-        device := dev_reg.async_get_device(
-            connections={(CONNECTION_BLUETOOTH, address)}
-        )
-    ):
-        return
-    entities = async_entries_for_device(
-        ent_reg,
-        device_id=device.id,
-        include_disabled_entities=True,
-    )
-    matching_reg_entry: RegistryEntry | None = None
-    for entry in entities:
-        if entry.unique_id.endswith(unique_id_trailer) and (
-            not matching_reg_entry or "(" not in entry.unique_id
-        ):
-            matching_reg_entry = entry
-    if not matching_reg_entry or matching_reg_entry.unique_id == new_unique_id:
-        # Already has the newest unique id format
-        return
-    entity_id = matching_reg_entry.entity_id
-    ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
-    _LOGGER.debug("Migrated entity '%s' to unique id '%s'", entity_id, new_unique_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirthingsBLEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airthings BLE sensors."""
-    is_metric = hass.config.units is METRIC_SYSTEM
-
     coordinator = entry.runtime_data
-
-    # we need to change some units
-    sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
-    if not is_metric:
-        for key, val in sensors_mapping.items():
-            if val.native_unit_of_measurement is not VOLUME_BECQUEREL:
-                continue
-            sensors_mapping[key] = dataclasses.replace(
-                val,
-                native_unit_of_measurement=VOLUME_PICOCURIE,
-                suggested_display_precision=1,
-            )
 
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors)
     for sensor_type, sensor_value in coordinator.data.sensors.items():
-        if sensor_type not in sensors_mapping:
+        if sensor_type not in SENSORS_MAPPING_TEMPLATE:
             _LOGGER.debug(
                 "Unknown sensor type detected: %s, %s",
                 sensor_type,
                 sensor_value,
             )
             continue
-        async_migrate(hass, coordinator.data.address, sensor_type)
         entities.append(
-            AirthingsSensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
+            AirthingsSensor(
+                coordinator, coordinator.data, SENSORS_MAPPING_TEMPLATE[sensor_type]
+            )
         )
 
     async_add_entities(entities)
@@ -283,16 +261,7 @@ class AirthingsSensor(
 
     @property
     @override
-    def available(self) -> bool:
-        """Check if device and sensor is available in data."""
-        return (
-            super().available
-            and self.entity_description.key in self.coordinator.data.sensors
-        )
-
-    @property
-    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        value = self.coordinator.data.sensors[self.entity_description.key]
+        value = self.coordinator.data.sensors.get(self.entity_description.key)
         return self.entity_description.value_fn(value)

@@ -65,8 +65,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.FAN_SPEED
+        VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.START
@@ -156,12 +155,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Determine if the sensor is available based on API results."""
         # If the last update was successful...
         return self.coordinator.last_update_success and self.is_online
-
-    @property
-    @override
-    def battery_level(self) -> int | None:
-        """Get the current battery level."""
-        return self.sharkiq.get_property_value(Properties.BATTERY_CAPACITY)
 
     @override
     async def async_return_to_base(self, **kwargs: Any) -> None:

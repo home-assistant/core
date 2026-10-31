@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import MealieConfigEntry
+from .coordinator import MealieConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

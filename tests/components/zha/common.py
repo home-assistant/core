@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
+from pytest_homeassistant.common import async_fire_time_changed
 import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
@@ -10,8 +11,6 @@ from homeassistant.components.zha.helpers import ZHADeviceProxy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 
 def patch_cluster(cluster):
@@ -162,10 +161,7 @@ def find_entity_ids(
 
 def async_find_group_entity_id(hass: HomeAssistant, domain, group):
     """Find the group entity id under test."""
-    entity_id = (
-        f"{domain}.coordinator_manufacturer_coordinator_model"
-        f"_{group.name.lower().replace(' ', '_')}"
-    )
+    entity_id = f"{domain}.{group.name.lower().replace(' ', '_')}"
 
     entity_ids = hass.states.async_entity_ids(domain)
     assert entity_id in entity_ids

@@ -1,6 +1,7 @@
 {
   "domain": "openexchangerates",
   "name": "Open Exchange Rates",
+  "categories": ["finance"],
   "codeowners": ["@MartinHjelmare"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openexchangerates",

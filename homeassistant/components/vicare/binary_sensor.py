@@ -24,13 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
-from .utils import (
-    get_burners,
-    get_circuits,
-    get_compressors,
-    get_device_serial,
-    is_supported,
-)
+from .utils import get_burners, get_circuits, get_compressors, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,6 +102,16 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         value_getter=lambda api: api.getOneTimeCharge(),
     ),
     ViCareBinarySensorEntityDescription(
+        key="holiday_active",
+        translation_key="holiday",
+        value_getter=lambda api: api.getHolidayActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="holiday_at_home_active",
+        translation_key="holiday_at_home",
+        value_getter=lambda api: api.getHolidayAtHomeActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
         key="device_error",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_getter=lambda api: len(api.getDeviceErrors()) > 0,
@@ -157,7 +161,7 @@ def _build_entities(
         entities.extend(
             ViCareBinarySensor(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
             )
@@ -173,7 +177,7 @@ def _build_entities(
             entities.extend(
                 ViCareBinarySensor(
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                     component,

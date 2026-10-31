@@ -1,9 +1,15 @@
 """Tests for the Enphase Envoy integration."""
 
+from datetime import timedelta
+
+from jwt import encode
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+TOKEN_SIGNING_KEY = "envoy-test-signing-key-0123456789"
 
 
 async def setup_integration(
@@ -17,3 +23,15 @@ async def setup_integration(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is expected_state
+
+
+def envoy_token(days_to_expiry: int = 365) -> str:
+    """Build envoy token with specified days to expiration."""
+    return encode(
+        payload={
+            "name": "envoy",
+            "exp": (dt_util.utcnow() + timedelta(days=days_to_expiry)).timestamp(),
+        },
+        key=TOKEN_SIGNING_KEY,
+        algorithm="HS256",
+    )

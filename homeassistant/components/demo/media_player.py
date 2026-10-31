@@ -407,9 +407,9 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
 
 
 class DemoBrowsePlayer(AbstractDemoPlayer):
-    """A Demo media player that supports browse."""
+    """A Demo media player that supports browse and search."""
 
-    _attr_supported_features = BROWSE_PLAYER_SUPPORT
+    _attr_supported_features = BROWSE_PLAYER_SUPPORT | SEARCH_PLAYER_SUPPORT
 
     @override
     async def async_browse_media(
@@ -420,6 +420,13 @@ class DemoBrowsePlayer(AbstractDemoPlayer):
         """Implement the websocket media browsing helper."""
 
         return await media_source.async_browse_media(self.hass, media_content_id)
+
+    @override
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Implement the websocket media search helper by delegating to media source."""
+        return await media_source.async_search_media(
+            self.hass, query.media_content_id, query
+        )
 
 
 class DemoGroupPlayer(AbstractDemoPlayer):

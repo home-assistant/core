@@ -1,13 +1,13 @@
 """Tests for Prana integration entry points (async_setup_entry / async_unload_entry)."""
 
+from pytest_homeassistant.common import SnapshotAssertion
+
 from homeassistant.components.prana.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import async_init_integration
-
-from tests.common import SnapshotAssertion
 
 
 async def test_async_setup_entry_and_unload_entry(
@@ -35,8 +35,8 @@ async def test_device_info_registered(
     """Device info from the API should be registered on the device registry."""
     await async_init_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
 
     assert device is not None

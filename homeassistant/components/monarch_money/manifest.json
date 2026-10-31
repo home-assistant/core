@@ -2,10 +2,11 @@
   "domain": "monarch_money",
   "name": "Monarch Money",
   "after_dependencies": ["recorder"],
-  "codeowners": ["@jeeftor"],
+  "categories": ["finance"],
+  "codeowners": ["@jeeftor", "@bradleyseanf"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/monarchmoney",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["typedmonarchmoney==0.7.0"]
+  "requirements": ["monarchmoneycommunity==1.6.0"]
 }

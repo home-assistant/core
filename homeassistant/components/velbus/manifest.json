@@ -1,6 +1,7 @@
 {
   "domain": "velbus",
   "name": "Velbus",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@Cereal2nd", "@brefra"],
   "config_flow": true,
   "dependencies": ["usb", "file_upload"],
@@ -11,10 +12,11 @@
     "velbus-parser",
     "velbus-module",
     "velbus-packet",
-    "velbus-protocol"
+    "velbus-protocol",
+    "velbus-handler"
   ],
   "quality_scale": "silver",
-  "requirements": ["velbus-aio==2026.4.1"],
+  "requirements": ["velbus-aio==2026.9.0"],
   "usb": [
     {
       "pid": "0B1B",

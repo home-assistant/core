@@ -1,10 +1,10 @@
 """Test Filter component setup process."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(

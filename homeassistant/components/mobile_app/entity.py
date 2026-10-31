@@ -5,11 +5,11 @@ from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -93,8 +93,10 @@ class MobileAppEntity(RestoreEntity):
                 **last_state.attributes,
                 **self._config[ATTR_SENSOR_ATTRIBUTES],
             }
-            if ATTR_ICON in last_state.attributes:
-                config[ATTR_SENSOR_ICON] = last_state.attributes[ATTR_ICON]
+            if EntityStateAttribute.ICON in last_state.attributes:
+                config[ATTR_SENSOR_ICON] = last_state.attributes[
+                    EntityStateAttribute.ICON
+                ]
 
     @property
     @override
@@ -116,9 +118,10 @@ class MobileAppEntity(RestoreEntity):
         # pylint: disable-next=home-assistant-use-runtime-data
         pending_updates = self.hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type]
         if update := pending_updates.pop(self._attr_unique_id, None):
+            # The unique_id is prefixed with the webhook ID, so log the entity_id
             _LOGGER.debug(
                 "Applying pending update for %s: %s",
-                self._attr_unique_id,
+                self.entity_id,
                 update,
             )
             # Apply the pending update

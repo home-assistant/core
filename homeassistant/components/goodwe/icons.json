@@ -6,6 +6,9 @@
       }
     },
     "number": {
+      "battery_charge_current": {
+        "default": "mdi:battery-charging"
+      },
       "battery_discharge_depth": {
         "default": "mdi:battery-arrow-down"
       },

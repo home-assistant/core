@@ -18,6 +18,8 @@ from . import OverkizDataConfigEntry
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

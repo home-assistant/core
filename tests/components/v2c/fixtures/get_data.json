@@ -5,6 +5,7 @@
   "ChargePower": 1500.27,
   "VoltageInstallation": 230,
   "ChargeEnergy": 1.8,
+  "ChargeMode": 1,
   "SlaveError": 4,
   "ChargeTime": 4355,
   "HousePower": 0.0,

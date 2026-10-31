@@ -16,7 +16,7 @@ type ModemCallerIdConfigEntry = ConfigEntry[PhoneModem]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ModemCallerIdConfigEntry
-) -> bool:
+) -> None:
     """Set up Modem Caller ID from a config entry."""
     device = entry.data[CONF_DEVICE]
     api = PhoneModem(device)
@@ -39,11 +39,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ModemCallerIdConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

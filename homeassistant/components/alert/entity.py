@@ -22,7 +22,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.util.dt import now
+from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, LOGGER
 
@@ -72,11 +72,23 @@ class AlertEntity(Entity):
         self._ack = False
         self._cancel: Callable[[], None] | None = None
         self._send_done_message = False
+        self._watched_entity_id = watched_entity_id
         self.entity_id = f"{DOMAIN}.{entity_id}"
 
         async_track_state_change_event(
             hass, [watched_entity_id], self.watched_entity_change
         )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Start alerting if the watched entity is already in the alert state."""
+        await super().async_added_to_hass()
+        if (
+            (state := self.hass.states.get(self._watched_entity_id)) is not None
+            and state.state == self._alert_state
+            and not self._firing
+        ):
+            await self.begin_alerting()
 
     @property
     @override
@@ -128,7 +140,7 @@ class AlertEntity(Entity):
     async def _schedule_notify(self) -> None:
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
-        next_msg = now() + delay
+        next_msg = utcnow() + delay
         self._cancel = async_track_point_in_time(
             self.hass,
             HassJob(

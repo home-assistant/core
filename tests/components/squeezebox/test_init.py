@@ -4,11 +4,12 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.squeezebox import async_remove_config_entry_device
 from homeassistant.components.squeezebox.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -16,8 +17,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .conftest import TEST_MAC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -76,19 +75,19 @@ async def test_init_unauthorized(
     """Test init fail due to unauthorized error."""
 
     # Setup component to simulate unauthorized response
-    with (
-        patch(
-            "homeassistant.components.squeezebox.Server.async_query",
-            return_value=False,  # async_query returns False on auth failure
-        ),
-        patch(
-            "homeassistant.components.squeezebox.Server",
-            autospec=True,
-        ) as mock_server_instance,
-    ):
+    with patch(
+        "homeassistant.components.squeezebox.Server",
+        autospec=True,
+    ) as mock_server_instance:
+        mock_server_instance.return_value.async_query.return_value = False
         mock_server_instance.return_value.http_status = HTTPStatus.UNAUTHORIZED
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
 
 
 async def test_init_missing_uuid(
@@ -114,11 +113,14 @@ async def test_init_missing_uuid(
 async def test_device_registry(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
+    config_entry: MockConfigEntry,
     configured_player: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test squeezebox device registered in the device registry."""
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[0])})
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MAC[0]), config_entry.entry_id
+    )
     assert reg_device is not None
     assert reg_device == snapshot
 
@@ -137,7 +139,9 @@ async def test_device_registry_numeric_firmware(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[0])})
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MAC[0]), config_entry.entry_id
+    )
     assert reg_device is not None
     assert reg_device.hw_version == "137"
 
@@ -145,12 +149,17 @@ async def test_device_registry_numeric_firmware(
 async def test_device_registry_server_merged(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
+    config_entry: MockConfigEntry,
     configured_players: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test squeezebox device registered in the device registry."""
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[2])})
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MAC[2]), config_entry.entry_id
+    )
     assert reg_device is not None
+    # The player shares the server's device, so it must not be linked to itself.
+    assert reg_device.via_device_id is None
     assert reg_device == snapshot
 
 
@@ -182,7 +191,9 @@ async def test_remove_device_blocked(
     else:
         player_id = TEST_MAC[0]
         entry.runtime_data.player_coordinators[player_id].available = is_online
-        device = device_registry.async_get_device(identifiers={(DOMAIN, player_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, player_id), entry.entry_id
+        )
 
     assert device is not None
     with pytest.raises(HomeAssistantError, match=expected_error):
@@ -200,7 +211,9 @@ async def test_remove_device_allowed_offline_player(
     # Ensure the player coordinator exists and is marked offline/unavailable.
     coordinator = entry.runtime_data.player_coordinators[player_id]
     coordinator.available = False
-    device = device_registry.async_get_device(identifiers={(DOMAIN, player_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, player_id), entry.entry_id
+    )
     assert device is not None
     result = await async_remove_config_entry_device(hass, entry, device)
     assert result is True
@@ -222,3 +235,17 @@ async def test_remove_device_allowed_stale_player(
     )
     result = await async_remove_config_entry_device(hass, entry, device)
     assert result is True
+
+
+async def test_remove_device_rejects_child_device(
+    hass: HomeAssistant,
+    setup_squeezebox: MockConfigEntry,
+) -> None:
+    """Test that removal is rejected for an unexpected child device."""
+    entry = setup_squeezebox
+    child_device = dr.ChildDeviceEntry(
+        config_entry_id=entry.entry_id,
+        parent_device_id="mock-parent-device",
+    )
+    result = await async_remove_config_entry_device(hass, entry, child_device)
+    assert result is False

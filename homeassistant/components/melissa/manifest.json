@@ -1,6 +1,7 @@
 {
   "domain": "melissa",
   "name": "Melissa",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@kennedyshead"],
   "documentation": "https://www.home-assistant.io/integrations/melissa",
   "iot_class": "cloud_polling",
