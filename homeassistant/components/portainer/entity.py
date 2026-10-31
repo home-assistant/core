@@ -1,6 +1,6 @@
 """Base class for Portainer entities."""
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from pyportainer.models.docker import DockerVolume
 from yarl import URL
@@ -36,6 +36,26 @@ class PortainerDockerDiskSpaceCoordinatorEntity(
     """Base class for Portainer entities using the Docker disk space coordinator."""
 
     _attr_has_entity_name = True
+    _attr_entity_registry_enabled_default = False
+    endpoint_id: int
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Let the coordinator fetch this entity's endpoint."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_endpoint_entity(self.endpoint_id)
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the endpoint has disk space data."""
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self.endpoint_id in self.coordinator.data
+        )
 
 
 class PortainerServerEntity(CoordinatorEntity[PortainerSystemVersionCoordinator]):
@@ -276,15 +296,28 @@ class PortainerDockerSystemDiskSpaceEndpointEntity(
             f"_{entity_description.key}"
         )
 
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self.endpoint_id in self.coordinator.data
-        )
+
+def _volume_device_info(
+    coordinator: PortainerCoordinator | PortainerDockerDiskSpaceCoordinator,
+    endpoint_id: int,
+    volume_name: str,
+) -> DeviceInfo:
+    """Return the device info of a volume."""
+    entry = coordinator.config_entry
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{entry.entry_id}_{endpoint_id}_volume_{volume_name}")},
+        manufacturer=DEFAULT_NAME,
+        configuration_url=URL(
+            f"{entry.data[CONF_URL]}#!/{endpoint_id}/docker/volumes/{volume_name}"
+        ),
+        model="Volume",
+        name=volume_name,
+        via_device_id=dr.async_get_device_id_by_identifier(
+            coordinator.hass,
+            (DOMAIN, f"{entry.entry_id}_{endpoint_id}"),
+            config_entry_id=entry.entry_id,
+        ),
+    )
 
 
 class PortainerVolumeEntity(PortainerCoordinatorEntity):
@@ -304,25 +337,8 @@ class PortainerVolumeEntity(PortainerCoordinatorEntity):
         self.volume_name = device_info.name
         self.endpoint_id = via_device.endpoint.id
         self.endpoint_name = via_device.endpoint.name
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_volume_{self.volume_name}",
-                )
-            },
-            manufacturer=DEFAULT_NAME,
-            configuration_url=URL(
-                f"{coordinator.config_entry.data[CONF_URL]}#!/{self.endpoint_id}/docker/volumes/{self.volume_name}"
-            ),
-            model="Volume",
-            name=self.volume_name,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_{self.endpoint_id}"),
-                config_entry_id=coordinator.config_entry.entry_id,
-            ),
+        self._attr_device_info = _volume_device_info(
+            coordinator, self.endpoint_id, self.volume_name
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}"
@@ -344,3 +360,40 @@ class PortainerVolumeEntity(PortainerCoordinatorEntity):
     def volume_data(self) -> PortainerVolumeData:
         """Return the coordinator data for this volume."""
         return self.coordinator.data[self.endpoint_id].volumes[self.volume_name]
+
+
+class PortainerDockerDiskSpaceVolumeEntity(PortainerDockerDiskSpaceCoordinatorEntity):
+    """Base class for volume entities backed by the Docker disk space coordinator."""
+
+    def __init__(
+        self,
+        coordinator: PortainerDockerDiskSpaceCoordinator,
+        entity_description: EntityDescription,
+        device_info: DockerVolume,
+        via_device: PortainerCoordinatorData,
+    ) -> None:
+        """Initialize a Portainer volume disk space entity."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self.volume_name = device_info.name
+        self.endpoint_id = via_device.endpoint.id
+        self._attr_device_info = _volume_device_info(
+            coordinator, self.endpoint_id, self.volume_name
+        )
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self.endpoint_id}_volume"
+            f"_{self.volume_name}_{entity_description.key}"
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the volume has disk space data."""
+        return super().available and self.volume_usage is not None
+
+    @property
+    def volume_usage(self) -> dict[str, Any] | None:
+        """Return the disk usage item for this volume."""
+        items = self.coordinator.data[self.endpoint_id].volume_disk_usage.items or []
+        return next((item for item in items if item["Name"] == self.volume_name), None)
