@@ -138,6 +138,11 @@ SSDP = {
             "st": "urn:schemas-frontier-silicon-com:invalid:fsapi:1",
         },
     ],
+    "habitron": [
+        {
+            "st": "urn:habitron-com:device:SmartHub:1",
+        },
+    ],
     "harman_luxury": [
         {
             "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
