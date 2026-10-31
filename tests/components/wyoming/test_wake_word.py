@@ -7,6 +7,7 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
+from wyoming.audio import AudioChunk
 from wyoming.error import Error
 from wyoming.info import Info, WakeModel, WakeProgram
 from wyoming.wake import Detection
@@ -206,6 +207,53 @@ async def test_detect_message_with_wrong_wake_word(
         result = await entity.async_process_audio_stream(audio_stream(), "my-wake-word")
 
     assert result is None
+
+
+@pytest.mark.parametrize(
+    "detections",
+    [
+        pytest.param(["my-wake-word"], id="detection"),
+        pytest.param(["not-my-wake-word", "my-wake-word"], id="skipped_detection"),
+    ],
+)
+@pytest.mark.usefixtures("init_wyoming_wake_word")
+async def test_detection_keeps_ready_audio(
+    hass: HomeAssistant, detections: list[str]
+) -> None:
+    """Test that audio read alongside a detection is forwarded or queued."""
+    entity = wake_word.async_get_wake_word_detection_entity(
+        hass, "wake_word.test_wake_word"
+    )
+    assert entity is not None
+
+    read_chunks: list[bytes] = []
+
+    async def audio_stream():
+        for i in range(5):
+            read_chunks.append(f"chunk{i}".encode())
+            yield read_chunks[-1], i
+
+    mock_client = MockAsyncTcpClient(
+        [Detection(name=name, timestamp=0).event() for name in detections]
+    )
+
+    with patch(
+        "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
+        mock_client,
+    ):
+        result = await entity.async_process_audio_stream(audio_stream(), "my-wake-word")
+
+    assert isinstance(result, wake_word.DetectionResult)
+    assert result.wake_word_id == "my-wake-word"
+
+    # Every chunk taken from the stream must reach the service or the pipeline
+    forwarded = [
+        AudioChunk.from_event(event).audio
+        for event in mock_client.written
+        if AudioChunk.is_type(event.type)
+    ]
+    queued = [chunk for chunk, _timestamp in result.queued_audio or []]
+    assert forwarded + queued == read_chunks
 
 
 async def test_dynamic_wake_word_info(
