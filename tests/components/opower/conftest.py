@@ -38,7 +38,7 @@ def mock_opower_api() -> Generator[AsyncMock]:
         api = mock_api.return_value
         api.utility = PGE()
 
-        api.async_get_accounts.return_value = [
+        accounts = [
             Account(
                 customer=Mock(),
                 uuid="111111-uuid",
@@ -56,6 +56,7 @@ def mock_opower_api() -> Generator[AsyncMock]:
                 read_resolution=ReadResolution.DAY,
             ),
         ]
+        api.async_get_accounts.return_value = accounts
         api.async_get_forecast.return_value = [
             Forecast(
                 account=Account(

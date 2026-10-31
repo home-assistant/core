@@ -51,8 +51,27 @@ class OpowerData:
 
     account: Account
     forecast: Forecast | None
+    last_bill_effective_electricity_rate: float | None
+    last_bill_received: bool
     last_changed: datetime | None
     last_updated: datetime
+
+
+def _bill_read_electricity_rate(bill_read: CostRead) -> float | None:
+    """Return the effective electricity rate of a bill read, if meaningful."""
+    if bill_read.exported or bill_read.consumption <= 0 or bill_read.provided_cost <= 0:
+        return None
+    return bill_read.provided_cost / bill_read.consumption
+
+
+def _update_bill_electricity_rates(
+    rates: dict[str, float | None], account: Account, bill_reads: list[CostRead]
+) -> None:
+    """Store the rate of an electricity account's newest bill read, if any."""
+    if account.meter_type is MeterType.ELEC and bill_reads:
+        rates[account.utility_account_id] = _bill_read_electricity_rate(
+            max(bill_reads, key=lambda read: read.end_time)
+        )
 
 
 class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
@@ -133,20 +152,45 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
         # Because Opower provides historical usage/cost with a delay of a couple of days
         # we need to insert data into statistics.
-        last_changed_per_account = await self._insert_statistics(accounts)
+        last_changed_per_account, bill_rates = await self._insert_statistics(accounts)
+
         return {
             account.utility_account_id: OpowerData(
                 account=account,
                 forecast=forecasts.get(account.utility_account_id),
+                last_bill_effective_electricity_rate=self._bill_rate_or_previous(
+                    account.utility_account_id, bill_rates
+                ),
+                last_bill_received=account.utility_account_id in bill_rates,
                 last_changed=last_changed_per_account.get(account.utility_account_id),
                 last_updated=dt_util.utcnow(),
             )
             for account in accounts
         }
 
-    async def _insert_statistics(self, accounts: list[Account]) -> dict[str, datetime]:
-        """Insert Opower statistics."""
+    def _bill_rate_or_previous(
+        self, utility_account_id: str, rates: dict[str, float | None]
+    ) -> float | None:
+        """Return the account's rate, or the previous one if no bill was read.
+
+        Incremental updates only read bills from about the last month.
+        """
+        if utility_account_id in rates:
+            return rates[utility_account_id]
+        if self.data and (previous := self.data.get(utility_account_id)):
+            return previous.last_bill_effective_electricity_rate
+        return None
+
+    async def _insert_statistics(
+        self, accounts: list[Account]
+    ) -> tuple[dict[str, datetime], dict[str, float | None]]:
+        """Insert Opower statistics.
+
+        Return when each account last changed and the electricity rate from
+        each electricity account's newest bill read, if any was read.
+        """
         last_changed_per_account: dict[str, datetime] = {}
+        bill_rates: dict[str, float | None] = {}
         for account in accounts:
             id_prefix = (
                 (
@@ -227,9 +271,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             )
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
-                cost_reads = await self._async_get_cost_reads(
+                cost_reads, bill_reads = await self._async_get_cost_reads(
                     account, self.api.utility.timezone()
                 )
+                _update_bill_electricity_rates(bill_rates, account, bill_reads)
                 cost_sum = 0.0
                 compensation_sum = 0.0
                 consumption_sum = 0.0
@@ -257,11 +302,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                         "Statistics migration completed. Skipping update for now"
                     )
                     continue
-                cost_reads = await self._async_get_cost_reads(
+                cost_reads, bill_reads = await self._async_get_cost_reads(
                     account,
                     self.api.utility.timezone(),
                     last_stat[consumption_statistic_id][0]["start"],
                 )
+                _update_bill_electricity_rates(bill_rates, account, bill_reads)
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
                     continue
@@ -393,7 +439,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             )
             async_add_external_statistics(self.hass, return_metadata, return_statistics)
 
-        return last_changed_per_account
+        return last_changed_per_account, bill_rates
 
     async def _async_maybe_migrate_statistics(
         self,
@@ -523,8 +569,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
     async def _async_get_cost_reads(
         self, account: Account, time_zone_str: str, start_time: float | None = None
-    ) -> list[CostRead]:
-        """Get cost reads.
+    ) -> tuple[list[CostRead], list[CostRead]]:
+        """Get cost reads and the bill reads they were built from.
 
         If start_time is None, get cost reads since account activation,
         otherwise since start_time - 30 days to allow corrections in data from utilities
@@ -565,8 +611,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.error("Error getting monthly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
+        bill_reads = list(cost_reads)
         if account.read_resolution is ReadResolution.BILLING:
-            return cost_reads
+            return cost_reads, bill_reads
 
         if start_time is None:
             start = end - timedelta(days=3 * 365)
@@ -588,14 +635,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             if account.read_resolution is ReadResolution.DAY:
                 # Nothing finer to fall back to, and see the hourly reads below.
                 _LOGGER.debug("No daily cost reads. Skipping update")
-                return []
+                return [], bill_reads
             # The hourly reads below are still finer than the statistics they
             # land on, so only drop the bill reads and carry on with those.
             _LOGGER.debug("No daily cost reads. Trying the hourly ones")
             cost_reads = []
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
         if account.read_resolution is ReadResolution.DAY:
-            return cost_reads
+            return cost_reads, bill_reads
 
         if start_time is None:
             start = end - timedelta(days=2 * 30)
@@ -618,7 +665,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             # once statistics exist: on the initial import there is nothing to
             # overwrite and the daily reads are the best available data.
             _LOGGER.debug("No hourly cost reads. Skipping update")
-            return []
+            return [], bill_reads
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         _LOGGER.debug("Got %s cost reads", len(cost_reads))
-        return cost_reads
+        return cost_reads, bill_reads
