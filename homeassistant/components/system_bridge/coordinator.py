@@ -123,7 +123,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             self.unsub = None
         # Setup failures are reported through ConfigEntryNotReady instead
         if (
-            self.last_update_success
+            not self._unavailable_logged
             and self.config_entry.state is ConfigEntryState.LOADED
         ):
             self.logger.info("%s is unavailable", self.title)

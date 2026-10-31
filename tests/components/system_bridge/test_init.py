@@ -424,9 +424,21 @@ async def test_reconnect_backoff_and_logging(
     async def register_with_buffered_data(*args: Any) -> None:
         coordinator.async_set_updated_data(coordinator.data)
 
+    async def register_fails_after_buffered_data(*args: Any) -> None:
+        await register_with_buffered_data()
+        raise ConnectionErrorException
+
+    # Data pushed before the register call fails must not log the outage again
+    register.side_effect = register_fails_after_buffered_data
+    mock_websocket_client.connect.side_effect = None
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 5
+    assert caplog.text.count("TestSystem is unavailable") == 1
+
     # Data pushed before the register call returns must not hide the recovery
     register.side_effect = register_with_buffered_data
-    mock_websocket_client.connect.side_effect = None
     freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -441,7 +453,7 @@ async def test_reconnect_backoff_and_logging(
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert register.await_count == calls + 6
+    assert register.await_count == calls + 7
 
 
 @pytest.mark.usefixtures("init_integration")
