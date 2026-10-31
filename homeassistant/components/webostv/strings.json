@@ -94,18 +94,45 @@
   "options": {
     "error": {
       "cannot_connect": "[%key:component::webostv::config::error::cannot_connect%]",
-      "error_pairing": "[%key:component::webostv::config::error::error_pairing%]"
+      "error_pairing": "[%key:component::webostv::config::error::error_pairing%]",
+      "invalid_mac": "Enter a valid MAC address."
     },
     "step": {
+      "automatic": {
+        "data": {
+          "mac": "[%key:component::webostv::options::step::init::data::mac%]",
+          "sources": "[%key:component::webostv::options::step::init::data::sources%]"
+        },
+        "data_description": {
+          "mac": "[%key:component::webostv::options::step::init::data_description::mac%]",
+          "sources": "[%key:component::webostv::options::step::init::data_description::sources%]"
+        },
+        "description": "Automatic Wake-on-LAN is enabled.\n\n- Ethernet (network cable): **{wired_mac}**\n- Wi-Fi (wireless): **{wifi_mac}**\n\nThe TV has a separate MAC address for each network adapter. Wake-up packets are sent to each detected address. A dash means the address was not detected.",
+        "title": "[%key:component::webostv::options::step::init::title%]"
+      },
       "init": {
         "data": {
+          "mac": "MAC address override",
           "sources": "Sources list"
         },
         "data_description": {
+          "mac": "Leave empty to use the automatically detected MAC addresses, or enter an address to override them. Enable network wake-up in the TV's settings.",
           "sources": "List of sources to enable"
         },
-        "description": "Select enabled sources",
+        "description": "Turn the TV on to detect its Ethernet and Wi-Fi MAC addresses, or enter a MAC address override to enable Wake-on-LAN.",
         "title": "Options for LG webOS TV"
+      },
+      "manual": {
+        "data": {
+          "mac": "[%key:component::webostv::options::step::init::data::mac%]",
+          "sources": "[%key:component::webostv::options::step::init::data::sources%]"
+        },
+        "data_description": {
+          "mac": "[%key:component::webostv::options::step::init::data_description::mac%]",
+          "sources": "[%key:component::webostv::options::step::init::data_description::sources%]"
+        },
+        "description": "Wake-on-LAN uses your MAC address override: **{mac_address}**.\n\nOnly this address receives wake-up packets. Clear the override to return to automatic detection.",
+        "title": "[%key:component::webostv::options::step::init::title%]"
       }
     }
   },

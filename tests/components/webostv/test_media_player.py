@@ -1049,6 +1049,7 @@ async def test_availability(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that availability status changes are set and logged correctly."""
+    client.tv_info.connection = {}
     await setup_webostv(hass)
 
     # Initially available
