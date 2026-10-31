@@ -200,6 +200,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register the todo services."""
     component = hass.data[DATA_COMPONENT]
 
+    # TodoServices is public and predates the singular <Prefix>Service naming
+    # pylint: disable=home-assistant-action-name-not-enum
     component.async_register_entity_service(
         TodoServices.ADD_ITEM,
         probatio.All(
