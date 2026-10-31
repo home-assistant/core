@@ -663,7 +663,7 @@ async def test_device_discovery_ignores_platform_only_component(
 ) -> None:
     """Test a component with only a platform is ignored, as it is deprecated.
 
-    The component and its child device are removed when they are omitted.
+    The component is handled as omitted, so it is removed with its child device.
     """
     mqtt_mock = await mqtt_mock_entry()
     components = {"sw": _discovery_switch("sw")}
@@ -683,9 +683,8 @@ async def test_device_discovery_ignores_platform_only_component(
         ),
     )
     parent = _get_device(hass, device_registry, "parent")
-    child_2 = _get_child_device(hass, device_registry, "sub2")
     assert parent is not None
-    assert child_2 is not None
+    assert _get_child_device(hass, device_registry, "sub2") is not None
     mqtt_mock.async_publish.reset_mock()
 
     payload = _device_payload(
@@ -696,21 +695,10 @@ async def test_device_discovery_ignores_platform_only_component(
         ],
     )
     diff = _diff_device_payload(hass, payload)
-    assert not diff.removed_components
-    assert not diff.removed_child_devices
-
-    await _discover_device(hass, payload)
-    assert entity_registry.async_is_registered("switch.parent_sub_2_switch")
-    assert _device_id(_get_child_device(hass, device_registry, "sub2")) == child_2.id
-    assert (
-        "Ignoring switch 'parent sw2' with only the platform option in the MQTT "
-        f"device discovery payload on topic {DEVICE_TOPIC} from external application "
-        "Foo2Mqtt; removing a component this way is deprecated, omit it from the "
-        "payload instead" in caplog.text
-    )
-
-    payload = _device_payload(components, [child_device_1])
-    diff = _diff_device_payload(hass, payload)
+    assert diff.desired_components == {
+        ("switch", "parent sw"),
+        ("switch", "parent sw1"),
+    }
     assert set(diff.removed_components) == {("switch", "parent sw2")}
     assert diff.removed_child_devices == {frozenset({"sub2"})}
 
@@ -720,7 +708,102 @@ async def test_device_discovery_ignores_platform_only_component(
     assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
     assert entity_registry.async_is_registered("switch.parent_sub_1_switch")
     assert entity_registry.async_is_registered("switch.parent_switch")
+    assert (
+        "Ignoring switch 'parent sw2' with only the platform option in the MQTT "
+        f"device discovery payload on topic {DEVICE_TOPIC} from external application "
+        "Foo2Mqtt; removing a component this way is deprecated, omit it from the "
+        "payload instead" in caplog.text
+    )
     mqtt_mock.async_publish.assert_not_called()
+
+
+async def test_device_discovery_replace_last_component_with_platform_only(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a payload with only a new component with only a platform has none left.
+
+    The device is removed with its last component.
+    """
+    await mqtt_mock_entry()
+    await _discover_device(hass, _device_payload({"sw1": _discovery_switch("sw1")}))
+    assert _get_device(hass, device_registry, "parent") is not None
+
+    payload = _device_payload({"sw2": {"p": "switch"}})
+    diff = _diff_device_payload(hass, payload)
+    assert not diff.desired_components
+    assert set(diff.removed_components) == {("switch", "parent sw1")}
+
+    await _discover_device(hass, payload)
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is None
+    assert _get_device(hass, device_registry, "parent") is None
+
+
+async def test_device_discovery_omitted_child_device_with_numeric_identifier(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test omitting a child device with a numeric identifier removes it."""
+    await mqtt_mock_entry()
+    components = {"sw": _discovery_switch("sw")}
+    await _discover_device(
+        hass,
+        _device_payload(
+            components,
+            [{"ids": [1], "name": "One", "cmps": {"sw1": _discovery_switch("sw1")}}],
+        ),
+    )
+    assert _get_child_device(hass, device_registry, "1") is not None
+
+    await _discover_device(hass, _device_payload(components))
+    assert _get_child_device(hass, device_registry, "1") is None
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is None
+    assert "Removing child device 1, omitted" in caplog.text
+
+
+async def test_device_discovery_parent_change_removes_old_parent_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a payload with another parent device removes the old empty devices."""
+    await mqtt_mock_entry()
+    await _discover_device(
+        hass,
+        _device_payload(
+            child_devices=[
+                _child_device_payload(
+                    "sub1", "Sub 1", {"sw1": _discovery_switch("sw1")}
+                )
+            ]
+        ),
+    )
+    assert _get_device(hass, device_registry, "parent") is not None
+    assert _get_child_device(hass, device_registry, "sub1") is not None
+
+    payload = {
+        **_device_payload(
+            child_devices=[
+                _child_device_payload(
+                    "sub2", "Sub 2", {"sw2": _discovery_switch("sw2")}
+                )
+            ]
+        ),
+        "dev": {"ids": ["new_parent"], "name": "New parent"},
+    }
+    await _discover_device(hass, payload)
+    assert _get_child_device(hass, device_registry, "sub1") is None
+    assert _get_device(hass, device_registry, "parent") is None
+    new_parent = _get_device(hass, device_registry, "new_parent")
+    child_device_2 = _get_child_device(hass, device_registry, "sub2")
+    assert new_parent is not None
+    assert child_device_2 is not None
+    assert child_device_2.parent_device_id == new_parent.id
 
 
 @pytest.mark.parametrize(

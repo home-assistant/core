@@ -41,6 +41,7 @@ from .const import (
     CONF_CHILD_DEVICE,
     CONF_CHILD_DEVICES,
     CONF_COMPONENTS,
+    CONF_CONNECTIONS,
     CONF_DISCOVERY_QOS,
     CONF_IDENTIFIERS,
     CONF_ORIGIN,
@@ -424,10 +425,24 @@ def _device_discovery_components(
 def _child_device_identifiers(
     child_device: Mapping[str, Any] | None,
 ) -> frozenset[str]:
-    """Return the identifiers of a child device."""
+    """Return the identifiers of a child device, as strings like the schema."""
     if child_device is None:
         return frozenset()
-    return frozenset(probatio.EnsureList()(child_device[CONF_IDENTIFIERS]))
+    return frozenset(
+        str(identifier)
+        for identifier in probatio.EnsureList()(child_device[CONF_IDENTIFIERS])
+    )
+
+
+def _device_keys(device_config: Mapping[str, Any]) -> set[tuple[str, ...]]:
+    """Return the identifiers and connections that link a device config."""
+    return {
+        (CONF_IDENTIFIERS, str(identifier))
+        for identifier in probatio.EnsureList()(device_config.get(CONF_IDENTIFIERS))
+    } | {
+        (CONF_CONNECTIONS, *map(str, connection))
+        for connection in device_config.get(CONF_CONNECTIONS, [])
+    }
 
 
 @callback
@@ -481,22 +496,26 @@ def _async_diff_device_discovery(
     """Return the known components and child devices a device payload removes.
 
     The payload is the desired state of the device, a known component is removed
-    when it is omitted. A known child device is removed when none of its
-    identifiers is in a child device with components.
+    when it is omitted. A component with only a platform is ignored, as if it is
+    omitted. A known child device is removed when none of its identifiers is in a
+    child device with desired components.
     """
-    desired_components = {
-        (
-            device_component.config[CONF_PLATFORM],
-            _device_component_discovery_id(
-                object_id, node_id, device_component.component_id
-            ),
-        )
-        for device_component in _device_discovery_components(device_payload)
-    }
+    desired_components: set[tuple[str, str]] = set()
     desired_child_identifiers: set[str] = set()
-    for child_device in device_payload.get(CONF_CHILD_DEVICES, []):
-        if child_device[CONF_COMPONENTS]:
-            desired_child_identifiers.update(_child_device_identifiers(child_device))
+    for device_component in _device_discovery_components(device_payload):
+        if len(device_component.config) == 1:
+            continue
+        desired_components.add(
+            (
+                device_component.config[CONF_PLATFORM],
+                _device_component_discovery_id(
+                    object_id, node_id, device_component.component_id
+                ),
+            )
+        )
+        desired_child_identifiers.update(
+            _child_device_identifiers(device_component.child_device)
+        )
     known_components = _async_get_known_device_components(hass, topic)
     return _DeviceDiscoveryDiff(
         desired_components,
@@ -531,9 +550,11 @@ def _async_remove_omitted_device_components(
     The removals are done first, so a renamed component can keep its unique ID.
     They only clean up the omitted child devices, so a device that is kept is never
     removed and created again while the components are processed. Without
-    components in the payload, the removals clean up all devices left empty.
+    components in the payload, or when the payload has another parent device, the
+    removals clean up all devices left empty.
     """
     origin_info = get_origin_log_string(device_payload, include_url=False)
+    parent_device_keys = _device_keys(device_payload[CONF_DEVICE])
     for identifiers in diff.removed_child_devices:
         _LOGGER.warning(
             "Removing child device %s, omitted from the MQTT device discovery "
@@ -554,7 +575,9 @@ def _async_remove_omitted_device_components(
         )
         removal_payload = MQTTDiscoveryPayload()
         removal_payload.device_discovery = True
-        if diff.desired_components:
+        if diff.desired_components and not parent_device_keys.isdisjoint(
+            _device_keys(known_payload[CONF_DEVICE])
+        ):
             removal_payload.cleanup_device = (
                 _child_device_identifiers(
                     known_payload[CONF_DEVICE].get(CONF_CHILD_DEVICE)
