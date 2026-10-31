@@ -66,7 +66,7 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    api.subscribe()
+    await hass.async_add_executor_job(api.subscribe)
 
     def update_published():
         """Handle a push update."""
@@ -78,10 +78,14 @@ async def async_setup_entry(
     for _eqip in equipment[EquipmentType.THERMOSTAT]:
         _eqip.set_update_callback(update_published)
 
+    def resubscribe_mqtt() -> None:
+        """Resubscribe to MQTT updates."""
+        api.unsubscribe()
+        api.subscribe()
+
     async def resubscribe(now):
         """Resubscribe to the MQTT updates."""
-        await hass.async_add_executor_job(api.unsubscribe)
-        api.subscribe()
+        await hass.async_add_executor_job(resubscribe_mqtt)
 
         # Refresh values
         await asyncio.sleep(60)
