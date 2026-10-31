@@ -11,7 +11,7 @@ import time
 from typing import Any, Protocol, override
 import wave
 
-from homeassistant.components import stt
+from homeassistant.components import stt, wake_word
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import chat_session
 from homeassistant.util import ulid as ulid_util
@@ -97,6 +97,7 @@ class _PipelineProcessorRequest:
     stt_metadata: stt.SpeechMetadata | None = None
     stt_stream: AsyncIterable[bytes] | None = None
     wake_word_phrase: str | None = None
+    wake_word_detection: wake_word.DetectionResult | None = None
     intent_input: str | None = None
     tts_input: str | None = None
     conversation_extra_system_prompt: str | None = None
@@ -387,6 +388,11 @@ class PipelineInput:
     stt_metadata: stt.SpeechMetadata | None = None
     stt_stream: AsyncIterable[bytes] | None = None
     wake_word_phrase: str | None = None
+    wake_word_detection: wake_word.DetectionResult | None = None
+    """Wake word detected by the satellite, whose audio starts the stream.
+
+    The audio before the timestamp (ms) is removed before speech-to-text.
+    """
     intent_input: str | None = None
     tts_input: str | None = None
     conversation_extra_system_prompt: str | None = None
@@ -408,6 +414,7 @@ class PipelineInput:
             stt_metadata=self.stt_metadata,
             stt_stream=self.stt_stream,
             wake_word_phrase=self.wake_word_phrase,
+            wake_word_detection=self.wake_word_detection,
             intent_input=self.intent_input,
             tts_input=self.tts_input,
             conversation_extra_system_prompt=self.conversation_extra_system_prompt,

@@ -6,6 +6,7 @@ from http import HTTPStatus
 import io
 import socket
 import struct
+from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 import wave
 
@@ -20,6 +21,7 @@ from aioesphomeapi import (
     VoiceAssistantEventType,
     VoiceAssistantFeature,
     VoiceAssistantTimerEventType,
+    VoiceAssistantWakeWordAudio,
 )
 import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -28,7 +30,9 @@ from homeassistant.components import (
     assist_pipeline,
     assist_satellite,
     conversation,
+    stt,
     tts,
+    wake_word,
 )
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_pipeline.pipeline import KEY_ASSIST_PIPELINE  # pylint: disable=home-assistant-component-root-import
@@ -40,7 +44,10 @@ from homeassistant.components.assist_satellite import (
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
+from homeassistant.components.esphome.assist_satellite import (
+    EsphomeAssistSatellite,
+    VoiceAssistantUDPServer,
+)
 from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -51,6 +58,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent as intent_helper
 from homeassistant.helpers.network import get_url
 from homeassistant.setup import async_setup_component
+from homeassistant.util.async_ import create_eager_task
 
 from .common import get_satellite_entity
 from .conftest import MockESPHomeDeviceType
@@ -199,6 +207,19 @@ async def test_pipeline_api_audio(
 
         assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
             VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END,
+            {},
+        )
+
+        # Wake word rejected
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.WAKE_WORD_REJECTED,
+                data={"wake_word_output": {"wake_word_phrase": "test-wake-word"}},
+            )
+        )
+
+        assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_REJECTED,
             {},
         )
 
@@ -2395,6 +2416,202 @@ async def test_multichannel_audio(
             await satellite.handle_audio(b"channel 0", b"channel 1")
             await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
+
+
+@pytest.mark.parametrize(
+    ("request_wake_word_audio", "feature_flags", "expected_wake_word_audio"),
+    [
+        pytest.param(True, VoiceAssistantFeature.WAKE_WORD_AUDIO, True, id="requested"),
+        pytest.param(True, 0, False, id="not_supported"),
+        pytest.param(
+            False, VoiceAssistantFeature.WAKE_WORD_AUDIO, False, id="not_requested"
+        ),
+    ],
+)
+async def test_wake_word_audio_subscription(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    request_wake_word_audio: bool,
+    feature_flags: VoiceAssistantFeature,
+    expected_wake_word_audio: bool,
+) -> None:
+    """Test wake word audio is only requested from devices that support it."""
+    with patch.object(
+        EsphomeAssistSatellite, "_request_wake_word_audio", request_wake_word_audio
+    ):
+        mock_device = await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={
+                "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+                | VoiceAssistantFeature.API_AUDIO
+                | feature_flags
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert mock_device.voice_assistant_wake_word_audio == expected_wake_word_audio
+
+
+@pytest.mark.parametrize(
+    (
+        "prefers_unprocessed_audio",
+        "expected_timestamp",
+        "expected_stt_audio",
+    ),
+    [
+        pytest.param(False, 1500, b"wakewordcmd", id="channel_0"),
+        pytest.param(True, 1443, b"WAKEWOCMD", id="channel_1"),
+    ],
+)
+async def test_wake_word_audio(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    prefers_unprocessed_audio: bool,
+    expected_timestamp: int,
+    expected_stt_audio: bytes,
+) -> None:
+    """Test the wake word audio goes to the pipeline with its channel's length in ms."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.MULTI_CHANNEL_AUDIO
+            | VoiceAssistantFeature.WAKE_WORD_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline_kwargs: dict[str, Any] = {}
+    stt_audio: bytes | None = None
+    pipeline_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        nonlocal stt_audio
+        pipeline_kwargs.update(kwargs)
+        stt_audio = b"".join([chunk async for chunk in kwargs["stt_stream"]])
+        pipeline_finished.set()
+
+    stt_engine = Mock(
+        audio_processing=stt.SpeechAudioProcessing(
+            requires_external_vad=True,
+            prefers_auto_gain_enabled=not prefers_unprocessed_audio,
+            prefers_noise_reduction_enabled=not prefers_unprocessed_audio,
+        )
+    )
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.esphome.assist_satellite.async_get_pipeline",
+            return_value=Mock(stt_engine="stt.test"),
+        ),
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=stt_engine,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            # Started like aioesphomeapi starts it
+            start_task = create_eager_task(
+                satellite.handle_pipeline_start(
+                    conversation_id="",
+                    flags=VoiceAssistantCommandFlag(0),  # stt
+                    audio_settings=VoiceAssistantAudioSettings(),
+                    wake_word_phrase="okay nabu",
+                    wake_word_audio=VoiceAssistantWakeWordAudio(
+                        wake_word_id="okay_nabu",
+                        # 1500 ms, and 1443.5 ms rounded down
+                        audio_bytes=48000,
+                        audio_bytes2=46192,
+                        probability=0.75,
+                        probability_cutoff=0.375,
+                    ),
+                )
+            )
+
+            # The device streams without waiting for the response
+            await satellite.handle_audio(b"wakeword", b"WAKEWO")
+            await start_task
+            await satellite.handle_audio(b"cmd", b"CMD")
+            await satellite.handle_pipeline_stop(abort=False)
+            await pipeline_finished.wait()
+
+    assert pipeline_kwargs["wake_word_detection"] == wake_word.DetectionResult(
+        wake_word_id="okay_nabu",
+        wake_word_phrase="okay nabu",
+        timestamp=expected_timestamp,
+    )
+    assert stt_audio == expected_stt_audio
+
+
+async def test_wake_word_audio_rejected(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the audio stream ends when the wake word is rejected."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.WAKE_WORD_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    stt_audio: bytes | None = None
+    pipeline_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        nonlocal stt_audio
+        stt_stream = aiter(kwargs["stt_stream"])
+        chunks = [await anext(stt_stream)]
+        kwargs["event_callback"](
+            PipelineEvent(
+                type=PipelineEventType.WAKE_WORD_REJECTED,
+                data={"wake_word_output": {"wake_word_id": "okay_nabu"}},
+            )
+        )
+        chunks.extend([chunk async for chunk in stt_stream])
+        stt_audio = b"".join(chunks)
+        pipeline_finished.set()
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase="okay nabu",
+                wake_word_audio=VoiceAssistantWakeWordAudio(
+                    wake_word_id="okay_nabu", audio_bytes=8
+                ),
+            )
+            await satellite.handle_audio(b"wakeword")
+
+            # The device sends no more audio
+            await pipeline_finished.wait()
+
+    mock_client.send_voice_assistant_event.assert_any_call(
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_REJECTED, {}
+    )
+    assert stt_audio == b"wakeword"
 
 
 async def test_empty_audio_frame_does_not_end_stream(

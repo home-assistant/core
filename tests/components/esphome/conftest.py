@@ -328,6 +328,7 @@ class MockESPHomeDevice:
             ]
             | None
         )
+        self.voice_assistant_wake_word_audio = False
         self.on_log_message: Callable[[SubscribeLogsResponse], None]
         self.device_info = device_info
         self.current_log_level = LogLevel.LOG_LEVEL_NONE
@@ -559,11 +560,13 @@ async def _mock_generic_device_entry(
             ]
             | None
         ) = None,
+        wake_word_audio: bool = False,
     ) -> Callable[[], None]:
         """Subscribe to voice assistant."""
         mock_device.set_subscribe_voice_assistant_callbacks(
             handle_start, handle_stop, handle_audio, handle_announcement_finished
         )
+        mock_device.voice_assistant_wake_word_audio = wake_word_audio
 
         def unsub():
             pass
