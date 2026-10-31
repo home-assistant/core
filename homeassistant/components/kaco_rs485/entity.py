@@ -8,8 +8,8 @@ from homeassistant.const import CONF_MODEL
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_INVERTERS, CONF_SW_VERSION, DOMAIN, MANUFACTURER, SERIES_PREFIX
-from .coordinator import KacoRs485Coordinator
+from .const import CONF_INVERTERS, CONF_SW_VERSION, MANUFACTURER, SERIES_PREFIX
+from .coordinator import KacoRs485Coordinator, device_identifier
 
 
 def _device_name(address: int, inverter_type: str | None) -> str:
@@ -38,7 +38,7 @@ class KacoRs485Entity(CoordinatorEntity[KacoRs485Coordinator]):
         model = recorded.get(CONF_MODEL)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{address}")},
+            identifiers={device_identifier(entry, address)},
             name=_device_name(address, model),
             manufacturer=MANUFACTURER,
             model=model,
