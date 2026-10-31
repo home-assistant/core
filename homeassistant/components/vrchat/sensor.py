@@ -1,8 +1,7 @@
 """Setup sensors for the VRChat integration."""
 
 import asyncio
-from collections.abc import Mapping
-from typing import Any, cast, override
+from typing import cast, override
 
 from vrchatapi.highlevel import VRChatUser
 from vrchatapi.highlevel.presence import (
@@ -34,39 +33,6 @@ from .const import (
 from .coordinator import VRChatConfigEntry
 from .entity import VRChatUserDataEntity, VRChatUserLocationEntityMixin
 from .utils import normalize_vrchat_enum_value
-
-_EXCLUDED_USER_ATTRIBUTES = frozenset(
-    {
-        "authToken",
-        "friendKey",
-        "friends",
-        "activeFriends",
-        "onlineFriends",
-        "offlineFriends",
-        "friendGroupNames",
-        "email",
-        "obfuscatedEmail",
-        "obfuscatedPendingEmail",
-        "accountDeletionLog",
-        "pastDisplayNames",
-        "statusHistory",
-        "pronounsHistory",
-        "platform_history",
-        "appleDetails",
-        "appleId",
-        "discordDetails",
-        "discordId",
-        "googleDetails",
-        "googleId",
-        "oculusId",
-        "picoId",
-        "steamDetails",
-        "steamId",
-        "twitchDetails",
-        "twitchId",
-        "viveId",
-    }
-)
 
 
 async def _async_cancel_discovery_tasks(tasks: tuple[asyncio.Task[None], ...]) -> None:
@@ -286,16 +252,6 @@ class VRChatUserStateSensor(VRChatUserDataSensorEntity):
             return VRChatUserState.OFFLINE.value
         return VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE.value
 
-    @property
-    @override
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """User data without credentials, account details, or large lists."""
-        return {
-            key: value
-            for key, value in self.user_data.items()
-            if key not in _EXCLUDED_USER_ATTRIBUTES
-        }
-
 
 class VRChatUserLocationSensor(
     VRChatUserLocationEntityMixin, VRChatUserDataSensorEntity
@@ -369,19 +325,6 @@ class VRChatUserLocationSensor(
                 if name is not None and not name.startswith(VRCHAT_WORLD_ID_PREFIX):
                     self._attr_native_value = name
         return self._attr_native_value
-
-    @property
-    @override
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """World data."""
-        user_data_get = self.user_data.get
-        if (world := self.world) is not None and (data := world.data) is not None:
-            return {"instanceId": user_data_get("instanceId"), **data}
-        return {
-            "id": user_data_get("worldId"),
-            "instanceId": user_data_get("instanceId"),
-            "travelingToLocation": user_data_get("travelingToLocation"),
-        }
 
 
 SENSOR_CLASSES: tuple[type[VRChatUserDataSensorEntity], ...] = (

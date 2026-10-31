@@ -742,7 +742,7 @@ async def test_async_world_lookup_updates_location(
     state = hass.states.get(entity_id)
     assert state.state == "Resolved world"
     assert state.attributes["entity_picture"] == "https://example.com/world.png"
-    assert state.attributes["instanceId"] == "instance"
+    assert "instanceId" not in state.attributes
 
 
 async def test_disconnect_and_reconnect_update_availability(

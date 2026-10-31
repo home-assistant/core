@@ -1,6 +1,7 @@
 """Test VRChat sensors."""
 
 import asyncio
+from copy import deepcopy
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import AsyncMock
@@ -191,17 +192,26 @@ def test_location_follows_travel_and_preserves_pending_name(
     assert sensor.native_value == "Next world"
 
 
-def test_state_attributes_exclude_account_details_without_mutating_user(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    "sensor_class",
+    [
+        pytest.param(VRChatUserStatusSensor, id="status"),
+        pytest.param(VRChatUserStatusDescriptionSensor, id="description"),
+        pytest.param(VRChatUserStateSensor, id="state"),
+        pytest.param(VRChatUserLocationSensor, id="location"),
+    ],
+)
+def test_sensors_do_not_expose_raw_user_attributes(
+    hass: HomeAssistant, sensor_class: type[VRChatUserDataSensorEntity]
 ) -> None:
-    """Filter private and bulky fields while retaining other user metadata."""
+    """No raw user fields become attributes or get removed from the SDK snapshot."""
     data = {
         "id": "usr_test",
         "displayName": "Test user",
         "bio": "Profile",
         "status": "active",
         "location": "private",
-        "customField": "preserved",
+        "customField": {"nested": [{"value": "preserved"}]},
         "authToken": "test-token",
         "friendKey": "test-key",
         "friends": ["usr_friend"],
@@ -214,19 +224,19 @@ def test_state_attributes_exclude_account_details_without_mutating_user(
         "steamId": "private-id",
         "statusHistory": ["old status"],
     }
-    original = data.copy()
-    sensor = VRChatUserStateSensor(
-        _coordinator(hass, cast(VRChatUser, SimpleNamespace(data=data))), USER_ID
+    original = deepcopy(data)
+    sensor = sensor_class(
+        _coordinator(
+            hass,
+            cast(
+                VRChatUser,
+                SimpleNamespace(data=data, world=None, destination_world=None),
+            ),
+        ),
+        USER_ID,
     )
 
-    assert sensor.extra_state_attributes == {
-        "id": "usr_test",
-        "displayName": "Test user",
-        "bio": "Profile",
-        "status": "active",
-        "location": "private",
-        "customField": "preserved",
-    }
+    assert sensor.extra_state_attributes is None
     assert data == original
 
 
@@ -399,9 +409,19 @@ def test_state_sensor_avatar_fallbacks(
     assert sensor.entity_picture == expected
 
 
-def test_location_sensor_world_attributes(hass: HomeAssistant) -> None:
-    """Test location sensor exposes resolved world metadata."""
-    world = SimpleNamespace(data={"id": "wrld_test", "name": "Test world"})
+def test_location_sensor_does_not_expose_raw_world_attributes(
+    hass: HomeAssistant,
+) -> None:
+    """World fields stay in the SDK cache without being exposed as attributes."""
+    world = SimpleNamespace(
+        data={
+            "id": "wrld_test",
+            "name": "Test world",
+            "thumbnailImageUrl": "https://example.com/world.png",
+            "customField": {"nested": [{"value": "preserved"}]},
+        }
+    )
+    original_world_data = deepcopy(world.data)
     user = cast(
         VRChatUser,
         SimpleNamespace(
@@ -417,11 +437,12 @@ def test_location_sensor_world_attributes(hass: HomeAssistant) -> None:
 
     sensor = VRChatUserLocationSensor(_coordinator(hass, user), USER_ID)
 
-    assert sensor.extra_state_attributes == {
-        "instanceId": "instance",
-        "id": "wrld_test",
-        "name": "Test world",
-    }
+    original_user_data = deepcopy(user.data)
+    assert sensor.extra_state_attributes is None
+    assert sensor.native_value == "Test world"
+    assert sensor.entity_picture == "https://example.com/world.png"
+    assert world.data == original_world_data
+    assert user.data == original_user_data
 
 
 async def test_entity_world_data_helpers(hass: HomeAssistant) -> None:
