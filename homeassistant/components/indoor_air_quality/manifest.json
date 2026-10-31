@@ -1,0 +1,11 @@
+{
+  "domain": "indoor_air_quality",
+  "name": "Indoor Air Quality",
+  "codeowners": ["@liudger"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/indoor_air_quality",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "quality_scale": "bronze",
+  "requirements": []
+}
