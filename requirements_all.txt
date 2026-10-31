@@ -3309,7 +3309,7 @@ systembridgeconnector==5.23.0
 tailscale==1.0.0
 
 # homeassistant.components.tank_utility
-tank-utility==1.5.1
+tank-utility==1.5.3
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1

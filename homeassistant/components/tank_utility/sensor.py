@@ -11,11 +11,18 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, PERCENTAGE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,20 +52,62 @@ SENSOR_ATTRS = [
 ]
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Tank Utility sensor."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and (reason := result.get("reason")) != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version="2027.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+        )
+        return
 
-    email = config[CONF_EMAIL]
-    password = config[CONF_PASSWORD]
-    devices = config[CONF_DEVICES]
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Tank Utility",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Tank Utility sensor from a config entry."""
+    email = entry.data[CONF_EMAIL]
+    password = entry.data[CONF_PASSWORD]
+    devices = entry.data[CONF_DEVICES]
 
     try:
-        token = auth.get_token(email, password)
+        token = await hass.async_add_executor_job(auth.get_token, email, password)
     except requests.exceptions.HTTPError as http_error:
         if http_error.response.status_code == requests.codes.unauthorized:
             _LOGGER.error("Invalid credentials")
@@ -69,7 +118,7 @@ def setup_platform(
     for device in devices:
         sensor = TankUtilitySensor(email, password, token, device)
         all_sensors.append(sensor)
-    add_entities(all_sensors, True)
+    async_add_entities(all_sensors, True)
 
 
 class TankUtilitySensor(SensorEntity):
@@ -84,6 +133,7 @@ class TankUtilitySensor(SensorEntity):
         self._token = token
         self._device = device
         self._attr_name = f"Tank Utility {device}"
+        self._attr_unique_id = device
 
     def get_data(self):
         """Get data from the device.
