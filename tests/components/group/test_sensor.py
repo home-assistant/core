@@ -263,6 +263,36 @@ async def test_no_members(hass: HomeAssistant, sensor_type: str) -> None:
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_config_entry_ignore_non_numeric_default(hass: HomeAssistant) -> None:
+    """Test a config entry without ignore_non_numeric does not ignore non numeric."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "group_type": "sensor",
+            "hide_members": False,
+            "name": "test_sum",
+            "type": "sum",
+        },
+        title="test_sum",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for entity_id, value in zip(
+        ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        STATES_ONE_UNAVAILABLE,
+        strict=True,
+    ):
+        hass.states.async_set(entity_id, value)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_reload(hass: HomeAssistant) -> None:
     """Verify we can reload sensors."""
     hass.states.async_set("sensor.test_1", "12345")
