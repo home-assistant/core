@@ -292,6 +292,7 @@ aioghost==0.4.16
 
 # homeassistant.components.github
 # homeassistant.components.marketplace
+# homeassistant.components.tasmota
 aiogithubapi==26.0.0
 
 # homeassistant.components.guardian
