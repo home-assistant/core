@@ -143,6 +143,19 @@
   list([
   ])
 # ---
+# name: test_sensor_state[Air Purifier Vital 200S][binary_sensor.air_purifier_vital_200s_dark_room]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Vital 200S Dark room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.air_purifier_vital_200s_dark_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_sensor_state[Air Purifier Vital 200S][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -177,6 +190,41 @@
 # ---
 # name: test_sensor_state[Air Purifier Vital 200S][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'binary_sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'binary_sensor.air_purifier_vital_200s_dark_room',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Dark room',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Dark room',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'dark_room',
+      'unique_id': 'vital200s-purifier-light_detection_status',
+      'unit_of_measurement': None,
+    }),
   ])
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][devices]
