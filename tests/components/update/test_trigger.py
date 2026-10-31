@@ -18,14 +18,14 @@ from pytest_homeassistant.components.common import (
 
 from homeassistant.components.update import DOMAIN
 from homeassistant.components.update.trigger import TRIGGERS
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
 async def target_updates(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple update entities associated with different targets."""
-    return await target_entities(hass, DOMAIN)
+    return await target_entities(hass, DOMAIN, entity_category=EntityCategory.CONFIG)
 
 
 _TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
