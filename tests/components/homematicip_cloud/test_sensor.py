@@ -4,7 +4,10 @@ from unittest.mock import patch
 
 from homematicip.base.enums import ValveState, WindowState
 import pytest
-from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homematicip_cloud import DOMAIN
@@ -305,6 +308,47 @@ async def test_hmip_power_sensor(
     assert ha_state.attributes[ATTR_DEVICE_UNTERVOLTAGE]
     assert ha_state.attributes[ATTR_DUTY_CYCLE_REACHED]
     assert ha_state.attributes[ATTR_CONFIG_PENDING]
+
+
+async def test_hmip_power_and_energy_without_device_class(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the power and energy of a device the library has no class for."""
+    fixture = await async_load_json_object_fixture(
+        hass, "homematicip_cloud.json", DOMAIN
+    )
+    device = fixture["devices"]["3014F7110000000000000108"]
+    device["id"] = "3014F7110000000000000BSI"
+    device["label"] = "Flur unten"
+    device["type"] = "BRAND_SWITCH_MEASURING_INTERNATIONAL"
+    device["modelType"] = "HmIP-BSM-I"
+    device["functionalChannels"]["1"]["deviceId"] = device["id"]
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Flur unten"], test_groups=[], extra_devices=[device]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    entity_id = "sensor.flur_unten_power"
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass,
+        hmip_device,
+        "currentPowerConsumption",
+        23.5,
+        channel=0,
+        channel_real_index=1,
+    )
+    assert hass.states.get(entity_id).state == "23.5"
 
 
 async def test_hmip_illuminance_sensor1(
