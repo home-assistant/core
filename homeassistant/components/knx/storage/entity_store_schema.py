@@ -61,10 +61,8 @@ from .knx_selector import (
     group_select,
 )
 
-type SyncState = Annotated[bool | str | int, SyncStateSelector()]
-type SyncStateAllowFalse = Annotated[
-    bool | str | int, SyncStateSelector(allow_false=True)
-]
+SyncState = Annotated[bool | str | int, SyncStateSelector()]
+SyncStateAllowFalse = Annotated[bool | str | int, SyncStateSelector(allow_false=True)]
 
 
 @dataclass(kw_only=True, slots=True)
