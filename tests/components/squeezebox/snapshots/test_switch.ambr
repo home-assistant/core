@@ -40,7 +40,26 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'alarm_id': '1',
+      'dow': list([
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+      ]),
+      'dow_text': list([
+        'Sun',
+        'Mon',
+        'Tue',
+        'Wed',
+        'Thu',
+        'Fri',
+        'Sat',
+      ]),
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Alarm (1)',
+      'time': '07:00',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_alarm_1',
