@@ -45,7 +45,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import update_callback_entity
 
@@ -187,43 +191,97 @@ async def test_window_open_close_stop_services_no_speed(
     mock_window.stop.assert_awaited_once_with(wait_for_completion=False)
 
 
+@pytest.mark.parametrize(
+    ("speed", "velocity"),
+    [
+        pytest.param("slow", Velocity.SILENT, id="slow"),
+        pytest.param("fast", Velocity.FAST, id="fast"),
+        pytest.param("silent", Velocity.SILENT, id="deprecated_silent"),
+        pytest.param("default", None, id="deprecated_default"),
+    ],
+)
 async def test_window_services_with_speed(
-    hass: HomeAssistant, mock_window: AsyncMock
+    hass: HomeAssistant,
+    mock_window: AsyncMock,
+    speed: str,
+    velocity: Velocity | None,
 ) -> None:
-    """Verify open/close/stop services map to device calls with no wait."""
+    """Verify the speed is mapped to the device velocity."""
 
     entity_id = "cover.test_window"
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {"entity_id": entity_id, ATTR_SPEED: "silent"},
+        {"entity_id": entity_id, ATTR_SPEED: speed},
         blocking=True,
     )
     mock_window.open.assert_awaited_once_with(
-        velocity=Velocity.SILENT, wait_for_completion=False
+        velocity=velocity, wait_for_completion=False
     )
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {"entity_id": entity_id, ATTR_SPEED: "fast"},
+        {"entity_id": entity_id, ATTR_SPEED: speed},
         blocking=True,
     )
     mock_window.close.assert_awaited_once_with(
-        velocity=Velocity.FAST, wait_for_completion=False
+        velocity=velocity, wait_for_completion=False
     )
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_SPEED: "default", ATTR_POSITION: 50},
+        {"entity_id": entity_id, ATTR_SPEED: speed, ATTR_POSITION: 50},
         blocking=True,
     )
     mock_window.set_position.assert_awaited_once_with(
         ANY,
-        velocity=Velocity.DEFAULT,
+        velocity=velocity,
         wait_for_completion=False,
     )
+
+
+@pytest.mark.parametrize("speed", ["silent", "default"])
+@pytest.mark.usefixtures("mock_window")
+async def test_deprecated_speed_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    speed: str,
+) -> None:
+    """Verify using a deprecated speed creates a repair issue."""
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {"entity_id": "cover.test_window", ATTR_SPEED: speed},
+        blocking=True,
+    )
+
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_speed_{speed}")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"entity_id": "cover.test_window"}
+    assert len(issue_registry.issues) == 1
+
+
+@pytest.mark.parametrize("speed", ["slow", "fast"])
+@pytest.mark.usefixtures("mock_window")
+async def test_standard_speed_no_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    speed: str,
+) -> None:
+    """Verify using a standard speed does not create a repair issue."""
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {"entity_id": "cover.test_window", ATTR_SPEED: speed},
+        blocking=True,
+    )
+
+    assert len(issue_registry.issues) == 0
 
 
 async def test_window_set_cover_position_inversion(
