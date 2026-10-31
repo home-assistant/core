@@ -792,6 +792,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=[
+                            "gpt-transcribe",
                             "gpt-4o-transcribe",
                             "gpt-4o-mini-transcribe",
                             "whisper-1",
