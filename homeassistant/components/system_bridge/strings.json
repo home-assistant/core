@@ -149,8 +149,17 @@
       "gpu_core_clock_speed": {
         "name": "{gpu_name} clock speed"
       },
+      "gpu_decoder_usage_percentage": {
+        "name": "{gpu_name} decoder usage"
+      },
+      "gpu_encoder_usage_percentage": {
+        "name": "{gpu_name} encoder usage"
+      },
       "gpu_fan_speed": {
         "name": "{gpu_name} fan speed"
+      },
+      "gpu_fan_speed_percentage": {
+        "name": "{gpu_name} fan speed percentage"
       },
       "gpu_memory_clock_speed": {
         "name": "{gpu_name} memory clock speed"
@@ -158,11 +167,20 @@
       "gpu_memory_free": {
         "name": "{gpu_name} memory free"
       },
+      "gpu_memory_total": {
+        "name": "{gpu_name} memory total"
+      },
       "gpu_memory_used": {
         "name": "{gpu_name} memory used"
       },
       "gpu_memory_used_percentage": {
         "name": "{gpu_name} memory usage"
+      },
+      "gpu_performance_state": {
+        "name": "{gpu_name} performance state"
+      },
+      "gpu_power_limit": {
+        "name": "{gpu_name} power limit"
       },
       "gpu_power_usage": {
         "name": "{gpu_name} power usage"
