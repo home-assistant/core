@@ -15,33 +15,33 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-def setup_mock_temescal(
+def setup_mock_soundbar_client(
     hass: HomeAssistant,
-    mock_temescal: MagicMock,
+    mock_soundbar_client: MagicMock,
     mac_info_dev: dict[str, Any] | None = None,
     product_info: dict[str, Any] | None = None,
     info: dict[str, Any] | None = None,
 ) -> None:
-    """Set up a mock of the temescal object to craft our expected responses."""
-    tmock = mock_temescal.temescal
+    """Set up a mock of the BarTalk object to craft our expected responses."""
+    tmock = mock_soundbar_client.LGSoundbarClient
     instance = tmock.return_value
 
-    def create_temescal_response(msg: str, data: dict | None = None) -> dict[str, Any]:
+    def create_soundbar_response(msg: str, data: dict | None = None) -> dict[str, Any]:
         response: dict[str, Any] = {"msg": msg}
         if data is not None:
             response["data"] = data
         return response
 
-    def temescal_side_effect(
+    def soundbar_side_effect(
         addr: str, port: int, callback: Callable[[dict[str, Any]], None]
     ):
-        mac_info_response = create_temescal_response(
+        mac_info_response = create_soundbar_response(
             msg="MAC_INFO_DEV", data=mac_info_dev
         )
-        product_info_response = create_temescal_response(
+        product_info_response = create_soundbar_response(
             msg="PRODUCT_INFO", data=product_info
         )
-        info_response = create_temescal_response(msg="SPK_LIST_VIEW_INFO", data=info)
+        info_response = create_soundbar_response(msg="SPK_LIST_VIEW_INFO", data=info)
 
         instance.get_mac_info.side_effect = lambda: hass.add_job(
             callback, mac_info_response
@@ -53,23 +53,23 @@ def setup_mock_temescal(
 
         return DEFAULT
 
-    tmock.side_effect = temescal_side_effect
+    tmock.side_effect = soundbar_side_effect
 
 
 @contextmanager
 def _patch_success(hass: HomeAssistant) -> Generator[None]:
-    """Patch temescal to answer with a valid device and skip entry setup."""
+    """Patch BarTalk to answer with a valid device and skip entry setup."""
     with (
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
+            "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+        ) as mock_soundbar_client,
         patch(
             "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
         ),
     ):
-        setup_mock_temescal(
+        setup_mock_soundbar_client(
             hass=hass,
-            mock_temescal=mock_temescal,
+            mock_soundbar_client=mock_soundbar_client,
             mac_info_dev={"s_uuid": "uuid"},
             info={"s_user_name": "name"},
         )
@@ -87,15 +87,15 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
+            "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+        ) as mock_soundbar_client,
         patch(
             "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
-        setup_mock_temescal(
+        setup_mock_soundbar_client(
             hass=hass,
-            mock_temescal=mock_temescal,
+            mock_soundbar_client=mock_soundbar_client,
             mac_info_dev={"s_uuid": "uuid"},
             info={"s_user_name": "name"},
         )
@@ -115,6 +115,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_PORT: DEFAULT_PORT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_soundbar_client.LGSoundbarClient.return_value.close.assert_called_once_with()
 
 
 async def test_form_mac_info_response_empty(hass: HomeAssistant) -> None:
@@ -128,15 +129,15 @@ async def test_form_mac_info_response_empty(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
+            "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+        ) as mock_soundbar_client,
         patch(
             "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
-        setup_mock_temescal(
+        setup_mock_soundbar_client(
             hass=hass,
-            mock_temescal=mock_temescal,
+            mock_soundbar_client=mock_soundbar_client,
             mac_info_dev={"s_uuid": "uuid"},
             info={"s_user_name": "name"},
         )
@@ -174,15 +175,15 @@ async def test_form_uuid_present_in_both_functions_uuid_q_empty(
 
     with (
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
+            "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+        ) as mock_soundbar_client,
         patch(
             "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
-        setup_mock_temescal(
+        setup_mock_soundbar_client(
             hass=hass,
-            mock_temescal=mock_temescal,
+            mock_soundbar_client=mock_soundbar_client,
             mac_info_dev={"s_uuid": "uuid"},
             product_info={"s_uuid": "uuid"},
             info={"s_user_name": "name"},
@@ -226,15 +227,15 @@ async def test_form_uuid_present_in_both_functions_uuid_q_not_empty(
             new=0.1,
         ),
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
+            "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+        ) as mock_soundbar_client,
         patch(
             "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
-        setup_mock_temescal(
+        setup_mock_soundbar_client(
             hass=hass,
-            mock_temescal=mock_temescal,
+            mock_soundbar_client=mock_soundbar_client,
             mac_info_dev={"s_uuid": "uuid"},
             product_info={"s_uuid": "uuid"},
             info={"s_user_name": "name"},
@@ -269,15 +270,15 @@ async def test_form_uuid_missing_from_mac_info(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
+            "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+        ) as mock_soundbar_client,
         patch(
             "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
-        setup_mock_temescal(
+        setup_mock_soundbar_client(
             hass=hass,
-            mock_temescal=mock_temescal,
+            mock_soundbar_client=mock_soundbar_client,
             product_info={"s_uuid": "uuid"},
             info={"s_user_name": "name"},
         )
@@ -315,15 +316,15 @@ async def test_form_uuid_not_provided_by_api(hass: HomeAssistant) -> None:
             new=0.1,
         ),
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
+            "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+        ) as mock_soundbar_client,
         patch(
             "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
-        setup_mock_temescal(
+        setup_mock_soundbar_client(
             hass=hass,
-            mock_temescal=mock_temescal,
+            mock_soundbar_client=mock_soundbar_client,
             product_info={"i_model_no": "8", "i_model_type": 0},
             info={"s_user_name": "name"},
         )
@@ -360,13 +361,13 @@ async def test_form_both_queues_empty(hass: HomeAssistant) -> None:
             new=0.1,
         ),
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
+            "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+        ) as mock_soundbar_client,
         patch(
             "homeassistant.components.lg_soundbar.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
-        setup_mock_temescal(hass=hass, mock_temescal=mock_temescal)
+        setup_mock_soundbar_client(hass=hass, mock_soundbar_client=mock_soundbar_client)
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -379,6 +380,7 @@ async def test_form_both_queues_empty(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_data"}
     assert len(mock_setup_entry.mock_calls) == 0
+    mock_soundbar_client.LGSoundbarClient.return_value.close.assert_called_once_with()
 
     with _patch_success(hass):
         result3 = await hass.config_entries.flow.async_configure(
@@ -417,11 +419,13 @@ async def test_no_uuid_host_already_configured(hass: HomeAssistant) -> None:
             new=0.1,
         ),
         patch(
-            "homeassistant.components.lg_soundbar.config_flow.temescal"
-        ) as mock_temescal,
+            "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+        ) as mock_soundbar_client,
     ):
-        setup_mock_temescal(
-            hass=hass, mock_temescal=mock_temescal, info={"s_user_name": "name"}
+        setup_mock_soundbar_client(
+            hass=hass,
+            mock_soundbar_client=mock_soundbar_client,
+            info={"s_user_name": "name"},
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -441,9 +445,9 @@ async def test_form_socket_timeout(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal:
-        mock_temescal.temescal.side_effect = socket.timeout
+        "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+    ) as mock_soundbar_client:
+        mock_soundbar_client.LGSoundbarClient.side_effect = socket.timeout
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -473,9 +477,9 @@ async def test_form_os_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal:
-        mock_temescal.temescal.side_effect = OSError
+        "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+    ) as mock_soundbar_client:
+        mock_soundbar_client.LGSoundbarClient.side_effect = OSError
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -515,11 +519,11 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.lg_soundbar.config_flow.temescal"
-    ) as mock_temescal:
-        setup_mock_temescal(
+        "homeassistant.components.lg_soundbar.config_flow.soundbar_client"
+    ) as mock_soundbar_client:
+        setup_mock_soundbar_client(
             hass=hass,
-            mock_temescal=mock_temescal,
+            mock_soundbar_client=mock_soundbar_client,
             mac_info_dev={"s_uuid": "uuid"},
             info={"s_user_name": "name"},
         )
