@@ -1,70 +1,38 @@
 """Tests for Proxmox VE integration."""
 
-from copy import deepcopy
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
-from pytest_homeassistant.common import MockConfigEntry
-
+from homeassistant.components.proxmoxve.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-# Example permissions dict with audit permissions granted for nodes and vms
-AUDIT_PERMISSIONS = {
-    "/nodes": {
-        "VM.GuestAgent.Audit": 1,
-        "Sys.Audit": 1,
-        "VM.Audit": 1,
-    },
-    "/vms": {
-        "Sys.Audit": 1,
-        "VM.GuestAgent.Audit": 1,
-        "VM.Audit": 1,
-    },
-    "/": {
-        "VM.Audit": 1,
-        "VM.GuestAgent.Audit": 1,
-        "Sys.Audit": 1,
-    },
-}
+# Real response for PVEAuditor on /, with ACLs on VMs outside the mocked cluster
+AUDIT_PERMISSIONS = load_json_object_fixture("access_permissions.json", DOMAIN)
+AUDITOR_PRIVILEGES = AUDIT_PERMISSIONS["/"]
+# The real response grants VM 102 exactly the PVEVMUser role
+PVEVMUSER_PRIVILEGES = AUDIT_PERMISSIONS["/vms/102"]
 
-POWER_PERMISSIONS = {
-    "/": {
-        "Sys.PowerMgmt": 1,
-        "VM.PowerMgmt": 1,
-    },
-    "/nodes": {
-        "Sys.PowerMgmt": 1,
-        "VM.PowerMgmt": 1,
-    },
-    "/vms": {"VM.PowerMgmt": 1},
-    "/vms/101": {"VM.Audit": 1},
-}
-
-SNAPSHOT_PERMISSIONS = {
-    "/vms": {"VM.Snapshot": 1},
-    "/vms/101": {"VM.Audit": 1},
-}
-SYSMOD_PERMISSIONS = {
-    "/": {"Sys.Modify": 1},
-    "/nodes": {"Sys.Modify": 1},
-}
+# Paths Proxmox lists for a role granted on /, each with what / propagates
+ROOT_PROPAGATED_PATHS = [
+    path for path in AUDIT_PERMISSIONS if not path.startswith("/vms/")
+]
 
 MERGED_PERMISSIONS = {
-    key: {
-        **AUDIT_PERMISSIONS.get(key, {}),
-        **POWER_PERMISSIONS.get(key, {}),
-        **SNAPSHOT_PERMISSIONS.get(key, {}),
-        **SYSMOD_PERMISSIONS.get(key, {}),
-    }
-    for key in set(AUDIT_PERMISSIONS)
-    | set(POWER_PERMISSIONS)
-    | set(SNAPSHOT_PERMISSIONS)
-    | set(SYSMOD_PERMISSIONS)
+    **{
+        path: {
+            **AUDITOR_PRIVILEGES,
+            "Sys.Modify": 1,
+            "Sys.PowerMgmt": 1,
+            "VM.PowerMgmt": 1,
+            "VM.Snapshot": 1,
+        }
+        for path in ROOT_PROPAGATED_PATHS
+    },
+    # PVEAuditor on VM 101 replaces the power and snapshot rights from /
+    "/vms/101": AUDITOR_PRIVILEGES,
 }
 
-PVEVMUSER_PERMISSIONS = deepcopy(MERGED_PERMISSIONS)
-# Remove node-level and root-level scopes entirely
-PVEVMUSER_PERMISSIONS.pop("/", None)
-PVEVMUSER_PERMISSIONS.pop("/nodes", None)
+PVEVMUSER_PERMISSIONS = {"/vms": PVEVMUSER_PRIVILEGES}
 
 
 async def setup_integration(

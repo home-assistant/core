@@ -3,11 +3,11 @@
 import re
 from unittest.mock import MagicMock, patch
 
-from proxmoxer import AuthenticationError
-from proxmoxer.core import ResourceException
+import aiohttp
+from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
+from aioproxmox.model import PVEPermissions
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
-from requests.exceptions import ConnectTimeout, SSLError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS
@@ -61,7 +61,7 @@ async def test_node_buttons(
     """Test pressing a ProxmoxVE node action button triggers the correct API call."""
     await setup_integration(hass, mock_config_entry)
 
-    method_mock = mock_proxmox_client._node_mock.status.post
+    method_mock = getattr(mock_proxmox_client._node_mock, command)
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
@@ -72,7 +72,7 @@ async def test_node_buttons(
     )
 
     assert len(method_mock.mock_calls) == pre_calls + 1
-    method_mock.assert_called_with(command=command)
+    method_mock.assert_called_with()
 
 
 @pytest.mark.parametrize(
@@ -93,7 +93,7 @@ async def test_node_all_actions_buttons(
     """Test ProxmoxVE node start/stop all button API call."""
     await setup_integration(hass, mock_config_entry)
 
-    method_mock = getattr(mock_proxmox_client._node_mock, attr).post
+    method_mock = getattr(mock_proxmox_client._node_mock, attr)
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
@@ -129,7 +129,7 @@ async def test_vm_buttons(
     await setup_integration(hass, mock_config_entry)
 
     mock_proxmox_client._node_mock.qemu(vmid)
-    method_mock = getattr(mock_proxmox_client._qemu_mocks[vmid].status, action).post
+    method_mock = getattr(mock_proxmox_client._qemu_mocks[vmid].status, action)
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
@@ -161,7 +161,7 @@ async def test_snapshot_button(
     await setup_integration(hass, mock_config_entry)
 
     node = mock_proxmox_client.nodes("pve1")
-    method_mock = getattr(node, guest_resource)(vmid).snapshot.post
+    method_mock = getattr(node, guest_resource)(vmid).status.snapshot
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
@@ -175,7 +175,7 @@ async def test_snapshot_button(
 
     # Proxmox validates the name as a `pve-configid` of at most 40 characters:
     # two or more, starting with a letter, then only [A-Za-z0-9_-]
-    snapname = method_mock.call_args.kwargs["snapname"]
+    snapname = method_mock.call_args.kwargs["snap_name"]
     assert len(snapname) <= 40
     assert re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]+", snapname)
 
@@ -201,9 +201,9 @@ async def test_container_buttons(
 
     mock_proxmox_client._node_mock.lxc(vmid)
     if action == "snapshot":
-        method_mock = mock_proxmox_client._lxc_mocks[vmid].snapshot.post
+        method_mock = mock_proxmox_client._lxc_mocks[vmid].status.snapshot
     else:
-        method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action).post
+        method_mock = getattr(mock_proxmox_client._lxc_mocks[vmid].status, action)
     pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
@@ -217,12 +217,25 @@ async def test_container_buttons(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "exception"),
+    ("entity_id", "command", "exception"),
     [
-        ("button.pve1_restart", AuthenticationError("auth failed")),
-        ("button.pve1_restart", SSLError("ssl error")),
-        ("button.pve1_restart", ConnectTimeout("timeout")),
-        ("button.pve1_shut_down", ResourceException(500, "error", {})),
+        ("button.pve1_restart", "reboot", ProxmoxAuthError("auth failed")),
+        (
+            "button.pve1_restart",
+            "reboot",
+            aiohttp.ClientSSLError(MagicMock(), OSError("ssl error")),
+        ),
+        ("button.pve1_restart", "reboot", TimeoutError("timeout")),
+        (
+            "button.pve1_shut_down",
+            "shutdown",
+            ProxmoxAPIError(500, "error", "nodes/pve1/status"),
+        ),
+        (
+            "button.pve1_shut_down",
+            "shutdown",
+            aiohttp.ClientConnectionError("connection refused"),
+        ),
     ],
 )
 async def test_node_buttons_exceptions(
@@ -230,12 +243,13 @@ async def test_node_buttons_exceptions(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
+    command: str,
     exception: Exception,
 ) -> None:
     """Test that ProxmoxVE node button errors are raised as HomeAssistantError."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_proxmox_client._node_mock.status.post.side_effect = exception
+    getattr(mock_proxmox_client._node_mock, command).side_effect = exception
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -253,25 +267,25 @@ async def test_node_buttons_exceptions(
             "button.vm_web_start",
             100,
             "start",
-            AuthenticationError("auth failed"),
+            ProxmoxAuthError("auth failed"),
         ),
         (
             "button.vm_web_start",
             100,
             "start",
-            SSLError("ssl error"),
+            aiohttp.ClientSSLError(MagicMock(), OSError("ssl error")),
         ),
         (
             "button.vm_web_suspend",
             100,
             "suspend",
-            ConnectTimeout("timeout"),
+            TimeoutError("timeout"),
         ),
         (
             "button.vm_web_reset",
             100,
             "reset",
-            ResourceException(500, "error", {}),
+            ProxmoxAPIError(500, "error", "nodes/pve1"),
         ),
     ],
 )
@@ -290,7 +304,7 @@ async def test_vm_buttons_exceptions(
     mock_proxmox_client._node_mock.qemu(vmid)
     getattr(
         mock_proxmox_client._qemu_mocks[vmid].status, action
-    ).post.side_effect = exception
+    ).side_effect = exception
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -308,25 +322,25 @@ async def test_vm_buttons_exceptions(
             "button.ct_nginx_start",
             200,
             "start",
-            AuthenticationError("auth failed"),
+            ProxmoxAuthError("auth failed"),
         ),
         (
             "button.ct_nginx_start",
             200,
             "start",
-            SSLError("ssl error"),
+            aiohttp.ClientSSLError(MagicMock(), OSError("ssl error")),
         ),
         (
             "button.ct_nginx_restart",
             200,
             "reboot",
-            ConnectTimeout("timeout"),
+            TimeoutError("timeout"),
         ),
         (
             "button.ct_nginx_stop",
             200,
             "stop",
-            ResourceException(500, "error", {}),
+            ProxmoxAPIError(500, "error", "nodes/pve1"),
         ),
     ],
 )
@@ -343,9 +357,7 @@ async def test_container_buttons_exceptions(
     await setup_integration(hass, mock_config_entry)
 
     mock_proxmox_client._node_mock.lxc(vmid)
-    getattr(
-        mock_proxmox_client._lxc_mocks[vmid].status, action
-    ).post.side_effect = exception
+    getattr(mock_proxmox_client._lxc_mocks[vmid].status, action).side_effect = exception
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -363,7 +375,9 @@ async def test_buttons_only_allowed_buttons(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that ProxmoxVE button is not generated when not allowed."""
-    mock_proxmox_client.access.permissions.get.return_value = AUDIT_PERMISSIONS
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(AUDIT_PERMISSIONS)
+    )
 
     await setup_integration(hass, mock_config_entry)
 

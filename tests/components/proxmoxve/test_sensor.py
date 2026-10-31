@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from aioproxmox.model import PVEPermissions
+from aioproxmox.model.pve import NodeStorageResource, NodeStorageResources
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -58,7 +60,9 @@ async def test_storage_missing_used_fraction(
         {key: value for key, value in storage.items() if key != "used_fraction"}
         for storage in storage_data
     ]
-    mock_proxmox_client._node_mock.storage.get.return_value = storage_without_fraction
+    mock_proxmox_client._node_mock.storage.return_value = NodeStorageResources(
+        storages=NodeStorageResource.list_from_api(storage_without_fraction)
+    )
 
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
@@ -77,7 +81,9 @@ async def test_sensors_according_to_permissions(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that sensors are not created when not allowed."""
-    mock_proxmox_client.access.permissions.get.return_value = PVEVMUSER_PERMISSIONS
+    mock_proxmox_client.access.permissions.return_value = (
+        PVEPermissions.from_api_response(PVEVMUSER_PERMISSIONS)
+    )
 
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
@@ -100,7 +106,9 @@ async def test_sensors_for_offline_node(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that node sensors except status are unavailable."""
-    mock_proxmox_client.nodes.get.return_value = mock_proxmox_client._all_nodes
+    mock_proxmox_client.cluster_resources.resources = (
+        mock_proxmox_client._all_cluster_resources.resources
+    )
 
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
