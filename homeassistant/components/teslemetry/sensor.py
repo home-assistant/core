@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import Any, override
 
-from aiopowerwall import component_float, pv_string_current
+from aiopowerwall import component_float, current_power, pv_string_current
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
@@ -49,6 +49,7 @@ from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
     TeslemetryEnergyLocalComponentsEntity,
+    TeslemetryEnergyLocalStatusEntity,
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
     TeslemetryWallConnectorEntity,
@@ -1714,6 +1715,39 @@ ENERGY_LOCAL_COMPONENTS_DESCRIPTIONS: tuple[
 )
 
 
+def _meter_power(location: str) -> Callable[[dict[str, Any]], StateType]:
+    """Return a function reading a meter location's power from the gateway status."""
+
+    def value_fn(data: dict[str, Any]) -> StateType:
+        return current_power(data).get(location)
+
+    return value_fn
+
+
+ENERGY_LOCAL_STATUS_DESCRIPTIONS: tuple[TeslemetryLocalSensorEntityDescription, ...] = (
+    TeslemetryLocalSensorEntityDescription(
+        key="solar_rgm_power",
+        value_fn=_meter_power("SOLAR_RGM"),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetryLocalSensorEntityDescription(
+        key="conductor_power",
+        value_fn=_meter_power("CONDUCTOR"),
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -1766,6 +1800,16 @@ async def async_setup_entry(
             description.key == "percentage_charged"
             and energysite.info_coordinator.data.get("components_battery")
         )
+    )
+
+    entities.extend(
+        TeslemetryEnergyLocalStatusSensorEntity(energysite, description)
+        for energysite in entry.runtime_data.energysites
+        if (status_coordinator := energysite.local_status_coordinator)
+        for description in ENERGY_LOCAL_STATUS_DESCRIPTIONS
+        # Without a first status, add every sensor so they recover with the gateway.
+        if status_coordinator.data is None
+        or description.value_fn(status_coordinator.data) is not None
     )
 
     entities.extend(
@@ -1988,6 +2032,29 @@ class TeslemetryEnergyLiveSensorEntity(TeslemetryEnergyLiveEntity, SensorEntity)
         """Update the attributes of the sensor."""
         self._attr_available = not self.is_none
         self._attr_native_value = self.entity_description.value_fn(self._value)
+
+
+class TeslemetryEnergyLocalStatusSensorEntity(
+    TeslemetryEnergyLocalStatusEntity, SensorEntity
+):
+    """Teslemetry energy sensor read from the local gateway status."""
+
+    entity_description: TeslemetryLocalSensorEntityDescription
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        description: TeslemetryLocalSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(data, description.key)
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
 
 
 class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorEntity):
