@@ -1,14 +1,26 @@
 {
   "entity": {
     "sensor": {
+      "fall_asleep": {
+        "default": "mdi:timer-sand"
+      },
       "heart_rate_avg": {
         "default": "mdi:heart-pulse"
       },
       "hrv": {
         "default": "mdi:heart-flash"
       },
+      "out_of_bed": {
+        "default": "mdi:bed-empty"
+      },
       "respiratory_rate_avg": {
         "default": "mdi:lungs"
+      },
+      "restful": {
+        "default": "mdi:power-sleep"
+      },
+      "restless": {
+        "default": "mdi:sleep-off"
       },
       "sleep_duration": {
         "default": "mdi:sleep"
