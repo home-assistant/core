@@ -49,10 +49,9 @@ from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
-    UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
-    UndefinedType,
+    Undefined,
     VolSchemaType,
 )
 from homeassistant.util.json import json_loads
@@ -1860,7 +1859,7 @@ class MqttEntity(
             )
             entity_registry.async_update_entity(
                 recreated_entry.entity_id,
-                disabled_by=None if reenable_condition else UNDEFINED,
+                disabled_by=None if reenable_condition else Undefined,
                 hidden_by=hidden_by,
             )
 
@@ -2029,9 +2028,9 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
-        entity_name: str | UndefinedType | None = config.get(CONF_NAME, UNDEFINED)
+        entity_name: str | Undefined | None = config.get(CONF_NAME, Undefined)
         # Only set _attr_name if it is needed
-        if entity_name is not UNDEFINED:
+        if entity_name is not Undefined:
             self._attr_name = entity_name
         elif not self._default_to_device_class_name():
             # Assign the default name
@@ -2077,13 +2076,13 @@ class MqttEntity(
 
     @callback
     def _attrs_have_changed(
-        self, attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...]
+        self, attrs_snapshot: tuple[tuple[str, Any | Undefined], ...]
     ) -> bool:
         """Return True if attributes on entity changed or if update is forced."""
         if self._attr_force_update:
             return True
         for attribute, last_value in attrs_snapshot:
-            if getattr(self, attribute, UNDEFINED) != last_value:
+            if getattr(self, attribute, Undefined) != last_value:
                 return True
         return False
 
@@ -2097,8 +2096,8 @@ class MqttEntity(
     ) -> None:
         """Process the message callback."""
         if attributes is not None:
-            attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
-                (attribute, getattr(self, attribute, UNDEFINED))
+            attrs_snapshot: tuple[tuple[str, Any | Undefined], ...] = tuple(
+                (attribute, getattr(self, attribute, Undefined))
                 for attribute in attributes
             )
         mqtt_data = self.hass.data[DATA_MQTT]

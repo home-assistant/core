@@ -13,7 +13,7 @@ from cronsim import CronSim
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
@@ -185,14 +185,14 @@ class BackupConfig:
     def update(
         self,
         *,
-        agents: dict[str, AgentParametersDict] | UndefinedType = UNDEFINED,
-        automatic_backups_configured: bool | UndefinedType = UNDEFINED,
-        create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
-        retention: RetentionParametersDict | UndefinedType = UNDEFINED,
-        schedule: ScheduleParametersDict | UndefinedType = UNDEFINED,
+        agents: dict[str, AgentParametersDict] | Undefined = Undefined,
+        automatic_backups_configured: bool | Undefined = Undefined,
+        create_backup: CreateBackupParametersDict | Undefined = Undefined,
+        retention: RetentionParametersDict | Undefined = Undefined,
+        schedule: ScheduleParametersDict | Undefined = Undefined,
     ) -> None:
         """Update config."""
-        if agents is not UNDEFINED:
+        if agents is not Undefined:
             for agent_id, agent_config in agents.items():
                 agent_retention = agent_config.get("retention")
                 if agent_retention is None:
@@ -224,18 +224,18 @@ class BackupConfig:
                     # There's a single retention application method
                     # for both global and agent retention settings.
                     self.data.retention.apply(self._manager)
-        if automatic_backups_configured is not UNDEFINED:
+        if automatic_backups_configured is not Undefined:
             self.data.automatic_backups_configured = automatic_backups_configured
-        if create_backup is not UNDEFINED:
+        if create_backup is not Undefined:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
             if "agent_ids" in create_backup:
                 check_unavailable_agents(self._hass, self._manager)
-        if retention is not UNDEFINED:
+        if retention is not Undefined:
             new_retention = RetentionConfig(**retention)
             if new_retention != self.data.retention:
                 self.data.retention = new_retention
                 self.data.retention.apply(self._manager)
-        if schedule is not UNDEFINED:
+        if schedule is not Undefined:
             new_schedule = BackupSchedule(**schedule)
             if new_schedule.to_dict() != self.data.schedule.to_dict():
                 self.data.schedule = new_schedule
