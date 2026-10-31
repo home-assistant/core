@@ -1,4 +1,87 @@
 # serializer version: 1
+# name: test_select_entities_snapshot[cloud_sauter_sop6615lb.json][select.oven_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'defrost',
+        'bottomHeat',
+        'bottomFan',
+        'conventional',
+        'conventionalFan',
+        'fannedGrill',
+        'keepingWarm',
+        'fanCooking',
+        'combinedHeat',
+        'bread',
+        'drying',
+        'pizza',
+        'eco',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('overkiz', 'ogp://1234-5678-9123/16000211')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.oven_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ogp://1234-5678-9123/16000211-core:ModeState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities_snapshot[cloud_sauter_sop6615lb.json][select.oven_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'defrost',
+        'bottomHeat',
+        'bottomFan',
+        'conventional',
+        'conventionalFan',
+        'fannedGrill',
+        'keepingWarm',
+        'fanCooking',
+        'combinedHeat',
+        'bread',
+        'drying',
+        'pizza',
+        'eco',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.oven_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'defrost',
+  })
+# ---
 # name: test_select_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][select.living_room_garden_gate_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
