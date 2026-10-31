@@ -25,8 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> No
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def _async_scan_update(_=None):
-        await refoss_discovery.discovery.broadcast_msg()
+    async def _async_scan_update(_=None) -> None:
+        await refoss_discovery.async_scan()
 
     await _async_scan_update()
 
