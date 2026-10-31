@@ -38,6 +38,7 @@ from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
+    FAN_MEDIUM,
     FAN_MIDDLE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
@@ -120,6 +121,7 @@ async def test_climate_entity_fan_modes_order(
             supported_fan_modes=[
                 ClimateFanMode.AUTO,
                 ClimateFanMode.LOW,
+                ClimateFanMode.MEDIUM,
                 ClimateFanMode.HIGH,
                 ClimateFanMode.MIDDLE,
             ],
@@ -137,6 +139,7 @@ async def test_climate_entity_fan_modes_order(
     assert state.attributes[ATTR_FAN_MODES] == [
         FAN_AUTO,
         FAN_LOW,
+        FAN_MEDIUM,
         FAN_MIDDLE,
         FAN_HIGH,
         "Turbo",
