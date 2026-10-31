@@ -23,6 +23,7 @@ FLOWS = {
         "tod",
         "trend",
         "utility_meter",
+        "virtual_remote",
     ],
     "integration": [
         "abode",
