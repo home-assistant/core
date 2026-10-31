@@ -76,6 +76,12 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "display_on_time": {
+        "name": "Display on-time"
+      },
       "energy_saving_enter_duration": {
         "name": "Energy-saving enter duration"
       },
