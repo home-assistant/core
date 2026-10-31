@@ -221,6 +221,7 @@ homeassistant.components.evil_genius_labs.*
 homeassistant.components.evohome.*
 homeassistant.components.exicom_spin_ble.*
 homeassistant.components.faa_delays.*
+homeassistant.components.famn.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.feedreader.*
