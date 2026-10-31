@@ -956,6 +956,7 @@ FLOWS = {
         "worldclock",
         "ws66i",
         "wsdot",
+        "wws",
         "wyoming",
         "xbox",
         "xiaomi_aqara",
