@@ -8,6 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareNotSupportedFeatureError,
+    PyViCareRateLimitError,
 )
 from syrupy.assertion import SnapshotAssertion
 
@@ -396,3 +397,38 @@ async def test_holiday_command_error(
             blocking=True,
         )
     assert str(exc_info.value) == message
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        ("schedule_holiday", {"start_date": "2026-12-20", "end_date": "2027-01-06"}),
+        ("cancel_holiday", {}),
+    ],
+)
+async def test_holiday_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    data: dict[str, Any],
+) -> None:
+    """Test an API failure during a holiday command is reported to the user."""
+    mock_vicare = await _setup_climate(hass, mock_config_entry, HEAT_PUMP)
+    mock_vicare.devices[0].service.setProperty.side_effect = PyViCareRateLimitError(
+        {
+            "extendedPayload": {
+                "name": "rate limit",
+                "requestCountLimit": 1450,
+                "limitReset": 1584462010106,
+            }
+        }
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "climate.model0_heating", **data},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "api_error"

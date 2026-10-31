@@ -11,11 +11,7 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
-    PyViCareDeviceCommunicationError,
-    PyViCareInternalServerError,
-    PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
 )
 
 from homeassistant.components.water_heater import (
@@ -36,7 +32,7 @@ from .const import DOMAIN
 from .entity import ViCareEntity
 from .services import ATTR_FROM, ATTR_TO, HA_TO_VICARE_CIRCULATION_MODE, WEEKDAYS
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import get_circuits
+from .utils import VICARE_API_ERRORS, get_circuits
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,13 +69,6 @@ HA_TO_VICARE_HVAC_DHW = {
 VICARE_TO_HA_CIRCULATION_MODE = {
     value: key for key, value in HA_TO_VICARE_CIRCULATION_MODE.items()
 }
-
-VICARE_API_ERRORS = (
-    PyViCareDeviceCommunicationError,
-    PyViCareInternalServerError,
-    PyViCareInvalidDataError,
-    PyViCareRateLimitError,
-)
 
 
 def _to_vicare_time(value: time) -> str:

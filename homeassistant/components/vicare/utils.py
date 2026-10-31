@@ -28,6 +28,13 @@ from .const import DEFAULT_CACHE_DURATION, VICARE_TOKEN_FILENAME
 
 MAX_RATE_LIMIT_BACKOFF = 86400  # the quota window is a day
 
+VICARE_API_ERRORS = (
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
+    PyViCareInvalidDataError,
+    PyViCareRateLimitError,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
