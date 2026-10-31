@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+from aioamazondevices.structures import AmazonDeviceSensor
+
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -15,6 +17,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import slugify
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
@@ -23,7 +26,11 @@ from .entity import AmazonEntity
 
 PARALLEL_UPDATES = 1
 
-THERMOSTAT_DESCRIPTION = ClimateEntityDescription(key="thermostat", name=None)
+THERMOSTAT_DESCRIPTION = ClimateEntityDescription(
+    key="thermostat",
+    name=None,
+    translation_key="thermostat",
+)
 
 AMAZON_TO_HVAC_MODE = {
     "AUTO": HVACMode.HEAT_COOL,
@@ -84,8 +91,6 @@ def _format_temperature(value: float) -> str:
 class AmazonClimateEntity(AmazonEntity, ClimateEntity):
     """Thermostat device."""
 
-    _attr_target_temperature_step = 1
-
     def __init__(
         self,
         coordinator: AmazonDevicesCoordinator,
@@ -101,11 +106,27 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
                 if mode in AMAZON_TO_HVAC_MODE
             )
         )
-        self._power_features = ClimateEntityFeature(0)
+        self._base_features = ClimateEntityFeature(0)
         if HVACMode.OFF in self._attr_hvac_modes and len(self._attr_hvac_modes) > 1:
-            self._power_features = (
+            self._base_features = (
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
+
+        # the fan mode is a generic mode feature, keyed as fan_mode by the library
+        self._fan_instance: str | None = None
+        self._fan_modes: dict[str, str] = {}
+        for instance, feature in self.device.features.get("mode", {}).items():
+            if feature.sensor_keys.get("mode") == "fan_mode":
+                self._fan_instance = instance
+                self._fan_modes = {
+                    slugify(option["modeResources"]["friendlyName"]["value"]["text"]): (
+                        option["value"]
+                    )
+                    for option in feature.raw_configuration.get("modeOptions") or []
+                }
+        if self._fan_modes:
+            self._base_features |= ClimateEntityFeature.FAN_MODE
+            self._attr_fan_modes = list(self._fan_modes)
 
     @property
     @override
@@ -113,24 +134,34 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
         """Return the supported features for the current mode."""
         # a single target in heat/cool mode would not be applied by the thermostat
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            return self._power_features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        return self._power_features | ClimateEntityFeature.TARGET_TEMPERATURE
+            return self._base_features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        return self._base_features | ClimateEntityFeature.TARGET_TEMPERATURE
 
-    def _sensor(self, feature_name: str, property_name: str) -> Any:
+    def _feature_sensor(
+        self, feature_name: str, property_name: str, instance: str = ""
+    ) -> AmazonDeviceSensor | None:
+        """Return the sensor of a feature property, even if in error."""
+        if (
+            feature := self.device.features.get(feature_name, {}).get(instance)
+        ) is None or (sensor_key := feature.sensor_keys.get(property_name)) is None:
+            return None
+        return self.coordinator.device_sensor(self._serial_num, sensor_key)
+
+    def _sensor(
+        self, feature_name: str, property_name: str, instance: str = ""
+    ) -> AmazonDeviceSensor | None:
         """Return the sensor of a feature property, None if unknown."""
         if (
-            (feature := self.device.features.get(feature_name, {}).get("")) is None
-            or (sensor_key := feature.sensor_keys.get(property_name)) is None
-            or (sensor := self.coordinator.device_sensor(self._serial_num, sensor_key))
-            is None
-            or sensor.error
-        ):
+            sensor := self._feature_sensor(feature_name, property_name, instance)
+        ) is None or sensor.error:
             return None
         return sensor
 
-    def _sensor_value(self, feature_name: str, property_name: str) -> Any:
+    def _sensor_value(
+        self, feature_name: str, property_name: str, instance: str = ""
+    ) -> Any:
         """Return the current value of a feature property, None if unknown."""
-        if (sensor := self._sensor(feature_name, property_name)) is None:
+        if (sensor := self._sensor(feature_name, property_name, instance)) is None:
             return None
         return sensor.value
 
@@ -172,8 +203,19 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
             ("temperatureSensor", "temperature"),
         ):
             if (sensor := self._sensor(feature_name, property_name)) is not None:
-                return AMAZON_TO_UNIT.get(sensor.scale, UnitOfTemperature.FAHRENHEIT)
+                return AMAZON_TO_UNIT.get(
+                    sensor.scale or "", UnitOfTemperature.FAHRENHEIT
+                )
         return UnitOfTemperature.FAHRENHEIT
+
+    @property
+    @override
+    def target_temperature_step(self) -> float:
+        """Return the supported step of target temperature."""
+        # the thermostat reports half degrees in Celsius
+        if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
+            return 0.5
+        return 1
 
     @property
     @override
@@ -234,19 +276,30 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
         operation_name: str,
         command_payload: dict[str, Any],
         new_values: dict[str, Any],
+        feature_name: str = "thermostat",
+        instance: str | None = None,
     ) -> None:
-        """Invoke a thermostat feature operation and store the new values."""
+        """Invoke a feature operation and store the new values."""
         async with alexa_api_call(self.coordinator):
             await self.coordinator.api.call_feature_operation(
                 self.device,
-                "thermostat",
+                feature_name,
                 operation_name,
                 command_payload=command_payload,
+                instance=instance,
             )
-        # Optimistic until Amazon pushes or a poll returns the new state
+        # Optimistic until Amazon pushes or a poll returns the new state, also
+        # replacing a NOT_FOUND error, e.g. the target setpoint while in AUTO
         for property_name, value in new_values.items():
-            if (sensor := self._sensor("thermostat", property_name)) is not None:
+            if (
+                sensor := self._feature_sensor(
+                    feature_name, property_name, instance or ""
+                )
+            ) is not None:
                 sensor.value = value
+                sensor.error = False
+                sensor.error_type = None
+                sensor.error_msg = None
         self.async_write_ha_state()
 
     def _temperature_payload(self, value: float) -> dict[str, str]:
@@ -262,6 +315,32 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
         mode = HVAC_MODE_TO_AMAZON[hvac_mode]
         await self._call(
             "setThermostatMode", {"thermostatMode": mode}, {"thermostatMode": mode}
+        )
+
+    @property
+    @override
+    def fan_mode(self) -> str | None:
+        """Return the current fan mode."""
+        if (
+            self._fan_instance is None
+            or (value := self._sensor_value("mode", "mode", self._fan_instance)) is None
+        ):
+            return None
+        return next(
+            (name for name, option in self._fan_modes.items() if option == value),
+            None,
+        )
+
+    @override
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set the fan mode."""
+        value = self._fan_modes[fan_mode]
+        await self._call(
+            "setMode",
+            {"mode": value},
+            {"mode": value},
+            feature_name="mode",
+            instance=self._fan_instance,
         )
 
     @override

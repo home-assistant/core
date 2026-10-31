@@ -1,5 +1,6 @@
 """Tests for the Alexa Devices climate platform."""
 
+from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -10,12 +11,15 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
@@ -131,10 +135,19 @@ async def test_mode_state(
     } == expected_attributes
 
 
-def _operation(operation: str, payload: dict[str, Any]) -> Any:
-    """Return the expected call of a thermostat operation."""
+def _operation(
+    operation: str,
+    payload: dict[str, Any],
+    feature_name: str = "thermostat",
+    instance: str | None = None,
+) -> Any:
+    """Return the expected call of a feature operation."""
     return call(
-        TEST_DEVICE_THERMOSTAT, "thermostat", operation, command_payload=payload
+        TEST_DEVICE_THERMOSTAT,
+        feature_name,
+        operation,
+        command_payload=payload,
+        instance=instance,
     )
 
 
@@ -224,6 +237,14 @@ def _operation(operation: str, payload: dict[str, Any]) -> Any:
             ),
             id="temperature_range_eco",
         ),
+        pytest.param(
+            "AUTO",
+            SERVICE_SET_FAN_MODE,
+            {ATTR_FAN_MODE: "circulate"},
+            [_operation("setMode", {"mode": "3"}, "mode", "5")],
+            (HVACMode.HEAT_COOL, {ATTR_FAN_MODE: "circulate"}),
+            id="fan_mode",
+        ),
     ],
 )
 async def test_climate_services(
@@ -234,7 +255,7 @@ async def test_climate_services(
     service: str,
     service_data: dict[str, Any],
     expected_calls: list[Any],
-    expected_state: tuple[HVACMode, dict[str, float]],
+    expected_state: tuple[HVACMode, dict[str, Any]],
 ) -> None:
     """Test climate services call the operation and store the new state."""
     mock_amazon_devices_client.sensors[TEST_DEVICE_THERMOSTAT_SN][
@@ -314,6 +335,53 @@ async def test_set_temperature_rejected(
     mock_amazon_devices_client.call_feature_operation.assert_not_called()
 
 
+async def test_command_replaces_errored_setpoint(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a command stores its setpoint even if Amazon reported it as not found."""
+    sensors = mock_amazon_devices_client.sensors[TEST_DEVICE_THERMOSTAT_SN]
+    sensors["thermostatMode"].value = "HEAT"
+    target = sensors["targetSetpoint"]
+    target.value = None
+    target.error = True
+    target.error_type = "NOT_FOUND"
+    target.error_msg = "NOT_FOUND"
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_TEMPERATURE] is None
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_TEMPERATURE] == 20.0
+
+
+async def test_thermostat_without_temperature_sensor(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a thermostat without a temperature sensor has no current temperature."""
+    device = deepcopy(TEST_DEVICE_THERMOSTAT)
+    del device.features["temperatureSensor"]
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_THERMOSTAT_SN: device
+    }
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == HVACMode.HEAT_COOL
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+
+
 async def test_command_without_known_setpoint(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
@@ -342,12 +410,15 @@ async def test_celsius_thermostat(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a thermostat using Celsius sends setpoints in Celsius."""
+    """Test a thermostat using Celsius has half degree steps and sends Celsius."""
     sensors = mock_amazon_devices_client.sensors[TEST_DEVICE_THERMOSTAT_SN]
     for sensor in sensors.values():
         sensor.scale = "CELSIUS" if sensor.scale else None
     sensors["thermostatMode"].value = "HEAT"
     await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 0.5
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -361,6 +432,7 @@ async def test_celsius_thermostat(
         "thermostat",
         "setTargetSetpoint",
         command_payload={"targetSetpoint": {"value": "21.5", "scale": "CELSIUS"}},
+        instance=None,
     )
 
 

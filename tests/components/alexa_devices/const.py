@@ -458,6 +458,44 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
                 },
             )
         },
+        "mode": {
+            "5": AmazonDeviceFeature(
+                properties=["mode"],
+                supported_operations=["setMode"],
+                supported_modes=["1", "2", "3"],
+                friendly_name="Fan Mode",
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={
+                    "__typename": "ModeConfiguration",
+                    "friendlyName": {"value": {"text": "Fan Mode"}},
+                    "order": "UNORDERED",
+                    "modeOptions": [
+                        {
+                            "value": "1",
+                            "modeResources": {
+                                "friendlyName": {"value": {"text": "On"}}
+                            },
+                        },
+                        {
+                            "value": "2",
+                            "modeResources": {
+                                "friendlyName": {"value": {"text": "Auto"}}
+                            },
+                        },
+                        {
+                            "value": "3",
+                            "modeResources": {
+                                "friendlyName": {"value": {"text": "Circulate"}}
+                            },
+                        },
+                    ],
+                },
+                sensor_keys={"mode": "fan_mode"},
+            )
+        },
         "thermostatConfiguration": {
             "": AmazonDeviceFeature(
                 properties=["allowedTemperatureRange"],
@@ -728,6 +766,17 @@ TEST_DEVICE_THERMOSTAT_SENSORS: dict[str, AmazonDeviceSensor] = {
         feature_name="thermostatConfiguration",
         property_name="allowedTemperatureRange",
         instance="",
+    ),
+    "fan_mode": AmazonDeviceSensor(
+        name="fan_mode",
+        value="2",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="mode",
+        property_name="mode",
+        instance="5",
     ),
 }
 
