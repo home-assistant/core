@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the panel. Confirm the host is reachable and the panel is online.",
+      "invalid_auth": "Unable to authenticate with the panel. Check the access code, passphrase, and network connectivity.",
+      "link_required": "The panel requires linking. Enter the access code and passphrase again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_code": "Access code (used for linking, NOT a PIN)",
+          "host": "Host",
+          "passphrase": "Passphrase"
+        },
+        "data_description": {
+          "access_code": "The panel access code used during linking. It is not a PIN.",
+          "host": "The panel host name or IP address.",
+          "passphrase": "The passphrase used during linking."
+        },
+        "description": "Enter the host and linking credentials.",
+        "title": "Set up Elk E27 Alarm Engine"
+      }
+    }
+  }
+}
