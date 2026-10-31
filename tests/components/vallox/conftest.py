@@ -108,16 +108,6 @@ def setup_fetch_metric_data_mock(fetch_metric_data_mock, default_metrics):
     return _setup
 
 
-def patch_set_profile():
-    """Patch the Vallox metrics set values."""
-    return patch("homeassistant.components.vallox.Vallox.set_profile")
-
-
-def patch_set_fan_speed():
-    """Patch the Vallox metrics set values."""
-    return patch("homeassistant.components.vallox.Vallox.set_fan_speed")
-
-
 def patch_set_values():
     """Patch the Vallox metrics set values."""
     return patch("homeassistant.components.vallox.Vallox.set_values")
