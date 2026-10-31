@@ -846,17 +846,19 @@ async def test_smart_tcl_portable_ac(
         & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
 
-    # switch to heat_cool mode by simulating device reporting SystemMode = 1
+    # switch to heat_cool mode; the real device reports OccupiedCoolingSetpoint 2500
+    # in auto while OccupiedHeatingSetpoint and the heat limits stay null
     set_node_attribute(matter_node, 1, 513, 28, 1)
-    set_node_attribute(matter_node, 1, 513, 18, 2000)
+    set_node_attribute(matter_node, 1, 513, 17, 2500)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.smart_tcl_portable_ac")
     assert state
     assert state.state == HVACMode.HEAT_COOL
-    # single setpoint: target_temperature from OccupiedHeatingSetpoint, no range attrs
-    assert state.attributes["temperature"] == 20
+    assert state.attributes["temperature"] == 25
     assert state.attributes.get("target_temp_high") is None
     assert state.attributes.get("target_temp_low") is None
+    assert state.attributes["min_temp"] == 18
+    assert state.attributes["max_temp"] == 32
 
     # set_hvac_mode to HEAT_COOL writes SystemMode = 1
     set_node_attribute(matter_node, 1, 513, 28, 3)
@@ -875,9 +877,8 @@ async def test_smart_tcl_portable_ac(
     )
     matter_client.write_attribute.reset_mock()
 
-    # set_temperature in HEAT_COOL writes OccupiedHeatingSetpoint (single setpoint)
+    # set_temperature in HEAT_COOL writes OccupiedCoolingSetpoint (cooling-only device)
     set_node_attribute(matter_node, 1, 513, 28, 1)
-    set_node_attribute(matter_node, 1, 513, 18, 2000)
     await trigger_subscription_callback(hass, matter_client)
     await hass.services.async_call(
         "climate",
@@ -888,10 +889,18 @@ async def test_smart_tcl_portable_ac(
     assert matter_client.write_attribute.call_count == 1
     assert matter_client.write_attribute.call_args == call(
         node_id=matter_node.node_id,
-        attribute_path="1/513/18",
+        attribute_path="1/513/17",
         value=2200,
     )
     matter_client.write_attribute.reset_mock()
+
+    # dry mode also uses OccupiedCoolingSetpoint
+    set_node_attribute(matter_node, 1, 513, 28, 8)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.smart_tcl_portable_ac")
+    assert state
+    assert state.state == HVACMode.DRY
+    assert state.attributes["temperature"] == 25
 
     # regression guard: if kAutoMode is set on this device (allowlist entry), the elif
     # in _calculate_features must prevent HEAT_COOL from being appended twice

@@ -309,7 +309,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
         if target_temperature is not None:
             # single setpoint control
             if self.native_target_temperature != target_temperature:
-                if current_mode == HVACMode.COOL:
+                if self._uses_cooling_setpoint(current_mode):
                     matter_attribute = (
                         clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
                     )
@@ -549,6 +549,14 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
                 return HVACMode.OFF
 
     @callback
+    def _uses_cooling_setpoint(self, hvac_mode: HVACMode | None) -> bool:
+        """Return True if the cooling setpoint and limits apply for the given mode."""
+        # Cooling-only devices report null heating setpoints and limits.
+        return hvac_mode == HVACMode.COOL or not (
+            int(self._feature_map or 0) & ThermostatFeature.kHeating
+        )
+
+    @callback
     def _update_target_temperatures(self) -> None:
         """Update target temperature or temperature range."""
         supports_range = (
@@ -569,7 +577,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
             self._attr_native_target_temperature_high = None
             self._attr_native_target_temperature_low = None
             # update target_temperature
-            if self._attr_hvac_mode == HVACMode.COOL:
+            if self._uses_cooling_setpoint(self._attr_hvac_mode):
                 self._attr_native_target_temperature = self._get_temperature_in_degrees(
                     clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
                 )
@@ -581,8 +589,9 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
     @callback
     def _update_temperature_limits(self) -> None:
         """Update min and max temperature limits."""
+        uses_cooling_setpoint = self._uses_cooling_setpoint(self._attr_hvac_mode)
         # update min_temp
-        if self._attr_hvac_mode == HVACMode.COOL:
+        if uses_cooling_setpoint:
             attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
         else:
             attribute = clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
@@ -591,7 +600,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
         else:
             self._attr_min_temp = DEFAULT_MIN_TEMP
         # update max_temp
-        if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL):
+        if uses_cooling_setpoint or self._attr_hvac_mode == HVACMode.HEAT_COOL:
             attribute = clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
         else:
             attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
