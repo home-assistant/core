@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
     ATTR_MAX_HUMIDITY,
@@ -34,7 +35,10 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
+    FAN_AUTO,
     FAN_HIGH,
+    FAN_LOW,
+    FAN_MIDDLE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
@@ -99,6 +103,44 @@ async def test_climate_entity(
         [call(key=1, target_temperature=25.0, device_id=0)]
     )
     mock_client.climate_command.reset_mock()
+
+
+async def test_climate_entity_fan_modes_order(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test fan modes are listed in speed order, not ESPHome enum order."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            supported_modes=[ClimateMode.COOL],
+            supported_fan_modes=[
+                ClimateFanMode.AUTO,
+                ClimateFanMode.LOW,
+                ClimateFanMode.HIGH,
+                ClimateFanMode.MIDDLE,
+            ],
+            supported_custom_fan_modes=["Turbo"],
+        )
+    ]
+    states = [ClimateState(key=1, mode=ClimateMode.COOL)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.attributes[ATTR_FAN_MODES] == [
+        FAN_AUTO,
+        FAN_LOW,
+        FAN_MIDDLE,
+        FAN_HIGH,
+        "Turbo",
+    ]
 
 
 async def test_climate_entity_with_step_and_two_point(
