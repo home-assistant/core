@@ -8289,66 +8289,106 @@ def test_deprecated_connection_class_constants(
     )
 
 
-async def test_update_entry_and_reload_with_listener_logs(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test update and reload with config entry listener logs."""
+class _ListenerReloadFlow(config_entries.ConfigFlow):
+    """Test flow reloading an entry from reauth and reconfigure."""
+
+    VERSION = 1
+
+    async def async_step_reauth(self, data):
+        """Mock Reauth."""
+        await self.async_set_unique_id("1234")
+        self._abort_if_unique_id_configured(updates={"vendor": "data2"})
+
+    async def async_step_reconfigure(self, data):
+        """Mock Reconfigure."""
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(), data={"vendor": "data3"}
+        )
+
+
+async def _setup_entry_with_update_listener(
+    hass: HomeAssistant, built_in: bool
+) -> tuple[MockConfigEntry, AsyncMock]:
+    """Set up a loaded entry with an update listener."""
     entry = MockConfigEntry(
         domain="comp",
         unique_id="1234",
         title="Test",
         data={"vendor": "data"},
-        options={"vendor": "options"},
     )
     entry.add_to_hass(hass)
     entry.add_update_listener(AsyncMock())
 
-    comp = MockModule(
-        "comp",
-        async_setup_entry=AsyncMock(return_value=None),
-        async_unload_entry=AsyncMock(return_value=None),
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=AsyncMock(return_value=None),
+        ),
+        built_in=built_in,
     )
-    mock_integration(hass, comp)
     mock_platform(hass, "comp.config_flow", None)
 
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    return entry, mock_setup_entry
 
-    class MockFlowHandler(config_entries.ConfigFlow):
-        """Define a mock flow handler."""
 
-        VERSION = 1
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
+)
+async def test_update_entry_and_reload_with_listener_core_integration(
+    hass: HomeAssistant, source: str
+) -> None:
+    """Test updating and reloading an entry with update listener raises for core."""
+    entry, _ = await _setup_entry_with_update_listener(hass, built_in=True)
 
-        async def async_step_reauth(self, data):
-            """Mock Reauth."""
-            self._abort_if_unique_id_configured(updates={"vendor": "data2"})
+    with (
+        mock_config_flow("comp", _ListenerReloadFlow),
+        pytest.raises(
+            RuntimeError,
+            match="has an update listener and should use it for scheduling a reload",
+        ),
+    ):
+        await hass.config_entries.flow.async_init(
+            "comp", context={"source": source, "entry_id": entry.entry_id}
+        )
 
-        async def async_step_reconfigure(self, data):
-            """Mock Reconfigure."""
-            return self.async_update_reload_and_abort(entry, data={"vendor": "data3"})
 
-    message = (
-        "Detected that integration 'comp' has an update listener and should use it"
-        " for scheduling a reload. This will stop working in Home Assistant 2026.12.0"
+@pytest.mark.parametrize(
+    ("source", "reason"),
+    [
+        (config_entries.SOURCE_REAUTH, "already_configured"),
+        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+    ],
+)
+async def test_update_entry_and_reload_with_listener_custom_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, source: str, reason: str
+) -> None:
+    """Test updating and reloading an entry with update listener logs for custom."""
+    entry, mock_setup_entry = await _setup_entry_with_update_listener(
+        hass, built_in=False
     )
 
     with (
-        mock_config_flow("comp", MockFlowHandler),
+        mock_config_flow("comp", _ListenerReloadFlow),
         patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
     ):
-        await entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_init(
+            "comp", context={"source": source, "entry_id": entry.entry_id}
+        )
     await hass.async_block_till_done()
 
-    assert message in caplog.text
-    caplog.clear()
-
-    with (
-        mock_config_flow("comp", MockFlowHandler),
-        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
-    ):
-        await entry.start_reconfigure_flow(hass)
-    await hass.async_block_till_done()
-
-    assert message in caplog.text
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert (
+        "Detected that custom integration 'comp' has an update listener and should"
+        " use it for scheduling a reload"
+    ) in caplog.text
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 @pytest.mark.parametrize(
