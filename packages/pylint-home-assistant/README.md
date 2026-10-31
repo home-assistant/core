@@ -171,6 +171,7 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7455` | [`home-assistant-coordinator-entity-should-poll`](#w7455-home-assistant-coordinator-entity-should-poll) | `_attr_should_poll` has no effect on a `CoordinatorEntity` |
 
 ## `home_assistant_logger` checker
 
@@ -444,6 +445,18 @@ or `_attr_available`, are not flagged. Neither are entities of a push
 coordinator, one that never sets an `update_interval` and gets its data
 through `async_set_updated_data`: its `last_update_success` doesn't show
 whether the device is reachable.
+
+
+## `home_assistant_coordinator_entity_should_poll` checker
+
+Checks for `_attr_should_poll` on coordinator entities.
+
+### `W7455`: `home-assistant-coordinator-entity-should-poll`
+
+`CoordinatorEntity` overrides `should_poll` to always return `False`, as the
+coordinator tells its entities when it has new data. `_attr_should_poll` is
+only read by `Entity.should_poll`, so setting it on a coordinator entity has
+no effect and can be removed.
 
 
 ## `home_assistant_log_and_raise` checker
