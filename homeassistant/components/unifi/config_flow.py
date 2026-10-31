@@ -55,6 +55,7 @@ from .const import (
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    CONF_TRACK_WAN_NETWORKS,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
@@ -396,6 +397,10 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                     probatio.Optional(
                         CONF_TRACK_DEVICES,
                         default=self.hub.config.option_track_devices,
+                    ): bool,
+                    probatio.Optional(
+                        CONF_TRACK_WAN_NETWORKS,
+                        default=self.hub.config.option_track_wan_networks,
                     ): bool,
                     probatio.Optional(
                         CONF_BLOCK_CLIENT, default=selected_clients_to_block
