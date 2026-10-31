@@ -380,7 +380,9 @@ def _parse_device_payload(
         )
     _replace_all_abbreviations(device_payload)
     try:
-        validate_device_discovery_components(DEVICE_DISCOVERY_SCHEMA(device_payload))
+        validated_payload = validate_device_discovery_components(
+            DEVICE_DISCOVERY_SCHEMA(device_payload)
+        )
     except probatio.Invalid as exc:
         _LOGGER.warning(
             "Invalid MQTT device discovery payload for %s, %s: '%s'",
@@ -389,6 +391,11 @@ def _parse_device_payload(
             payload,
         )
         return MQTTDiscoveryPayload({})
+    # Use the validated devices, the shared and component options are validated
+    # with each component
+    device_payload[CONF_DEVICE] = validated_payload[CONF_DEVICE]
+    if CONF_CHILD_DEVICES in validated_payload:
+        device_payload[CONF_CHILD_DEVICES] = validated_payload[CONF_CHILD_DEVICES]
     return device_payload
 
 
@@ -426,15 +433,12 @@ def _device_discovery_components(
 
 
 def _child_device_identifiers(
-    child_device: Mapping[str, Any] | None,
+    child_device: MqttChildDeviceConfig | None,
 ) -> frozenset[str]:
-    """Return the identifiers of a child device, as strings like the schema."""
+    """Return the identifiers of a child device."""
     if child_device is None:
         return frozenset()
-    return frozenset(
-        str(identifier)
-        for identifier in probatio.EnsureList()(child_device[CONF_IDENTIFIERS])
-    )
+    return frozenset(child_device["identifiers"])
 
 
 @callback
@@ -519,14 +523,14 @@ def _async_diff_device_discovery(
 def _async_get_main_device_id(
     hass: HomeAssistant, config_entry_id: str, device_config: Mapping[str, Any]
 ) -> str | None:
-    """Return the ID of the registered main device of a device config."""
+    """Return the ID of the registered main device of a validated device config."""
     device_registry = dr.async_get(hass)
-    for identifier in probatio.EnsureList()(device_config.get(CONF_IDENTIFIERS)):
+    for identifier in device_config[CONF_IDENTIFIERS]:
         if device := device_registry.async_get_device_by_identifier(
-            (DOMAIN, str(identifier)), config_entry_id
+            (DOMAIN, identifier), config_entry_id
         ):
             return device.id
-    for connection_type, value in device_config.get(CONF_CONNECTIONS, []):
+    for connection_type, value in device_config[CONF_CONNECTIONS]:
         # The device registry normalizes the MAC address of the connection
         if device := device_registry.async_get_device_by_connection(
             (connection_type, value), config_entry_id
