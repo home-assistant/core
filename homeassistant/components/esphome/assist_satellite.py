@@ -343,6 +343,7 @@ class EsphomeAssistSatellite(
 
         self._is_running = False
         self._stop_pipeline()
+        await self._cancel_tts_stream()
 
     @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
@@ -537,10 +538,7 @@ class EsphomeAssistSatellite(
         while not self._audio_queue.empty():
             await self._audio_queue.get()
 
-        if self._tts_streaming_task is not None:
-            # Cancel current TTS response
-            self._tts_streaming_task.cancel()
-            self._tts_streaming_task = None
+        await self._cancel_tts_stream()
 
         # API or UDP output audio
         port: int = 0
@@ -636,8 +634,19 @@ class EsphomeAssistSatellite(
         """Handle request for pipeline to stop."""
         if abort:
             self._abort_pipeline()
+            await self._cancel_tts_stream()
         else:
             self._stop_pipeline()
+
+    async def _cancel_tts_stream(self) -> None:
+        """Cancel and await the current TTS audio task."""
+        task = self._tts_streaming_task
+        if task is None:
+            return
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+        if self._tts_streaming_task is task:
+            self._tts_streaming_task = None
 
     def handle_pipeline_finished(self) -> None:
         """Handle when pipeline has finished running."""
