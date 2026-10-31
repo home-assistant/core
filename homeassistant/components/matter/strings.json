@@ -803,6 +803,27 @@
     "bitmap_write_not_supported": {
       "message": "The device does not support changing {name}."
     },
+    "camera_focus_zones_not_supported": {
+      "message": "{entity_id} does not support focus zones."
+    },
+    "camera_motion_zone_not_editable": {
+      "message": "Home Assistant cannot change motion zones. Zone {zone_id} of {entity_id} can only be removed, and only if no camera trigger uses it."
+    },
+    "camera_user_zones_not_supported": {
+      "message": "{entity_id} does not allow changing its zones."
+    },
+    "camera_zone_has_trigger": {
+      "message": "Zone {zone_id} of {entity_id} is used by a camera trigger. Remove the trigger first in the app that set it up, for example the camera's app."
+    },
+    "camera_zone_not_editable": {
+      "message": "Zone {zone_id} of {entity_id} is not a user zone and cannot be changed."
+    },
+    "camera_zone_not_removable": {
+      "message": "Zone {zone_id} of {entity_id} is not a user zone and cannot be removed."
+    },
+    "camera_zones_not_supported": {
+      "message": "{entity_id} does not support zones."
+    },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."
     },
@@ -827,7 +848,31 @@
       "title": "Newer version of Matter Server needed"
     }
   },
+  "selector": {
+    "camera_zone_use": {
+      "options": {
+        "focus": "Focus",
+        "privacy": "Privacy"
+      }
+    },
+    "camera_zone_vertex": {
+      "fields": {
+        "x": "X",
+        "y": "Y"
+      }
+    }
+  },
   "services": {
+    "clear_camera_zone": {
+      "description": "Removes a zone from a camera.",
+      "fields": {
+        "zone_id": {
+          "description": "The ID of the zone to remove.",
+          "name": "Zone ID"
+        }
+      },
+      "name": "Clear camera zone"
+    },
     "clear_lock_credential": {
       "description": "Removes a credential from a lock.",
       "fields": {
@@ -851,6 +896,10 @@
         }
       },
       "name": "Clear lock user"
+    },
+    "get_camera_zones": {
+      "description": "Returns the zones of a camera, with corners in percent of the camera sensor.",
+      "name": "Get camera zones"
     },
     "get_lock_credential_status": {
       "description": "Returns the status of a credential slot on a lock.",
@@ -883,6 +932,32 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "set_camera_zone": {
+      "description": "Creates a camera zone, or updates the zone with the given ID.",
+      "fields": {
+        "color": {
+          "description": "A color for the zone, as #RRGGBB or #RRGGBBAA, where AA is the opacity.",
+          "name": "Color"
+        },
+        "name": {
+          "description": "The name of the zone, up to 32 bytes. Letters like ä take more than 1 byte.",
+          "name": "Name"
+        },
+        "use": {
+          "description": "What the camera uses the zone for.",
+          "name": "Use"
+        },
+        "vertices": {
+          "description": "The corners of the zone, in percent of the camera sensor from the top left, in order around the zone so that its edges don't cross. 3 to 12 corners.",
+          "name": "Corners"
+        },
+        "zone_id": {
+          "description": "The ID of the zone to update. Leave empty to create a zone.",
+          "name": "Zone ID"
+        }
+      },
+      "name": "Set camera zone"
     },
     "set_lock_credential": {
       "description": "Adds or updates a credential on a lock.",
