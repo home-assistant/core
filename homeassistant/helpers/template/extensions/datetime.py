@@ -158,7 +158,7 @@ class DateTimeExtension(BaseTemplateExtension):
                 result = dt_util.as_local(result)
 
             return result.strftime(date_format)
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError, OSError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_custom", value)
@@ -168,7 +168,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter to convert given timestamp to local date/time."""
         try:
             return dt_util.as_local(dt_util.utc_from_timestamp(value)).isoformat()
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError, OSError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_local", value)
@@ -178,7 +178,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter to convert given timestamp to UTC date/time."""
         try:
             return dt_util.utc_from_timestamp(value).isoformat()
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError, OSError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_utc", value)
@@ -205,7 +205,7 @@ class DateTimeExtension(BaseTemplateExtension):
             # Check for a valid UNIX timestamp string, int or float
             timestamp = float(value)
             return dt_util.utc_from_timestamp(timestamp)
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError, OSError:
             # Try to parse datetime string to datetime object
             try:
                 return dt_util.parse_datetime(value, raise_on_error=True)
