@@ -258,6 +258,12 @@
     "endpoint_not_supported": {
       "message": "This data is not supported by the vehicle"
     },
+    "insufficient_battery_level": {
+      "message": "The battery level is too low to start the AC."
+    },
+    "insufficient_battery_level_threshold": {
+      "message": "The battery level is too low to start the AC, it must be at least {soc_threshold}%."
+    },
     "no_config_entry_for_device": {
       "message": "No loaded config entry was found for device with ID {device_id}"
     },
