@@ -1,0 +1,5 @@
+get_opening_times:
+  target:
+    entity:
+      domain: binary_sensor
+      integration: tankerkoenig

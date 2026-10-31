@@ -197,5 +197,11 @@
         "title": "Tankerkoenig options"
       }
     }
+  },
+  "services": {
+    "get_opening_times": {
+      "description": "Retrieves the opening times of a gas station.",
+      "name": "Get opening times"
+    }
   }
 }
