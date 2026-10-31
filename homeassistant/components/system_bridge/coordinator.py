@@ -19,7 +19,7 @@ from systembridgeconnector.models.modules import (
 )
 from systembridgeconnector.websocket_client import WebSocketClient
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -66,7 +66,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
 
         self._host = entry.data[CONF_HOST]
-        self._failed_reconnects = 0
+        self._reconnect_delay = UPDATE_INTERVAL
 
         super().__init__(
             hass,
@@ -121,7 +121,10 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             self.unsub()
             self.unsub = None
         # Setup failures are reported through ConfigEntryNotReady instead
-        if self.last_update_success and self.listen_task is not None:
+        if (
+            self.last_update_success
+            and self.config_entry.state is ConfigEntryState.LOADED
+        ):
             self.logger.info("%s is unavailable", self.title)
         self.last_update_success = False
         self.async_update_listeners()
@@ -216,17 +219,16 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 ) from exception
             except (ConnectionClosedException, ConnectionErrorException) as exception:
                 await self.clean_disconnect()
-                self._failed_reconnects += 1
+                self._reconnect_delay = min(
+                    self._reconnect_delay * 2, MAX_UPDATE_INTERVAL
+                )
                 raise UpdateFailed(
                     f"Connection error occurred for {self.title}: {exception}",
-                    retry_after=min(
-                        UPDATE_INTERVAL * 2**self._failed_reconnects,
-                        MAX_UPDATE_INTERVAL,
-                    ).total_seconds(),
+                    retry_after=self._reconnect_delay.total_seconds(),
                 ) from exception
 
             self.logger.debug("Registered data listener for %s", self.title)
-            self._failed_reconnects = 0
+            self._reconnect_delay = UPDATE_INTERVAL
 
             # Clean disconnect WebSocket on Home Assistant shutdown
             self.unsub = self.hass.bus.async_listen_once(

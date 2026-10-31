@@ -323,6 +323,7 @@ async def test_register_data_listener_failure(
     side_effect: type[Exception],
     expected_state: ConfigEntryState,
     reauth: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup fails when registering the data listener fails."""
     mock_websocket_client.register_data_listener.side_effect = side_effect
@@ -335,6 +336,7 @@ async def test_register_data_listener_failure(
     assert (
         any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})) is reauth
     )
+    assert "TestSystem is unavailable" not in caplog.text
 
 
 @pytest.mark.parametrize(
