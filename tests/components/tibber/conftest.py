@@ -255,6 +255,17 @@ def tibber_mock(tibber_client_cls: MagicMock) -> MagicMock:
 
 
 @pytest.fixture
+def realtime_home(tibber_mock: MagicMock) -> MagicMock:
+    """Return a home with a running realtime subscription."""
+    home = create_tibber_home()
+    home.has_real_time_consumption = True
+    home.rt_subscription_running = True
+    home.rt_subscribe = AsyncMock()
+    tibber_mock.get_homes.return_value = [home]
+    return home
+
+
+@pytest.fixture
 def data_api_client_mock(tibber_mock: MagicMock) -> MagicMock:
     """Return the patched Tibber Data API client mock."""
     return tibber_mock.data_api
