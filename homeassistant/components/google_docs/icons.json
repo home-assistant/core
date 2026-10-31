@@ -1,0 +1,6 @@
+{
+  "services": {
+    "append_text": { "service": "mdi:file-document-edit-outline" },
+    "get_text": { "service": "mdi:file-document-outline" }
+  }
+}
