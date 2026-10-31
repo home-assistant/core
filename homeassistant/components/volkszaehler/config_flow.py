@@ -24,7 +24,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_PORT, DOMAIN, SUBENTRY_TYPE_CHANNEL
+from .const import (
+    CONF_MIDDLEWARE,
+    DEFAULT_MIDDLEWARE,
+    DEFAULT_PORT,
+    DOMAIN,
+    SUBENTRY_TYPE_CHANNEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +39,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_UUID): cv.string,
+        probatio.Required(CONF_MIDDLEWARE, default=DEFAULT_MIDDLEWARE): bool,
     }
 )
 
@@ -41,6 +48,7 @@ RECONFIGURE_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Required(CONF_MIDDLEWARE, default=DEFAULT_MIDDLEWARE): bool,
     }
 )
 
@@ -52,6 +60,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         uuid=data[CONF_UUID],
         host=data[CONF_HOST],
         port=data[CONF_PORT],
+        middleware=data.get(CONF_MIDDLEWARE, DEFAULT_MIDDLEWARE),
     )
     await api.get_data()
 
@@ -135,7 +144,9 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
                 if error := await _async_validate_input_errors(
                     self.hass,
@@ -143,6 +154,7 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_UUID: subentry.data[CONF_UUID],
+                        CONF_MIDDLEWARE: user_input[CONF_MIDDLEWARE],
                     },
                 ):
                     return self.async_show_form(
@@ -167,6 +179,9 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     CONF_HOST: entry.data[CONF_HOST],
                     CONF_PORT: entry.data.get(CONF_PORT, DEFAULT_PORT),
+                    CONF_MIDDLEWARE: entry.data.get(
+                        CONF_MIDDLEWARE, DEFAULT_MIDDLEWARE
+                    ),
                 },
             ),
         )
@@ -194,6 +209,7 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
+                        CONF_MIDDLEWARE: user_input[CONF_MIDDLEWARE],
                     },
                     subentries=[
                         {
@@ -236,6 +252,9 @@ class VolkszaehlerSubentryFlow(ConfigSubentryFlow):
                     CONF_HOST: entry.data[CONF_HOST],
                     CONF_PORT: entry.data[CONF_PORT],
                     CONF_UUID: user_input[CONF_UUID],
+                    CONF_MIDDLEWARE: entry.data.get(
+                        CONF_MIDDLEWARE, DEFAULT_MIDDLEWARE
+                    ),
                 },
             ):
                 errors["base"] = error
