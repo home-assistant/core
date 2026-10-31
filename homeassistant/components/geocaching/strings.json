@@ -24,6 +24,37 @@
       }
     }
   },
+  "config_subentries": {
+    "tracked_cache": {
+      "abort": {
+        "already_configured": "This cache is already configured.",
+        "entry_not_loaded": "Cannot add a tracked cache while the configuration is not loaded.",
+        "too_many_caches": "A maximum of 50 caches can be tracked."
+      },
+      "entry_type": "Tracked cache",
+      "error": {
+        "already_configured": "This cache is already configured.",
+        "cache_not_found": "This geocache does not exist or is not accessible.",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_cache_code": "Enter a valid geocache code."
+      },
+      "initiate_flow": {
+        "user": "Add tracked cache"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "code": "Geocache code"
+          },
+          "data_description": {
+            "code": "Enter one geocache code, for example GC12345."
+          },
+          "description": "Add one geocache to track by entering its geocache code.",
+          "title": "Add tracked cache"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "awarded_favorite_points": {
@@ -56,6 +87,11 @@
         "name": "Total souvenirs",
         "unit_of_measurement": "souvenirs"
       }
+    }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   }
 }
