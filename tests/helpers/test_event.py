@@ -3006,6 +3006,38 @@ async def test_track_template_result_refresh_cancel(hass: HomeAssistant) -> None
     assert refresh_runs == ["duck"]
 
 
+async def test_track_template_result_refresh_after_remove(
+    hass: HomeAssistant,
+) -> None:
+    """Test a refresh after removal neither renders nor tracks again."""
+    hass.states.async_set("sensor.switch", "off")
+    template = Template(
+        "{% if is_state('sensor.switch', 'on') %}{{ states('sensor.value') }}{% endif %}",
+        hass,
+    )
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(
+        event: Event[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template, None)], refresh_listener
+    )
+    info.async_remove()
+
+    # The refresh would track sensor.value now that the switch is on
+    hass.states.async_set("sensor.switch", "on")
+    info.async_refresh()
+    hass.states.async_set("sensor.value", "1")
+    await hass.async_block_till_done()
+
+    assert refresh_runs == []
+
+
 async def test_async_track_template_result_multiple_templates(
     hass: HomeAssistant,
 ) -> None:
