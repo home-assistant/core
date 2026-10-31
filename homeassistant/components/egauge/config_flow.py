@@ -3,12 +3,23 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
+from egauge_async.exceptions import (
+    EgaugeAuthenticationError,
+    EgaugeException,
+    EgaugePermissionError,
+)
 from egauge_async.json.client import EgaugeJsonClient
+from egauge_async.json.models import RegisterInfo, RegisterType
 from httpx2 import ConnectError
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -16,9 +27,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers import selector
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_INVERT_REGISTERS, DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -38,6 +50,12 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
 
 class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an eGauge config flow."""
+
+    @staticmethod
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
+        """Return the options flow."""
+        return EgaugeOptionsFlowHandler()
 
     async def _async_validate_input(
         self, data: Mapping[str, Any], errors: dict[str, str]
@@ -122,3 +140,90 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
             },
         )
+
+
+class EgaugeOptionsFlowHandler(OptionsFlowWithReload):
+    """Handle an eGauge options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user pick which registers report an inverted sign."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="not_loaded")
+
+        coordinator = self.config_entry.runtime_data
+        register_info, abort_reason = await self._async_fetch_register_info()
+        if abort_reason is not None:
+            return self.async_abort(reason=abort_reason)
+
+        # Offer only what can actually be inverted: a register the device still
+        # reports (so one removed since setup is gone) and one the sensor
+        # platform built an entity for (a register added since setup has no
+        # sensor until the entry reloads, so inverting it would do nothing).
+        built = {
+            name
+            for name, info in coordinator.data.register_info.items()
+            if info.type == RegisterType.POWER
+        }
+        registers = sorted(
+            name
+            for name, info in register_info.items()
+            if info.type == RegisterType.POWER and name in built
+        )
+        current = [
+            name
+            for name in self.config_entry.options.get(CONF_INVERT_REGISTERS, [])
+            if name in registers
+        ]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Optional(CONF_INVERT_REGISTERS, default=current): (
+                        selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=registers,
+                                multiple=True,
+                                mode=selector.SelectSelectorMode.LIST,
+                            )
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def _async_fetch_register_info(
+        self,
+    ) -> tuple[dict[str, RegisterInfo], str | None]:
+        """Read the register list from the device.
+
+        A fresh client, because EgaugeJsonClient memoises its first register
+        list: the coordinator's client was populated during setup, so asking it
+        again returns that snapshot without an HTTP request.
+        """
+        entry = self.config_entry
+        client = EgaugeJsonClient(
+            host=entry.data[CONF_HOST],
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+            client=get_async_client(self.hass, verify_ssl=entry.data[CONF_VERIFY_SSL]),
+            use_ssl=entry.data[CONF_SSL],
+        )
+        try:
+            return await client.get_register_info(), None
+        except EgaugeAuthenticationError:
+            return {}, "invalid_auth"
+        except EgaugePermissionError:
+            return {}, "missing_permission"
+        except EgaugeException:
+            return {}, "cannot_fetch_registers"
+        except ConnectError:
+            return {}, "cannot_fetch_registers"
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception reading eGauge registers")
+            return {}, "unknown"
