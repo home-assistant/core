@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_all_entities[date.vallox_filter_change_date-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vallox', '00050006-0007-0008-0009-000a000b000c')]>,
+    'disabled_by': None,
+    'domain': 'date',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'date.vallox_filter_change_date',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filter change date',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter change date',
+    'platform': 'vallox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_change_date',
+    'unique_id': '00050006-0007-0008-0009-000a000b000c-filter_change_date',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[date.vallox_filter_change_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vallox Filter change date',
+    }),
+    'context': <ANY>,
+    'entity_id': 'date.vallox_filter_change_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-02-16',
+  })
+# ---
