@@ -395,6 +395,17 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         return self._mk_data.serial_number
 
     @property
+    def interface_scope(self) -> str:
+        """Return the prefix that scopes interface identifiers to this router.
+
+        CHR and x86 installs have no routerboard serial number, so the config
+        entry ID keeps their interfaces apart instead.
+        """
+        if self.serial_num == "None":
+            return self.config_entry.entry_id
+        return self.serial_num
+
+    @property
     def option_detection_time(self) -> timedelta:
         """Config entry option defining number of seconds from last seen to away."""
         return timedelta(
