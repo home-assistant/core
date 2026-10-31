@@ -67,6 +67,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
         self._host = entry.data[CONF_HOST]
         self._reconnect_delay = UPDATE_INTERVAL
+        self._unavailable_logged = False
 
         super().__init__(
             hass,
@@ -126,6 +127,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             and self.config_entry.state is ConfigEntryState.LOADED
         ):
             self.logger.info("%s is unavailable", self.title)
+            self._unavailable_logged = True
         self.last_update_success = False
         self.async_update_listeners()
         if self.listen_task is not None:
@@ -229,6 +231,12 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
             self.logger.debug("Registered data listener for %s", self.title)
             self._reconnect_delay = UPDATE_INTERVAL
+            if self._unavailable_logged:
+                self.logger.info("%s is available again", self.title)
+                self._unavailable_logged = False
+                # Pushed data can mark the update successful before the
+                # refresh ends, so the built-in recovery log isn't reliable
+                self.last_update_success = True
 
             # Clean disconnect WebSocket on Home Assistant shutdown
             self.unsub = self.hass.bus.async_listen_once(

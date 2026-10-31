@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -418,7 +419,13 @@ async def test_reconnect_backoff_and_logging(
         and record.levelno >= logging.WARNING
     ]
 
-    register.side_effect = None
+    coordinator = mock_config_entry.runtime_data
+
+    async def register_with_buffered_data(*args: Any) -> None:
+        coordinator.async_set_updated_data(coordinator.data)
+
+    # Data pushed before the register call returns must not hide the recovery
+    register.side_effect = register_with_buffered_data
     mock_websocket_client.connect.side_effect = None
     freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
@@ -427,7 +434,8 @@ async def test_reconnect_backoff_and_logging(
     state = hass.states.get("update.hostname")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert caplog.text.count("Fetching system_bridge data recovered") == 1
+    assert caplog.text.count("TestSystem is available again") == 1
+    assert "Fetching system_bridge data recovered" not in caplog.text
     assert caplog.text.count("TestSystem is unavailable") == 1
 
     freezer.tick(timedelta(seconds=30))
