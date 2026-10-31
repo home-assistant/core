@@ -2,9 +2,8 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from itertools import chain
 from typing import override
-
-from pyintelliclima import IntelliClimaECO2
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
-from .entity import IntelliClimaECOEntity
+from .entity import IntelliClimaECODevice, IntelliClimaECOEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -27,7 +26,7 @@ PARALLEL_UPDATES = 0
 class IntelliClimaSensorEntityDescription(SensorEntityDescription):
     """Describes a sensor entity."""
 
-    value_fn: Callable[[IntelliClimaECO2], int | float | str | None]
+    value_fn: Callable[[IntelliClimaECODevice], int | float | str | None]
 
 
 def _reading(raw: str, sentinel: float) -> float | None:
@@ -71,9 +70,12 @@ async def async_setup_entry(
 
     entities: list[IntelliClimaSensor] = [
         IntelliClimaSensor(
-            coordinator=coordinator, device=ecocomfort2, description=description
+            coordinator=coordinator, device=device, description=description
         )
-        for ecocomfort2 in coordinator.data.ecocomfort2_devices.values()
+        for device in chain[IntelliClimaECODevice](
+            coordinator.data.ecocomfort2_devices.values(),
+            coordinator.data.ecocomfort3_devices.values(),
+        )
         for description in INTELLICLIMA_SENSORS
     ]
 
@@ -88,7 +90,7 @@ class IntelliClimaSensor(IntelliClimaECOEntity, SensorEntity):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO2,
+        device: IntelliClimaECODevice,
         description: IntelliClimaSensorEntityDescription,
     ) -> None:
         """Class initializer."""

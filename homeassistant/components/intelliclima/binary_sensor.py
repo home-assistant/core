@@ -2,9 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from itertools import chain
 from typing import override
 
-from pyintelliclima import FanState, IntelliClimaECO2
+from pyintelliclima import FanState, IntelliClimaECO2, IntelliClimaECO3
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -21,7 +22,7 @@ from .coordinator import (
     IntelliClimaCoordinator,
     IntelliClimaFilterCoordinator,
 )
-from .entity import IntelliClimaECOEntity, eco_device_info
+from .entity import IntelliClimaECODevice, IntelliClimaECOEntity, eco_device_info
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -72,6 +73,7 @@ async def async_setup_entry(
     """Set up the IntelliClima binary sensor platform."""
     data = entry.runtime_data
     ecocomfort2_devices = data.devices_coordinator.data.ecocomfort2_devices.values()
+    ecocomfort3_devices = data.devices_coordinator.data.ecocomfort3_devices.values()
 
     entities: list[BinarySensorEntity] = [
         IntelliClimaFilterCleaningBinarySensor(
@@ -80,12 +82,20 @@ async def async_setup_entry(
         for ecocomfort2 in ecocomfort2_devices
     ]
     entities.extend(
+        IntelliClimaECO3FilterCleaningBinarySensor(
+            coordinator=data.devices_coordinator, device=device
+        )
+        for device in ecocomfort3_devices
+    )
+    entities.extend(
         IntelliClimaFanStateBinarySensor(
             coordinator=data.devices_coordinator,
-            device=ecocomfort2,
+            device=device,
             description=description,
         )
-        for ecocomfort2 in ecocomfort2_devices
+        for device in chain[IntelliClimaECODevice](
+            ecocomfort2_devices, ecocomfort3_devices
+        )
         for description in FAN_STATE_BINARY_SENSORS
     )
     async_add_entities(entities)
@@ -138,7 +148,7 @@ class IntelliClimaFanStateBinarySensor(IntelliClimaECOEntity, BinarySensorEntity
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO2,
+        device: IntelliClimaECODevice,
         description: IntelliClimaFanStateBinarySensorEntityDescription,
     ) -> None:
         """Class initializer."""
@@ -154,3 +164,28 @@ class IntelliClimaFanStateBinarySensor(IntelliClimaECOEntity, BinarySensorEntity
         if (fan_state := self._fan_state) is None:
             return None
         return self.entity_description.value_fn(fan_state)
+
+
+class IntelliClimaECO3FilterCleaningBinarySensor(
+    IntelliClimaECOEntity, BinarySensorEntity
+):
+    """Filter warning reported directly by an ECOCOMFORT 3."""
+
+    _attr_translation_key = "filter_cleaning"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(
+        self, coordinator: IntelliClimaCoordinator, device: IntelliClimaECO3
+    ) -> None:
+        """Initialize the filter warning entity."""
+        super().__init__(coordinator, device)
+        self._attr_unique_id = f"{device.id}_filter_cleaning"
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return true if the device reports that its filter needs cleaning."""
+        if self._device_data.dev_state is None:
+            return None
+        return self._device_data.dev_state == "1"
