@@ -118,6 +118,14 @@
       "device_uplink_mac": {
         "name": "Uplink MAC"
       },
+      "firewall_policy_schedule_status": {
+        "name": "{policy_name} schedule status",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "disabled": "[%key:common::state::disabled%]",
+          "inactive": "Inactive"
+        }
+      },
       "outlet_power": {
         "name": "{outlet_name} outlet power"
       },
