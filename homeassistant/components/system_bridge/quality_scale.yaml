@@ -1,0 +1,100 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: done
+    comment: |
+      Data is pushed over the WebSocket. The 30 second poll only reconnects
+      when the connection drops.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      The already configured aborts and the reauth unique ID mismatch are not
+      tested.
+  config-flow:
+    status: todo
+    comment: The config flow fields have no data_description.
+  dependency-transparency: done
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities only get updates through the coordinator.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: Actions return the failed response instead of raising.
+  config-entry-unloading:
+    status: todo
+    comment: |
+      The legacy notify service is not removed on unload, so after a reload it
+      keeps using the old coordinator.
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no options flow.
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: A failed reconnect logs a warning on every poll.
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry is a single device.
+  entity-category: done
+  entity-device-class:
+    status: todo
+    comment: The CPU package, CPU core and GPU power sensors have no device class.
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: Some errors, such as the coordinator's UpdateFailed, are not translated.
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: todo
+    comment: |
+      The unsupported version issue is not deleted once a supported version is
+      found.
+  stale-devices:
+    status: exempt
+    comment: Each config entry is a single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
