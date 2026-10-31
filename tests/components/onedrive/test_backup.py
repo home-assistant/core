@@ -103,7 +103,7 @@ async def test_agents_list_backups(
         {
             "addons": [],
             "agents": {
-                "onedrive.mock_drive_id": {"protected": False, "size": 34519040}
+                "onedrive.MOCK_DRIVE_ID": {"protected": False, "size": 34519040}
             },
             "backup_id": "23e64aec",
             "database_included": True,

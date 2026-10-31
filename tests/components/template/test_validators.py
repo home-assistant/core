@@ -129,6 +129,35 @@ async def test_enum(
 
 
 @pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("mmmm", Brewery.MMMM),
+        ("beer", None),
+        ("BeeR", None),
+    ],
+)
+async def test_enum_deprecated(
+    hass: HomeAssistant,
+    value: Any,
+    expected: Brewery | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enum validator rejects deprecated enums."""
+    entity = create_test_entity(hass, {})
+    assert (
+        cv.strenum(entity, "state", Brewery, deprecated_enums=(Brewery.BEER,))(value)
+        == expected
+    )
+    check_for_error(
+        value,
+        expected,
+        caplog.text,
+        f"Received invalid state: {value} for entity Test,"
+        " expected one of mmmm, is, good",
+    )
+
+
+@pytest.mark.parametrize(
     "value",
     [
         "unknown",

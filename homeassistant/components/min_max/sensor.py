@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIQUE_ID,
@@ -37,18 +36,20 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import PLATFORMS
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
+from .const import (
+    CONF_ENTITY_IDS,
+    CONF_ROUND_DIGITS,
+    DOMAIN,
+    MinMaxEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MIN_VALUE = "min_value"
-ATTR_MIN_ENTITY_ID = "min_entity_id"
 ATTR_MAX_VALUE = "max_value"
-ATTR_MAX_ENTITY_ID = "max_entity_id"
 ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
-ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
 
@@ -287,15 +288,15 @@ class MinMaxSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         attributes: dict[str, list[str] | str | None] = {
-            ATTR_ENTITY_ID: self._entity_ids
+            MinMaxEntityStateAttribute.ENTITY_ID: self._entity_ids
         }
 
         if self._sensor_type == "min":
-            attributes[ATTR_MIN_ENTITY_ID] = self.min_entity_id
+            attributes[MinMaxEntityStateAttribute.MIN_ENTITY_ID] = self.min_entity_id
         elif self._sensor_type == "max":
-            attributes[ATTR_MAX_ENTITY_ID] = self.max_entity_id
+            attributes[MinMaxEntityStateAttribute.MAX_ENTITY_ID] = self.max_entity_id
         elif self._sensor_type == "last":
-            attributes[ATTR_LAST_ENTITY_ID] = self.last_entity_id
+            attributes[MinMaxEntityStateAttribute.LAST_ENTITY_ID] = self.last_entity_id
 
         return attributes
 

@@ -9,7 +9,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from zha.application.platforms.update import (
     FirmwareUpdateEntity as ZhaFirmwareUpdateEntity,
 )
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.exceptions import DeliveryError
 from zigpy.ota import OtaImagesResult, OtaImageWithMetadata
 import zigpy.ota.image as firmware
@@ -76,7 +76,7 @@ def update_platform_only():
 
 async def setup_test_data(
     hass: HomeAssistant,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     skip_attribute_plugs=False,
     file_not_found=False,
 ):
@@ -167,7 +167,7 @@ async def setup_test_data(
 async def test_firmware_update_notification_from_zigpy(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform - firmware update notification."""
     await setup_zha()
@@ -210,7 +210,7 @@ async def test_firmware_update_notification_from_zigpy(
 async def test_firmware_update_notification_from_service_call(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform - firmware update manual check."""
     await setup_zha()
@@ -272,7 +272,7 @@ async def test_firmware_update_poll_after_reload(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     config_entry: MockConfigEntry,
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test polling a ZHA update entity still works after reloading ZHA."""
     await setup_zha()
@@ -335,7 +335,7 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
 async def test_firmware_update_success(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform - firmware update success."""
     await setup_zha()
@@ -547,7 +547,7 @@ async def test_firmware_update_success(
 async def test_firmware_update_raises(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform - firmware update raises."""
     await setup_zha()
@@ -646,7 +646,7 @@ async def test_update_release_notes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA update platform release notes."""
     await setup_zha()
@@ -668,7 +668,8 @@ async def test_update_release_notes(
 
     # Mains-powered devices
     with patch(
-        "zha.zigbee.device.Device.is_mains_powered", PropertyMock(return_value=True)
+        "zha.zigbee.device.ZigbeeDevice.is_mains_powered",
+        PropertyMock(return_value=True),
     ):
         await ws_client.send_json(
             {
@@ -686,7 +687,8 @@ async def test_update_release_notes(
 
     # Battery-powered devices
     with patch(
-        "zha.zigbee.device.Device.is_mains_powered", PropertyMock(return_value=False)
+        "zha.zigbee.device.ZigbeeDevice.is_mains_powered",
+        PropertyMock(return_value=False),
     ):
         await ws_client.send_json(
             {
@@ -706,7 +708,7 @@ async def test_update_release_notes(
 async def test_update_version_sync_device_registry(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test firmware version syncing between the ZHA device and Home Assistant."""

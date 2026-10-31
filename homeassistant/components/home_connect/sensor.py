@@ -1,7 +1,8 @@
 """Provides a sensor for Home Connect."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import cast, override
 
@@ -13,9 +14,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfVolume
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util, slugify
 
 from .common import setup_home_connect_entry
@@ -46,6 +48,7 @@ class HomeConnectSensorEntityDescription(
     default_value: str | None = None
     appliance_types: tuple[str, ...] | None = None
     fetch_unit: bool = False
+    value_fn: Callable[[str | float], StateType | datetime] | None = None
 
 
 BSH_PROGRAM_SENSORS = (
@@ -53,6 +56,9 @@ BSH_PROGRAM_SENSORS = (
         key=EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_key="program_finish_time",
+        value_fn=lambda remaining: (
+            dt_util.utcnow() + timedelta(seconds=cast(float, remaining))
+        ),
         appliance_types=(
             "CoffeeMaker",
             "CookProcessor",
@@ -64,6 +70,15 @@ BSH_PROGRAM_SENSORS = (
             "Washer",
             "WasherDryer",
         ),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        translation_key="program_running_time",
+        # Limit state changes to one per minute
+        value_fn=lambda elapsed: round(cast(float, elapsed) / 60),
+        appliance_types=("Hood", "Oven"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
@@ -647,11 +662,10 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         if status is None:
             self._attr_native_value = None
             return
+        if self.entity_description.value_fn:
+            self._attr_native_value = self.entity_description.value_fn(status)
+            return
         match self.device_class:
-            case SensorDeviceClass.TIMESTAMP:
-                self._attr_native_value = dt_util.utcnow() + timedelta(
-                    seconds=cast(float, status)
-                )
             case SensorDeviceClass.ENUM:
                 # Value comes back as an enum, we only really care about the
                 # last part, so split it off

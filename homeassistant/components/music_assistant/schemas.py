@@ -63,7 +63,7 @@ MEDIA_ITEM_SCHEMA = probatio.Schema(
         probatio.Required(ATTR_NAME): cv.string,
         probatio.Required(ATTR_VERSION): cv.string,
         probatio.Required(ATTR_IMAGE, default=None): probatio.Any(None, cv.string),
-        probatio.Optional(ATTR_FAVORITE): bool,
+        probatio.Optional(ATTR_FAVORITE): probatio.Any(None, bool),
         probatio.Optional(ATTR_EXPLICIT): probatio.Any(None, bool),
         probatio.Optional(ATTR_DISCART_IMAGE): probatio.Any(None, cv.string),
         probatio.Optional(ATTR_FANART_IMAGE): probatio.Any(None, cv.string),

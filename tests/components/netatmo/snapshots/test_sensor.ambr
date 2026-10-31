@@ -1205,6 +1205,58 @@
     'state': '90',
   })
 # ---
+# name: test_entity[sensor.bureau_bureau_setpoint_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('netatmo', '222452125')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bureau_bureau_setpoint_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Setpoint end time',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_end_time',
+    'unique_id': '222452125-setpoint_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.bureau_bureau_setpoint_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bureau Setpoint end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bureau_bureau_setpoint_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entity[sensor.cocina_cocina_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1259,6 +1311,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
+  })
+# ---
+# name: test_entity[sensor.cocina_cocina_setpoint_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('netatmo', '2940411577')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cocina_cocina_setpoint_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Setpoint end time',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_end_time',
+    'unique_id': '2940411577-setpoint_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.cocina_cocina_setpoint_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cocina Setpoint end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cocina_cocina_setpoint_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.cold_water-entry]
@@ -1478,6 +1582,58 @@
     'state': '67',
   })
 # ---
+# name: test_entity[sensor.corridor_corridor_setpoint_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('netatmo', '1002003001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.corridor_corridor_setpoint_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Setpoint end time',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_end_time',
+    'unique_id': '1002003001-setpoint_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.corridor_corridor_setpoint_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Corridor Setpoint end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.corridor_corridor_setpoint_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entity[sensor.ecocompteur-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1583,6 +1739,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
+  })
+# ---
+# name: test_entity[sensor.entrada_entrada_setpoint_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('netatmo', '2833524037')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.entrada_entrada_setpoint_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Setpoint end time',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_end_time',
+    'unique_id': '2833524037-setpoint_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.entrada_entrada_setpoint_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Entrada Setpoint end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.entrada_entrada_setpoint_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.gas-entry]
@@ -4640,6 +4848,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
+  })
+# ---
+# name: test_entity[sensor.livingroom_livingroom_setpoint_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('netatmo', '2746182631')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.livingroom_livingroom_setpoint_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Setpoint end time',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'setpoint_end_time',
+    'unique_id': '2746182631-setpoint_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.livingroom_livingroom_setpoint_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom Setpoint end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.livingroom_livingroom_setpoint_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.livingroom_noise-entry]

@@ -599,3 +599,42 @@ async def test_wago_blind_type_select(
         ),
         value=0,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_led_strip_t2"])
+async def test_aqara_led_strip_t2(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entities on Aqara LED Strip T2."""
+    state = hass.states.get("select.aqara_led_strip_t2_music_sync_effect")
+    assert state
+    assert state.state == "pulse"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.aqara_led_strip_t2_music_sync_effect",
+            "option": "flash",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncEffect,
+        ),
+        value=4,  # = Flash
+    )
+
+    set_node_attribute(matter_node, 1, 291503119, 21, 4)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("select.aqara_led_strip_t2_music_sync_effect")
+    assert state
+    assert state.state == "flash"

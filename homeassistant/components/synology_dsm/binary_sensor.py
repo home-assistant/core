@@ -95,15 +95,6 @@ class SynoDSMBinarySensor(
 
     entity_description: SynologyDSMBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        api: SynoApi,
-        coordinator: SynologyDSMCentralUpdateCoordinator,
-        description: SynologyDSMBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the Synology DSM binary_sensor entity."""
-        super().__init__(api, coordinator, description)
-
 
 class SynoDSMSecurityBinarySensor(SynoDSMBinarySensor):
     """Representation a Synology Security binary sensor."""

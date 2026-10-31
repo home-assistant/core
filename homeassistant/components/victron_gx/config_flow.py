@@ -276,7 +276,6 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                 data=data,
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="ssdp_confirm",
             description_placeholders={"name": self.friendly_name or self.hostname},
@@ -333,7 +332,6 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
                         data=data,
                     )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="ssdp_token_pairing",
             errors=errors,

@@ -242,7 +242,7 @@ steps:
       rm -f .mcp.json
       # Only the skill from the frontmatter is in scope for the agent.
       find .claude/skills -mindepth 1 -maxdepth 1 ! -name ha-quality-scale-verify -exec rm -rf {} +
-timeout-minutes: 30
+timeout-minutes: 40
 ---
 
 # Quality scale reviewer

@@ -14,7 +14,7 @@ from homeassistant.components.google_assistant.http import (  # pylint: disable=
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
@@ -166,23 +166,23 @@ class CloudPreferences:
     async def async_update(
         self,
         *,
-        alexa_enabled: bool | UndefinedType = UNDEFINED,
-        alexa_report_state: bool | UndefinedType = UNDEFINED,
-        alexa_settings_version: int | UndefinedType = UNDEFINED,
-        cloud_ice_servers_enabled: bool | UndefinedType = UNDEFINED,
-        cloud_user: str | UndefinedType = UNDEFINED,
-        cloudhooks: dict[str, dict[str, str | bool]] | UndefinedType = UNDEFINED,
-        google_connected: bool | UndefinedType = UNDEFINED,
-        google_enabled: bool | UndefinedType = UNDEFINED,
-        google_report_state: bool | UndefinedType = UNDEFINED,
-        google_secure_devices_pin: str | UndefinedType | None = UNDEFINED,
-        google_settings_version: int | UndefinedType = UNDEFINED,
-        remote_allow_remote_enable: bool | UndefinedType = UNDEFINED,
-        remote_domain: str | UndefinedType | None = UNDEFINED,
-        onboarded_items: list[str] | UndefinedType = UNDEFINED,
-        onboarding_postponed_until: str | UndefinedType | None = UNDEFINED,
-        remote_enabled: bool | UndefinedType = UNDEFINED,
-        tts_default_voice: tuple[str, str] | UndefinedType = UNDEFINED,
+        alexa_enabled: bool | Undefined = Undefined,
+        alexa_report_state: bool | Undefined = Undefined,
+        alexa_settings_version: int | Undefined = Undefined,
+        cloud_ice_servers_enabled: bool | Undefined = Undefined,
+        cloud_user: str | Undefined = Undefined,
+        cloudhooks: dict[str, dict[str, str | bool]] | Undefined = Undefined,
+        google_connected: bool | Undefined = Undefined,
+        google_enabled: bool | Undefined = Undefined,
+        google_report_state: bool | Undefined = Undefined,
+        google_secure_devices_pin: str | Undefined | None = Undefined,
+        google_settings_version: int | Undefined = Undefined,
+        remote_allow_remote_enable: bool | Undefined = Undefined,
+        remote_domain: str | Undefined | None = Undefined,
+        onboarded_items: list[str] | Undefined = Undefined,
+        onboarding_postponed_until: str | Undefined | None = Undefined,
+        remote_enabled: bool | Undefined = Undefined,
+        tts_default_voice: tuple[str, str] | Undefined = Undefined,
     ) -> None:
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -209,7 +209,7 @@ class CloudPreferences:
                     (PREF_REMOTE_DOMAIN, remote_domain),
                     (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
                 )
-                if value is not UNDEFINED
+                if value is not Undefined
             }
         )
 

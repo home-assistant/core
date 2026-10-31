@@ -236,7 +236,7 @@ async def async_setup_entry(
     if not data.api.has_public_bootstrap:
         return
     # Cameras which are gone or no longer adopted leave issues to be deleted
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass, DOMAIN, issue_id_pattern="rtsp_disabled_", config_entry_id=entry.entry_id
     ):
         entities = _async_camera_entities(hass, entry, data)
