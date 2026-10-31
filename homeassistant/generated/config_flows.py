@@ -607,6 +607,7 @@ FLOWS = {
         "openexchangerates",
         "opengarage",
         "openhome",
+        "openresponses",
         "openrgb",
         "opensensemap",
         "opensky",
