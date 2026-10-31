@@ -1,0 +1,108 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      Integration has no integration-specific service actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      Integration does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      Integration has no integration-specific service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Integration entities do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Service integration, no discovery.
+  discovery:
+    status: exempt
+    comment: |
+      Service integration, no discovery.
+  docs-data-update:
+    status: exempt
+    comment: |
+      No data updates.
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      Integration provides cloud services and does not integrate physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category:
+    status: exempt
+    comment: |
+      Conversation, AI Task, speech-to-text, and text-to-speech are primary
+      functional entities, not configuration or diagnostic entities.
+  entity-device-class:
+    status: exempt
+    comment: |
+      These service entity platforms do not have applicable device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      Each entity represents a primary service subentry explicitly created by
+      the user.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: done
+    comment: |
+      Entities use the icon translations provided by their Conversation, AI Task,
+      speech-to-text, and text-to-speech entity components.
+  reconfiguration-flow: done
+  repair-issues: todo
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: done
+    comment: |
+      Uses `httpx` session.
+  strict-typing: done

@@ -1,0 +1,514 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "base_url_required": "Base URL is required.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "deployment_model_family_required": "Provide both a deployment name and its model family, or leave both empty.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "model_not_supported": "This model family is not supported by this integration.",
+      "stt_deployment_model_required": "Provide both a speech-to-text deployment name and its model, or leave both empty.",
+      "tts_deployment_model_required": "Provide both a text-to-speech deployment name and its model, or leave both empty.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "base_url": "Base URL"
+        },
+        "data_description": {
+          "api_key": "[%key:component::azure_openai::config::step::user::data_description::api_key%]",
+          "base_url": "[%key:component::azure_openai::config::step::user::data_description::base_url%]"
+        },
+        "description": "Reauthentication required. Update your Azure OpenAI connection settings."
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "base_url": "[%key:component::azure_openai::config::step::reauth_confirm::data::base_url%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::azure_openai::config::step::user::data_description::api_key%]",
+          "base_url": "[%key:component::azure_openai::config::step::user::data_description::base_url%]"
+        },
+        "description": "Update your Azure OpenAI connection settings."
+      },
+      "user": {
+        "data": {
+          "ai_task_data": "AI Task",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "base_url": "Base URL",
+          "conversation": "Conversation",
+          "stt": "Speech-to-text",
+          "tts": "Text-to-speech"
+        },
+        "data_description": {
+          "api_key": "Your Azure OpenAI resource API key.",
+          "base_url": "Your Azure resource endpoint or full API base URL. The recommended v1 API is used by default unless you provide a full API base URL."
+        },
+        "description": "Connect to Azure OpenAI using an API key and base URL. Create your resource and deployments in [Microsoft Foundry]({instructions_url}). Open each section below to create that service now, or leave it collapsed and add it later from the integration page. See Azure OpenAI concepts and terminology in the documentation if you are new to Azure OpenAI.",
+        "sections": {
+          "ai_task_data": {
+            "data": {
+              "chat_model": "Azure deployment name",
+              "model_family": "Model family"
+            },
+            "data_description": {
+              "chat_model": "The deployment name to use, not the underlying model.",
+              "model_family": "[%key:component::azure_openai::config_subentries::conversation::step::init::data_description::model_family%]"
+            },
+            "name": "AI Task"
+          },
+          "conversation": {
+            "data": {
+              "chat_model": "Azure deployment name",
+              "model_family": "Model family"
+            },
+            "data_description": {
+              "chat_model": "The deployment name to use, not the underlying model.",
+              "model_family": "[%key:component::azure_openai::config_subentries::conversation::step::init::data_description::model_family%]"
+            },
+            "name": "Conversation"
+          },
+          "stt": {
+            "data": {
+              "api_version": "API version",
+              "chat_model": "Azure deployment name",
+              "stt_model": "Model"
+            },
+            "data_description": {
+              "api_version": "Optional. Speech-to-text uses an older Azure API that requires an api-version. Leave empty to use the latest one this integration knows about, or enter your own to override it.",
+              "chat_model": "The deployment name to use, not the underlying model.",
+              "stt_model": "The model underlying the deployment. Select the same model here so the integration can choose the request path and API version. Changing this value does not change the Azure deployment."
+            },
+            "name": "Speech-to-text"
+          },
+          "tts": {
+            "data": {
+              "chat_model": "Azure deployment name",
+              "tts_model": "Model"
+            },
+            "data_description": {
+              "chat_model": "The deployment name to use, not the underlying model.",
+              "tts_model": "The model underlying the deployment. Select the same model here so the integration can offer compatible voices. Changing this value does not change the Azure deployment."
+            },
+            "name": "Text-to-speech"
+          }
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::azure_openai::config_subentries::conversation::abort::entry_not_loaded%]"
+      },
+      "entry_type": "AI task",
+      "error": {
+        "cannot_connect": "[%key:component::azure_openai::config_subentries::conversation::error::cannot_connect%]",
+        "code_interpreter_minimal_reasoning": "[%key:component::azure_openai::config_subentries::conversation::error::code_interpreter_minimal_reasoning%]",
+        "deployment_required": "[%key:component::azure_openai::config_subentries::conversation::error::deployment_required%]",
+        "invalid_auth": "[%key:component::azure_openai::config_subentries::conversation::error::invalid_auth%]",
+        "location_lookup_failed": "[%key:component::azure_openai::config_subentries::conversation::error::location_lookup_failed%]",
+        "model_family_required": "[%key:component::azure_openai::config_subentries::conversation::error::model_family_required%]",
+        "model_not_supported": "[%key:component::azure_openai::config_subentries::conversation::error::model_not_supported%]",
+        "model_required": "[%key:component::azure_openai::config_subentries::conversation::error::model_required%]",
+        "rate_limited": "[%key:component::azure_openai::config_subentries::conversation::error::rate_limited%]",
+        "web_search_minimal_reasoning": "[%key:component::azure_openai::config_subentries::conversation::error::web_search_minimal_reasoning%]"
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
+        "user": "Add AI task"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "[%key:component::azure_openai::config_subentries::conversation::step::init::data::chat_model%]",
+            "model_family": "[%key:component::azure_openai::config_subentries::conversation::step::init::data::model_family%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "recommended": "[%key:component::azure_openai::config_subentries::conversation::step::init::data::recommended%]"
+          },
+          "data_description": {
+            "chat_model": "[%key:component::azure_openai::config_subentries::conversation::step::init::data_description::chat_model%]",
+            "model_family": "[%key:component::azure_openai::config_subentries::conversation::step::init::data_description::model_family%]"
+          }
+        },
+        "model": {
+          "description": "[%key:component::azure_openai::config_subentries::conversation::step::model::description%]",
+          "sections": {
+            "image_generation": {
+              "data": {
+                "image_deployment": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::image_generation::data::image_deployment%]",
+                "image_model": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::image_generation::data::image_model%]"
+              },
+              "data_description": {
+                "image_deployment": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::image_generation::data_description::image_deployment%]",
+                "image_model": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::image_generation::data_description::image_model%]"
+              },
+              "name": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::image_generation::name%]"
+            },
+            "reasoning": {
+              "data": {
+                "pro_mode": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::reasoning::data::pro_mode%]",
+                "reasoning_effort": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::reasoning::data::reasoning_effort%]",
+                "reasoning_summary": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::reasoning::data::reasoning_summary%]"
+              },
+              "data_description": {
+                "pro_mode": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::reasoning::data_description::pro_mode%]",
+                "reasoning_effort": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::reasoning::data_description::reasoning_effort%]",
+                "reasoning_summary": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::reasoning::data_description::reasoning_summary%]"
+              },
+              "name": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::reasoning::name%]"
+            },
+            "response": {
+              "data": {
+                "max_tokens": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::response::data::max_tokens%]",
+                "verbosity": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::response::data::verbosity%]"
+              },
+              "data_description": {
+                "max_tokens": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::response::data_description::max_tokens%]",
+                "verbosity": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::response::data_description::verbosity%]"
+              },
+              "name": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::response::name%]"
+            },
+            "tools": {
+              "data": {
+                "code_interpreter": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::tools::data::code_interpreter%]"
+              },
+              "data_description": {
+                "code_interpreter": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::tools::data_description::code_interpreter%]"
+              },
+              "name": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::tools::name%]"
+            },
+            "web_search": {
+              "data": {
+                "inline_citations": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::web_search::data::inline_citations%]",
+                "search_context_size": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::web_search::data::search_context_size%]",
+                "user_location": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::web_search::data::user_location%]",
+                "web_search": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::web_search::data::web_search%]"
+              },
+              "data_description": {
+                "inline_citations": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::web_search::data_description::inline_citations%]",
+                "search_context_size": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::web_search::data_description::search_context_size%]",
+                "user_location": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::web_search::data_description::user_location%]",
+                "web_search": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::web_search::data_description::web_search%]"
+              },
+              "name": "[%key:component::azure_openai::config_subentries::conversation::step::model::sections::web_search::name%]"
+            }
+          },
+          "title": "[%key:component::azure_openai::config_subentries::conversation::step::model::title%]"
+        },
+        "sampling": {
+          "data": {
+            "temperature": "[%key:component::azure_openai::config_subentries::conversation::step::sampling::data::temperature%]",
+            "top_p": "[%key:component::azure_openai::config_subentries::conversation::step::sampling::data::top_p%]"
+          },
+          "data_description": {
+            "temperature": "[%key:component::azure_openai::config_subentries::conversation::step::sampling::data_description::temperature%]",
+            "top_p": "[%key:component::azure_openai::config_subentries::conversation::step::sampling::data_description::top_p%]"
+          },
+          "description": "[%key:component::azure_openai::config_subentries::conversation::step::sampling::description%]",
+          "title": "[%key:component::azure_openai::config_subentries::conversation::step::sampling::title%]"
+        }
+      }
+    },
+    "conversation": {
+      "abort": {
+        "entry_not_loaded": "Cannot add things while the configuration is disabled."
+      },
+      "entry_type": "Conversation agent",
+      "error": {
+        "cannot_connect": "Unable to connect to Azure OpenAI.",
+        "code_interpreter_minimal_reasoning": "Code interpreter is not supported with minimal reasoning effort",
+        "deployment_required": "Enter an Azure deployment name.",
+        "invalid_auth": "Authentication failed while connecting to Azure OpenAI.",
+        "location_lookup_failed": "Azure OpenAI returned an invalid response while determining the Home location.",
+        "model_family_required": "Enter the underlying model family of your Azure deployment.",
+        "model_not_supported": "This model is not supported, please select a different model",
+        "model_required": "Enter the model underlying the Azure deployment.",
+        "rate_limited": "Azure OpenAI rate limited the location lookup. Try again later.",
+        "web_search_minimal_reasoning": "Web search is currently not supported with minimal reasoning effort"
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "Azure deployment name",
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "model_family": "Model family",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "recommended": "Recommended model settings"
+          },
+          "data_description": {
+            "chat_model": "The Azure deployment name to use, not the underlying model.",
+            "model_family": "The model underlying the Azure deployment. Select the same model here so the integration can offer supported features. Changing this value does not change the Azure deployment. If the model is not listed, enter a custom value; unrecognized models use basic settings.",
+            "prompt": "Instruct how the LLM should respond. This can be a template."
+          }
+        },
+        "model": {
+          "description": "These options reflect the declared model family's capabilities.",
+          "sections": {
+            "image_generation": {
+              "data": {
+                "image_deployment": "Azure image deployment name",
+                "image_model": "Image base model"
+              },
+              "data_description": {
+                "image_deployment": "The deployment name to use for image generation. Leave empty to disable image generation for this AI task.",
+                "image_model": "The model underlying the image deployment. Select the same model here."
+              },
+              "description": "Configure an optional additional model and Azure deployment for image generation tasks.",
+              "name": "Image generation"
+            },
+            "reasoning": {
+              "data": {
+                "pro_mode": "Pro mode",
+                "reasoning_effort": "Reasoning effort",
+                "reasoning_summary": "Reasoning summary"
+              },
+              "data_description": {
+                "pro_mode": "Performs more model work for difficult tasks. This can increase latency and token usage.",
+                "reasoning_effort": "Controls how much internal reasoning the model performs before responding. Higher settings can improve difficult tasks but usually increase latency and token usage.",
+                "reasoning_summary": "Controls whether the response includes a separate summary of the model's internal reasoning and how detailed that summary is."
+              },
+              "name": "Reasoning"
+            },
+            "response": {
+              "data": {
+                "max_tokens": "Maximum output tokens",
+                "verbosity": "Verbosity"
+              },
+              "data_description": {
+                "max_tokens": "Limits all generated tokens, including internal reasoning and the visible response. If the limit is too low, the response can end before visible text is produced.",
+                "verbosity": "Controls how concise or detailed the visible response is. It does not change reasoning effort."
+              },
+              "name": "Response"
+            },
+            "tools": {
+              "data": {
+                "code_interpreter": "Enable code interpreter"
+              },
+              "data_description": {
+                "code_interpreter": "Allows the model to write and run Python code for calculations and data processing."
+              },
+              "name": "Tools"
+            },
+            "web_search": {
+              "data": {
+                "inline_citations": "Include links in web search results",
+                "search_context_size": "Web search context size",
+                "user_location": "Use home location for web search",
+                "web_search": "Enable web search"
+              },
+              "data_description": {
+                "inline_citations": "Asks the model to include source links in its response.",
+                "search_context_size": "Controls how much search content is made available to the model. Larger values can improve coverage but use more context.",
+                "user_location": "Refines search results using an approximate city and region derived from the Home location.",
+                "web_search": "Allows the model to search the web for current information before responding."
+              },
+              "name": "Web search"
+            }
+          },
+          "title": "Model-specific options"
+        },
+        "sampling": {
+          "data": {
+            "temperature": "Temperature",
+            "top_p": "Top P"
+          },
+          "data_description": {
+            "temperature": "Controls randomness. Lower values are more focused and repeatable; higher values allow more varied responses.",
+            "top_p": "Limits choices to the most likely tokens. Lower values are more focused; 1.0 considers the full probability range."
+          },
+          "description": "Sampling controls how the model chooses its next words. It is recommended to adjust Temperature or Top P, not both, because their interaction is difficult to predict.",
+          "title": "Sampling settings"
+        }
+      }
+    },
+    "stt": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::azure_openai::config_subentries::conversation::abort::entry_not_loaded%]"
+      },
+      "entry_type": "Speech-to-text",
+      "error": {
+        "deployment_required": "[%key:component::azure_openai::config_subentries::conversation::error::deployment_required%]",
+        "model_required": "[%key:component::azure_openai::config_subentries::conversation::error::model_required%]"
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure speech-to-text service",
+        "user": "Add speech-to-text service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "api_version": "[%key:component::azure_openai::config::step::user::sections::stt::data::api_version%]",
+            "chat_model": "Azure deployment name",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "stt_model": "Model"
+          },
+          "data_description": {
+            "api_version": "[%key:component::azure_openai::config::step::user::sections::stt::data_description::api_version%]",
+            "chat_model": "The deployment name to use, not the underlying model.",
+            "prompt": "Optional context to improve transcript quality, such as expected words or spellings. Write it in the pipeline language.",
+            "stt_model": "The model underlying the deployment. Select the same model here so the integration can choose the request path and API version. Changing this value does not change the Azure deployment."
+          }
+        }
+      }
+    },
+    "tts": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::azure_openai::config_subentries::conversation::abort::entry_not_loaded%]"
+      },
+      "entry_type": "Text-to-speech",
+      "error": {
+        "deployment_required": "[%key:component::azure_openai::config_subentries::conversation::error::deployment_required%]",
+        "model_required": "[%key:component::azure_openai::config_subentries::conversation::error::model_required%]"
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure text-to-speech service",
+        "user": "Add text-to-speech service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "Azure deployment name",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "tts_model": "Model",
+            "tts_speed": "Speed"
+          },
+          "data_description": {
+            "chat_model": "The deployment name to use, not the underlying model.",
+            "prompt": "Optional. Control aspects of speech, including accent, emotional range, intonation, impressions, speed of speech, tone, and whispering. Only steerable speech models such as gpt-4o-mini-tts apply these instructions; older models such as tts and tts-hd ignore them.",
+            "tts_model": "The model underlying the deployment. Select the same model here so the integration can offer compatible voices. Changing this value does not change the Azure deployment.",
+            "tts_speed": "Speed of the generated speech"
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "tts": {
+      "tts": {
+        "name": "Text-to-speech"
+      }
+    }
+  },
+  "exceptions": {
+    "attachment_missing": {
+      "message": "`{file_path}` does not exist"
+    },
+    "attachment_unsupported": {
+      "message": "Only images and PDF are supported by the OpenAI API; `{file_path}` is not an image file or PDF"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed while connecting to Azure OpenAI."
+    },
+    "cannot_connect": {
+      "message": "Unable to connect to Azure OpenAI."
+    },
+    "insufficient_quota": {
+      "message": "Insufficient funds for Azure OpenAI"
+    },
+    "invalid_structured_response": {
+      "message": "Error with Azure OpenAI structured response"
+    },
+    "no_image_returned": {
+      "message": "No image returned"
+    },
+    "provider_error": {
+      "message": "Error talking to Azure OpenAI"
+    },
+    "rate_limited": {
+      "message": "Rate limited or insufficient funds"
+    },
+    "response_error": {
+      "message": "Azure OpenAI response error: {error}"
+    },
+    "response_failed": {
+      "message": "Azure OpenAI response failed: {reason}"
+    },
+    "response_incomplete": {
+      "message": "Azure OpenAI response incomplete: {reason}"
+    },
+    "schema_all_of_conflict": {
+      "message": "Conflicting OpenAI output schema allOf at {path}: {conflicts}"
+    },
+    "schema_all_of_unsupported": {
+      "message": "Unsupported OpenAI output schema allOf at {path}"
+    },
+    "schema_array_items_required": {
+      "message": "OpenAI output schema requires array items at {path}"
+    },
+    "schema_keywords_unsupported": {
+      "message": "Unsupported OpenAI output schema keywords at {path}: {keywords}"
+    },
+    "schema_object_fields_required": {
+      "message": "OpenAI output schema requires explicitly defined object fields at {path}"
+    },
+    "schema_reference_invalid": {
+      "message": "Invalid OpenAI output schema reference: {reference}"
+    },
+    "schema_reference_siblings": {
+      "message": "Unsupported OpenAI output schema reference siblings at {path}: {siblings}"
+    },
+    "schema_reference_unsupported": {
+      "message": "Unsupported OpenAI output schema reference: {reference}"
+    },
+    "schema_unsupported": {
+      "message": "Unsupported OpenAI output schema at {path}"
+    },
+    "structured_output_object_root": {
+      "message": "OpenAI structured output requires an object root"
+    },
+    "tts_error": {
+      "message": "Error generating speech with Azure OpenAI."
+    },
+    "unexpected_chat_log_content": {
+      "message": "Last content in chat log is not an AssistantContent"
+    }
+  },
+  "selector": {
+    "reasoning_effort": {
+      "options": {
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "max": "Max",
+        "medium": "[%key:common::state::medium%]",
+        "minimal": "Minimal",
+        "none": "None",
+        "xhigh": "X-High"
+      }
+    },
+    "reasoning_summary": {
+      "options": {
+        "auto": "[%key:common::state::auto%]",
+        "detailed": "Detailed",
+        "off": "[%key:common::state::off%]"
+      }
+    },
+    "search_context_size": {
+      "options": {
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]"
+      }
+    },
+    "verbosity": {
+      "options": {
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]"
+      }
+    }
+  }
+}
