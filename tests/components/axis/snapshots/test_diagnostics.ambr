@@ -29,6 +29,7 @@
     }),
     'config': dict({
       'data': dict({
+        'companion': False,
         'host': '1.2.3.4',
         'model': 'A1234',
         'name': 'home',
