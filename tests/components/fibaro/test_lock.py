@@ -30,7 +30,7 @@ async def test_lock_setup(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("lock.room_1_test_lock_11")
+        entry = entity_registry.async_get("lock.test_lock_room_1_test_lock")
         assert entry
         assert entry.unique_id == "hc2_111111.11"
         assert entry.original_name == "Room 1 Test lock"
@@ -54,7 +54,7 @@ async def test_execute_lock_action(
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_LOCK,
-            {ATTR_ENTITY_ID: "lock.room_1_test_lock_11"},
+            {ATTR_ENTITY_ID: "lock.test_lock_room_1_test_lock"},
             blocking=True,
         )
         # Assert
@@ -79,7 +79,7 @@ async def test_execute_unlock_action(
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: "lock.room_1_test_lock_11"},
+            {ATTR_ENTITY_ID: "lock.test_lock_room_1_test_lock"},
             blocking=True,
         )
         # Assert
