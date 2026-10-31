@@ -1,0 +1,43 @@
+# serializer version: 1
+# name: test_reconfigure_new_line_settings_silent_inverter
+  dict({
+    'baudrate': 9600,
+    'device': '/dev/ttyUSB0',
+    'last_handled_fault': None,
+    'served_components': list([
+      'active_power_control',
+      'energy',
+      'fault_log',
+      'feed_in',
+      'grid',
+      'meter_energy',
+      'pv_1_2',
+      'remote',
+      'rtc_sync',
+      'state',
+    ]),
+    'type': 'serial',
+    'unit_id': 1,
+  })
+# ---
+# name: test_reconfigure_new_line_settings_wrong_device
+  dict({
+    'baudrate': 9600,
+    'device': '/dev/ttyUSB0',
+    'last_handled_fault': None,
+    'served_components': list([
+      'active_power_control',
+      'energy',
+      'fault_log',
+      'feed_in',
+      'grid',
+      'meter_energy',
+      'pv_1_2',
+      'remote',
+      'rtc_sync',
+      'state',
+    ]),
+    'type': 'serial',
+    'unit_id': 1,
+  })
+# ---

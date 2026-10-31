@@ -29,8 +29,8 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_UNIT_ID,
     DOMAIN,
-    HAS_FAULT_LOG,
     LAST_HANDLED_FAULT,
+    SERVED_COMPONENTS,
     TYPE_SERIAL,
     TYPE_TCP,
 )
@@ -205,7 +205,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
                         **data,
                         **{
                             key: entry.data[key]
-                            for key in (HAS_FAULT_LOG, LAST_HANDLED_FAULT)
+                            for key in (LAST_HANDLED_FAULT, SERVED_COMPONENTS)
                             if key in entry.data
                         },
                     },
