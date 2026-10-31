@@ -1213,7 +1213,6 @@ class MqttDiscoveryUpdateMixin(Entity):
                     self.hass,
                     entity_entry.device_id,
                     entity_entry.config_entry_id,
-                    include_disabled_entities=not payload.cleanup_parent_device,
                     cleanup_parent_device=payload.cleanup_parent_device,
                 )
         else:
@@ -1347,7 +1346,6 @@ class MqttDiscoveryUpdateMixin(Entity):
             send_discovery_done(self.hass, self._discovery_data)
             return
 
-        debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
         if not payload:
             # Empty payload: Remove component
             if self._migrate_discovery is None:
@@ -1638,7 +1636,6 @@ class MqttEntityDeviceInfo(Entity):
                     self.hass,
                     device.id,
                     config_entry_id,
-                    include_disabled_entities=True,
                 ),
                 "mqtt cleanup parent device",
             )
@@ -1673,7 +1670,6 @@ class MqttEntityDeviceInfo(Entity):
                 hass,
                 unused_device_id,
                 self._config_entry.entry_id,
-                include_disabled_entities=True,
             ),
             "mqtt cleanup device of aborted entity",
         )
@@ -1724,7 +1720,6 @@ class MqttEntityDeviceInfo(Entity):
             self.hass,
             old_device_id,
             self._config_entry.entry_id,
-            include_disabled_entities=True,
         )
 
     @property
@@ -1939,7 +1934,6 @@ class MqttEntity(
             self.hass,
             previous_device_id,
             self._config_entry.entry_id,
-            include_disabled_entities=True,
         )
 
     async def mqtt_async_added_to_hass(self) -> None:
@@ -1969,6 +1963,11 @@ class MqttEntity(
             # Cancel the update, the entity keeps its current config and device
             _log_device_info_error(err)
             return
+        # The debug info shares the discovery data that holds the current payload,
+        # so it is only updated when the update is accepted
+        debug_info.update_entity_discovery_data(
+            self.hass, discovery_payload, self.entity_id
+        )
         self._config = config
         self._setup_from_config(self._config)
         self._setup_common_attributes_from_config(self._config)

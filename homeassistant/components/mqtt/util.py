@@ -34,7 +34,6 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
-    ATTR_DISCOVERY_PAYLOAD,
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
@@ -458,48 +457,19 @@ def learn_more_url(platform: str) -> str:
     return f"https://www.home-assistant.io/integrations/{platform}.mqtt/"
 
 
-@callback
-def _async_device_has_entities(
-    hass: HomeAssistant, device_id: str, *, include_disabled_entities: bool
-) -> bool:
-    """Return if entities that keep the device remain.
-
-    Disabled entities only keep the device if include_disabled_entities is set,
-    or if they were discovered through device discovery, as removing the device
-    would remove them while they are still part of the device discovery payload.
-    """
-    device_discovered_disabled_entities = {
-        disabled_entity.registry_key
-        for disabled_entity in hass.data[
-            DATA_MQTT
-        ].discovery_discovered_and_disabled.values()
-        if disabled_entity.discovery_data[ATTR_DISCOVERY_PAYLOAD].device_discovery
-    }
-    return any(
-        not entry.disabled
-        or include_disabled_entities
-        or (entry.domain, entry.platform, entry.unique_id)
-        in device_discovered_disabled_entities
-        for entry in er.async_entries_for_device(
-            er.async_get(hass), device_id, include_disabled_entities=True
-        )
-    )
-
-
 async def async_cleanup_device_registry(
     hass: HomeAssistant,
     device_id: str | None,
     config_entry_id: str | None,
     *,
-    include_disabled_entities: bool = False,
     cleanup_parent_device: bool = True,
 ) -> None:
     """Clean up the device registry after MQTT removal.
 
     Remove MQTT from the device registry entry if there are no remaining
-    entities, triggers, tags or child devices. With include_disabled_entities,
-    all disabled entities keep the device. Without cleanup_parent_device, the
-    parent device of a removed child device is kept.
+    entities, including disabled entities, triggers, tags or child devices.
+    Without cleanup_parent_device, the parent device of a removed child device
+    is kept.
     """
     # Local import to avoid circular dependencies
     from . import device_trigger, tag  # noqa: PLC0415
@@ -513,8 +483,8 @@ async def async_cleanup_device_registry(
         and device.config_entry_id == config_entry_id
         # Removing a parent device also removes its child devices
         and not dr.async_entries_for_parent_device(device_registry, device_id)
-        and not _async_device_has_entities(
-            hass, device_id, include_disabled_entities=include_disabled_entities
+        and not er.async_entries_for_device(
+            er.async_get(hass), device_id, include_disabled_entities=True
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
@@ -522,10 +492,7 @@ async def async_cleanup_device_registry(
         device_registry.async_remove_device(device_id)
         if cleanup_parent_device and isinstance(device, dr.ChildDeviceEntry):
             await async_cleanup_device_registry(
-                hass,
-                device.parent_device_id,
-                config_entry_id,
-                include_disabled_entities=include_disabled_entities,
+                hass, device.parent_device_id, config_entry_id
             )
 
 

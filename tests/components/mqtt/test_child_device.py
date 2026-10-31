@@ -1104,11 +1104,19 @@ async def test_device_discovery_keeps_single_component_child_device(
     assert "Removing child device single_sub" not in caplog.text
 
 
+@pytest.mark.parametrize(
+    "remaining_components",
+    [
+        pytest.param({"sw": _discovery_switch("sw")}, id="components_left"),
+        pytest.param({}, id="all_components_omitted"),
+    ],
+)
 async def test_device_discovery_keeps_child_device_shared_with_disabled_entity(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    remaining_components: dict[str, Any],
 ) -> None:
     """Test an omitted child device is kept while a disabled entity still uses it."""
     await mqtt_mock_entry()
@@ -1133,15 +1141,71 @@ async def test_device_discovery_keeps_child_device_shared_with_disabled_entity(
             [_child_device_payload("sub1", "Sub 1", {"sw1": _discovery_switch("sw1")})],
         ),
     )
+    parent = _get_device(hass, device_registry, "parent")
     child_device = _get_child_device(hass, device_registry, "sub1")
+    assert parent is not None
     assert child_device is not None
 
-    await _discover_device(hass, _device_payload(components))
+    await _discover_device(hass, _device_payload(remaining_components))
     assert not entity_registry.async_is_registered("switch.parent_sub_1_switch")
     assert (
         _device_id(_get_child_device(hass, device_registry, "sub1")) == child_device.id
     )
+    assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
     assert entity_registry.async_get_entity_id("switch", DOMAIN, "single") is not None
+
+
+async def test_device_discovery_known_state_ignores_rejected_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a rejected update does not change the known child device of a component.
+
+    The entity keeps its current child device, which is removed when it is omitted.
+    """
+    await mqtt_mock_entry()
+    await _discover_device(
+        hass,
+        _device_payload(
+            child_devices=[
+                _child_device_payload(
+                    "sub1", "Sub 1", {"sw1": _discovery_switch("sw1")}
+                )
+            ]
+        ),
+    )
+    child_device = _get_child_device(hass, device_registry, "sub1")
+    assert child_device is not None
+
+    # Moving the switch to another child device is rejected without command topic
+    invalid_switch = {"p": "switch", "name": "Switch", "uniq_id": "sw1"}
+    await _discover_device(
+        hass,
+        _device_payload(
+            child_devices=[
+                _child_device_payload("sub2", "Sub 2", {"sw1": invalid_switch})
+            ]
+        ),
+    )
+    entity_entry = entity_registry.async_get("switch.parent_sub_1_switch")
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+
+    payload = _device_payload(
+        child_devices=[
+            _child_device_payload("sub2", "Sub 2", {"sw3": _discovery_switch("sw3")})
+        ]
+    )
+    diff = _diff_device_payload(hass, payload)
+    assert set(diff.removed_components) == {("switch", "parent sw1")}
+    assert diff.removed_child_devices == {frozenset({"sub1"})}
+
+    await _discover_device(hass, payload)
+    assert not entity_registry.async_is_registered("switch.parent_sub_1_switch")
+    assert _get_child_device(hass, device_registry, "sub1") is None
+    assert _get_child_device(hass, device_registry, "sub2") is not None
 
 
 async def test_cleanup_parent_device_with_child_device(

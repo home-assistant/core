@@ -104,8 +104,7 @@ class MQTTDiscoveryPayload(dict[str, Any]):
     device_discovery: bool = False
     migrate_discovery: bool = False
     # A component omitted from a device discovery payload only cleans up its device
-    # when the payload omits its child device too. The parent device is kept, and
-    # so is the child device while it has other entities, including disabled ones.
+    # when the payload omits its child device too, the parent device is kept
     cleanup_device: bool = True
     cleanup_parent_device: bool = True
     discovery_data: DiscoveryInfoType
@@ -741,7 +740,6 @@ def _async_cleanup_disabled_entity(
                 hass,
                 device_id=entity_entry.device_id,
                 config_entry_id=entity_entry.config_entry_id,
-                include_disabled_entities=not payload.cleanup_parent_device,
                 cleanup_parent_device=payload.cleanup_parent_device,
             ),
             name=f"Check for cleanup device registry for {entity_id}",
