@@ -429,6 +429,7 @@ class IntentTool(Tool):
             language=llm_context.language,
             assistant=llm_context.assistant,
             device_id=llm_context.device_id,
+            conversation_agent_id=llm_context.agent_id,
         )
         return ToolResult(data=IntentResponseDict(intent_response))
 
