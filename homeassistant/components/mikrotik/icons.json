@@ -25,7 +25,7 @@
       "disk_usage": {
         "default": "mdi:harddisk"
       },
-      "fan_speed": {
+      "fan_speed_with_index": {
         "default": "mdi:fan"
       },
       "memory_usage": {

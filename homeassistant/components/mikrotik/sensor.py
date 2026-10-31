@@ -148,7 +148,7 @@ SENSORS: Final = (
     ),
     MikrotikSensorEntityDescription(
         key="fan1-speed",
-        translation_key="fan_speed",
+        translation_key="fan_speed_with_index",
         translation_placeholders={"index": "1"},
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
