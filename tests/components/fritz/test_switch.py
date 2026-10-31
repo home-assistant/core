@@ -1018,6 +1018,40 @@ async def test_migrate_to_new_unique_id(
         assert entity_entry.unique_id == new_unique_id
 
 
+@pytest.mark.usefixtures("fh_class_mock", "fs_class_mock")
+async def test_migrate_to_identical_unique_id(
+    hass: HomeAssistant,
+    fc_class_mock: MagicMock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test switch setup preserves an entity whose unique ID is unchanged."""
+    fc_class_mock.return_value.override_services(
+        wifi_services_with_ssids("Main WiFi", "Guest")
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    unique_id = f"{MOCK_SERIAL_NUMBER}-wi_fi_guest"
+    existing_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=unique_id,
+        config_entry=entry,
+        disabled_by=None,
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (existing_entry := entity_registry.async_get(existing_entity.entity_id))
+    assert existing_entry.unique_id == unique_id
+    assert (state := hass.states.get(existing_entity.entity_id))
+    assert state.state == STATE_ON
+    assert (state := hass.states.get("switch.mock_title_wi_fi_main_2_4ghz"))
+    assert state.state == STATE_ON
+
+
 @pytest.mark.parametrize(
     ("wifi_index", "wifi_count", "expected_name"),
     [
