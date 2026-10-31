@@ -21,7 +21,11 @@ from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    RestoreDataUpdateCoordinator,
+    UpdateFailed,
+)
 
 if TYPE_CHECKING:
     from . import TeslaFleetConfigEntry
@@ -136,7 +140,9 @@ class TeslaFleetCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._rate_limit_logged = False
 
 
-class TeslaFleetVehicleDataCoordinator(TeslaFleetCoordinator):
+class TeslaFleetVehicleDataCoordinator(
+    RestoreDataUpdateCoordinator[dict[str, Any]], TeslaFleetCoordinator
+):
     """Class to manage fetching data from the TeslaFleet API."""
 
     config_entry: TeslaFleetConfigEntry
@@ -159,6 +165,7 @@ class TeslaFleetVehicleDataCoordinator(TeslaFleetCoordinator):
             LOGGER,
             config_entry=config_entry,
             name="Tesla Fleet Vehicle",
+            storage_key=api.vin,
             update_interval=VEHICLE_INTERVAL,
         )
         self.api = api
