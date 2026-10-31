@@ -34,6 +34,7 @@ class VRChatUserDataEntity(CoordinatorEntity[VRChatAccountDataCoordinator]):
         self.user_id = user_id
         entry = coordinator.config_entry
         identifier = f"{entry.unique_id}:{user_id}"
+        self._attr_unique_id = f"{self.entity_description.key}.{identifier}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
             configuration_url=VRCHAT_USER_PAGE_BASE_URL + user_id,
@@ -82,12 +83,6 @@ class VRChatUserDataEntity(CoordinatorEntity[VRChatAccountDataCoordinator]):
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self.coordinator.available and self.user_id in self.coordinator.data
-
-    @cached_property
-    @override
-    def unique_id(self) -> str:
-        """Return the unique ID."""
-        return f"{self.entity_description.key}.{next(iter(self.device_info['identifiers']))[1]}"
 
     @cached_property
     @override

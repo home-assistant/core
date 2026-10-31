@@ -26,6 +26,7 @@ from homeassistant.components.vrchat.sensor import (
     VRChatUserStatusSensor,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 USER_ID = "usr_test"
 
@@ -480,6 +481,81 @@ def test_user_access_requires_a_live_coordinator_entry(
     with pytest.raises(KeyError, match=USER_ID):
         _ = sensor.user
     assert sensor.unique_id == unique_id
+
+
+@pytest.mark.parametrize(
+    ("sensor_class", "key", "translation_key"),
+    [
+        pytest.param(VRChatUserStatusSensor, "status", "status", id="status"),
+        pytest.param(
+            VRChatUserStatusDescriptionSensor,
+            "statusDescription",
+            "status_description",
+            id="description",
+        ),
+        pytest.param(VRChatUserStateSensor, "state", "state", id="state"),
+        pytest.param(VRChatUserLocationSensor, "location", "location", id="location"),
+    ],
+)
+def test_sensor_identity_and_translation_keys(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    sensor_class: type[VRChatUserDataSensorEntity],
+    key: str,
+    translation_key: str,
+) -> None:
+    """Keep account-scoped IDs stable independently of names and translation keys."""
+    user = cast(
+        VRChatUser,
+        SimpleNamespace(
+            data={
+                "displayName": "Initial name",
+                "status": "active",
+                "statusDescription": "Hello",
+                "location": "private",
+            },
+            world=None,
+            destination_world=None,
+        ),
+    )
+    coordinator = _coordinator(hass, user)
+    sensor = sensor_class(coordinator, USER_ID)
+    expected_unique_id = f"{key}.{USER_ID}:{USER_ID}"
+
+    assert sensor.unique_id == expected_unique_id
+    assert sensor.entity_description.key == key
+    assert sensor.translation_key == translation_key
+    assert sensor.device_info["identifiers"] == {(DOMAIN, f"{USER_ID}:{USER_ID}")}
+    assert (
+        sensor.device_info["configuration_url"]
+        == f"https://vrchat.com/home/user/{USER_ID}"
+    )
+
+    user.data["displayName"] = "Renamed user"
+    assert sensor.unique_id == expected_unique_id
+    assert sensor_class(coordinator, USER_ID).unique_id == expected_unique_id
+
+    coordinator.data.clear()
+    assert not sensor.available
+    assert sensor.unique_id == expected_unique_id
+    coordinator.data[USER_ID] = user
+    assert sensor_class(coordinator, USER_ID).unique_id == expected_unique_id
+
+    other_entry = MockConfigEntry(domain=DOMAIN, unique_id="usr_other_account")
+    other_entry.add_to_hass(hass)
+    other_parent_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, "usr_other_account:usr_other_account")},
+    )
+    other_account = VRChatAccountDataCoordinator(hass, other_entry)
+    other_account.data = {USER_ID: user}
+    other_sensor = sensor_class(other_account, USER_ID)
+    assert other_sensor.unique_id == f"{key}.usr_other_account:{USER_ID}"
+    assert other_sensor.unique_id != sensor.unique_id
+    assert other_sensor.device_info["via_device_id"] == other_parent_device.id
+    assert other_sensor.device_info["identifiers"] == {
+        (DOMAIN, f"usr_other_account:{USER_ID}")
+    }
 
 
 @pytest.mark.parametrize(

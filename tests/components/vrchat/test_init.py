@@ -1093,6 +1093,29 @@ async def test_hundred_friend_pushes_write_once_without_fetches(
     remove_change()
 
 
+async def test_reload_preserves_registry_customizations(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Stable constructor IDs retain user settings across unload/reload."""
+    entity_id = _entity_id(
+        entity_registry, f"statusDescription.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
+    )
+    original = entity_registry.async_update_entity(
+        entity_id, name="My description", icon="mdi:chat"
+    )
+    assert await hass.config_entries.async_unload(loaded_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(loaded_entry.entry_id)
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entity_id)
+    assert entry.id == original.id
+    assert entry.name == "My description"
+    assert entry.icon == "mdi:chat"
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 8
+
+
 async def test_friend_deleted_while_platform_setup_is_pending(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
