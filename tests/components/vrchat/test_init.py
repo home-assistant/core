@@ -626,13 +626,13 @@ async def test_late_sensor_field_and_duplicate_updates(
     assert len(loaded_entry.runtime_data._listeners) == listeners_before + 1
 
 
-async def test_push_updates_only_affected_user(
+async def test_push_updates_use_standard_coordinator_notifications(
     hass: HomeAssistant,
     loaded_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Unchanged states must not be reported again for unrelated friends."""
+    """Standard notifications refresh entities and preserve dynamic device names."""
     entity_ids = hass.states.async_entity_ids(SENSOR_DOMAIN)
     reports: list[str] = []
 
@@ -652,10 +652,7 @@ async def test_push_updates_only_affected_user(
     remove_report()
     remove_change()
 
-    assert set(reports) == {
-        _entity_id(entity_registry, f"{key}.{CURRENT_USER_ID}:{FRIEND_USER_ID}")
-        for key in ("state", "status", "statusDescription", "location")
-    }
+    assert set(reports) == set(entity_ids)
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{CURRENT_USER_ID}:{FRIEND_USER_ID}"), loaded_entry.entry_id
     )
@@ -663,12 +660,12 @@ async def test_push_updates_only_affected_user(
     assert device.name == "Renamed friend"
 
 
-async def test_world_updates_only_location_sensor(
+async def test_world_updates_use_standard_coordinator_notifications(
     hass: HomeAssistant,
     loaded_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Resolved metadata updates the location without reporting other data again."""
+    """Standard notifications publish resolved location metadata without polling."""
     client = loaded_entry.runtime_data.client
     world = {"id": "wrld_test", "name": "First world"}
     await client.handle_event(
@@ -700,7 +697,7 @@ async def test_world_updates_only_location_sensor(
     entity_id = _entity_id(
         entity_registry, f"location.{CURRENT_USER_ID}:{FRIEND_USER_ID}"
     )
-    assert set(reports) == {entity_id}
+    assert set(reports) == set(entity_ids)
     assert hass.states.get(entity_id).state == "Renamed world"
 
 
@@ -957,6 +954,60 @@ async def test_immediate_readd_during_pending_entity_add(
     )
     assert hass.states.get(entity_id).state == "ask_me"
     assert len(hass.states.async_all(SENSOR_DOMAIN)) == 12
+
+
+async def test_hundred_friend_pushes_write_once_without_fetches(
+    hass: HomeAssistant,
+    loaded_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Standard push notifications stay bounded and never poll user/world APIs."""
+    client = loaded_entry.runtime_data.client
+    for index in range(100):
+        client.set_user(
+            {**FRIEND_USER, "id": f"usr_bulk_{index}", "displayName": f"Friend {index}"}
+        )
+    await hass.async_block_till_done()
+    entity_ids = hass.states.async_entity_ids(SENSOR_DOMAIN)
+    assert len(entity_ids) == 408
+    reports: list[str] = []
+
+    @callback
+    def record(event: Event) -> None:
+        reports.append(event.data["entity_id"])
+
+    remove_report = async_track_state_report_event(hass, entity_ids, record)
+    remove_change = async_track_state_change_event(hass, entity_ids, record)
+    with (
+        patch.object(client.api, "get_user", new=AsyncMock()) as get_user,
+        patch.object(client.api, "get_world", new=AsyncMock()) as get_world,
+    ):
+        await client.handle_event(
+            VRChatEvent(
+                "friend-update",
+                {"userId": "usr_bulk_0", "user": {"statusDescription": "Changed"}},
+            )
+        )
+        await hass.async_block_till_done()
+        assert len(reports) == len(entity_ids)
+        description_id = _entity_id(
+            entity_registry, f"statusDescription.{CURRENT_USER_ID}:usr_bulk_0"
+        )
+        assert hass.states.get(description_id).state == "Changed"
+        reports.clear()
+        await client.handle_event(
+            VRChatEvent(
+                "friend-update",
+                {"userId": "usr_bulk_0", "user": {"statusDescription": ""}},
+            )
+        )
+        await hass.async_block_till_done()
+        assert len(reports) == len(entity_ids)
+        assert hass.states.get(description_id).state == STATE_UNKNOWN
+        get_user.assert_not_awaited()
+        get_world.assert_not_awaited()
+    remove_report()
+    remove_change()
 
 
 async def test_friend_deleted_while_platform_setup_is_pending(

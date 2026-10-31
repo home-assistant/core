@@ -31,9 +31,6 @@ class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]])
         """Initialize the integration adapter."""
         super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN)
         self.data = {}
-        self.updated_user_id: str | None = None
-        self.world_update = False
-        self.force_refresh = False
         self.device_registry = dr.async_get(hass)
         assert entry.unique_id is not None
         self.cookie_store = get_vrchat_auth_cookie_store(hass, entry.unique_id)
@@ -86,9 +83,6 @@ class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]])
 
     @callback
     def _user_updated(self, data: VRChatUser, world_update: bool) -> None:
-        self.updated_user_id = data.id
-        self.world_update = world_update
-        self.force_refresh = True
         self.async_set_updated_data(self.data)
         if (device := self._device_entry(data.id)) is not None:
             self.device_registry.async_update_device(
@@ -100,16 +94,10 @@ class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]])
     def _user_removed(self, user_id: str) -> None:
         if (device := self._device_entry(user_id)) is not None:
             self.device_registry.async_remove_device(device.id)
-        self.updated_user_id = user_id
-        self.world_update = False
-        self.force_refresh = False
         self.async_set_updated_data(self.data)
 
     @callback
     def _availability_updated(self, available: bool) -> None:
-        self.updated_user_id = None
-        self.world_update = False
-        self.force_refresh = available
         self.async_update_listeners()
 
     @callback

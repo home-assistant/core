@@ -9,7 +9,6 @@ from vrchatapi.highlevel import VRChatUser, VRChatWorldData
 from vrchatapi.highlevel.presence import process_vrchat_string
 from vrchatapi.highlevel.types import HighLevelUserData, User
 
-from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -53,19 +52,6 @@ class VRChatUserDataEntity(CoordinatorEntity[VRChatAccountDataCoordinator]):
     def destination_world(self) -> VRChatWorldData | None:
         """Return the destination world."""
         return self.user.destination_world
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Write state after data changes."""
-        if (
-            self.user_id in self.coordinator.data
-            and self.coordinator.updated_user_id in (None, self.user_id)
-            and (not self.coordinator.world_update or self.subscribe_to_world_update)
-        ):
-            self.async_schedule_update_ha_state(
-                force_refresh=self.coordinator.force_refresh
-            )
 
     @override
     async def async_update(self) -> None:
