@@ -16,6 +16,7 @@ from .services import async_setup_services
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.EVENT,
     Platform.LIGHT,
     Platform.MEDIA_PLAYER,
