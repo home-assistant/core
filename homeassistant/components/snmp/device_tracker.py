@@ -19,11 +19,18 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
+    ScannerEntity,
 )
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_AUTH_KEY,
@@ -36,8 +43,10 @@ from .const import (
     DEFAULT_PRIV_PROTOCOL,
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
+    DOMAIN,
     SNMP_VERSIONS,
 )
+from .coordinator import SnmpConfigEntry, SnmpDeviceTrackerCoordinator
 from .util import RequestArgsType, async_create_request_cmd_args
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,16 +60,6 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         probatio.Inclusive(probatio.Secret(CONF_PRIV_KEY), "keys"): cv.string,
     }
 )
-
-
-async def async_get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> SnmpScanner | None:
-    """Validate the configuration and return an SNMP scanner."""
-    scanner = await SnmpScanner.create(config[DEVICE_TRACKER_DOMAIN])
-    await scanner.async_init(hass)
-
-    return scanner if scanner.success_init else None
 
 
 class SnmpScanner(DeviceScanner):
@@ -208,3 +207,139 @@ class SnmpScanner(DeviceScanner):
                     mac = ":".join([mac[i : i + 2] for i in range(0, len(mac), 2)])
                     devices.append({"mac": mac})
         return devices
+
+
+async def async_get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> SnmpScanner | None:
+    """Validate the configuration and return an SNMP scanner."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml_device_tracker",
+        breaks_in_ha_version="2027.5.0",
+        is_fixable=False,
+        is_persistent=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml_device_tracker",
+        translation_placeholders={"integration_title": "SNMP"},
+    )
+
+    scanner = await SnmpScanner.create(config[DEVICE_TRACKER_DOMAIN])
+    if scanner is None:
+        return None
+    await scanner.async_init(hass)
+
+    return scanner if scanner.success_init else None
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SnmpConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the device trackers of the entry's subentries."""
+    ent_reg = er.async_get(hass)
+
+    # Iterate the coordinators, not the subentries: a subentry added while the
+    # entry was starting has no coordinator yet and is handled by the reload.
+    for subentry_id in entry.runtime_data.coordinators:
+        _async_setup_subentry(entry, subentry_id, ent_reg, async_add_entities)
+
+
+@callback
+def _async_setup_subentry(
+    entry: SnmpConfigEntry,
+    subentry_id: str,
+    ent_reg: er.EntityRegistry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add the tracker entities of a single subentry."""
+    coordinator = entry.runtime_data.coordinators[subentry_id]
+
+    # Ensure previously known MACs show up as 'not_home' instead of disappearing
+    # if missing from the current poll.
+    unique_id_prefix = f"{subentry_id}_"
+    initial_macs = {
+        reg_entry.unique_id.removeprefix(unique_id_prefix)
+        for reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+        if reg_entry.unique_id
+        and reg_entry.unique_id.startswith(unique_id_prefix)
+        and reg_entry.config_subentry_id == subentry_id
+        and reg_entry.domain == DEVICE_TRACKER_DOMAIN
+        and reg_entry.platform == DOMAIN
+    }
+
+    if initial_macs:
+        async_add_entities(
+            (SnmpTrackerEntity(coordinator, mac) for mac in initial_macs),
+            config_subentry_id=subentry_id,
+        )
+
+    tracked_macs = set(initial_macs)
+
+    @callback
+    def _handle_coordinator_update() -> None:
+        """Handle updated data from the coordinator."""
+        if not coordinator.data:
+            return
+
+        new_entities: list[SnmpTrackerEntity] = []
+        for mac in coordinator.data:
+            if mac in tracked_macs:
+                continue
+            tracked_macs.add(mac)
+            new_entities.append(SnmpTrackerEntity(coordinator, mac))
+
+        if new_entities:
+            async_add_entities(new_entities, config_subentry_id=subentry_id)
+
+    entry.async_on_unload(coordinator.async_add_listener(_handle_coordinator_update))
+    _handle_coordinator_update()
+
+
+class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], ScannerEntity):
+    """Represent an individual device tracked via SNMP."""
+
+    def __init__(
+        self,
+        coordinator: SnmpDeviceTrackerCoordinator,
+        mac: str,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.subentry_id}_{mac}"
+        self._attr_mac_address = mac
+        self._attr_name = mac
+        self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
+
+    @property
+    @override
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the entity.
+
+        ScannerEntity derives the unique ID from the MAC address, which would
+        collide between subentries tracking the same device.
+        """
+        return self._attr_unique_id
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return True if this MAC was seen in the latest scan."""
+        if not self.coordinator.data:
+            return False
+        return self.mac_address in self.coordinator.data
+
+    @override
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update the IP address before the base class writes the state."""
+        mac = self.mac_address
+        self._attr_ip_address = (
+            self.coordinator.data.get(mac)
+            if self.coordinator.data and mac is not None
+            else None
+        )
+        super()._handle_coordinator_update()

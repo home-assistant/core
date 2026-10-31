@@ -804,7 +804,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "smarty",
     "sms",
     "snapcast",
-    "snmp",
     "snooz",
     "solaredge",
     "solax",
