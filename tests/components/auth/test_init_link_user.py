@@ -38,6 +38,8 @@ async def async_get_code(
         },
     ]
     client = await async_setup_auth(hass, aiohttp_client, config)
+    # The owner must keep a login, so the linking user is a regular one.
+    await hass.auth.async_create_user(name="Owner")
     user = await hass.auth.async_create_user(name="Hello")
     refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
     access_token = hass.auth.async_create_access_token(refresh_token)
