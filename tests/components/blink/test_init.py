@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
 from blinkpy.auth import LoginError
+from blinkpy.helpers.constants import DEFAULT_REFRESH
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -103,6 +104,27 @@ async def test_scheduled_refresh_is_not_forced(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_blink_api.refresh.assert_awaited_once_with()
+
+
+async def test_refresh_rate_shorter_than_scan_interval(
+    hass: HomeAssistant,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test BlinkPy's refresh throttle is shorter than the scan interval.
+
+    BlinkPy skips an unforced refresh until its refresh rate has passed since
+    the last one. If that equals the scan interval, a poll that lands slightly
+    early does nothing, and so does the refresh after an arm or disarm.
+    See #186556.
+    """
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    refresh_rate = getattr(mock_blink_api, "refresh_rate", DEFAULT_REFRESH)
+    assert refresh_rate < SCAN_INTERVAL
 
 
 async def test_migrate_V0(
