@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, callback
 from .const import DATA_BACKUP_AGENT_LISTENERS
 from .coordinator import SeafileConfigEntry, SeafileDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SeafileConfigEntry) -> None:

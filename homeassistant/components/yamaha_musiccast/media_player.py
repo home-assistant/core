@@ -76,7 +76,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     """The musiccast media player."""
 
     _attr_media_content_type = MediaType.MUSIC
-    _attr_should_poll = False
     _attr_translation_key = "zone"
 
     def __init__(self, zone_id, name, entry_id, coordinator):

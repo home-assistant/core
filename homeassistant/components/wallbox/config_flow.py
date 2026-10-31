@@ -72,23 +72,25 @@ class WallboxConfigFlow(ConfigFlow, domain=COMPONENT_DOMAIN):
 
         errors = {}
 
-        try:
-            await self.async_set_unique_id(user_input["station"])
-            if self.source != SOURCE_REAUTH:
-                self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(user_input["station"])
+        if self.source != SOURCE_REAUTH:
+            self._abort_if_unique_id_configured()
+            try:
                 validation_data = await validate_input(self.hass, user_input)
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            else:
                 return self.async_create_entry(
                     title=validation_data["title"],
                     data=validation_data["data"],
                 )
+        else:
             reauth_entry = self._get_reauth_entry()
             if user_input["station"] == reauth_entry.data[CONF_STATION]:
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)
             errors["base"] = "reauth_invalid"
-        except ConnectionError:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user",

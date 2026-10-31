@@ -2,15 +2,46 @@
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from victron_mqtt import Hub as VictronVenusHub
+from victron_mqtt import Hub as VictronVenusHub, ValueType
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.victron_gx.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import MOCK_INSTALLATION_ID
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_json_metric_does_not_create_entity(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test JSON metrics are discovered without creating entities or devices."""
+    victron_hub, mock_config_entry = init_integration
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Network/Services",
+        '{"value": {"ethernet": {}, "wifi": {}}}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    metric = victron_hub.devices["system_0"].get_metric("platform_network_services")
+    assert metric is not None
+    assert metric.value_type is ValueType.JSON
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert not dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert not hass.states.async_all(Platform.SENSOR)
 
 
 async def test_victron_battery_sensor(

@@ -8,6 +8,23 @@
         "default": "mdi:restart"
       }
     },
+    "button": {
+      "power_hibernate": {
+        "default": "mdi:snowflake"
+      },
+      "power_lock": {
+        "default": "mdi:lock"
+      },
+      "power_logout": {
+        "default": "mdi:logout"
+      },
+      "power_shutdown": {
+        "default": "mdi:power"
+      },
+      "power_sleep": {
+        "default": "mdi:power-sleep"
+      }
+    },
     "media_player": {
       "media": {
         "default": "mdi:volume-high"

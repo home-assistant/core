@@ -425,8 +425,6 @@ async def marketplace_repository_refresh(
         return
 
     await marketplace.data.async_write()
-    marketplace.coordinators[repository.data.category].async_update_listeners()
-
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 

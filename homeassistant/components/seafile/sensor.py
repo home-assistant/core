@@ -11,14 +11,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import SUBENTRY_TYPE_LIBRARY
-from .coordinator import SeafileConfigEntry, SeafileData, SeafileDataUpdateCoordinator
+from .coordinator import SeafileConfigEntry, SeafileData
 from .entity import SeafileEntity
 
 PARALLEL_UPDATES = 0
@@ -78,16 +77,6 @@ class SeafileSensor(SeafileEntity, SensorEntity):
     """Sensor of a Seafile library."""
 
     entity_description: SeafileSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: SeafileDataUpdateCoordinator,
-        subentry: ConfigSubentry,
-        description: SeafileSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, subentry, description.key)
-        self.entity_description = description
 
     @property
     @override
