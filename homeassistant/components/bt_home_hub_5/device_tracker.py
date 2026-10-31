@@ -1,80 +1,106 @@
 """Support for BT Home Hub 5."""
 
 import logging
-from typing import override
-
-import bthomehub5_devicelist
-import probatio
+from typing import Any
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    ScannerEntity,
+    SourceType,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN
+from .coordinator import BTHomeHub5ConfigEntry, BTHomeHub5DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_IP = "192.168.1.254"
 
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {probatio.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string}
-)
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: Any = None,
+    discovery_info: dict[str, Any] | None = None,
+) -> bool:
+    """Import legacy YAML device tracker configuration."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml_device_tracker",
+        breaks_in_ha_version="2026.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "platform": DEVICE_TRACKER_DOMAIN,
+        },
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data={CONF_HOST: config[CONF_HOST]},
+        )
+    )
+    return True
 
 
-def get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> BTHomeHub5DeviceScanner | None:
-    """Return a BT Home Hub 5 scanner if successful."""
-    scanner = BTHomeHub5DeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: BTHomeHub5ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device tracker entities from a config entry."""
+    coordinator = entry.runtime_data
+    known_macs: set[str] = set()
 
-    return scanner if scanner.success_init else None
+    def _update_entities() -> None:
+        """Add newly discovered devices as scanner entities."""
+        new_entities: list[BTHomeHub5ScannerEntity] = []
+        for mac, name in coordinator.data.items():
+            if mac not in known_macs:
+                known_macs.add(mac)
+                new_entities.append(BTHomeHub5ScannerEntity(coordinator, mac, name))
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _update_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_update_entities))
 
 
-class BTHomeHub5DeviceScanner(DeviceScanner):
-    """Class which queries a BT Home Hub 5."""
+class BTHomeHub5ScannerEntity(
+    CoordinatorEntity[BTHomeHub5DataUpdateCoordinator], ScannerEntity
+):
+    """Representation of a BT Home Hub 5 tracked device."""
 
-    def __init__(self, config):
-        """Initialise the scanner."""
+    _attr_source_type = SourceType.ROUTER
+    _attr_has_entity_name = True
 
-        self.host = config[CONF_HOST]
-        self.last_results = {}
+    def __init__(
+        self,
+        coordinator: BTHomeHub5DataUpdateCoordinator,
+        mac: str,
+        name: str,
+    ) -> None:
+        """Initialize the device tracker entity."""
+        super().__init__(coordinator)
+        self._mac = mac
+        self._attr_unique_id = mac
+        self._attr_name = name
 
-        # Test the router is accessible
-        data = bthomehub5_devicelist.get_devicelist(self.host)
-        self.success_init = data is not None
+    @property
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
 
-    @override
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self.update_info()
-
-        return (device for device in self.last_results)
-
-    @override
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        # If not initialised and not already scanned and not found.
-        if device not in self.last_results:
-            self.update_info()
-
-            if not self.last_results:
-                return None
-
-        return self.last_results.get(device)
-
-    def update_info(self):
-        """Ensure the information from the BT Home Hub 5 is up to date."""
-
-        _LOGGER.debug("Scanning")
-
-        data = bthomehub5_devicelist.get_devicelist(self.host)
-
-        if not data:
-            _LOGGER.warning("Error scanning devices")
-            return
-
-        self.last_results = data
+    @property
+    def is_connected(self) -> bool:
+        """Return True if the device is currently connected to the router."""
+        return self._mac in self.coordinator.data

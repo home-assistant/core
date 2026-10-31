@@ -9,6 +9,7 @@
   "documentation": "https://www.home-assistant.io/integrations/bt_home_hub_5",
   "iot_class": "local_polling",
   "loggers": ["bthomehub5_devicelist"],
-  "quality_scale": "legacy",
-  "requirements": ["bthomehub5-devicelist==0.1.1"]
+  "requirements": ["bthomehub5-devicelist==0.1.1"],
+  "config_flow" : true,
+  "integration_type": "hub"
 }
