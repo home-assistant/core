@@ -47,6 +47,12 @@
       "frost_protection": {
         "name": "Frost protection"
       },
+      "holiday": {
+        "name": "Holiday"
+      },
+      "holiday_at_home": {
+        "name": "Holiday at home"
+      },
       "identification_mode": {
         "name": "Identification mode"
       },
@@ -444,6 +450,18 @@
       },
       "heating_rod_starts": {
         "name": "Heating rod starts"
+      },
+      "holiday_at_home_end": {
+        "name": "Holiday at home end"
+      },
+      "holiday_at_home_start": {
+        "name": "Holiday at home start"
+      },
+      "holiday_end": {
+        "name": "Holiday end"
+      },
+      "holiday_start": {
+        "name": "Holiday start"
       },
       "hot_gas_pressure": {
         "name": "Hot gas pressure"

@@ -32,7 +32,7 @@ from .models import IsyConfigEntry
 class ISYSwitchEntityDescription(SwitchEntityDescription):
     """Describes ISY switch."""
 
-    # ISYEnableSwitchEntity does not support UNDEFINED or None,
+    # ISYEnableSwitchEntity does not support Undefined or None,
     # restrict the type to str.
     name: str = ""
 

@@ -10,7 +10,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.frame import report_usage
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN
 from .error import UnknownMediaSource, Unresolvable
@@ -116,13 +116,13 @@ async def async_search_media(
 async def async_resolve_media(
     hass: HomeAssistant,
     media_content_id: str,
-    target_media_player: str | UndefinedType | None = UNDEFINED,
+    target_media_player: str | Undefined | None = Undefined,
 ) -> PlayMedia:
     """Get info to play media."""
     if DOMAIN not in hass.config.top_level_components:
         raise Unresolvable("Media Source not loaded")
 
-    if target_media_player is UNDEFINED:
+    if target_media_player is Undefined:
         report_usage(
             "calls media_source.async_resolve_media without passing an entity_id",
             exclude_integrations={DOMAIN},
