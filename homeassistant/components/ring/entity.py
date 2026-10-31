@@ -103,7 +103,10 @@ class RingBaseEntity(
         )
 
 
-class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEntity):
+class RingEntity(
+    RingBaseEntity[RingDataCoordinator, RingDeviceT],
+    CoordinatorEntity[RingDataCoordinator],
+):
     """Implementation for Ring devices."""
 
     def _get_coordinator_data(self) -> RingDevices:
