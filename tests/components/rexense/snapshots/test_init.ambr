@@ -1,0 +1,111 @@
+# serializer version: 1
+# name: test_setup_and_unload[entity]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rexense', 'rexense-gateway_00124B0000000001')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tl0001_switch_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch 1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch 1',
+    'platform': 'rexense',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'endpoint',
+    'unique_id': 'rexense-gateway_00124B0000000001:1_on',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_and_unload[gateway]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'rexense',
+        'rexense-gateway',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Rexense',
+    'model': 'RG5100',
+    'model_id': None,
+    'name': 'Rexense RG5100',
+    'name_by_user': None,
+    'serial_number': 'rexense-gateway',
+    'sw_version': '4.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_setup_and_unload[state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TL0001 Switch 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tl0001_switch_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_and_unload[switch]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'rexense',
+        'rexense-gateway_00124B0000000001',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Rexense',
+    'model': 'TL0001',
+    'model_id': None,
+    'name': 'TL0001',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': '20260630 17:12',
+    'via_device_id': <ANY>,
+  })
+# ---
