@@ -28,6 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # asyncio's own idea of a slow callback in debug mode
 DEFAULT_THRESHOLD_MS = 100.0
+# As in services.yaml; a callback over a minute is a stuck loop anyway
+MAX_THRESHOLD_MS = 60_000
 MAX_SLOW_CALLBACKS = 100
 # Only code compiled at runtime can add rows without bound
 MAX_ROWS = 10_000
@@ -264,9 +266,12 @@ def format_report(report: dict[str, Any]) -> str:
     """Return a report as text for the log."""
 
     def where(row: dict[str, Any]) -> str:
-        if (entry := row.get("entry")) is None:
-            return ""
-        return f" [{entry['domain']}: {entry['title']}]"
+        if (entry := row.get("entry")) is not None:
+            return f" [{entry['domain']}: {entry['title']}]"
+        # The entry was removed while timing ran; its ID still tells rows apart
+        if (entry_id := row.get("config_entry")) is not None:
+            return f" [{entry_id}]"
+        return ""
 
     lines = [f"Event loop callbacks since {report['since']}, busiest first:"]
     lines.extend(

@@ -17,6 +17,7 @@ import zlib
 from freezegun.api import FrozenDateTimeFactory
 from lru import LRU
 import objgraph
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -523,6 +524,22 @@ async def test_loop_timing_needs_a_running_timing(
         await hass.services.async_call(DOMAIN, service, {}, blocking=True)
 
 
+@pytest.mark.parametrize("threshold", [-1, 60_001, "inf"])
+async def test_loop_timing_rejects_a_threshold_out_of_range(
+    hass: HomeAssistant, threshold: float | str
+) -> None:
+    """The threshold is validated like the UI selector, not left to overflow."""
+    await _setup_profiler(hass)
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_START_LOOP_TIMING,
+            {CONF_THRESHOLD: threshold},
+            blocking=True,
+        )
+    assert Handle._run.__qualname__ == "Handle._run"
+
+
 async def test_loop_timing_starts_once_and_stops_on_unload(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -906,3 +923,32 @@ def test_loop_timing_log_says_when_rows_are_left_out() -> None:
     assert "cb49:" in text
     assert "cb50:" not in text
     assert "... and 2 more callbacks" in text
+
+
+def test_loop_timing_log_keeps_the_id_of_a_removed_entry() -> None:
+    """A config entry removed while timing ran still tells its rows apart."""
+    row = {
+        "callback": "cb",
+        "count": 1,
+        "total_ms": 0.1,
+        "max_ms": 0.1,
+        "max_at": "now",
+    }
+    report = {
+        "since": "now",
+        "threshold_ms": 100.0,
+        "errors": 0,
+        "overflowed": 0,
+        "slow": [],
+        "callbacks": [
+            {**row, "config_entry": "gone"},
+            {**row, "config_entry": "kept", "entry": {"domain": "hue", "title": "Hue"}},
+            {**row, "config_entry": None},
+        ],
+    }
+    lines = format_report(report).splitlines()[1:]
+    assert lines == [
+        "  cb [gone]: 1 calls, 0.1 ms total, longest 0.1 ms at now",
+        "  cb [hue: Hue]: 1 calls, 0.1 ms total, longest 0.1 ms at now",
+        "  cb: 1 calls, 0.1 ms total, longest 0.1 ms at now",
+    ]

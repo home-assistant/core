@@ -32,7 +32,12 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DATA_PROFILER, DOMAIN
-from .loop_timing import DEFAULT_THRESHOLD_MS, LoopTiming, format_report
+from .loop_timing import (
+    DEFAULT_THRESHOLD_MS,
+    MAX_THRESHOLD_MS,
+    LoopTiming,
+    format_report,
+)
 
 SERVICE_START = "start"
 SERVICE_MEMORY = "memory"
@@ -468,7 +473,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             {
                 probatio.Optional(
                     CONF_THRESHOLD, default=DEFAULT_THRESHOLD_MS
-                ): probatio.All(probatio.Coerce(float), probatio.Range(min=0))
+                ): probatio.All(
+                    probatio.Coerce(float), probatio.Range(min=0, max=MAX_THRESHOLD_MS)
+                )
             }
         ),
     )
