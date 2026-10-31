@@ -16,7 +16,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SNAPSHOT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
-        func="snapshot",
+        func="async_snapshot",
     )
     service.async_register_platform_entity_service(
         hass,
@@ -24,5 +24,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_RESTORE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
-        func="restore",
+        func="async_restore",
     )

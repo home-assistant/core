@@ -1,9 +1,10 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
 
+from collections.abc import Callable
 import logging
-from typing import override
+from typing import Any, override
 
-from serialx import SerialException
+from pymonoprice import ZoneStatus
 
 from homeassistant import core
 from homeassistant.components.media_player import (
@@ -13,12 +14,14 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.const import CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MonopriceConfigEntry
 from .const import CONF_SOURCES, DOMAIN
+from .coordinator import ZONE_IDS, MonopriceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,24 +59,28 @@ async def async_setup_entry(
     """Set up the Monoprice 6-zone amplifier platform."""
     port = config_entry.data[CONF_PORT]
 
-    monoprice = config_entry.runtime_data.client
-
     sources = _get_sources(config_entry)
+    runtime_data = config_entry.runtime_data
 
     entities = []
-    for i in range(1, 4):
-        for j in range(1, 7):
-            zone_id = (i * 10) + j
-            _LOGGER.debug("Adding zone %d for port %s", zone_id, port)
-            entities.append(
-                MonopriceZone(monoprice, sources, config_entry.entry_id, zone_id)
+    for zone_id in ZONE_IDS:
+        _LOGGER.debug("Adding zone %d for port %s", zone_id, port)
+        entities.append(
+            MonopriceZone(
+                runtime_data.coordinator,
+                sources,
+                config_entry.entry_id,
+                zone_id,
+                runtime_data.discovered_zones is None
+                or zone_id < 20
+                or zone_id in runtime_data.discovered_zones,
             )
+        )
 
-    # only call update before add if it's the first run so we can try to detect zones
-    async_add_entities(entities, config_entry.runtime_data.first_run)
+    async_add_entities(entities)
 
 
-class MonopriceZone(MediaPlayerEntity):
+class MonopriceZone(CoordinatorEntity[MonopriceCoordinator], MediaPlayerEntity):
     """Representation of a Monoprice amplifier zone."""
 
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
@@ -89,9 +96,18 @@ class MonopriceZone(MediaPlayerEntity):
     _attr_name = None
     _attr_volume_step = 1 / MAX_VOLUME
 
-    def __init__(self, monoprice, sources, namespace, zone_id):
+    def __init__(
+        self,
+        coordinator: MonopriceCoordinator,
+        sources,
+        namespace,
+        zone_id: int,
+        enabled_default: bool,
+    ) -> None:
         """Initialize new zone."""
-        self._monoprice = monoprice
+        super().__init__(coordinator, context=zone_id)
+        self._monoprice = coordinator.client
+        self._attr_entity_registry_enabled_default = enabled_default
         # dict source_id -> source name
         self._source_id_name = sources[0]
         # dict source name -> source_id
@@ -107,73 +123,79 @@ class MonopriceZone(MediaPlayerEntity):
             name=f"Zone {self._zone_id}",
         )
 
-        self._snapshot = None
-        self._update_success = True
+        self._snapshot: ZoneStatus | None = None
+        self._update_from_status()
 
-    def update(self) -> None:
-        """Retrieve latest state."""
-        try:
-            state = self._monoprice.zone_status(self._zone_id)
-        except SerialException:
-            self._update_success = False
-            _LOGGER.warning("Could not update zone %d", self._zone_id)
+    @callback
+    def _update_from_status(self) -> None:
+        """Take the state from the latest status of the zone."""
+        if (state := self.coordinator.data.get(self._zone_id)) is None:
             return
-
-        if not state:
-            self._update_success = False
-            return
-
         self._attr_state = MediaPlayerState.ON if state.power else MediaPlayerState.OFF
         self._attr_volume_level = state.volume / MAX_VOLUME
         self._attr_is_volume_muted = state.mute
-        idx = state.source
-        self._attr_source = self._source_id_name.get(idx)
+        self._attr_source = self._source_id_name.get(state.source)
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle a new status of the zone."""
+        self._update_from_status()
+        super()._handle_coordinator_update()
 
     @property
     @override
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added."""
-        return self._zone_id < 20 or self._update_success
+    def available(self) -> bool:
+        """Return whether this zone answered its last poll."""
+        return (
+            super().available and self.coordinator.data.get(self._zone_id) is not None
+        )
 
     @property
     @override
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Return the current source as medial title."""
         return self.source
 
-    def snapshot(self):
-        """Save zone's current state."""
-        self._snapshot = self._monoprice.zone_status(self._zone_id)
+    async def _async_send(self, command: Callable[..., Any], *args: Any) -> None:
+        """Send a command to the amplifier, then read back the zone."""
+        await self.coordinator.async_command(self._zone_id, command, *args)
 
-    def restore(self):
+    async def async_snapshot(self) -> None:
+        """Save zone's current state."""
+        self._snapshot = await self.coordinator.async_snapshot(self._zone_id)
+
+    async def async_restore(self) -> None:
         """Restore saved state."""
         if self._snapshot:
-            self._monoprice.restore_zone(self._snapshot)
+            await self._async_send(self._monoprice.restore_zone, self._snapshot)
 
     @override
-    def select_source(self, source: str) -> None:
+    async def async_select_source(self, source: str) -> None:
         """Set input source."""
         if source not in self._source_name_id:
             return
         idx = self._source_name_id[source]
-        self._monoprice.set_source(self._zone_id, idx)
+        await self._async_send(self._monoprice.set_source, self._zone_id, idx)
 
     @override
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        self._monoprice.set_power(self._zone_id, True)
+        await self._async_send(self._monoprice.set_power, self._zone_id, True)
 
     @override
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
-        self._monoprice.set_power(self._zone_id, False)
+        await self._async_send(self._monoprice.set_power, self._zone_id, False)
 
     @override
-    def mute_volume(self, mute: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
-        self._monoprice.set_mute(self._zone_id, mute)
+        await self._async_send(self._monoprice.set_mute, self._zone_id, mute)
 
     @override
-    def set_volume_level(self, volume: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._monoprice.set_volume(self._zone_id, round(volume * MAX_VOLUME))
+        await self._async_send(
+            self._monoprice.set_volume, self._zone_id, round(volume * MAX_VOLUME)
+        )
