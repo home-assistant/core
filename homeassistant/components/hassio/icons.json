@@ -7,6 +7,14 @@
       "memory_percent": {
         "default": "mdi:memory"
       }
+    },
+    "switch": {
+      "core_auto_update": {
+        "default": "mdi:autorenew",
+        "state": {
+          "off": "mdi:autorenew-off"
+        }
+      }
     }
   },
   "services": {
