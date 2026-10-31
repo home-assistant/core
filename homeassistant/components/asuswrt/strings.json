@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "invalid_unique_id": "Impossible to determine a valid unique ID for the device",
-      "no_unique_id": "A device without a valid unique ID is already configured. Configuration of multiple instances is not possible"
+      "no_unique_id": "A device without a valid unique ID is already configured. Configuration of multiple instances is not possible",
+      "unique_id_mismatch": "The router at this address is not the router that was configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,6 +20,25 @@
           "mode": "Router operating mode"
         },
         "description": "Set required parameters to connect to your router"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "[%key:component::asuswrt::config::step::user::data_description::host%]"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "port": "[%key:component::asuswrt::config::step::user::sections::more_options::data::port%]",
+              "ssh_key": "[%key:component::asuswrt::config::step::user::sections::more_options::data::ssh_key%]"
+            },
+            "name": "[%key:component::asuswrt::config::step::user::sections::more_options::name%]"
+          }
+        }
       },
       "user": {
         "data": {
