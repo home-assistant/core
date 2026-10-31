@@ -16,6 +16,13 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
+      }
+    }
+  },
   "exceptions": {
     "auth_failed": {
       "message": "Authentication with Bosch failed, please sign in again."
