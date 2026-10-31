@@ -188,6 +188,7 @@ class PendingDiscovered(TypedDict):
     """Pending discovered items."""
 
     pending: deque[MQTTDiscoveryPayload]
+    processing: MQTTDiscoveryPayload
     unsub: CALLBACK_TYPE
 
 
@@ -555,7 +556,10 @@ class MqttData:
     discovery_discovered_and_disabled: dict[
         tuple[str, str], DiscoveredDisabledEntity
     ] = field(default_factory=dict)
-    discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
+    # Maps a discovery hash to the discovery data the component keeps up to date
+    discovery_already_discovered: dict[tuple[str, str], DiscoveryInfoType] = field(
+        default_factory=dict
+    )
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict
     )

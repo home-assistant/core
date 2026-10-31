@@ -48,7 +48,7 @@ from homeassistant.components.mqtt.discovery import (
     async_start,
 )
 from homeassistant.components.mqtt.entity import MqttEntity, async_removed_from_device
-from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.components.mqtt.models import DATA_MQTT, ReceiveMessage
 from homeassistant.components.mqtt.schemas import (
     DEVICE_DISCOVERY_SCHEMA,
     SHARED_OPTIONS,
@@ -2107,6 +2107,254 @@ async def test_cleanup_device_mqtt_device_discovery(
     assert "No device components to cleanup" in caplog.text
 
 
+DESIRED_STATE_DEVICE_TOPIC = "homeassistant/device/parent/config"
+DESIRED_STATE_SWITCH_1 = {
+    "p": "switch",
+    "name": "Switch 1",
+    "cmd_t": "sw1/set",
+    "uniq_id": "sw1",
+}
+DESIRED_STATE_SWITCH_2 = {
+    "p": "switch",
+    "name": "Switch 2",
+    "cmd_t": "sw2/set",
+    "uniq_id": "sw2",
+}
+
+
+def _desired_state_payload(components: dict[str, Any]) -> str:
+    """Return a device discovery payload with the components."""
+    return json.dumps(
+        {
+            "dev": {"ids": ["parent"], "name": "Parent"},
+            "o": {"name": "Foo2Mqtt"},
+            "cmps": components,
+        }
+    )
+
+
+def _desired_state_device_id(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> str | None:
+    """Return the ID of the device of the device discovery payload."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "parent"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+    return None if device is None else device.id
+
+
+@pytest.mark.parametrize(
+    "switch_1",
+    [
+        pytest.param(DESIRED_STATE_SWITCH_1, id="enabled"),
+        pytest.param({**DESIRED_STATE_SWITCH_1, "en": False}, id="disabled"),
+    ],
+)
+async def test_device_discovery_replace_all_components(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    switch_1: dict[str, Any],
+) -> None:
+    """Test replacing all components, including a device trigger, keeps the device."""
+    mqtt_mock = await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        DESIRED_STATE_DEVICE_TOPIC,
+        _desired_state_payload(
+            {
+                "trigger": {
+                    "p": "device_automation",
+                    "automation_type": "trigger",
+                    "topic": "button1",
+                    "type": "button_short_press",
+                    "subtype": "button_1",
+                },
+                "sw1": switch_1,
+            }
+        ),
+    )
+    await hass.async_block_till_done()
+    device_id = _desired_state_device_id(hass, device_registry)
+    assert device_id is not None
+    assert await mqtt.device_trigger.async_get_triggers(hass, device_id)
+    assert entity_registry.async_is_registered("switch.parent_switch_1")
+    mqtt_mock.async_publish.reset_mock()
+
+    # The omitted components are removed before the new switch is added
+    async_fire_mqtt_message(
+        hass,
+        DESIRED_STATE_DEVICE_TOPIC,
+        _desired_state_payload({"sw2": DESIRED_STATE_SWITCH_2}),
+    )
+    await hass.async_block_till_done()
+    assert _desired_state_device_id(hass, device_registry) == device_id
+    assert not await mqtt.device_trigger.async_get_triggers(hass, device_id)
+    assert not entity_registry.async_is_registered("switch.parent_switch_1")
+    entity_entry = entity_registry.async_get("switch.parent_switch_2")
+    assert entity_entry is not None
+    assert entity_entry.device_id == device_id
+    assert (
+        "Removing switch 'parent sw1', omitted from the MQTT device discovery "
+        f"payload on topic {DESIRED_STATE_DEVICE_TOPIC} from external application "
+        "Foo2Mqtt" in caplog.text
+    )
+    # Clearing the device discovery topic would remove all device components
+    mqtt_mock.async_publish.assert_not_called()
+
+
+async def test_device_discovery_omitted_pending_component(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a component omitted while its platform is set up is removed."""
+    await mqtt_mock_entry()
+    platform_setup = asyncio.Event()
+    forward_entry_setup = mqtt.discovery.async_forward_entry_setup_and_setup_discovery
+
+    async def _wait_for_platform_setup(*args: Any) -> None:
+        await platform_setup.wait()
+        await forward_entry_setup(*args)
+
+    with patch(
+        "homeassistant.components.mqtt.discovery.async_forward_entry_setup_and_setup_discovery",
+        side_effect=_wait_for_platform_setup,
+    ):
+        async_fire_mqtt_message(
+            hass,
+            DESIRED_STATE_DEVICE_TOPIC,
+            _desired_state_payload(
+                {"sw1": DESIRED_STATE_SWITCH_1, "sw2": DESIRED_STATE_SWITCH_2}
+            ),
+        )
+        # Let the discovery reach the blocked platform setup
+        for _ in range(5):
+            await asyncio.sleep(0)
+        mqtt_data = hass.data[DATA_MQTT]
+        assert ("switch", "parent sw2") in mqtt_data.discovery_pending_discovered
+        assert ("switch", "parent sw2") not in mqtt_data.discovery_already_discovered
+        async_fire_mqtt_message(
+            hass,
+            DESIRED_STATE_DEVICE_TOPIC,
+            _desired_state_payload({"sw1": DESIRED_STATE_SWITCH_1}),
+        )
+        platform_setup.set()
+        await hass.async_block_till_done()
+    assert entity_registry.async_is_registered("switch.parent_switch_1")
+    assert not entity_registry.async_is_registered("switch.parent_switch_2")
+    assert _desired_state_device_id(hass, device_registry) is not None
+    assert not hass.data[DATA_MQTT].discovery_pending_discovered
+
+
+@pytest.mark.parametrize(
+    ("components", "removed_entity_ids", "entity_id"),
+    [
+        pytest.param(
+            {"sw1": DESIRED_STATE_SWITCH_1, "sw_renamed": DESIRED_STATE_SWITCH_2},
+            [],
+            "switch.parent_switch_2",
+            id="rename",
+        ),
+        pytest.param(
+            {
+                "sw1": DESIRED_STATE_SWITCH_1,
+                "sw2": {
+                    "p": "binary_sensor",
+                    "name": "Switch 2",
+                    "stat_t": "sw2/state",
+                    "uniq_id": "sw2",
+                },
+            },
+            ["switch.parent_switch_2"],
+            "binary_sensor.parent_switch_2",
+            id="platform_change",
+        ),
+    ],
+)
+async def test_device_discovery_replace_component(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    components: dict[str, Any],
+    removed_entity_ids: list[str],
+    entity_id: str,
+) -> None:
+    """Test replacing a component with another component ID or platform."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        DESIRED_STATE_DEVICE_TOPIC,
+        _desired_state_payload(
+            {"sw1": DESIRED_STATE_SWITCH_1, "sw2": DESIRED_STATE_SWITCH_2}
+        ),
+    )
+    await hass.async_block_till_done()
+    device_id = _desired_state_device_id(hass, device_registry)
+    assert device_id is not None
+
+    async_fire_mqtt_message(
+        hass, DESIRED_STATE_DEVICE_TOPIC, _desired_state_payload(components)
+    )
+    await hass.async_block_till_done()
+    for removed_entity_id in removed_entity_ids:
+        assert not entity_registry.async_is_registered(removed_entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.device_id == device_id
+    assert hass.states.get(entity_id) is not None
+    assert _desired_state_device_id(hass, device_registry) == device_id
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param("{", id="invalid_json"),
+        pytest.param(
+            json.dumps(
+                {
+                    "dev": {"ids": ["parent"], "name": "Parent"},
+                    "cmps": {"sw1": DESIRED_STATE_SWITCH_1},
+                }
+            ),
+            id="invalid_schema",
+        ),
+        pytest.param('{"migrate_discovery": true}', id="migrate_discovery"),
+    ],
+)
+async def test_device_discovery_payload_without_desired_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    payload: str,
+) -> None:
+    """Test an invalid payload or a migration request does not remove anything."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        DESIRED_STATE_DEVICE_TOPIC,
+        _desired_state_payload(
+            {"sw1": DESIRED_STATE_SWITCH_1, "sw2": DESIRED_STATE_SWITCH_2}
+        ),
+    )
+    await hass.async_block_till_done()
+    device_id = _desired_state_device_id(hass, device_registry)
+    assert device_id is not None
+
+    async_fire_mqtt_message(hass, DESIRED_STATE_DEVICE_TOPIC, payload)
+    await hass.async_block_till_done()
+    assert entity_registry.async_is_registered("switch.parent_switch_1")
+    assert entity_registry.async_is_registered("switch.parent_switch_2")
+    assert _desired_state_device_id(hass, device_registry) == device_id
+    assert "omitted from the MQTT device discovery payload" not in caplog.text
+
+
 async def test_cleanup_device_multiple_config_entries(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -3075,10 +3323,8 @@ IGNORED_DISABLED_COMPONENT_REMOVAL_WARNING = (
     "was discovered on topic homeassistant/device/bla/config from external "
     "application bla2mqtt, version: 1.0; after migration to device discovery, "
     "a component cannot be removed by publishing an empty payload to its "
-    "old single component discovery topic; to remove the component, publish the "
-    "device discovery payload to homeassistant/device/bla/config with only "
-    "the `platform` option for this component, then omit the component from "
-    "the device discovery payload"
+    "old single component discovery topic; to remove the component, omit it "
+    "from the device discovery payload published to homeassistant/device/bla/config"
 )
 
 
