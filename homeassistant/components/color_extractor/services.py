@@ -8,7 +8,7 @@ from typing import Any
 
 import aiohttp
 from colorthief import ColorThief
-from PIL import UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 import probatio
 
 from homeassistant.components.light import (
@@ -21,9 +21,19 @@ from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, cal
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_GET_COLOR
+from .const import (
+    ATTR_MIN_BRIGHTNESS,
+    ATTR_PATH,
+    ATTR_URL,
+    DOMAIN,
+    SERVICE_GET_COLOR,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+MIN_BRIGHTNESS_SCHEMA = probatio.All(
+    probatio.Coerce(int), probatio.Range(min=0, max=100)
+)
 
 # Extend the existing light.turn_on service schema
 TURN_ON_SERVICE_SCHEMA = probatio.All(
@@ -33,6 +43,7 @@ TURN_ON_SERVICE_SCHEMA = probatio.All(
             **LIGHT_TURN_ON_SCHEMA,
             probatio.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
             probatio.Exclusive(ATTR_URL, "color_extractor"): cv.url,
+            probatio.Optional(ATTR_MIN_BRIGHTNESS): MIN_BRIGHTNESS_SCHEMA,
         }
     ),
 )
@@ -42,6 +53,7 @@ GET_COLOR_SERVICE_SCHEMA = probatio.All(
     {
         probatio.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
         probatio.Exclusive(ATTR_URL, "color_extractor"): cv.url,
+        probatio.Optional(ATTR_MIN_BRIGHTNESS): MIN_BRIGHTNESS_SCHEMA,
     },
 )
 
@@ -66,9 +78,54 @@ def _get_color(file_handler: io.BytesIO | str) -> tuple[int, int, int]:
     return color
 
 
+def _get_bright_color(
+    file_handler: io.BytesIO | str, min_brightness: int
+) -> tuple[int, int, int] | None:
+    """Extract the dominant color after excluding dark pixels."""
+    with Image.open(file_handler) as image:
+        image.thumbnail((256, 256))
+        image = image.convert("RGBA")
+
+        threshold = min_brightness * 255 / 100
+        pixels = [
+            (red, green, blue, alpha if max(red, green, blue) >= threshold else 0)
+            for red, green, blue, alpha in image.getdata()
+        ]
+        qualifying_pixels = [
+            (red, green, blue)
+            for red, green, blue, alpha in pixels
+            if alpha >= 125
+        ]
+        if not qualifying_pixels:
+            return None
+
+        # ColorThief ignores near-white pixels, so handle them directly
+        # when every qualifying pixel would otherwise be discarded.
+        if all(min(red, green, blue) > 250 for red, green, blue in qualifying_pixels):
+            return tuple(
+                round(sum(pixel[channel] for pixel in qualifying_pixels) / len(qualifying_pixels))
+                for channel in range(3)
+            )
+
+        image.putdata(pixels)
+        with io.BytesIO() as image_buffer:
+            image.save(image_buffer, format="PNG")
+            image_buffer.seek(0)
+            return _get_color(image_buffer)
+
+
+def _extract_color(
+    file_handler: io.BytesIO | str, min_brightness: int | None
+) -> tuple[int, int, int] | None:
+    """Extract the predominant color with optional dark-pixel filtering."""
+    if min_brightness is None:
+        return _get_color(file_handler)
+    return _get_bright_color(file_handler, min_brightness)
+
+
 async def _async_extract_color_from_url(
-    hass: HomeAssistant, url: str
-) -> tuple[int, int, int]:
+    hass: HomeAssistant, url: str, min_brightness: int | None = None
+) -> tuple[int, int, int] | None:
     """Handle call for URL based image."""
     if not hass.config.is_allowed_external_url(url):
         raise ServiceValidationError(
@@ -112,12 +169,12 @@ async def _async_extract_color_from_url(
         _file.name = "color_extractor.jpg"
         _file.seek(0)
 
-        return _get_color(_file)
+        return await hass.async_add_executor_job(_extract_color, _file, min_brightness)
 
 
 def _extract_color_from_path(
-    hass: HomeAssistant, file_path: str
-) -> tuple[int, int, int]:
+    hass: HomeAssistant, file_path: str, min_brightness: int | None = None
+) -> tuple[int, int, int] | None:
     """Handle call for local file based image."""
     if not hass.config.is_allowed_path(file_path):
         raise ServiceValidationError(
@@ -129,26 +186,30 @@ def _extract_color_from_path(
     _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
     _file = _get_file(file_path)
-    return _get_color(_file)
+    return _extract_color(_file, min_brightness)
 
 
 async def async_handle_service(service_call: ServiceCall) -> None:
     """Decide which color_extractor method to call based on service."""
     service_data = dict(service_call.data)
+    min_brightness = service_data.pop(ATTR_MIN_BRIGHTNESS, None)
 
     try:
         if ATTR_URL in service_data:
             image_type = "URL"
             image_reference = service_data.pop(ATTR_URL)
             color = await _async_extract_color_from_url(
-                service_call.hass, image_reference
+                service_call.hass, image_reference, min_brightness
             )
 
         elif ATTR_PATH in service_data:
             image_type = "file path"
             image_reference = service_data.pop(ATTR_PATH)
             color = await service_call.hass.async_add_executor_job(
-                _extract_color_from_path, service_call.hass, image_reference
+                _extract_color_from_path,
+                service_call.hass,
+                image_reference,
+                min_brightness,
             )
 
     except UnidentifiedImageError as ex:
@@ -160,6 +221,10 @@ async def async_handle_service(service_call: ServiceCall) -> None:
                 "image_reference": image_reference,
             },
         ) from ex
+
+    if color is None:
+        _LOGGER.debug("No color meets the minimum brightness; leaving lights unchanged")
+        return
 
     service_data[ATTR_RGB_COLOR] = color
 
@@ -173,20 +238,24 @@ async def async_handle_get_color(
 ) -> dict[str, Any]:
     """Handle get_color service call."""
     service_data = dict(service_call.data)
+    min_brightness = service_data.pop(ATTR_MIN_BRIGHTNESS, None)
 
     try:
         if ATTR_URL in service_data:
             image_type = "URL"
             image_reference = service_data.pop(ATTR_URL)
             color = await _async_extract_color_from_url(
-                service_call.hass, image_reference
+                service_call.hass, image_reference, min_brightness
             )
 
         elif ATTR_PATH in service_data:
             image_type = "file path"
             image_reference = service_data.pop(ATTR_PATH)
             color = await service_call.hass.async_add_executor_job(
-                _extract_color_from_path, service_call.hass, image_reference
+                _extract_color_from_path,
+                service_call.hass,
+                image_reference,
+                min_brightness,
             )
 
     except UnidentifiedImageError as ex:

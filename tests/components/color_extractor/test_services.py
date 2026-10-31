@@ -6,18 +6,20 @@ from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
 import aiohttp
-from PIL import UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 from probatio.error import MultipleInvalid
 import pytest
 from pytest_homeassistant.common import async_load_fixture, load_fixture
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.color_extractor.services import (
+    ATTR_MIN_BRIGHTNESS,
     ATTR_PATH,
     ATTR_URL,
     DOMAIN,
     SERVICE_GET_COLOR,
     SERVICE_TURN_ON,
+    _get_bright_color,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -514,3 +516,94 @@ async def test_get_color_service_not_allowed_path(
     assert exc_info.value.translation_placeholders == {
         "file_path": "/opt/not_an_image.txt",
     }
+
+
+@pytest.mark.parametrize(
+    "min_brightness",
+    [30, 100],
+)
+def test_bright_color_extraction(min_brightness: int) -> None:
+    """Bright colors remain eligible after excluding a dark background."""
+
+    image = Image.new("RGB", (100, 100), (5, 5, 5))
+    for x in range(20):
+        for y in range(20):
+            image.putpixel((x, y), (255, 0, 0))
+
+    with io.BytesIO() as image_buffer:
+        image.save(image_buffer, format="PNG")
+        image_buffer.seek(0)
+        color = _get_bright_color(image_buffer, min_brightness)
+        assert color is not None
+        assert _close_enough(color, (255, 0, 0))
+
+
+@pytest.mark.parametrize("rgb", [(255, 255, 255), (252, 253, 254)])
+def test_bright_color_extraction_near_white(rgb: tuple[int, int, int]) -> None:
+    """Qualifying near-white pixels must not be discarded by ColorThief."""
+    image = Image.new("RGB", (30, 30), rgb)
+    with io.BytesIO() as image_buffer:
+        image.save(image_buffer, format="PNG")
+        image_buffer.seek(0)
+        assert _get_bright_color(image_buffer, 90) == rgb
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_min_brightness_dark_image_skips_light(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """An entirely dark image must not turn a light on."""
+    url = "http://example.com/images/dark.png"
+    with io.BytesIO() as image_buffer:
+        Image.new("RGB", (30, 30), (5, 5, 5)).save(image_buffer, format="PNG")
+        image_content = image_buffer.getvalue()
+
+    hass.config.allowlist_external_urls.add("http://example.com/images/")
+    aioclient_mock.get(url, content=image_content)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_URL: url, ATTR_MIN_BRIGHTNESS: 30, ATTR_ENTITY_ID: LIGHT_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(LIGHT_ENTITY).state == STATE_OFF
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_get_color_no_bright_pixels(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Response explicitly indicates when no pixel meets the threshold."""
+    url = "http://example.com/images/dark.png"
+    with io.BytesIO() as image_buffer:
+        Image.new("RGB", (30, 30), (5, 5, 5)).save(image_buffer, format="PNG")
+        image_content = image_buffer.getvalue()
+
+    hass.config.allowlist_external_urls.add("http://example.com/images/")
+    aioclient_mock.get(url, content=image_content)
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_COLOR,
+        {ATTR_URL: url, ATTR_MIN_BRIGHTNESS: 30},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {"color": None}
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("threshold", [-1, 101])
+async def test_min_brightness_invalid(
+    hass: HomeAssistant, threshold: int
+) -> None:
+    """Invalid minimum brightness is rejected by the service schema."""
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_COLOR,
+            {ATTR_URL: "http://example.com/image.png", ATTR_MIN_BRIGHTNESS: threshold},
+            blocking=True,
+            return_response=True,
+        )

@@ -1,5 +1,6 @@
 """Constants for the color_extractor component."""
 
+ATTR_MIN_BRIGHTNESS = "min_brightness"
 ATTR_PATH = "color_extract_path"
 ATTR_URL = "color_extract_url"
 
