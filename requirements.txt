@@ -62,4 +62,4 @@ urllib3>=2.0
 uv==0.13.6
 webrtc-models==0.3.0
 yarl==1.25.1
-zeroconf==0.151.5
+zeroconf==0.152.0
