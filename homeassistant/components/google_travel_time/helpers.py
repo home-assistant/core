@@ -21,6 +21,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
@@ -36,6 +37,7 @@ from .const import (
     TRAFFIC_MODELS_TO_API_ENUM,
     TRANSIT_PREFS_TO_API_ENUM,
     TRANSPORT_TYPES_TO_API_ENUM,
+    TRAVEL_PREFS_TO_API_ENUM,
     UNITS_TO_API_ENUM,
 )
 
@@ -198,6 +200,7 @@ async def async_compute_routes(
     field_mask: str = (
         "routes.duration,routes.staticDuration,routes.distanceMeters,routes.localizedValues"
     ),
+    travel_routing_preference: str | None = None,
 ) -> ComputeRoutesResponse | None:
     """Compute routes using Google Routes API."""
     origin_waypoint = convert_to_waypoint(hass, origin)
@@ -207,9 +210,25 @@ async def async_compute_routes(
         return None
 
     routing_preference = None
+    routing_traffic_model = (
+        TRAFFIC_MODELS_TO_API_ENUM[traffic_model] if traffic_model else None
+    )
     avoid_tolls = avoid_highways = avoid_ferries = avoid_indoor = False
+
     if travel_mode == TravelMode.DRIVE:
         routing_preference = RoutingPreference.TRAFFIC_AWARE_OPTIMAL
+        if travel_routing_preference is not None:
+            routing_preference = TRAVEL_PREFS_TO_API_ENUM[travel_routing_preference]
+
+        if (
+            routing_preference != RoutingPreference.TRAFFIC_AWARE_OPTIMAL
+            and routing_traffic_model is not None
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="traffic_model_not_allowed",
+            )
+
         avoid_tolls = avoid == "tolls"
         avoid_ferries = avoid == "ferries"
         avoid_highways = avoid == "highways"
@@ -238,9 +257,7 @@ async def async_compute_routes(
         avoid_highways=avoid_highways,
         avoid_ferries=avoid_ferries,
         avoid_indoor=avoid_indoor,
-        traffic_model=TRAFFIC_MODELS_TO_API_ENUM[traffic_model]
-        if traffic_model
-        else None,
+        traffic_model=routing_traffic_model,
         transit_routing_preference=transit_routing_preference_enum,
         allowed_travel_modes=allowed_travel_modes,
         field_mask=field_mask,
