@@ -1,9 +1,11 @@
 """Support for AlarmDecoder devices."""
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 from adext import AdExt
 from alarmdecoder.devices import SerialDevice, SocketDevice
@@ -17,7 +19,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -40,6 +43,7 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+INIT_TIMEOUT = 30
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -57,6 +61,9 @@ class AlarmDecoderData:
     remove_update_listener: Callable[[], None]
     remove_stop_listener: Callable[[], None]
     restart: bool
+    cancel_retry: CALLBACK_TYPE | None = None
+    shutdown: bool = False
+    opening: asyncio.Future[Any] | None = None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -76,28 +83,39 @@ async def async_setup_entry(
 
     def stop_alarmdecoder(event):
         """Handle the shutdown of AlarmDecoder."""
-        if not entry.runtime_data:
-            return
         _LOGGER.debug("Shutting down alarmdecoder")
-        entry.runtime_data.restart = False
+        data.restart = False
         controller.close()
 
     async def open_connection(now=None):
         """Open a connection to AlarmDecoder."""
+        data.cancel_retry = None
+        # An attempt still connecting when the entry shut down must not revive
+        # the controller or schedule another one.
+        if data.shutdown:
+            return
         try:
-            await hass.async_add_executor_job(controller.open, baud)
+            # Shielded so a setup timeout leaves it for shutdown to clean up.
+            data.opening = hass.async_add_executor_job(controller.open, baud)
+            await asyncio.shield(data.opening)
         except NoDeviceError:
+            if data.shutdown:
+                return
             _LOGGER.debug("Failed to connect. Retrying in 5 seconds")
-            async_call_later(hass, timedelta(seconds=5), open_connection)
+            data.cancel_retry = async_call_later(
+                hass, timedelta(seconds=5), open_connection
+            )
+            return
+        if data.shutdown:
             return
         _LOGGER.debug("Established a connection with the alarmdecoder")
-        entry.runtime_data.restart = True
+        data.restart = True
 
     def handle_closed_connection(event):
         """Restart after unexpected loss of connection."""
-        if not entry.runtime_data.restart:
+        if not data.restart:
             return
-        entry.runtime_data.restart = False
+        data.restart = False
         _LOGGER.warning("AlarmDecoder unexpectedly lost connection")
         hass.add_job(open_connection)
 
@@ -141,13 +159,19 @@ async def async_setup_entry(
         EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder
     )
 
-    entry.runtime_data = AlarmDecoderData(
+    data = entry.runtime_data = AlarmDecoderData(
         controller, undo_listener, remove_stop_listener, False
     )
 
-    await open_connection()
-
-    await controller.is_init()
+    try:
+        async with asyncio.timeout(INIT_TIMEOUT):
+            await open_connection()
+            await controller.is_init()
+    except TimeoutError as err:
+        await _async_shutdown(hass, data)
+        raise ConfigEntryNotReady(
+            f"No response from the AlarmDecoder within {INIT_TIMEOUT} seconds"
+        ) from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -157,12 +181,29 @@ async def async_unload_entry(
 ) -> None:
     """Unload a AlarmDecoder entry."""
     data = entry.runtime_data
-    data.restart = False
 
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
+    await _async_shutdown(hass, data)
+
+
+async def _async_shutdown(hass: HomeAssistant, data: AlarmDecoderData) -> None:
+    """Stop reconnecting, remove listeners and close the connection."""
+    data.shutdown = True
+    data.restart = False
+    if data.cancel_retry is not None:
+        # A pending reconnect would otherwise revive this controller.
+        data.cancel_retry()
+        data.cancel_retry = None
     data.remove_update_listener()
     data.remove_stop_listener()
+    if data.opening is not None and not data.opening.done():
+        # close() can't interrupt a connect() in progress, which would then
+        # leave the connection open. Close once the attempt finishes instead.
+        data.opening.add_done_callback(
+            lambda _: hass.async_add_executor_job(data.client.close)
+        )
+        return
     await hass.async_add_executor_job(data.client.close)
 
 
