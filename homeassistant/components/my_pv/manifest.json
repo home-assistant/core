@@ -1,7 +1,11 @@
 {
   "domain": "my_pv",
   "name": "my-PV",
-  "categories": ["energy.solar_batteries", "climate.water_heaters"],
+  "categories": [
+    "energy.solar_batteries",
+    "climate.water_heaters",
+    "climate.thermostats_heating"
+  ],
   "codeowners": ["@my-pv", "@rrooggiieerr"],
   "config_flow": true,
   "dhcp": [

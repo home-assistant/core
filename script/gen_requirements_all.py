@@ -232,12 +232,6 @@ auth0-python<5.0
 backoff==2.2.1
 python-backoff<2.4.0
 
-# bitstring 5.0.0 removed ConstBitStream, which pysml (used by edl21) still imports
-# https://github.com/home-assistant/core/issues/185883
-# https://codeberg.org/obi/pysml/issues/33
-# Remove once pysml supports bitstring>=5
-bitstring<5
-
 # graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
 # (used by aioaseko) still imports
 # https://github.com/home-assistant/core/issues/184918
@@ -249,6 +243,10 @@ pycares>=5.2.1
 
 # pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
 pypasser<1.0.0
+
+# srptools 2.0.0 made the private key a keyword-only argument, which pyatv passes positionally
+# https://github.com/home-assistant/core/issues/189315
+srptools<2
 
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5

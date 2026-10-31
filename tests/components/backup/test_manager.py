@@ -61,6 +61,7 @@ from homeassistant.components.backup.manager import (
     UploadBackupEvent,
     WrittenBackup,
 )
+from homeassistant.components.backup.services import BackupService
 from homeassistant.components.http.server import MAX_CLIENT_SIZE
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
@@ -150,7 +151,7 @@ async def test_create_backup_service(
     ) as create_backup:
         await hass.services.async_call(
             DOMAIN,
-            "create",
+            BackupService.CREATE,
             blocking=True,
         )
 
@@ -1876,7 +1877,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
     with pytest.raises(BackupManagerError) as err:
         await hass.services.async_call(
             DOMAIN,
-            "create",
+            BackupService.CREATE,
             blocking=True,
         )
 
@@ -1932,7 +1933,7 @@ async def test_exception_platform_post(
     with pytest.raises(expected_exception, match=re.escape(expected_msg)):
         await hass.services.async_call(
             DOMAIN,
-            "create",
+            BackupService.CREATE,
             blocking=True,
         )
 

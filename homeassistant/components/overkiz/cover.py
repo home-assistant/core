@@ -21,6 +21,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityDescription,
     CoverEntityFeature,
+    CoverSpeed,
 )
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
@@ -46,9 +47,6 @@ _POSITION_UNKNOWN = 124  # "Unknown position" preset
 
 # Default tilt step size (in degrees) used for RTS tilt commands
 _TILT_STEP_SIZE = 5
-
-_SPEED_DEFAULT = "default"
-_SPEED_SLOW = "slow"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -750,7 +748,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         if self.device.supports_command(OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED):
             supported_features |= CoverEntityFeature.SPEED
-            self._attr_supported_speeds = [_SPEED_DEFAULT, _SPEED_SLOW]
+            self._attr_supported_speeds = [CoverSpeed.FAST, CoverSpeed.SLOW]
 
         self._attr_supported_features = supported_features
 
@@ -831,7 +829,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        if kwargs.get(ATTR_SPEED) == _SPEED_SLOW:
+        if kwargs.get(ATTR_SPEED) == CoverSpeed.SLOW:
             await self._async_set_cover_position_low_speed(position)
             return
 
@@ -844,7 +842,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if kwargs.get(ATTR_SPEED) == _SPEED_SLOW:
+        if kwargs.get(ATTR_SPEED) == CoverSpeed.SLOW:
             await self._async_set_cover_position_low_speed(100)
             return
 
@@ -854,7 +852,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if kwargs.get(ATTR_SPEED) == _SPEED_SLOW:
+        if kwargs.get(ATTR_SPEED) == CoverSpeed.SLOW:
             await self._async_set_cover_position_low_speed(0)
             return
 

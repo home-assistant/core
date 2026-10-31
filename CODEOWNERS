@@ -1528,6 +1528,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerfox_local/ @klaasnicolaas
 /tests/components/powerfox_local/ @klaasnicolaas
+/homeassistant/components/powersensor_au/ @bookman-dius @jmattsson
+/tests/components/powersensor_au/ @bookman-dius @jmattsson
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
 /homeassistant/components/prana/ @prana-dev-official
@@ -2261,8 +2263,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/yandex_transport/ @rishatik92 @devbis
 /homeassistant/components/yardian/ @aeon-matrix
 /tests/components/yardian/ @aeon-matrix
-/homeassistant/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
-/tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
+/homeassistant/components/yeelight/ @shenxn @starkillerOG @alexyao2015
+/tests/components/yeelight/ @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward
 /homeassistant/components/yi/ @bachya
 /homeassistant/components/yolink/ @matrixd2

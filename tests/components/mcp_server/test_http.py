@@ -447,7 +447,9 @@ async def test_server_icons(
         client.make_url({"sse": SSE_API, "streamable": STREAMABLE_API}[mcp_protocol])
     )
     base_url = str(URL(mcp_url).origin())
-    hass.config.internal_url = base_url
+    # The icon URL follows the origin of the request, not the configured URLs
+    hass.config.internal_url = "http://homeassistant.local:8123"
+    hass.config.external_url = "https://example.com"
 
     async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         assert session.server_info is not None

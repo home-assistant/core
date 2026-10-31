@@ -81,7 +81,7 @@ async def test_sensor_memory_missing(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("sensor.hostname_memory_used")
+    state = hass.states.get("sensor.hostname_memory_usage")
     assert state
     assert state.state == STATE_UNKNOWN
 
