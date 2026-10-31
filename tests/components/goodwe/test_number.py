@@ -4,7 +4,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from goodwe import InverterError, SensorKind
-from goodwe.sensor import Current
+from goodwe.exceptions import RequestRejectedException
+from goodwe.sensor import Current, Integer
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -35,7 +36,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_HOST, TEST_PORT, TEST_SERIAL
@@ -47,6 +48,10 @@ GRID_EXPORT_LIMIT_ENTITY_ID = "number.goodwe_grid_export_limit"
 # Setting definition as advertised by the goodwe library for ET inverters
 BATTERY_CHARGE_CURRENT_SETTING = Current(
     BATTERY_CHARGE_CURRENT, 45353, "Battery Charge Current", SensorKind.BAT
+)
+FAST_CHARGING_SETTINGS = (
+    Integer("fast_charging_soc", 47546, "Fast Charging SoC", "%", SensorKind.BAT),
+    Integer("fast_charging_power", 47603, "Fast Charging Power", "%", SensorKind.BAT),
 )
 
 
@@ -235,7 +240,7 @@ async def test_set_battery_charge_current_limit_write_error(
     await setup_integration(hass, mock_config_entry)
     mock_inverter.write_setting.side_effect = InverterError("Failed to write setting")
 
-    with pytest.raises(InverterError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -245,6 +250,8 @@ async def test_set_battery_charge_current_limit_write_error(
             },
             blocking=True,
         )
+    assert not isinstance(exc_info.value, ServiceValidationError)
+    assert exc_info.value.translation_key == "write_failed"
 
     mock_inverter.write_setting.assert_called_once_with(BATTERY_CHARGE_CURRENT, 20.3)
     assert hass.states.get(BATTERY_CHARGE_CURRENT_ENTITY_ID).state == "25.5"
@@ -287,3 +294,98 @@ async def test_grid_export_limit_max(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_MAX] == expected_max
+
+
+@pytest.mark.parametrize(
+    ("setting", "entity_id"),
+    [
+        ("fast_charging_soc", "number.goodwe_fast_charging_target_soc"),
+        ("fast_charging_power", "number.goodwe_fast_charging_power"),
+    ],
+)
+async def test_fast_charging_numbers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_inverter: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    setting: str,
+    entity_id: str,
+) -> None:
+    """Test the fast charging numbers are created and written as whole percents."""
+    configure_settings(
+        mock_inverter, {"fast_charging_soc": 90, "fast_charging_power": 50}
+    )
+    mock_inverter.settings.return_value = FAST_CHARGING_SETTINGS
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert state.attributes[ATTR_MIN] == 0
+    assert state.attributes[ATTR_MAX] == 100
+    assert state.attributes[ATTR_STEP] == 1
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.unique_id == f"{DOMAIN}-{setting}-{TEST_SERIAL}"
+    assert entry.entity_category is EntityCategory.CONFIG
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 80},
+        blocking=True,
+    )
+
+    mock_inverter.write_setting.assert_called_once_with(setting, 80)
+    assert hass.states.get(entity_id).state == "80.0"
+
+
+async def test_fast_charging_numbers_not_advertised(
+    hass: HomeAssistant,
+    mock_inverter: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no fast charging numbers are created without the settings."""
+    configure_settings(
+        mock_inverter, {"fast_charging_soc": 90, "fast_charging_power": 50}
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("number.goodwe_fast_charging_target_soc") is None
+    assert hass.states.get("number.goodwe_fast_charging_power") is None
+
+
+async def test_set_fast_charging_soc_rejected(
+    hass: HomeAssistant,
+    mock_inverter: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a value rejected by the inverter raises a validation error.
+
+    The inverter rejects e.g. a target SoC not above the current battery SoC.
+    """
+    configure_settings(
+        mock_inverter, {"fast_charging_soc": 90, "fast_charging_power": 50}
+    )
+    mock_inverter.settings.return_value = FAST_CHARGING_SETTINGS
+    await setup_integration(hass, mock_config_entry)
+    mock_inverter.write_setting.side_effect = RequestRejectedException(
+        "ILLEGAL DATA VALUE"
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: "number.goodwe_fast_charging_target_soc", ATTR_VALUE: 10},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "setting_rejected"
+    assert exc_info.value.translation_placeholders == {
+        "value": "10",
+        "reason": "ILLEGAL DATA VALUE",
+    }
+    mock_inverter.write_setting.assert_called_once_with("fast_charging_soc", 10)
+    assert hass.states.get("number.goodwe_fast_charging_target_soc").state == "90.0"

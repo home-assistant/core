@@ -29,6 +29,12 @@
       "battery_discharge_depth": {
         "name": "Depth of discharge (on-grid)"
       },
+      "fast_charging_power": {
+        "name": "Fast charging power"
+      },
+      "fast_charging_soc": {
+        "name": "Fast charging target SoC"
+      },
       "grid_export_limit": {
         "name": "Grid export limit"
       }
@@ -46,6 +52,19 @@
           "peak_shaving": "Peak shaving mode"
         }
       }
+    },
+    "switch": {
+      "fast_charging": {
+        "name": "Fast charging"
+      }
+    }
+  },
+  "exceptions": {
+    "setting_rejected": {
+      "message": "The inverter rejected the value {value} ({reason})."
+    },
+    "write_failed": {
+      "message": "Failed to write the setting to the inverter."
     }
   }
 }

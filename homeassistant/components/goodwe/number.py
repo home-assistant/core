@@ -6,6 +6,7 @@ import logging
 from typing import override
 
 from goodwe import Inverter, InverterError
+from goodwe.exceptions import RequestRejectedException
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -20,6 +21,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -117,6 +119,32 @@ NUMBERS = (
         filter=lambda inv: _has_setting(inv, "battery_charge_current"),
         converter=float,
     ),
+    # Target SoC of fast charging (immediate battery charge).
+    GoodweNumberEntityDescription(
+        key="fast_charging_soc",
+        translation_key="fast_charging_soc",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("fast_charging_soc"),
+        setter=lambda inv, val: inv.write_setting("fast_charging_soc", val),
+        filter=lambda inv: _has_setting(inv, "fast_charging_soc"),
+    ),
+    # Fast charging power as % of the inverter rated power.
+    GoodweNumberEntityDescription(
+        key="fast_charging_power",
+        translation_key="fast_charging_power",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("fast_charging_power"),
+        setter=lambda inv, val: inv.write_setting("fast_charging_power", val),
+        filter=lambda inv: _has_setting(inv, "fast_charging_power"),
+    ),
 )
 
 
@@ -187,6 +215,22 @@ class InverterNumberEntity(NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         native_value = self.entity_description.converter(value)
-        await self.entity_description.setter(self._inverter, native_value)
+        try:
+            await self.entity_description.setter(self._inverter, native_value)
+        except RequestRejectedException as err:
+            # The inverter validates some values against its current state,
+            # e.g. a fast charging SoC not above the current battery SoC.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="setting_rejected",
+                translation_placeholders={
+                    "value": f"{native_value:g}",
+                    "reason": err.message,
+                },
+            ) from err
+        except InverterError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="write_failed"
+            ) from err
         self._attr_native_value = float(native_value)
         self.async_write_ha_state()

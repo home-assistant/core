@@ -12,6 +12,12 @@
       "battery_discharge_depth": {
         "default": "mdi:battery-arrow-down"
       },
+      "fast_charging_power": {
+        "default": "mdi:battery-charging-high"
+      },
+      "fast_charging_soc": {
+        "default": "mdi:battery-charging-90"
+      },
       "grid_export_limit": {
         "default": "mdi:transmission-tower"
       }
@@ -19,6 +25,11 @@
     "select": {
       "operation_mode": {
         "default": "mdi:solar-power"
+      }
+    },
+    "switch": {
+      "fast_charging": {
+        "default": "mdi:battery-charging-high"
       }
     }
   }
