@@ -119,7 +119,7 @@ async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_OPTIONS
         )
         assert result3["type"] is FlowResultType.CREATE_ENTRY
-        assert result3["data"] == MOCK_OPTIONS
+        assert result3["data"] == {**MOCK_OPTIONS, "resend_unchanged": False}
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -134,6 +134,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     new_options = {
         "prefix": "updated",
         "rate": 5,
+        "resend_unchanged": True,
     }
 
     # OSError Case

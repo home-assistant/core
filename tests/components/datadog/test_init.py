@@ -1,9 +1,16 @@
 """The tests for the Datadog component."""
 
+import threading
 from unittest import mock
 from unittest.mock import patch
 
-from pytest_homeassistant.common import EVENT_STATE_CHANGED, MockConfigEntry
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import (
+    EVENT_STATE_CHANGED,
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.datadog.const import (
     DEFAULT_HOST,
@@ -11,6 +18,7 @@ from homeassistant.components.datadog.const import (
     DEFAULT_PREFIX,
     DEFAULT_RATE,
     DOMAIN,
+    SEND_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -227,3 +235,94 @@ async def test_state_changed_skips_unknown(hass: HomeAssistant) -> None:
         hass.bus.async_fire(EVENT_STATE_CHANGED, {"new_state": unknown_state})
         await hass.async_block_till_done()
         assert not mock_dogstatsd.gauge.called
+
+
+@pytest.mark.parametrize(
+    ("resend_unchanged", "expected_calls"),
+    [
+        pytest.param(
+            True,
+            [mock.call("hass.sensor", 1.5, sample_rate=1, tags=["entity:sensor.foo"])],
+            id="enabled",
+        ),
+        pytest.param(False, [], id="disabled"),
+    ],
+)
+async def test_unchanged_states_resent(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    resend_unchanged: bool,
+    expected_calls: list[mock._Call],
+) -> None:
+    """Test unchanged states are resent on the send interval only when enabled."""
+    with patch("homeassistant.components.datadog.DogStatsd") as mock_statsd_class:
+        mock_statsd = mock_statsd_class.return_value
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=MOCK_DATA,
+            options={**MOCK_OPTIONS, "resend_unchanged": resend_unchanged},
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+        hass.states.async_set("sensor.foo", "1.5")
+        await hass.async_block_till_done()
+        mock_statsd.gauge.reset_mock()
+
+        freezer.tick(SEND_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert mock_statsd.gauge.call_args_list == expected_calls
+
+
+async def test_sends_are_ordered(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test sends run in order, off the event loop, without stacking resends."""
+    started = threading.Event()
+    release = threading.Event()
+    sent: list[float | str] = []
+    send_threads: set[int] = set()
+
+    def blocking_gauge(metric: str, value: float, **kwargs: object) -> None:
+        # Hold sends until released so newer sends and the unload queue behind.
+        send_threads.add(threading.get_ident())
+        started.set()
+        release.wait(5)
+        sent.append(value)
+
+    with patch("homeassistant.components.datadog.DogStatsd") as mock_statsd_class:
+        mock_statsd = mock_statsd_class.return_value
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=MOCK_DATA,
+            options={**MOCK_OPTIONS, "resend_unchanged": True},
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+        hass.states.async_set("sensor.foo", "1.5")
+        await hass.async_block_till_done()
+        mock_statsd.gauge.side_effect = blocking_gauge
+        mock_statsd.close_socket.side_effect = lambda: sent.append("closed")
+
+        freezer.tick(SEND_INTERVAL)
+        async_fire_time_changed(hass)
+        assert await hass.async_add_executor_job(started.wait, 5)
+
+        # One more resend queues behind the held one; the next is skipped.
+        for _ in range(2):
+            freezer.tick(SEND_INTERVAL)
+            async_fire_time_changed(hass)
+        hass.states.async_set("sensor.foo", "2.5")
+        unload = hass.async_create_task(
+            hass.config_entries.async_unload(entry.entry_id)
+        )
+        # Nothing, including the client close, may finish before the held resend.
+        assert sent == []
+        release.set()
+        assert await unload
+
+    assert sent == [1.5, 1.5, 2.5, "closed"]
+    assert hass.loop_thread_id not in send_threads

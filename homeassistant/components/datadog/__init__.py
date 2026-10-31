@@ -1,5 +1,7 @@
 """Support for sending data to Datadog."""
 
+import asyncio
+from functools import partial
 import logging
 
 from datadog import DogStatsd, initialize
@@ -13,11 +15,18 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, state as state_helper
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import config_flow as config_flow
-from .const import CONF_RATE, DOMAIN
+from .const import (
+    CONF_RATE,
+    CONF_RESEND_UNCHANGED,
+    DEFAULT_RESEND_UNCHANGED,
+    DOMAIN,
+    SEND_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,11 +52,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
 
     initialize(statsd_host=host, statsd_port=port)
 
-    def logbook_entry_listener(event):
+    queue: list[partial[None]] = []
+    sending: asyncio.Task[None] | None = None
+
+    def run_sends(sends):
+        for send in sends:
+            send()
+
+    async def drain_queue():
+        while queue:
+            sends = queue.copy()
+            queue.clear()
+            await hass.async_add_executor_job(run_sends, sends)
+
+    # Sends run in queue order from one executor job at a time, so a resend
+    # can't overwrite a newer value and the client is closed after the last send.
+    @callback
+    def queue_send(target, *args):
+        nonlocal sending
+        queue.append(partial(target, *args))
+        if sending is None or sending.done():
+            sending = entry.async_create_task(hass, drain_queue())
+
+    def close_client():
+        statsd_client.flush()
+        statsd_client.close_socket()
+
+    # Registered first so it runs last, after the listeners and timer are removed.
+    # Closing is queued like a send, so it runs after the last one.
+    entry.async_on_unload(partial(queue_send, close_client))
+
+    def send_logbook_entry(event):
         name = event.data.get("name")
         message = event.data.get("message")
 
-        entry.runtime_data.event(
+        statsd_client.event(
             title="Home Assistant",
             message=f"%%% \n **{name}** {message} \n %%%",
             tags=[
@@ -56,8 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
             ],
         )
 
-    def state_changed_listener(event):
-        state = event.data.get("new_state")
+    def send_state(state):
         if state is None or state.state == STATE_UNKNOWN:
             return
 
@@ -68,15 +106,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
             if isinstance(value, (float, int, bool)):
                 value = int(value) if isinstance(value, bool) else value
                 attribute = f"{metric}.{key.replace(' ', '_')}"
-                entry.runtime_data.gauge(
+                statsd_client.gauge(
                     attribute, value, sample_rate=sample_rate, tags=tags
                 )
 
         try:
             value = state_helper.state_as_number(state)
-            entry.runtime_data.gauge(metric, value, sample_rate=sample_rate, tags=tags)
+            statsd_client.gauge(metric, value, sample_rate=sample_rate, tags=tags)
         except ValueError:
             pass
+
+    def send_states(states):
+        for state in states:
+            send_state(state)
+
+    @callback
+    def logbook_entry_listener(event):
+        queue_send(send_logbook_entry, event)
+
+    @callback
+    def state_changed_listener(event):
+        queue_send(send_state, event.data.get("new_state"))
+
+    # Resend unchanged states so Datadog does not show gaps for stable values.
+    @callback
+    def send_all_states(now):
+        # Skip if the previous resend is still waiting to be sent.
+        if all(send.func is not send_states for send in queue):
+            queue_send(send_states, hass.states.async_all())
 
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
@@ -84,10 +141,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> N
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
     )
+    if options.get(CONF_RESEND_UNCHANGED, DEFAULT_RESEND_UNCHANGED):
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass, send_all_states, SEND_INTERVAL, cancel_on_shutdown=True
+            )
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> None:
     """Unload a Datadog config entry."""
-    runtime = entry.runtime_data
-    runtime.flush()
-    runtime.close_socket()
+    # The client is closed by an unload callback once queued sends finish.
