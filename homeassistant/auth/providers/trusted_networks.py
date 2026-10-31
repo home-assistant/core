@@ -165,7 +165,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
                     return credential
 
             cred = self.async_create_credentials({"user_id": user_id})
-            await self.store.async_link_user(user, cred)
+            await self.hass.auth.async_link_user(user, cred)
             return cred
 
         # We only allow login as exist user
