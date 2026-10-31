@@ -132,6 +132,12 @@
     "service_config_entry_wrong_domain": {
       "message": "Config entry {entry_title} does not belong to integration {domain}."
     },
+    "service_data_template_error": {
+      "message": "Error rendering data template: {error}"
+    },
+    "service_data_template_not_dict": {
+      "message": "Error rendering data template: Result is not a Dictionary"
+    },
     "service_device_not_found": {
       "message": "Device with ID {device_id} was not found."
     },
