@@ -20,6 +20,9 @@
       "poe_control": {
         "default": "mdi:ethernet"
       },
+      "vpn_policy": {
+        "default": "mdi:vpn"
+      },
       "wan_connect_ipv4": {
         "default": "mdi:wan"
       },
