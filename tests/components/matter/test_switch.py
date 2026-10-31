@@ -509,6 +509,45 @@ async def test_door_lock_one_touch_locking(
     assert matter_client.write_attribute.call_count == 2
 
 
+@pytest.mark.parametrize("node_fixture", ["aqara_camera_hub_g350"])
+async def test_camera_night_vision(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the CameraAvStreamManagement night vision config switch."""
+    entity_id = "switch.aqara_camera_hub_g350_night_vision"
+    # fixture reports NightVision as TriStateAutoEnum.kAuto, which is "on"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 2, 1361, 22, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    attribute_path = create_attribute_path_from_attribute(
+        endpoint_id=2,
+        attribute=clusters.CameraAvStreamManagement.Attributes.NightVision,
+    )
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": entity_id}, blocking=True
+    )
+    assert matter_client.write_attribute.call_args_list == [
+        call(node_id=matter_node.node_id, attribute_path=attribute_path, value=1)
+    ]
+
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": entity_id}, blocking=True
+    )
+    assert matter_client.write_attribute.call_args_list[1] == call(
+        node_id=matter_node.node_id, attribute_path=attribute_path, value=0
+    )
+    assert matter_client.write_attribute.call_count == 2
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
 async def test_window_covering_reverse_motor_direction(
     hass: HomeAssistant,

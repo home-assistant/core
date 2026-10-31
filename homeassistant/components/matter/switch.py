@@ -37,6 +37,10 @@ EVSE_SUPPLY_STATE_MAP = {
 ALARM_MODE_VISUAL = clusters.BooleanStateConfiguration.Bitmaps.AlarmModeBitmap.kVisual
 ALARM_MODE_AUDIBLE = clusters.BooleanStateConfiguration.Bitmaps.AlarmModeBitmap.kAudible
 
+CAMERA_FEATURE_NIGHT_VISION = (
+    clusters.CameraAvStreamManagement.Bitmaps.Feature.kNightVision
+)
+
 BOOLEAN_STATE_CONFIGURATION_FEATURE_VISUAL = (
     clusters.BooleanStateConfiguration.Bitmaps.Feature.kVisual
 )
@@ -500,6 +504,19 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumericSwitch,
         required_attributes=(clusters.DoorLock.Attributes.EnablePrivacyModeButton,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="CameraAvStreamManagementNightVision",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="night_vision",
+            device_to_ha=bool,
+            ha_to_device=int,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.CameraAvStreamManagement.Attributes.NightVision,),
+        featuremap_contains=CAMERA_FEATURE_NIGHT_VISION,
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
