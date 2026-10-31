@@ -49,19 +49,16 @@ async def _get_fixture_collection(
         fixtures: dict[str, Any] = await envoy.fixture_collection(
             mask_serials=mask, strict_masking=strict
         )
-        # pyenphase may leak Clientconnectionerror header data in endpoint_log, clean until fixed
-        for ep in [ep for ep in fixtures if ep.endswith("_log") and ep.startswith("/")]:
-            if (
-                "error" in (ep_data := fixtures[ep])
-                and "ClientResponseError" in ep_data["error"]
-            ):
-                ep_data["error"] = "ClientResponseError"
-    except ClientError as err:
-        return {
-            "collection_aborted_log": f"Error: {type(err).__name__ if not hasattr(err, 'status') else err.status}"
-        }
-    except (EnvoyError, EnvoyClientClosedError) as err:
-        return {"collection_aborted_log": f"Error: {err!r}"}
+    except (EnvoyError, EnvoyClientClosedError, ClientError) as err:
+        status = getattr(err, "status", None)
+        if isinstance(status, int) and 100 <= status <= 599:
+            return {"collection_aborted_log": f"Error: {type(err).__name__}: {status}"}
+        status_code = getattr(err, "status_code", 0)
+        if isinstance(status_code, int) and status_code > 0:
+            return {
+                "collection_aborted_log": f"Error: {type(err).__name__}: {status_code}"
+            }
+        return {"collection_aborted_log": f"Error: {type(err).__name__}"}
     return fixtures
 
 

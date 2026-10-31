@@ -2732,7 +2732,7 @@
       'token_lifetime': 200,
     }),
     'fixtures': dict({
-      'collection_aborted_log': "Error: EnvoyError('Test')",
+      'collection_aborted_log': 'Error: EnvoyError',
     }),
     'raw_data': dict({
       'varies_by': 'firmware_version',
