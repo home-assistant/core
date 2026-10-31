@@ -47,6 +47,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - When catching exceptions, try-clauses should be as small as possible, i.e. avoid wrapping large blocks of code in a try-clause, and avoid catching exceptions from functions that are not expected to raise them.
 - Asserts that exist only to narrow types for the type checker must be placed behind an `if TYPE_CHECKING:` guard, so they are not executed at runtime.
 - Sensitive service actions, i.e. those that can change configuration or have security implications, should require an admin user. Register them with the `async_register_admin_service` service helper, which checks this for you.
+- Constants that more than one module of an integration uses go in `const.py`; a constant only one module uses stays in that module. Tests do not count as a user. This includes entity descriptions and service schemas. Never import a constant from one platform module into another; move it to `const.py` instead. Pre-existing constants that a change does not touch can stay where they are.
 
 ## AI policy
 
