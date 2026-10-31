@@ -50,7 +50,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WattWächter."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -165,7 +165,6 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm zeroconf discovery."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="zeroconf_confirm",
                 description_placeholders={

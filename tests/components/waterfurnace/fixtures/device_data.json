@@ -17,6 +17,7 @@
   "airflowcurrentspeed": 850,
   "tstatheatingsetpoint": 68,
   "tstatcoolingsetpoint": 74,
+  "outdoorair": 55.2,
   "activesettings": {
     "activemode": 3,
     "heatingsp_read": 68,

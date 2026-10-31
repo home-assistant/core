@@ -317,7 +317,6 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_credentials()
             return self._create_discovered_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="unverified_ssl",
             description_placeholders=self.context.get("title_placeholders", {}),
@@ -330,7 +329,6 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._create_discovered_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=self.context.get("title_placeholders", {}),

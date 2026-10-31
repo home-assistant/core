@@ -30,6 +30,7 @@ async def test_entry_diagnostics(
     mock_error.created_at = datetime(2021, 1, 1, tzinfo=UTC)
     mock_error.updated_at = datetime(2021, 1, 2, tzinfo=UTC)
     spa.get_errors.return_value = [mock_error]
+    spa_state.error_code = mock_error.code
 
     # raw fields not otherwise parsed by the smarttub library, to verify they're redacted
     spa_state.properties["sensors"] = [

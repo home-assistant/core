@@ -17,6 +17,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.EVENT,
+    Platform.LIGHT,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.SELECT,

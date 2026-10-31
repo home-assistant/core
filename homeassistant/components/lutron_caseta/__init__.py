@@ -200,10 +200,18 @@ async def async_setup_entry(
         except TimeoutError as ex:
             connect_task.cancel()
             await bridge.close()
-            raise ConfigEntryNotReady(f"Timed out on {name} for {host}") from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_timeout",
+                translation_placeholders={"step": name, "host": host},
+            ) from ex
 
     if not bridge.is_connected():
-        raise ConfigEntryNotReady(f"Connection failed to {host}")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        )
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
     await _async_migrate_unique_ids(hass, entry)

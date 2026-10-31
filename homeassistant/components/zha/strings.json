@@ -248,6 +248,12 @@
       "accelerometer": {
         "name": "Accelerometer"
       },
+      "active_water_leak": {
+        "name": "Active water leak"
+      },
+      "battery_alarm": {
+        "name": "Battery alarm"
+      },
       "binary_input": {
         "name": "Binary input"
       },
@@ -256,6 +262,9 @@
       },
       "consumer_connected": {
         "name": "Consumer connected"
+      },
+      "cooktop_active": {
+        "name": "Cooktop active"
       },
       "error_or_battery_low": {
         "name": "Error or battery low"
@@ -475,6 +484,17 @@
       },
       "shade": {
         "name": "[%key:component::cover::entity_component::shade::name%]"
+      }
+    },
+    "event": {
+      "button_numbered": {
+        "name": "Button {number}"
+      },
+      "rocker_bottom": {
+        "name": "Rocker {rocker} bottom"
+      },
+      "rocker_top": {
+        "name": "Rocker {rocker} top"
       }
     },
     "fan": {
@@ -754,6 +774,9 @@
       "hush_duration": {
         "name": "Hush duration"
       },
+      "illuminance_calibration": {
+        "name": "Illuminance calibration"
+      },
       "illuminance_interval": {
         "name": "Illuminance interval"
       },
@@ -837,6 +860,9 @@
       },
       "max_heat_setpoint_limit": {
         "name": "Max heat setpoint limit"
+      },
+      "max_moisture": {
+        "name": "Max moisture"
       },
       "max_set": {
         "name": "Liquid max percentage"
@@ -943,6 +969,9 @@
       "on_time": {
         "name": "On time"
       },
+      "on_time_reload": {
+        "name": "On time reload"
+      },
       "on_transition_time": {
         "name": "On transition time"
       },
@@ -987,6 +1016,9 @@
       },
       "power_rise_threshold": {
         "name": "Power rise threshold"
+      },
+      "pre_warning_time": {
+        "name": "Pre warning time"
       },
       "presence_detection_timeout": {
         "name": "Presence detection timeout"
@@ -1075,11 +1107,23 @@
       "small_move_sensitivity": {
         "name": "Small move sensitivity"
       },
+      "soil_moisture_calibration": {
+        "name": "Soil moisture calibration"
+      },
+      "soil_sampling_interval": {
+        "name": "Soil sampling interval"
+      },
+      "soil_warning_threshold": {
+        "name": "Soil warning threshold"
+      },
       "sound_volume": {
         "name": "Sound volume"
       },
       "speed": {
         "name": "Speed"
+      },
+      "stall_time": {
+        "name": "Stall time"
       },
       "start_up_color_temperature": {
         "name": "Start-up color temperature"
@@ -1272,6 +1316,9 @@
       "color_temperature_channel": {
         "name": "Color temperature channel"
       },
+      "control_mode": {
+        "name": "Control mode"
+      },
       "control_type": {
         "name": "Control type"
       },
@@ -1304,6 +1351,9 @@
       },
       "device_mode": {
         "name": "Device mode"
+      },
+      "dimming_curve": {
+        "name": "Dimming curve"
       },
       "display_brightness": {
         "name": "Display brightness"
@@ -1592,6 +1642,9 @@
       "alarm_state": {
         "name": "Alarm state"
       },
+      "alarm_status": {
+        "name": "Alarm status"
+      },
       "analog_input": {
         "name": "Analog input"
       },
@@ -1604,6 +1657,12 @@
       "brightness_level": {
         "name": "Brightness level"
       },
+      "button_click_count": {
+        "name": "Button click count"
+      },
+      "button_click_duration": {
+        "name": "Button click duration"
+      },
       "calibrated": {
         "name": "Calibrated"
       },
@@ -1612,6 +1671,9 @@
       },
       "control_status": {
         "name": "Control status"
+      },
+      "cooktop_temperature": {
+        "name": "Cooktop temperature"
       },
       "dc_current": {
         "name": "DC current"
@@ -1831,6 +1893,9 @@
       "rejoined_count": {
         "name": "Rejoined count"
       },
+      "relay_address": {
+        "name": "Relay address"
+      },
       "remaining_watering_time": {
         "name": "Remaining watering time"
       },
@@ -1863,6 +1928,9 @@
       },
       "setpoint_change_source": {
         "name": "Setpoint change source"
+      },
+      "setpoint_change_source_timestamp": {
+        "name": "Setpoint change source timestamp"
       },
       "single_watering_amount": {
         "name": "Single watering amount"
@@ -2005,11 +2073,17 @@
       "water_flow": {
         "name": "Water flow"
       },
+      "water_warning": {
+        "name": "Water warning"
+      },
       "weight_dispensed_today": {
         "name": "Weight dispensed today"
       },
       "window_covering_type": {
         "name": "Window covering type"
+      },
+      "wiring_mode": {
+        "name": "Wiring mode"
       },
       "work_mode": {
         "name": "Work mode"
@@ -2306,6 +2380,9 @@
   "exceptions": {
     "no_gateway": {
       "message": "ZHA is not loaded, so this action cannot be performed."
+    },
+    "not_zigbee_device": {
+      "message": "Device {ieee} is not a Zigbee device, so this action cannot be performed."
     }
   },
   "issues": {

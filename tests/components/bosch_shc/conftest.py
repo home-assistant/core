@@ -67,11 +67,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_shc.const import (
+    CONF_HOSTNAME,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 
@@ -89,6 +90,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "1.1.1.1",
             CONF_SSL_CERTIFICATE: "cert",
             CONF_SSL_KEY: "key",
+            CONF_TOKEN: "token:hostname",
+            CONF_HOSTNAME: "hostname",
         },
         unique_id="test-mac",
     )
@@ -131,6 +134,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
     # Not a list bucket — presence_simulation_system is a single optional
     # device on device_helper, not a device_helper.<x> list of devices.
     "presence_simulation_system": None,
+    "smoke_detection_system": None,
 }
 
 
@@ -516,6 +520,9 @@ def thermostat_gen2_device(
     valve_type: WallThermostatConfiguration.ValveType | None = None,
     heater_type: WallThermostatConfiguration.HeaterType | None = None,
     terminal_type: TerminalConfiguration.Type | None = None,
+    temperature: float = 21.0,
+    humidity: float | None = None,
+    terminal_temperature: float | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -553,6 +560,10 @@ def thermostat_gen2_device(
     if spec is SHCRoomThermostat2:
         device.supports_terminal_configuration = terminal_type is not None
         device.terminal_type = terminal_type
+        device.temperature = temperature
+        device.supports_humidity = humidity is not None
+        device.humidity = humidity
+        device.terminal_temperature = terminal_temperature
     return device
 
 
@@ -803,6 +814,36 @@ class FakeAlarmService:
 
     def unsubscribe_callback(self, entity: Any) -> None:
         """No-op counterpart to subscribe_callback."""
+
+
+class FakeSurveillanceAlarmService:
+    """Minimal double of the SurveillanceAlarm DeviceService callback API."""
+
+    id = "SurveillanceAlarm"
+
+    def __init__(self) -> None:
+        """Initialize the fake service's callback registry."""
+        self.callbacks: dict[str, Any] = {}
+
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
+        """Remember the callback so tests can fire it."""
+        self.callbacks[entity] = callback
+
+    def unsubscribe_callback(self, entity: Any) -> None:
+        """Forget the callback."""
+        self.callbacks.pop(entity, None)
+
+
+def smoke_detection_system_device(
+    alarm: Any = None, triggered: set[str] | None = None
+) -> MagicMock:
+    """Build a minimal double of the smoke detection system."""
+    system = MagicMock()
+    system.id = "hdm:ZigBee:smokedetectionsystem"
+    system.alarm = alarm
+    system.device_services = [FakeSurveillanceAlarmService()]
+    system.triggered_device_ids.return_value = triggered or set()
+    return system
 
 
 def motion_detector_device(

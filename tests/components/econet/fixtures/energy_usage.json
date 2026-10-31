@@ -1,0 +1,9 @@
+{
+  "results": {
+    "energy_usage": {
+      "data": [{ "name": "0", "value": 10 }],
+      "historyData": [],
+      "message": "Energy usage in KBTU"
+    }
+  }
+}

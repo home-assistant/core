@@ -286,7 +286,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     probatio.Optional(CONF_PROMPT): TemplateSelector(),
                     probatio.Optional(
                         CONF_LLM_HASS_API,
-                    ): SelectSelector({"options": hass_apis, "multiple": True}),
+                    ): SelectSelector(
+                        {
+                            "options": hass_apis,
+                            "multiple": True,
+                            "mode": SelectSelectorMode.LIST,
+                        }
+                    ),
                 }
             )
 

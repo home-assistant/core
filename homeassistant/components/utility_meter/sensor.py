@@ -10,7 +10,6 @@ from typing import Any, Self, override
 from cronsim import CronSim
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     DOMAIN as SENSOR_DOMAIN,
@@ -55,7 +54,6 @@ from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
-    ATTR_NEXT_RESET,
     BIMONTHLY,
     CONF_CRON_PATTERN,
     CONF_METER,
@@ -80,6 +78,7 @@ from .const import (
     SIGNAL_RESET_METER,
     WEEKLY,
     YEARLY,
+    UtilityMeterEntityStateAttribute,
 )
 
 PERIOD2CRON = {
@@ -94,13 +93,6 @@ PERIOD2CRON = {
 }
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_SOURCE_ID = "source"
-ATTR_STATUS = "status"
-ATTR_PERIOD = "meter_period"
-ATTR_LAST_PERIOD = "last_period"
-ATTR_LAST_VALID_STATE = "last_valid_state"
-ATTR_TARIFF = "tariff"
 
 PRECISION = 3
 PAUSED = "paused"
@@ -325,7 +317,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     _attr_translation_key = "utility_meter"
     _attr_should_poll = False
-    _unrecorded_attributes = frozenset({ATTR_NEXT_RESET})
+    _unrecorded_attributes = frozenset({UtilityMeterEntityStateAttribute.NEXT_RESET})
 
     def __init__(
         self,
@@ -707,22 +699,30 @@ class UtilityMeterSensor(RestoreSensor):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
-        state_attr = {
-            ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
-            ATTR_LAST_PERIOD: str(self._last_period),
-            ATTR_LAST_VALID_STATE: str(self._last_valid_state),
+        state_attr: dict[str, Any] = {
+            UtilityMeterEntityStateAttribute.STATUS: (
+                PAUSED if self._collecting is None else COLLECTING
+            ),
+            UtilityMeterEntityStateAttribute.LAST_PERIOD: str(self._last_period),
+            UtilityMeterEntityStateAttribute.LAST_VALID_STATE: str(
+                self._last_valid_state
+            ),
         }
         if self._tariff is not None:
-            state_attr[ATTR_TARIFF] = self._tariff
+            state_attr[UtilityMeterEntityStateAttribute.TARIFF] = self._tariff
         # last_reset in utility meter was used before last_reset was added for long term
         # statistics in base sensor. base sensor only supports last reset
         # sensors with state_class set to total.
         # To avoid a breaking change we set last_reset directly
         # in extra state attributes.
         if last_reset := self._last_reset:
-            state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
+            state_attr[UtilityMeterEntityStateAttribute.LAST_RESET] = (
+                last_reset.isoformat()
+            )
         if self._next_reset is not None:
-            state_attr[ATTR_NEXT_RESET] = self._next_reset.isoformat()
+            state_attr[UtilityMeterEntityStateAttribute.NEXT_RESET] = (
+                self._next_reset.isoformat()
+            )
 
         return state_attr
 

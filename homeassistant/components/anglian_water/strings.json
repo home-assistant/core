@@ -90,6 +90,9 @@
     "consent_required": {
       "message": "The terms and conditions for your Anglian Water account have been updated. Please visit and log in to your Anglian Water account to accept the new terms and conditions."
     },
+    "hourly_readings_unavailable": {
+      "message": "Hourly readings are not available for this Anglian Water account. Check your online account or contact Anglian Water to confirm that hourly readings are supported by your meter. Once hourly readings are available, reload the integration to start receiving them."
+    },
     "service_unavailable": {
       "message": "Anglian Water web services are currently unavailable, check the logs for more details."
     },
