@@ -1,7 +1,7 @@
 """Support for iZone sensors."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from operator import attrgetter
 from typing import override
 
@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
-from .entity import IZoneCoordinatorEntity
+from .entity import IZoneCoordinatorEntity, zone_device_info
 
 PARALLEL_UPDATES = 0
 
@@ -60,6 +60,14 @@ CONTROLLER_SENSOR_DESCRIPTIONS: tuple[IZoneSensorEntityDescription[Controller], 
     ),
 )
 
+DAMPER_POSITION_DESCRIPTION = IZoneSensorEntityDescription[Zone](
+    key="damper_position",
+    translation_key="damper_position",
+    native_unit_of_measurement=PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=attrgetter("damper_position"),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -83,6 +91,25 @@ async def async_setup_entry(
             ),
         )
         for description in CONTROLLER_SENSOR_DESCRIPTIONS
+    )
+
+    # Bridges without damper position feedback report a constant 50.
+    damper_position = replace(
+        DAMPER_POSITION_DESCRIPTION,
+        entity_registry_enabled_default=any(
+            zone.damper_position not in (None, 50) for zone in controller.zones
+        ),
+    )
+    async_add_entities(
+        IZoneSensor(
+            coordinator,
+            damper_position,
+            zone,
+            unique_id=f"{controller.device_uid}_z{zone.index + 1}_damper_position",
+            device_info=zone_device_info(coordinator, zone),
+        )
+        for zone in controller.zones
+        if zone.damper_position is not None
     )
 
 
