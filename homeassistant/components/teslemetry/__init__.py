@@ -24,6 +24,7 @@ from tesla_fleet_api.exceptions import (
     PrivateKeyError,
     SubscriptionRequired,
     TeslaFleetError,
+    is_key_rejected,
 )
 from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.tesla import EnergySiteRouter
@@ -86,6 +87,7 @@ from .const import (
     CONF_VIN,
     DOMAIN,
     ISSUE_GATEWAY_NOT_FOUND,
+    ISSUE_TYPE_BLE_KEY_REJECTED,
     LABS_CHARGE_ON_SOLAR_FEATURE,
     LOGGER,
     POWERWALL_KEY_FILE,
@@ -343,13 +345,16 @@ _BLE_KEY_ERRORS: Final = (
 
 async def _async_resolve_vehicle_api(
     hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
     vin: str,
+    vehicle_name: str,
     cloud_vehicle: Vehicle,
-    address: str | None,
+    subentry: ConfigSubentry | None,
 ) -> tuple[Vehicle | VehicleRouter, VehicleBluetooth | None]:
     """Return the API a vehicle's platforms should call, and its Bluetooth backend."""
-    if not address:
+    if subentry is None:
         return cloud_vehicle, None
+    address: str = subentry.data[CONF_ADDRESS]
 
     # A bad BLE key file for one vehicle must not tear down the whole entry.
     try:
@@ -387,8 +392,36 @@ async def _async_resolve_vehicle_api(
         bluetooth_vehicle.set_device(device)
         return True
 
+    issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{vin}"
+
+    @callback
+    def _on_result(err: BaseException | None, backend: Any, method: str) -> bool:
+        """Raise or clear the key rejected repair from Bluetooth command outcomes."""
+        if backend is bluetooth_vehicle:
+            if err is None:
+                ir.async_delete_issue(hass, DOMAIN, issue_id)
+            elif is_key_rejected(err):
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=ISSUE_TYPE_BLE_KEY_REJECTED,
+                    translation_placeholders={"vehicle": vehicle_name},
+                    data={
+                        "issue_type": ISSUE_TYPE_BLE_KEY_REJECTED,
+                        "entry_id": entry.entry_id,
+                        "subentry_id": subentry.subentry_id,
+                    },
+                )
+        # Always fail over: the cloud signs with its own key, so it can still succeed.
+        return True
+
     return (
-        VehicleRouter(bluetooth_vehicle, cloud_vehicle, health=_in_range),
+        VehicleRouter(
+            bluetooth_vehicle, cloud_vehicle, health=_in_range, on_result=_on_result
+        ),
         bluetooth_vehicle,
     )
 
@@ -793,20 +826,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             stream_vehicle = stream.get_vehicle(vin)
 
             # Pairing always stores an address, so the subentry is the Bluetooth switch.
-            ble_address: str | None = next(
+            ble_subentry = next(
                 (
-                    subentry.data[CONF_ADDRESS]
+                    subentry
                     for subentry in entry.subentries.values()
                     if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
                     and subentry.data.get(CONF_VIN) == vin
                 ),
                 None,
             )
+            ble_address: str | None = (
+                ble_subentry.data[CONF_ADDRESS] if ble_subentry else None
+            )
             vehicle_api, ble_api = await _async_resolve_vehicle_api(
                 hass,
+                entry,
                 vin,
+                product["display_name"] or vin,
                 vehicle,
-                ble_address,
+                ble_subentry,
             )
 
             if isinstance(vehicle_api, VehicleRouter):
@@ -1023,15 +1061,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 def _setup_subentry_change_reload(
     hass: HomeAssistant, entry: TeslemetryConfigEntry
 ) -> None:
-    """Reload the entry when a subentry is added or removed."""
-    known = set(entry.subentries)
+    """Reload the entry when a subentry is added or removed, or a vehicle's data changes."""
+
+    def _snapshot(updated_entry: TeslemetryConfigEntry) -> dict[str, Any]:
+        return {
+            subentry_id: dict(subentry.data)
+            if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
+            else None
+            for subentry_id, subentry in updated_entry.subentries.items()
+        }
+
+    known = _snapshot(entry)
 
     async def _handle_update(
         hass: HomeAssistant, updated_entry: TeslemetryConfigEntry
     ) -> None:
         nonlocal known
-        current = set(updated_entry.subentries)
-        if known.symmetric_difference(current):
+        current = _snapshot(updated_entry)
+        if known != current:
             hass.config_entries.async_schedule_reload(updated_entry.entry_id)
         # Refresh known so a later update does not re-fire on this same change.
         known = current
@@ -1220,6 +1267,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
                     vehicle.vin,
                     BLE_DISCONNECT_TIMEOUT,
                 )
+            # Only the running router can observe the key, so its repair ends with it.
+            ir.async_delete_issue(
+                hass, DOMAIN, f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{vehicle.vin}"
+            )
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> None:
