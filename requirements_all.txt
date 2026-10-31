@@ -3303,7 +3303,7 @@ switchbot-api==2.13.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.23.0
+systembridgeconnector==5.24.0
 
 # homeassistant.components.tailscale
 tailscale==1.0.0
