@@ -6,7 +6,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "incomplete_config": "Configuration is missing a required variable",
       "non_unique_id": "Multiple devices found with the same unique ID",
-      "not_dmr": "Device is not a supported Digital Media Renderer"
+      "not_dmr": "Device is not a supported Digital Media Renderer",
+      "unique_id_mismatch": "The provided URL belongs to a different device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -26,6 +27,14 @@
         },
         "description": "URL to a device description XML file",
         "title": "Manual DLNA DMR device connection"
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::dlna_dmr::config::step::manual::description%]"
+        }
       },
       "user": {
         "data": {

@@ -2220,6 +2220,33 @@ async def test_config_update_listen_port(
     assert mock_state.state == MediaPlayerState.IDLE
 
 
+async def test_config_update_location(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
+) -> None:
+    """Test DlnaDmrEntity reconnects when the ConfigEntry's CONF_URL changes."""
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+
+    hass.config_entries.async_update_entry(
+        config_entry_mock,
+        data={**config_entry_mock.data, CONF_URL: NEW_DEVICE_LOCATION},
+    )
+    await hass.async_block_till_done()
+
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        NEW_DEVICE_LOCATION
+    )
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 1
+    assert dmr_device_mock.async_subscribe_services.await_count == 2
+
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == MediaPlayerState.IDLE
+
+
 async def test_config_update_connect_failure(
     hass: HomeAssistant,
     domain_data_mock: Mock,
