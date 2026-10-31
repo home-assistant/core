@@ -689,3 +689,22 @@ async def test_redirect_to_blocked_address(
         pytest.raises(client.SSRFRedirectError),
     ):
         await session.get(redirect_url)
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_clientsession_accepts_large_headers(hass: HomeAssistant) -> None:
+    """Test the clientsession reads header fields larger than aiohttp's default limit."""
+    large_value = "x" * 9300
+
+    async def handler(request: web.Request) -> web.Response:
+        """Return a response with a header field larger than 8190 bytes."""
+        return web.Response(text="ok", headers={"Content-Security-Policy": large_value})
+
+    app = web.Application()
+    app.router.add_get("/", handler)
+
+    async with TestServer(app) as server:
+        session = client.async_get_clientsession(hass)
+        async with session.get(server.make_url("/")) as resp:
+            assert resp.status == 200
+            assert resp.headers["Content-Security-Policy"] == large_value

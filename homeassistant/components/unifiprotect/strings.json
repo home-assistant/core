@@ -26,7 +26,7 @@
           "port": "Port of your UniFi Protect device.",
           "verify_ssl": "Verify SSL certificate of the UniFi Protect device."
         },
-        "description": "Connect using only an API key, without a local user. The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "description": "Connect using only an API key, without a local user. Features the public Integration API does not offer yet are unavailable. For more information: {api_key_documentation_url}",
         "title": "UniFi Protect setup (API key)"
       },
       "discovery_api_key": {
@@ -38,14 +38,14 @@
           "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]",
           "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]"
         },
-        "description": "Connect to {name} ({ip_address}) using only an API key. The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "description": "Connect to {name} ({ip_address}) using only an API key. Features the public Integration API does not offer yet are unavailable. For more information: {api_key_documentation_url}",
         "title": "UniFi Protect discovered (API key)"
       },
       "discovery_confirm": {
-        "description": "How do you want to connect to {name} ({ip_address})? The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user.",
+        "description": "How do you want to connect to {name} ({ip_address})? An API key uses the public Integration API. A local user adds the features the public API does not offer yet.",
         "menu_options": {
-          "discovery_api_key": "API key only (limited feature set)",
-          "discovery_full": "Local user and API key (full access)"
+          "discovery_api_key": "API key only",
+          "discovery_full": "API key and local user"
         },
         "title": "UniFi Protect discovered"
       },
@@ -114,8 +114,8 @@
       "reconfigure": {
         "description": "[%key:component::unifiprotect::config::step::user::description%]",
         "menu_options": {
-          "reconfigure_api_key": "API key only (limited feature set)",
-          "reconfigure_full": "Local user and API key (full access)"
+          "reconfigure_api_key": "API key only",
+          "reconfigure_full": "API key and local user"
         },
         "title": "Reconfigure UniFi Protect"
       },
@@ -132,7 +132,7 @@
           "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]",
           "verify_ssl": "[%key:component::unifiprotect::config::step::api_key::data_description::verify_ssl%]"
         },
-        "description": "Switch to (or update) API-key-only mode. Stored local user credentials are kept, so you can switch back at any time. The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "description": "Switch to (or update) API-key-only mode. Stored local user credentials are kept, so you can switch back at any time. Features the public Integration API does not offer yet are unavailable. For more information: {api_key_documentation_url}",
         "title": "Reconfigure UniFi Protect (API key)"
       },
       "reconfigure_full": {
@@ -156,10 +156,10 @@
         "title": "Reconfigure UniFi Protect (local user)"
       },
       "user": {
-        "description": "Choose how to connect to your UniFi Protect console. The API-key-only mode currently provides a limited set of entities: the alarm manager, cameras (streams and snapshots) and lights. Everything else requires a local user.",
+        "description": "Choose how to connect to your UniFi Protect console. An API key uses the public Integration API. A local user adds the features the public API does not offer yet.",
         "menu_options": {
-          "api_key": "API key only (limited feature set)",
-          "full": "Local user and API key (full access)"
+          "api_key": "API key only",
+          "full": "API key and local user"
         },
         "title": "UniFi Protect setup"
       }
@@ -874,7 +874,7 @@
       "message": "Could not load the public API bootstrap for camera streams"
     },
     "public_only_no_actions": {
-      "message": "This action requires full access (local user); the entry is set up with an API key only."
+      "message": "This action requires a local user; the entry is set up with an API key only."
     },
     "relay_not_available": {
       "message": "Relay is no longer available"

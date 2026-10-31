@@ -341,7 +341,9 @@ async def google_generative_ai_config_option_schema(
                     CONF_LLM_HASS_API,
                     description={"suggested_value": suggested_llm_apis},
                 ): SelectSelector(
-                    SelectSelectorConfig(options=hass_apis, multiple=True)
+                    SelectSelectorConfig(
+                        options=hass_apis, multiple=True, mode=SelectSelectorMode.LIST
+                    )
                 ),
             }
         )

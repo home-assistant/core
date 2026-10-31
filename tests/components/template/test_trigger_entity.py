@@ -7,6 +7,7 @@ import pytest
 from pytest_homeassistant.common import assert_setup_component
 
 from homeassistant.components.template import DOMAIN, trigger_entity
+from homeassistant.components.template.const import TemplateService
 from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
 from homeassistant.components.template.helpers import DATA_COORDINATORS
 from homeassistant.const import (
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -511,7 +511,7 @@ async def test_trigger_variables_rendered_on_reload(hass: HomeAssistant) -> None
         autospec=True,
         return_value=_config("second"),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     listeners = hass.bus.async_listeners()
@@ -721,7 +721,7 @@ async def test_reload_stops_script_and_unsubscribes_triggers(
         autospec=True,
         return_value={"template": []},
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     # Script should be stopped and unloaded

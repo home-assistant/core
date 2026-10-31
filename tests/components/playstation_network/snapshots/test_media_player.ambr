@@ -8,7 +8,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('playstation_network', 'my-psn-id_PSVITA')]>,
     'disabled_by': None,
@@ -61,7 +61,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('playstation_network', 'my-psn-id_PSVITA')]>,
     'disabled_by': None,
@@ -119,7 +119,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('playstation_network', 'my-psn-id_PSVITA')]>,
     'disabled_by': None,
@@ -174,7 +174,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('playstation_network', 'my-psn-id_PS4')]>,
     'disabled_by': None,
@@ -229,7 +229,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('playstation_network', 'my-psn-id_PS4')]>,
     'disabled_by': None,
@@ -282,7 +282,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('playstation_network', 'my-psn-id_PS4')]>,
     'disabled_by': None,
@@ -340,7 +340,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('playstation_network', 'my-psn-id_PS5')]>,
     'disabled_by': None,
@@ -395,7 +395,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('playstation_network', 'my-psn-id_PS5')]>,
     'disabled_by': None,
@@ -448,7 +448,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('playstation_network', 'my-psn-id_PS5')]>,
     'disabled_by': None,

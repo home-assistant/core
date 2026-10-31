@@ -3,13 +3,13 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 
 from . import FarmadConfigEntry
 from .const import CONF_REFRESH_TOKEN
 
-TO_REDACT = {CONF_ACCESS_TOKEN, CONF_REFRESH_TOKEN, "title", "unique_id"}
+TO_REDACT = {CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_REFRESH_TOKEN, "title", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(

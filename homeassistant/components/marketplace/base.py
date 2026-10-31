@@ -36,7 +36,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -48,9 +48,7 @@ from .const import (
     DOMAIN,
     LEGACY_HACS_INTEGRATION_REPOSITORY,
     RESTART_ISSUE_PREFIX,
-    TV,
     WARNING_VERSION,
-    WEBSESSION_MAX_HEADER_SIZE,
 )
 from .coordinator import MarketplaceUpdateCoordinator
 from .critical import async_create_critical_repository_issue
@@ -81,6 +79,7 @@ from .repositories.base import (
     REPOSITORY_MANIFEST_KEYS_TO_EXPORT,
     RepositoryData,
     RepositoryManifest,
+    valid_integration_categories,
 )
 from .utils.data import MarketplaceData
 from .utils.file_system import async_exists, async_run_to_completion
@@ -391,11 +390,7 @@ class MarketplaceManager:
         )
         self.version = AwesomeVersion(HAVERSION)
 
-        self.session: ClientSession = async_create_clientsession(
-            hass,
-            max_line_size=WEBSESSION_MAX_HEADER_SIZE,
-            max_field_size=WEBSESSION_MAX_HEADER_SIZE,
-        )
+        self.session: ClientSession = async_get_clientsession(hass)
         # An empty token keeps aiogithubapi from reading GITHUB_TOKEN from the
         # environment, without a connected account the calls are anonymous.
         self.githubapi = GitHubAPI(
@@ -606,30 +601,30 @@ class MarketplaceManager:
         return 0
 
     @overload
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: Literal[True] = True,
         **kwargs: Any,
-    ) -> TV: ...
+    ) -> T: ...
 
     @overload
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: bool,
         **kwargs: Any,
-    ) -> TV | None: ...
+    ) -> T | None: ...
 
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: bool = True,
         **kwargs: Any,
-    ) -> Any:
+    ) -> T | None:
         """Call a GitHub API method.
 
         Without a connected account the call is anonymous, a refusal then only
@@ -1155,6 +1150,13 @@ class MarketplaceManager:
 
         self.async_set_repository_id(repository, repo_id)
         self.repositories.mark_default(repository)
+
+        # The catalog calls them categories, here that word means the kind of
+        # repository. Taken on every pass: storage from before they existed
+        # has none, and the catalog entry need not be newer than that.
+        repository.data.integration_categories = valid_integration_categories(
+            repo_data.get("categories")
+        )
 
         if repository.data.last_fetched is None or (
             repository.data.last_fetched.timestamp() < repo_data["last_fetched"]

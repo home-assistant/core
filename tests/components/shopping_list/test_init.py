@@ -11,15 +11,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.shopping_list import NoMatchingShoppingListItem
 from homeassistant.components.shopping_list.common import _get_shopping_data
-from homeassistant.components.shopping_list.const import (
-    ATTR_REVERSE,
-    DOMAIN,
-    SERVICE_ADD_ITEM,
-    SERVICE_CLEAR_COMPLETED_ITEMS,
-    SERVICE_COMPLETE_ITEM,
-    SERVICE_INCOMPLETE_ITEM,
-    SERVICE_REMOVE_ITEM,
-    SERVICE_SORT,
+from homeassistant.components.shopping_list.const import DOMAIN
+from homeassistant.components.shopping_list.services import (
+    ShoppingListService,
+    ShoppingListServiceArgument,
 )
 from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
@@ -790,8 +785,8 @@ async def test_add_item_service(
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_ITEM,
-        {ATTR_NAME: "beer"},
+        ShoppingListService.ADD_ITEM,
+        {ShoppingListServiceArgument.NAME: "beer"},
         blocking=True,
     )
     assert len(_get_shopping_data(hass).items) == 1
@@ -806,8 +801,8 @@ async def test_add_item_service_allows_duplicates(
     for _ in range(2):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_ITEM,
-            {ATTR_NAME: "beer"},
+            ShoppingListService.ADD_ITEM,
+            {ShoppingListServiceArgument.NAME: "beer"},
             blocking=True,
         )
 
@@ -821,14 +816,14 @@ async def test_remove_item_service(
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_ITEM,
-        {ATTR_NAME: "beer"},
+        ShoppingListService.ADD_ITEM,
+        {ShoppingListServiceArgument.NAME: "beer"},
         blocking=True,
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_ITEM,
-        {ATTR_NAME: "cheese"},
+        ShoppingListService.ADD_ITEM,
+        {ShoppingListServiceArgument.NAME: "cheese"},
         blocking=True,
     )
     assert len(_get_shopping_data(hass).items) == 2
@@ -837,8 +832,8 @@ async def test_remove_item_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_ITEM,
-        {ATTR_NAME: "beer"},
+        ShoppingListService.REMOVE_ITEM,
+        {ShoppingListServiceArgument.NAME: "beer"},
         blocking=True,
     )
     assert len(_get_shopping_data(hass).items) == 1
@@ -850,9 +845,9 @@ async def test_remove_item_service(
 @pytest.mark.parametrize(
     "service",
     [
-        pytest.param(SERVICE_REMOVE_ITEM, id="remove_item"),
-        pytest.param(SERVICE_COMPLETE_ITEM, id="complete_item"),
-        pytest.param(SERVICE_INCOMPLETE_ITEM, id="incomplete_item"),
+        pytest.param(ShoppingListService.REMOVE_ITEM, id="remove_item"),
+        pytest.param(ShoppingListService.COMPLETE_ITEM, id="complete_item"),
+        pytest.param(ShoppingListService.INCOMPLETE_ITEM, id="incomplete_item"),
     ],
 )
 @pytest.mark.usefixtures("sl_setup")
@@ -862,7 +857,7 @@ async def test_item_service_item_not_found(hass: HomeAssistant, service: str) ->
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_NAME: "beer"},
+            {ShoppingListServiceArgument.NAME: "beer"},
             blocking=True,
         )
     assert exc_info.value.translation_key == "item_not_found"
@@ -876,8 +871,8 @@ async def test_clear_completed_items_service(
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_ITEM,
-        {ATTR_NAME: "beer"},
+        ShoppingListService.ADD_ITEM,
+        {ShoppingListServiceArgument.NAME: "beer"},
         blocking=True,
     )
     assert len(_get_shopping_data(hass).items) == 1
@@ -887,8 +882,8 @@ async def test_clear_completed_items_service(
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_COMPLETE_ITEM,
-        {ATTR_NAME: "beer"},
+        ShoppingListService.COMPLETE_ITEM,
+        {ShoppingListServiceArgument.NAME: "beer"},
         blocking=True,
     )
     assert len(_get_shopping_data(hass).items) == 1
@@ -898,7 +893,7 @@ async def test_clear_completed_items_service(
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAR_COMPLETED_ITEMS,
+        ShoppingListService.CLEAR_COMPLETED_ITEMS,
         {},
         blocking=True,
     )
@@ -915,8 +910,8 @@ async def test_sort_list_service(
     for name in ("zzz", "ddd", "aaa"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_ITEM,
-            {ATTR_NAME: name},
+            ShoppingListService.ADD_ITEM,
+            {ShoppingListServiceArgument.NAME: name},
             blocking=True,
         )
     assert_shopping_list_data(hass, snapshot)
@@ -925,8 +920,8 @@ async def test_sort_list_service(
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SORT,
-        {ATTR_REVERSE: False},
+        ShoppingListService.SORT,
+        {ShoppingListServiceArgument.REVERSE: False},
         blocking=True,
     )
     assert_shopping_list_data(hass, snapshot)
@@ -939,8 +934,8 @@ async def test_sort_list_service(
     # sort descending
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SORT,
-        {ATTR_REVERSE: True},
+        ShoppingListService.SORT,
+        {ShoppingListServiceArgument.REVERSE: True},
         blocking=True,
     )
     assert_shopping_list_data(hass, snapshot)

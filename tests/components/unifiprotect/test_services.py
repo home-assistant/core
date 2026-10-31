@@ -941,7 +941,7 @@ async def test_public_only_action_rejected(
     )
     assert device is not None
 
-    with pytest.raises(HomeAssistantError, match="requires full access"):
+    with pytest.raises(HomeAssistantError, match="requires a local user"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_DOORBELL_TEXT,

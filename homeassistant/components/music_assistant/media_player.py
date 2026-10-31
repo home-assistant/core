@@ -7,7 +7,6 @@ import os
 from typing import TYPE_CHECKING, Any, override
 
 from music_assistant_client.helpers import LinkedUser
-from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     DashboardType,
@@ -70,6 +69,7 @@ from .helpers import (
     catch_musicassistant_error,
     catch_user_not_found,
     dashboard_identifier,
+    user_from_context,
 )
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
@@ -547,16 +547,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         """Send the play_media command to the media player."""
         # An explicit username impersonates that Music Assistant user (the server rejects an
         # unknown name). When omitted, default playback to the Home Assistant user that made
-        # the call: the server resolves them by provider link, or plays as the default
-        # account (required=False) when that Home Assistant user has no linked account.
-        user: str | LinkedUser | None = username
-        ha_user_id = self._context.user_id if self._context is not None else None
-        if username is None and ha_user_id is not None:
-            user = LinkedUser(
-                provider=AuthProviderType.HOME_ASSISTANT,
-                user_id=ha_user_id,
-                required=False,
-            )
+        # the call.
+        user: str | LinkedUser | None = (
+            username if username is not None else user_from_context(self._context)
+        )
 
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
@@ -743,8 +737,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Search media."""
         return await async_search_media(
-            self.mass,
-            query,
+            self.mass, query, user_from_context(self._context)
         )
 
     def _update_media_image_url(self, player: Player) -> None:

@@ -8,7 +8,7 @@ from homeassistant.components.mijn_farmad_apotheek.const import (
     BASKET_PAGE_SIZE,
     CONF_REFRESH_TOKEN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
@@ -41,13 +41,14 @@ async def test_setup_entry_not_ready(
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant, mock_farmad_client: MagicMock
 ) -> None:
-    """Test a config entry fails setup without retrying when the session expired."""
+    """Test a config entry starts reauthentication when the session expired."""
     mock_farmad_client.return_value.async_get_account.side_effect = (
         FarmadAuthenticationError("mock")
     )
     entry = await init_integration(hass)
     assert entry.state is ConfigEntryState.SETUP_ERROR
     mock_farmad_client.return_value.async_close.assert_awaited_once()
+    assert any(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_setup_entry_not_ready_baskets(

@@ -164,7 +164,6 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         if not await self._test_connection():
             return self.async_abort(reason="cannot_connect")
         # call the config step
-        self._set_confirm_only()
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(

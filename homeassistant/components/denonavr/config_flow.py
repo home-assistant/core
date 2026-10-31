@@ -178,7 +178,6 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_connect()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
 
     async def _async_connect_receiver(self) -> denonavr.DenonAVR | None:
@@ -239,6 +238,39 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_SERIAL_NUMBER: self.serial_number,
             },
             options={CONF_USE_TELNET: DEFAULT_USE_TELNET_NEW_INSTALL},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the receiver host."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self.host = user_input[CONF_HOST]
+            self._async_abort_entries_match({CONF_HOST: self.host})
+            if (receiver := await self._async_connect_receiver()) is None:
+                errors["base"] = "cannot_connect"
+            else:
+                unique_id = None
+                if receiver.serial_number is not None:
+                    unique_id = self.construct_unique_id(
+                        receiver.model_name.replace("*", ""), receiver.serial_number
+                    )
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or entry.data,
+            ),
+            errors=errors,
         )
 
     @override

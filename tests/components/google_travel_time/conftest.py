@@ -54,6 +54,7 @@ def routes_mock() -> Generator[AsyncMock]:
                     {
                         "distanceMeters": 21300,
                         "duration": "1620s",
+                        "staticDuration": "1560s",
                         "localizedValues": {
                             "distance": {"text": "21.3 km"},
                             "duration": {"text": "27 mins"},

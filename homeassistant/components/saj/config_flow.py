@@ -4,8 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import aiosaj
 import probatio
-import pysaj
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -96,27 +96,29 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
 
         async def _async_validate_connection() -> str:
             """Validate connection and get serial number."""
-            saj = pysaj.SAJ(host, **kwargs)
-            sensor_def = pysaj.Sensors(wifi)
+            saj = aiosaj.SAJ(host, **kwargs)
+            sensor_def = aiosaj.Sensors(wifi)
             done = await saj.read(sensor_def)
             if not done:
                 raise CannotConnect("Failed to read sensor data")
 
+            # aiosaj keeps reading when the info page is unavailable and leaves
+            # the serial at its placeholder, which is not a usable unique ID.
             serial_number = saj.serialnumber
-            if not serial_number:
+            if serial_number == aiosaj.UNKNOWN_SERIAL:
                 raise CannotConnect("Device did not return a serial number")
             return serial_number
 
         try:
             serial_number = await _async_validate_connection()
 
-        except pysaj.UnauthorizedException as err:
+        except aiosaj.UnauthorizedException as err:
             # Only raise auth error for WiFi connections with wrong credentials
             if wifi:
                 raise InvalidAuth("Invalid authentication") from err
             # For ethernet, this likely means wrong connection type - treat as connection error
             raise CannotConnect("Wrong connection type or cannot connect") from err
-        except pysaj.UnexpectedResponseException as err:
+        except aiosaj.UnexpectedResponseException as err:
             raise CannotConnect(f"Connection error: {err}") from err
         except CannotConnect, InvalidAuth:
             raise

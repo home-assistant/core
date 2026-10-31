@@ -15,6 +15,7 @@ from homeassistant.components.weather import (
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,7 +24,12 @@ async def setup_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a mock configuration for testing."""
     mock_data = MockConfigEntry(
         domain=DOMAIN,
-        data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
+        data={
+            "name": "Somewhere",
+            CONF_LOCATION: {"latitude": 10, "longitude": 20},
+            "elevation": 0,
+        },
+        version=2,
     )
     mock_data.add_to_hass(hass)
 

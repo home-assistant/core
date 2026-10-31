@@ -1,6 +1,7 @@
 """Tests for the Marketplace base object."""
 
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
@@ -190,6 +191,48 @@ async def test_catalog_keeps_the_domain_of_an_installed_integration(
 
     assert repository.data.manifest_name == "Example"
     assert repository.data.domain == "example"
+
+
+@pytest.mark.parametrize(
+    ("categories", "expected"),
+    [
+        pytest.param(["energy.ev_charging"], ["energy.ev_charging"], id="categories"),
+        pytest.param(None, [], id="removed"),
+        pytest.param("energy", [], id="not-a-list"),
+        pytest.param([1], [], id="not-strings"),
+    ],
+)
+@pytest.mark.parametrize("newer", [True, False], ids=["newer", "same-entry"])
+async def test_catalog_integration_categories(
+    marketplace: MarketplaceManager,
+    categories: Any,
+    expected: list[str],
+    newer: bool,
+) -> None:
+    """Test the catalog sets the categories of an integration.
+
+    The catalog calls them categories, a broken value only loses them. They
+    don't wait for a newer entry: storage from before they existed has none.
+    """
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.integration_categories = ["lighting"]
+
+    entry = {
+        "domain": repository.data.domain,
+        "full_name": repository.data.full_name,
+        "last_fetched": repository.data.last_fetched.timestamp() + int(newer),
+        "manifest": {},
+        "manifest_name": "Example",
+    }
+    if categories is not None:
+        entry["categories"] = categories
+    feed = {repository.data.id: entry}
+    with patch.object(marketplace.data_client, "async_get_category", return_value=feed):
+        await marketplace.async_get_category_repositories_from_catalog(
+            RepositoryCategory.INTEGRATION
+        )
+
+    assert repository.data.integration_categories == expected
 
 
 async def test_custom_repository_listed_by_the_catalog_is_default(

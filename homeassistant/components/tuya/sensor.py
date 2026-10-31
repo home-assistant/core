@@ -219,6 +219,67 @@ def _indexed_electricity_data(
     )
 
 
+def _has_multiple_meter_channels(device: CustomerDevice) -> bool:
+    """Return if the device reports more than one meter channel."""
+    return DPCode.CUR_POWER2 in device.status_range
+
+
+def _meter_channel_sensors(channel: int) -> tuple[TuyaSensorEntityDescription, ...]:
+    """Build sensors for one channel of a multi-channel energy meter."""
+    return (
+        TuyaSensorEntityDescription(
+            key=DPCode(f"device_state{channel}"),
+            translation_key="meter_status",
+            channel_index=channel,
+            channel_condition=_has_multiple_meter_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode(f"cur_current{channel}"),
+            translation_key="current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            channel_index=channel,
+            channel_condition=_has_multiple_meter_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode(f"cur_power{channel}"),
+            translation_key="power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            channel_index=channel,
+            channel_condition=_has_multiple_meter_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode(f"cur_voltage{channel}"),
+            translation_key="voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            channel_index=channel,
+            channel_condition=_has_multiple_meter_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode(f"total_energy{channel}"),
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            channel_index=channel,
+            channel_condition=_has_multiple_meter_channels,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode(f"today_acc_energy{channel}"),
+            translation_key="energy_today",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            channel_index=channel,
+            channel_condition=_has_multiple_meter_channels,
+        ),
+    )
+
+
 # Commonly used battery sensors, that are reused in the sensors down below.
 BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     TuyaSensorEntityDescription(
@@ -463,94 +524,8 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
-        TuyaSensorEntityDescription(
-            key=DPCode.DEVICE_STATE1,
-            translation_key="indexed_meter_status",
-            translation_placeholders={"index": "1"},
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.DEVICE_STATE2,
-            translation_key="indexed_meter_status",
-            translation_placeholders={"index": "2"},
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CUR_CURRENT1,
-            translation_key="indexed_current",
-            translation_placeholders={"index": "1"},
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CUR_CURRENT2,
-            translation_key="indexed_current",
-            translation_placeholders={"index": "2"},
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CUR_POWER1,
-            translation_key="indexed_power",
-            translation_placeholders={"index": "1"},
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CUR_POWER2,
-            translation_key="indexed_power",
-            translation_placeholders={"index": "2"},
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CUR_VOLTAGE1,
-            translation_key="indexed_voltage",
-            translation_placeholders={"index": "1"},
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.CUR_VOLTAGE2,
-            translation_key="indexed_voltage",
-            translation_placeholders={"index": "2"},
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.TOTAL_ENERGY1,
-            translation_key="indexed_total_energy",
-            translation_placeholders={"index": "1"},
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.TOTAL_ENERGY2,
-            translation_key="indexed_total_energy",
-            translation_placeholders={"index": "2"},
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.TODAY_ACC_ENERGY1,
-            translation_key="indexed_energy_today",
-            translation_placeholders={"index": "1"},
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.TODAY_ACC_ENERGY2,
-            translation_key="indexed_energy_today",
-            translation_placeholders={"index": "2"},
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        ),
+        *_meter_channel_sensors(1),
+        *_meter_channel_sensors(2),
         TuyaSensorEntityDescription(
             key=DPCode.ALL_ENERGY,
             translation_key="total_energy",

@@ -45,7 +45,7 @@ def next_departuredate(departure: list[str]) -> date:
     return next_weekday(today_date, WEEKDAYS.index(departure[0]))
 
 
-class TVDataUpdateCoordinator(DataUpdateCoordinator):
+class TVDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """A Trafikverket Data Update Coordinator."""
 
     config_entry: TVFerryConfigEntry

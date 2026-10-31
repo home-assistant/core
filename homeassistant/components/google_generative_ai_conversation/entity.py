@@ -133,6 +133,12 @@ def supports_custom_sampling(model: str) -> bool:
     return name == stem or name.startswith(f"{stem}-")
 
 
+def supports_voice_library(model: str) -> bool:
+    """Return whether a TTS model can use the voices from the voices API."""
+    version = _gemini_version(model.removeprefix("models/"))
+    return version is not None and version >= (3, 8)
+
+
 def _is_thinking_model(model: str) -> bool:
     """Check if the model uses the integration's thinking configuration."""
     name = model.removeprefix("models/")

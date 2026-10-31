@@ -991,7 +991,7 @@ class TibberRtEntityCreator:
             self._async_add_entities(new_entities)
 
 
-class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-assistant-enforce-class-module
+class TibberRtDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=home-assistant-enforce-class-module
     """Handle Tibber realtime data."""
 
     def __init__(
