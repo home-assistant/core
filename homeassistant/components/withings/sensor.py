@@ -245,6 +245,14 @@ MEASUREMENT_SENSORS: dict[
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    MeasurementType.BASAL_METABOLIC_RATE: WithingsMeasurementSensorEntityDescription(
+        key="basal_metabolic_rate",
+        measurement_type=MeasurementType.BASAL_METABOLIC_RATE,
+        translation_key="basal_metabolic_rate",
+        native_unit_of_measurement="kcal/day",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
     MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: (
         WithingsMeasurementSensorEntityDescription(
             key="electrodermal_activity_feet",

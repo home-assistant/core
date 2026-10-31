@@ -1,0 +1,23 @@
+[
+  {
+    "grpid": 1,
+    "attrib": 0,
+    "date": 1697889600,
+    "created": 1697889600,
+    "modified": 1697889600,
+    "category": 1,
+    "deviceid": "test-device",
+    "hash_deviceid": "test-device",
+    "measures": [
+      {
+        "type": 226,
+        "unit": 0,
+        "value": 2252,
+        "position": 7
+      }
+    ],
+    "modelid": 10,
+    "model": "Body Scan",
+    "comment": null
+  }
+]
