@@ -405,7 +405,7 @@
         }
       }
     },
-    "productivity_information": {
+      "productivity_information": {
       "description": "Calendars, to-do and shopping lists, grocery delivery, package tracking, documents, photos and bookmarks.",
       "name": "Productivity & information",
       "subcategory": {
@@ -417,6 +417,9 @@
         },
         "shopping_groceries": {
           "name": "Shopping & groceries"
+        },
+        "parcel_tracking": {
+          "name": "Parcel tracking"
         }
       }
     },
