@@ -196,6 +196,19 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @property
+    def pending_alarms(self) -> dict[int, tuple[str, int]]:
+        """Return the pending alarms for the device, keyed by alarm id.
+
+        Each value is the alarm's (severity, count).
+        """
+        alarm_counts = self._device_information["notifications"]["pending"].get(
+            "alarmCount", []
+        )
+        return {
+            alarm["id"]: (alarm["severity"], alarm["count"]) for alarm in alarm_counts
+        }
+
+    @property
     def water_detected(self) -> bool:
         """Return whether water is detected, for leak detectors."""
         return self._device_information["fwProperties"]["telemetry_water"]
