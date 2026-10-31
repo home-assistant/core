@@ -1,10 +1,14 @@
 """Test ViCare climate entity."""
 
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
-from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
+from PyViCare.PyViCareUtils import (
+    PyViCareCommandError,
+    PyViCareNotSupportedFeatureError,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -16,8 +20,10 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_component, entity_registry as er
 
 from . import MODULE, setup_integration
@@ -226,3 +232,167 @@ async def test_set_hvac_mode_off_uses_standby(
         "setMode",
         {"mode": "standby"},
     )
+
+
+async def _setup_climate(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, fixture: Fixture
+) -> MockPyViCare:
+    mock_vicare = MockPyViCare([fixture])
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
+        patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+    return mock_vicare
+
+
+HEAT_PUMP = Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")
+
+
+@pytest.mark.parametrize(
+    ("data", "feature"),
+    [
+        ({}, "heating.operating.programs.holiday"),
+        ({"program": "holiday_at_home"}, "heating.operating.programs.holidayAtHome"),
+    ],
+)
+async def test_schedule_holiday(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    data: dict[str, Any],
+    feature: str,
+) -> None:
+    """Test scheduling a holiday program."""
+    mock_vicare = await _setup_climate(hass, mock_config_entry, HEAT_PUMP)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "schedule_holiday",
+        {
+            ATTR_ENTITY_ID: "climate.model0_heating",
+            "start_date": "2026-12-20",
+            "end_date": "2027-01-06",
+            **data,
+        },
+        blocking=True,
+    )
+
+    device = mock_vicare.devices[0]
+    device.service.setProperty.assert_called_once_with(
+        device.accessor,
+        feature,
+        "schedule",
+        {"start": "2026-12-20", "end": "2027-01-06"},
+    )
+
+
+@pytest.mark.parametrize(
+    ("data", "feature"),
+    [
+        ({}, "heating.operating.programs.holiday"),
+        ({"program": "holiday_at_home"}, "heating.operating.programs.holidayAtHome"),
+    ],
+)
+async def test_cancel_holiday(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    data: dict[str, Any],
+    feature: str,
+) -> None:
+    """Test cancelling a holiday program."""
+    mock_vicare = await _setup_climate(hass, mock_config_entry, HEAT_PUMP)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "cancel_holiday",
+        {ATTR_ENTITY_ID: "climate.model0_heating", **data},
+        blocking=True,
+    )
+
+    device = mock_vicare.devices[0]
+    device.service.setProperty.assert_called_once_with(
+        device.accessor, feature, "unschedule", {}
+    )
+
+
+async def test_schedule_holiday_end_before_start(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a holiday that ends before it starts is rejected."""
+    mock_vicare = await _setup_climate(hass, mock_config_entry, HEAT_PUMP)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "schedule_holiday",
+            {
+                ATTR_ENTITY_ID: "climate.model0_heating",
+                "start_date": "2027-01-06",
+                "end_date": "2026-12-20",
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "holiday_end_before_start"
+    mock_vicare.devices[0].service.setProperty.assert_not_called()
+
+
+async def test_holiday_program_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a holiday program the device does not have is rejected."""
+    mock_vicare = await _setup_climate(
+        hass, mock_config_entry, Fixture({"type:boiler"}, "vicare/Vitodens300W.json")
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "cancel_holiday",
+            {ATTR_ENTITY_ID: "climate.model0_heating", "program": "holiday_at_home"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "holiday_not_supported"
+    mock_vicare.devices[0].service.setProperty.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "message"),
+    [
+        (
+            "schedule_holiday",
+            {"start_date": "2026-12-20", "end_date": "2027-01-06"},
+            'Unable to schedule the holiday program: Command failed with message "rejected"',
+        ),
+        (
+            "cancel_holiday",
+            {},
+            'Unable to cancel the holiday program: Command failed with message "rejected"',
+        ),
+    ],
+)
+async def test_holiday_command_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    data: dict[str, Any],
+    message: str,
+) -> None:
+    """Test a holiday command the API rejects is reported to the user."""
+    mock_vicare = await _setup_climate(hass, mock_config_entry, HEAT_PUMP)
+    mock_vicare.devices[0].service.setProperty.side_effect = PyViCareCommandError(
+        "rejected"
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "climate.model0_heating", **data},
+            blocking=True,
+        )
+    assert str(exc_info.value) == message
