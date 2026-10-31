@@ -767,8 +767,12 @@ def test_loop_timing_counts_a_callback_it_cannot_attribute(
     """A callable that breaks when looked at still runs, counted under other callbacks."""
 
     class Prickly:
+        # Only the name breaks: asyncio's debug mode looks at other
+        # attributes when the callback is scheduled
         def __getattr__(self, name: str) -> Any:
-            raise RuntimeError("do not look at me")
+            if name == "__qualname__":
+                raise RuntimeError("do not look at me")
+            raise AttributeError(name)
 
         def __call__(self) -> None:
             ran.append(True)
