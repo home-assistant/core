@@ -430,6 +430,13 @@ class ZonneplanBatterySettingsCoordinator(
         """Refresh the settings after the control mode was fetched."""
         if self.control_coordinator.last_update_success:
             self.config_entry.async_create_task(self.hass, self.async_request_refresh())
+        else:
+            self.async_set_update_error(
+                UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="control_mode_unavailable",
+                )
+            )
 
     @override
     async def _async_fetch(self) -> ZonneplanBatterySettingsData:
@@ -477,11 +484,15 @@ class ZonneplanBatterySettingsCoordinator(
             ),
         )
 
-    def _ensure_control_mode(
+    async def _async_ensure_control_mode(
         self, contract_uuid: str, mode: BatteryMode, translation_key: str
     ) -> None:
         """Raise unless the battery runs in the mode, as writing its settings enables it."""
-        if self.control_coordinator.data[contract_uuid].control_mode != mode:
+        # Fetched fresh, as the mode may have changed in the app since the last poll.
+        control_mode = await self.async_call_zonneplan(
+            self.zonneplan.async_get_battery_control_mode(contract_uuid)
+        )
+        if control_mode.control_mode != mode:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=translation_key,
@@ -494,7 +505,7 @@ class ZonneplanBatterySettingsCoordinator(
         max_discharge_power_w: int | None,
     ) -> None:
         """Set the power limits of home optimization and refresh."""
-        self._ensure_control_mode(
+        await self._async_ensure_control_mode(
             contract_uuid, BatteryMode.HOME_OPTIMIZATION, "home_optimization_not_active"
         )
         await self.async_call_zonneplan(
@@ -505,23 +516,24 @@ class ZonneplanBatterySettingsCoordinator(
                 max_discharge_power_w=max_discharge_power_w,
             )
         )
-        await self.async_request_refresh()
+        # Not debounced: the next write sends both limits from this data.
+        await self.async_refresh()
 
     async def async_set_price_spread(
         self, contract_uuid: str, price_spread: float
     ) -> None:
         """Set the price spread day-ahead arbitrage trades on and refresh."""
-        self._ensure_control_mode(
-            contract_uuid,
-            BatteryMode.DAY_AHEAD_ARBITRAGE,
-            "day_ahead_arbitrage_not_active",
-        )
         resolution = self.data.day_ahead_arbitrage[contract_uuid].market_time_resolution
         if resolution is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="day_ahead_arbitrage_not_set_up",
             )
+        await self._async_ensure_control_mode(
+            contract_uuid,
+            BatteryMode.DAY_AHEAD_ARBITRAGE,
+            "day_ahead_arbitrage_not_active",
+        )
         await self.async_call_zonneplan(
             self.zonneplan.async_enable_battery_day_ahead_arbitrage(
                 contract_uuid,
@@ -529,4 +541,4 @@ class ZonneplanBatterySettingsCoordinator(
                 market_time_resolution=resolution,
             )
         )
-        await self.async_request_refresh()
+        await self.async_refresh()

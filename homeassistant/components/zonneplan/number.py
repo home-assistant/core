@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pyzonneplan import BatteryHomeOptimization, BatteryPowerLimits
 
@@ -178,9 +178,9 @@ class ZonneplanPowerLimitNumber(
     @override
     def native_value(self) -> int | None:
         """Return the power limit."""
-        if (settings := self._settings) is None:
-            return None
-        return self.entity_description.value_fn(settings)
+        return self.entity_description.value_fn(
+            self.coordinator.data.home_optimization[self._contract_uuid]
+        )
 
     def _limits(self) -> BatteryPowerLimits | None:
         """Return the power limits the API accepts, if it sent them."""
@@ -208,8 +208,9 @@ class ZonneplanPowerLimitNumber(
     async def async_set_native_value(self, value: float) -> None:
         """Set the power limit, keeping the other one."""
         settings = self._settings
-        # Only reachable while available, so the settings are known.
-        assert settings is not None
+        if TYPE_CHECKING:
+            # Only reachable while available, so the settings are known.
+            assert settings is not None
         max_charge_power_w, max_discharge_power_w = (
             self.entity_description.power_limits_fn(settings, int(value))
         )

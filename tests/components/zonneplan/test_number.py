@@ -1,7 +1,8 @@
 """Tests for the Zonneplan number platform."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from dataclasses import replace
+from unittest.mock import AsyncMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -227,6 +228,93 @@ async def test_set_power_limit(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_set_power_limits_in_a_row(
+    hass: HomeAssistant,
+    mock_zonneplan_client: AsyncMock,
+) -> None:
+    """Test quick successive power limit writes keep each other's limit."""
+
+    async def _enable(
+        connection_uuid: str,
+        contract_uuid: str,
+        *,
+        max_charge_power_w: int,
+        max_discharge_power_w: int,
+    ) -> None:
+        mock_zonneplan_client.async_get_battery_home_optimization.return_value = (
+            replace(
+                mock_zonneplan_client.async_get_battery_home_optimization.return_value,
+                max_desired_charge_power_watts=max_charge_power_w,
+                max_desired_discharge_power_watts=max_discharge_power_w,
+            )
+        )
+
+    mock_zonneplan_client.async_enable_battery_home_optimization.side_effect = _enable
+
+    await _set_value(hass, MAX_CHARGE_POWER_ENTITY_ID, 1500)
+    await _set_value(hass, MAX_DISCHARGE_POWER_ENTITY_ID, 500)
+    await _set_value(hass, MAX_CHARGE_POWER_ENTITY_ID, 1200)
+
+    assert (
+        mock_zonneplan_client.async_enable_battery_home_optimization.await_args_list
+        == [
+            call(
+                CONNECTION_UUID,
+                CONTRACT_UUID,
+                max_charge_power_w=1500,
+                max_discharge_power_w=800,
+            ),
+            call(
+                CONNECTION_UUID,
+                CONTRACT_UUID,
+                max_charge_power_w=1500,
+                max_discharge_power_w=500,
+            ),
+            call(
+                CONNECTION_UUID,
+                CONTRACT_UUID,
+                max_charge_power_w=1200,
+                max_discharge_power_w=500,
+            ),
+        ]
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_power_limit_mode_changed_in_app(
+    hass: HomeAssistant,
+    mock_zonneplan_client: AsyncMock,
+) -> None:
+    """Test a mode change since the last poll blocks writing the power limits."""
+    mock_zonneplan_client.async_get_battery_control_mode.return_value = _control_mode(
+        BatteryMode.SELF_CONSUMPTION, available=True
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _set_value(hass, MAX_CHARGE_POWER_ENTITY_ID, 1500)
+
+    assert exc_info.value.translation_key == "home_optimization_not_active"
+    mock_zonneplan_client.async_enable_battery_home_optimization.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_power_limit_control_mode_error(
+    hass: HomeAssistant,
+    mock_zonneplan_client: AsyncMock,
+) -> None:
+    """Test the power limits are not written when the control mode can't be fetched."""
+    mock_zonneplan_client.async_get_battery_control_mode.side_effect = (
+        ZonneplanConnectionError("boom")
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _set_value(hass, MAX_CHARGE_POWER_ENTITY_ID, 1500)
+
+    assert exc_info.value.translation_key == "cannot_connect"
+    mock_zonneplan_client.async_enable_battery_home_optimization.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_set_price_spread_wrong_mode(
     hass: HomeAssistant,
     mock_zonneplan_client: AsyncMock,
@@ -396,6 +484,37 @@ async def test_number_update(
 
     assert (state := hass.states.get(MAX_CHARGE_POWER_ENTITY_ID))
     assert state.state == "1200"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_number_control_mode_update_failed(
+    hass: HomeAssistant,
+    mock_zonneplan_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the settings are unavailable while the control mode can't be fetched."""
+    mock_zonneplan_client.async_get_battery_control_mode.side_effect = (
+        ZonneplanConnectionError("boom")
+    )
+    freezer.tick(BATTERY_CONTROL_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in (
+        MAX_CHARGE_POWER_ENTITY_ID,
+        MAX_DISCHARGE_POWER_ENTITY_ID,
+        PRICE_SPREAD_ENTITY_ID,
+    ):
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNAVAILABLE
+
+    mock_zonneplan_client.async_get_battery_control_mode.side_effect = None
+    freezer.tick(BATTERY_CONTROL_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(MAX_CHARGE_POWER_ENTITY_ID))
+    assert state.state == "2500"
 
 
 async def test_number_control_mode_unavailable_at_setup(
