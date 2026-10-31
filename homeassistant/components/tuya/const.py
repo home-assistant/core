@@ -911,6 +911,10 @@ class DPCode(StrEnum):
     SWITCH_6 = "switch_6"  # Switch 6
     SWITCH_7 = "switch_7"  # Switch 7
     SWITCH_8 = "switch_8"  # Switch 8
+    SWITCH_9 = "switch_9"  # Switch 9
+    SWITCH_10 = "switch_10"  # Switch 10
+    SWITCH_11 = "switch_11"  # Switch 11
+    SWITCH_12 = "switch_12"  # Switch 12
     SWITCH_ALARM_LIGHT = "switch_alarm_light"
     SWITCH_ALARM_PROPEL = "switch_alarm_propel"
     SWITCH_ALARM_SOUND = "switch_alarm_sound"
