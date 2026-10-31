@@ -40,7 +40,14 @@ from homeassistant.helpers.recorder import (  # noqa: F401
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
+from .const import (
+    DEFAULT_MAX_BIND_VARS,
+    DOMAIN,
+    POSTGRESQL_PSYCOPG2_URL_PREFIX,
+    POSTGRESQL_URL_PREFIX,
+    SQLITE_URL_PREFIX,
+    SupportedDialect,
+)
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -256,6 +263,23 @@ def execute_select(
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
+
+
+def get_engine_db_url(db_url: str) -> str:
+    """Return the database URL to create an engine with.
+
+    SQLAlchemy 2.1 defaults postgresql:// to psycopg 3, but installations
+    ship psycopg2. It also URL-decodes the database part, so literal percent
+    signs in SQLite paths are escaped to keep pointing at the same file.
+    """
+    if db_url.startswith(POSTGRESQL_URL_PREFIX):
+        return POSTGRESQL_PSYCOPG2_URL_PREFIX + db_url.removeprefix(
+            POSTGRESQL_URL_PREFIX
+        )
+    if db_url.startswith(SQLITE_URL_PREFIX):
+        path, sep, query = db_url.removeprefix(SQLITE_URL_PREFIX).partition("?")
+        return f"{SQLITE_URL_PREFIX}{path.replace('%', '%25')}{sep}{query}"
+    return db_url
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:

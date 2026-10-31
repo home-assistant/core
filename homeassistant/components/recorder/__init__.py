@@ -40,6 +40,7 @@ from .core import Recorder
 from .entity_options import is_entity_recorded
 from .services import async_setup_services
 from .tasks import AddRecorderPlatformTask
+from .util import get_engine_db_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +85,7 @@ __all__ = [
     "DOMAIN",
     "Recorder",
     "SupportedDialect",
+    "get_engine_db_url",
     "get_instance",
     "is_entity_recorded",
 ]
