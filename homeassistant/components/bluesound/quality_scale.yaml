@@ -43,7 +43,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: The integration connects to devices locally without authentication.
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
