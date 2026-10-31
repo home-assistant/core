@@ -931,6 +931,21 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._entry_title = entry_title
         self.iid_storage = iid_storage
 
+    @ha_callback
+    def async_update_accessories_hash(self) -> bool:
+        """Update the accessories hash, advertising a new config number if changed."""
+        old_hash = self.state.accessories_hash
+        new_hash = self.accessories_hash
+        if self.state.set_accessories_hash(new_hash):
+            _LOGGER.debug(
+                "Updating HomeKit accessories hash from %s -> %s", old_hash, new_hash
+            )
+            self.async_persist()
+            self.async_update_advertisement()
+            return True
+        _LOGGER.debug("HomeKit accessories hash is unchanged: %s", new_hash)
+        return False
+
     @pyhap_callback  # type: ignore[untyped-decorator]
     def pair(
         self, client_username_bytes: bytes, client_public: str, client_permissions: int
