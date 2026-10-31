@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "authorized_by": {
+        "default": "mdi:shield-key"
+      },
+      "charging_state": {
+        "default": "mdi:ev-plug-type2"
+      },
+      "charging_strategy": {
+        "default": "mdi:tune-variant"
+      },
+      "status": {
+        "default": "mdi:ev-station"
+      },
+      "vehicle_state": {
+        "default": "mdi:car-electric"
+      }
+    }
+  }
+}
