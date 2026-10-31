@@ -501,10 +501,9 @@ class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
 class ShellyRpcMenuRepairsFlow(RepairsFlow):
     """Handler for an issue fixing flow with confirm and ignore menu."""
 
-    def __init__(self, device: RpcDevice, issue_id: str) -> None:
+    def __init__(self, device: RpcDevice) -> None:
         """Initialize."""
         self._device = device
-        self.issue_id = issue_id
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -609,12 +608,12 @@ async def async_create_fix_flow(
         return DisableOutboundWebSocketFlow(device)
 
     if "open_wifi_ap" in issue_id:
-        return DisableOpenWiFiApFlow(device, issue_id)
+        return DisableOpenWiFiApFlow(device)
 
     if "rtsp_disabled" in issue_id:
-        return EnableRtspFlow(device, issue_id)
+        return EnableRtspFlow(device)
 
     if "ir_raw_receive_disabled" in issue_id:
-        return EnableIrRawReceiveFlow(device, issue_id)
+        return EnableIrRawReceiveFlow(device)
 
     return ConfirmRepairFlow()
