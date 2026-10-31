@@ -6,6 +6,11 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from growattServer import GrowattV1ApiError, GrowattV1ApiErrorCode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.growatt_server.coordinator import SCAN_INTERVAL
@@ -18,8 +23,6 @@ from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 DOMAIN = "growatt_server"
 

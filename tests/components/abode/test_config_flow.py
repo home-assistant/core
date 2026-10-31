@@ -8,6 +8,7 @@ from jaraco.abode.exceptions import (
 )
 from jaraco.abode.helpers.errors import MFA_CODE_REQUIRED
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import ConnectTimeout
 
 from homeassistant.components.abode.const import CONF_POLLING, DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

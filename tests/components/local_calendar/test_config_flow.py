@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.local_calendar.const import (
@@ -20,8 +21,6 @@ from homeassistant.components.local_calendar.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -74,7 +73,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.local_calendar.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -113,7 +112,7 @@ async def test_form_import_ics(
 
     with patch(
         "homeassistant.components.local_calendar.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         file_id = mock_process_uploaded_file.file_id
         result3 = await hass.config_entries.flow.async_configure(
@@ -186,7 +185,7 @@ async def test_invalid_ics(
     mock_process_uploaded_file.return_value.__enter__.return_value = valid_ics
     with patch(
         "homeassistant.components.local_calendar.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

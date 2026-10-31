@@ -93,7 +93,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> None:
     """Set up an LMS Server from a config entry."""
     config = entry.data
     session = async_get_clientsession(hass)
@@ -169,16 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         and status[STATUS_QUERY_LIBRARYNAME]
     ) or host
     version = (STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION]) or None
-    # mac can be missing
-    mac_connect = (
-        {(CONNECTION_NETWORK_MAC, status[STATUS_QUERY_MAC])}
-        if STATUS_QUERY_MAC in status
-        else None
-    )
-
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
+    device_info = dr.DeviceInfo(
         identifiers={(DOMAIN, lms.uuid)},
         name=lms.name,
         manufacturer=SERVER_MANUFACTURER,
@@ -186,7 +177,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         model_id=SERVER_MODEL_ID,
         sw_version=version,
         entry_type=DeviceEntryType.SERVICE,
-        connections=mac_connect,
+    )
+    # mac can be missing
+    if STATUS_QUERY_MAC in status:
+        device_info.connections = {(CONNECTION_NETWORK_MAC, status[STATUS_QUERY_MAC])}
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=device_info
     )
     _LOGGER.debug("LMS Device %s", device)
 
@@ -239,10 +237,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         hass, _player_discovery(), "squeezebox.media_player.player_discovery"
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> None:
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
     _LOGGER.debug(
@@ -258,7 +254,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
         hass.data[SQUEEZEBOX_HASS_DATA].cancel()
         hass.data.pop(SQUEEZEBOX_HASS_DATA)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

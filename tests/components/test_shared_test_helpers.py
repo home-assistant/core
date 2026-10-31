@@ -14,6 +14,11 @@ from typing import Any, cast
 
 import probatio
 import pytest
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    assert_conditions_target_support,
+    assert_triggers_target_support,
+)
 
 from homeassistant.const import CONF_TARGET, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -27,12 +32,6 @@ from homeassistant.helpers.trigger import (
     Trigger,
     TriggerConfig,
     make_entity_target_state_trigger,
-)
-
-from .common import (
-    TargetSupport,
-    assert_conditions_target_support,
-    assert_triggers_target_support,
 )
 
 # Valid baselines created by the public factories: proper entity-base classes that

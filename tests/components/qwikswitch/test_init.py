@@ -5,18 +5,17 @@ from unittest.mock import Mock
 
 from aiohttp.client_exceptions import ClientError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+    MockLongPollSideEffect,
+)
 from yarl import URL
 
 from homeassistant.components.qwikswitch import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.test_util.aiohttp import (
-    AiohttpClientMocker,
-    AiohttpClientMockResponse,
-    MockLongPollSideEffect,
-)
 
 
 @pytest.fixture

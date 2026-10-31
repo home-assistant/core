@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.tradfri import DOMAIN, config_flow
@@ -15,8 +16,6 @@ from homeassistant.helpers.service_info.zeroconf import (
 )
 
 from . import TRADFRI_PATH
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_auth")

@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mpd.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -25,7 +24,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.mpd.async_setup_entry", return_value=True
+        "homeassistant.components.mpd.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -40,4 +39,5 @@ def mock_mpd_client() -> Generator[MagicMock]:
     ) as mpd_client:
         client = mpd_client.return_value
         client.password = AsyncMock()
+        client.status = AsyncMock(return_value={})
         yield client

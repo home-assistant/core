@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components import ps4
 from homeassistant.components.media_player import (
@@ -33,8 +35,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location as location_util
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.0.1"
 MOCK_NAME = "test_ps4"
@@ -119,7 +119,7 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.ps4.media_player.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
         patch(mock_flow, return_value=MOCK_FLOW_RESULT),
     ):

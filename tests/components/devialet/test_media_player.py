@@ -4,6 +4,7 @@ from unittest.mock import PropertyMock, patch
 
 from devialet import DevialetApi
 from devialet.const import UrlSuffix
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from yarl import URL
 
 from homeassistant.components.devialet.media_player import SUPPORT_DEVIALET
@@ -51,8 +52,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import HOST, NAME, setup_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 SERVICE_TO_URL = {
     SERVICE_MEDIA_SEEK: [UrlSuffix.SEEK],

@@ -34,7 +34,7 @@ def mock_setup():
     """Prevent setup."""
     with patch(
         "homeassistant.components.meteoclimatic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

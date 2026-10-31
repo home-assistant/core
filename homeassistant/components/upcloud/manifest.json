@@ -1,6 +1,7 @@
 {
   "domain": "upcloud",
   "name": "UpCloud",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@scop"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/upcloud",

@@ -1,15 +1,30 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "machine_not_found": "[%key:component::lamarzocco::config::error::machine_not_found%]",
+      "no_machines": "[%key:component::lamarzocco::config::error::no_machines%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "machine_not_found": "Discovered machine not found in given account",
-      "no_machines": "No machines found in account"
+      "no_machines": "No machines found in account",
+      "policy_not_accepted": "La Marzocco did not register the privacy policy acceptance, please try again, or do it through the La Marzocco app."
     },
     "step": {
+      "accept_policy": {
+        "data": {
+          "commercial_policy": "Commercial communications",
+          "profile_policy": "Profiling"
+        },
+        "data_description": {
+          "commercial_policy": "Allow La Marzocco to send you marketing communications",
+          "profile_policy": "Allow La Marzocco to analyze your usage to personalize its offers"
+        },
+        "description": "La Marzocco requires you to accept its latest privacy policy before your machines can be accessed. By submitting this form, you accept the privacy policy, which you can also review and accept in the La Marzocco app. The consents below are optional.",
+        "title": "Accept privacy policy"
+      },
       "bluetooth_selection": {
         "data": {
           "mac": "[%key:common::config_flow::data::device%]"
@@ -209,6 +224,9 @@
     },
     "number_exception": {
       "message": "Error while setting value {value} for number {key}"
+    },
+    "policy_acceptance_required": {
+      "message": "The latest La Marzocco privacy policy must be accepted"
     },
     "select_option_error": {
       "message": "Error while setting select option {option} for {key}"

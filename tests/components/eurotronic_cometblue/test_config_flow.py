@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from bleak.exc import BleakDeviceNotFoundError
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.eurotronic_cometblue.config_flow import (
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import FIXTURE_DEVICE_NAME, FIXTURE_MAC, FIXTURE_USER_INPUT
 from .conftest import FAKE_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_no_devices(

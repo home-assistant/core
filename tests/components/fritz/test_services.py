@@ -9,6 +9,7 @@ from fritzconnection.core.exceptions import (
 )
 from probatio import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.fritz.services import (
@@ -20,8 +21,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_SERIAL_NUMBER, MOCK_USER_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_services(hass: HomeAssistant) -> None:

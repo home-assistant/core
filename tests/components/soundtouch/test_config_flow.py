@@ -30,7 +30,7 @@ async def test_user_flow_create_entry(
     assert result.get("step_id") == "user"
 
     with patch(
-        "homeassistant.components.soundtouch.async_setup_entry", return_value=True
+        "homeassistant.components.soundtouch.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -70,7 +70,7 @@ async def test_user_flow_cannot_connect(
 
     requests_mock.get(f"{DEVICE_1_URL}/info", text=device1_info)
     with patch(
-        "homeassistant.components.soundtouch.async_setup_entry", return_value=True
+        "homeassistant.components.soundtouch.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: DEVICE_1_IP}
@@ -107,7 +107,7 @@ async def test_zeroconf_flow_create_entry(
     assert result.get("description_placeholders") == {"name": DEVICE_1_NAME}
 
     with patch(
-        "homeassistant.components.soundtouch.async_setup_entry", return_value=True
+        "homeassistant.components.soundtouch.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}

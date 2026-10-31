@@ -1,5 +1,6 @@
 """Test configuration for Shelly."""
 
+import asyncio
 from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
@@ -18,6 +19,7 @@ from aioshelly.const import MODEL_1, MODEL_25, MODEL_PLUS_2PM
 from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
@@ -26,8 +28,6 @@ from homeassistant.components.shelly.const import (
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_MAC
-
-from tests.common import async_capture_events
 
 MOCK_SETTINGS = {
     "name": "Test name",
@@ -230,6 +230,7 @@ MOCK_CONFIG = {
         "xcounts": {"expr": None, "unit": None},
         "xfreq": {"expr": None, "unit": None},
     },
+    "ir": {"raw_receive": True},
     "flood:0": {"id": 0, "name": "Kitchen"},
     "light:0": {"name": "test light_0"},
     "light:1": {"name": "test light_1"},
@@ -420,6 +421,7 @@ MOCK_STATUS_RPC = {
         "freq": 208.00,
         "xfreq": 6.11,
     },
+    "ir": {},
     "light:0": {"output": True, "brightness": 53.0},
     "light:1": {"output": True, "brightness": 53.0},
     "light:2": {"output": True, "brightness": 53.0},
@@ -489,6 +491,56 @@ MOCK_CAMERA_STATUS = {
     }
 }
 
+MOCK_LEDSTRIP_CONFIG = {
+    "ledstrip:0": {
+        "id": 0,
+        "name": None,
+        "initial_state": 2,
+        "num_leds": 100,
+        "protocol": "ws2812b",
+        "color_order": "rgb",
+        "ddp_port": 4048,
+        "effects": ["solid", "blink", "fade", "rainbow"],
+    }
+}
+
+MOCK_LEDSTRIP_STATUS_RAINBOW = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "rainbow",
+    "speed": 33,
+    "reverse": True,
+}
+MOCK_LEDSTRIP_STATUS_AURORA = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "bg_rgb": [0, 0, 0],
+    "effect": "aurora",
+    "palette": "ocean",
+    "speed": 50,
+    "intensity": 50,
+}
+MOCK_LEDSTRIP_STATUS_BLINK = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "blink",
+    "rgb": [127, 172, 255],
+    "bg_rgb": [171, 171, 171],
+    "speed": 50,
+    "intensity": 65,
+}
+MOCK_LEDSTRIP_STATUS_SOLID = {
+    "id": 0,
+    "on": False,
+    "brightness": 36,
+    "effect": "solid",
+    "rgb": [255, 81, 68],
+}
+MOCK_LEDSTRIP_STATUS = {"ledstrip:0": MOCK_LEDSTRIP_STATUS_RAINBOW}
+
 MOCK_SCRIPTS = [
     """"
 function eventHandler(event, userdata) {
@@ -510,6 +562,25 @@ Shelly.emitEvent("script_start");
     .replace(VAR_EVENT_TYPE, BLE_SCAN_RESULT_EVENT)
     .replace(VAR_VERSION, str(BLE_SCAN_RESULT_VERSION)),
 ]
+
+MOCK_LEDSTRIP_EFFECTS = {
+    "solid": {"name": "Solid Color", "controls": ["rgb"]},
+    "blink": {"name": "Blink", "controls": ["rgb", "bg_rgb", "speed", "intensity"]},
+    "fade": {"name": "Fade", "controls": ["rgb", "speed"]},
+    "rainbow": {"name": "Rainbow", "controls": ["speed", "reverse"]},
+    "colorwipe": {"name": "Color Wipe", "controls": ["rgb", "speed", "reverse"]},
+    "aurora": {
+        "name": "Aurora",
+        "controls": ["bg_rgb", "palette", "intensity", "speed"],
+    },
+    "ddp": {"name": "DDP Receiver", "controls": []},
+}
+MOCK_LEDSTRIP_PALETTES = {
+    "rainbow": "Rainbow",
+    "fire": "Fire",
+    "ocean": "Ocean",
+    "monochrome": "Monochrome",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -610,6 +681,8 @@ def _mock_rpc_device(version: str | None = None):
         ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
         shutdown=AsyncMock(),
+        ledstrip_list_effects=AsyncMock(return_value=MOCK_LEDSTRIP_EFFECTS),
+        ledstrip_list_palettes=AsyncMock(return_value=MOCK_LEDSTRIP_PALETTES),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -681,7 +754,12 @@ async def mock_rpc_device():
                 current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
             )
 
+        async def _initialize() -> None:
+            # Yield like the network I/O of a real device
+            await asyncio.sleep(0)
+
         device = _mock_rpc_device()
+        device.initialize = AsyncMock(side_effect=_initialize)
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=_disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=_update)
@@ -829,9 +907,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry and async_unload_entry."""
     with (
         patch(
-            "homeassistant.components.shelly.async_setup_entry", return_value=True
+            "homeassistant.components.shelly.async_setup_entry", return_value=None
         ) as mock_setup_entry,
-        patch("homeassistant.components.shelly.async_unload_entry", return_value=True),
+        patch("homeassistant.components.shelly.async_unload_entry", return_value=None),
     ):
         yield mock_setup_entry
 
@@ -865,5 +943,18 @@ def mock_camera_rpc_device(
     """Set up mock RPC device with camera component data."""
     monkeypatch.setattr(mock_rpc_device, "config", MOCK_CAMERA_CONFIG)
     monkeypatch.setattr(mock_rpc_device, "status", MOCK_CAMERA_STATUS)
+
+    return mock_rpc_device
+
+
+@pytest.fixture
+def mock_ledstrip_rpc_device(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock
+) -> Mock:
+    """Set up mock RPC device with LED strip component data."""
+    monkeypatch.setattr(mock_rpc_device, "config", MOCK_CONFIG | MOCK_LEDSTRIP_CONFIG)
+    monkeypatch.setattr(
+        mock_rpc_device, "status", MOCK_STATUS_RPC | MOCK_LEDSTRIP_STATUS
+    )
 
     return mock_rpc_device

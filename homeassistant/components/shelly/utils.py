@@ -25,19 +25,16 @@ from aioshelly.const import (
     RPC_GENERATIONS,
     ShellyDevice,
 )
+from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, WsServer
+from aioshelly.rpc_device.models import ShellyLedStripEffect
 from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MODEL,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_MODEL, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -62,7 +59,7 @@ from .const import (
     DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
-    FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    DYNAMIC_COMPONENTS_MAP,
     FW_ID_VERSION_PATTERN,
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
@@ -79,7 +76,6 @@ from .const import (
     SHELLY_WALL_DISPLAY_MODEL_PREFIX,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
-    VIRTUAL_COMPONENTS_MAP,
     WALL_DISPLAY_RELEASE_URL,
     All_LIGHT_TYPES,
 )
@@ -407,7 +403,13 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     _, component, component_id = get_rpc_key(key)
 
     if custom_name := get_rpc_custom_name(device, key):
-        if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
+        if component in (
+            *VIRTUAL_COMPONENTS,
+            "camerazone",
+            "input",
+            "presencezone",
+            "script",
+        ):
             return custom_name
 
         return (
@@ -610,26 +612,6 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
 
 
-@callback
-def async_create_issue_unsupported_firmware(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> None:
-    """Create a repair issue if the device runs an unsupported firmware."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
-        is_fixable=False,
-        is_persistent=False,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key="unsupported_firmware",
-        translation_placeholders={
-            "device_name": entry.title,
-            "ip_address": entry.data[CONF_HOST],
-        },
-    )
-
-
 def is_rpc_wifi_stations_disabled(
     config: dict[str, Any], _status: dict[str, Any], key: str
 ) -> bool:
@@ -673,7 +655,7 @@ def async_remove_shelly_rpc_entities(
 
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
-    component = VIRTUAL_COMPONENTS_MAP[platform]
+    component = DYNAMIC_COMPONENTS_MAP[platform]
 
     ids: list[str] = []
 
@@ -692,7 +674,7 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
 
 def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
     """Return true if the virtual component view match the platform."""
-    component = VIRTUAL_COMPONENTS_MAP[platform]
+    component = DYNAMIC_COMPONENTS_MAP[platform]
     view = config[key]["meta"]["ui"]["view"]
     return view in component["modes"]
 
@@ -809,13 +791,27 @@ async def get_rpc_scripts_event_types(
     return script_events
 
 
+def is_rpc_ledstrip_control_available(
+    effects: dict[str, ShellyLedStripEffect] | None,
+    status: dict[str, Any],
+    control: str,
+) -> bool:
+    """Return True if the current effect supports the control and reports it."""
+    return (
+        effects is not None
+        and (effect := effects.get(status["effect"])) is not None
+        and control in effect["controls"]
+        and control in status
+    )
+
+
 def get_irrigation_zone_id(device: RpcDevice, key: str) -> int | None:
     """Return the zone id if the component is an irrigation zone."""
-    if (
-        device.initialized
-        and key in device.config
-        and (zone := get_rpc_role_by_key(device.config, key)).startswith("zone")
-    ):
+    try:
+        config = device.config
+    except NotInitialized:
+        return None
+    if key in config and (zone := get_rpc_role_by_key(config, key)).startswith("zone"):
         return int(zone[4:])
     return None
 
@@ -898,6 +894,27 @@ def get_blu_trv_device_info(
         model_id=config.get("local_name"),
         name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
         sw_version=fw_ver,
+    )
+
+
+def get_ir_device_info(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    device: RpcDevice,
+    mac: str,
+    key: str,
+) -> DeviceInfo:
+    """Return device info for IR code sub-device."""
+    device_id = device.config[key]["device_id"]
+    ir_device_key = f"irdevice:{device_id}"
+    name = device.config[ir_device_key].get("name") or f"IR Device {device_id}"
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{ir_device_key}")},
+        name=name,
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, mac), config_entry_id=config_entry_id
+        ),
     )
 
 
@@ -1129,6 +1146,7 @@ async def async_manage_coiot_issues_task(
                 "device_name": device.name,
                 "ip_address": device.ip_address,
             },
+            config_entry_id=entry.entry_id,
         )
         return
 
@@ -1147,4 +1165,11 @@ async def async_manage_coiot_issues_task(
             "ip_address": device.ip_address,
         },
         data={"entry_id": entry.entry_id},
+        config_entry_id=entry.entry_id,
     )
+
+
+def normalize_command_source(source: str | None) -> str | None:
+    """Normalize the last command source to match translation keys."""
+    # Sources mix case (e.g. "WS_in"); Wall Display also uses spaces ("RPC Set")
+    return source and source.lower().replace(" ", "_")

@@ -105,7 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> None:
     """Set up yolink from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -174,11 +174,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bo
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_yolink_unload)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.home_instance.async_unload()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.home_instance.async_unload()

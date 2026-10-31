@@ -4,6 +4,7 @@ import logging
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airq import AirQCoordinator
 from homeassistant.components.airq.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .common import TEST_DEVICE_DATA, TEST_DEVICE_INFO
-
-from tests.common import MockConfigEntry
 
 MOCKED_ENTRY = MockConfigEntry(
     domain=DOMAIN,

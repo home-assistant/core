@@ -11,9 +11,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
-    UnitOfTemperature,
 )
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -57,7 +57,6 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
     _attr_max_temp = 50
     _attr_min_temp = -50
     _attr_precision = 1.0
-    _attr_should_poll = False
     _attr_supported_features = ClimateEntityFeature(
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 
 from homeassistant.components import zha
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
@@ -24,7 +25,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.components.usb import patch_scanned_serial_ports
 
 
@@ -468,7 +468,18 @@ async def test_multi_pan_migration_issue_created_for_addon(
     assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
     assert issue.translation_placeholders == {"hardware_name": "Home Assistant Yellow"}
     assert issue.data == {"entry_id": config_entry.entry_id}
+    assert issue.config_entry_id == config_entry.entry_id
     assert issue.is_fixable
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )
 
 
 async def test_multi_pan_migration_issue_deleted_for_ezsp(

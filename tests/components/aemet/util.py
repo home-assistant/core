@@ -4,12 +4,11 @@ from typing import Any
 from unittest.mock import patch
 
 from aemet_opendata.const import ATTR_BYTES, ATTR_DATA, ATTR_TIMESTAMP, ATTR_TYPE
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 
 from homeassistant.components.aemet.const import CONF_RADAR_UPDATES, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 FORECAST_DAILY_DATA_MOCK = {
     ATTR_DATA: load_json_value_fixture("aemet/town-28065-forecast-daily-data.json"),

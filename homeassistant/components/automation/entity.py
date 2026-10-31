@@ -9,6 +9,7 @@ import probatio
 from propcache.api import cached_property
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.components.trace import ATTR_ITEM_ID, ATTR_RUN_ID
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
@@ -30,6 +31,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
 from homeassistant.helpers import (
     condition as condition_helper,
+    issue_registry as ir,
     trigger as trigger_helper,
 )
 from homeassistant.helpers.entity import ToggleEntity
@@ -209,6 +211,11 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return the repair issue id for the entity_id."""
         return f"{entity_id}_validation_{self._validation_status}"
 
+    @property
+    def repair_issue_id(self) -> str:
+        """Return the id of the repair issue."""
+        return self._issue_id(self.entity_id)
+
     @callback
     def _async_create_issue(self) -> None:
         """Create a repair issue to notify the user the automation has errors."""
@@ -245,7 +252,9 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
-        async_delete_issue(self.hass, DOMAIN, self._issue_id(self.entity_id))
+        async_delete_issue(
+            self.hass, DOMAIN, self.repair_issue_id, defer_to_refresh=True
+        )
 
     @override
     async def async_trigger(
@@ -546,6 +555,10 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             }
             if "trigger" in variables and "description" in variables["trigger"]:
                 event_data[ATTR_SOURCE] = variables["trigger"]["description"]
+            # Without an id there is no item id to look up the trace by
+            if self.unique_id:
+                event_data[ATTR_ITEM_ID] = self.unique_id
+                event_data[ATTR_RUN_ID] = automation_trace.run_id
 
             @callback
             def started_action() -> None:
@@ -566,20 +579,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                         variables, trigger_context, started_action
                     )
             except ServiceNotFound as err:
-                async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"{self.entity_id}_service_not_found_{err.domain}.{err.service}",
-                    is_fixable=True,
-                    is_persistent=True,
-                    severity=IssueSeverity.ERROR,
-                    translation_key="service_not_found",
-                    translation_placeholders={
-                        "service": f"{err.domain}.{err.service}",
-                        "entity_id": self.entity_id,
-                        "name": self._attr_name or self.entity_id,
-                        "edit": f"/config/automation/edit/{self.unique_id}",
-                    },
+                self._async_create_service_not_found_issue(
+                    f"{err.domain}.{err.service}"
                 )
                 automation_trace.set_error(err)
             except (probatio.Invalid, HomeAssistantError) as err:
@@ -615,6 +616,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """
         super().async_entity_id_changed(old_entity_id)
         self._async_update_logger()
+        self._async_move_service_not_found_issues(old_entity_id)
         if (detach_triggers := self._async_detach_triggers) is None:
             # Not attached, or an attach in progress retries with the new entity_id
             return
@@ -626,6 +628,58 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             self._async_attach_triggers_for_entity_id(),
             f"automation {self.entity_id} reattach",
         )
+
+    @callback
+    def _async_create_service_not_found_issue(self, service: str) -> str:
+        """Create a repair issue for a missing service and return its id."""
+        issue_id = f"{self.entity_id}_service_not_found_{service}"
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="service_not_found",
+            translation_placeholders={
+                "service": service,
+                "entity_id": self.entity_id,
+                "name": self._attr_name or self.entity_id,
+                "edit": self._edit_path,
+            },
+        )
+        return issue_id
+
+    @property
+    def _edit_path(self) -> str:
+        """Return the frontend path for editing the automation."""
+        return f"/config/automation/edit/{self.unique_id}"
+
+    @callback
+    def _async_move_service_not_found_issues(self, old_entity_id: str) -> None:
+        """Move missing service issues, their id and placeholders use entity_id."""
+        issue_registry = ir.async_get(self.hass)
+        for (domain, issue_id), issue in list(issue_registry.issues.items()):
+            # Matched on the placeholders, an issue_id prefix can match another
+            # automation's entity_id, and a deleted automation's issue can have
+            # the same entity_id
+            if (
+                domain != DOMAIN
+                or issue.translation_key != "service_not_found"
+                or issue.translation_placeholders is None
+                or issue.translation_placeholders["entity_id"] != old_entity_id
+                or issue.translation_placeholders["edit"] != self._edit_path
+            ):
+                continue
+            async_delete_issue(self.hass, DOMAIN, issue_id)
+            new_issue_id = self._async_create_service_not_found_issue(
+                issue.translation_placeholders["service"]
+            )
+            # An existing issue under the new id, e.g. left by a deleted automation,
+            # keeps its own ignored state when created again
+            issue_registry.async_ignore(
+                DOMAIN, new_issue_id, issue.dismissed_version is not None
+            )
 
     async def _async_attach_triggers_for_entity_id(self) -> None:
         """Attach the triggers, retrying if the entity_id changes while attaching.

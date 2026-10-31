@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from probatio.error import Invalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.jellyfin.client_wrapper import CannotConnect, InvalidAuth
@@ -26,8 +27,6 @@ from .const import (
     TEST_USERNAME,
     USER_INPUT,
 )
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

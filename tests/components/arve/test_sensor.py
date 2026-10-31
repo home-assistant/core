@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from asyncarve import ArveConnectionError
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 SENSORS = (
     "air_quality_index",

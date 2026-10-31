@@ -5,7 +5,6 @@ from typing import Any, override
 from adguardhome import AdGuardHomeError
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,10 +43,7 @@ class AdGuardHomeUpdate(AdGuardHomeEntity[AdGuardHomeUpdateCoordinator], UpdateE
         super().__init__(coordinator)
         entry = coordinator.config_entry
 
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
-            [DOMAIN, entry.data[CONF_HOST], str(entry.data[CONF_PORT]), "update"]
-        )
+        self._attr_unique_id = entry.entry_id
 
     @property
     @override
@@ -84,7 +80,10 @@ class AdGuardHomeUpdate(AdGuardHomeEntity[AdGuardHomeUpdateCoordinator], UpdateE
         try:
             await self.coordinator.client.update.install()
         except AdGuardHomeError as err:
-            raise HomeAssistantError(f"Failed to install update: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="install_update_failed",
+            ) from err
         self.hass.config_entries.async_schedule_reload(
             self.coordinator.config_entry.entry_id
         )

@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from upb_lib.devices import UpbAddr, UpbDevice
 
 from homeassistant.components.upb.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 LIGHT_ENTITY_ID = "light.test_light"
 
@@ -87,25 +86,30 @@ async def test_element_callback_removed_with_entity(
 
 
 @pytest.mark.usefixtures("mock_upb")
-async def test_element_callback_not_duplicated_on_readd(
+async def test_element_callback_kept_on_entity_id_change(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_upb_device: UpbDevice,
 ) -> None:
-    """Test re-adding the entity does not leave a stale element callback."""
+    """Test changing the entity_id keeps the element callback."""
     await setup_integration(hass)
     element_callback = mock_upb_device.add_callback.call_args.args[0]
 
-    # Changing the entity_id removes and re-adds the same entity object.
+    # The entity_id is changed in place, without removing and re-adding.
     entity_registry.async_update_entity(
         LIGHT_ENTITY_ID, new_entity_id="light.renamed_light"
     )
     await hass.async_block_till_done()
 
-    assert mock_upb_device.add_callback.call_count == 2
-    mock_upb_device.remove_callback.assert_called_once_with(element_callback)
+    mock_upb_device.add_callback.assert_called_once()
+    mock_upb_device.remove_callback.assert_not_called()
 
     assert hass.states.get("light.renamed_light").state == STATE_OFF
-    # The element still notifies the re-added entity.
+    # The element still notifies the renamed entity.
     mock_upb_device.setattr("status", 100)
     assert hass.states.get("light.renamed_light").state == STATE_ON
+
+    entity_registry.async_remove("light.renamed_light")
+    await hass.async_block_till_done()
+
+    mock_upb_device.remove_callback.assert_called_once_with(element_callback)

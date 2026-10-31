@@ -58,17 +58,6 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         if self.skip_rendered_result is not None:
             self._skip_rendered_result.extend(self.skip_rendered_result)
 
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -211,7 +200,10 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     @override
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
-        return self._rendered_entity_variables or {}
+        return {
+            **self.coordinator.trigger_variables,
+            **(self._rendered_entity_variables or {}),
+        }
 
     @override
     def _render_single_template(
@@ -325,11 +317,21 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 write_state = True
                 continue
 
-            value = (
-                entity_template.validator(rendered)
-                if entity_template.validator
-                else rendered
-            )
+            try:
+                value = (
+                    entity_template.validator(rendered)
+                    if entity_template.validator
+                    else rendered
+                )
+            except probatio.Invalid as err:
+                log_validation_error(
+                    rendered,
+                    entity_template.template,
+                    entity_template.attribute,
+                    self.entity_id,
+                    err,
+                )
+                value = None
 
             if entity_template.on_update:
                 entity_template.on_update(value)

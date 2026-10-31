@@ -28,7 +28,7 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> None:
     """Set up Weheat from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -91,9 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

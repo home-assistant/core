@@ -255,6 +255,8 @@ async def async_setup_integration(
         data.pop("battery_status", None)
         await tracker.async_see(**data)
 
+    # Cannot be moved: actions are registered per legacy platform
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA
     )
@@ -779,6 +781,7 @@ class DeviceTracker:
                 device.async_write_ha_state()
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class Device(RestoreEntity):
     """Base class for a tracked device."""
 

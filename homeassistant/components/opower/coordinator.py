@@ -502,6 +502,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             self.hass,
             DOMAIN,
             issue_id=f"return_to_grid_migration_{utility_account_id}",
+            config_entry_id=self.config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="return_to_grid_migration",

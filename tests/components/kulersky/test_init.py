@@ -1,12 +1,12 @@
 """Tests for init methods."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.kulersky.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_entry(

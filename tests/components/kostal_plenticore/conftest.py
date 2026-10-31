@@ -6,11 +6,10 @@ from unittest.mock import patch
 
 from pykoplenti import ExtendedApiClient, MeData, SettingsData, VersionData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.kostal_plenticore.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DEFAULT_SETTING_VALUES = {
     "devices:local": {

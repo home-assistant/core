@@ -3,6 +3,7 @@
 import logging
 
 import pytest
+from pytest_homeassistant.common import async_mock_service, mock_component
 
 from homeassistant.components import automation, zone
 from homeassistant.const import (
@@ -13,8 +14,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service, mock_component
 
 
 @pytest.fixture

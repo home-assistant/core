@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aioaxlevpp import AxleAuthenticationError, AxleConnectionError, AxleError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.axle_energy.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

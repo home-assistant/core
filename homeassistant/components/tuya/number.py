@@ -107,16 +107,40 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
         # Two-channel current transformer meters warn above these thresholds
         TuyaNumberEntityDescription(
             key=DPCode.WARN_POWER1,
-            translation_key="indexed_power_warning_threshold",
-            translation_placeholders={"index": "1"},
+            translation_key="power_warning_threshold",
             device_class=NumberDeviceClass.POWER,
             entity_category=EntityCategory.CONFIG,
+            channel_index=1,
+            channel_condition=lambda device: DPCode.WARN_POWER2 in device.status_range,
         ),
         TuyaNumberEntityDescription(
             key=DPCode.WARN_POWER2,
-            translation_key="indexed_power_warning_threshold",
-            translation_placeholders={"index": "2"},
+            translation_key="power_warning_threshold",
             device_class=NumberDeviceClass.POWER,
+            entity_category=EntityCategory.CONFIG,
+            channel_index=2,
+            channel_condition=lambda device: DPCode.WARN_POWER2 in device.status_range,
+        ),
+    ),
+    DeviceCategory.DGHSXJ: (
+        TuyaNumberEntityDescription(
+            key=DPCode.BASIC_DEVICE_VOLUME,
+            translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaNumberEntityDescription(
+            key=DPCode.IPC_BRIGHT,
+            translation_key="video_brightness",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaNumberEntityDescription(
+            key=DPCode.IPC_CONTRAST,
+            translation_key="video_contrast",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        TuyaNumberEntityDescription(
+            key=DPCode.IPC_SHARP,
+            translation_key="video_sharpness",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -491,9 +515,6 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
         ),
     ),
 }
-
-# Smart Camera - Low power consumption camera (duplicate of `sp`)
-NUMBERS[DeviceCategory.DGHSXJ] = NUMBERS[DeviceCategory.SP]
 
 
 async def async_setup_entry(

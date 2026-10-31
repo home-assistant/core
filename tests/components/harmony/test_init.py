@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock
 
 from aioharmony.exceptions import TimeOut
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    RegistryEntryWithDefaults,
+    mock_registry,
+)
 
 from homeassistant.components.harmony.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -23,8 +28,6 @@ from .const import (
     PLAY_MUSIC_ACTIVITY_ID,
     WATCH_TV_ACTIVITY_ID,
 )
-
-from tests.common import MockConfigEntry, RegistryEntryWithDefaults, mock_registry
 
 
 async def test_unique_id_migration(

@@ -21,7 +21,7 @@ _TOKEN = "test-token"
 _PRIOR = "1234567890abcdef1234567890abcdef12345678"
 _HEAD = "fedcba0987654321fedcba0987654321fedcba09"
 
-InstallGithub = Callable[..., MagicMock]
+type InstallGithub = Callable[..., MagicMock]
 
 
 def _body(sha: str | None) -> str:

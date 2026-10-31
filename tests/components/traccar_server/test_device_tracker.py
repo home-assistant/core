@@ -2,13 +2,13 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import get_subscription_callback
 from .common import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_update_data_happy_path(

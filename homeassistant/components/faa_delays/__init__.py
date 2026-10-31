@@ -8,7 +8,7 @@ from .coordinator import FAAConfigEntry, FAADataUpdateCoordinator
 PLATFORMS = [Platform.BINARY_SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FAAConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FAAConfigEntry) -> None:
     """Set up FAA Delays from a config entry."""
     code = entry.data[CONF_ID]
 
@@ -19,9 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FAAConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FAAConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FAAConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

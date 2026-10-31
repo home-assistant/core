@@ -25,6 +25,6 @@ SUPPORTED_DATABASE_VERSIONS: dict[str, DatabaseVersions] = {
     },
     "mysql": {
         "supported_lts": ["8.4", "9.7"],
-        "latest_non_lts": "9.6",
+        "latest_non_lts": "26.10",
     },
 }

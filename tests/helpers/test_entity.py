@@ -13,6 +13,17 @@ from freezegun.api import FrozenDateTimeFactory
 import probatio
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    RegistryEntryWithDefaults,
+    async_capture_events,
+    mock_integration,
+    mock_registry,
+)
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -51,20 +62,8 @@ from homeassistant.helpers.event import (
     async_track_state_removed_domain,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    RegistryEntryWithDefaults,
-    async_capture_events,
-    mock_integration,
-    mock_registry,
-)
 
 
 def test_generate_entity_id_requires_hass_or_ids() -> None:
@@ -1137,7 +1136,7 @@ async def test_friendly_name_empty_override_uses_device_name(
         (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
-        (True, "Entity Blu", UNDEFINED, "Mock Title Entity Blu"),
+        (True, "Entity Blu", Undefined, "Mock Title Entity Blu"),
         (True, "Entity Blu", None, "Mock Title Entity Blu"),
     ],
 )
@@ -1145,7 +1144,7 @@ async def test_friendly_name_attr(
     hass: HomeAssistant,
     has_entity_name: bool,
     entity_name: str | None,
-    device_name: str | UndefinedType | None,
+    device_name: str | Undefined | None,
     expected_friendly_name: str | None,
 ) -> None:
     """Test friendly name when the entity uses _attr_*."""
@@ -1173,10 +1172,10 @@ async def test_friendly_name_attr(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_description(
@@ -1211,10 +1210,10 @@ async def test_friendly_name_description(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla English cls"),
+        (True, Undefined, "Device Bla English cls"),
     ],
 )
 async def test_friendly_name_description_device_class_name(
@@ -1484,10 +1483,10 @@ async def test_entity_name_translation_placeholder_errors(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_property(
@@ -1521,11 +1520,11 @@ async def test_friendly_name_property(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_property_device_class_name(
@@ -2674,7 +2673,7 @@ async def test_change_entity_id_then_update(
 
     entity_registry.async_update_entity("test_domain.renamed", name="New name")
     await hass.async_block_till_done()
-    assert hass.states.get("test_domain.renamed").name == "New name"
+    assert hass.states.get("test_domain.renamed").name == "Renamed device New name"
     assert hass.states.async_entity_ids() == ["test_domain.renamed"]
 
 
@@ -2686,11 +2685,15 @@ def _async_entity_id_changed(self: entity.Entity, old_entity_id: str) -> None:
     """Run when the entity_id has been changed."""
 
 
-def _entity_class(module: str, methods: dict[str, Any]) -> type[entity.Entity]:
+def _entity_class(
+    module: str,
+    methods: dict[str, Any],
+    base: type[entity.Entity] = entity.Entity,
+) -> type[entity.Entity]:
     """Return an entity class defined in module with the given methods."""
     return type(
         "GeneratedEntity",
-        (entity.Entity,),
+        (base,),
         {"__module__": module, "_attr_unique_id": "5678", **methods},
     )
 
@@ -2705,6 +2708,10 @@ _CORE_ADDED = _entity_class(_CORE_MODULE, _ADDED_METHODS)
 _CUSTOM_ADDED = _entity_class(_CUSTOM_MODULE, _ADDED_METHODS)
 _CORE_ADDED_HOOK = _entity_class(_CORE_MODULE, _ADDED_HOOK_METHODS)
 _CUSTOM_ADDED_HOOK = _entity_class(_CUSTOM_MODULE, _ADDED_HOOK_METHODS)
+_CUSTOM_SUBCLASS_OF_CORE_ADDED = _entity_class(_CUSTOM_MODULE, {}, _CORE_ADDED)
+_CUSTOM_ADDED_SUBCLASS_OF_CORE_ADDED = _entity_class(
+    _CUSTOM_MODULE, _ADDED_METHODS, _CORE_ADDED
+)
 
 
 class _AddedEntity(entity.Entity):
@@ -2927,10 +2934,18 @@ class _InternalAndAddedEntity(_InternalAddedEntity):
         pytest.param(_AddedEntity, True, id="added"),
         pytest.param(_RemovedEntity, True, id="removed"),
         pytest.param(_PreparedEntity, True, id="prepared"),
-        pytest.param(_CORE_ADDED, True, id="core_module_added"),
+        pytest.param(_CORE_ADDED, False, id="core_module_added"),
         pytest.param(_CUSTOM_ADDED, True, id="custom_module_added"),
         pytest.param(_CORE_ADDED_HOOK, False, id="core_module_added_hook"),
         pytest.param(_CUSTOM_ADDED_HOOK, False, id="custom_module_added_hook"),
+        pytest.param(
+            _CUSTOM_SUBCLASS_OF_CORE_ADDED, False, id="custom_subclass_of_core_added"
+        ),
+        pytest.param(
+            _CUSTOM_ADDED_SUBCLASS_OF_CORE_ADDED,
+            True,
+            id="custom_added_subclass_of_core_added",
+        ),
         pytest.param(_HookOnly, False, id="hook_only"),
         pytest.param(_HookAboveAdded, False, id="hook_above_added"),
         pytest.param(_AddedBelowHook, True, id="added_below_hook"),
@@ -2981,9 +2996,18 @@ def _custom_on_remove() -> None:
         pytest.param(_PlainEntity, False, id="plain"),
         pytest.param(_AddedEntity, True, id="added"),
         pytest.param(_RemovedEntity, True, id="removed"),
+        pytest.param(_CORE_ADDED, False, id="core_module_added"),
         pytest.param(_CUSTOM_ADDED, True, id="custom_module_added"),
         pytest.param(_CORE_ADDED_HOOK, False, id="core_module_added_hook"),
         pytest.param(_CUSTOM_ADDED_HOOK, False, id="custom_module_added_hook"),
+        pytest.param(
+            _CUSTOM_SUBCLASS_OF_CORE_ADDED, False, id="custom_subclass_of_core_added"
+        ),
+        pytest.param(
+            _CUSTOM_ADDED_SUBCLASS_OF_CORE_ADDED,
+            True,
+            id="custom_added_subclass_of_core_added",
+        ),
         pytest.param(_HookAboveAdded, False, id="hook_above_added"),
         pytest.param(_AddedBelowHook, True, id="added_below_hook"),
         pytest.param(

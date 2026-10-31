@@ -37,6 +37,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.types import BINARY
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.recorder import session_scope
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.ulid import ulid_at_time, ulid_to_bytes
 
@@ -122,7 +123,6 @@ from .util import (
     execute_stmt_lambda_element,
     get_index_by_name,
     retryable_database_job_method,
-    session_scope,
 )
 
 if TYPE_CHECKING:

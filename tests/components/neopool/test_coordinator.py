@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus.registers import MAX_RELAY_GPIO
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.neopool.const import (
     CONF_MODBUS_FRAMER,
@@ -20,8 +21,6 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA, MOCK_SERIAL, _read_all_timers
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_neopool_client")

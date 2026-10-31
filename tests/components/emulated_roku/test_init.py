@@ -2,12 +2,12 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import emulated_roku
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_required_fields(hass: HomeAssistant) -> None:

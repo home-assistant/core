@@ -9,6 +9,7 @@ from flux_led.const import (
 )
 from flux_led.protocol import PowerRestoreState, RemoteConfig
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import CONF_WHITE_CHANNEL_TYPE, DOMAIN
@@ -30,8 +31,6 @@ from . import (
     _patch_discovery,
     _patch_wifibulb,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

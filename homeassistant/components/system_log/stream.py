@@ -1,7 +1,7 @@
 """Stream the raw Home Assistant log to websocket subscribers."""
 
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Iterable
 import logging
 import os
 import re
@@ -15,7 +15,11 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.hass_dict import HassKey
-from homeassistant.util.logging import HomeAssistantQueueHandler
+from homeassistant.util.logging import (
+    LOG_FORMAT,
+    HomeAssistantLogFormatter,
+    HomeAssistantQueueHandler,
+)
 
 from .const import (
     RAW_BACKLOG_LINES,
@@ -28,6 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_RAW_LOG_STREAM: HassKey[RawLogStreamHandler] = HassKey("system_log_raw")
 
+type LogReader = Callable[[], Awaitable[list[str]]]
+
 # Logs every message it sends, including the streamed lines
 WEBSOCKET_CONNECTION_LOGGER = "homeassistant.components.websocket_api.http.connection"
 
@@ -37,10 +43,6 @@ LOG_FILE_RECORD = re.compile(r"\d{4}-\d{2}-\d{2} \S+ [A-Z]+ \(.*?\) \[([^\]]+)\]
 TAIL_BLOCK_SIZE = 64 * 1024
 
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
-
-FALLBACK_FORMAT = (
-    "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
-)
 
 
 def _console_formatter() -> logging.Formatter:
@@ -53,7 +55,7 @@ def _console_formatter() -> logging.Formatter:
                     and listener_handler.formatter
                 ):
                     return listener_handler.formatter
-    return logging.Formatter(FALLBACK_FORMAT)
+    return HomeAssistantLogFormatter(LOG_FORMAT)
 
 
 def _read_log_tail(path: str, lines: int) -> list[str]:
@@ -81,21 +83,28 @@ def _matches_loggers(name: str, loggers: tuple[str, ...]) -> bool:
     return any(name == logger or name.startswith(f"{logger}.") for logger in loggers)
 
 
-def _read_log_records(path: str, loggers: tuple[str, ...], lines: int) -> list[str]:
-    """Return the last lines of the log file logged by the loggers."""
+def _filter_log_records(
+    log_lines: Iterable[str], loggers: tuple[str, ...], lines: int
+) -> list[str]:
+    """Return the last lines logged by the loggers."""
     backlog: deque[str] = deque(maxlen=lines)
     matches = False
+    for line in log_lines:
+        if record := LOG_FILE_RECORD.match(line):
+            matches = _matches_loggers(record.group(1), loggers)
+        # Lines without a record start belong to the previous record
+        if matches:
+            backlog.append(line.rstrip("\n"))
+    return list(backlog)
+
+
+def _read_log_records(path: str, loggers: tuple[str, ...], lines: int) -> list[str]:
+    """Return the last lines of the log file logged by the loggers."""
     try:
         with open(path, encoding="utf-8", errors="replace") as log_file:
-            for line in log_file:
-                if record := LOG_FILE_RECORD.match(line):
-                    matches = _matches_loggers(record.group(1), loggers)
-                # Lines without a record start belong to the previous record
-                if matches:
-                    backlog.append(line.rstrip("\n"))
+            return _filter_log_records(log_file, loggers, lines)
     except OSError:
         return []
-    return list(backlog)
 
 
 class RawLogStreamHandler(logging.Handler):
@@ -111,6 +120,7 @@ class RawLogStreamHandler(logging.Handler):
         ] = {}
         # Replaced, never changed, as emit reads it from other threads
         self._wanted_loggers: tuple[str, ...] | None = ()
+        self.log_reader: LogReader | None = None
         self._update_debouncer = Debouncer(
             hass,
             _LOGGER,
@@ -213,6 +223,35 @@ def async_setup_raw_log_stream(hass: HomeAssistant) -> RawLogStreamHandler:
     return handler
 
 
+@callback
+def async_register_log_reader(hass: HomeAssistant, reader: LogReader) -> None:
+    """Register a reader of the log since start, used when there is no log file."""
+    if (stream := hass.data.get(DATA_RAW_LOG_STREAM)) is not None:
+        stream.log_reader = reader
+
+
+async def _async_read_backlog(
+    hass: HomeAssistant, loggers: tuple[str, ...] | None
+) -> list[str]:
+    """Return the end of the log, only the lines of the loggers if given."""
+    if path := hass.data.get(KEY_DATA_LOGGING):
+        if loggers:
+            return await hass.async_add_executor_job(
+                _read_log_records, path, loggers, RAW_INTEGRATION_BACKLOG_LINES
+            )
+        return await hass.async_add_executor_job(
+            _read_log_tail, path, RAW_BACKLOG_LINES
+        )
+    if (reader := hass.data[DATA_RAW_LOG_STREAM].log_reader) is None:
+        return []
+    log_lines = await reader()
+    if loggers:
+        return await hass.async_add_executor_job(
+            _filter_log_records, log_lines, loggers, RAW_INTEGRATION_BACKLOG_LINES
+        )
+    return log_lines[-RAW_BACKLOG_LINES:]
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -224,10 +263,10 @@ def async_setup_raw_log_stream(hass: HomeAssistant) -> RawLogStreamHandler:
 async def subscribe_raw_log(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Subscribe to the raw log, starting with the end of the log file.
+    """Subscribe to the raw log, starting with the end of the log.
 
     With an integration, only its lines are streamed, starting with its lines
-    from the log file.
+    from the log.
     """
     msg_id = msg["id"]
     loggers: tuple[str, ...] | None = None
@@ -257,16 +296,7 @@ async def subscribe_raw_log(
         _async_send_lines, loggers
     )
 
-    backlog: list[str] = []
-    if path := hass.data.get(KEY_DATA_LOGGING):
-        if loggers:
-            backlog = await hass.async_add_executor_job(
-                _read_log_records, path, loggers, RAW_INTEGRATION_BACKLOG_LINES
-            )
-        else:
-            backlog = await hass.async_add_executor_job(
-                _read_log_tail, path, RAW_BACKLOG_LINES
-            )
+    backlog = await _async_read_backlog(hass, loggers)
 
     hass.data[DATA_RAW_LOG_STREAM].async_flush()
     # The log file may already contain some of the collected lines

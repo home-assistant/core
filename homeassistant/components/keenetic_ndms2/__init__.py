@@ -3,7 +3,7 @@
 import logging
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import (
@@ -21,7 +21,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: KeeneticConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KeeneticConfigEntry) -> None:
     """Set up the component."""
     async_add_defaults(hass, entry)
 
@@ -32,20 +32,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: KeeneticConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: KeeneticConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        router = config_entry.runtime_data
+        await router.async_teardown()
 
-    router = config_entry.runtime_data
-    await router.async_teardown()
+        _async_remove_untracked_devices(hass, config_entry, router)
 
+
+@callback
+def _async_remove_untracked_devices(
+    hass: HomeAssistant, config_entry: KeeneticConfigEntry, router: KeeneticRouter
+) -> None:
+    """Remove device_tracker entities on interfaces that are no longer tracked."""
     new_tracked_interfaces: set[str] = set(config_entry.options[CONF_INTERFACES])
 
     if router.tracked_interfaces - new_tracked_interfaces:
@@ -80,8 +87,6 @@ async def async_unload_entry(
                         dev_reg.async_remove_device(device.id)
 
         _LOGGER.debug("Finished cleaning device_tracker entities")
-
-    return unload_ok
 
 
 def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry) -> None:

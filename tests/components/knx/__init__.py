@@ -6,3 +6,4 @@ from typing import Any
 from homeassistant.helpers import entity_registry as er
 
 type KnxEntityGenerator = Callable[..., Coroutine[Any, Any, er.RegistryEntry]]
+type KnxSuggestionGetter = Callable[..., Coroutine[Any, Any, dict[str, Any]]]

@@ -9,7 +9,7 @@ from .const import LOGGER, PLATFORMS
 from .coordinator import RomyConfigEntry, RomyVacuumCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: RomyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: RomyConfigEntry) -> None:
     """Initialize the ROMY platform via config entry."""
 
     new_romy = await romy.create_romy(
@@ -25,12 +25,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: RomyConfigEntry) 
 
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RomyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RomyConfigEntry) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, config_entry: RomyConfigEntry) -> None:

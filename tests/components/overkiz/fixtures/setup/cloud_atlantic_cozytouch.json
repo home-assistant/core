@@ -2188,6 +2188,11 @@
             "minute": 22,
             "second": 57
           }
+        },
+        {
+          "name": "core:ErrorCodeState",
+          "type": 1,
+          "value": 0
         }
       ],
       "available": true,

@@ -242,20 +242,12 @@
     },
     "no_file_path": {
       "message": "Telegram did not return a path for the requested file."
+    },
+    "platform_setup_failed": {
+      "message": "Failed to set up the Telegram bot."
     }
   },
   "issues": {
-    "deprecated_timeout_parameter": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then select **Submit** to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action originating from `{action_origin}`.",
-            "title": "The `timeout` parameter for {integration_title} is being removed"
-          }
-        }
-      },
-      "title": "The `timeout` parameter for {integration_title} is being removed"
-    },
     "migrate_chat_ids_in_target": {
       "fix_flow": {
         "step": {

@@ -3,6 +3,7 @@
 import time
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from toonapi import Agreement, Status
 from toonapi.models import ThermostatInfo
 
@@ -14,8 +15,6 @@ from homeassistant.helpers import config_entry_oauth2_flow, device_registry as d
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_oauth_implementation_not_available(
@@ -71,7 +70,7 @@ async def test_migrate_entry_version_1(hass: HomeAssistant) -> None:
 
 async def test_migrate_entry_minor_version_2_2(hass: HomeAssistant) -> None:
     """Test migrating a 2.1 config entry to 2.2."""
-    with patch("homeassistant.components.toon.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.toon.async_setup_entry", return_value=None):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={

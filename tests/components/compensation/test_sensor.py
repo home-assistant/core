@@ -4,6 +4,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    assert_platform_setup_creates_issue,
+    assert_setup_component,
+    get_fixture_path,
+)
 
 from homeassistant import config as hass_config
 from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
@@ -27,12 +32,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    assert_platform_setup_creates_issue,
-    assert_setup_component,
-    get_fixture_path,
-)
 
 TEST_OBJECT_ID = "test_compensation"
 TEST_ENTITY_ID = "sensor.test_compensation"
@@ -137,6 +136,17 @@ async def test_linear_state(hass: HomeAssistant, config: dict[str, Any]) -> None
     assert state is not None
 
     assert state.state == STATE_UNKNOWN
+
+
+async def test_initial_state_from_existing_source(hass: HomeAssistant) -> None:
+    """Test the sensor uses the source state that exists before setup."""
+    hass.states.async_set(TEST_SOURCE, 4, {})
+
+    await async_setup_compensation(hass, TEST_CONFIG)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == "5.0"
 
 
 @pytest.mark.parametrize("config", [{"name": TEST_OBJECT_ID, **TEST_BASE_CONFIG}])

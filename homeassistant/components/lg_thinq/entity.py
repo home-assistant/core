@@ -67,6 +67,12 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             )
 
     @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.device_connected
+
+    @property
     def data(self) -> PropertyState:
         """Return the state data of entity."""
         return self.coordinator.data.get(self.property_id, EMPTY_STATE)

@@ -42,7 +42,14 @@ import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from mcp import JSONRPCRequest, types
 from mcp.server import InitializationOptions, Server
+from mcp.server.runner import Connection, TransportContext, serve_connection
+from mcp.server.streamable_http import (
+    DEFAULT_NEGOTIATED_VERSION,
+    MCP_PROTOCOL_VERSION_HEADER,
+)
+from mcp.shared.jsonrpc_dispatcher import JSONRPCDispatcher
 from mcp.shared.message import SessionMessage
+import pydantic
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -50,7 +57,7 @@ from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import llm
 
-from .const import CONF_ALL_LLM_APIS, CONF_REQUIRE_ADMIN, DOMAIN
+from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
 from .server import create_server
 from .session import Session
 from .types import MCPServerConfigEntry
@@ -63,8 +70,11 @@ TIMEOUT = 60  # Seconds
 
 KNOWN_MCP_METHODS: frozenset[str] = frozenset(
     req_cls.model_fields["method"].default
-    for req_cls in get_args(types.ClientRequestType)
+    for req_cls in get_args(types.ClientRequest)
     if "method" in req_cls.model_fields
+)
+JSONRPC_MESSAGE_ADAPTER: pydantic.TypeAdapter[types.JSONRPCMessage] = (
+    pydantic.TypeAdapter(types.JSONRPCMessage)
 )
 
 # Legacy SSE endpoint
@@ -160,9 +170,13 @@ async def create_streams() -> AsyncGenerator[Streams]:
 
 
 async def create_mcp_server(
-    hass: HomeAssistant, context: Context, llm_api_id: str | list[str]
+    request: web.Request,
+    context: Context,
+    llm_api_id: str | list[str],
+    read_only: bool,
 ) -> tuple[Server, InitializationOptions]:
     """Initialize the MCP server to ensure it's ready to handle requests."""
+    hass = request.app[KEY_HASS]
     llm_context = llm.LLMContext(
         platform=DOMAIN,
         context=context,
@@ -170,7 +184,9 @@ async def create_mcp_server(
         assistant=conversation.DOMAIN,
         device_id=None,
     )
-    server = await create_server(hass, llm_api_id, llm_context)
+    server = await create_server(
+        hass, llm_api_id, llm_context, read_only, str(request.url.origin())
+    )
     options = await hass.async_add_executor_job(
         server.create_initialization_options  # Reads package for version info
     )
@@ -199,7 +215,10 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         session_manager = entry.runtime_data
 
         server, options = await create_mcp_server(
-            hass, self.context(request), _entry_llm_api_ids(hass, entry)
+            request,
+            self.context(request),
+            _entry_llm_api_ids(hass, entry),
+            entry.data[CONF_READ_ONLY],
         )
 
         async with (
@@ -257,7 +276,7 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
 
         json_data = await request.json()
         try:
-            message = types.JSONRPCMessage.model_validate(json_data)
+            message = JSONRPC_MESSAGE_ADAPTER.validate_python(json_data)
         except ValueError as err:
             _LOGGER.info("Failed to parse message: %s", err)
             raise HTTPBadRequest(text="Could not parse message") from err
@@ -268,11 +287,12 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
 
 
 async def _async_handle_streamable_message(
-    request: web.Request, context: Context, llm_api_id: str | list[str]
+    request: web.Request,
+    context: Context,
+    llm_api_id: str | list[str],
+    read_only: bool,
 ) -> web.StreamResponse:
     """Process a single JSON-RPC message for the given LLM API."""
-    hass = request.app[KEY_HASS]
-
     # The request must include a JSON-RPC message
     if CONTENT_TYPE_JSON not in request.headers.get("accept", ""):
         raise HTTPBadRequest(text=f"Client must accept {CONTENT_TYPE_JSON}")
@@ -280,7 +300,7 @@ async def _async_handle_streamable_message(
         raise HTTPBadRequest(text=f"Content-Type must be {CONTENT_TYPE_JSON}")
     try:
         json_data = await request.json()
-        message = types.JSONRPCMessage.model_validate(json_data)
+        message = JSONRPC_MESSAGE_ADAPTER.validate_python(json_data)
     except ValueError as err:
         _LOGGER.debug("Failed to parse message as JSON-RPC message: %s", err)
         raise HTTPBadRequest(text="Request must be a JSON-RPC message") from err
@@ -288,18 +308,18 @@ async def _async_handle_streamable_message(
     _LOGGER.debug("Received client message: %s", message)
 
     # For notifications and responses only, return 202 Accepted
-    if not isinstance(message.root, JSONRPCRequest):
+    if not isinstance(message, JSONRPCRequest):
         _LOGGER.debug("Notification or response received, returning 202")
         return web.Response(status=HTTPStatus.ACCEPTED)
 
-    if message.root.method not in KNOWN_MCP_METHODS:
+    if message.method not in KNOWN_MCP_METHODS:
         error_response = types.JSONRPCError(
             jsonrpc="2.0",
-            id=message.root.id,
+            id=message.id,
             error=types.ErrorData(
                 code=types.METHOD_NOT_FOUND,
                 message="Method not found",
-                data=message.root.method,
+                data=message.method,
             ),
         )
         return web.json_response(
@@ -310,14 +330,32 @@ async def _async_handle_streamable_message(
     # request. We open a buffered stream pair to communicate with it. The
     # request is sent to the MCP server and we wait for a single response
     # then shut down the server.
-    server, options = await create_mcp_server(hass, context, llm_api_id)
+    server, options = await create_mcp_server(request, context, llm_api_id, read_only)
+
+    protocol_version = (
+        request.headers.get(MCP_PROTOCOL_VERSION_HEADER) or DEFAULT_NEGOTIATED_VERSION
+    )
 
     async with create_streams() as streams:
+        dispatcher: JSONRPCDispatcher[TransportContext] = JSONRPCDispatcher(
+            streams.read_stream,
+            streams.write_stream,
+            inline_methods=frozenset({"initialize"}),
+            transport_builder=lambda _md: TransportContext(
+                kind="streamable-http", can_send_request=False
+            ),
+        )
+        connection = Connection.from_envelope(protocol_version, None, None)
 
         async def run_server() -> None:
-            await server.run(
-                streams.read_stream, streams.write_stream, options, stateless=True
-            )
+            async with server.lifespan(server) as lifespan_state:
+                await serve_connection(
+                    server,
+                    dispatcher,
+                    connection=connection,
+                    lifespan_state=lifespan_state,
+                    init_options=options,
+                )
 
         async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
             tg.start_soon(run_server)
@@ -348,7 +386,10 @@ class ModelContextProtocolStreamableView(HomeAssistantView):
         entry = async_get_config_entry(hass)
         _validate_admin(request, entry)
         return await _async_handle_streamable_message(
-            request, self.context(request), _entry_llm_api_ids(hass, entry)
+            request,
+            self.context(request),
+            _entry_llm_api_ids(hass, entry),
+            entry.data[CONF_READ_ONLY],
         )
 
 
@@ -370,5 +411,5 @@ class ModelContextProtocolStreamableApiView(HomeAssistantView):
         if api_id not in {api.id for api in llm.async_get_apis(hass)}:
             raise HTTPNotFound(text=f"Unknown LLM API '{api_id}'")
         return await _async_handle_streamable_message(
-            request, self.context(request), api_id
+            request, self.context(request), api_id, read_only=False
         )

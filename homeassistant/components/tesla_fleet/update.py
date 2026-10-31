@@ -88,10 +88,8 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
             # Remove build from version
             self._attr_installed_version = self._attr_installed_version.split(" ")[0]
 
-        # Latest Version - hide update if scheduled far in the future
-        if self._value in (AVAILABLE, INSTALLING, DOWNLOADING, WIFI_WAIT) or (
-            self._value == SCHEDULED and self._is_scheduled_soon()
-        ):
+        # Latest Version - a scheduled update is still pending
+        if self._value in (AVAILABLE, INSTALLING, DOWNLOADING, WIFI_WAIT, SCHEDULED):
             self._attr_latest_version = self.coordinator.data[
                 "vehicle_state_software_update_version"
             ]
@@ -117,5 +115,5 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
         if scheduled_time_ms is None:
             return False
         # Convert milliseconds to seconds and compare to current time
-        scheduled_time_sec = scheduled_time_ms / 1000
+        scheduled_time_sec: float = scheduled_time_ms / 1000
         return scheduled_time_sec - time.time() < SCHEDULED_THRESHOLD_SECONDS

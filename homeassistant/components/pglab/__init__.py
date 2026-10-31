@@ -28,7 +28,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: PGLabConfigEntry
-) -> bool:
+) -> None:
     """Set up PG LAB Electronics integration from a config entry."""
 
     async def mqtt_publish(topic: str, payload: str, qos: int, retain: bool) -> None:
@@ -71,16 +71,12 @@ async def async_setup_entry(
     # Start to discovery PG Lab devices.
     await config_entry.runtime_data.start(hass, pglab_mqtt, config_entry)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: PGLabConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
 
     # Stop PGLab device discovery.
     pglab_discovery = config_entry.runtime_data
     await pglab_discovery.stop(hass, config_entry)
-
-    return True

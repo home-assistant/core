@@ -35,9 +35,9 @@ from .const import (
     INTENT_PLAYER_UNMUTE,
     INTENT_SET_VOLUME,
     INTENT_SET_VOLUME_RELATIVE,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SEARCH_MEDIA,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 
 # Intents owned by this integration that are exposed as LLM tools.
@@ -172,16 +172,16 @@ class MediaSearchTool(Tool):
 
         service_data: dict[str, Any] = {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_SEARCH_QUERY: args[ATTR_MEDIA_SEARCH_QUERY],
+            MediaPlayerServiceArgument.SEARCH_QUERY: args[ATTR_MEDIA_SEARCH_QUERY],
         }
         if within_id := args.get("within_media_content_id"):
-            service_data[ATTR_MEDIA_CONTENT_ID] = within_id
+            service_data[MediaPlayerServiceArgument.MEDIA_CONTENT_ID] = within_id
         if within_type := args.get("within_media_content_type"):
-            service_data[ATTR_MEDIA_CONTENT_TYPE] = within_type
+            service_data[MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE] = within_type
 
         service_result = await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEARCH_MEDIA,
+            MediaPlayerService.SEARCH_MEDIA,
             service_data,
             context=llm_context.context,
             blocking=True,
@@ -255,11 +255,15 @@ class MediaPlayTool(Tool):
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: entity_id,
-                ATTR_MEDIA_CONTENT_ID: args[ATTR_MEDIA_CONTENT_ID],
-                ATTR_MEDIA_CONTENT_TYPE: args[ATTR_MEDIA_CONTENT_TYPE],
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: args[
+                    ATTR_MEDIA_CONTENT_ID
+                ],
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: args[
+                    ATTR_MEDIA_CONTENT_TYPE
+                ],
             },
             context=llm_context.context,
             blocking=True,

@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from librouteros.exceptions import ConnectionClosed, LibRouterosError, TrapError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import (
@@ -42,8 +43,6 @@ from .const import (
     TEST_SERIAL_NUMBER,
     WLAN1_INTERFACE,
 )
-
-from tests.common import async_fire_time_changed
 
 _BASE_COMMAND_RESPONSES: dict[str, list[dict[str, Any]]] = {
     MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}]

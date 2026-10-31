@@ -1,6 +1,7 @@
 {
   "domain": "russound_rio",
   "name": "Russound RIO",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@noahhusby"],
   "config_flow": true,
   "dependencies": ["usb"],

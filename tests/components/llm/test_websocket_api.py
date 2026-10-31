@@ -3,12 +3,11 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 class _StubAPI(llm.API):
@@ -35,7 +34,7 @@ async def setup_llm(hass: HomeAssistant) -> None:
         pytest.param(
             [],
             [
-                {"id": "assist", "name": "Assist", "requires_admin": False},
+                {"id": "assist", "name": "Device control", "requires_admin": False},
                 {
                     "id": "homeassistant",
                     "name": "Home Assistant",
@@ -47,7 +46,7 @@ async def setup_llm(hass: HomeAssistant) -> None:
         pytest.param(
             [("test-api", "Test API")],
             [
-                {"id": "assist", "name": "Assist", "requires_admin": False},
+                {"id": "assist", "name": "Device control", "requires_admin": False},
                 {
                     "id": "homeassistant",
                     "name": "Home Assistant",

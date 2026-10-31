@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> None:
     """Set up ecobee via a config entry."""
     api_key = entry.data.get(CONF_API_KEY)
     username = entry.data.get(CONF_USERNAME)
@@ -75,8 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bo
     entry.runtime_data = runtime_data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 class EcobeeData:
@@ -173,6 +171,6 @@ class EcobeeData:
         return False
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> None:
     """Unload the config entry and platforms."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

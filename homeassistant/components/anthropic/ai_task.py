@@ -14,7 +14,7 @@ from .const import DOMAIN
 from .entity import AnthropicBaseLLMEntity
 
 if TYPE_CHECKING:
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 PARALLEL_UPDATES = 0
 

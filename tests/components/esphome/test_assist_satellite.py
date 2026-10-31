@@ -22,6 +22,7 @@ from aioesphomeapi import (
     VoiceAssistantTimerEventType,
 )
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import (
     assist_pipeline,
@@ -30,9 +31,7 @@ from homeassistant.components import (
     tts,
 )
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
-    KEY_ASSIST_PIPELINE,
-)
+from homeassistant.components.assist_pipeline.pipeline import KEY_ASSIST_PIPELINE  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
     AssistSatelliteEntityFeature,
@@ -57,7 +56,6 @@ from .common import get_satellite_entity
 from .conftest import MockESPHomeDeviceType
 
 from tests.components.tts.common import MockResultStream
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -1021,12 +1019,43 @@ async def test_tts_format_from_media_player(
         }
 
 
-async def test_tts_minimal_format_from_media_player(
+@pytest.mark.parametrize(
+    ("sample_rate", "num_channels", "sample_bytes", "tts_audio_output"),
+    [
+        pytest.param(0, 0, 0, {tts.ATTR_PREFERRED_FORMAT: "mp3"}, id="codec_only"),
+        pytest.param(
+            48000,
+            0,
+            0,
+            {
+                tts.ATTR_PREFERRED_FORMAT: "mp3",
+                tts.ATTR_PREFERRED_SAMPLE_RATE: 48000,
+            },
+            id="rate_only",
+        ),
+        pytest.param(
+            0,
+            1,
+            2,
+            {
+                tts.ATTR_PREFERRED_FORMAT: "mp3",
+                tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
+                tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+            },
+            id="channels_and_width_only",
+        ),
+    ],
+)
+async def test_tts_partial_format_from_media_player(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
+    sample_rate: int,
+    num_channels: int,
+    sample_bytes: int,
+    tts_audio_output: dict[str, str | int],
 ) -> None:
-    """Test text-to-speech format when media player only specifies the codec."""
+    """Test text-to-speech format when media player leaves some values unset."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[
@@ -1044,12 +1073,13 @@ async def test_tts_minimal_format_from_media_player(
                         sample_bytes=2,
                     ),
                     # This is the format that should be used for tts
+                    # 0 means the value of the source audio
                     MediaPlayerSupportedFormat(
                         format="mp3",
-                        sample_rate=0,  # source rate
-                        num_channels=0,  # source channels
+                        sample_rate=sample_rate,
+                        num_channels=num_channels,
                         purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
-                        sample_bytes=0,  # source width
+                        sample_bytes=sample_bytes,
                     ),
                 ],
             )
@@ -1079,9 +1109,7 @@ async def test_tts_minimal_format_from_media_player(
         kwargs = mock_pipeline_from_audio_stream.call_args_list[0].kwargs
 
         # Should be ANNOUNCEMENT format from media player
-        assert kwargs.get("tts_audio_output") == {
-            tts.ATTR_PREFERRED_FORMAT: "mp3",
-        }
+        assert kwargs.get("tts_audio_output") == tts_audio_output
 
 
 async def test_announce_message(

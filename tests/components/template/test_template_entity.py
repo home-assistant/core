@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.template import template_entity
 from homeassistant.components.template.entity import AbstractTemplateEntity
@@ -11,8 +12,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_capture_events
 
 
 async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:

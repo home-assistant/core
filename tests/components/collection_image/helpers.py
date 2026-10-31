@@ -2,11 +2,11 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.collection_image.const import CONF_MEDIA, DOMAIN
 from homeassistant.components.media_player import BrowseMedia, MediaClass
 from homeassistant.components.media_source import BrowseMediaSource
-
-from tests.common import MockConfigEntry
 
 
 def data_from_uri(uri: str | list[str]) -> dict[str, Any]:

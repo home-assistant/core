@@ -18,8 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import StiebelEltronConfigEntry
-from .coordinator import StiebelEltronDataCoordinator
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronEntity
 
 _LOGGER = logging.getLogger(__name__)

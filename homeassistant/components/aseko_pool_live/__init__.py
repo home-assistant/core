@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AsekoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AsekoConfigEntry) -> None:
     """Set up Aseko Pool Live from a config entry."""
     aseko = Aseko(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
 
@@ -29,17 +29,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AsekoConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AsekoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AsekoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: AsekoConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -52,7 +51,7 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(config_entry, data=new, version=2)
 
         _LOGGER.debug("Migration to version %s successful", config_entry.version)
-        return True
+        return
 
     raise ConfigEntryError(
         translation_domain=DOMAIN,

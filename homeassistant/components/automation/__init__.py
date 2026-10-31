@@ -2,68 +2,62 @@
 
 from typing import Any
 
-import probatio
-
 from homeassistant.components import websocket_api
-from homeassistant.const import (  # noqa: F401
-    ATTR_AREA_ID,
-    ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
-    ATTR_MODE,
-    ATTR_NAME,
-    CONF_ACTIONS,
-    CONF_ALIAS,
-    CONF_CONDITIONS,
-    CONF_ID,
-    CONF_MODE,
-    CONF_PATH,
-    CONF_TRIGGERS,
-    CONF_VARIABLES,
+from homeassistant.const import (
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.script import (  # noqa: F401
-    ATTR_CUR,
-    ATTR_MAX,
-    CONF_MAX,
-    CONF_MAX_EXCEEDED,
-    Script,
-    ScriptRunResult,
-    script_stack_cv,
-)
-from homeassistant.helpers.service import (
-    ReloadServiceHelper,
-    async_register_admin_service,
-)
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_SOURCE,
     DATA_COMPONENT,
     DOMAIN,
+    EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
     LOGGER,
 )
-from .entity import (  # noqa: F401
-    AutomationEntity,
-    BaseAutomationEntity,
-    UnavailableAutomationEntity,
-)
+from .entity import AutomationEntity, BaseAutomationEntity, UnavailableAutomationEntity
 from .helpers import async_get_blueprints
 from .services import async_setup_services
-from .util import async_process_config, async_process_single_config
+from .util import async_process_config
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 
 ATTR_LAST_TRIGGERED = "last_triggered"
+
+__all__ = [
+    "ATTR_SOURCE",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "EVENT_AUTOMATION_RELOADED",
+    "EVENT_AUTOMATION_TRIGGERED",
+    "SERVICE_RELOAD",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "AutomationEntity",
+    "BaseAutomationEntity",
+    "UnavailableAutomationEntity",
+    "areas_in_automation",
+    "automations_with_area",
+    "automations_with_blueprint",
+    "automations_with_device",
+    "automations_with_entity",
+    "automations_with_floor",
+    "automations_with_label",
+    "blueprint_in_automation",
+    "devices_in_automation",
+    "entities_in_automation",
+    "floors_in_automation",
+    "labels_in_automation",
+]
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -207,31 +201,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async_setup_services(hass)
-
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Remove all automations and load new ones from config."""
-        await async_get_blueprints(hass).async_reset_cache()
-        conf = await component.async_prepare_reload(skip_reset=True)
-        if automation_id := service_call.data.get(CONF_ID):
-            await async_process_single_config(hass, conf, component, automation_id)
-        else:
-            await async_process_config(hass, conf, component)
-        hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
-
-    def reload_targets(service_call: ServiceCall) -> set[str | None]:
-        if automation_id := service_call.data.get(CONF_ID):
-            return {automation_id}
-        return {automation.unique_id for automation in component.entities}
-
-    reload_helper = ReloadServiceHelper(reload_service_handler, reload_targets)
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_helper.execute_service,
-        schema=probatio.Schema({probatio.Optional(CONF_ID): str}),
-    )
 
     websocket_api.async_register_command(hass, websocket_config)
 

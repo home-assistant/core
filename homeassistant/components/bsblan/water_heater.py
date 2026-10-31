@@ -176,7 +176,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
                 translation_key="set_temperature_error",
             ) from err
 
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_hot_water()
 
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
@@ -194,7 +194,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
                 translation_key="set_operation_mode_error",
             ) from err
 
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_hot_water()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

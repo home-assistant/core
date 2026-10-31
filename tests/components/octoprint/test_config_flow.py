@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyoctoprintapi import ApiError, DiscoverySettings
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.octoprint.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -54,7 +53,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.octoprint.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -136,7 +135,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         patch("homeassistant.components.octoprint.async_setup", return_value=True),
         patch(
             "homeassistant.components.octoprint.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -214,7 +213,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         patch("homeassistant.components.octoprint.async_setup", return_value=True),
         patch(
             "homeassistant.components.octoprint.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -284,7 +283,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         patch("homeassistant.components.octoprint.async_setup", return_value=True),
         patch(
             "homeassistant.components.octoprint.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -354,7 +353,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         patch("homeassistant.components.octoprint.async_setup", return_value=True),
         patch(
             "homeassistant.components.octoprint.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -392,7 +391,7 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
         patch("homeassistant.components.octoprint.async_setup", return_value=True),
         patch(
             "homeassistant.components.octoprint.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -560,7 +559,7 @@ async def test_user_duplicate_entry(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.octoprint.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -659,7 +658,7 @@ async def test_reauth_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -194,6 +194,7 @@
         "name": "Heat pump status",
         "state": {
           "alarm": "Alarm",
+          "anti_legionella": "[%key:component::hr_energy_qube::entity::binary_sensor::anti_legionella::name%]",
           "compressor_shutdown": "Compressor stopping",
           "compressor_startup": "Compressor startup",
           "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",

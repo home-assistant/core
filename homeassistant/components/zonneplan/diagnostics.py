@@ -27,6 +27,7 @@ TO_REDACT = {
     "uuid",
     "external_contract_id",
     "identifier",
+    "last_known_vehicle_uuid",
 }
 
 
@@ -35,6 +36,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data = entry.runtime_data.coordinator.data
+    settings_data = entry.runtime_data.battery_settings_coordinator.data
 
     return async_redact_data(
         {
@@ -57,6 +59,32 @@ async def async_get_config_entry_diagnostics(
                 battery_data.battery.contract.to_dict()
                 for battery_data in entry.runtime_data.battery_coordinator.data.values()
             ],
+            "battery_control_modes": [
+                control_mode.to_dict()
+                for control_mode in (
+                    entry.runtime_data.battery_control_coordinator.data or {}
+                ).values()
+            ],
+            "charge_points": [
+                charge_point.to_dict()
+                for charge_point in (
+                    entry.runtime_data.charge_point_coordinator.data.values()
+                )
+            ],
+            "battery_settings": (
+                {
+                    "home_optimization": [
+                        settings.to_dict()
+                        for settings in settings_data.home_optimization.values()
+                    ],
+                    "day_ahead_arbitrage": [
+                        settings.to_dict()
+                        for settings in settings_data.day_ahead_arbitrage.values()
+                    ],
+                }
+                if settings_data is not None
+                else None
+            ),
         },
         TO_REDACT,
     )

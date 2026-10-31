@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from bitvis_protobuf.parse import PayloadSample
 from bitvis_protobuf.powerhub_pb2 import Payload
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bitvis.const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from homeassistant.components.bitvis.coordinator import async_get_listener_registry
@@ -22,8 +23,6 @@ from .conftest import (
     FakeListener,
     patch_config_flow_connectivity,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

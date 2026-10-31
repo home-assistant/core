@@ -16,7 +16,7 @@ from .coordinator import LoqedConfigEntry, LoqedDataCoordinator, is_auth_error
 PLATFORMS: list[Platform] = [Platform.LOCK, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> None:
     """Set up loqed from a config entry."""
     websession = async_get_clientsession(hass)
     host = entry.data["bridge_ip"]
@@ -61,13 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> boo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LoqedConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.remove_webhooks()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.remove_webhooks()

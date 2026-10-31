@@ -66,7 +66,7 @@ class VelbusEntity(Entity):
             config_entry = self.platform.config_entry
             if TYPE_CHECKING:
                 assert config_entry
-            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
                 self.hass,
                 (DOMAIN, self._module_address),
                 config_entry_id=config_entry.entry_id,

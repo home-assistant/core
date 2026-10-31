@@ -182,6 +182,17 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
                 "Recent Tide data queried with start time set to %s",
                 begin.strftime("%m-%d-%Y %H:%M"),
             )
+        except (
+            coops.station.COOPSAPIError,
+            requests.exceptions.RequestException,
+        ) as err:
+            if self._attr_available:
+                _LOGGER.info("NOAA Tides and Currents API is unavailable: %s", err)
+                self._attr_available = False
+            return
         except ValueError as err:
             _LOGGER.error("Check NOAA Tides and Currents: %s", err.args)
             self.data = None
+        if not self._attr_available:
+            _LOGGER.info("NOAA Tides and Currents API is available again")
+            self._attr_available = True

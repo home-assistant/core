@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from aioaquacell import ApiException, AuthenticationFailed
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aquacell.const import (
     CONF_BRAND,
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import TEST_CONFIG_ENTRY, TEST_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_flow_already_configured(hass: HomeAssistant) -> None:

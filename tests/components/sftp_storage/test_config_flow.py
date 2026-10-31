@@ -9,6 +9,7 @@ from asyncssh import KeyImportError, generate_private_key
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sftp_storage.config_flow import (
     SFTPStorageInvalidPrivateKey,
@@ -26,8 +27,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .conftest import USER_INPUT, SSHClientConnectionMock
-
-from tests.common import MockConfigEntry
 
 type ComponentSetup = Callable[[], Awaitable[None]]
 

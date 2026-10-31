@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 type NZBGetConfigEntry = ConfigEntry[NZBGetDataUpdateCoordinator]
 
 
-class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
+class NZBGetDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Class to manage fetching NZBGet data."""
 
     config_entry: NZBGetConfigEntry

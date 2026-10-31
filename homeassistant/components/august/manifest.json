@@ -1,6 +1,10 @@
 {
   "domain": "august",
   "name": "August",
+  "categories": [
+    "security_safety.locks_access",
+    "security_safety.doorbells_intercoms"
+  ],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["application_credentials", "cloud"],

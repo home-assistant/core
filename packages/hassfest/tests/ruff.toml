@@ -1,0 +1,4 @@
+extend = "../../../tests/ruff.toml"
+
+[lint.per-file-ignores]
+"check_package.py" = ["T201"]

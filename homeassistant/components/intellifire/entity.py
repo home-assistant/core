@@ -3,7 +3,7 @@
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IntellifireDataUpdateCoordinator
+from .coordinator import IntellifireDataUpdateCoordinator
 
 
 class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):

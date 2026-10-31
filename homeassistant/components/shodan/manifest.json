@@ -1,6 +1,7 @@
 {
   "domain": "shodan",
   "name": "Shodan",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@fabaff"],
   "documentation": "https://www.home-assistant.io/integrations/shodan",
   "iot_class": "cloud_polling",

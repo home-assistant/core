@@ -3,16 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanelEntityFeature,
-    AlarmControlPanelState,
-)
-from homeassistant.components.alarm_control_panel.trigger import TRIGGERS
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -25,6 +16,14 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
+from homeassistant.components.alarm_control_panel.trigger import TRIGGERS
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

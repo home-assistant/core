@@ -19,7 +19,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SnapcastConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SnapcastConfigEntry) -> None:
     """Set up Snapcast from a config entry."""
     coordinator = SnapcastUpdateCoordinator(hass, entry)
 
@@ -34,12 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnapcastConfigEntry) -> 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SnapcastConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SnapcastConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # disconnect from server
-        await entry.runtime_data.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # disconnect from server
+    await entry.runtime_data.disconnect()

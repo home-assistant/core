@@ -23,7 +23,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .entity import IRobotEntity, roomba_reported_state
+from . import roomba_reported_state
+from .entity import IRobotEntity
 from .models import RoombaConfigEntry
 
 

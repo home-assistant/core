@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.value import SetConfigParameterResult
 
@@ -57,8 +58,6 @@ from .common import (
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
     SCHLAGE_BE469_LOCK_ENTITY,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_set_config_parameter(

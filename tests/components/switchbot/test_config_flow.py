@@ -4,15 +4,21 @@ from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
 
-from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
+    DEFAULT_CURTAIN_SPEED,
+    DEFAULT_RETRY_COUNT,
 )
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import (
@@ -26,9 +32,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    CIRCULATOR_FAN_PRO_SERVICE_INFO,
     LOCK_ULTRA_MAX_SERVICE_INFO,
     NOT_SWITCHBOT_INFO,
     USER_INPUT,
+    WOCURTAIN3_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
     WOHAND_ENCRYPTED_SERVICE_INFO,
     WOHAND_SERVICE_ALT_ADDRESS_INFO,
@@ -41,8 +49,6 @@ from . import (
     init_integration,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "switchbot"
 
@@ -85,6 +91,42 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "aabbccddeeff"
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("service_info", "sensor_type"),
+    [
+        pytest.param(WOCURTAIN_SERVICE_INFO, "curtain", id="curtain"),
+        pytest.param(WOCURTAIN3_SERVICE_INFO, "curtain_3", id="curtain_3"),
+    ],
+)
+async def test_bluetooth_discovery_curtain_options(
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+) -> None:
+    """Test both curtain models get speed options and the new config version."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=service_info,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert result["data"][CONF_SENSOR_TYPE] == sensor_type
+    assert result["options"] == {
+        CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
+        CONF_CURTAIN_SPEED: DEFAULT_CURTAIN_SPEED,
+    }
+    assert result["result"].version == 2
+    assert result["result"].minor_version == 1
 
 
 async def test_bluetooth_discovery_requires_password(hass: HomeAssistant) -> None:
@@ -210,6 +252,44 @@ async def test_bluetooth_discovery_lock_ultra_max(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SENSOR_TYPE] == "lock_ultra_max"
+    assert result["result"].unique_id == "aabbccddeeff"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_circulator_fan_pro(hass: HomeAssistant) -> None:
+    """Test discovery of an encrypted Circulator Fan Pro."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=CIRCULATOR_FAN_PRO_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotCirculatorFanPro.verify_encryption_key",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SENSOR_TYPE] == "circulator_fan_pro"
     assert result["result"].unique_id == "aabbccddeeff"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -436,7 +516,7 @@ async def test_async_step_bluetooth_meter_pro_co2_not_connectable(
     assert result["title"] == "Meter Pro CO2 EEFF"
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
-        CONF_SENSOR_TYPE: "hygrometer_co2",
+        CONF_SENSOR_TYPE: "meter_pro_co2",
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
@@ -1130,7 +1210,7 @@ async def test_user_setup_wosensor(hass: HomeAssistant) -> None:
     assert result["title"] == "Meter EEFF"
     assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-        CONF_SENSOR_TYPE: "hygrometer",
+        CONF_SENSOR_TYPE: "meter",
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
@@ -1605,7 +1685,7 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     # Test Force night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -1649,28 +1729,35 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     assert entry.options[CONF_LOCK_NIGHTLATCH] is True
 
 
-async def test_options_flow_curtain_speed(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("sensor_type", ["curtain", "curtain_3"])
+async def test_options_flow_curtain_speed(
+    hass: HomeAssistant, sensor_type: str
+) -> None:
     """Test updating curtain speed option."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
             CONF_NAME: "test-name",
-            CONF_SENSOR_TYPE: "curtain",
+            CONF_SENSOR_TYPE: sensor_type,
         },
         options={CONF_RETRY_COUNT: 2, CONF_CURTAIN_SPEED: 255},
         unique_id="aabbccddeeff",
+        version=2,
+        minor_version=1,
     )
     entry.add_to_hass(hass)
 
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"] is None
+
+        assert CONF_CURTAIN_SPEED in result["data_schema"].schema
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -1989,7 +2076,7 @@ async def test_options_flow_lock_with_night_latch(
     # Test night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM

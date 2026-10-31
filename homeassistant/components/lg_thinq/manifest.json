@@ -1,6 +1,7 @@
 {
   "domain": "lg_thinq",
   "name": "LG ThinQ",
+  "categories": ["appliances_cleaning", "climate"],
   "codeowners": ["@LG-ThinQ-Integration"],
   "config_flow": true,
   "dhcp": [

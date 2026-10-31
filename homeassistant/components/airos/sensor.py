@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
+from airos.airos8 import AirOS8Data
 from airos.data import (
     AirOSDataBaseClass,
     DerivedWirelessMode,
@@ -30,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import AirOS8Data, AirOSConfigEntry, AirOSDataUpdateCoordinator
+from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
 
 _LOGGER = logging.getLogger(__name__)

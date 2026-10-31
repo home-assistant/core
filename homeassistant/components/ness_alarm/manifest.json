@@ -1,6 +1,7 @@
 {
   "domain": "ness_alarm",
   "name": "Ness Alarm",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@nickw444", "@poshy163"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ness_alarm",

@@ -11,13 +11,22 @@ from music_assistant_client.players import Players
 from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.config_entries import PlayerConfig
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry, load_fixture
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
 from homeassistant.components.music_assistant.const import DOMAIN
 
-from tests.common import AsyncMock, MockConfigEntry, load_fixture
-
 MOCK_SERVER_ID = "1234"
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.music_assistant.async_setup_entry",
+        return_value=None,
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture

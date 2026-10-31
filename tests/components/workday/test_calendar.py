@@ -5,6 +5,7 @@ import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
@@ -19,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import TEST_CONFIG_WITH_PROVINCE, init_integration
-
-from tests.common import async_fire_time_changed
 
 ATTR_END = "end"
 ATTR_START = "start"

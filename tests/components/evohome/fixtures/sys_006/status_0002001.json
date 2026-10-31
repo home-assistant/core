@@ -1,0 +1,70 @@
+{
+  "locationId": "0002001",
+  "gateways": [
+    {
+      "gatewayId": "0002002",
+      "temperatureControlSystems": [
+        {
+          "systemId": "0002003",
+          "zones": [
+            {
+              "zoneId": "0002004",
+              "temperatureStatus": {
+                "temperature": 19.5,
+                "isAvailable": true
+              },
+              "activeFaults": [
+                {
+                  "faultType": "TempZoneActuatorCommunicationLost",
+                  "since": "2024-12-01T01:00:00"
+                },
+                {
+                  "faultType": "TempZoneSensorLowBattery",
+                  "since": "2024-04-01T01:00:00"
+                }
+              ],
+              "setpointStatus": {
+                "targetHeatTemperature": 14.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Main Room"
+            }
+          ],
+          "dhw": {
+            "dhwId": "0002005",
+            "temperatureStatus": {
+              "temperature": 45.5,
+              "isAvailable": true
+            },
+            "stateStatus": {
+              "state": "Off",
+              "mode": "FollowSchedule"
+            },
+            "activeFaults": [
+              {
+                "faultType": "DHWSensorLowBattery",
+                "since": "2024-08-15T01:00:00"
+              }
+            ]
+          },
+          "activeFaults": [
+            {
+              "faultType": "DHWActuatorFailure",
+              "since": "2024-11-15T01:00:00"
+            },
+            {
+              "faultType": "DHWSensorCommunicationLost",
+              "since": "2024-10-15T01:00:00"
+            }
+          ],
+          "systemModeStatus": {
+            "mode": "Away",
+            "timeUntil": "2024-07-20T23:00:00Z",
+            "isPermanent": false
+          }
+        }
+      ],
+      "activeFaults": []
+    }
+  ]
+}

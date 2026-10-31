@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from aioairzone_cloud.exceptions import AirzoneTimeout
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .util import CONFIG, WS_ID, WS_ID_AIDOO, async_init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

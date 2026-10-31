@@ -1,6 +1,7 @@
 {
   "domain": "remember_the_milk",
   "name": "Remember The Milk",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@MartinHjelmare"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/remember_the_milk",

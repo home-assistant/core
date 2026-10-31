@@ -10,8 +10,6 @@ from habluetooth import BluetoothScanningMode
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_IDENTIFIERS,
     CONF_ENTITY_CATEGORY,
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
@@ -22,7 +20,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import async_get_current_platform
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN
@@ -31,13 +29,17 @@ from .update_coordinator import BasePassiveBluetoothCoordinator
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from home_assistant_bluetooth import BluetoothServiceInfoBleak
+
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .models import BluetoothChange, BluetoothServiceInfoBleak
+    from .models import BluetoothChange
 
 STORAGE_KEY = "bluetooth.passive_update_processor"
 STORAGE_VERSION = 1
 STORAGE_SAVE_INTERVAL = timedelta(minutes=15)
+# Restore data is a cache, so stored keys which are no longer fields are dropped
+_DEVICE_INFO_FIELDS = frozenset(field.name for field in dataclasses.fields(DeviceInfo))
 PASSIVE_UPDATE_PROCESSOR = "passive_update_processor"
 
 
@@ -76,7 +78,7 @@ class PassiveBluetoothProcessorData:
 class RestoredPassiveBluetoothDataUpdate(TypedDict):
     """Restored PassiveBluetoothDataUpdate."""
 
-    devices: dict[str, DeviceInfo]
+    devices: dict[str, dict[str, Any]]
     entity_descriptions: dict[str, dict[str, Any]]
     entity_names: dict[str, str | None]
     entity_data: dict[str, Any]
@@ -152,16 +154,20 @@ class PassiveBluetoothDataUpdate[_T]:
         device_change = False
         changed_entity_keys: set[PassiveBluetoothEntityKey] = set()
         for device_key, device_info in new_data.devices.items():
-            if device_change or self.devices.get(device_key, UNDEFINED) != device_info:
+            if (
+                not device_change
+                and self.devices.get(device_key, Undefined) != device_info
+            ):
                 device_change = True
-                self.devices[device_key] = device_info
+            # Stored even when equal, so the next comparison is with the same object
+            self.devices[device_key] = device_info
         for incoming, current in (
             (new_data.entity_descriptions, self.entity_descriptions),
             (new_data.entity_names, self.entity_names),
             (new_data.entity_data, self.entity_data),
         ):
             for key, data in incoming.items():
-                if current.get(key, UNDEFINED) != data:
+                if current.get(key, Undefined) != data:
                     changed_entity_keys.add(key)
                     current[key] = data  # type: ignore[assignment]
         # If the device changed we don't need to return the changed
@@ -172,7 +178,9 @@ class PassiveBluetoothDataUpdate[_T]:
         """Serialize restore data to storage."""
         return {
             "devices": {
-                key or "": device_info for key, device_info in self.devices.items()
+                # A plain dict, as orjson would also write the unset dataclass fields
+                key or "": dict(device_info)
+                for key, device_info in self.devices.items()
             },
             "entity_descriptions": {
                 key.to_string(): serialize_entity_description(description)
@@ -195,7 +203,9 @@ class PassiveBluetoothDataUpdate[_T]:
         """Set the restored data from storage."""
         self.devices.update(
             {
-                key or None: device_info
+                key or None: DeviceInfo(
+                    **{k: v for k, v in device_info.items() if k in _DEVICE_INFO_FIELDS}
+                )
                 for key, device_info in restore_data["devices"].items()
             }
         )
@@ -664,9 +674,9 @@ class PassiveBluetoothProcessorEntity[
         device_info = DeviceInfo(name=processor.coordinator.name)
         if device_id in devices:
             device_info.update(devices[device_id])
-        device_info[ATTR_IDENTIFIERS] = {(DOMAIN, identifier)}
+        device_info.identifiers = {(DOMAIN, identifier)}
         if device_id is None:
-            device_info[ATTR_CONNECTIONS] = {(CONNECTION_BLUETOOTH, address)}
+            device_info.connections = {(CONNECTION_BLUETOOTH, address)}
         self._attr_device_info = device_info
         if (name := processor.entity_names.get(entity_key)) is not None:
             self._attr_name = name

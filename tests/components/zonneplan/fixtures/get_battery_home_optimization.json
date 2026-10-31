@@ -1,0 +1,12 @@
+{
+  "max_desired_charge_power_watts": 2500,
+  "max_desired_charge_power_limits": {
+    "min_watts": 100,
+    "max_watts": 2500
+  },
+  "max_desired_discharge_power_watts": 800,
+  "max_desired_discharge_power_limits": {
+    "min_watts": 100,
+    "max_watts": 800
+  }
+}

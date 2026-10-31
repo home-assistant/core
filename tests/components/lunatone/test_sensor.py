@@ -7,15 +7,14 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import LineStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(
@@ -45,8 +44,9 @@ async def test_setup(
         (1, "sensor.test_temperature", "22"),
         (2, "sensor.test_air_humidity", "55"),
         (3, "sensor.dali_line_0_a02_temperature", "20"),
+        (4, "sensor.test_cpu_temperature", "50"),
     ],
-    ids=["temperature", "air_humidity", "dali_temperature"],
+    ids=["temperature", "air_humidity", "dali_temperature", "cpu_temperature"],
 )
 async def test_sensor_value_update(
     hass: HomeAssistant,
@@ -72,7 +72,7 @@ async def test_sensor_value_update(
 
     entity = hass.states.get(entity_id)
     assert entity
-    assert entity.state == "unknown"
+    assert entity.state == STATE_UNKNOWN
 
     freezer.tick(timedelta(seconds=40))
     async_fire_time_changed(hass)

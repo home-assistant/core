@@ -4,6 +4,10 @@ from http import HTTPStatus
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -14,11 +18,6 @@ from homeassistant.core import HomeAssistant
 from . import mocked_response
 from .conftest import MarketplaceResponses
 from .const import TOKEN, WARNING_ACCEPTANCE
-
-from tests.common import MockConfigEntry, MockUser
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 # The entry keys that change between runs, plus the Home Assistant version.
 EXCLUDED = props(

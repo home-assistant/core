@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import aiohttp
 from aiohttp.hdrs import CONTENT_TYPE
 from async_upnp_client.client import UpnpService, UpnpStateVariable
+from async_upnp_client.exceptions import UpnpError
 from wiim.consts import PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
 from wiim.models import (
@@ -45,7 +46,14 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_WIIM, DOMAIN, LOGGER, WiimConfigEntry
+from .const import (
+    DATA_WIIM,
+    DOMAIN,
+    LOGGER,
+    SIGNAL_DEVICE_GENERAL_UPDATED,
+    SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED,
+    WiimConfigEntry,
+)
 from .entity import WiimBaseEntity
 from .models import WiimData
 
@@ -81,6 +89,8 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.SEEK
     | MediaPlayerEntityFeature.GROUPING
 )
+
+_ENTITY_ID_CHANGED_SIGNAL = "wiim_entity_id_changed"
 
 
 def _group_member_state_signal(member_udn: str) -> str:
@@ -490,18 +500,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
             return
 
-        async def _wrapped() -> None:
-            await self._device.ensure_subscriptions()
-            self._update_ha_state_from_sdk_cache()
-
-        if self._device.supports_http_api:
-            self._entry.async_create_background_task(
-                self.hass,
-                _wrapped(),
-                name=f"wiim_{self.entity_id}_general_update",
-            )
-        else:
-            self._update_ha_state_from_sdk_cache()
+        self._update_ha_state_from_sdk_cache()
 
     @callback
     def _handle_sdk_av_transport_event(
@@ -643,11 +642,16 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         super().async_entity_id_changed(old_entity_id)
         self._wiim_data.entity_id_to_udn_map.pop(old_entity_id, None)
         self._wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
-        # Group members are resolved through the map, core writes the state
+        # Every player's group members are resolved through the map
+        async_dispatcher_send(self.hass, _ENTITY_ID_CHANGED_SIGNAL)
+
+    @callback
+    def _async_handle_entity_id_changed(self) -> None:
+        """Refresh the group members, which may list a renamed player."""
         self._update_ha_state_from_sdk_cache(
             write_state=False, update_supported_features=False
         )
-        self._async_propagate_group_state_update(self._get_group_snapshot())
+        self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -661,6 +665,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._async_handle_group_member_state_refresh,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                _ENTITY_ID_CHANGED_SIGNAL,
+                self._async_handle_entity_id_changed,
+            )
+        )
         LOGGER.debug(
             "Added %s (UDN: %s) to entity maps in hass.data",
             self.entity_id,
@@ -671,10 +682,22 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._update_ha_state_from_sdk_cache(
             write_state=False, update_supported_features=False
         )
-        self._device.general_event_callback = self._handle_sdk_general_device_update
         self._device.av_transport_event_callback = self._handle_sdk_av_transport_event
-        self._device.rendering_control_event_callback = self._handle_sdk_refresh_event
         self._device.play_queue_event_callback = self._handle_sdk_refresh_event
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_DEVICE_GENERAL_UPDATED.format(self._device.udn),
+                self._handle_sdk_general_device_update,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED.format(self._device.udn),
+                self._handle_sdk_refresh_event,
+            )
+        )
         LOGGER.debug(
             "Entity %s registered callbacks with WiimDevice %s",
             self.entity_id,
@@ -685,9 +708,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from Home Assistant."""
         # Unregister SDK callbacks
-        self._device.general_event_callback = None
         self._device.av_transport_event_callback = None
-        self._device.rendering_control_event_callback = None
         self._device.play_queue_event_callback = None
         LOGGER.debug(
             "Entity %s unregistered callbacks from WiimDevice %s",
@@ -941,7 +962,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
 
         if media_content_id == MEDIA_CONTENT_ID_FAVORITES:
-            sdk_favorites = await self._device.async_get_presets()
+            try:
+                sdk_favorites = await self._device.async_get_presets()
+            except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
+                LOGGER.info("Unable to browse presets for %s: %s", self.entity_id, err)
+                sdk_favorites = ()
             favorites_items = [
                 BrowseMedia(
                     media_class=MediaClass.PLAYLIST,
@@ -966,8 +991,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
 
         if media_content_id == MEDIA_CONTENT_ID_PLAYLISTS:
-            queue_snapshot = await self._device.async_get_queue_snapshot()
-            if not queue_snapshot.is_active:
+            try:
+                queue_snapshot = await self._device.async_get_queue_snapshot()
+            except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
+                LOGGER.info("Unable to browse queue for %s: %s", self.entity_id, err)
+                queue_snapshot = None
+            if queue_snapshot is None or not queue_snapshot.is_active:
                 return BrowseMedia(
                     media_class=MediaClass.PLAYLIST,
                     media_content_id=MEDIA_CONTENT_ID_PLAYLISTS,

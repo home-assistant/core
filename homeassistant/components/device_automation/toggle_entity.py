@@ -3,6 +3,7 @@
 import probatio
 
 from homeassistant.components.homeassistant.triggers import state as state_trigger
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CONDITION,
@@ -23,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DEVICE_TRIGGER_BASE_SCHEMA, entity
 from .const import (
+    CONF_CHANGED_STATES,
     CONF_IS_OFF,
     CONF_IS_ON,
     CONF_TOGGLE,
@@ -98,7 +100,14 @@ _TOGGLE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
-TRIGGER_SCHEMA = probatio.Any(entity.TRIGGER_SCHEMA, _TOGGLE_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        CONF_CHANGED_STATES: entity.TRIGGER_SCHEMA,
+        CONF_TURNED_OFF: _TOGGLE_TRIGGER_SCHEMA,
+        CONF_TURNED_ON: _TOGGLE_TRIGGER_SCHEMA,
+    },
+)
 
 
 async def async_call_action_from_config(
@@ -160,13 +169,13 @@ async def async_attach_trigger(
         to_state = "on"
     else:
         to_state = "off"
-    state_config = {
-        CONF_PLATFORM: "state",
-        state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state_trigger.CONF_TO: to_state,
+    state_config: ConfigType = {
+        StateTriggerArgument.PLATFORM: "state",
+        StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+        StateTriggerArgument.TO: to_state,
     }
     if CONF_FOR in config:
-        state_config[CONF_FOR] = config[CONF_FOR]
+        state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
 
     state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(

@@ -262,9 +262,9 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         """Device info for neato robot."""
         device_info = self._attr_device_info
         if self._robot_stats:
-            device_info["manufacturer"] = self._robot_stats["battery"]["vendor"]
-            device_info["model"] = self._robot_stats["model"]
-            device_info["sw_version"] = self._robot_stats["firmware"]
+            device_info.manufacturer = self._robot_stats["battery"]["vendor"]
+            device_info.model = self._robot_stats["model"]
+            device_info.sw_version = self._robot_stats["firmware"]
         return device_info
 
     @override

@@ -86,7 +86,6 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.data[CONF_HOST]},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="discovery_confirm")
 
     @override
@@ -118,9 +117,6 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     # At this point the main device is always set
                     assert isinstance(hub.main, EheimDigitalDevice)
-                await self.async_set_unique_id(
-                    hub.main.mac_address, raise_on_progress=False
-                )
                 await hub.close()
         except ClientError, TimeoutError:
             errors["base"] = "cannot_connect"
@@ -128,6 +124,9 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             LOGGER.exception("Unknown exception occurred")
         else:
+            await self.async_set_unique_id(
+                hub.main.mac_address, raise_on_progress=False
+            )
             self._abort_if_unique_id_configured()
             return self.async_create_entry(data=user_input, title=user_input[CONF_HOST])
         return self.async_show_form(
@@ -166,7 +165,6 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     # At this point the main device is always set
                     assert isinstance(hub.main, EheimDigitalDevice)
-                await self.async_set_unique_id(hub.main.mac_address)
                 await hub.close()
         except ClientError, TimeoutError:
             errors["base"] = "cannot_connect"
@@ -174,6 +172,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             LOGGER.exception("Unknown exception occurred")
         else:
+            await self.async_set_unique_id(hub.main.mac_address)
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),

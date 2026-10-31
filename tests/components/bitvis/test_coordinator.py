@@ -3,13 +3,12 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import FakeListener
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("patch_shared_listener")
 

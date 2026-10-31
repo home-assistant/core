@@ -14,6 +14,7 @@ from unittest.mock import (
 import blebox_uniapi
 import blebox_uniapi.box
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.blebox import config_flow
@@ -32,8 +33,6 @@ from .conftest import (
     mock_only_feature,
     setup_product_mock,
 )
-
-from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     ip="172.100.123.4",
@@ -360,7 +359,7 @@ async def test_flow_with_zeroconf(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
-    with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.blebox.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -529,7 +528,7 @@ async def test_flow_with_dhcp(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
-    with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.blebox.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 

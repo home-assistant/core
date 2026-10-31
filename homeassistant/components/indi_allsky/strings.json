@@ -1,25 +1,60 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_credentials": "Both username and password are required when configuring authentication.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for your INDI Allsky user account.",
+          "username": "Username for your INDI Allsky user account."
+        },
+        "description": "Please enter credentials for INDI Allsky."
+      },
+      "discovery_confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for your INDI Allsky user account.",
+          "username": "Username for your INDI Allsky user account."
+        },
+        "description": "Please enter updated credentials for INDI Allsky."
+      },
+      "unverified_ssl": {
+        "description": "INDI Allsky servers use a self-signed SSL certificate by default. Connecting without certificate verification allows communication with {name}, but encrypted traffic cannot be verified against a trusted authority. Do you want to continue without certificate verification?"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your INDI Allsky server.",
+          "password": "Password for your INDI Allsky user account, if authentication is enabled.",
           "port": "The port number of your INDI Allsky web server.",
           "ssl": "Connect using SSL/HTTPS.",
+          "username": "Username for your INDI Allsky user account, if authentication is enabled.",
           "verify_ssl": "Verify the SSL certificate of the INDI Allsky server."
         },
         "description": "Enter the connection details for your INDI Allsky instance."
@@ -112,6 +147,9 @@
     }
   },
   "exceptions": {
+    "invalid_auth": {
+      "message": "Authentication failed connecting to INDI Allsky API"
+    },
     "update_failed": {
       "message": "Error communicating with INDI Allsky API"
     }

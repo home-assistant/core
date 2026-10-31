@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import SynoApi
+from .common import SynoApi
 from .const import CONF_VOLUMES, ENTITY_UNIT_LOAD
 from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import (
@@ -427,15 +427,6 @@ class SynoDSMSensor(
     """Mixin for sensor specific attributes."""
 
     entity_description: SynologyDSMSensorEntityDescription
-
-    def __init__(
-        self,
-        api: SynoApi,
-        coordinator: SynologyDSMCentralUpdateCoordinator,
-        description: SynologyDSMSensorEntityDescription,
-    ) -> None:
-        """Initialize the Synology DSM sensor entity."""
-        super().__init__(api, coordinator, description)
 
 
 class SynoDSMUtilSensor(SynoDSMSensor):

@@ -37,7 +37,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -> None:
     """Set up Monoprice 6-Zone Amplifier from a config entry."""
     port = entry.data[CONF_PORT]
 
@@ -65,14 +65,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     def _cleanup(monoprice) -> None:
         """Destroy the Monoprice object.
@@ -84,8 +80,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -
         del monoprice
 
     await hass.async_add_executor_job(_cleanup, entry.runtime_data.client)
-
-    return True
 
 
 async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

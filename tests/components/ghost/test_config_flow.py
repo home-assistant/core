@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aioghost.exceptions import GhostAuthError, GhostConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ghost.const import (
     CONF_ADMIN_API_KEY,
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import API_KEY, API_URL, SITE_UUID
-
-from tests.common import MockConfigEntry
 
 NEW_API_KEY = "new_key_id:new_key_secret"
 NEW_API_URL = "https://new.ghost.io"

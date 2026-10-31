@@ -5,6 +5,7 @@ import ssl
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from unifi_access_api import (
     ApiAuthError,
     ApiConnectionError,
@@ -29,8 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import _make_door
-
-from tests.common import MockConfigEntry
 
 FRONT_DOOR_BINARY_SENSOR = "binary_sensor.front_door"
 BACK_DOOR_BINARY_SENSOR = "binary_sensor.back_door"

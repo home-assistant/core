@@ -14,6 +14,7 @@ from boschshcpy import (
     ThermostatService,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -43,8 +44,6 @@ from .conftest import (
     thermostat_gen2_device,
     twinguard_device,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

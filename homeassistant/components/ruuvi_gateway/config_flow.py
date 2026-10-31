@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import DOMAIN
+from .const import DOMAIN
 from .schemata import CONFIG_SCHEMA, get_config_schema_with_default_host
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +42,14 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
                     host=user_input[CONF_HOST],
                     bearer_token=user_input[CONF_TOKEN],
                 )
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
             await self.async_set_unique_id(
                 format_mac(resp.gw_mac), raise_on_progress=False
             )
@@ -53,13 +61,6 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.async_create_entry(title=info["title"], data=user_input),
                 errors,
             )
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
         return (None, errors)
 
     @override

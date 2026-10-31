@@ -10,7 +10,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
-    async_delete_issue,
+    async_refresh_issues,
 )
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -33,41 +33,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         active_alerts: dict[str, str | None] = {}
 
-        for issue_id, alert in coordinator.data.items():
-            # Skip creation if already created and not updated since then
-            if issue_id in last_alerts and alert.date_updated == last_alerts[issue_id]:
-                active_alerts[issue_id] = alert.date_updated
-                continue
+        # All issues of the domain are alerts, including inactive ones from before
+        # a restart which are not in last_alerts
+        with async_refresh_issues(hass, DOMAIN) as refresh:
+            for issue_id, alert in coordinator.data.items():
+                # Skip creation if already created and not updated since then
+                if (
+                    issue_id in last_alerts
+                    and alert.date_updated == last_alerts[issue_id]
+                ):
+                    active_alerts[issue_id] = alert.date_updated
+                    refresh.async_keep([issue_id])
+                    continue
 
-            # Fetch alert to get title + description
-            try:
-                response = await async_get_clientsession(hass).get(
-                    f"https://alerts.home-assistant.io/alerts/{alert.alert_id}.json",
-                    timeout=REQUEST_TIMEOUT,
+                # Fetch alert to get title + description
+                try:
+                    response = await async_get_clientsession(hass).get(
+                        f"https://alerts.home-assistant.io/alerts/{alert.alert_id}.json",
+                        timeout=REQUEST_TIMEOUT,
+                    )
+                except TimeoutError:
+                    _LOGGER.warning("Error fetching %s: timeout", alert.filename)
+                    refresh.async_keep([issue_id])
+                    continue
+
+                alert_content = await response.json()
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=False,
+                    issue_domain=alert.integration,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="alert",
+                    translation_placeholders={
+                        "title": alert_content["title"],
+                        "description": alert_content["content"],
+                    },
                 )
-            except TimeoutError:
-                _LOGGER.warning("Error fetching %s: timeout", alert.filename)
-                continue
-
-            alert_content = await response.json()
-            async_create_issue(
-                hass,
-                DOMAIN,
-                issue_id,
-                is_fixable=False,
-                issue_domain=alert.integration,
-                severity=IssueSeverity.WARNING,
-                translation_key="alert",
-                translation_placeholders={
-                    "title": alert_content["title"],
-                    "description": alert_content["content"],
-                },
-            )
-            active_alerts[issue_id] = alert.date_updated
-
-        inactive_alerts = last_alerts.keys() - active_alerts.keys()
-        for issue_id in inactive_alerts:
-            async_delete_issue(hass, DOMAIN, issue_id)
+                active_alerts[issue_id] = alert.date_updated
 
         last_alerts = active_alerts
 

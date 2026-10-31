@@ -1,6 +1,6 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 
-import datetime
+import datetime as dt
 from typing import Any, override
 
 from aiohttp import ClientConnectionError
@@ -84,7 +84,7 @@ HW_FAN_MODE_TO_HA = {
     "follow schedule": FAN_AUTO,
 }
 
-SCAN_INTERVAL = datetime.timedelta(seconds=30)
+SCAN_INTERVAL = dt.timedelta(seconds=30)
 
 
 async def async_setup_entry(
@@ -376,11 +376,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 # Set temporary hold time and temperature
                 if mode in COOLING_MODES:
                     await self._device.set_hold_cool(
-                        datetime.time(hour_cool, minute_cool), temperature
+                        dt.time(hour_cool, minute_cool), temperature
                     )
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(
-                        datetime.time(hour_heat, minute_heat), temperature
+                        dt.time(hour_heat, minute_heat), temperature
                     )
 
             # Set temperature if not in auto - set the temperature

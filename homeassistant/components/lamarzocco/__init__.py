@@ -13,7 +13,11 @@ from pylamarzocco import (
     LaMarzoccoMachine,
 )
 from pylamarzocco.const import FirmwareType
-from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.exceptions import (
+    AuthFail,
+    PolicyAcceptanceRequired,
+    RequestNotSuccessful,
+)
 from pylamarzocco.util import InstallationKey, generate_installation_key
 
 from homeassistant.components.bluetooth import (
@@ -69,7 +73,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> None:
     """Set up La Marzocco as config entry."""
 
     assert entry.unique_id
@@ -149,6 +153,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from ex
+        except PolicyAcceptanceRequired as ex:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="policy_acceptance_required",
+            ) from ex
         except (RequestNotSuccessful, TimeoutError) as ex:
             _LOGGER.debug(ex, exc_info=True)
             if not bluetooth_client:
@@ -225,17 +234,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: LaMarzoccoConfigEntry
-) -> bool:
+) -> None:
     """Migrate config entry."""
 
     if entry.version in (1, 2):
@@ -273,8 +280,6 @@ async def async_migrate_entry(
             version=4,
         )
         _LOGGER.debug("Migrated La Marzocco config entry to version 4")
-
-    return True
 
 
 def create_client_session(hass: HomeAssistant) -> ClientSession:

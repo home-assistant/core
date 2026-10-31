@@ -5,6 +5,7 @@ from typing import Any, override
 
 import probatio
 import pypck
+from pypck.connection import PchkConnectionManager
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -20,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import PchkConnectionManager
 from .const import CONF_ACKNOWLEDGE, CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

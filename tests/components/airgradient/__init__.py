@@ -7,11 +7,14 @@ from airgradient import (
     parse_config_json,
     parse_measures_json,
 )
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_fixture,
+    load_fixture,
+)
 
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_fixture, load_fixture
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

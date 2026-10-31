@@ -149,7 +149,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         """Return the device info."""
         device_info = DeviceInfo(identifiers={(DOMAIN, self._dev_id)})
         if "host_name" in self._data:
-            device_info["name"] = self._data["host_name"]
+            device_info.name = self._data["host_name"]
         return device_info
 
     @override

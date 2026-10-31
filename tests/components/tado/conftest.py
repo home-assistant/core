@@ -6,17 +6,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from PyTado.http import DeviceActivationStatus
 import pytest
-import requests_mock
-
-from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
-from homeassistant.core import HomeAssistant
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_fixture,
     load_json_object_fixture,
 )
+import requests_mock
+
+from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -44,7 +43,7 @@ def mock_tado_api() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the setup entry."""
     with patch(
-        "homeassistant.components.tado.async_setup_entry", return_value=True
+        "homeassistant.components.tado.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

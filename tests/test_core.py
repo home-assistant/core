@@ -2,11 +2,13 @@
 
 import array
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import functools
 import gc
 import logging
 import os
+import pickle
 import re
 import threading
 import time
@@ -16,6 +18,7 @@ from unittest.mock import MagicMock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_mock_service
 from pytest_unordered import unordered
 
 from homeassistant import core as ha
@@ -59,8 +62,6 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.read_only_dict import ReadOnlyDict
-
-from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -1612,6 +1613,17 @@ def test_state_dict_conversion() -> None:
     assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
 
 
+def test_state_dict_conversion_keeps_context() -> None:
+    """Test conversion of dict keeps the full context."""
+    context = ha.Context(user_id="user", parent_id="parent", id="id")
+    state = ha.State("domain.hello", "world", context=context)
+
+    restored = ha.State.from_dict(state.as_dict())
+
+    assert restored.context.parent_id == "parent"
+    assert restored.as_dict() == state.as_dict()
+
+
 def test_state_dict_conversion_with_wrong_data() -> None:
     """Test conversion with wrong data."""
     assert ha.State.from_dict(None) is None
@@ -1627,6 +1639,17 @@ def test_state_dict_conversion_with_wrong_data() -> None:
     )
     assert wrong_context is not None
     assert wrong_context.context.id == "123"
+
+
+@pytest.mark.parametrize("protocol", range(2, pickle.HIGHEST_PROTOCOL + 1))
+def test_state_pickle(protocol: int) -> None:
+    """Test a state with attributes survives a pickle round trip."""
+    state = ha.State("domain.hello", "world", {"some": "attr"})
+
+    restored = pickle.loads(pickle.dumps(state, protocol=protocol))  # noqa: S301
+
+    assert type(restored.attributes) is ReadOnlyDict
+    assert restored.as_dict() == state.as_dict()
 
 
 def test_state_repr() -> None:
@@ -2323,6 +2346,7 @@ def test_valid_entity_id() -> None:
         "Light.kitchen",
         "light.Kitchen",
         "lightkitchen",
+        "light.kitchen\n",
     ):
         assert not ha.valid_entity_id(invalid), invalid
 
@@ -2352,6 +2376,7 @@ def test_valid_domain() -> None:
         "light.kitchen_yo_",
         "light.kitchen.",
         "Light",
+        "light\n",
     ):
         assert not ha.valid_domain(invalid), invalid
 
@@ -3336,7 +3361,7 @@ async def test_async_run_job_deprecated(
     hass.async_run_job(_test)
     assert (
         "Detected code that calls `async_run_job`, which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
         " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
@@ -3352,7 +3377,7 @@ async def test_async_add_job_deprecated(
     hass.async_add_job(_test)
     assert (
         "Detected code that calls `async_add_job`, which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
         " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
@@ -3369,7 +3394,7 @@ async def test_async_add_hass_job_deprecated(
     assert (
         "Detected code that calls `async_add_hass_job`,"
         " which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+        "https://contributors.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job/"
         " for replacement options. This will stop working in Home Assistant 2025.5"
     ) in caplog.text
 
@@ -3602,11 +3627,84 @@ async def test_thread_safety_message(hass: HomeAssistant) -> None:
             "Detected code that calls test from a thread other than the event loop, "
             "which may cause Home Assistant to crash or data to corrupt. For more "
             "information, see "
-            "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
+            "https://contributors.home-assistant.io/core/internals/thread-safety/#test"
             ". Please report this issue",
         ),
     ):
         await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")
+
+
+@ha.verify_event_loop_thread("test.function")
+def _decorated_function(hass: HomeAssistant, value: int, *, extra: int) -> int:
+    """Return the sum of the arguments."""
+    return value + extra
+
+
+class _DecoratedMethodOwner:
+    """Hold a reference to hass and a decorated method."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+        self.hass = hass
+
+    @ha.verify_event_loop_thread("test.method")
+    def decorated(self, value: int, *, extra: int) -> int:
+        """Return the sum of the arguments."""
+        return value + extra
+
+
+class _DecoratedMethodPrivateOwner:
+    """Hold a private reference to hass and a decorated method."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+        self._hass = hass
+
+    @ha.verify_event_loop_thread("test.private_method")
+    def decorated(self, value: int, *, extra: int) -> int:
+        """Return the sum of the arguments."""
+        return value + extra
+
+
+@pytest.mark.parametrize(
+    ("get_target", "what"),
+    [
+        pytest.param(
+            lambda hass: functools.partial(_decorated_function, hass),
+            "test.function",
+            id="hass_argument",
+        ),
+        pytest.param(
+            lambda hass: functools.partial(_decorated_function, hass=hass),
+            "test.function",
+            id="hass_keyword_argument",
+        ),
+        pytest.param(
+            lambda hass: _DecoratedMethodOwner(hass).decorated,
+            "test.method",
+            id="hass_attribute",
+        ),
+        pytest.param(
+            lambda hass: _DecoratedMethodPrivateOwner(hass).decorated,
+            "test.private_method",
+            id="private_hass_attribute",
+        ),
+    ],
+)
+async def test_verify_event_loop_thread_decorator(
+    hass: HomeAssistant,
+    get_target: Callable[[HomeAssistant], Callable[..., int]],
+    what: str,
+) -> None:
+    """Test the verify_event_loop_thread decorator."""
+    target = get_target(hass)
+    assert target(value=1, extra=2) == 3
+
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(f"Detected code that calls {what} from a thread other than"),
+    ):
+        await hass.async_add_executor_job(functools.partial(target, value=1, extra=2))
 
 
 async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:

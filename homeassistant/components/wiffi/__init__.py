@@ -25,7 +25,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 type WiffiConfigEntry = ConfigEntry[WiffiIntegrationApi]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> None:
     """Set up wiffi from a config entry."""
 
     # create api object
@@ -52,19 +52,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> None:
     """Unload a config entry."""
     api = entry.runtime_data
     await api.server.close_server()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        api.shutdown()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    api.shutdown()
 
 
 class WiffiIntegrationApi:

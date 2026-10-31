@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AzureEventHubConfigEntry
-) -> bool:
+) -> None:
     """Do the setup based on the config entry and the filter from yaml."""
     hub = AzureEventHub(
         hass,
@@ -111,7 +111,6 @@ async def async_setup_entry(
     entry.async_on_unload(hub.async_stop)
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await hub.async_start()
-    return True
 
 
 async def async_update_listener(
@@ -123,9 +122,8 @@ async def async_update_listener(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AzureEventHubConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True
 
 
 class AzureEventHub:

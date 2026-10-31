@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pushover_complete import BadAPIRequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.pushover.const import CONF_USER_KEY, DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -29,7 +28,7 @@ def mock_pushover():
 def pushover_setup_fixture():
     """Patch pushover setup entry."""
     with patch(
-        "homeassistant.components.pushover.async_setup_entry", return_value=True
+        "homeassistant.components.pushover.async_setup_entry", return_value=None
     ):
         yield
 

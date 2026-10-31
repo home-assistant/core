@@ -1,6 +1,7 @@
 {
   "domain": "econet",
   "name": "Rheem EcoNet Products",
+  "categories": ["climate.water_heaters", "climate.thermostats_heating"],
   "codeowners": ["@w1ll1am23"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/econet",

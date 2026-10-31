@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.exceptions import MarketplaceError
@@ -24,8 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 def _backup_root(config_dir: Path) -> Path:

@@ -3,13 +3,7 @@
 from collections.abc import Generator
 
 import pytest
-
-from homeassistant.components import water_heater
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     mock_config_flow,
@@ -17,17 +11,13 @@ from tests.common import (
     mock_platform,
 )
 
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+
 
 class MockFlow(ConfigFlow):
     """Test flow."""
-
-
-@pytest.fixture(autouse=True)
-def reset_deprecated_reports() -> Generator[None]:
-    """Reset the reports the deprecation shim makes once per class."""
-    yield
-    water_heater._REPORTED_DEPRECATED_MEMBERS.clear()
-    water_heater._REPORTED_DEPRECATED_READS.clear()
 
 
 @pytest.fixture
@@ -50,18 +40,17 @@ def register_test_integration(
 
     async def help_async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.WATER_HEATER]
         )
-        return True
 
     async def help_async_unload_entry(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload test config entry."""
-        return await hass.config_entries.async_unload_platforms(
+        await hass.config_entries.async_unload_platforms_or_raise(
             config_entry, [Platform.WATER_HEATER]
         )
 

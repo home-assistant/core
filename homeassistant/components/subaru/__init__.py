@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
@@ -52,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> None:
     """Set up Subaru from a config entry."""
     config = entry.data
     websession = aiohttp_client.async_create_clientsession(hass)
@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> bo
         _LOGGER.debug("Using subarulink %s", controller.version)
         await controller.connect()
     except InvalidCredentials as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
@@ -97,12 +97,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def get_vehicle_info(controller, vin):

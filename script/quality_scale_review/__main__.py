@@ -36,14 +36,16 @@ def decide_skip(
     """Decide whether this pull request is reviewed.
 
     It is skipped when it is too large to review reliably, or when it touches
-    no integration that declares a quality scale.
+    no integration that declares a quality scale. Test snapshots do not count
+    towards the size limits.
     """
-    if pr.changed_lines > max_changed_lines or pr.changed_files > max_changed_files:
+    if pr.reviewed_lines > max_changed_lines or pr.reviewed_files > max_changed_files:
         return SkipDecision(
             skip=True,
             too_long=True,
             reason=(
-                f"changes {pr.changed_lines} lines in {pr.changed_files} files, "
+                f"changes {pr.reviewed_lines} lines in {pr.reviewed_files} files "
+                "(excluding test snapshots), "
                 f"above the limit of {max_changed_lines} lines "
                 f"and {max_changed_files} files"
             ),
@@ -81,8 +83,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("GITHUB_TOKEN is unset")
 
     pr = github_api.fetch_pull_request(args.repo, args.pr_number, token)
+    # The diff excludes test snapshots, so they do not make a domain touched.
     domains = integrations.with_quality_scale(
-        integrations.touched_domains(pr.filenames), pr.file_statuses
+        integrations.touched_domains(pr.reviewed_filenames), pr.file_statuses
     )
     decision = decide_skip(
         pr,
@@ -98,8 +101,6 @@ def main(argv: list[str] | None = None) -> int:
             skip=decision.skip,
             too_long=decision.too_long,
             skip_reason=decision.reason,
-            changed_lines=pr.changed_lines,
-            changed_files=pr.changed_files,
             domains=domains,
         ),
         pr,

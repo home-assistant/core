@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, call, patch
 
 from pyloadapi import CannotConnect, InvalidAuth, ParserError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -14,8 +15,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 API_CALL = {
     PyLoadButtonEntity.ABORT_DOWNLOADS: call.stop_all_downloads,

@@ -1,10 +1,11 @@
 """Tests for the bosch_shc alarm control panel platform."""
 
-from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from collections.abc import Callable, Generator
+from unittest.mock import ANY, MagicMock, patch
 
 from boschshcpy import SHCIntrusionSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
@@ -19,12 +20,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import intrusion_system_device, setup_integration
 
-from tests.common import MockConfigEntry
-
 ENTITY_ID = "alarm_control_panel.alarm_system"
+NEW_ENTITY_ID = "alarm_control_panel.renamed_alarm_system"
+UNIQUE_ID = "test-mac_com.bosch.tt.intrusion.system"
 ArmingState = SHCIntrusionSystem.ArmingState
 AlarmState = SHCIntrusionSystem.AlarmState
 Profile = SHCIntrusionSystem.Profile
@@ -160,3 +162,49 @@ async def test_push_update(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.TRIGGERED
+
+
+@pytest.mark.parametrize(
+    "remove_entity",
+    [
+        pytest.param(
+            lambda entity_registry: entity_registry.async_remove(NEW_ENTITY_ID),
+            id="remove",
+        ),
+        pytest.param(
+            lambda entity_registry: entity_registry.async_update_entity(
+                NEW_ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
+            ),
+            id="disable",
+        ),
+    ],
+)
+async def test_entity_id_change_in_place(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    remove_entity: Callable[[er.EntityRegistry], object],
+) -> None:
+    """The SHC subscription survives an entity_id change and is released on removal."""
+    device = intrusion_system_device()
+    mock_session.intrusion_system = device
+    await setup_integration(hass, mock_config_entry)
+
+    entity_registry.async_update_entity(ENTITY_ID, new_entity_id=NEW_ENTITY_ID)
+    await hass.async_block_till_done()
+
+    # Renamed in place, not removed and re-added.
+    device.subscribe_callback.assert_called_once_with(UNIQUE_ID, ANY)
+    device.unsubscribe_callback.assert_not_called()
+
+    device.alarm_state = AlarmState.ALARM_ON
+    device.subscribe_callback.call_args.args[1]()
+    await hass.async_block_till_done()
+    assert hass.states.get(NEW_ENTITY_ID).state == AlarmControlPanelState.TRIGGERED
+
+    remove_entity(entity_registry)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(NEW_ENTITY_ID) is None
+    device.unsubscribe_callback.assert_called_once_with(UNIQUE_ID)

@@ -8,6 +8,7 @@ from asyncsleepiq import (
     SleepIQAPIException,
     SleepIQConnectionException,
     SleepIQLoginException,
+    SleepIQSleeper,
     SleepIQTimeoutException,
 )
 import probatio
@@ -64,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> None:
     """Set up the SleepIQ config entry."""
     conf = entry.data
     email = conf[CONF_USERNAME]
@@ -97,6 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
         raise ConfigEntryNotReady(str(err) or "Error reading from SleepIQ API") from err
 
     _filter_duplicate_beds(gateway)
+    _deduplicate_sleepers(gateway)
     await _async_migrate_unique_ids(hass, entry, gateway)
 
     coordinator = SleepIQDataUpdateCoordinator(hass, entry, gateway)
@@ -117,12 +119,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> None:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 _FIRMNESS_CONTROL = "firmness control"
@@ -147,6 +147,34 @@ def _filter_duplicate_beds(gateway: AsyncSleepIQ) -> None:
             gateway.beds[bed_id].model,
         )
         del gateway.beds[bed_id]
+
+
+def _deduplicate_sleepers(gateway: AsyncSleepIQ) -> None:
+    """Remove duplicate sleepers within each bed.
+
+    The API can return the same sleeper_id more than once per bed, which
+    causes entity platforms to create entities with colliding unique IDs.
+    Keep only the first occurrence of each effective identity, keyed by
+    str(sleeper_id) so that falsy values (None, "") are also deduplicated
+    rather than skipped.
+    """
+    for bed in gateway.beds.values():
+        seen: set[str] = set()
+        filtered: list[SleepIQSleeper] = []
+        for sleeper in bed.sleepers:
+            key = str(sleeper.sleeper_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            filtered.append(sleeper)
+        if len(filtered) != len(bed.sleepers):
+            _LOGGER.debug(
+                "Removed %d duplicate sleeper(s) from bed '%s' (id=%s)",
+                len(bed.sleepers) - len(filtered),
+                bed.name,
+                bed.id,
+            )
+            bed.sleepers[:] = filtered
 
 
 async def _async_migrate_unique_ids(

@@ -7,6 +7,7 @@ from unittest.mock import patch
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import const, core, setup
 from homeassistant.components import (
@@ -21,8 +22,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import DEMO_DEVICES
-
-from tests.typing import ClientSessionGenerator
 
 API_PASSWORD = "test1234"
 

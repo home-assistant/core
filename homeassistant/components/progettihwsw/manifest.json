@@ -1,6 +1,7 @@
 {
   "domain": "progettihwsw",
   "name": "ProgettiHWSW Automation",
+  "categories": ["diy_makers.boards_hardware", "plugs_switches"],
   "codeowners": ["@ardaseremet"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/progettihwsw",

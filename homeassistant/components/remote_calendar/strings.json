@@ -35,7 +35,7 @@
           "url": "The URL of the remote calendar.",
           "verify_ssl": "[%key:common::config_flow::description::verify_ssl%]"
         },
-        "description": "Please choose a name for the calendar to be imported"
+        "description": "Enter the details of the remote calendar."
       }
     }
   },

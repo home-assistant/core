@@ -46,7 +46,12 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import ReolinkDeviceCoordinator, ReolinkFirmwareCoordinator
-from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
+from .exceptions import (
+    PasswordIncompatible,
+    ReolinkException,
+    ReolinkSetupException,
+    UserNotAdmin,
+)
 from .host import ReolinkHost
 from .services import async_setup_services
 from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch, get_store
@@ -81,16 +86,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
-) -> bool:
+) -> None:
     """Set up Reolink from a config entry."""
     host = ReolinkHost(hass, config_entry.data, config_entry.options, config_entry)
 
     try:
         await host.async_init()
-    except (UserNotAdmin, CredentialsInvalidError, PasswordIncompatible) as err:
+    except (UserNotAdmin, PasswordIncompatible) as err:
         await host.stop()
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryAuthFailed(err) from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        ) from err
+    except ReolinkSetupException as err:
+        await host.stop()
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        ) from err
+    except CredentialsInvalidError as err:
+        await host.stop()
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+            translation_placeholders={"host": host.api.host},
+        ) from err
     except LoginAccountDeviceError as err:
         await host.stop()
         raise ConfigEntryError(
@@ -255,7 +277,7 @@ async def async_setup_entry(
 
     if host.api.is_nvr and host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
         # ensure the camera devices are setup before
-        # the lens sub-devices that use via_device
+        # their lens child devices
         for channel in host.api.stream_channels:
             if host.api.supported(channel, "UID"):
                 camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(channel)}"
@@ -283,8 +305,6 @@ async def async_setup_entry(
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
 
 
 async def register_callbacks(
@@ -337,7 +357,7 @@ async def register_callbacks(
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     host: ReolinkHost = config_entry.runtime_data.host
 
@@ -353,7 +373,7 @@ async def async_unload_entry(
     if host.cancel_first_firmware_check is not None:
         host.cancel_first_firmware_check()
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_remove_entry(
@@ -369,7 +389,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a device from a config entry."""
     if not isinstance(device, dr.DeviceEntry):
-        # This integration does not create child devices.
+        # Lens child devices are removed together with their parent device
         return False
     host: ReolinkHost = config_entry.runtime_data.host
     (_device_uid, ch, is_chime) = get_device_uid_and_ch(device.identifiers, host)

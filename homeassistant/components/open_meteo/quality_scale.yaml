@@ -84,7 +84,7 @@ rules:
   icon-translations:
     status: exempt
     comment: The weather entity uses the icons of its conditions.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices:
     status: exempt

@@ -3,13 +3,12 @@
 from unittest.mock import patch
 
 from fritzconnection.core.exceptions import FritzSecurityError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fritzbox_callmonitor.const import CONF_PHONEBOOK, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_insufficient_permissions(hass: HomeAssistant) -> None:

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wsdot import WsdotTravelError
 
 from homeassistant.components.wsdot.const import DOMAIN, SUBENTRY_TRAVEL_TIMES
@@ -10,8 +11,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 VALID_USER_CONFIG = {
     CONF_API_KEY: "abcd-1234",

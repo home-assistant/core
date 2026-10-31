@@ -6,6 +6,8 @@ from typing import Any
 import probatio
 from pydeconz.errors import RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
@@ -27,9 +29,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .test_hub import BRIDGE_ID
-
-from tests.common import MockConfigEntry, async_capture_events
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("config_entry_setup")

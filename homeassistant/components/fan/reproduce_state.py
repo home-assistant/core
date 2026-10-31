@@ -5,26 +5,10 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
-    SERVICE_OSCILLATE,
-    SERVICE_SET_DIRECTION,
-    SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
-)
-from .const import DOMAIN, FanEntityStateAttribute
+from .const import DOMAIN, FanEntityStateAttribute, FanService, FanServiceArgument
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,13 +17,25 @@ VALID_STATES = {STATE_ON, STATE_OFF}
 # Maps a state attribute to the (service, service argument) used to restore it.
 # These are used as parameters to fan.turn_on service.
 SPEED_AND_MODE_ATTRIBUTES = {
-    FanEntityStateAttribute.PERCENTAGE: (SERVICE_SET_PERCENTAGE, ATTR_PERCENTAGE),
-    FanEntityStateAttribute.PRESET_MODE: (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
+    FanEntityStateAttribute.PERCENTAGE: (
+        FanService.SET_PERCENTAGE,
+        FanServiceArgument.PERCENTAGE,
+    ),
+    FanEntityStateAttribute.PRESET_MODE: (
+        FanService.SET_PRESET_MODE,
+        FanServiceArgument.PRESET_MODE,
+    ),
 }
 
 SIMPLE_ATTRIBUTES = {
-    FanEntityStateAttribute.DIRECTION: (SERVICE_SET_DIRECTION, ATTR_DIRECTION),
-    FanEntityStateAttribute.OSCILLATING: (SERVICE_OSCILLATE, ATTR_OSCILLATING),
+    FanEntityStateAttribute.DIRECTION: (
+        FanService.SET_DIRECTION,
+        FanServiceArgument.DIRECTION,
+    ),
+    FanEntityStateAttribute.OSCILLATING: (
+        FanService.OSCILLATE,
+        FanServiceArgument.OSCILLATING,
+    ),
 }
 
 
@@ -61,7 +57,7 @@ async def _async_reproduce_state(
         )
         return
 
-    service_calls: dict[str, dict[str, Any]] = {}
+    service_calls: dict[FanService, dict[str, Any]] = {}
 
     if state.state == STATE_ON:
         # The fan should be on
@@ -69,7 +65,7 @@ async def _async_reproduce_state(
             # Turn on the fan with all the speed and modes attributes.
             # The `turn_on` method will figure out in which mode to
             # turn the fan on.
-            service_calls[SERVICE_TURN_ON] = {
+            service_calls[FanService.TURN_ON] = {
                 service_arg: value
                 for attribute, (
                     _service,
@@ -100,7 +96,7 @@ async def _async_reproduce_state(
             ):
                 service_calls[service] = {service_arg: value}
     elif state.state == STATE_OFF and cur_state.state != state.state:
-        service_calls[SERVICE_TURN_OFF] = {}
+        service_calls[FanService.TURN_OFF] = {}
 
     for service, data in service_calls.items():
         await hass.services.async_call(

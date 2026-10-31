@@ -1,6 +1,7 @@
 {
   "domain": "onkyo",
   "name": "Onkyo",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@arturpragacz", "@eclair4151"],
   "config_flow": true,
   "dependencies": ["network"],

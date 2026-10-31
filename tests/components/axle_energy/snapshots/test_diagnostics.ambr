@@ -3,6 +3,7 @@
   dict({
     'data': None,
     'last_update_success': True,
+    'opted_out': False,
   })
 # ---
 # name: test_diagnostics[healthy-scheduled]
@@ -15,12 +16,14 @@
       'updated_at': '2026-09-11T08:00:00+00:00',
     }),
     'last_update_success': True,
+    'opted_out': False,
   })
 # ---
 # name: test_diagnostics[unavailable-empty]
   dict({
     'data': None,
     'last_update_success': False,
+    'opted_out': False,
   })
 # ---
 # name: test_diagnostics[unavailable-scheduled]
@@ -33,5 +36,6 @@
       'updated_at': '2026-09-11T08:00:00+00:00',
     }),
     'last_update_success': False,
+    'opted_out': False,
   })
 # ---

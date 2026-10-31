@@ -14,14 +14,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import (
-    PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
 )
-from .utils import async_ufp_instance_command
+from .utils import async_get_doorbell_settings_public, async_ufp_instance_command
 
 PARALLEL_UPDATES = 0
 
@@ -33,7 +32,7 @@ class ProtectTextEntityDescription(ProtectSettableKeysMixin[T], TextEntityDescri
 
 def _get_doorbell_current(obj: PublicDeviceModel) -> str | None:
     if (text := cast(PublicCamera, obj).lcd_message_text) is None:
-        return obj.api.bootstrap.nvr.doorbell_settings.default_message_text
+        return async_get_doorbell_settings_public(obj.api).default_message_text
     return text
 
 
@@ -52,7 +51,6 @@ CAMERA: tuple[ProtectTextEntityDescription, ...] = (
         ufp_public_value_fn=_get_doorbell_current,
         ufp_set_method_fn=_set_doorbell_message,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 

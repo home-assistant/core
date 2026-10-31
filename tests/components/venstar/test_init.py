@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.venstar.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.const import CONF_HOST, CONF_SSL
 from homeassistant.core import HomeAssistant
 
 from . import VenstarColorTouchMock
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "venstartest.localdomain"
 

@@ -419,8 +419,11 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         light: str | None = None,
     ) -> None:
         """Set full AC state."""
-        new_ac_state = self.device_data.ac_states
-        new_ac_state.pop("timestamp")
+        new_ac_state = {
+            key: value
+            for key, value in self.device_data.ac_states.items()
+            if key != "timestamp"
+        }
         new_ac_state["on"] = False
         if mode != "off":
             new_ac_state["on"] = True

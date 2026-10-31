@@ -1,8 +1,11 @@
 """Tests for the BTHome integration."""
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 TEMP_HUMI_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="ATC 8D18B2",

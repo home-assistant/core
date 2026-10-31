@@ -2,6 +2,8 @@
 
 from unittest.mock import ANY, AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -13,8 +15,6 @@ from . import (
     MockMicroBotApiClientFail,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "keymitt_ble"
 

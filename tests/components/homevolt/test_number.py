@@ -12,6 +12,11 @@ from homevolt import (
     HomevoltError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homevolt.const import DOMAIN, SCAN_INTERVAL
@@ -33,8 +38,6 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 SETPOINT_ENTITY_ID = "number.homevolt_ems_power_setpoint"
 IMPORT_LIMIT_ENTITY_ID = "number.homevolt_ems_grid_import_limit"

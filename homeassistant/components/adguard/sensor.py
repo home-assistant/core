@@ -11,11 +11,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE, UnitOfTime
+from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import (
     AdGuardConfigEntry,
     AdGuardHomeStatistics,
@@ -130,16 +129,7 @@ class AdGuardHomeSensor(
         super().__init__(coordinator)
         entry = coordinator.config_entry
         self.entity_description = description
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
-            [
-                DOMAIN,
-                entry.data[CONF_HOST],
-                str(entry.data[CONF_PORT]),
-                "sensor",
-                description.key,
-            ]
-        )
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
     @property
     @override

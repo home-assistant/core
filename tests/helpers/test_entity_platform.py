@@ -10,6 +10,16 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockPlatform,
+    RegistryEntryWithDefaults,
+    async_fire_time_changed,
+    mock_platform,
+    mock_registry,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
@@ -44,17 +54,6 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockPlatform,
-    RegistryEntryWithDefaults,
-    async_fire_time_changed,
-    mock_platform,
-    mock_registry,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -1184,7 +1183,7 @@ async def test_setup_entry_platform_not_ready(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1205,7 +1204,7 @@ async def test_setup_entry_platform_not_ready_with_message(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1232,7 +1231,7 @@ async def test_setup_entry_platform_not_ready_from_exception(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1253,7 +1252,7 @@ async def test_reset_cancels_retry_setup(hass: HomeAssistant) -> None:
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     assert len(mock_call_later.mock_calls) == 1
     assert len(mock_call_later.return_value.mock_calls) == 0
@@ -1277,7 +1276,7 @@ async def test_reset_cancels_retry_setup_when_not_started(hass: HomeAssistant) -
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    assert not await ent_platform.async_setup_entry(config_entry)
+    assert await ent_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
     assert (
         hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
@@ -1302,7 +1301,7 @@ async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     assert len(mock_call_later.mock_calls) == 1
     assert len(mock_call_later.return_value.mock_calls) == 0
@@ -1522,6 +1521,89 @@ async def test_device_info_called(
     assert device.config_entry_id == config_entry.entry_id
     assert device.config_subentry_id == "mock-subentry-id-1"
     assert device.via_device_id == via.id
+
+
+async def test_device_info_clears_via_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a device info with via_device_id None removes the via device link."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    via = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "via-id")}
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "1234")},
+        via_device_id=via.id,
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info=dr.DeviceInfo(
+                        identifiers={("hue", "1234")}, via_device_id=None
+                    ),
+                )
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        ("hue", "1234"), config_entry.entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
+
+
+@pytest.mark.parametrize(
+    "device_info",
+    [
+        pytest.param({}, id="dict"),
+        pytest.param(dr.DeviceInfo(), id="device_info"),
+    ],
+)
+async def test_device_info_empty(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    device_info: dict[str, Any] | dr.DeviceInfo,
+) -> None:
+    """Test an entity with an empty device info is added without a device."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([MockEntity(unique_id="abcd", device_info=device_info)])
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert not dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
 
 
 async def test_device_info_not_overrides(
@@ -3020,10 +3102,18 @@ async def test_add_entity_unknown_subentry(
     ) in caplog.text
 
 
+@pytest.mark.parametrize(
+    "device_info_type",
+    [
+        pytest.param(dict, id="dict"),
+        pytest.param(dr.ChildDeviceInfo, id="child_device_info"),
+    ],
+)
 async def test_device_info_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    device_info_type: Callable[..., dr.ChildDeviceInfo | dict[str, Any]],
 ) -> None:
     """Test a child device info creates a child device and binds the entity."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -3046,11 +3136,11 @@ async def test_device_info_child_device(
                     unique_id="power",
                     has_entity_name=True,
                     name="Power",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
-                        "name": "Outlet 1",
-                        "parent_device_id": parent.id,
-                    },
+                    device_info=device_info_type(
+                        identifiers={(config_entry.domain, "strip_outlet_1")},
+                        name="Outlet 1",
+                        parent_device_id=parent.id,
+                    ),
                 ),
             ]
         )
@@ -3085,10 +3175,18 @@ async def test_device_info_child_device(
     assert state.name == "Outlet 1 Power"
 
 
+@pytest.mark.parametrize(
+    "device_info_type",
+    [
+        pytest.param(dict, id="dict"),
+        pytest.param(dr.ChildDeviceInfo, id="child_device_info"),
+    ],
+)
 async def test_device_info_child_device_invalid(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
+    device_info_type: Callable[..., dr.ChildDeviceInfo | dict[str, Any]],
 ) -> None:
     """Test an entity with an invalid child device info is not added."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -3104,11 +3202,11 @@ async def test_device_info_child_device_invalid(
             [
                 MockEntity(
                     unique_id="power",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
-                        "name": "Outlet 1",
-                        "parent_device_id": "nonexistent-device-id",
-                    },
+                    device_info=device_info_type(
+                        identifiers={(config_entry.domain, "strip_outlet_1")},
+                        name="Outlet 1",
+                        parent_device_id="nonexistent-device-id",
+                    ),
                 ),
             ]
         )

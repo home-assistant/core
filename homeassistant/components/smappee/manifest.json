@@ -1,6 +1,11 @@
 {
   "domain": "smappee",
   "name": "Smappee",
+  "categories": [
+    "energy.meters_monitoring",
+    "plugs_switches",
+    "water.meters_leak_detection"
+  ],
   "codeowners": ["@bsmappee"],
   "config_flow": true,
   "dependencies": ["auth"],

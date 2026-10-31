@@ -11,6 +11,7 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, patch
 
 from homeassistant import config_entries
 from homeassistant.components.paperless_ngx.const import DOMAIN
@@ -21,14 +22,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import USER_INPUT_ONE, USER_INPUT_REAUTH, USER_INPUT_TWO
 
-from tests.common import MockConfigEntry, patch
-
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.paperless_ngx.async_setup_entry", return_value=True
+        "homeassistant.components.paperless_ngx.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

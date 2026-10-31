@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 from sunsynk.battery import Battery
 from sunsynk.grid import Grid
 from sunsynk.input import Input
@@ -14,12 +19,6 @@ from sunsynk.user import User
 from homeassistant.components.sunsynk.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
-
 USERNAME = "test@example.com"
 PASSWORD = "test-password"
 USER_ID = "281092"
@@ -29,7 +28,7 @@ USER_ID = "281092"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sunsynk.async_setup_entry", return_value=True
+        "homeassistant.components.sunsynk.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

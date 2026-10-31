@@ -1,14 +1,17 @@
 """Tests for the Notifications for Android TV / Fire TV notify platform."""
 
 from collections.abc import AsyncGenerator
+import errno
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from notifications_android_tv.notifications import ConnectError
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import camera, image, media_source
+from homeassistant.components import media_source
 from homeassistant.components.nfandroidtv.const import (
     ATTR_BGCOLOR,
     ATTR_DURATION,
@@ -33,14 +36,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import NAME
-
-from tests.common import AsyncMock, MockConfigEntry, snapshot_platform
 
 LEGACY_SERVICE_NAME = "android_tv_fire_tv_1_2_3_4"
 ENTITY_ID = "notify.android_tv_fire_tv_1_2_3_4"
@@ -251,8 +252,8 @@ async def test_nfandroidtv_send_message_camera_snapshot(
     assert state.state == STATE_UNKNOWN
     with (
         patch(
-            "homeassistant.components.camera.async_get_image",
-            return_value=camera.Image("image/jpeg", b"I play the sax\n"),
+            "homeassistant.components.nfandroidtv.notify.async_get_media_image",
+            return_value=media_source.MediaImage(b"I play the sax\n", "image/jpeg"),
         ) as mock_get_image,
     ):
         await hass.services.async_call(
@@ -269,7 +270,9 @@ async def test_nfandroidtv_send_message_camera_snapshot(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "camera.demo_camera")
+    mock_get_image.assert_called_once_with(
+        hass, "media-source://camera/camera.demo_camera"
+    )
     mock_notifications_android_tv.send.assert_called_once_with(
         message="Hello", title="World", image_file=b"I play the sax\n"
     )
@@ -298,8 +301,8 @@ async def test_nfandroidtv_send_message_image_snapshot(
     assert state.state == STATE_UNKNOWN
 
     with patch(
-        "homeassistant.components.image.async_get_image",
-        return_value=image.Image(content_type="image/png", content=b"\x89PNG"),
+        "homeassistant.components.nfandroidtv.notify.async_get_media_image",
+        return_value=media_source.MediaImage(b"\x89PNG", "image/png"),
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
@@ -315,7 +318,7 @@ async def test_nfandroidtv_send_message_image_snapshot(
             },
             blocking=True,
         )
-    mock_get_image.assert_called_once_with(hass, "image.test")
+    mock_get_image.assert_called_once_with(hass, "media-source://image/image.test")
     mock_notifications_android_tv.send.assert_called_once_with(
         message="Hello", title="World", icon=b"\x89PNG"
     )
@@ -433,7 +436,12 @@ async def test_nfandroidtv_send_message_media_not_readable(
     assert state
     assert state.state == STATE_UNKNOWN
     with (
-        patch("pathlib.Path.read_bytes", side_effect=FileNotFoundError),
+        patch(
+            "pathlib.Path.read_bytes",
+            side_effect=FileNotFoundError(
+                errno.ENOENT, "No such file or directory", "/media/screenshot.jpg"
+            ),
+        ),
         pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
@@ -450,7 +458,11 @@ async def test_nfandroidtv_send_message_media_not_readable(
             },
             blocking=True,
         )
-    assert err.value.translation_key == "media_not_readable"
+    assert err.value.translation_key == "os_read_not_found"
+    assert err.value.translation_placeholders == {
+        "path": str(Path("tests/testing_config/media/screenshot.jpg").resolve())
+    }
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
 
 
 @pytest.mark.parametrize(

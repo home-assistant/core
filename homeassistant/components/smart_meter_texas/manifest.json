@@ -1,6 +1,7 @@
 {
   "domain": "smart_meter_texas",
   "name": "Smart Meter Texas",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@grahamwetzler"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smart_meter_texas",

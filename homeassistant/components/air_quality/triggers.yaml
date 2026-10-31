@@ -45,6 +45,10 @@
   - "ppb"
   - "μg/m³"
 
+.radon_units: &radon_units
+  - "Bq/m³"
+  - "pCi/L"
+
 # --- Entity filter anchors ---
 
 .co_threshold_entity: &co_threshold_entity
@@ -151,6 +155,14 @@
   - domain: number
     device_class: sulphur_dioxide
 
+.radon_threshold_entity: &radon_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *radon_units
+  - domain: sensor
+    device_class: radon
+  - domain: number
+    device_class: radon
+
 # --- Number anchors for single-unit pollutants ---
 
 .co2_threshold_number: &co2_threshold_number
@@ -249,6 +261,11 @@
   entity:
     - domain: sensor
       device_class: sulphur_dioxide
+
+.target_radon: &target_radon
+  entity:
+    - domain: sensor
+      device_class: radon
 
 # --- Binary sensor triggers ---
 
@@ -630,3 +647,32 @@ so2_crossed_threshold:
           number:
             mode: box
           unit_of_measurement: *so2_units
+
+# Radon (multi-unit)
+radon_changed:
+  target: *target_radon
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *radon_threshold_entity
+          mode: changed
+          number:
+            mode: box
+          unit_of_measurement: *radon_units
+
+radon_crossed_threshold:
+  target: *target_radon
+  fields:
+    behavior: *trigger_behavior
+    for: *trigger_for
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *radon_threshold_entity
+          mode: crossed
+          number:
+            mode: box
+          unit_of_measurement: *radon_units

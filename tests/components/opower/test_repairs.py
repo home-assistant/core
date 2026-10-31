@@ -1,5 +1,12 @@
 """Test the Opower repairs."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.opower.const import DOMAIN
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
@@ -7,10 +14,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 
 async def test_unsupported_utility_fix_flow(
@@ -49,6 +52,7 @@ async def test_unsupported_utility_fix_flow(
     assert issue is not None
     assert issue.translation_key == "unsupported_utility"
     assert issue.is_fixable is True
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.data == {
         "entry_id": mock_config_entry.entry_id,
         "utility": "Unsupported Utility",

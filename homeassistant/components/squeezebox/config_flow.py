@@ -1,6 +1,7 @@
 """Config flow for Squeezebox integration."""
 
 import asyncio
+from collections.abc import Mapping
 from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -62,6 +63,13 @@ SHORT_EDIT_SCHEMA = probatio.Schema(
     }
 )
 
+REAUTH_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+    }
+)
+
 
 class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Squeezebox."""
@@ -119,11 +127,10 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovered Servers %s", self.discovered_servers)
         _discovery_task.cancel()
 
-    async def _validate_input(self, data: dict[str, Any]) -> str | None:
-        """Validate the user input allows us to connect.
-
-        Retrieve unique id and abort if already configured.
-        """
+    async def _async_query_status(
+        self, data: Mapping[str, Any]
+    ) -> tuple[dict[str, Any] | None, str | None]:
+        """Query the server status, returning the status or an error key."""
         server = Server(
             async_get_clientsession(self.hass),
             data[CONF_HOST],
@@ -137,20 +144,68 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             status = await server.async_query("serverstatus")
             if not status:
                 if server.http_status == HTTPStatus.UNAUTHORIZED:
-                    return "invalid_auth"
-                return "cannot_connect"
+                    return None, "invalid_auth"
+                return None, "cannot_connect"
         except Exception:
             _LOGGER.exception("Unknown exception while validating connection")
-            return "unknown"
+            return None, "unknown"
 
         if "uuid" not in status:
             _LOGGER.exception("Discovered server did not provide a uuid")
-            return "missing_uuid"
+            return None, "missing_uuid"
+
+        return status, None
+
+    async def _validate_input(self, data: dict[str, Any]) -> str | None:
+        """Validate the user input allows us to connect.
+
+        Retrieve unique id and abort if already configured.
+        """
+        status, error = await self._async_query_status(data)
+        if status is None:
+            return error
 
         await self.async_set_unique_id(status["uuid"])
         self._abort_if_unique_id_configured()
 
         return None
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when credentials are rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for new credentials."""
+        entry = self._get_reauth_entry()
+        self.context["title_placeholders"] = {"host": entry.data[CONF_HOST]}
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            new_data = {
+                **entry.data,
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
+            status, error = await self._async_query_status(new_data)
+            if status is None:
+                errors["base"] = error or "unknown"
+            else:
+                await self.async_set_unique_id(status["uuid"])
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(entry, data=new_data)
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                REAUTH_SCHEMA, {CONF_USERNAME: entry.data.get(CONF_USERNAME)}
+            ),
+            description_placeholders={"host": entry.data[CONF_HOST]},
+            errors=errors,
+        )
 
     async def async_step_choose_server(
         self, user_input: dict[str, Any] | None = None

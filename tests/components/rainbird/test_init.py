@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rainbird.const import DOMAIN
@@ -25,9 +27,6 @@ from .conftest import (
     mock_response,
     mock_response_error,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
 async def test_init_success(
@@ -609,7 +608,7 @@ async def test_options_listener(
     # Changing options triggers reload
     with patch(
         "homeassistant.components.rainbird.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         hass.config_entries.async_update_entry(config_entry, options={"duration": 5})
         await hass.async_block_till_done()

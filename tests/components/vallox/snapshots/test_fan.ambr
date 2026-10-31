@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_all_entities[fan.vallox-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'Home',
+        'Away',
+        'Boost',
+        'Fireplace',
+        'Extra',
+        'Auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vallox', '00050006-0007-0008-0009-000a000b000c')]>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.vallox',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'vallox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 57>,
+    'translation_key': None,
+    'unique_id': '00050006-0007-0008-0009-000a000b000c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[fan.vallox-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'fan_speed_away': 10,
+      'fan_speed_boost': 80,
+      'fan_speed_home': 30,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vallox',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 30,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'Home',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'Home',
+        'Away',
+        'Boost',
+        'Fireplace',
+        'Extra',
+        'Auto',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.vallox',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

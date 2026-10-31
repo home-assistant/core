@@ -3,6 +3,7 @@
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.eurotronic_cometblue import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.comet_blue_aa_bb_cc_dd_ee_ff"
 

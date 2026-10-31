@@ -1,11 +1,12 @@
 {
   "domain": "victron_remote_monitoring",
   "name": "Victron Remote Monitoring",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@AndyTempel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/victron_remote_monitoring",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["victron-vrm==0.1.13"]
+  "requirements": ["victron-vrm==0.1.14"]
 }

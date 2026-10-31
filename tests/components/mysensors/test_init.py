@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 from mysensors import BaseSyncGateway
 from mysensors.sensor import Sensor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.mysensors import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,9 +15,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_gateway_setup_failed(

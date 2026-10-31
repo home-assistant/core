@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiomusiccast import MusicCastConnectionException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.yamaha_musiccast.const import DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from tests.common import MockConfigEntry
-
 
 @contextmanager
 def _patch_valid_device_info() -> Generator[None]:
@@ -33,27 +32,10 @@ def _patch_valid_device_info() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def silent_ssdp_scanner() -> Generator[None]:
-    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with (
-        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
-        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
-        patch("homeassistant.components.ssdp.Scanner.async_scan"),
-        patch(
-            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
-        ),
-        patch(
-            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
-        ),
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def mock_setup_entry():
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.yamaha_musiccast.async_setup_entry", return_value=True
+        "homeassistant.components.yamaha_musiccast.async_setup_entry", return_value=None
     ):
         yield
 

@@ -74,5 +74,13 @@
       "videos": { "name": "Videos" },
       "views": { "name": "Views" }
     }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication with YouTube failed. Please reauthenticate your account."
+    },
+    "update_error": {
+      "message": "An error occurred while communicating with YouTube."
+    }
   }
 }

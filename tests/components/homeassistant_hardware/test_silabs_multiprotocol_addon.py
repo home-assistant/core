@@ -8,6 +8,14 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockPlatform,
+    flush_store,
+    mock_component,
+    mock_config_flow,
+    mock_platform,
+)
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
@@ -19,15 +27,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import ATTR_COMPONENT
-
-from tests.common import (
-    MockConfigEntry,
-    MockPlatform,
-    flush_store,
-    mock_component,
-    mock_config_flow,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test"
 TEST_DOMAIN_2 = "test_2"

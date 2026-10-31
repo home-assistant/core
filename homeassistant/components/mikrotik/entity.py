@@ -75,7 +75,7 @@ class MikrotikDeviceEntity(MikrotikBaseEntity):
         ident = f"{slugify(interface.get('mac-address'))}_{name}"
 
         self._attr_device_info = self._device_info(ident, name)
-        self._attr_device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+        self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
             config_entry.runtime_data.hass,
             (DOMAIN, coordinator.api.serial_number),
             config_entry_id=config_entry.entry_id,

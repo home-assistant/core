@@ -766,7 +766,7 @@ class Thermostat(ClimateEntity):
         LOGGER.debug(
             "Setting sensors %s to be used on thermostat %s for program %s",
             sensor_names,
-            self.device_info.get("name"),
+            self.device_info.name,
             preset_mode,
         )
         self.data.ecobee.update_climate_sensors(

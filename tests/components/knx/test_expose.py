@@ -5,6 +5,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
@@ -20,9 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -664,6 +663,77 @@ async def test_ui_expose_with_options(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await knx.assert_write(GROUP_ADDRESS_1, (50,))
+
+
+async def test_ui_expose_stores_only_set_options(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test options left unset or at their default are not stored."""
+    entity_id = "light.test"
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": entity_id,
+            "data": {
+                "options": [
+                    {
+                        "ga": {"write": "1/1/1", "dpt": "5.010"},
+                        "attribute": None,
+                        "cooldown": None,
+                        "send_on_init": False,
+                        "respond_to_read": True,
+                        "value_template": None,
+                    },
+                    {
+                        "ga": {"write": "1/1/3", "dpt": "5.010"},
+                        "cooldown": 0,
+                        "periodic_send": 0,
+                    },
+                    {
+                        "ga": {"write": "1/1/2", "dpt": "5.010"},
+                        "attribute": "brightness",
+                        "cooldown": 2.5,
+                        "default": 0,
+                        "periodic_send": 60,
+                        "respond_to_read": False,
+                        "value_template": "{{ value }}",
+                    },
+                ],
+                "notes": "test",
+            },
+        }
+    )
+    res = await ws_client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True, res["result"]
+
+    assert hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["expose"][entity_id] == {
+        "options": [
+            {"ga": {"write": "1/1/1", "dpt": "5.010"}},
+            # explicitly set numbers are kept, even when they act like unset
+            {
+                "ga": {"write": "1/1/3", "dpt": "5.010"},
+                "cooldown": 0.0,
+                "periodic_send": 0.0,
+            },
+            {
+                "ga": {"write": "1/1/2", "dpt": "5.010"},
+                "attribute": "brightness",
+                "default": 0,
+                "cooldown": 2.5,
+                "periodic_send": 60.0,
+                "respond_to_read": False,
+                "value_template": "{{ value }}",
+            },
+        ],
+        "notes": "test",
+    }
 
 
 @pytest.mark.freeze_time("2022-1-7 9:13:14")  # UTC -> +1h = Vienna in winter (9 -> 0xA)

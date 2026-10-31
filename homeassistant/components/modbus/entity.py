@@ -285,11 +285,8 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
             v_result = []
             for entry in val:
                 v_temp = self.__process_raw_value(entry, scale, offset)
-                if self._data_type != DataType.CUSTOM:
-                    v_result.append(str(v_temp))
-                else:
-                    v_result.append(str(v_temp) if v_temp is not None else "0")
-            return ",".join(map(str, v_result))
+                v_result.append(str(v_temp))
+            return ",".join(v_result)
 
         # Apply scale, precision, limits to floats and ints
         return self.__process_raw_value(val[0], scale, offset)
@@ -343,17 +340,6 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
             )
         else:
             self._verify_active = False
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

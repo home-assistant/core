@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests.exceptions import ConnectionError as RequestsConnectionError, HTTPError
 
 from homeassistant.components.iss.const import MAX_CONSECUTIVE_FAILURES
@@ -11,8 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def _async_poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:

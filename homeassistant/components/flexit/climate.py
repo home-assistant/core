@@ -31,9 +31,8 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import FlexitConfigEntry
 from .const import DOMAIN
-from .coordinator import FlexitDataCoordinator
+from .coordinator import FlexitConfigEntry, FlexitDataCoordinator
 from .entity import FlexitEntity
 
 _LOGGER = logging.getLogger(__name__)

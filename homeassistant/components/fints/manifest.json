@@ -1,6 +1,7 @@
 {
   "domain": "fints",
   "name": "FinTS",
+  "categories": ["finance"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/fints",
   "integration_type": "service",

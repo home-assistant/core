@@ -1,6 +1,10 @@
 {
   "domain": "wled",
   "name": "WLED",
+  "categories": [
+    "lighting.led_strips_controllers",
+    "diy_makers.boards_hardware"
+  ],
   "codeowners": ["@frenck", "@mik-laj"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wled",

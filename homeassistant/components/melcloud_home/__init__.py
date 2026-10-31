@@ -26,7 +26,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: MelCloudHomeConfigEntry
-) -> bool:
+) -> None:
     """Set up MELCloud Home from a config entry."""
     session = async_get_clientsession(hass)
     auth = MelCloudHomeAuth(
@@ -37,7 +37,7 @@ async def async_setup_entry(
     client = MELCloudHome(auth=auth, session=session)
 
     coordinator = MelCloudHomeCoordinator(hass, entry, client)
-    telemetry_coordinator = MelCloudHomeTelemetryCoordinator(hass, entry, client)
+    telemetry_coordinator = MelCloudHomeTelemetryCoordinator(hass, entry, coordinator)
 
     # It has to be this order, to avoid a race condition
     await coordinator.async_config_entry_first_refresh()
@@ -47,21 +47,21 @@ async def async_setup_entry(
         coordinator=coordinator,
         telemetry_coordinator=telemetry_coordinator,
     )
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    coordinator.async_start_live_updates()
 
-    return True
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: MelCloudHomeConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: MelCloudHomeConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entries."""
     if entry.minor_version < 2:
 
@@ -76,5 +76,3 @@ async def async_migrate_entry(
 
         await er.async_migrate_entries(hass, entry.entry_id, _add_key_to_unique_id)
         hass.config_entries.async_update_entry(entry, minor_version=2)
-
-    return True

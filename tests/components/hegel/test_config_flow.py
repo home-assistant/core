@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hegel.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import TEST_HOST, TEST_MODEL, TEST_UDN
-
-from tests.common import MockConfigEntry
 
 TEST_NAME = "Hegel H190"
 TEST_SSDP_LOCATION = f"http://{TEST_HOST}:8080/description.xml"

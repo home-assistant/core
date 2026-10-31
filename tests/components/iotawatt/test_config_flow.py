@@ -22,7 +22,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.iotawatt.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
@@ -86,7 +86,7 @@ async def test_form_auth(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.iotawatt.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
@@ -132,7 +132,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.iotawatt.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
@@ -169,7 +169,7 @@ async def test_form_setup_exception(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.iotawatt.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",

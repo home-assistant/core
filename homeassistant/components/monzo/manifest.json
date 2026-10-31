@@ -2,6 +2,7 @@
   "domain": "monzo",
   "name": "Monzo",
   "after_dependencies": ["cloud"],
+  "categories": ["finance"],
   "codeowners": ["@jakemartin-icl"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],

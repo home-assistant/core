@@ -24,7 +24,7 @@
   "entity": {
     "button": {
       "reboot": {
-        "name": "Reboot"
+        "name": "[%key:common::action::reboot%]"
       },
       "reset": {
         "name": "Reset"

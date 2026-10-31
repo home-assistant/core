@@ -33,7 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MillConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MillConfigEntry) -> None:
     """Set up the Mill heater."""
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
         mill_data_connection = MillLocal(
@@ -69,9 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MillConfigEntry) -> bool
     entry.runtime_data = data_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MillConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MillConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

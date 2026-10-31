@@ -1,6 +1,7 @@
 {
   "domain": "novy_cooker_hood",
   "name": "Novy Cooker Hood",
+  "categories": ["appliances_cleaning.cooking", "climate.fans_ventilation"],
   "codeowners": ["@piitaya"],
   "config_flow": true,
   "dependencies": ["radio_frequency"],

@@ -42,7 +42,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
@@ -62,9 +62,9 @@ rules:
   entity-device-class: todo
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: There are no repairable issues

@@ -3,7 +3,9 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from pyrail import ApiUnavailableError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nmbs.config_flow import CONF_EXCLUDE_VIAS
@@ -15,8 +17,6 @@ from homeassistant.components.nmbs.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DUMMY_DATA_IMPORT: dict[str, Any] = {
     "STAT_BRUSSELS_NORTH": "Brussel-Noord/Bruxelles-Nord",
@@ -152,6 +152,22 @@ async def test_unavailable_api(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock
 ) -> None:
     """Test starting a flow by user and api is unavailable."""
+    mock_nmbs_client.get_stations.side_effect = ApiUnavailableError(
+        "The iRail API is unavailable"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_unavailable"
+
+
+async def test_api_not_modified(
+    hass: HomeAssistant, mock_nmbs_client: AsyncMock
+) -> None:
+    """Test starting a flow when the station list is not modified."""
     mock_nmbs_client.get_stations.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

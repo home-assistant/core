@@ -14,6 +14,7 @@ from plugwise.exceptions import (
     UnsupportedDeviceError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.plugwise.const import (
     DEFAULT_UPDATE_INTERVAL,
@@ -24,8 +25,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 HA_PLUGWISE_SMILE_ASYNC_UPDATE = (
     "homeassistant.components.plugwise.coordinator.Smile.async_update"
@@ -289,7 +288,7 @@ async def test_update_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 57
+        == 56
     )
     assert (
         len(
@@ -321,7 +320,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 64
+            == 63
         )
         assert (
             len(
@@ -352,7 +351,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 57
+            == 56
         )
         assert (
             len(

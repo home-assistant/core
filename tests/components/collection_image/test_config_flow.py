@@ -3,6 +3,7 @@
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.collection_image.config_flow import IMAGE_MEDIA_URI
@@ -18,8 +19,6 @@ from .const import (
     MOCK_MEDIA_DIR_URI_EMPTY,
 )
 from .helpers import data_from_uri
-
-from tests.common import MockConfigEntry
 
 TEST_TIME = "2026-09-12T07:12:00+00:00"
 TEST_TIME_NEXT = "2026-09-12T07:30:00+00:00"

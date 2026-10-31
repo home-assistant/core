@@ -1,5 +1,10 @@
 """Test the Kaku RC config flow."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
+
 from homeassistant.components.klik_aan_klik_uit.const import (
     CONF_CHANNEL,
     CONF_DEVICE_ID,
@@ -15,9 +20,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TRANSMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 
 async def _start_user_flow(hass: HomeAssistant) -> dict:

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from pydrawise import APIError
 from pydrawise.schema import Zone
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hydrawise.const import DEFAULT_WATERING_TIME
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_all_switches(

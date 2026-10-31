@@ -14,6 +14,7 @@ from greeclimate.device import (
 )
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -74,8 +75,6 @@ from homeassistant.util.unit_system import (
 )
 
 from .common import async_setup_gree, build_device_mock
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{CLIMATE_DOMAIN}.fake_device_1"
 

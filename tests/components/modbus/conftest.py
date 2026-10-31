@@ -10,6 +10,7 @@ from unittest import mock
 from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
 
 from homeassistant.components.modbus.const import DOMAIN, TCP
 from homeassistant.const import (
@@ -24,8 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
-
-from tests.common import async_fire_time_changed, mock_restore_cache
 
 TEST_MODBUS_NAME = "modbusTest"
 TEST_ENTITY_NAME = "test entity"

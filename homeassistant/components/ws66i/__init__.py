@@ -53,7 +53,7 @@ def _find_zones(hass: HomeAssistant, ws66i: WS66i) -> list[int]:
     return zone_list
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Ws66iConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Ws66iConfigEntry) -> None:
     """Set up Soundavo WS66i 6-Zone Amplifier from a config entry."""
     # Get the source names from the options flow
     options: dict[str, dict[str, str]]
@@ -102,13 +102,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: Ws66iConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: Ws66iConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Ws66iConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        entry.runtime_data.device.close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    entry.runtime_data.device.close()

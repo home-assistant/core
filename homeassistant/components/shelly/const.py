@@ -36,7 +36,6 @@ PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to 
 CONF_SSID: Final = "ssid"
 
 CONF_COAP_PORT: Final = "coap_port"
-FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
 # max BLOCK light transition time in milliseconds (min=0)
 BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
@@ -251,6 +250,8 @@ OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
 DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
 OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
 RTSP_DISABLED_ISSUE_ID = "rtsp_disabled_{unique}"
+IR_RAW_RECEIVE_DISABLED_ISSUE_ID = "ir_raw_receive_disabled_{unique}"
+IR_RAW_RECEIVE_MIN_FIRMWARE = 20260903
 COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
 
 
@@ -305,9 +306,9 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 CONF_GEN = "gen"
 
 VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "number", "text")
-VIRTUAL_COMPONENTS_MAP = {
+DYNAMIC_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
-    "button": {"types": ["button"], "modes": ["button"]},
+    "button": {"types": ["button", "ircode"], "modes": ["button"]},
     "number": {"types": ["number"], "modes": ["field", "slider"]},
     "select": {"types": ["enum"], "modes": ["dropdown"]},
     "sensor": {"types": ["enum", "number", "text"], "modes": ["label"]},
@@ -338,7 +339,7 @@ DEVICE_UNIT_MAP = {
 # so that the integration startup remains fast.
 MAX_SCRIPT_SIZE = 5120
 
-All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
+All_LIGHT_TYPES = ("cct", "ledstrip", "light", "rgb", "rgbw")
 
 # Shelly-X specific models
 MODEL_NEO_WATER_VALVE = "NeoWaterValve"

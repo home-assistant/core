@@ -4,13 +4,12 @@ from unittest.mock import AsyncMock
 
 from aionanoleaf2 import TouchEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

@@ -17,10 +17,9 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .binary_sensor import profile_pic
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry
-from .entity import to_https
+from .entity import profile_pic, to_https
 
 _LOGGER = logging.getLogger(__name__)
 

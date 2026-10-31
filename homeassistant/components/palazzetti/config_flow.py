@@ -83,7 +83,6 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._discovered_device.host},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={

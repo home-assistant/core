@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import switch_as_x
 from homeassistant.components.homeassistant import exposed_entities
@@ -29,8 +30,6 @@ from homeassistant.helpers.event import async_track_entity_registry_updated_even
 from homeassistant.setup import async_setup_component
 
 from . import CAPABILITY_MAP, PLATFORMS_TO_TEST, SUPPORTED_FEATURE_MAP
-
-from tests.common import MockConfigEntry
 
 EXPOSE_SETTINGS = {
     "cloud.alexa": True,

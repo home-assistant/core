@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
@@ -27,8 +28,6 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 from homeassistant.core import Event, HomeAssistant
-
-from tests.common import async_mock_service
 
 
 async def test_activity_remote(

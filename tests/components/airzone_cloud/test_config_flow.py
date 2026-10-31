@@ -27,7 +27,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone_cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_config",
@@ -103,7 +103,7 @@ async def test_installations_list_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone_cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_config",
@@ -175,7 +175,7 @@ async def test_login_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone_cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_config",

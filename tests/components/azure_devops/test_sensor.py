@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -13,8 +14,6 @@ from . import (
     DEVOPS_BUILD_MISSING_PROJECT_DEFINITION,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 BASE_ENTITY_ID = "sensor.testproject_ci"
 SENSOR_KEYS = [

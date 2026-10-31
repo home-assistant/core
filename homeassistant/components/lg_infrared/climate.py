@@ -1,6 +1,7 @@
 """Climate platform for LG IR integration — LG AC."""
 
-from typing import Any, override
+from dataclasses import dataclass
+from typing import Any, Self, override
 
 from infrared_protocols.codes.lg.ac import LGACCode
 from infrared_protocols.commands.lg_ac import (
@@ -22,10 +23,10 @@ from homeassistant.components.climate import (
     FAN_LOW,
     FAN_MEDIUM,
     SWING_OFF,
-    ClimateEntity,
     ClimateEntityFeature,
-    ClimateEntityStateAttribute,
+    ClimateExtraStoredData,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.components.infrared import (
     InfraredEmitterConsumerEntity,
@@ -41,8 +42,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -128,6 +127,27 @@ _HA_SWING_H_TO_LIB: dict[str, LGACCode] = {
 _LIB_SWING_H_TO_HA: dict[LGACCode, str] = {v: k for k, v in _HA_SWING_H_TO_LIB.items()}
 
 
+@dataclass(kw_only=True)
+class _LgAcExtraStoredData(ClimateExtraStoredData):
+    """Extra data restored alongside the entity's visible state.
+
+    Holds the mode to turn back on in, which the visible state no longer records
+    once the unit is off.
+    """
+
+    last_on_hvac_mode: str
+
+    @classmethod
+    @override
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize stored data from a dict."""
+        if (climate_data := ClimateExtraStoredData.from_dict(restored)) is None:
+            return None
+        if not isinstance(last_on_hvac_mode := restored.get("last_on_hvac_mode"), str):
+            return None
+        return cls(**climate_data.as_dict(), last_on_hvac_mode=last_on_hvac_mode)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -146,9 +166,7 @@ async def async_setup_entry(
         async_add_entities([LgAcClimateEntity(entry, emitter_entity_id)])
 
 
-class LgAcClimateEntity(
-    LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity, RestoreEntity
-):
+class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, RestoreClimate):
     """LG AC climate entity controlled via infrared emitter."""
 
     _attr_name = None
@@ -185,11 +203,14 @@ class LgAcClimateEntity(
         self._attr_fan_mode = FAN_AUTO
         self._attr_swing_mode = SWING_OFF
         self._attr_swing_horizontal_mode = SWING_OFF
+        self._last_on_hvac_mode = self._attr_hvac_modes[1]
 
         self._attr_supported_features = (
             ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
             | ClimateEntityFeature.SWING_HORIZONTAL_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
         )
         # Without a temperature-carrying mode no target temperature can ever be sent.
         if any(
@@ -203,6 +224,16 @@ class LgAcClimateEntity(
         """Restore the assumed state, as infrared cannot read it back from the AC."""
         await super().async_added_to_hass()
 
+        last_extra_data = await self.async_get_last_extra_data()
+        if (
+            last_extra_data is not None
+            and (data := _LgAcExtraStoredData.from_dict(last_extra_data.as_dict()))
+            is not None
+            and data.last_on_hvac_mode in self._attr_hvac_modes
+            and data.last_on_hvac_mode != HVACMode.OFF
+        ):
+            self._last_on_hvac_mode = HVACMode(data.last_on_hvac_mode)
+
         last_state = await self.async_get_last_state()
         if last_state is None or last_state.state in (
             STATE_UNAVAILABLE,
@@ -212,27 +243,38 @@ class LgAcClimateEntity(
 
         if last_state.state in self._attr_hvac_modes:
             self._attr_hvac_mode = HVACMode(last_state.state)
+            if self._attr_hvac_mode is not HVACMode.OFF:
+                self._last_on_hvac_mode = self._attr_hvac_mode
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
             self._attr_fan_mode = fan_mode
-        if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_native_target_temperature = float(
-                round(
-                    TemperatureConverter.convert(
-                        float(temperature),
-                        last_state.attributes.get(
-                            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
-                            self.hass.config.units.temperature_unit,
-                        ),
-                        self.native_temperature_unit,
-                    )
-                )
-            )
+        if (
+            climate_data := await self.async_get_last_climate_data(validate_range=True)
+        ) is not None and (
+            temperature := climate_data.native_target_temperature
+        ) is not None:
+            self._attr_native_target_temperature = float(round(temperature))
         if (swing := last_state.attributes.get(ATTR_SWING_MODE)) in _HA_SWING_TO_LIB:
             self._attr_swing_mode = swing
         if (
             swing_h := last_state.attributes.get(ATTR_SWING_HORIZONTAL_MODE)
         ) in _HA_SWING_H_TO_LIB:
             self._attr_swing_horizontal_mode = swing_h
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> _LgAcExtraStoredData:
+        """Return extra data to be restored alongside the entity's state."""
+        return _LgAcExtraStoredData(
+            **super().extra_restore_state_data.as_dict(),
+            last_on_hvac_mode=self._last_on_hvac_mode.value,
+        )
+
+    @callback
+    def _set_hvac_mode_state(self, hvac_mode: HVACMode) -> None:
+        """Record the HVAC mode the unit is now in."""
+        self._attr_hvac_mode = hvac_mode
+        if hvac_mode is not HVACMode.OFF:
+            self._last_on_hvac_mode = hvac_mode
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -243,8 +285,13 @@ class LgAcClimateEntity(
                 _HA_MODE_TO_LIB[hvac_mode], temp, self._attr_fan_mode or FAN_AUTO
             )
         )
-        self._attr_hvac_mode = hvac_mode
+        self._set_hvac_mode_state(hvac_mode)
         self.async_write_ha_state()
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn the entity on in the mode it was last on in."""
+        await self.async_set_hvac_mode(self._last_on_hvac_mode)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -262,7 +309,7 @@ class LgAcClimateEntity(
                 self._build_command(lib_mode, temp, self._attr_fan_mode or FAN_AUTO)
             )
             if hvac_mode is not None:
-                self._attr_hvac_mode = hvac_mode
+                self._set_hvac_mode_state(hvac_mode)
 
         self._attr_native_target_temperature = float(temp)
         self.async_write_ha_state()
@@ -328,7 +375,7 @@ class LgAcClimateWithReceiver(LgAcClimateEntity, InfraredReceiverConsumerEntity)
         hvac_mode = _LIB_MODE_TO_HA[command.mode]
         if hvac_mode not in self._attr_hvac_modes:
             return
-        self._attr_hvac_mode = hvac_mode
+        self._set_hvac_mode_state(hvac_mode)
 
         # Power-off frames omit fan and temperature, so preserve the last known values.
         if command.fan is not None:

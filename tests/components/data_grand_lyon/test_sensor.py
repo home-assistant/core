@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 from aiohttp import ClientConnectionError, ClientResponseError
 from data_grand_lyon_ha import TclPassage, TclPassageType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.data_grand_lyon.const import (
@@ -32,8 +33,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_VELOV_STATION
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 TZ_PARIS = ZoneInfo("Europe/Paris")
 

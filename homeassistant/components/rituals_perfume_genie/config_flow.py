@@ -11,7 +11,7 @@ from ritualsgenie import (
 )
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -54,7 +54,7 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
-                    data=user_input,
+                    data={**user_input, CONF_TOKEN: client.token},
                 )
 
         return self.async_show_form(
@@ -98,6 +98,7 @@ class RitualsPerfumeGenieConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_EMAIL: reauth_entry.unique_id,
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_TOKEN: client.token,
                     },
                 )
 

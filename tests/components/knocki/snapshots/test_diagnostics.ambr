@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'triggers': list([
+      dict({
+        'details': dict({
+          'name': 'Aaaa',
+          'trigger_id': 31,
+        }),
+        'device_id': 'KNC1-W-00000214',
+      }),
+    ]),
+  })
+# ---

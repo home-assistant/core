@@ -1,6 +1,7 @@
 {
   "domain": "airvisual_pro",
   "name": "AirVisual Pro",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airvisual_pro",

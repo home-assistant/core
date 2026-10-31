@@ -2,6 +2,8 @@
 
 import json
 
+from hassfest.model import Config, Integration
+
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     NON_NUMERIC_DEVICE_CLASSES,
@@ -10,8 +12,6 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-
-from .model import Config, Integration
 
 PATH = "homeassistant/generated/sensor.json"
 

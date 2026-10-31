@@ -1,5 +1,7 @@
 """Test SkyConnect utilities."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.homeassistant_sky_connect.const import (
     DOMAIN,
     HardwareVariant,
@@ -9,8 +11,6 @@ from homeassistant.components.homeassistant_sky_connect.util import (
     get_usb_service_info,
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 SKYCONNECT_CONFIG_ENTRY = MockConfigEntry(
     domain=DOMAIN,

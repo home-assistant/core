@@ -45,7 +45,7 @@ def _async_migrate_data_to_options(
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: HoneywellConfigEntry
-) -> bool:
+) -> None:
     """Set up the Honeywell thermostat."""
     _async_migrate_data_to_options(hass, config_entry)
 
@@ -89,14 +89,12 @@ async def async_setup_entry(
     config_entry.runtime_data = HoneywellData(config_entry.entry_id, client, devices)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: HoneywellConfigEntry
-) -> bool:
+) -> None:
     """Unload the config and platforms."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 @dataclass

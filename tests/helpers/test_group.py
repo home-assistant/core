@@ -1,5 +1,7 @@
 """Test the group helper."""
 
+from pytest_homeassistant.common import MockEntity, MockEntityPlatform
+
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, group
@@ -8,8 +10,6 @@ from homeassistant.helpers.group import (
     IntegrationSpecificGroup,
     get_group_entities,
 )
-
-from tests.common import MockEntity, MockEntityPlatform
 
 
 async def test_expand_entity_ids(hass: HomeAssistant) -> None:
@@ -70,6 +70,45 @@ async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
         "light.bowl",
         "light.ceiling",
     ]
+
+
+async def test_expand_entity_ids_include_groups(hass: HomeAssistant) -> None:
+    """Test expand_entity_ids keeps nested old-style group entity ids."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
+    hass.states.async_set(
+        "group.init_group", STATE_ON, {ATTR_ENTITY_ID: ["light.bowl", "light.ceiling"]}
+    )
+    hass.states.async_set(
+        "group.rec_group",
+        STATE_ON,
+        {ATTR_ENTITY_ID: ["group.init_group", "group.rec_group", "light.ceiling"]},
+    )
+
+    assert sorted(
+        group.expand_entity_ids(hass, ["group.rec_group"], include_groups=True)
+    ) == ["group.init_group", "group.rec_group", "light.bowl", "light.ceiling"]
+
+
+async def test_expand_entity_ids_include_groups_generic_group(
+    hass: HomeAssistant,
+) -> None:
+    """Test expand_entity_ids keeps nested group entity ids."""
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    outer = MockEntity(entity_id="light.outer", unique_id="outer")
+    outer.group = GenericGroup(outer, ["light.inner", "light.a"])
+    inner = MockEntity(entity_id="light.inner", unique_id="inner")
+    inner.group = GenericGroup(inner, ["light.b"])
+    await platform.async_add_entities([outer, inner])
+    await hass.async_block_till_done()
+
+    assert sorted(group.expand_entity_ids(hass, ["light.outer"])) == [
+        "light.a",
+        "light.b",
+    ]
+    assert sorted(
+        group.expand_entity_ids(hass, ["light.outer"], include_groups=True)
+    ) == ["light.a", "light.b", "light.inner", "light.outer"]
 
 
 async def test_expand_entity_ids_ignores_non_strings(hass: HomeAssistant) -> None:

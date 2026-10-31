@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from jaraco.abode.helpers import timeline
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.abode.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
-from tests.common import MockConfigEntry, snapshot_platform
-
 CAMERA_ENTITY_ID = "camera.test_cam"
 RENAMED_CAMERA_ENTITY_ID = "camera.renamed_cam"
 
@@ -26,7 +25,7 @@ RENAMED_CAMERA_ENTITY_ID = "camera.renamed_cam"
 def mock_getrandbits():
     """Mock camera access token which normally is randomized."""
     with patch(
-        "homeassistant.components.camera.SystemRandom.getrandbits",
+        "homeassistant.components.camera.entity.SystemRandom.getrandbits",
         return_value=1,
     ):
         yield

@@ -210,7 +210,7 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
         await hass.config_entries.async_remove(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> None:
     """Set up go2rtc from a config entry."""
 
     config = hass.data[_DATA_GO2RTC]
@@ -225,6 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
                 hass,
                 DOMAIN,
                 "recommended_version",
+                config_entry_id=entry.entry_id,
                 is_fixable=False,
                 is_persistent=False,
                 severity=ir.IssueSeverity.WARNING,
@@ -249,6 +250,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
             hass,
             DOMAIN,
             "unsupported_version",
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.ERROR,
@@ -270,13 +272,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
     provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
     await provider.initialize()
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> None:
     """Unload a go2rtc config entry."""
     await entry.runtime_data.teardown()
-    return True
 
 
 async def _get_binary(hass: HomeAssistant) -> str | None:
@@ -393,10 +393,13 @@ class WebRTCProvider(CameraWebRTCProvider):
         height: int | None = None,
     ) -> bytes | None:
         """Get an image from the camera."""
-        await self._update_stream_source(camera)
-        return await self._rest_client.get_jpeg_snapshot(
-            get_camera_identifier(camera), width, height
-        )
+        try:
+            await self._update_stream_source(camera)
+            return await self._rest_client.get_jpeg_snapshot(
+                get_camera_identifier(camera), width, height
+            )
+        except Go2RtcClientError as err:
+            raise HomeAssistantError("Unable to get image from go2rtc") from err
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""

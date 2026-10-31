@@ -25,7 +25,7 @@ Error handling pattern for reauth:
 """
 
 from collections.abc import Mapping
-import datetime
+import datetime as dt
 from json import JSONDecodeError
 import logging
 
@@ -83,7 +83,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entries.
 
     Migration from version 1.0 to 1.1:
@@ -209,8 +209,6 @@ async def async_migrate_entry(
 
         _LOGGER.debug("Migration completed to version %s.%s", config_entry.version, 1)
 
-    return True
-
 
 async def _create_api_and_login(
     hass: HomeAssistant, username: str, password: str, url: str
@@ -316,7 +314,7 @@ def get_device_list_v1(
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
-) -> bool:
+) -> None:
     """Set up Growatt from a config entry."""
 
     config = config_entry.data
@@ -405,7 +403,7 @@ async def async_setup_entry(
     # Set up all the entities
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    async def _async_scan_for_new_devices(_now: datetime.datetime) -> None:
+    async def _async_scan_for_new_devices(_now: dt.datetime) -> None:
         """Scan for new or removed devices and update HA accordingly."""
         # Fetch current config (in case it was updated via reauth or options)
         current_plant_id = config_entry.data[CONF_PLANT_ID]
@@ -492,11 +490,9 @@ async def async_setup_entry(
         )
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

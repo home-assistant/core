@@ -39,7 +39,7 @@ async def test_import(hass: HomeAssistant) -> None:
     """Test the import flow."""
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": "import"}
@@ -66,7 +66,7 @@ async def test_single_instance_allowed_zeroconf(
     """Test zeroconf single instance allowed abort reason."""
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": source}
@@ -77,7 +77,7 @@ async def test_single_instance_allowed_zeroconf(
 
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": "zeroconf"}, data=TEST_ZEROCONF_RECORD
@@ -92,7 +92,7 @@ async def test_user(hass: HomeAssistant) -> None:
     """Test the user flow."""
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": "user"}
@@ -122,7 +122,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -146,7 +146,7 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.thread.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -171,7 +171,7 @@ async def test_import_and_user(
     """Test single instance allowed for user and import."""
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": first_source}
@@ -183,7 +183,7 @@ async def test_import_and_user(
 
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": second_source}
@@ -205,7 +205,7 @@ async def test_zeroconf_then_import_user(
     )
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     # pylint: disable-next=home-assistant-tests-config-flow-unique-id
@@ -213,7 +213,7 @@ async def test_zeroconf_then_import_user(
 
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": source}
@@ -239,7 +239,7 @@ async def test_zeroconf_in_progress_then_import_user(
 
     with patch(
         "homeassistant.components.thread.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             thread.DOMAIN, context={"source": source}

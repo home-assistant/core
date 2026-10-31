@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from pymystrom.exceptions import MyStromConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mystrom.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import DEVICE_MAC
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

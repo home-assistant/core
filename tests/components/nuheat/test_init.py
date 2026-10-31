@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.nuheat.const import DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .mocks import MOCK_CONFIG_ENTRY, _get_mock_nuheat
-
-from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     "nuheat": {"username": "warm", "password": "feet", "devices": "thermostat123"}

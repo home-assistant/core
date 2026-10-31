@@ -8,10 +8,9 @@ from typing import Any
 from unittest import mock
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import backup_restore
-
-from .common import get_fixture_path
 
 
 def restore_result_file_content(config_dir: Path) -> dict[str, Any] | None:
