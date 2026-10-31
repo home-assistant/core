@@ -110,8 +110,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(system_status.instance_id)
-                self._abort_if_unique_id_configured()
+                await self.async_set_unique_id_or_abort(system_status.instance_id)
                 return self.async_create_entry(
                     title=user_input[CONF_URL],
                     data=user_input,
@@ -209,8 +208,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(system_status.instance_id)
-                self._abort_if_unique_id_mismatch()
+                await self.async_set_unique_id_or_abort(system_status.instance_id)
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={

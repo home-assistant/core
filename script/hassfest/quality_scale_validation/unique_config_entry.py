@@ -25,8 +25,9 @@ def _has_abort_entries_match(module: ast.Module) -> bool:
 
 def _has_abort_unique_id_configured(module: ast.Module) -> bool:
     """Test if the module calls defines (and checks for) a unique_id."""
-    return _has_method_call(module, "async_set_unique_id") and _has_method_call(
-        module, "_abort_if_unique_id_configured"
+    return _has_method_call(module, "async_set_unique_id_or_abort") or (
+        _has_method_call(module, "async_set_unique_id")
+        and _has_method_call(module, "_abort_if_unique_id_configured")
     )
 
 
