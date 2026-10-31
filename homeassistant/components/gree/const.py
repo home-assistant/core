@@ -1,8 +1,9 @@
 """Constants for the Gree Climate integration."""
 
+CONF_IDENTIFIER = "identifier"
+
 DISCOVERY_SCAN_INTERVAL = 300
 DISCOVERY_TIMEOUT = 8
-DISPATCH_DEVICE_DISCOVERED = "gree_device_discovered"
 
 DOMAIN = "gree"
 
