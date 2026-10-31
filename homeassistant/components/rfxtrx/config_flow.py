@@ -105,6 +105,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         """Initialize rfxtrx device subentry flow."""
         self._event_code: str | None = None
         self._device_object: rfxtrxmod.RFXtrxEvent | None = None
+        self._options_subentry_id: str | None = None
         self._replace_subentry_id: str | None = None
 
     async def async_step_user(
@@ -131,14 +132,32 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Reconfigure an existing device.
+        """Choose between configuring the device options and replacing it."""
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=["reconfigure_options", "replace_device"],
+        )
 
-        Also allows pointing the device at different hardware (e.g. after a
-        broken unit was physically replaced), either by entering a new event
-        code directly, or by picking another already-configured device of
-        the same protocol to take over (which is then removed) - the
-        device, its entities, and their history are kept as-is since their
-        identity is the subentry, not the radio address.
+    async def async_step_reconfigure_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Configure the options of an existing device."""
+        subentry = self._get_reconfigure_subentry()
+        self._event_code = subentry.data[CONF_EVENT_CODE][0]
+        self._device_object = get_rfx_object(self._event_code)
+        self._options_subentry_id = subentry.subentry_id
+        return await self.async_step_device_options()
+
+    async def async_step_replace_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Point an existing device at different hardware.
+
+        Either by entering a new event code directly, or by picking another
+        already-configured device of the same protocol to take over (which
+        is then removed) - the device, its entities, and their history are
+        kept as-is since their identity is the subentry, not the radio
+        address.
         """
         subentry = self._get_reconfigure_subentry()
         errors: dict[str, str] = {}
@@ -158,9 +177,9 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                     .data[CONF_EVENT_CODE][0]
                 )
             else:
-                event_code = user_input[CONF_EVENT_CODE]
+                event_code = user_input.get(CONF_EVENT_CODE, "")
 
-            device_object = get_rfx_object(event_code)
+            device_object = get_rfx_object(event_code) if event_code else None
             exclude_subentry_ids = self._reconfigure_exclude_ids(replace_subentry_id)
 
             if device_object is None:
@@ -174,13 +193,15 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             else:
                 self._event_code = event_code
                 self._device_object = device_object
+                self._options_subentry_id = replace_subentry_id
                 self._replace_subentry_id = replace_subentry_id
                 return await self.async_step_device_options()
 
         schema: VolDictType = {
-            probatio.Required(
-                CONF_EVENT_CODE, default=subentry.data[CONF_EVENT_CODE][0]
-            ): str,
+            probatio.Optional(
+                CONF_EVENT_CODE,
+                description={"suggested_value": subentry.data[CONF_EVENT_CODE][0]},
+            ): str
         }
         if replace_devices:
             schema[probatio.Optional(CONF_REPLACE_DEVICE)] = probatio.In(
@@ -188,7 +209,9 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             )
 
         return self.async_show_form(
-            step_id="reconfigure", data_schema=probatio.Schema(schema), errors=errors
+            step_id="replace_device",
+            data_schema=probatio.Schema(schema),
+            errors=errors,
         )
 
     async def async_step_device_options(
@@ -198,15 +221,9 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         assert self._device_object
         assert self._event_code
-
         current_data: Mapping[str, Any] = {}
-        if self.source == SOURCE_RECONFIGURE:
-            if self._replace_subentry_id:
-                current_data = (
-                    self._get_entry().subentries[self._replace_subentry_id].data
-                )
-            else:
-                current_data = self._get_reconfigure_subentry().data
+        if self._options_subentry_id:
+            current_data = self._get_entry().subentries[self._options_subentry_id].data
 
         if user_input is not None:
             try:
@@ -236,7 +253,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                     ):
                         errors[CONF_DATA_BITS] = "already_configured_device"
                     elif self.source == SOURCE_RECONFIGURE:
-                        return await self.async_step_reconfigure(
+                        return await self.async_step_replace_device(
                             {CONF_EVENT_CODE: self._event_code}
                         )
                     else:
