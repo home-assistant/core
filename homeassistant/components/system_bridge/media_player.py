@@ -1,6 +1,9 @@
 """Support for System Bridge media players."""
 
+import base64
+import contextlib
 import datetime as dt
+import hashlib
 from typing import Final, override
 
 from systembridgeconnector.models.media_control import MediaAction, MediaControl
@@ -23,6 +26,15 @@ from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
 
 PARALLEL_UPDATES = 0
+
+ALLOWED_IMAGE_MIME_TYPES: Final = frozenset(
+    {
+        "image/gif",
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+    }
+)
 
 STATUS_CHANGING: Final[str] = "CHANGING"
 STATUS_STOPPED: Final[str] = "STOPPED"
@@ -94,6 +106,9 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             description.key,
         )
         self.entity_description = description
+        self._cached_thumb: str | None = None
+        self._cached_thumb_result: tuple[bytes, str] | None = None
+        self._cached_thumb_hash: str | None = None
 
     @property
     @override
@@ -202,6 +217,68 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         if self._systembridge_data.media.repeat is None:
             return RepeatMode.OFF
         return MEDIA_REPEAT_MAP.get(self._systembridge_data.media.repeat)
+
+    @property
+    @override
+    def media_image_url(self) -> str | None:
+        """Return the image URL of current playing media."""
+        if (
+            (media := self._systembridge_data.media) is not None
+            and (thumb := media.thumbnail) is not None
+            and thumb.startswith(("http://", "https://"))
+        ):
+            return thumb
+
+        return None
+
+    @property
+    @override
+    def media_image_hash(self) -> str | None:
+        """Hash value for media image."""
+        if (
+            (media := self._systembridge_data.media) is not None
+            and (thumb := media.thumbnail) is not None
+            and self._decode_image_data(thumb) is not None
+        ):
+            return self._cached_thumb_hash
+
+        return super().media_image_hash
+
+    @override
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+        """Fetch media image of current playing track."""
+        if (
+            (media := self._systembridge_data.media) is not None
+            and (thumb := media.thumbnail) is not None
+            and (result := self._decode_image_data(thumb)) is not None
+        ):
+            return result
+
+        return await super().async_get_media_image()
+
+    def _decode_image_data(self, thumb: str) -> tuple[bytes, str] | None:
+        """Return image bytes and mime type for a valid image data URL, or None."""
+        if thumb == self._cached_thumb:
+            return self._cached_thumb_result
+
+        result: tuple[bytes, str] | None = None
+        thumb_hash: str | None = None
+        if thumb.startswith("data:"):
+            with contextlib.suppress(ValueError):
+                prefix, image_data = thumb.split(",", 1)
+                if ";base64" in prefix:
+                    mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1].strip().lower()
+                    if mime in ALLOWED_IMAGE_MIME_TYPES:
+                        result = (base64.b64decode(image_data, validate=True), mime)
+                        thumb_hash = hashlib.sha256(thumb.encode("utf-8")).hexdigest()[
+                            :16
+                        ]
+
+        self._cached_thumb = thumb
+        self._cached_thumb_result = result
+        self._cached_thumb_hash = thumb_hash
+
+        return result
 
     @override
     async def async_media_play(self) -> None:
