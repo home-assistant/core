@@ -53,6 +53,29 @@ DUE_DATE_VALID_LANGS: Final = [
 DUE_DATE: Final = "due_date"
 # Service Call: When should user be reminded of this task?
 REMINDER_DATE: Final = "reminder_date"
+# Service Call: The zone whose location should trigger the reminder
+REMINDER_ZONE: Final = "reminder_zone"
+# Service Call: An alias name for the location that should trigger the reminder
+REMINDER_LOCATION_NAME: Final = "reminder_location_name"
+# Service Call: The latitude of the location that should trigger the reminder
+REMINDER_LATITUDE: Final = "reminder_latitude"
+# Service Call: The longitude of the location that should trigger the reminder
+REMINDER_LONGITUDE: Final = "reminder_longitude"
+# Service Call: The radius, in meters, around the location that triggers the reminder
+REMINDER_RADIUS: Final = "reminder_radius"
+# Service Call: Trigger the reminder when entering or when leaving the location?
+REMINDER_LOCATION_DIRECTION: Final = "reminder_location_direction"
+# The REMINDER_LOCATION_DIRECTION option that triggers on entering the location
+REMINDER_LOCATION_DIRECTION_ENTER: Final = "on_enter"
+# The REMINDER_LOCATION_DIRECTION option that triggers on leaving the location
+REMINDER_LOCATION_DIRECTION_LEAVE: Final = "on_leave"
+# Service Call: The available options of REMINDER_LOCATION_DIRECTION
+REMINDER_LOCATION_VALID_DIRECTIONS: Final = [
+    REMINDER_LOCATION_DIRECTION_ENTER,
+    REMINDER_LOCATION_DIRECTION_LEAVE,
+]
+# The largest radius, in meters, the Todoist API accepts for a location reminder
+MAX_REMINDER_RADIUS: Final = 5000
 # Attribute: Is this task due today?
 DUE_TODAY: Final = "due_today"
 # Calendar Platform: When a calendar event ends
