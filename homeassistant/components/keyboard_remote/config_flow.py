@@ -30,10 +30,12 @@ from .const import (
     CONF_EMULATE_KEY_HOLD,
     CONF_EMULATE_KEY_HOLD_DELAY,
     CONF_EMULATE_KEY_HOLD_REPEAT,
+    CONF_EXCLUSIVE,
     CONF_KEY_TYPES,
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEFAULT_EXCLUSIVE,
     DEFAULT_KEY_TYPES,
     DEVINPUT_BY_ID,
     DOMAIN,
@@ -293,6 +295,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=data,
                     options={
                         CONF_KEY_TYPES: DEFAULT_KEY_TYPES,
+                        CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
                         CONF_EMULATE_KEY_HOLD: DEFAULT_EMULATE_KEY_HOLD,
                         CONF_EMULATE_KEY_HOLD_DELAY: DEFAULT_EMULATE_KEY_HOLD_DELAY,
                         CONF_EMULATE_KEY_HOLD_REPEAT: DEFAULT_EMULATE_KEY_HOLD_REPEAT,
@@ -397,6 +400,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
             options={
                 CONF_KEY_TYPES: key_types,
+                CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
                 CONF_EMULATE_KEY_HOLD: import_data[CONF_EMULATE_KEY_HOLD],
                 CONF_EMULATE_KEY_HOLD_DELAY: _clamp_imported(
                     CONF_EMULATE_KEY_HOLD_DELAY,
@@ -505,6 +509,9 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                                 mode=selector.SelectSelectorMode.LIST,
                             )
                         ),
+                        probatio.Required(
+                            CONF_EXCLUSIVE,
+                        ): selector.BooleanSelector(),
                         probatio.Required(
                             CONF_EMULATE_KEY_HOLD,
                         ): selector.BooleanSelector(),
