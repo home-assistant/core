@@ -10,6 +10,7 @@ CORE_CLIMATE_TIMER = "core_climate_timer"
 CORE_CLIMATE = "core_climate"
 BED = "bed"
 FIRMNESS = "firmness"
+FAVORITE_FIRMNESS = "favorite_firmness"
 ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
@@ -26,6 +27,7 @@ ENTITY_TYPES = {
     CORE_CLIMATE_TIMER: "Core Climate Timer",
     CORE_CLIMATE: "Core Climate",
     FIRMNESS: "Firmness",
+    FAVORITE_FIRMNESS: "Favorite Firmness",
     PRESSURE: "Pressure",
     IS_IN_BED: "Is In Bed",
     SLEEP_NUMBER: "SleepNumber",

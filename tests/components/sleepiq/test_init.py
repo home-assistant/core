@@ -136,6 +136,12 @@ async def test_api_timeout(hass: HomeAssistant, mock_asyncsleepiq) -> None:
             id="pause_mode",
         ),
         pytest.param(
+            lambda client, bed: bed.sleepers[0].fetch_favsleepnumber,
+            "number",
+            LONGER_UPDATE_INTERVAL,
+            id="favorite_firmness",
+        ),
+        pytest.param(
             lambda client, bed: bed.sleepers[0].fetch_sleep_data,
             "sensor",
             SLEEP_DATA_UPDATE_INTERVAL,
