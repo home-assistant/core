@@ -19,7 +19,7 @@ from systembridgeconnector.models.modules import (
 )
 from systembridgeconnector.websocket_client import WebSocketClient
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -35,6 +35,9 @@ from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
 from .data import SystemBridgeData
 
 type SystemBridgeConfigEntry = ConfigEntry[SystemBridgeDataUpdateCoordinator]
+
+UPDATE_INTERVAL = timedelta(seconds=30)
+MAX_UPDATE_INTERVAL = timedelta(minutes=2)
 
 
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
@@ -63,13 +66,15 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
 
         self._host = entry.data[CONF_HOST]
+        self._reconnect_delay = UPDATE_INTERVAL
+        self._unavailable_logged = False
 
         super().__init__(
             hass,
             LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=UPDATE_INTERVAL,
         )
 
         self.data = SystemBridgeData()
@@ -85,7 +90,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             try:
                 await self.websocket_client.connect()
             except ConnectionErrorException as exception:
-                self.logger.warning(
+                self.logger.debug(
                     "[check_websocket_connected] Connection error occurred for %s: %s",
                     self.title,
                     exception,
@@ -116,6 +121,13 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         if self.unsub:
             self.unsub()
             self.unsub = None
+        # Setup failures are reported through ConfigEntryNotReady instead
+        if (
+            not self._unavailable_logged
+            and self.config_entry.state is ConfigEntryState.LOADED
+        ):
+            self.logger.info("%s is unavailable", self.title)
+            self._unavailable_logged = True
         self.last_update_success = False
         self.async_update_listeners()
         if self.listen_task is not None:
@@ -209,14 +221,22 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 ) from exception
             except (ConnectionClosedException, ConnectionErrorException) as exception:
                 await self.clean_disconnect()
+                self._reconnect_delay = min(
+                    self._reconnect_delay * 2, MAX_UPDATE_INTERVAL
+                )
                 raise UpdateFailed(
-                    f"Connection error occurred for {self.title}: {exception}"
+                    f"Connection error occurred for {self.title}: {exception}",
+                    retry_after=self._reconnect_delay.total_seconds(),
                 ) from exception
 
             self.logger.debug("Registered data listener for %s", self.title)
-
-            self.last_update_success = True
-            self.async_update_listeners()
+            self._reconnect_delay = UPDATE_INTERVAL
+            if self._unavailable_logged:
+                self.logger.info("%s is available again", self.title)
+                self._unavailable_logged = False
+                # Pushed data can mark the update successful before the
+                # refresh ends, so the built-in recovery log isn't reliable
+                self.last_update_success = True
 
             # Clean disconnect WebSocket on Home Assistant shutdown
             self.unsub = self.hass.bus.async_listen_once(
