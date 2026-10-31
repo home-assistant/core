@@ -351,6 +351,33 @@ async def test_unavailable_llm_api_restored(
     assert chat_log.llm_api.api.id == expected
 
 
+async def test_unavailable_llm_api_is_reused(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test the LLM API instance is reused while a requested API stays unavailable."""
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api=["assist", "unknown-api"],
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+            llm_api = chat_log.llm_api
+
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api=["assist", "unknown-api"],
+            )
+
+    assert llm_api is not None
+    assert llm_api.api.id == "assist"
+    assert chat_log.llm_api is llm_api
+
+
 async def test_all_llm_apis_unavailable(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,

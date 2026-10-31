@@ -788,12 +788,14 @@ class ChatLog:
         )
 
         registered = {api.id for api in llm.async_get_apis(self.hass)}
+        available = [api_id for api_id in api_ids if api_id in registered]
+        if not isinstance(user_llm_hass_api, llm.API):
+            # Key the cache on the APIs in use, so a later turn retries the
+            # missing API once it is back.
+            llm_api_key = (*llm_api_key[:-1], tuple(available))
+
         if (
             user_llm_hass_api
-            and (
-                isinstance(user_llm_hass_api, llm.API)
-                or all(api_id in registered for api_id in api_ids)
-            )
             and self.llm_api is not None
             and llm_context.agent_id is not None
             and llm_api_key == self._llm_api_key
@@ -817,7 +819,6 @@ class ChatLog:
         else:
             # Leave out an API that is not available, such as an MCP server that
             # is down, so the agent keeps its other tools.
-            available = [api_id for api_id in api_ids if api_id in registered]
             if available and len(available) < len(api_ids):
                 LOGGER.warning(
                     "LLM API %s for %s is not available, continuing without it",
@@ -825,9 +826,6 @@ class ChatLog:
                     llm_context.platform,
                 )
                 user_llm_hass_api = available
-                # Key the cache on the APIs in use, so a later turn retries the
-                # missing API once it is back.
-                llm_api_key = (*llm_api_key[:-1], tuple(available))
             try:
                 llm_api = await llm.async_get_api(
                     self.hass,
