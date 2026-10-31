@@ -60,7 +60,7 @@
     'state': '3158.0',
   })
 # ---
-# name: test_hmip_power_and_energy_without_device_class[sensor.flur_unten_energy-entry]
+# name: test_hmip_power_and_energy_without_device_class[sensor.deckenlicht_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -76,7 +76,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.flur_unten_energy',
+    'entity_id': 'sensor.deckenlicht_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -102,12 +102,12 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_hmip_power_and_energy_without_device_class[sensor.flur_unten_energy-state]
+# name: test_hmip_power_and_energy_without_device_class[sensor.deckenlicht_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flur unten Energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Deckenlicht Energy',
       'id': '3014F7110000000000000BSI',
       'is_group': False,
       'model_type': 'HmIP-BSM-I',
@@ -115,14 +115,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.flur_unten_energy',
+    'entity_id': 'sensor.deckenlicht_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.3332',
+    'state': '11.4717',
   })
 # ---
-# name: test_hmip_power_and_energy_without_device_class[sensor.flur_unten_power-entry]
+# name: test_hmip_power_and_energy_without_device_class[sensor.deckenlicht_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -138,7 +138,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.flur_unten_power',
+    'entity_id': 'sensor.deckenlicht_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -164,12 +164,12 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_hmip_power_and_energy_without_device_class[sensor.flur_unten_power-state]
+# name: test_hmip_power_and_energy_without_device_class[sensor.deckenlicht_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flur unten Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Deckenlicht Power',
       'id': '3014F7110000000000000BSI',
       'is_group': False,
       'model_type': 'HmIP-BSM-I',
@@ -177,7 +177,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.flur_unten_power',
+    'entity_id': 'sensor.deckenlicht_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
