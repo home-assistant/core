@@ -160,8 +160,16 @@ def _derived_disabled_by(
 ) -> RegistryEntryDisabler | None:
     """Return the disabler implied by the state of the config entry and device.
 
-    A disabled config entry takes precedence over a disabled device.
+    A disabled config entry takes precedence over a device disabled by its config
+    entry, but not over a device disabled for another reason, since only entities
+    disabled by their config entry are kept in the state machine.
     """
+    if (
+        device is not None
+        and device.disabled
+        and device.disabled_by is not dr.DeviceEntryDisabler.CONFIG_ENTRY
+    ):
+        return RegistryEntryDisabler.DEVICE
     if config_entry is not None and config_entry.disabled_by is not None:
         return RegistryEntryDisabler.CONFIG_ENTRY
     if device is not None and device.disabled:
@@ -322,6 +330,14 @@ class RegistryEntry:
         return self.disabled_by is not None
 
     @property
+    def in_state_machine(self) -> bool:
+        """Return if the entity has a state, as unavailable when not loaded."""
+        return (
+            self.disabled_by is None
+            or self.disabled_by is RegistryEntryDisabler.CONFIG_ENTRY
+        )
+
+    @property
     def hidden(self) -> bool:
         """Return if entry is hidden."""
         return self.hidden_by is not None
@@ -358,6 +374,8 @@ class RegistryEntry:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
             display_dict["hb"] = True
+        if self.disabled_by is not None:
+            display_dict["db"] = True
         if name := self.entity_name:
             display_dict["en"] = name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
@@ -2974,7 +2992,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         ) is not None and remove_restored_state(old_entity_id, event.context)
 
         entry = registry.async_get(entity_id)
-        if entry is None or entry.disabled:
+        if entry is None or not entry.in_state_machine:
             remove_restored_state(entity_id, event.context)
             return
 
@@ -2998,7 +3016,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         existing = set(hass.states.async_entity_ids())
 
         for entry in registry.entities.values():
-            if entry.entity_id in existing or entry.disabled:
+            if entry.entity_id in existing or not entry.in_state_machine:
                 continue
 
             entry.write_unavailable_state(hass)
