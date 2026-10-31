@@ -118,7 +118,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class InverterSensorEntity(CoordinatorEntity, SensorEntity):
+class InverterSensorEntity(CoordinatorEntity[SolaxDataUpdateCoordinator], SensorEntity):
     """Class for a sensor."""
 
     def __init__(
