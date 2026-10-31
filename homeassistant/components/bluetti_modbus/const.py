@@ -18,15 +18,20 @@ DEFAULT_UNIT_ID: Final = 1
 # Faster polling has made the device's Modbus TCP stack unresponsive.
 SCAN_INTERVAL: Final = timedelta(seconds=15)
 
+# Settings read on their own, slower poll: they only change when the owner
+# changes them.
+SETTINGS_SCAN_INTERVAL: Final = timedelta(seconds=60)
+SETTINGS_FIELDS: Final = frozenset({"b_soc_low", "b_soc_high"})
+
 # Left out of the read plan as well as entity creation.
 EXCLUDED_FIELDS: Final = frozenset(
     {
-        # Writable controls; this integration is read-only.
+        # Writable, but not exposed yet.
         "ac_o_switch",
+        # Writable, but the device's working mode, which is not readable, can
+        # put them back right after a write.
         "g_i_switch",
         "g_o_switch",
-        "b_soc_high",
-        "b_soc_low",
         # The library only decodes their zero member, so a real code reads None.
         "d_inverter_fault",
         "d_inverter_warning",
