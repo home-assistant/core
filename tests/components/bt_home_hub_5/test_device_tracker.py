@@ -11,6 +11,7 @@ from homeassistant.components.bt_home_hub_5.device_tracker import async_setup_sc
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 MOCK_HOST = "192.168.1.254"
 MAC_1 = "00:11:22:33:44:55"
@@ -103,8 +104,28 @@ async def test_coordinator_data_none(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_coordinator_index_error(hass: HomeAssistant) -> None:
+    """Test coordinator handles parsing IndexError correctly."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST},
+        title=f"BT Home Hub 5 ({MOCK_HOST})",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
+        side_effect=IndexError("Payload parsing error"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_async_setup_scanner_legacy(hass: HomeAssistant) -> None:
     """Test legacy YAML async_setup_scanner registers issue and creates import flow."""
+    issue_reg = ir.async_get(hass)
     with (
         patch(
             "homeassistant.components.bt_home_hub_5.config_flow.get_devicelist",
@@ -120,6 +141,11 @@ async def test_async_setup_scanner_legacy(hass: HomeAssistant) -> None:
         )
         assert result is True
         await hass.async_block_till_done()
+
+    # Assert repair issue was recorded
+    assert (
+        issue_reg.async_get_issue(DOMAIN, "deprecated_yaml_device_tracker") is not None
+    )
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
