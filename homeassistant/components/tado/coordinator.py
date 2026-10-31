@@ -102,48 +102,72 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         try:
-            (
-                tado_home_call,
-                self.zones,
-                self.devices,
-            ) = await self.hass.async_add_executor_job(_load_tado_data)
-        except RequestException as err:
-            _LOGGER.debug("Checking rate limit")
-            ratelimit = self.get_rate_limit()
-            if ratelimit.get("remaining") == "0":
-                raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
-            raise UpdateFailed(f"Error during Tado setup: {err}") from err
+            try:
+                (
+                    tado_home_call,
+                    self.zones,
+                    self.devices,
+                ) = await self.hass.async_add_executor_job(_load_tado_data)
+            except RequestException as err:
+                _LOGGER.debug("Checking rate limit")
+                ratelimit = self.get_rate_limit()
+                if ratelimit.get("remaining") == "0":
+                    raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
+                raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
-        tado_home = tado_home_call["homes"][0]
-        self.home_id = tado_home["id"]
-        self.home_name = tado_home["name"]
+            tado_home = tado_home_call["homes"][0]
+            self.home_id = tado_home["id"]
+            self.home_name = tado_home["name"]
 
-        # Heating circuits are configuration, so fetching them once is enough.
-        if not self._heating_circuits_loaded:
-            await self._async_fetch_heating_circuits()
-            self._heating_circuits_loaded = True
+            # Heating circuits are configuration, so fetching them once is enough.
+            if not self._heating_circuits_loaded:
+                await self._async_fetch_heating_circuits()
+                self._heating_circuits_loaded = True
 
-        devices = await self._async_update_devices()
-        zones = await self._async_update_zones()
-        home = await self._async_update_home()
+            devices = await self._async_update_devices()
+            zones = await self._async_update_zones()
+            home = await self._async_update_home()
 
-        self.data["device"] = devices
-        self.data["zone"] = zones
-        self.data["weather"] = home["weather"]
-        self.data["geofence"] = home["geofence"]
-        self.data["rate_limit"] = self.get_rate_limit()
-
-        refresh_token = await self.hass.async_add_executor_job(
-            self._tado.get_refresh_token
-        )
-
-        if refresh_token != self._refresh_token:
-            _LOGGER.debug("New refresh token obtained from Tado: %s", refresh_token)
-            self._refresh_token = refresh_token
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
-            )
+            self.data["device"] = devices
+            self.data["zone"] = zones
+            self.data["weather"] = home["weather"]
+            self.data["geofence"] = home["geofence"]
+            self.data["rate_limit"] = self.get_rate_limit()
+        finally:
+            # Tado rotates the refresh token every time the (10-minute-lived)
+            # access token is refreshed, which PyTado does lazily on the
+            # *first* API call of this cycle (inside _load_tado_data above).
+            # Persisting the new token used to happen only after every call
+            # in this method succeeded, so a later failure (rate limit,
+            # transient network error) meant a token that had already
+            # rotated was never saved to the config entry - it kept working
+            # from the in-memory PyTado client, but a restart before the
+            # next *successful* cycle handed PyTado the stale, by-then
+            # invalidated saved token and forced a full re-authentication.
+            # Persisting in `finally` instead captures every rotation that
+            # actually happened, regardless of what fails afterwards.
+            # Fetching/persisting the token gets its own try/except so a
+            # failure here (e.g. the same rate limit or network error that
+            # caused the outer failure) only gets logged, instead of
+            # replacing - and hiding - whatever exception was already
+            # propagating out of the try block above.
+            try:
+                refresh_token = await self.hass.async_add_executor_job(
+                    self._tado.get_refresh_token
+                )
+            except RequestException as err:
+                _LOGGER.warning("Could not fetch refresh token from Tado: %s", err)
+            else:
+                if refresh_token and refresh_token != self._refresh_token:
+                    _LOGGER.debug("New refresh token obtained from Tado")
+                    self._refresh_token = refresh_token
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data={
+                            **self.config_entry.data,
+                            CONF_REFRESH_TOKEN: refresh_token,
+                        },
+                    )
 
         # Calculate the most recent update interval
         self._calculate_update_interval()
