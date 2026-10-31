@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_sensors
+  dict({
+    'sensor.busy_bar_battery': tuple(
+      '82',
+      '%',
+    ),
+    'sensor.busy_bar_wi_fi_network': tuple(
+      'Home',
+      None,
+    ),
+    'sensor.busy_bar_wi_fi_signal': tuple(
+      '-48',
+      'dBm',
+    ),
+  })
+# ---
