@@ -39,7 +39,6 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     HomeAssistantError,
-    TemplateError,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.automation import (
@@ -63,6 +62,7 @@ from .conditions import (
     LegacyConditionChecker,
     NotConditionChecker,
     OrConditionChecker,
+    TemplateEnabledConditionChecker,
     _StateDependentChecker,
     async_numeric_state,
     async_template,
@@ -351,20 +351,22 @@ async def async_from_config(
 
     Should be run on the event loop.
     """
-    # Check if condition is not enabled
-    if CONF_ENABLED in config:
-        enabled = config[CONF_ENABLED]
-        if isinstance(enabled, Template):
-            try:
-                enabled = enabled.async_render(limited=True)
-            except TemplateError as err:
-                raise HomeAssistantError(
-                    f"Error rendering condition enabled template: {err}"
-                ) from err
-        if not enabled:
-            disabled_checker = DisabledConditionChecker(hass)
-            await disabled_checker.async_setup()
-            return disabled_checker
+    enabled = config.get(CONF_ENABLED, True)
+    if isinstance(enabled, Template):
+        enabled_checker = TemplateEnabledConditionChecker(
+            hass,
+            enabled,
+            await async_from_config(
+                hass,
+                {key: value for key, value in config.items() if key != CONF_ENABLED},
+            ),
+        )
+        await enabled_checker.async_setup()
+        return enabled_checker
+    if not enabled:
+        disabled_checker = DisabledConditionChecker(hass)
+        await disabled_checker.async_setup()
+        return disabled_checker
 
     condition_key: str = config[CONF_CONDITION]
     factory: Any = None

@@ -6813,6 +6813,61 @@ async def test_enabled_template_on_condition_step(hass: HomeAssistant) -> None:
     assert len(events) == 3
 
 
+@pytest.mark.parametrize(
+    "action",
+    [
+        pytest.param(
+            {
+                "if": [
+                    {
+                        "condition": "state",
+                        "entity_id": "light.test",
+                        "state": "on",
+                        "enabled": "{{ enable_condition }}",
+                    }
+                ],
+                "then": [{"event": "test_event"}],
+            },
+            id="if",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {
+                        "conditions": [
+                            {
+                                "condition": "state",
+                                "entity_id": "light.test",
+                                "state": "on",
+                                "enabled": "{{ enable_condition }}",
+                            }
+                        ],
+                        "sequence": [{"event": "test_event"}],
+                    }
+                ]
+            },
+            id="choose",
+        ),
+    ],
+)
+async def test_condition_enabled_template_cached_script(
+    hass: HomeAssistant, action: dict[str, Any]
+) -> None:
+    """Cached script conditions use the enabled value from the current run."""
+    events = async_capture_events(hass, "test_event")
+    hass.states.async_set("light.test", "off")
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA([action]), "Test Name", "test_domain"
+    )
+
+    for enabled, expected_events in ((True, 0), (False, 1), (True, 1), (False, 2)):
+        await script_obj.async_run(
+            run_variables={"enable_condition": enabled}, context=Context()
+        )
+        await hass.async_block_till_done()
+        assert len(events) == expected_events
+
+
 async def test_enabled_template_error(hass: HomeAssistant) -> None:
     """Test that a script aborts when an action enabled template fails to render."""
     event = "test_event"
