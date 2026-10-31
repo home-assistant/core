@@ -15,7 +15,7 @@ from homeassistant.components.devolo_home_network.const import (
 )
 from homeassistant.const import STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import configure_integration
 from .const import CONNECTED_STATIONS, NO_CONNECTED_STATIONS
@@ -29,6 +29,7 @@ async def test_device_tracker(
     hass: HomeAssistant,
     mock_device: MockDevice,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -40,6 +41,14 @@ async def test_device_tracker(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id) == snapshot
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == STATION.mac_address
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(STATION.mac_address))
+    }
 
     # Emulate state change
     mock_device.device.async_get_wifi_connected_station = AsyncMock(

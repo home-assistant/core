@@ -8,9 +8,31 @@
         "default": "mdi:restart"
       }
     },
+    "button": {
+      "power_hibernate": {
+        "default": "mdi:snowflake"
+      },
+      "power_lock": {
+        "default": "mdi:lock"
+      },
+      "power_logout": {
+        "default": "mdi:logout"
+      },
+      "power_shutdown": {
+        "default": "mdi:power"
+      },
+      "power_sleep": {
+        "default": "mdi:power-sleep"
+      }
+    },
     "media_player": {
       "media": {
         "default": "mdi:volume-high"
+      }
+    },
+    "number": {
+      "display_brightness": {
+        "default": "mdi:brightness-6"
       }
     },
     "sensor": {
@@ -25,6 +47,18 @@
       },
       "cpu_speed": {
         "default": "mdi:speedometer"
+      },
+      "disk_device_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_device_write_rate": {
+        "default": "mdi:database-arrow-up"
+      },
+      "disk_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_write_rate": {
+        "default": "mdi:database-arrow-up"
       },
       "display_refresh_rate": {
         "default": "mdi:monitor"
@@ -124,6 +158,14 @@
       },
       "version_latest": {
         "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "display_power": {
+        "default": "mdi:monitor",
+        "state": {
+          "off": "mdi:monitor-off"
+        }
       }
     }
   },

@@ -13,6 +13,7 @@ from pytest_homeassistant.common import async_fire_time_changed, mock_component
 from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation, sun
+from homeassistant.components.sun.const import SunEntityStateAttribute
 from homeassistant.components.sun.trigger import _next_polar_transition
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -931,11 +932,15 @@ async def test_elevation_changed_trigger(
         {},
     )
 
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 5.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 5.0}
+    )
     await hass.async_block_till_done()
     calls_before = len(service_calls)
 
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 6.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 6.0}
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == calls_before + 1
 
@@ -953,17 +958,23 @@ async def test_elevation_crossed_threshold_trigger(
         {},
     )
 
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 5.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 5.0}
+    )
     await hass.async_block_till_done()
     calls_before = len(service_calls)
 
     # Crossing from below to above the threshold fires once.
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 15.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 15.0}
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == calls_before + 1
 
     # Staying above the threshold does not fire again.
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 20.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 20.0}
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == calls_before + 1
 

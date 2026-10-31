@@ -21,7 +21,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('qbus', '00:11:22:33:44:55')]>,
     'disabled_by': None,

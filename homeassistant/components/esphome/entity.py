@@ -27,7 +27,7 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -226,8 +226,15 @@ def async_static_info_updated(
                 updates["new_unique_id"] = unique_id
 
             # Update device assignment in registry
-            if info.device_id:
-                # Entity now belongs to a sub device
+            new_device: dr.AnyDeviceEntry | None
+            if info.device_id in entry_data.child_device_ids:
+                # Entity now belongs to a child device
+                new_device = dev_reg.async_get_child_device_by_identifier(
+                    (DOMAIN, f"{mac}_{info.device_id}"),
+                    entry_data.entry_id,
+                )
+            elif info.device_id:
+                # Entity now belongs to a sub device reached via the main device
                 new_device = dev_reg.async_get_device_by_identifier(
                     (DOMAIN, f"{mac}_{info.device_id}"),
                     entry_data.entry_id,
@@ -476,7 +483,7 @@ class EsphomeBaseEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _device_info: EsphomeDeviceInfo
-    device_entry: dr.DeviceEntry
+    device_entry: dr.AnyDeviceEntry
 
 
 class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
@@ -506,10 +513,18 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         self._key_unsubs: list[CALLBACK_TYPE] = []
         self._on_static_info_update(entity_info)
 
-        # Determine the device connection based on whether this
-        # entity belongs to a sub device
-        if entity_info.device_id:
-            # Entity belongs to a sub device
+        if entity_info.device_id in entry_data.child_device_ids:
+            # Entity belongs to a child of the main device
+            if TYPE_CHECKING:
+                assert entry_data.main_device_entry_id is not None
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{device_info.mac_address}_{entity_info.device_id}")
+                },
+                parent_device_id=entry_data.main_device_entry_id,
+            )
+        elif entity_info.device_id:
+            # Entity belongs to a sub device reached via the main device
             self._attr_device_info = DeviceInfo(
                 identifiers={
                     (DOMAIN, f"{device_info.mac_address}_{entity_info.device_id}")

@@ -238,10 +238,8 @@ async def test_reconfigure_deprecated_model_repair(
         hass, subentry.subentry_id
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: deprecated_model.id}
+        result["flow_id"],
+        {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: deprecated_model.id},
     )
     assert result["step_id"] == "model"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
@@ -305,14 +303,12 @@ async def test_reconfigure_clears_model_repair(
     result = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    assert result["step_id"] == "additional"
+    assert result["step_id"] == "init"
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: replacement_model.id}
+        result["flow_id"],
+        {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: replacement_model.id},
     )
     assert result["step_id"] == "model"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
@@ -394,13 +390,10 @@ async def test_model_repair_retained_for_other_subentries(
     result = await healthy_entry.start_subentry_reconfigure_flow(
         hass, healthy_subentry.subentry_id
     )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    assert result["step_id"] == "additional"
+    assert result["step_id"] == "init"
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: active_model.id}
+        result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: active_model.id}
     )
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
     assert result["reason"] == "reconfigure_successful"
@@ -415,10 +408,8 @@ async def test_model_repair_retained_for_other_subentries(
             hass, subentry.subentry_id
         )
         result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_RECOMMENDED: False}
-        )
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_CHAT_MODEL: active_model.id}
+            result["flow_id"],
+            {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: active_model.id},
         )
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}

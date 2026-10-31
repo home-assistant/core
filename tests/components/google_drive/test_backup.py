@@ -1,15 +1,21 @@
 """Test the Google Drive backup platform."""
 
+from dataclasses import replace
 from io import StringIO
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import ClientResponse
+from aiohttp import (
+    ClientConnectionError,
+    ClientPayloadError,
+    ClientResponse,
+    StreamReader,
+)
 from freezegun.api import FrozenDateTimeFactory
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 from pytest_homeassistant.test_util.aiohttp import mock_stream
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
@@ -63,6 +69,14 @@ TEST_AGENT_BACKUP_RESULT = {
     "name": "Test",
     "with_automatic_settings": None,
 }
+
+
+# Protected with password "hunter2", padded beyond the 4 MiB read buffer so the
+# backup is not read to the end when checking the password or decrypting it
+PROTECTED_BACKUP_DATA = (
+    get_fixture_path("test_backups/c0cb53bd.tar", BACKUP_DOMAIN).read_bytes()
+    + b"\0" * 12 * 2**20
+)
 
 
 async def consume_stream(
@@ -639,3 +653,166 @@ async def test_agents_delete_not_found(
     assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
     mock_api.delete_file.assert_not_called()
+
+
+@pytest.fixture
+def backup_data() -> bytes:
+    """Backup data, override in tests to change defaults."""
+    return b"backup data"
+
+
+@pytest.fixture
+def backup_protected() -> bool:
+    """Backup protected, override in tests to change defaults."""
+    return False
+
+
+@pytest.fixture
+def downloaded_responses(
+    mock_api: MagicMock, backup_data: bytes, backup_protected: bool
+) -> list[AsyncMock]:
+    """Mock the backup and return the responses of downloaded backup archives."""
+    backup = replace(TEST_AGENT_BACKUP, protected=backup_protected)
+    mock_api.list_files = AsyncMock(
+        return_value={
+            "files": [
+                {"id": "backup-file-id", "description": json.dumps(backup.as_dict())}
+            ]
+        }
+    )
+    responses: list[AsyncMock] = []
+
+    def get_file_content(*args: Any, **kwargs: Any) -> AsyncMock:
+        response = AsyncMock(spec=ClientResponse)
+        response.content = mock_stream(backup_data)
+        responses.append(response)
+        return response
+
+    mock_api.get_file_content = AsyncMock(side_effect=get_file_content)
+    return responses
+
+
+@pytest.mark.parametrize(
+    ("backup_protected", "backup_data"),
+    [pytest.param(True, PROTECTED_BACKUP_DATA, id="protected_backup")],
+)
+@pytest.mark.parametrize(
+    ("password", "success"),
+    [
+        pytest.param("hunter2", True, id="correct_password"),
+        pytest.param("wrong", False, id="wrong_password"),
+    ],
+)
+async def test_can_decrypt_on_download_closes_response(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    downloaded_responses: list[AsyncMock],
+    password: str,
+    success: bool,
+) -> None:
+    """Test the download is closed after checking the password of a backup."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": TEST_AGENT_BACKUP.backup_id,
+            "agent_id": TEST_AGENT_ID,
+            "password": password,
+        }
+    )
+    assert (await client.receive_json())["success"] is success
+
+    assert len(downloaded_responses) == 1
+    downloaded_responses[0].close.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("backup_protected", "backup_data"),
+    [pytest.param(True, PROTECTED_BACKUP_DATA, id="protected_backup")],
+)
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("", id="no_password"),
+        pytest.param("&password=hunter2", id="correct_password"),
+        pytest.param("&password=wrong", id="wrong_password"),
+    ],
+)
+async def test_agents_download_closes_response(
+    hass_client: ClientSessionGenerator,
+    downloaded_responses: list[AsyncMock],
+    query: str,
+) -> None:
+    """Test the download is closed when the backup is downloaded."""
+    client = await hass_client()
+
+    resp = await client.get(
+        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={TEST_AGENT_ID}{query}"
+    )
+    assert resp.status == 200
+    await resp.read()
+
+    assert len(downloaded_responses) == 1
+    downloaded_responses[0].close.assert_called_once()
+
+
+async def test_agents_download_closes_response_on_read_error(
+    hass_client: ClientSessionGenerator,
+    mock_api: MagicMock,
+    downloaded_responses: list[AsyncMock],
+) -> None:
+    """Test the download is closed when reading the backup fails."""
+    get_file_content = mock_api.get_file_content.side_effect
+
+    def get_failing_file_content(*args: Any, **kwargs: Any) -> AsyncMock:
+        response = get_file_content(*args, **kwargs)
+        response.content = StreamReader(Mock(_reading_paused=False), limit=2**16)
+        response.content.set_exception(ClientConnectionError())
+        return response
+
+    mock_api.get_file_content.side_effect = get_failing_file_content
+    client = await hass_client()
+
+    resp = await client.get(
+        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={TEST_AGENT_ID}"
+    )
+    with pytest.raises(ClientPayloadError):
+        await resp.read()
+
+    assert len(downloaded_responses) == 1
+    downloaded_responses[0].close.assert_called_once()
+
+
+async def test_agents_download_empty_chunk_before_eof(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_api: MagicMock,
+    downloaded_responses: list[AsyncMock],
+) -> None:
+    """Test an empty chunk at an HTTP chunk boundary does not end the download."""
+    get_file_content = mock_api.get_file_content.side_effect
+
+    def get_chunked_file_content(*args: Any, **kwargs: Any) -> AsyncMock:
+        response = get_file_content(*args, **kwargs)
+        response.content = StreamReader(
+            Mock(_reading_paused=False), 2**16, loop=hass.loop
+        )
+        for data in (b"backup", b"", b" data"):
+            response.content.begin_http_chunk_receiving()
+            response.content.feed_data(data)
+            response.content.end_http_chunk_receiving()
+        response.content.feed_eof()
+        return response
+
+    mock_api.get_file_content.side_effect = get_chunked_file_content
+    client = await hass_client()
+
+    resp = await client.get(
+        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={TEST_AGENT_ID}"
+    )
+    assert resp.status == 200
+    assert await resp.read() == b"backup data"
+
+    assert len(downloaded_responses) == 1
+    downloaded_responses[0].close.assert_called_once()

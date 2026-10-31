@@ -78,22 +78,21 @@ class MatterCover(MatterEntity, CoverEntity):
     """Representation of a Matter Cover."""
 
     _write_state_debounce_cooldown = STATE_WRITE_DEBOUNCE_COOLDOWN
+    _tilt_only = False
     entity_description: MatterCoverEntityDescription
 
     @property
     @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed, None if no position."""
-        if not self._entity_info.endpoint.has_attribute(
-            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
-        ):
-            return None
-
-        return (
-            self.current_cover_position == 0
-            if self.current_cover_position is not None
-            else None
+        # tilt-only covers have no lift axis, so tilt is the only closure
+        # indicator, even if a non-conformant device reports a lift position
+        position = (
+            self.current_cover_tilt_position
+            if self._tilt_only
+            else self.current_cover_position
         )
+        return position == 0 if position is not None else None
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -127,6 +126,23 @@ class MatterCover(MatterEntity, CoverEntity):
             # value needs to be inverted and is sent in 100ths
             clusters.WindowCovering.Commands.GoToTiltPercentage((100 - position) * 100)
         )
+
+    @override
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        # tilt button features are only set on tilt-only covers,
+        # where UpOrOpen moves the tilt axis
+        await self.send_device_command(clusters.WindowCovering.Commands.UpOrOpen())
+
+    @override
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        await self.send_device_command(clusters.WindowCovering.Commands.DownOrClose())
+
+    @override
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt movement."""
+        await self.send_device_command(clusters.WindowCovering.Commands.StopMotion())
 
     @callback
     def _positions_at_target(self) -> bool | None:
@@ -228,7 +244,18 @@ class MatterCover(MatterEntity, CoverEntity):
             detection,
         )
 
-        if self._entity_info.endpoint.has_attribute(
+        feature_map = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.FeatureMap
+        )
+        self._tilt_only = bool(
+            feature_map & clusters.WindowCovering.Bitmaps.Feature.kTilt
+        ) and not (feature_map & clusters.WindowCovering.Bitmaps.Feature.kLift)
+
+        if self._tilt_only:
+            # a lift position reported by a non-conformant tilt-only device
+            # does not describe the covering
+            self._attr_current_cover_position = None
+        elif self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
         ):
             # current position is inverted in matter (100 is closed, 0 is open)
@@ -275,16 +302,30 @@ class MatterCover(MatterEntity, CoverEntity):
         )
         self._attr_device_class = TYPE_MAP.get(device_type, CoverDeviceClass.AWNING)
 
-        supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
+        if self._tilt_only:
+            # tilt-only covers expose the tilt button features instead,
+            # so UIs derive the button state from the tilt position
+            supported_features = (
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+            )
+        else:
+            # the lift commands are mandatory for all window coverings,
+            # so they are the safe default for non-conformant feature maps
+            supported_features = (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+            )
         commands = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.AcceptedCommandList
         )
-        feature_map = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.FeatureMap
-        )
-        if clusters.WindowCovering.Commands.GoToLiftPercentage.command_id in commands:
+        if (
+            not self._tilt_only
+            and clusters.WindowCovering.Commands.GoToLiftPercentage.command_id
+            in commands
+        ):
             supported_features |= CoverEntityFeature.SET_POSITION
         # Some devices report GoToTiltPercentage in AcceptedCommandList even
         # without tilt support, so also require the FeatureMap Tilt bit.
@@ -304,7 +345,12 @@ class MatterCover(MatterEntity, CoverEntity):
         ):
             self._attr_device_class = CoverDeviceClass.SHUTTER
             self._attr_current_cover_tilt_position = None
-            supported_features &= ~CoverEntityFeature.SET_TILT_POSITION
+            supported_features &= ~(
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
+            )
         self._attr_supported_features = supported_features
 
 

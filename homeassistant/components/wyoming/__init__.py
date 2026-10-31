@@ -45,7 +45,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> N
     service = await WyomingService.create(entry.data["host"], entry.data["port"])
 
     if service is None:
-        raise ConfigEntryNotReady("Unable to connect")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "host": entry.data["host"],
+                "port": str(entry.data["port"]),
+            },
+        )
 
     coordinator = WyomingInfoCoordinator(
         hass, entry, entry.data["host"], entry.data["port"]

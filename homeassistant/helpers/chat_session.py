@@ -24,7 +24,7 @@ from homeassistant.util.ulid import ulid_now, ulid_to_bytes
 
 from . import frame
 from .event import async_call_later
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 DATA_CHAT_SESSION: HassKey[dict[str, ChatSession]] = HassKey("chat_session")
 DATA_CHAT_SESSION_CLEANUP: HassKey[SessionCleanup] = HassKey("chat_session_cleanup")
@@ -43,7 +43,7 @@ class ChatSession:
 
     conversation_id: str
     last_updated: datetime = field(default_factory=dt_util.utcnow)
-    user_id: str | UndefinedType | None = UNDEFINED
+    user_id: str | Undefined | None = Undefined
     # Requests that use the session. The cleanup skips a session in use.
     in_use: int = 0
     _cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
@@ -121,7 +121,7 @@ def async_get_chat_session(
     hass: HomeAssistant,
     conversation_id: str | None = None,
     *,
-    context: Context | UndefinedType | None = UNDEFINED,
+    context: Context | Undefined | None = Undefined,
 ) -> Generator[ChatSession]:
     """Return a chat session.
 
@@ -130,7 +130,7 @@ def async_get_chat_session(
     the caller does not act for a user, like a satellite that starts a
     conversation.
     """
-    if context is UNDEFINED:
+    if context is Undefined:
         frame.report_usage(
             "calls async_get_chat_session without a context",
             breaks_in_ha_version="2027.5",
@@ -142,7 +142,7 @@ def async_get_chat_session(
         # return that. We won't update the last updated time in this case.
         if session.conversation_id == conversation_id:
             if context is not None:
-                if session.user_id is UNDEFINED:
+                if session.user_id is Undefined:
                     session.user_id = context.user_id
                 elif session.user_id != context.user_id:
                     raise Unauthorized(context=context)
@@ -189,7 +189,7 @@ def async_get_chat_session(
         all_sessions[conversation_id] = session
 
     if context is not None:
-        if session.user_id is UNDEFINED:
+        if session.user_id is Undefined:
             session.user_id = context.user_id
         elif session.user_id != context.user_id:
             raise Unauthorized(context=context)

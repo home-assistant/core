@@ -27,7 +27,8 @@ class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
         self._avm_wrapper = avm_wrapper
         self._mac: str = device.mac_address
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)}
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)},
+            name=device.hostname,
         )
 
     @property

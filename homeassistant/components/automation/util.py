@@ -270,7 +270,7 @@ async def _async_replace_automations(
         for automation in old_automations
         if isinstance(automation, UnavailableAutomationEntity)
     ]
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_ids=[automation.repair_issue_id for automation in broken_automations],

@@ -15,5 +15,5 @@
   "iot_class": "local_polling",
   "loggers": ["fronius_modbus", "fronius_solarapi", "modbus_connection"],
   "quality_scale": "platinum",
-  "requirements": ["fronius-modbus==0.2.0", "fronius-solarapi==0.1.0"]
+  "requirements": ["fronius-modbus==0.2.0", "fronius-solarapi==0.1.1"]
 }

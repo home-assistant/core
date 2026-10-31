@@ -60,7 +60,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='location' title='Helsinki'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('foreca', '01JZ4Q1F0RECALOCATION000001')]>,
     'disabled_by': None,

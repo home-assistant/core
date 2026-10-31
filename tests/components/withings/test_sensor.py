@@ -1,9 +1,10 @@
 """Tests for the Withings component."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiowithings import Goals
+from aiowithings import Goals, NotificationCategory
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -11,6 +12,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.withings import DOMAIN
@@ -19,14 +21,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
+    call_webhook,
     load_activity_fixture,
     load_device_fixture,
     load_goals_fixture,
     load_measurements_fixture,
     load_sleep_fixture,
     load_workout_fixture,
+    prepare_webhook_setup,
     setup_integration,
 )
+from .conftest import USER_ID, WEBHOOK_ID
 
 
 @pytest.mark.freeze_time("2023-10-21 12:00:00")
@@ -107,6 +112,67 @@ async def test_update_updates_incrementally(
     assert state is not None
     assert state.state == "71"
     assert len(withings.get_measurement_in_period.call_args_list) == 1
+
+
+async def test_workout_sensor_keeps_latest_workout_after_webhook_updates(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test webhook updates accept newer/equal workouts and ignore older ones."""
+    initial = replace(load_workout_fixture()[0], distance=100)
+    newer = replace(
+        initial,
+        end_date=initial.end_date + timedelta(hours=1),
+        distance=200,
+    )
+    older = replace(
+        initial,
+        end_date=initial.end_date - timedelta(minutes=1),
+        distance=50,
+    )
+    equal = replace(newer, distance=250)
+    withings.get_workouts_in_period.return_value = [initial]
+    withings.get_workouts_since.side_effect = [[older, newer], [older], [equal]]
+
+    await setup_integration(hass, webhook_config_entry)
+    await prepare_webhook_setup(hass, freezer)
+    client = await hass_client_no_auth()
+    sensor = "sensor.henk_distance_travelled_last_workout"
+    calendar = "calendar.henk_workouts"
+
+    async def _webhook_update(expected_distance: str) -> None:
+        response = await call_webhook(
+            hass,
+            WEBHOOK_ID,
+            {"userid": USER_ID, "appli": NotificationCategory.ACTIVITY},
+            client,
+        )
+        assert response.message_code == 0
+        state = hass.states.get(sensor)
+        assert state is not None
+        assert state.state == expected_distance
+        assert hass.states.get(calendar) is not None
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(sensor)
+    assert state is not None
+    assert state.state == "100"
+    assert hass.states.get(calendar) is not None
+
+    await _webhook_update("200")
+    await _webhook_update("200")
+    await _webhook_update("250")
+
+    assert [call.args[0] for call in withings.get_workouts_since.call_args_list] == [
+        initial.end_date,
+        newer.end_date,
+        newer.end_date,
+    ]
 
 
 async def test_update_new_measurement_creates_new_sensor(

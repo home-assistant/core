@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "file_count": {
+        "default": "mdi:file-multiple"
+      },
+      "last_modified": {
+        "default": "mdi:file-clock"
+      },
+      "size": {
+        "default": "mdi:folder"
+      }
+    }
+  }
+}
