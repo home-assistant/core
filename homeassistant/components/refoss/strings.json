@@ -1,8 +1,21 @@
 {
   "config": {
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "invalid_networks": "Enter IPv4 addresses or /24 networks, separated by commas."
+    },
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user": {
+        "data": {
+          "networks": "Networks"
+        },
+        "data_description": {
+          "networks": "Optional. Leave empty to discover devices on this network. Use an IPv4 address for a known device, or a /24 to scan that VLAN, e.g. 192.168.20.0/24, 10.1.2.17"
+        },
+        "description": "Devices on this network are discovered automatically. To reach another VLAN, add IPv4 addresses or /24 subnets, separated by commas. English and Chinese commas are both accepted. An IPv4 address is probed as that host only. A /24 subnet is scanned periodically."
       }
     }
   },
@@ -25,6 +38,22 @@
       },
       "voltage": {
         "name": "{channel_name} voltage"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_networks": "[%key:component::refoss::config::error::invalid_networks%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "networks": "[%key:component::refoss::config::step::user::data::networks%]"
+        },
+        "data_description": {
+          "networks": "[%key:component::refoss::config::step::user::data_description::networks%]"
+        },
+        "description": "[%key:component::refoss::config::step::user::description%]"
       }
     }
   }
