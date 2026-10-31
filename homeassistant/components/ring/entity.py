@@ -83,7 +83,6 @@ class RingBaseEntity(
     """Base implementation for Ring device."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
