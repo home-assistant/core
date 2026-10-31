@@ -68,6 +68,16 @@
         "name": "Display {display_id} brightness"
       }
     },
+    "select": {
+      "power_profile": {
+        "name": "Power profile",
+        "state": {
+          "balanced": "Balanced",
+          "performance": "Performance",
+          "power-saver": "Power saver"
+        }
+      }
+    },
     "sensor": {
       "amount_memory_used": {
         "name": "Amount of memory used"
@@ -261,6 +271,9 @@
     "switch": {
       "display_power": {
         "name": "Display {display_id} power"
+      },
+      "keep_awake": {
+        "name": "Keep awake"
       }
     }
   },
@@ -285,6 +298,9 @@
     },
     "send_message_failed": {
       "message": "Failed to send message to {title} ({host}) due to a connection error"
+    },
+    "system_control_failed": {
+      "message": "System Bridge couldn't make the change: {error}"
     },
     "timeout": {
       "message": "A timeout occurred for {title} ({host})"

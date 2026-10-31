@@ -49,3 +49,53 @@
     'state': 'on',
   })
 # ---
+# name: test_switch_platform[switch.hostname_keep_awake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.hostname_keep_awake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Keep awake',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keep awake',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keep_awake',
+    'unique_id': 'uuid_keep_awake',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_platform[switch.hostname_keep_awake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Keep awake',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.hostname_keep_awake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

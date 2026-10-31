@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_select_platform[select.hostname_power_profile-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'power-saver',
+        'balanced',
+        'performance',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.hostname_power_profile',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power profile',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power profile',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_profile',
+    'unique_id': 'uuid_power_profile',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_platform[select.hostname_power_profile-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Power profile',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'power-saver',
+        'balanced',
+        'performance',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.hostname_power_profile',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'balanced',
+  })
+# ---
