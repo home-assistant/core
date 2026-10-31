@@ -1,19 +1,25 @@
 """Base entity for entities in victron_gx integration."""
 
 from abc import abstractmethod
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
     MetricType,
     MetricValue,
+    NotConnectedError,
+    PublishError,
+    WritableMetric as VictronVenusWritableMetric,
 )
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN
 
 # Entities that should be marked as diagnostic
 ENTITIES_CATEGORY_DIAGNOSTIC = [
@@ -88,6 +94,29 @@ class VictronBaseEntity(Entity):
         self._attr_entity_registry_enabled_default = (
             metric.generic_short_id not in ENTITIES_DISABLE_BY_DEFAULT
         )
+
+    @callback
+    def _set_metric_value(self, value: MetricValue) -> None:
+        """Write a metric value and translate library errors."""
+        if TYPE_CHECKING:
+            assert isinstance(self._metric, VictronVenusWritableMetric)
+        try:
+            self._metric.set(value)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_value",
+            ) from err
+        except NotConnectedError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_connected",
+            ) from err
+        except PublishError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="publish_failed",
+            ) from err
 
     def _resolve_native_unit_of_measurement(self) -> str | None:
         """Resolve native unit of measurement for platforms that support it."""

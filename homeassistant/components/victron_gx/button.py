@@ -63,7 +63,5 @@ class VictronButton(VictronBaseEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        if TYPE_CHECKING:
-            assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Pressing button: %s", self.unique_id)
-        self._metric.set(GenericOnOff.ON)
+        self._set_metric_value(GenericOnOff.ON)
