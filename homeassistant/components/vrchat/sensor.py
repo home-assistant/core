@@ -83,6 +83,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     coordinator = config_entry.runtime_data
+    coordinator.async_register_account_device()
     platform = async_get_current_platform()
     entity_registry = er.async_get(hass)
     known_users: dict[str, VRChatUser] = {}

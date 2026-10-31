@@ -15,7 +15,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, USER_AGENT
+from .const import DOMAIN, USER_AGENT, VRCHAT_USER_PAGE_BASE_URL
 from .store import InitialCurrentUserData, get_vrchat_auth_cookie_store
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,12 +83,9 @@ class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]])
 
     @callback
     def _user_updated(self, data: VRChatUser, world_update: bool) -> None:
+        if not world_update:
+            self.async_update_device_name(data.id)
         self.async_set_updated_data(self.data)
-        if (device := self._device_entry(data.id)) is not None:
-            self.device_registry.async_update_device(
-                device.id,
-                name=data.data.get("displayName"),
-            )
 
     @callback
     def _user_removed(self, user_id: str) -> None:
@@ -99,6 +96,28 @@ class VRChatAccountDataCoordinator(DataUpdateCoordinator[dict[str, VRChatUser]])
     @callback
     def _availability_updated(self, available: bool) -> None:
         self.async_update_listeners()
+
+    @callback
+    def async_register_account_device(self) -> None:
+        """Register the parent needed by friend entity constructors."""
+        account_id = self.config_entry.unique_id
+        assert account_id is not None
+        self.device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            identifiers={(DOMAIN, f"{account_id}:{account_id}")},
+            configuration_url=VRCHAT_USER_PAGE_BASE_URL + account_id,
+        )
+        self.async_update_device_name(account_id)
+
+    @callback
+    def async_update_device_name(self, user_id: str) -> None:
+        """Apply the latest display name without changing user customizations."""
+        if (
+            (device := self._device_entry(user_id)) is not None
+            and (name := self.data[user_id].data.get("displayName")) is not None
+            and name != device.name
+        ):
+            self.device_registry.async_update_device(device.id, name=name)
 
     @callback
     def _device_entry(self, user_id: str) -> dr.DeviceEntry | None:

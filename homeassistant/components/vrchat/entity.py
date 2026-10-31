@@ -32,6 +32,26 @@ class VRChatUserDataEntity(CoordinatorEntity[VRChatAccountDataCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator, context=user_id)
         self.user_id = user_id
+        entry = coordinator.config_entry
+        identifier = f"{entry.unique_id}:{user_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            configuration_url=VRCHAT_USER_PAGE_BASE_URL + user_id,
+        )
+        if user_id != entry.unique_id:
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, f"{entry.unique_id}:{entry.unique_id}"),
+                    config_entry_id=entry.entry_id,
+                )
+            )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Apply the latest device name after framework registration."""
+        await super().async_added_to_hass()
+        self.coordinator.async_update_device_name(self.user_id)
 
     @property
     def user(self) -> VRChatUser:
@@ -62,24 +82,6 @@ class VRChatUserDataEntity(CoordinatorEntity[VRChatAccountDataCoordinator]):
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self.coordinator.available and self.user_id in self.coordinator.data
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        entry = self.coordinator.config_entry
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.unique_id}:{self.user_id}")},
-            name=self.user_data.get("displayName"),
-            configuration_url=VRCHAT_USER_PAGE_BASE_URL + self.user_id,
-        )
-        if self.user_id != entry.unique_id:
-            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
-                self.coordinator.hass,
-                (DOMAIN, f"{entry.unique_id}:{entry.unique_id}"),
-                config_entry_id=entry.entry_id,
-            )
-        return device_info
 
     @cached_property
     @override
