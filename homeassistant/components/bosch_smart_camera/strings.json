@@ -25,6 +25,9 @@
     },
     "snapshot_failed": {
       "message": "Unable to fetch the camera image from Bosch."
+    },
+    "stream_failed": {
+      "message": "Unable to open the live stream of the camera."
     }
   }
 }

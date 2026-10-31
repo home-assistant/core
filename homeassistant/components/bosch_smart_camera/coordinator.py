@@ -29,6 +29,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .live_sessions import LiveSessions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +61,7 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         )
         self._snapshots: dict[str, tuple[float, bytes | None]] = {}
         self._snapshot_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+        self.live_sessions = LiveSessions(self)
 
     @override
     async def _async_setup(self) -> None:
@@ -70,6 +72,17 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         self._oauth_session = OAuth2Session(
             self.hass, self.config_entry, implementation
         )
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Close the live sessions and stop updating."""
+        await super().async_shutdown()
+        await self.live_sessions.async_close_all()
+
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token."""
+        await self._oauth_session.async_ensure_token_valid()
+        return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
 
     @override
     async def _async_update_data(self) -> dict[str, Camera]:
@@ -92,6 +105,8 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
         for camera_id in self._snapshots.keys() - data.keys():
             del self._snapshots[camera_id]
             self._snapshot_locks.pop(camera_id, None)
+        for camera_id in self.live_sessions.camera_ids - data.keys():
+            await self.live_sessions.async_close(camera_id)
         self._sync_devices(data)
         return data
 
