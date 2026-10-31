@@ -142,19 +142,52 @@ class MultiprotocolAddonManager(WaitingAddonManager):
     async def async_change_channel(
         self, channel: int, delay: float
     ) -> list[asyncio.Task]:
-        """Change the channel and notify platforms."""
-        self.async_set_channel(channel)
+        """Change the channel and notify platforms.
 
-        tasks = []
+        The channel is stored once every platform has accepted the change. A
+        platform that refuses it, like a Thread border router whose network is
+        mid-change, leaves the stored channel and the other radios as they
+        were: the changes already started are cancelled, so no radio moves on
+        its own. A platform that cannot tell whether its change went through
+        is treated the same way, so nothing moves on a guess. The tasks
+        returned are the platforms' follow-up work, which fails on its own.
 
-        for platform in self._platforms.values():
-            if not await platform.async_using_multipan(self._hass):
-                continue
-            task = await platform.async_change_channel(self._hass, channel, delay)
-            if not task:
-                continue
-            tasks.append(task)
+        The change runs apart from the caller: cancelled midway -- a dialog
+        closed while the router waits for its leader -- it settles first and
+        the cancellation is passed on afterwards, so no radio is left half-way.
+        """
+        change = self._hass.async_create_task(
+            self._async_change_channel(channel, delay)
+        )
+        try:
+            return await asyncio.shield(change)
+        except asyncio.CancelledError:
+            await asyncio.wait([change])
+            raise
 
+    async def _async_change_channel(
+        self, channel: int, delay: float
+    ) -> list[asyncio.Task]:
+        """Ask the platforms, then store the channel they accepted."""
+        tasks: list[asyncio.Task] = []
+        accepted = False
+        try:
+            for platform in self._platforms.values():
+                if not await platform.async_using_multipan(self._hass):
+                    continue
+                task = await platform.async_change_channel(self._hass, channel, delay)
+                if task:
+                    tasks.append(task)
+            accepted = True
+        finally:
+            if not accepted:
+                for task in tasks:
+                    task.cancel()
+
+        self._channel = channel
+        # Written at once: a restart inside the save delay would bring the
+        # old channel back while both radios are moving to the new one.
+        await self._store.async_save(self._data_to_save())
         return tasks
 
     async def async_active_platforms(self) -> list[str]:
@@ -202,6 +235,10 @@ class MultiprotocolAddonManager(WaitingAddonManager):
         return data
 
 
+class ChannelChangeOutcomeUnknownError(HomeAssistantError):
+    """Raised by a platform that cannot tell whether its channel change went through."""
+
+
 class MultipanProtocol(Protocol):
     """Define the format of multipan platforms."""
 
@@ -211,6 +248,12 @@ class MultipanProtocol(Protocol):
         """Set the channel to be used.
 
         Does nothing if not configured or the multiprotocol add-on is not used.
+        Raises only while nothing has been written to the radio: once the
+        change is under way, work that can still fail is done in the returned
+        task, as the manager takes an error for a refusal. A platform that
+        cannot tell whether its write went through raises
+        ChannelChangeOutcomeUnknownError, which the options flow reports as
+        such.
         """
 
     async def async_get_channel(self, hass: HomeAssistant) -> int | None:
@@ -588,31 +631,46 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     ) -> ConfigFlowResult:
         """Change the channel."""
         multipan_manager = await get_multiprotocol_addon_manager(self.hass)
-        if user_input is None:
-            channels = [str(x) for x in range(11, 27)]
-            suggested_channel = DEFAULT_CHANNEL
-            if (channel := multipan_manager.async_get_channel()) is not None:
-                suggested_channel = channel
-            data_schema = probatio.Schema(
-                {
-                    probatio.Required(
-                        "channel",
-                        description={"suggested_value": str(suggested_channel)},
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=channels, mode=SelectSelectorMode.DROPDOWN
-                        )
+        channels = [str(x) for x in range(11, 27)]
+        suggested_channel = DEFAULT_CHANNEL
+        if (channel := multipan_manager.async_get_channel()) is not None:
+            suggested_channel = channel
+        data_schema = probatio.Schema(
+            {
+                probatio.Required(
+                    "channel",
+                    description={"suggested_value": str(suggested_channel)},
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=channels, mode=SelectSelectorMode.DROPDOWN
                     )
-                }
-            )
+                )
+            }
+        )
+        if user_input is None:
             return self.async_show_form(
                 step_id="change_channel", data_schema=data_schema
             )
 
         # Change the shared channel
-        await multipan_manager.async_change_channel(
-            int(user_input["channel"]), DEFAULT_CHANNEL_CHANGE_DELAY
-        )
+        try:
+            await multipan_manager.async_change_channel(
+                int(user_input["channel"]), DEFAULT_CHANNEL_CHANGE_DELAY
+            )
+        except HomeAssistantError as err:
+            # Refused by a radio before anything moved, or one that cannot
+            # tell: nothing was stored either way, and the form says which.
+            outcome_unknown = isinstance(err, ChannelChangeOutcomeUnknownError)
+            return self.async_show_form(
+                step_id="change_channel",
+                data_schema=data_schema,
+                errors={
+                    "base": "channel_change_unknown"
+                    if outcome_unknown
+                    else "channel_change_refused"
+                },
+                description_placeholders={"error": str(err)},
+            )
         return await self.async_step_notify_channel_change()
 
     async def async_step_notify_channel_change(
