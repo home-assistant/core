@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from yolink.home_manager import YoLinkHome
+from yolink.model import BRDP
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -14,12 +15,36 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.yolink.api import ConfigEntryAuth
+from homeassistant.components.yolink.const import (
+    AUTH_TYPE_UAC,
+    CONF_AUTH_TYPE,
+    CONF_HOME_ID,
+    CONF_SECRET_KEY,
+    CONF_UAID,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 CLIENT_ID = "12345"
 CLIENT_SECRET = "6789"
-DOMAIN = "yolink"
+
+TEST_UAID = "test-uaid-12345"
+TEST_SECRET_KEY = "test-secret-key-6789"
+TEST_HOME_ID = "home_12345"
+TEST_HOME_NAME = "My Test Home"
+
+
+def home_info_response(home_id: str = TEST_HOME_ID, name: str = TEST_HOME_NAME) -> BRDP:
+    """Return a Home.getGeneralInfo response for a home."""
+    return BRDP(code="000000", data={"id": home_id, "name": name})
+
+
+def build_yolink_home() -> AsyncMock:
+    """Return a mocked YoLink home instance."""
+    home_instance = AsyncMock(spec=YoLinkHome)
+    home_instance.async_get_home_info.return_value = home_info_response()
+    return home_instance
 
 
 @pytest.fixture
@@ -39,6 +64,15 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.yolink.async_setup_entry", return_value=None
+    ) as mock_setup:
+        yield mock_setup
+
+
 @pytest.fixture(name="mock_auth_manager")
 def mock_auth_manager() -> Generator[MagicMock]:
     """Mock the authentication manager."""
@@ -55,13 +89,26 @@ def mock_yolink_home() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.yolink.YoLinkHome", autospec=True
     ) as mock_home:
-        mock_home.return_value = AsyncMock(spec=YoLinkHome)
+        mock_home.return_value = build_yolink_home()
         yield mock_home
+
+
+@pytest.fixture(name="mock_yolink_client")
+def mock_yolink_client() -> Generator[AsyncMock]:
+    """Mock the YoLink API client used by the config flow."""
+    with patch(
+        "homeassistant.components.yolink.config_flow.YoLinkClient", autospec=True
+    ) as mock_client:
+        mock_client.return_value.execute.return_value = home_info_response()
+        yield mock_client
 
 
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Mock a config entry for YoLink."""
+    """Mock an OAuth2 config entry for YoLink.
+
+    Predates UAC support, so it carries no auth type.
+    """
     config_entry = MockConfigEntry(
         unique_id=DOMAIN,
         domain=DOMAIN,
@@ -75,6 +122,25 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "expires_in": 60,
                 "scope": "create",
             },
+        },
+        options={},
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+@pytest.fixture
+def mock_uac_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock a UAC config entry for YoLink."""
+    config_entry = MockConfigEntry(
+        unique_id=TEST_HOME_ID,
+        domain=DOMAIN,
+        title=TEST_HOME_NAME,
+        data={
+            CONF_AUTH_TYPE: AUTH_TYPE_UAC,
+            CONF_UAID: TEST_UAID,
+            CONF_SECRET_KEY: TEST_SECRET_KEY,
+            CONF_HOME_ID: TEST_HOME_ID,
         },
         options={},
     )
