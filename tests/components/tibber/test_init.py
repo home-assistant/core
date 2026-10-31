@@ -5,8 +5,10 @@ from collections.abc import Awaitable, Callable
 import time
 from unittest.mock import ANY, MagicMock, patch
 
+import aiohttp
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+import tibber
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber import DOMAIN
@@ -14,6 +16,61 @@ from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+
+from .conftest import create_tibber_home
+
+
+@pytest.mark.usefixtures("recorder_mock", "setup_credentials")
+@pytest.mark.parametrize(
+    ("method", "error"),
+    [
+        pytest.param(
+            "fetch_consumption_data_active_homes",
+            tibber.RetryableHttpExceptionError(
+                200, "Consumption failed", "INTERNAL_SERVER_ERROR"
+            ),
+            id="consumption",
+        ),
+        pytest.param(
+            "fetch_production_data_active_homes",
+            tibber.RetryableHttpExceptionError(
+                200, "Production failed", "INTERNAL_SERVER_ERROR"
+            ),
+            id="production",
+        ),
+        pytest.param(
+            "fetch_consumption_data_active_homes", TimeoutError(), id="timeout"
+        ),
+        pytest.param(
+            "fetch_consumption_data_active_homes",
+            aiohttp.ClientError(),
+            id="client_error",
+        ),
+    ],
+)
+async def test_setup_history_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    tibber_mock: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+    error: Exception,
+) -> None:
+    """Test setup succeeds when the initial history refresh fails."""
+    tibber_mock.get_homes.return_value = [create_tibber_home()]
+    getattr(tibber_mock, method).side_effect = error
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    coordinator = config_entry.runtime_data.data_coordinator
+    assert coordinator is not None
+    assert not coordinator.last_update_success
+    assert (
+        "Unable to update Tibber consumption/production history and statistics; will retry"
+        in caplog.messages
+    )
 
 
 async def test_entry_unload(
