@@ -185,9 +185,10 @@ async def test_get_image_without_exists_camera(hass: HomeAssistant) -> None:
             "homeassistant.helpers.entity_component.EntityComponent.get_entity",
             return_value=None,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await camera.async_get_image(hass, "camera.demo_camera")
+    assert exc_info.value.translation_key == "camera_not_found"
 
 
 @pytest.mark.usefixtures("image_mock_url")
@@ -222,9 +223,10 @@ async def test_get_image_with_timeout(hass: HomeAssistant) -> None:
             "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
             side_effect=TimeoutError,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await camera.async_get_image(hass, "camera.demo_camera")
+    assert exc_info.value.translation_key == "image_unavailable"
 
 
 @pytest.mark.usefixtures("image_mock_url")
@@ -235,9 +237,10 @@ async def test_get_image_fails(hass: HomeAssistant) -> None:
             "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
             return_value=None,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await camera.async_get_image(hass, "camera.demo_camera")
+    assert exc_info.value.translation_key == "image_unavailable"
 
 
 @pytest.mark.usefixtures("mock_camera")

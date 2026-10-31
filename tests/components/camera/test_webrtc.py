@@ -404,7 +404,10 @@ async def test_websocket_webrtc_offer_invalid_entity(
     assert not response["success"]
     assert response["error"] == {
         "code": "home_assistant_error",
-        "message": "Camera not found",
+        "message": "Camera camera.does_not_exist not found",
+        "translation_key": "camera_not_found",
+        "translation_domain": "camera",
+        "translation_placeholders": {"entity_id": "camera.does_not_exist"},
     }
 
 
@@ -635,7 +638,10 @@ async def test_ws_webrtc_candidate_invalid_entity(
     assert not response["success"]
     assert response["error"] == {
         "code": "home_assistant_error",
-        "message": "Camera not found",
+        "message": "Camera camera.does_not_exist not found",
+        "translation_key": "camera_not_found",
+        "translation_domain": "camera",
+        "translation_placeholders": {"entity_id": "camera.does_not_exist"},
     }
 
 
