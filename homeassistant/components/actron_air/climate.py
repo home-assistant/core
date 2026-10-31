@@ -1,5 +1,6 @@
 """Climate platform for Actron Air integration."""
 
+from collections.abc import Callable
 from typing import Any, override
 
 from actron_neo_api import ActronAirStatus, ActronAirZone
@@ -53,19 +54,28 @@ async def async_setup_entry(
 ) -> None:
     """Set up Actron Air climate entities."""
     system_coordinators = entry.runtime_data.system_coordinators
-    entities: list[ClimateEntity] = []
 
     for coordinator in system_coordinators.values():
-        status = coordinator.data
-        entities.append(ActronSystemClimate(coordinator))
+        async_add_entities([ActronSystemClimate(coordinator)])
 
-        entities.extend(
-            ActronZoneClimate(coordinator, zone)
-            for zone in status.remote_zone_info
-            if zone.exists
-        )
+        def _create_zone_listener(
+            coordinator: ActronAirSystemCoordinator,
+        ) -> Callable[[], None]:
+            added_zone_ids: set[int] = set()
 
-    async_add_entities(entities)
+            def _async_add_new_zones() -> None:
+                new_zone_ids, zones = coordinator.get_new_zones(added_zone_ids)
+                added_zone_ids.update(zones)
+                async_add_entities(
+                    ActronZoneClimate(coordinator, zones[zone_id])
+                    for zone_id in new_zone_ids
+                )
+
+            return _async_add_new_zones
+
+        add_new_zones = _create_zone_listener(coordinator)
+        entry.async_on_unload(coordinator.async_add_listener(add_new_zones))
+        add_new_zones()
 
 
 class ActronAirClimateEntity(ClimateEntity):
