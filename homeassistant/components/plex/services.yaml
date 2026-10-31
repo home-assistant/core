@@ -9,3 +9,133 @@ refresh_library:
       example: "TV Shows"
       selector:
         text:
+on_deck:
+  fields:
+    server_name:
+      example: "My Plex Server"
+      selector:
+        text:
+    username:
+      example: "my_user"
+      selector:
+        text:
+    library_name:
+      example: "Movies"
+      selector:
+        text:
+    media_type:
+      example: "episode"
+      selector:
+        select:
+          options:
+            - "movie"
+            - "episode"
+    limit:
+      default: 20
+      selector:
+        number:
+          mode: box
+          min: 1
+          max: 100
+search:
+  fields:
+    server_name:
+      example: "My Plex Server"
+      selector:
+        text:
+    username:
+      example: "my_user"
+      selector:
+        text:
+    query:
+      example: "The Matrix"
+      selector:
+        text:
+    plex_key:
+      example: 1234
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 999999999
+    playlist_name:
+      example: "Favorites"
+      selector:
+        text:
+    library_name:
+      example: "Movies"
+      selector:
+        text:
+    media_type:
+      example: "movie"
+      selector:
+        select:
+          options:
+            - "movie"
+            - "show"
+            - "season"
+            - "episode"
+            - "artist"
+            - "album"
+            - "track"
+            - "playlist"
+    title:
+      example: "The Matrix"
+      selector:
+        text:
+    show_name:
+      example: "Severance"
+      selector:
+        text:
+    season_number:
+      example: 1
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 999
+    episode_name:
+      example: "Good News About Hell"
+      selector:
+        text:
+    episode_number:
+      example: 1
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 9999
+    artist_name:
+      example: "Daft Punk"
+      selector:
+        text:
+    album_name:
+      example: "Discovery"
+      selector:
+        text:
+    track_name:
+      example: "One More Time"
+      selector:
+        text:
+    track_number:
+      example: 1
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 999
+    year:
+      example: 1999
+      selector:
+        number:
+          mode: box
+          min: 1800
+          max: 2200
+    filters:
+      example: '{"genre": "Sci-Fi"}'
+      selector:
+        object:
+    include_on_deck:
+      default: false
+      selector:
+        boolean:
