@@ -56,6 +56,24 @@ async def test_entry_diagnostics(
     assert result == snapshot(exclude=props("entry_id", "created_at", "modified_at"))
 
 
+async def test_entry_diagnostics_redacts_psk(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test pre-shared keys are redacted from runtime diagnostics."""
+    controller = init_integration.runtime_data
+
+    gateway = next(iter(controller.gateway_coordinator.data.values()))
+    gateway.raw_data["wlan"] = {"ssids": [{"ssid": "OFFICE", "psk": "SuperSecretPsk"}]}
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    payload = json.dumps(result)
+    assert "SuperSecretPsk" not in payload
+    assert result["runtime"]["gateway"]["wlan"]["ssids"][0]["psk"] == "**REDACTED**"
+
+
 async def test_entry_diagnostics_no_gateway(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
