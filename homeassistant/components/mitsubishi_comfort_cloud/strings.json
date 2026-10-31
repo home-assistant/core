@@ -1,0 +1,68 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "Sign in with the same Mitsubishi Comfort account that was used to set up this integration."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "No supported indoor units were found on this account",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for your Kumo Cloud account.",
+          "username": "The email address for your Kumo Cloud account."
+        },
+        "description": "Sign in with the same Mitsubishi Comfort account to restore cloud access.",
+        "title": "Reauthenticate Mitsubishi Comfort Cloud"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for your Kumo Cloud account.",
+          "username": "The email address for your Kumo Cloud account."
+        },
+        "description": "Control Mitsubishi Comfort indoor units through the cloud. An internet connection is required. Kumo Station devices are not supported."
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with Mitsubishi Comfort failed"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to Mitsubishi Comfort"
+    },
+    "communication_error": {
+      "message": "Error communicating with {device_name}"
+    },
+    "no_devices": {
+      "message": "No supported indoor units were found in your Mitsubishi Comfort account"
+    },
+    "set_fan_mode_failed": {
+      "message": "{device_name} did not accept the requested fan mode"
+    },
+    "set_hvac_mode_failed": {
+      "message": "{device_name} did not accept the requested HVAC mode"
+    },
+    "set_swing_mode_failed": {
+      "message": "{device_name} did not accept the requested swing mode"
+    },
+    "set_temperature_failed": {
+      "message": "{device_name} did not accept the requested temperature"
+    },
+    "update_failed": {
+      "message": "{device_name} returned no data"
+    }
+  }
+}

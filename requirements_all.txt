@@ -1701,6 +1701,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
+# homeassistant.components.mitsubishi_comfort_cloud
 mitsubishi-comfort==0.6.0
 
 # homeassistant.components.moat
