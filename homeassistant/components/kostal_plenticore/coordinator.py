@@ -145,7 +145,7 @@ class DataUpdateCoordinatorMixin:
             return None
 
         try:
-            return await client.get_setting_values(module_id, data_id)
+            return await client.get_setting_values(module_id, [data_id])
         except ApiException:
             return None
 
