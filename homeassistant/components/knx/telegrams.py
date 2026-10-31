@@ -11,6 +11,7 @@ from knx_telegram_store import (
     BufferedPostgresStore,
     BufferedSqliteStore,
     ConnectionErrorKind,
+    InsufficientDiskSpaceError,
     KnxTelegramStoreException,
     StoredTelegram,
 )
@@ -40,6 +41,7 @@ from .const import (
 )
 from .project import KNXProject
 from .repairs import (
+    async_create_telegram_storage_disk_space_issue,
     async_create_telegram_storage_issue,
     async_delete_telegram_storage_issue,
 )
@@ -192,6 +194,14 @@ class Telegrams:
             return
         try:
             await self._async_initialize_store(self._uninitialized_store)
+        except InsufficientDiskSpaceError as err:
+            _LOGGER.error(
+                "Not enough free disk space to upgrade the KNX telegram database: %s. "
+                "The upgrade is retried on the next start",
+                err,
+            )
+            await self._abort_store_init(disk_space=err)
+            return
         except KnxTelegramStoreException as err:
             _LOGGER.error(
                 "Database error initializing KNX telegram storage backend '%s': %s",
@@ -286,9 +296,19 @@ class Telegrams:
             else:
                 return
 
-    async def _abort_store_init(self) -> None:
+    async def _abort_store_init(
+        self, *, disk_space: InsufficientDiskSpaceError | None = None
+    ) -> None:
         """Create a repair issue and tear down a store that failed to init."""
-        async_create_telegram_storage_issue(self.hass, self.config_entry_id)
+        if disk_space is not None:
+            async_create_telegram_storage_disk_space_issue(
+                self.hass,
+                self.config_entry_id,
+                disk_space.required,
+                disk_space.available,
+            )
+        else:
+            async_create_telegram_storage_issue(self.hass, self.config_entry_id)
         if self._uninitialized_store is not None:
             with contextlib.suppress(Exception):
                 await self._uninitialized_store.close()
