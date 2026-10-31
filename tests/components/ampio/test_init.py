@@ -1,0 +1,285 @@
+"""Tests for the Ampio integration setup and teardown."""
+
+import logging
+from unittest.mock import MagicMock
+
+from ampio_mqtt import (
+    AmpioAuthError,
+    AmpioConnectionError,
+    AmpioNotConfigured,
+    AuthFailed,
+    AvailabilityChanged,
+    ConnectionDied,
+)
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.ampio.const import DOMAIN, HUB_IDENTIFIER
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from . import setup_integration
+from .conftest import (
+    DEFAULT_OBJECTS,
+    MSENS_DEVICE_NAME,
+    MSENS_IDENTIFIER,
+    USER_INPUT,
+    emit,
+    object_identifier,
+)
+
+
+async def test_setup_and_unload(
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """The entry loads, and unloading disconnects the client."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_client.disconnect.assert_awaited_once()
+
+
+async def test_shutdown_disconnects_client(
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Home Assistant stopping closes the connection.
+
+    Entries are not unloaded at shutdown, so the stop event is the only place
+    the client is reached, and a connection left open there is torn down by
+    task cancellation and reported as an outage.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_client.disconnect.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("connect_result", "expected_state", "expected_reason"),
+    [
+        pytest.param(
+            AmpioConnectionError("refused"),
+            ConfigEntryState.SETUP_RETRY,
+            "cannot_connect",
+            id="connection-error",
+        ),
+        pytest.param(
+            AmpioAuthError("denied"),
+            ConfigEntryState.SETUP_ERROR,
+            "invalid_auth",
+            id="auth-error",
+        ),
+        # A discovery cycle that does not complete in time is retryable.
+        pytest.param(
+            False,
+            ConfigEntryState.SETUP_RETRY,
+            "discovery_timeout",
+            id="incomplete-discovery",
+        ),
+    ],
+)
+async def test_setup_failure_disconnects_client(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    connect_result: Exception | bool,
+    expected_state: ConfigEntryState,
+    expected_reason: str,
+) -> None:
+    """A failed connect maps to the right entry state and disconnects the client."""
+    mock_client.connect.side_effect = [connect_result]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is expected_state
+    assert mock_config_entry.error_reason_translation_key == expected_reason
+    mock_client.disconnect.assert_awaited_once()
+
+
+async def test_setup_builds_client(
+    hass: HomeAssistant,
+    mock_client_class: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setup runs the client on the entry's host and credentials."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_client_class.assert_called_once_with(
+        USER_INPUT[CONF_HOST], USER_INPUT[CONF_USERNAME], USER_INPUT[CONF_PASSWORD]
+    )
+
+
+async def test_designer_fault_keeps_served_objects(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A Designer fault that the library reports still loads every served object.
+
+    The warning names the object ids and no Designer name.
+    """
+    mock_client.connect.side_effect = AmpioNotConfigured(objects=((61, "Podlewanie"),))
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == 8
+    )
+    assert "objects 61 without a bus address" in caplog.text
+    assert "Podlewanie" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_setup_accepts_replaced_server(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """An entry loads its entities when the M-SERV reports a different key."""
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="99999")
+
+    await setup_integration(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 8
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_entities_group_by_module_mac(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Object devices hang under a module device keyed on the address mac.
+
+    The module device is named after the mac and links to the hub.
+    """
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    hub = device_registry.async_get_device_by_identifier(
+        HUB_IDENTIFIER, mock_config_entry.entry_id
+    )
+    assert hub is not None
+    assert hub.name == "M-SERV"
+    assert hub.model == "M-SERV"
+
+    module = device_registry.async_get_device_by_identifier(
+        MSENS_IDENTIFIER, mock_config_entry.entry_id
+    )
+    assert module is not None
+    assert module.name == MSENS_DEVICE_NAME
+    assert module.via_device_id == hub.id
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 8
+    assert {
+        device_registry.async_get_child_device_by_identifier(
+            object_identifier(obj.id), mock_config_entry.entry_id
+        ).parent_device_id
+        for obj in DEFAULT_OBJECTS
+    } == {module.id}
+
+
+async def test_runtime_auth_failure_reloads_into_auth_error(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A credential rejection after startup surfaces as an entry auth error.
+
+    The library's reconnect loop stops for good on an unauthorized reconnect;
+    the integration schedules a reload, whose setup then raises
+    ConfigEntryAuthFailed and lands the entry in SETUP_ERROR.
+    """
+    await setup_integration(hass, mock_config_entry)
+    mock_client.connect.side_effect = AmpioAuthError("credentials changed")
+
+    emit(mock_client, AuthFailed(reason="not authorized"))
+    await hass.async_block_till_done()
+
+    assert "reloading" in caplog.text
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "invalid_auth"
+
+
+async def test_connection_died_reloads_and_recovers(
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """A terminal connection-loop crash re-runs setup and recovers."""
+    await setup_integration(hass, mock_config_entry)
+
+    emit(mock_client, ConnectionDied(reason="internal error"))
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_client.connect.await_count == 2
+
+
+@pytest.mark.parametrize(
+    "discovered",
+    [
+        pytest.param(True, id="after-discovery"),
+        pytest.param(False, id="before-discovery"),
+    ],
+)
+async def test_connection_died_while_connecting_retries_setup(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    discovered: bool,
+) -> None:
+    """A connection-loop crash inside connect() fails setup into a retry."""
+
+    def die_while_connecting() -> bool:
+        emit(mock_client, ConnectionDied(reason="internal error"))
+        return discovered
+
+    mock_client.connect.side_effect = die_while_connecting
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_client.connect.await_count == 1
+
+
+async def test_availability_transitions_log_once_per_edge(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """One warning on loss, one info on restore, nothing on first connect."""
+    await setup_integration(hass, mock_config_entry)
+
+    with caplog.at_level(logging.INFO, logger="homeassistant.components.ampio"):
+        emit(mock_client, AvailabilityChanged(available=True))
+        emit(mock_client, AvailabilityChanged(available=False))
+        emit(mock_client, AvailabilityChanged(available=True))
+
+    assert caplog.text.count("Connection to the Ampio server lost") == 1
+    assert caplog.text.count("Connection to the Ampio server restored") == 1
