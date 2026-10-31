@@ -1,0 +1,5 @@
+{
+  "domain": "nad",
+  "name": "NAD",
+  "integrations": ["nad", "nad_infrared"]
+}

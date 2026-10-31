@@ -1,0 +1,108 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This NAD device has already been configured with this infrared emitter.",
+      "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]"
+    },
+    "step": {
+      "amplifier": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the infrared emitter to use for controlling your NAD amplifier. The amplifier must be set to IR channel 0.",
+        "title": "Set up NAD amplifier"
+      },
+      "cassette_deck": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the infrared emitter to use for controlling your NAD cassette deck.",
+        "title": "Set up NAD cassette deck"
+      },
+      "cd_player": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the infrared emitter to use for controlling your NAD CD player.",
+        "title": "Set up NAD CD player"
+      },
+      "receiver": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the infrared emitter to use for controlling your NAD receiver. The receiver must be set to IR channel 0.",
+        "title": "Set up NAD receiver"
+      },
+      "user": {
+        "description": "Select the type of NAD device to set up.",
+        "menu_options": {
+          "amplifier": "Amplifier",
+          "cassette_deck": "Cassette deck",
+          "cd_player": "CD player",
+          "receiver": "Receiver (amplifier with tuner)"
+        },
+        "title": "Set up NAD IR Remote"
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "receiver": {
+        "state_attributes": {
+          "sound_mode": {
+            "state": {
+              "bypass": "Bypass",
+              "direct": "Direct",
+              "dolby_surround_ex": "Dolby Surround EX",
+              "ears": "EARS",
+              "enhanced_stereo": "Enhanced stereo",
+              "matrix_7_1": "Matrix 7.1",
+              "neo6_cinema": "DTS Neo:6 Cinema",
+              "neo6_music": "DTS Neo:6 Music",
+              "pliix_movie": "Dolby Pro Logic IIx Movie",
+              "pliix_music": "Dolby Pro Logic IIx Music",
+              "stereo_downmix": "Stereo downmix"
+            }
+          },
+          "source": {
+            "state": {
+              "front": "Front",
+              "input_1": "Input 1",
+              "input_2": "Input 2",
+              "input_3": "Input 3",
+              "input_4": "Input 4",
+              "input_5": "Input 5",
+              "input_6": "Input 6",
+              "input_7": "Input 7",
+              "mp": "MP",
+              "tuner": "Tuner"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "emitter_not_found": {
+      "message": "The infrared emitter used by this NAD device no longer exists. Remove this device and set it up again with another emitter."
+    },
+    "invalid_sound_mode": {
+      "message": "Cannot select sound mode {invalid_sound_mode}. Valid sound modes: {valid_sound_modes}."
+    },
+    "invalid_source": {
+      "message": "Cannot select input source {invalid_source}. Valid sources: {valid_sources}."
+    }
+  }
+}

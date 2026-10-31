@@ -545,6 +545,7 @@ FLOWS = {
         "mysensors",
         "mystrom",
         "myuplink",
+        "nad_infrared",
         "nam",
         "namecheapdns",
         "nanoleaf",
