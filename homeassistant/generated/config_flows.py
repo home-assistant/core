@@ -283,6 +283,7 @@ FLOWS = {
         "fully_kiosk",
         "fumis",
         "fyta",
+        "gaposa",
         "garages_amsterdam",
         "gardena_bluetooth",
         "gatus",
