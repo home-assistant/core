@@ -577,6 +577,59 @@ def test_jinja_namespace(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    "template_str",
+    [
+        "{{ dict.clear(states.sensor.test.attributes) }}",
+        "{{ dict.pop(states.sensor.test.attributes, 'a') }}",
+        "{{ dict.popitem(states.sensor.test.attributes) }}",
+        "{{ dict.setdefault(states.sensor.test.attributes, 'b', 2) }}",
+        "{{ dict.update(states.sensor.test.attributes, {'b': 2}) }}",
+    ],
+)
+def test_dict_methods_not_available(hass: HomeAssistant, template_str: str) -> None:
+    """Test the methods of the dict type that change a dict are not available."""
+    hass.states.async_set("sensor.test", "on", {"a": 1})
+
+    with pytest.raises(TemplateError):
+        template.Template(template_str, hass).async_render()
+
+    assert hass.states.get("sensor.test").attributes == {"a": 1}
+
+
+@pytest.mark.parametrize(
+    ("template_str", "expected"),
+    [
+        ("{{ dict.copy(states.sensor.test.attributes) }}", {"a": 1}),
+        ("{{ dict.fromkeys(['a', 'b'], 0) }}", {"a": 0, "b": 0}),
+        ("{{ dict.get(states.sensor.test.attributes, 'a') }}", 1),
+        ("{{ dict.items(states.sensor.test.attributes) | list }}", [("a", 1)]),
+        ("{{ dict.keys(states.sensor.test.attributes) | list }}", ["a"]),
+        ("{{ dict.values(states.sensor.test.attributes) | list }}", [1]),
+    ],
+)
+def test_dict_reading_methods(
+    hass: HomeAssistant, template_str: str, expected: Any
+) -> None:
+    """Test the methods of the dict type that read a dict are available."""
+    hass.states.async_set("sensor.test", "on", {"a": 1})
+
+    assert template.Template(template_str, hass).async_render() == expected
+
+
+def test_dict_function(hass: HomeAssistant) -> None:
+    """Test dict builds a new dict."""
+    hass.states.async_set("sensor.test", "on", {"a": 1})
+
+    assert template.Template(
+        "{{ dict(states.sensor.test.attributes, b=2) }}", hass
+    ).async_render() == {"a": 1, "b": 2}
+    assert hass.states.get("sensor.test").attributes == {"a": 1}
+    assert template.Template("{{ dict(self='x') }}", hass).async_render() == {
+        "self": "x"
+    }
+
+
+@pytest.mark.parametrize(
     ("rounded", "with_unit", "output1_1", "output1_2", "output2_1", "output2_2"),
     [
         (False, False, 23, 23.015, 23, 23.015),
