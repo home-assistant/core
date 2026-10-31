@@ -254,3 +254,68 @@ async def test_playback_connect_error(
     response = cast(ClientResponse, await http_client.get(proxy_url))
 
     assert response.status == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    "retry_headers",
+    [
+        pytest.param({}, id="no-retry-after"),
+        pytest.param({"Retry-After": "2"}, id="retry-after"),
+    ],
+)
+async def test_playback_service_unavailable(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    retry_headers: dict[str, str],
+) -> None:
+    """Preserve a temporary camera failure and allow a later range request."""
+    reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
+    unavailable_session = get_mock_session(content_type="text/html")
+    unavailable_response = unavailable_session.get.return_value
+    unavailable_response.status = HTTPStatus.SERVICE_UNAVAILABLE
+    unavailable_response.headers = {
+        "Content-Type": "text/html",
+        "Content-Length": "1000",
+        **retry_headers,
+    }
+    successful_session = get_mock_session()
+    successful_response = successful_session.get.return_value
+    successful_response.status = HTTPStatus.PARTIAL_CONTENT
+    successful_response.reason = "Partial Content"
+    successful_response.headers = {"Content-Range": "bytes 0-7/8"}
+    unavailable_session.get.side_effect = [unavailable_response, successful_response]
+
+    with patch(
+        "homeassistant.components.reolink.views.async_get_clientsession",
+        return_value=unavailable_session,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_FILE_NAME_MP4,
+        TEST_STREAM,
+        TEST_VOD_TYPE,
+    )
+    http_client = await hass_client()
+    response = await http_client.get(proxy_url, headers={"Range": "bytes=0-"})
+
+    assert response.status == HTTPStatus.SERVICE_UNAVAILABLE
+    assert response.headers.get("Retry-After") == retry_headers.get("Retry-After")
+    assert await response.text() == "Reolink playback service temporarily unavailable"
+    unavailable_response.release.assert_called_once_with()
+    unavailable_response.text.assert_not_awaited()
+    assert unavailable_session.get.await_count == 1
+    reolink_host.expire_session.assert_not_awaited()
+
+    response = await http_client.get(proxy_url, headers={"Range": "bytes=0-"})
+
+    assert response.status == HTTPStatus.PARTIAL_CONTENT
+    assert response.headers["Content-Range"] == "bytes 0-7/8"
+    assert await response.read() == b"testtest"
+    assert unavailable_session.get.call_args.kwargs["headers"]["Range"] == "bytes=0-"
+    successful_response.release.assert_called_once_with()
