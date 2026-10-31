@@ -46,12 +46,21 @@ async def stream_generator(response: dict | list[dict]) -> AsyncGenerator[dict]:
         yield msg
 
 
+@pytest.mark.parametrize(
+    "mock_config_entry_options",
+    [
+        pytest.param({}, id="no_tools"),
+        pytest.param(
+            {CONF_LLM_HASS_API: ["assist", "unknown-api"]}, id="unavailable_api"
+        ),
+    ],
+)
 @pytest.mark.parametrize("agent_id", [None, "conversation.ollama_conversation"])
 async def test_chat(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    agent_id: str,
+    mock_init_component: None,
+    agent_id: str | None,
 ) -> None:
     """Test that the chat function is called with the appropriate arguments."""
 

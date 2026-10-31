@@ -103,6 +103,7 @@ async def test_default_content(
 async def test_llm_api(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when we reference an LLM API."""
     with (
@@ -117,6 +118,7 @@ async def test_llm_api(
 
     assert isinstance(chat_log.llm_api, llm.APIInstance)
     assert chat_log.llm_api.api.id == "assist"
+    assert "is not available, continuing without it" not in caplog.text
 
 
 class CountingAPI(llm.API):
@@ -287,6 +289,117 @@ async def test_unknown_llm_api(
         ("user", mock_conversation_input.text),
         ("assistant", "Error: API unknown-api not found"),
     ]
+
+
+async def test_unavailable_llm_api_is_skipped(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an unavailable LLM API is left out when another one is available."""
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=["assist", "unknown-api"],
+            user_llm_prompt=None,
+        )
+
+    assert chat_log.llm_api
+    assert chat_log.llm_api.api.id == "assist"
+    assert "LLM API unknown-api for test is not available" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("before", "after", "expected"),
+    [
+        pytest.param("other", "late", "counting|late", id="restored"),
+        pytest.param("late", "other", "counting", id="removed"),
+    ],
+)
+async def test_unavailable_llm_api_restored(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    before: str,
+    after: str,
+    expected: str,
+) -> None:
+    """Test that a later turn reflects a change in API availability."""
+    api = CountingAPI(hass=hass, id="counting", name="Counting")
+    llm.async_register_api(hass, api)
+    unregister = llm.async_register_api(
+        hass, CountingAPI(hass=hass, id=before, name=before)
+    )
+
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api=["counting", "late"],
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+        unregister()
+        llm.async_register_api(hass, CountingAPI(hass=hass, id=after, name=after))
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api=["counting", "late"],
+            )
+
+    assert api.instances == 2
+    assert chat_log.llm_api is not None
+    assert chat_log.llm_api.api.id == expected
+
+
+async def test_unavailable_llm_api_is_reused(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test the LLM API instance is reused while a requested API stays unavailable."""
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api=["assist", "unknown-api"],
+            )
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+            llm_api = chat_log.llm_api
+
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            await chat_log.async_provide_llm_data(
+                mock_conversation_input.as_llm_context("test"),
+                user_llm_hass_api=["assist", "unknown-api"],
+            )
+
+    assert llm_api is not None
+    assert llm_api.api.id == "assist"
+    assert chat_log.llm_api is llm_api
+
+
+async def test_all_llm_apis_unavailable(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the conversation still fails when no listed LLM API is available."""
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        pytest.raises(ConverseError),
+    ):
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=["unknown-a", "unknown-b"],
+            user_llm_prompt=None,
+        )
+
+    assert "is not available, continuing without it" not in caplog.text
 
 
 async def test_concurrent_turn_busy(
@@ -588,12 +701,18 @@ async def test_llm_api_object_requires_admin_authorized(
                 language="en",
                 assistant=None,
                 device_id=None,
+                agent_id="mock-agent-id",
             ),
             user_llm_hass_api=api,
         )
 
     assert chat_log.llm_api
     assert chat_log.llm_api.api is api
+    api_instance = chat_log.llm_api
+    await chat_log.async_provide_llm_data(
+        api_instance.llm_context, user_llm_hass_api=api
+    )
+    assert chat_log.llm_api is api_instance
 
 
 async def test_multiple_llm_apis(
