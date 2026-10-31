@@ -1,10 +1,12 @@
 """Test template entity."""
 
 import asyncio
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
 
 from homeassistant.components.template import template_entity
 from homeassistant.components.template.entity import AbstractTemplateEntity
@@ -201,3 +203,100 @@ async def test_running_action_after_entity_id_change(
         {"entity_id": "button.renamed", "state": state.state}
     ]
     assert state.state != "unknown"
+
+
+@pytest.mark.parametrize(
+    "runs",
+    [
+        pytest.param([[1], [2], [3], [4], [5], [6], [7], [2]], id="separate_runs"),
+        pytest.param([[1, 2, 3, 4, 5, 6]], id="single_run"),
+    ],
+)
+async def test_self_referencing_template_after_external_updates(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, runs: list[list[int]]
+) -> None:
+    """Test external state writes do not count towards template loop detection."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "number": {
+                    "name": "test",
+                    "icon": "mdi:brightness-{{ states('number.test') | int(0) }}",
+                    "min": 1,
+                    "max": 7,
+                    "step": 1,
+                    "set_value": [],
+                },
+            }
+        },
+    )
+    # A single run shares one context across all of its set_value calls
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "set_values": {
+                    "sequence": {
+                        "repeat": {
+                            "for_each": "{{ values }}",
+                            "sequence": {
+                                "action": "number.set_value",
+                                "target": {"entity_id": "number.test"},
+                                "data": {"value": "{{ repeat.item }}"},
+                            },
+                        }
+                    }
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for values in runs:
+        await hass.services.async_call(
+            "script", "set_values", {"values": values}, blocking=True
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("number.test")
+        assert state.state == f"{values[-1]}.0"
+        assert state.attributes["icon"] == f"mdi:brightness-{values[-1]}"
+
+    assert "Template loop detected" not in caplog.text
+
+
+async def test_self_referencing_rate_limited_loop_with_unlimited_template(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a rate limited loop is detected when another template renders first."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "sensor": {
+                    "name": "test",
+                    # Iterating the domain makes this template rate limited
+                    "state": (
+                        "{{ ((states.sensor | selectattr('entity_id', 'eq',"
+                        " 'sensor.test') | map(attribute='state') | list"
+                        " + ['0'])[0] | int(0)) + 1 }}"
+                    ),
+                    "icon": "mdi:numeric-{{ states('sensor.test') }}",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for _ in range(10):
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "Template loop detected" in caplog.text
+    assert int(hass.states.get("sensor.test").state) < 5

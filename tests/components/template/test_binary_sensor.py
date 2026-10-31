@@ -599,6 +599,43 @@ async def test_delay_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     assert hass.states.get(TEST_BINARY_SENSOR.entity_id).state == STATE_OFF
 
 
+async def test_self_referencing_delay_loop(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a self referencing loop through delayed writes is detected."""
+    assert await setup.async_setup_component(
+        hass,
+        template.DOMAIN,
+        {
+            "template": {
+                "binary_sensor": {
+                    "name": "test",
+                    "state": "{{ not is_state('binary_sensor.test', 'on') }}",
+                    "delay_on": 1,
+                    "delay_off": 1,
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for _ in range(10):
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "Template loop detected" in caplog.text
+    last_changed = hass.states.get("binary_sensor.test").last_changed
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test").last_changed == last_changed
+
+
 @pytest.mark.parametrize(
     ("advanced_input", "expected_advanced_options", "expected_state"),
     [

@@ -226,7 +226,7 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
             if self._preview_callback:
                 self._async_preview_update()
             else:
-                self.async_write_ha_state()
+                self._async_write_render_state()
 
         delay = (self._delay_on if state else self._delay_off).total_seconds()
         # state with delay. Cancelled if template result changes.

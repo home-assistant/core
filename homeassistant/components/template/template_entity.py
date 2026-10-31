@@ -153,6 +153,8 @@ class TemplateEntity(AbstractTemplateEntity):
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._self_ref_update_count = 0
+        self._writing_render_state = False
+        self._render_states: list[State] = []
         self._attr_unique_id = unique_id
         self._preview_callback: (
             Callable[
@@ -419,8 +421,16 @@ class TemplateEntity(AbstractTemplateEntity):
 
         entity_id = event and event.data["entity_id"]
 
-        if entity_id and entity_id == self.entity_id:
-            self._self_ref_update_count += 1
+        if event and entity_id == self.entity_id:
+            new_state = event.data["new_state"]
+            # Only count states written by a render, rate limited renders run later
+            if self._writing_render_state:
+                self._add_render_state(new_state)
+                self._self_ref_update_count += 1
+            elif any(new_state is state for state in self._render_states):
+                self._self_ref_update_count += 1
+            else:
+                self._self_ref_update_count = 1
         else:
             self._self_ref_update_count = 0
 
@@ -446,7 +456,7 @@ class TemplateEntity(AbstractTemplateEntity):
                     errors.append(update.result)
 
         if not self._preview_callback:
-            self.async_write_ha_state()
+            self._async_write_render_state()
             return
 
         if errors:
@@ -454,6 +464,33 @@ class TemplateEntity(AbstractTemplateEntity):
             return
 
         self._async_preview_update()
+
+    @callback
+    def _async_write_render_state(self) -> None:
+        """Write a state resulting from a template render.
+
+        Use this instead of async_write_ha_state for any write caused by a
+        render, including deferred ones like delays, otherwise loops through
+        that write are treated as external updates and not detected.
+        """
+        # Outside of an event dispatch, the bus delivers our own state change
+        # synchronously during this write, before the new state can be recorded
+        writing_render_state = self._writing_render_state
+        self._writing_render_state = True
+        try:
+            self.async_write_ha_state()
+        finally:
+            self._writing_render_state = writing_render_state
+        self._add_render_state(self.hass.states.get(self.entity_id))
+
+    @callback
+    def _add_render_state(self, state: State | None) -> None:
+        """Remember a state written by a render for loop detection."""
+        if state is None or any(state is known for known in self._render_states):
+            return
+        self._render_states.append(state)
+        # A loop is stopped after this many renders, older states can't be pending
+        del self._render_states[: -(len(self._template_attrs) + 1)]
 
     @callback
     def _async_preview_update(self) -> None:
