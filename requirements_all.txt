@@ -2788,6 +2788,9 @@ python-bsblan==6.2.1
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
 
+# homeassistant.components.dali
+python-dali==0.16
+
 # homeassistant.components.digital_ocean
 python-digitalocean==1.13.2
 
@@ -3163,6 +3166,7 @@ sentence-stream==1.3.0
 # homeassistant.components.sentry
 sentry-sdk==2.48.0
 
+# homeassistant.components.dali
 # homeassistant.components.serial
 # homeassistant.components.usb
 serialx==1.15.1

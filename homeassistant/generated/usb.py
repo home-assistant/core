@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "aerosmart",
+    "dali",
     "denon_rs232",
     "dsmr",
     "edl21",
@@ -26,6 +27,11 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
 ]
 
 USB = [
+    {
+        "domain": "dali",
+        "pid": "0201",
+        "vid": "17B5",
+    },
     {
         "description": "*usb 300*",
         "domain": "enocean",
