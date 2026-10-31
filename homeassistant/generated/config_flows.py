@@ -717,6 +717,7 @@ FLOWS = {
         "route_b_smart_meter",
         "rova",
         "rpi_power",
+        "rtl_433",
         "ruckus_unleashed",
         "russound_rio",
         "ruuvi_gateway",
