@@ -2,9 +2,9 @@
 
 from dataclasses import dataclass, field
 import logging
-from typing import Any, NamedTuple, override
+from typing import Any, NamedTuple, cast, override
 
-from miio import Device as MiioDevice
+from miio import Device as MiioDevice, MiotDevice
 from miio.fan_common import LedBrightness as FanLedBrightness
 from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
     DisplayOrientation as AirfreshT2017DisplayOrientation,
@@ -65,6 +65,12 @@ from .typing import XiaomiMiioConfigEntry
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
 ATTR_PTC_LEVEL = "ptc_level"
+
+# python-miio 0.5.12 skips the value reversal for LedBrightness.Bright on these
+# models and sends 0, which turns the display off. Fixed upstream in
+# rytilahti/python-miio#1477, but not released yet.
+MODELS_REVERSED_LED_BRIGHTNESS = {MODEL_AIRPURIFIER_4, MODEL_AIRPURIFIER_4_PRO}
+REVERSED_LED_BRIGHTNESS_BRIGHT = 2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -312,10 +318,17 @@ class XiaomiGenericSelector(XiaomiSelector):
     async def async_set_attr(self, attr_value: str):
         """Set attr."""
         method = getattr(self._device, self.entity_description.set_method)
+        args: tuple[Any, ...] = (self._enum_class(self._options_map[attr_value]),)
+        if (
+            self._model in MODELS_REVERSED_LED_BRIGHTNESS
+            and args[0] is AirpurifierMiotLedBrightness.Bright
+        ):
+            method = cast(MiotDevice, self._device).set_property
+            args = (ATTR_LED_BRIGHTNESS, REVERSED_LED_BRIGHTNESS_BRIGHT)
         if await self._try_command(
             self.entity_description.set_method_error_message,
             method,
-            self._enum_class(self._options_map[attr_value]),
+            *args,
         ):
             self._current_attr = self._options_map[attr_value]
             self.async_write_ha_state()
