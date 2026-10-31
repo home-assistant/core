@@ -1213,6 +1213,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                     self.hass,
                     entity_entry.device_id,
                     entity_entry.config_entry_id,
+                    include_disabled_entities=not payload.cleanup_parent_device,
                     cleanup_parent_device=payload.cleanup_parent_device,
                 )
         else:

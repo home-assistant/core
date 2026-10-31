@@ -2054,8 +2054,6 @@ async def test_cleanup_device_mqtt_device_discovery(
         '  "name": "sensor1",'
         '  "state_topic": "foobar/sensor1",'
         '  "unique_id": "unique1"'
-        ' },"sens2": {'
-        '  "p": "sensor"'
         "}}}"
     )
     async_fire_mqtt_message(hass, discovery_topic, discovery_payload_update1)
@@ -2075,13 +2073,7 @@ async def test_cleanup_device_mqtt_device_discovery(
 
     # Removing last sensor
     discovery_payload_update2 = (
-        '{ "device":{"identifiers":["0AFFD2"]},'
-        '  "o": {"name": "foobar"},'
-        '  "cmps": {"sens1": {'
-        '  "p": "sensor"'
-        ' },"sens2": {'
-        '  "p": "sensor"'
-        "}}}"
+        '{ "device":{"identifiers":["0AFFD2"]},  "o": {"name": "foobar"},  "cmps": {}}'
     )
     async_fire_mqtt_message(hass, discovery_topic, discovery_payload_update2)
     await hass.async_block_till_done()
@@ -3356,7 +3348,7 @@ async def test_disabled_device_component_removal(
     mqtt_mock.async_publish.assert_not_called()
 
     # Remove the disabled component through the device discovery payload
-    device_config["cmps"]["sens2"] = {"platform": "sensor"}
+    del device_config["cmps"]["sens2"]
     async_fire_mqtt_message(
         hass, "homeassistant/device/bla/config", json.dumps(device_config)
     )
@@ -3366,7 +3358,7 @@ async def test_disabled_device_component_removal(
     mqtt_mock.async_publish.assert_not_called()
 
     # Remove the enabled component through the device discovery payload
-    device_config["cmps"]["sens1"] = {"platform": "sensor"}
+    del device_config["cmps"]["sens1"]
     async_fire_mqtt_message(
         hass, "homeassistant/device/bla/config", json.dumps(device_config)
     )
@@ -3426,7 +3418,7 @@ async def test_disabled_device_component_removal_after_entry_reload(
     assert IGNORED_DISABLED_COMPONENT_REMOVAL_WARNING in caplog.text
 
     # Remove the disabled component through the device discovery payload
-    device_config["cmps"]["sens2"] = {"platform": "sensor"}
+    del device_config["cmps"]["sens2"]
     async_fire_mqtt_message(
         hass, "homeassistant/device/bla/config", json.dumps(device_config)
     )
@@ -3459,8 +3451,8 @@ async def test_disabled_single_component_not_removed_via_device_topic(
     assert entity_registry.async_is_registered("sensor.bla_disabled")
     mqtt_mock.async_publish.reset_mock()
 
-    # A device discovery payload removing a component with the same
-    # discovery hash must not remove the disabled component
+    # A device discovery payload only removes the components of its own topic,
+    # a component with the same discovery hash and only a platform is ignored
     device_config = {
         "dev": {"identifiers": ["bla"], "name": "bla"},
         "o": {"name": "bla2mqtt"},
@@ -3472,11 +3464,10 @@ async def test_disabled_single_component_not_removed_via_device_topic(
     await hass.async_block_till_done()
     assert entity_registry.async_is_registered("sensor.bla_disabled")
     assert (
-        "Ignoring empty MQTT discovery payload for disabled sensor 'bla sens2' "
-        "received on topic homeassistant/device/bla/config, the component was "
-        "discovered on topic homeassistant/sensor/bla/sens2/config; to remove "
-        "the component, publish an empty payload to "
-        "homeassistant/sensor/bla/sens2/config" in caplog.text
+        "Ignoring sensor 'bla sens2' with only the platform option in the MQTT "
+        "device discovery payload on topic homeassistant/device/bla/config from "
+        "external application bla2mqtt; removing a component this way is "
+        "deprecated, omit it from the payload instead" in caplog.text
     )
     mqtt_mock.async_publish.assert_not_called()
 
@@ -3590,7 +3581,7 @@ async def test_remove_device_component_keeps_disabled_components(
     mqtt_mock.async_publish.reset_mock()
 
     # Only disabled components remain after removing sens1
-    device_config["cmps"]["sens1"] = {"platform": "sensor"}
+    del device_config["cmps"]["sens1"]
     async_fire_mqtt_message(
         hass, "homeassistant/device/bla/config", json.dumps(device_config)
     )
@@ -3768,7 +3759,7 @@ async def test_user_disabled_device_component(
     mqtt_mock.async_publish.reset_mock()
 
     # Only the component disabled by the user remains after removing sens1
-    device_config["cmps"]["sens1"] = {"platform": "sensor"}
+    del device_config["cmps"]["sens1"]
     async_fire_mqtt_message(
         hass, "homeassistant/device/bla/config", json.dumps(device_config)
     )

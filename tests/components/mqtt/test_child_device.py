@@ -143,7 +143,7 @@ def _diff_device_payload(
         hass, json.dumps(payload), DEVICE_TOPIC, "parent", None
     )
     return _async_diff_device_discovery(
-        hass, _entry_id(hass), DEVICE_TOPIC, "parent", None, device_payload
+        hass, DEVICE_TOPIC, "parent", None, device_payload
     )
 
 
@@ -572,11 +572,7 @@ async def test_device_discovery_update_child_devices(
     assert entity_entry.device_id == child_device.id
 
     # Remove the component, the child device and its parent are cleaned up
-    payload = {
-        "dev": device,
-        "o": origin,
-        "cdevs": [{"ids": ["sub"], "cmps": {"sw": {"p": "switch"}}}],
-    }
+    payload = {"dev": device, "o": origin, "cdevs": [{"ids": ["sub"], "cmps": {}}]}
     async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
     await hass.async_block_till_done()
     assert entity_registry.async_get(entity_id) is None
@@ -658,16 +654,16 @@ async def test_device_discovery_replace_child_device(
     mqtt_mock.async_publish.assert_not_called()
 
 
-async def test_device_discovery_platform_only_component_keeps_child_device(
+async def test_device_discovery_ignores_platform_only_component(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a component with only a platform no longer removes its child device.
+    """Test a component with only a platform is ignored, as it is deprecated.
 
-    The child device is removed when it is omitted from the payload.
+    The component and its child device are removed when they are omitted.
     """
     mqtt_mock = await mqtt_mock_entry()
     components = {"sw": _discovery_switch("sw")}
@@ -692,7 +688,6 @@ async def test_device_discovery_platform_only_component_keeps_child_device(
     assert child_2 is not None
     mqtt_mock.async_publish.reset_mock()
 
-    # Remove the component of the second child device the old way
     payload = _device_payload(
         components,
         [
@@ -701,33 +696,30 @@ async def test_device_discovery_platform_only_component_keeps_child_device(
         ],
     )
     diff = _diff_device_payload(hass, payload)
-    assert diff.desired_components == {
-        ("switch", "parent sw"),
-        ("switch", "parent sw1"),
-    }
-    assert set(diff.removed_components) == {("switch", "parent sw2")}
+    assert not diff.removed_components
     assert not diff.removed_child_devices
 
     await _discover_device(hass, payload)
-    assert not entity_registry.async_is_registered("switch.parent_sub_2_switch")
+    assert entity_registry.async_is_registered("switch.parent_sub_2_switch")
     assert _device_id(_get_child_device(hass, device_registry, "sub2")) == child_2.id
-    assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
-    assert "omitted from the MQTT device discovery payload" not in caplog.text
+    assert (
+        "Ignoring switch 'parent sw2' with only the platform option in the MQTT "
+        f"device discovery payload on topic {DEVICE_TOPIC} from external application "
+        "Foo2Mqtt; removing a component this way is deprecated, omit it from the "
+        "payload instead" in caplog.text
+    )
 
-    # The child device without components is removed when it is omitted
     payload = _device_payload(components, [child_device_1])
     diff = _diff_device_payload(hass, payload)
-    assert not diff.removed_components
+    assert set(diff.removed_components) == {("switch", "parent sw2")}
     assert diff.removed_child_devices == {frozenset({"sub2"})}
 
     await _discover_device(hass, payload)
+    assert not entity_registry.async_is_registered("switch.parent_sub_2_switch")
     assert _get_child_device(hass, device_registry, "sub2") is None
-    assert _get_child_device(hass, device_registry, "sub1") is not None
     assert _device_id(_get_device(hass, device_registry, "parent")) == parent.id
     assert entity_registry.async_is_registered("switch.parent_sub_1_switch")
     assert entity_registry.async_is_registered("switch.parent_switch")
-    assert "Removing child device sub2, omitted" in caplog.text
-    assert "Removing switch" not in caplog.text
     mqtt_mock.async_publish.assert_not_called()
 
 
@@ -1110,6 +1102,46 @@ async def test_device_discovery_keeps_single_component_child_device(
     )
     assert entity_registry.async_get_entity_id("switch", DOMAIN, "single") is not None
     assert "Removing child device single_sub" not in caplog.text
+
+
+async def test_device_discovery_keeps_child_device_shared_with_disabled_entity(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an omitted child device is kept while a disabled entity still uses it."""
+    await mqtt_mock_entry()
+    single_component_config = {
+        **json.loads(
+            _switch_config(
+                "single",
+                {**PARENT_DEVICE, "child_device": {"identifiers": ["sub1"]}},
+            )
+        ),
+        "enabled_by_default": False,
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/switch/single/config", json.dumps(single_component_config)
+    )
+    await hass.async_block_till_done()
+    components = {"sw": _discovery_switch("sw")}
+    await _discover_device(
+        hass,
+        _device_payload(
+            components,
+            [_child_device_payload("sub1", "Sub 1", {"sw1": _discovery_switch("sw1")})],
+        ),
+    )
+    child_device = _get_child_device(hass, device_registry, "sub1")
+    assert child_device is not None
+
+    await _discover_device(hass, _device_payload(components))
+    assert not entity_registry.async_is_registered("switch.parent_sub_1_switch")
+    assert (
+        _device_id(_get_child_device(hass, device_registry, "sub1")) == child_device.id
+    )
+    assert entity_registry.async_get_entity_id("switch", DOMAIN, "single") is not None
 
 
 async def test_cleanup_parent_device_with_child_device(
