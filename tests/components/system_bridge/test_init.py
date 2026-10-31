@@ -390,6 +390,7 @@ async def test_reconnect_backoff_and_logging(
 
     register = mock_websocket_client.register_data_listener
     register.side_effect = ConnectionErrorException
+    mock_websocket_client.connect.side_effect = ConnectionErrorException
     calls = register.await_count
 
     # Each failed reconnect doubles the wait, up to 2 minutes
@@ -418,6 +419,7 @@ async def test_reconnect_backoff_and_logging(
     ]
 
     register.side_effect = None
+    mock_websocket_client.connect.side_effect = None
     freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
