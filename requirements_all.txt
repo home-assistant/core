@@ -272,7 +272,7 @@ aioemonitor==1.0.5
 aioengiebelgium==0.8.2
 
 # homeassistant.components.esphome
-aioesphomeapi==46.21.0
+aioesphomeapi==46.25.0
 
 # homeassistant.components.mijn_farmad_apotheek
 aiofarmad==0.6.5
