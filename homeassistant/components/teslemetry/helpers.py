@@ -127,10 +127,12 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
-async def handle_local_command(command: Awaitable[None]) -> None:
-    """Handle a command sent to a local Powerwall gateway."""
+async def handle_energy_site_command(
+    command: Awaitable[dict[str, Any]],
+) -> dict[str, Any]:
+    """Handle a command that a paired energy site may send to its local Powerwall gateway."""
     try:
-        await command
+        return await handle_command(command)
     except PowerwallNotSupportedError as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
