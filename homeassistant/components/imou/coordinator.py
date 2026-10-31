@@ -83,7 +83,11 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Update coordinator data."""
         try:
             async with asyncio.timeout(UPDATE_TIMEOUT):
-                fresh_devices = await self._device_manager.async_get_devices()
+                # Ability refs decide which entities to create. A device that is
+                # already registered does not need that detail call again.
+                fresh_devices = await self._device_manager.async_get_devices(
+                    fetch_ability_refs=not self._devices_initialized
+                )
         except TimeoutError as err:
             self.open_api_quota_exceeded = False
             raise UpdateFailed(
@@ -102,6 +106,38 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
         fresh_by_key = {
             imou_device_identifier(device): device for device in fresh_devices
         }
+        if self._devices_initialized and (
+            new_keys := set(fresh_by_key) - set(self.devices_by_key)
+        ):
+            try:
+                async with asyncio.timeout(UPDATE_TIMEOUT):
+                    detailed = await self._device_manager.async_get_devices(
+                        fetch_ability_refs={
+                            fresh_by_key[key].device_id for key in new_keys
+                        }
+                    )
+            except TimeoutError as err:
+                self.open_api_quota_exceeded = False
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_timeout",
+                ) from err
+            except InvalidAppIdOrSecretException as err:
+                self.open_api_quota_exceeded = False
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
+                ) from err
+            except ImouException as err:
+                raise self._update_failed(err, "fetch_devices_failed") from err
+            detailed_by_key = {
+                imou_device_identifier(device): device for device in detailed
+            }
+            for key in new_keys:
+                if key in detailed_by_key:
+                    fresh_by_key[key] = detailed_by_key[key]
+                else:
+                    fresh_by_key.pop(key)
         self._async_add_remove_devices(fresh_by_key)
         devices = list(self.devices_by_key.values())
         if not devices:
