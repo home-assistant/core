@@ -33,6 +33,7 @@ from homeassistant.components.automation import (
     AutomationEntity,
 )
 from homeassistant.components.automation.const import CONF_STOP_ACTIONS, SERVICE_TRIGGER
+from homeassistant.components.automation.entity import BaseAutomationEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -68,6 +69,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     trigger as trigger_helper,
 )
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -718,6 +720,105 @@ async def test_reload_config_service(
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data.get("event") == "test_event2"
+
+
+@pytest.mark.parametrize(
+    "reload_data",
+    [pytest.param({}, id="all"), pytest.param({"id": "reload_self"}, id="single")],
+)
+async def test_reload_from_changed_automation(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    reload_data: dict[str, str],
+) -> None:
+    """A running automation can reload its own changed configuration."""
+    config = {
+        automation.DOMAIN: [
+            {
+                "id": "reload_self",
+                "alias": "reload_self",
+                "triggers": [{"trigger": "event", "event_type": "reload_self"}],
+                "actions": [{"action": "automation.reload", "data": reload_data}],
+            },
+            {
+                "id": "bystander",
+                "alias": "bystander",
+                "triggers": [{"trigger": "event", "event_type": "bystander"}],
+                "actions": [{"action": "test.automation"}],
+            },
+        ]
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+    reloaded = async_capture_events(hass, EVENT_AUTOMATION_RELOADED)
+    new_config = {
+        automation.DOMAIN: [
+            {
+                **config[automation.DOMAIN][0],
+                "alias": "reloaded_self",
+                "actions": [{"action": "test.automation"}],
+            },
+            config[automation.DOMAIN][1],
+        ]
+    }
+    with patch("homeassistant.config.load_yaml_config_file", return_value=new_config):
+        hass.bus.async_fire("reload_self")
+        await hass.async_block_till_done()
+
+    assert len(reloaded) == 1
+    assert hass.states.get("automation.reload_self").state == STATE_ON
+    assert hass.states.get("automation.reload_self").name == "reloaded_self"
+    assert hass.states.get("automation.bystander").state == STATE_ON
+    hass.bus.async_fire("reload_self")
+    hass.bus.async_fire("bystander")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+async def test_reload_cancellation_preserves_serialization(hass: HomeAssistant) -> None:
+    """Cancelling a caller must not interrupt a reload or allow overlapping reloads."""
+    config = {automation.DOMAIN: []}
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+    reloaded = async_capture_events(hass, EVENT_AUTOMATION_RELOADED)
+    started = asyncio.Event()
+    finish = asyncio.Event()
+
+    async def async_process_config(
+        hass: HomeAssistant,
+        config: ConfigType,
+        component: EntityComponent[BaseAutomationEntity],
+    ) -> None:
+        started.set()
+        await finish.wait()
+
+    with (
+        patch("homeassistant.config.load_yaml_config_file", return_value=config),
+        patch(
+            "homeassistant.components.automation.services.async_process_config",
+            side_effect=async_process_config,
+        ) as process_config,
+    ):
+        first_reload = hass.async_create_task(
+            hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        )
+        await started.wait()
+        first_reload.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await first_reload
+
+        second_reload = hass.async_create_task(
+            hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True),
+            eager_start=True,
+        )
+        assert process_config.await_count == 1
+        assert not second_reload.done()
+        assert not reloaded
+
+        finish.set()
+        await second_reload
+        await hass.async_block_till_done()
+
+    assert process_config.await_count == 2
+    assert len(reloaded) == 2
 
 
 async def test_reload_config_when_invalid_config(
