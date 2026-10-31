@@ -1,8 +1,11 @@
 """The tests for SleepIQ number platform."""
 
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
+from asyncsleepiq import SleepIQAPIException, SleepIQTimeoutException
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.number import (
@@ -19,6 +22,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -153,6 +157,35 @@ async def test_favorite_firmness(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(FAVORITE_L_ENTITY_ID).state == "60.0"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(SleepIQTimeoutException("timed out"), id="timeout"),
+        pytest.param(
+            SleepIQAPIException(HTTPStatus.INTERNAL_SERVER_ERROR, "server error"),
+            id="api_error",
+        ),
+    ],
+)
+async def test_favorite_firmness_unavailable_when_update_fails(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_asyncsleepiq: MagicMock,
+    error: Exception,
+) -> None:
+    """Test favorite firmness is unavailable while the pause coordinator fails."""
+    await setup_platform(hass, NUMBER_DOMAIN)
+    assert hass.states.get(FAVORITE_L_ENTITY_ID).state == "50.0"
+
+    mock_asyncsleepiq.beds[BED_ID].sleepers[0].fetch_favsleepnumber.side_effect = error
+    freezer.tick(LONGER_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(FAVORITE_L_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_actuators(
