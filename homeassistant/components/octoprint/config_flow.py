@@ -47,6 +47,17 @@ def _schema_with_defaults(
     )
 
 
+RECONFIGURE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT): probatio.Port(),
+        probatio.Required(CONF_PATH): str,
+        probatio.Required(CONF_SSL): bool,
+        probatio.Required(CONF_VERIFY_SSL): bool,
+    }
+)
+
+
 class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OctoPrint."""
 
@@ -144,6 +155,14 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_abort(reason="reauth_successful")
 
+        uuid = await self._async_get_uuid(user_input)
+        await self.async_set_unique_id(uuid, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+
+    async def _async_get_uuid(self, user_input: dict[str, Any]) -> str:
+        """Return the UPnP UUID of the OctoPrint instance."""
         octoprint = self._get_octoprint_client(user_input)
         octoprint.set_api_key(user_input[CONF_API_KEY])
 
@@ -155,10 +174,36 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await self._sessions.pop().close()
 
-        await self.async_set_unique_id(discovery.upnp_uuid, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
+        return discovery.upnp_uuid
 
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection settings."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            try:
+                uuid = await self._async_get_uuid({**entry.data, **user_input})
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(uuid)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+        )
 
     async def async_step_auth_failed(self, user_input: None) -> ConfigFlowResult:
         """Handle api fetch failure."""
