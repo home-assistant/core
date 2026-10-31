@@ -1,0 +1,98 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This TrueNAS host is already configured."
+    },
+    "error": {
+      "api_not_found": "Connection failed, API not found.",
+      "cannot_connect": "Failed to connect to host (TCP port closed or timeout).",
+      "certificate_verify_failed": "Certificate verification failed.",
+      "connection_refused": "Connection failed, connection refused.",
+      "handshake_timeout": "Connection failed, timed out while waiting for handshake response.",
+      "http_used": "The plain HTTP request was sent to HTTPS port. Reverse proxy?",
+      "invalid_hostname": "Invalid host. Enter only the hostname or IP address — without \"https://\", path or trailing slash.",
+      "invalid_key": "Login failed, invalid API key.",
+      "malformed_result": "API response is malformed.",
+      "proxy_intercepted": "Connection intercepted by a reverse proxy or SSO portal (e.g. Cloudflare Access). Point the integration at the TrueNAS host directly over your LAN/VPN, or exempt the WebSocket endpoint from the proxy's authentication.",
+      "timeout": "Connection failed, the API call timed out.",
+      "tlsv1_not_supported": "TLSv1 not supported. Reverse proxy?",
+      "unknown": "Unknown error occurred.",
+      "unknown_hostname": "Unknown hostname, check DNS.",
+      "websocket_not_supported": "WebSocket not supported. Reverse proxy?"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "API key",
+          "data_unit": "Data size unit (GB or GiB)",
+          "host": "Host",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
+          "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
+          "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
+          "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate."
+        },
+        "description": "Set up TrueNAS CE integration."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "system_cache_size_arc_value": {
+        "name": "ARC size"
+      },
+      "system_cpu_temperature": {
+        "name": "Temperature"
+      },
+      "system_cpu_usage": {
+        "name": "CPU usage"
+      },
+      "system_load_longterm": {
+        "name": "CPU load longterm"
+      },
+      "system_load_midterm": {
+        "name": "CPU load midterm"
+      },
+      "system_load_shortterm": {
+        "name": "CPU load shortterm"
+      },
+      "system_memory_free": {
+        "name": "Memory free"
+      },
+      "system_memory_total": {
+        "name": "Memory total"
+      },
+      "system_memory_usage": {
+        "name": "Memory usage"
+      },
+      "system_uptime": {
+        "name": "Uptime"
+      },
+      "traffic_rx": {
+        "name": "RX"
+      },
+      "traffic_tx": {
+        "name": "TX"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Error connecting to TrueNAS ({host}): {error}"
+    },
+    "disconnected": {
+      "message": "TrueNAS instance {host} disconnected"
+    },
+    "interface_unavailable": {
+      "message": "Network interface information was not received from TrueNAS ({host})"
+    },
+    "invalid_api_key": {
+      "message": "Invalid TrueNAS API key for {host}"
+    },
+    "system_info_unavailable": {
+      "message": "Essential system information was not received from TrueNAS ({host})"
+    }
+  }
+}
