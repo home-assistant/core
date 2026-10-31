@@ -34,6 +34,7 @@ HMIPC_NAME = "name"
 HMIPC_HAPID = "hapid"
 HMIPC_AUTHTOKEN = "authtoken"
 HMIPC_PIN = "pin"
+HMIPC_CLIENT_ID = "client_id"
 
 SWITCH_CHANNEL_TYPES = (
     FunctionalChannelType.SWITCH_CHANNEL,

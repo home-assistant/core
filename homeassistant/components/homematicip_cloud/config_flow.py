@@ -8,7 +8,14 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .const import DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
+from .const import (
+    DOMAIN,
+    HMIPC_AUTHTOKEN,
+    HMIPC_CLIENT_ID,
+    HMIPC_HAPID,
+    HMIPC_NAME,
+    HMIPC_PIN,
+)
 from .hap import HomematicipAuth
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +83,10 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 if self.source == "reauth":
                     return self.async_update_reload_and_abort(
                         self._get_reauth_entry(),
-                        data_updates={HMIPC_AUTHTOKEN: authtoken},
+                        data_updates={
+                            HMIPC_AUTHTOKEN: authtoken,
+                            HMIPC_CLIENT_ID: self.auth.client_id,
+                        },
                     )
                 return self.async_create_entry(
                     title=self.auth.config[HMIPC_HAPID],
@@ -84,6 +94,7 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
                         HMIPC_HAPID: self.auth.config[HMIPC_HAPID],
                         HMIPC_AUTHTOKEN: authtoken,
                         HMIPC_NAME: self.auth.config.get(HMIPC_NAME),
+                        HMIPC_CLIENT_ID: self.auth.client_id,
                     },
                 )
             if self.source == "reauth":
