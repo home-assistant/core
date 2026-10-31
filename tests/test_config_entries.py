@@ -495,7 +495,7 @@ async def test_migrate_from_higher_version_not_supported(
                 )
             ),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
-            "Config entry 'Mock Title' for comp integration could not authenticate",
+            "Error migrating entry Mock Title for comp",
             True,
             "error",
             "comp",
@@ -536,7 +536,7 @@ async def test_migrate_from_higher_version_not_supported(
                 )
             ),
             config_entries.ConfigEntryState.MIGRATION_ERROR,
-            "Config entry 'Mock Title' for comp integration could not authenticate",
+            "Error migrating entry Mock Title for comp",
             True,
             "oauth2_helper_reauth_required",
             "homeassistant",
@@ -590,6 +590,54 @@ async def test_migrate_handle_exceptions(
     assert entry.error_reason_translation_key == translation_key
     assert (log_message in caplog.text) is logs
 
+    assert hass.config_entries.flow.async_progress_by_handler("comp") == []
+
+
+async def test_migrate_auth_failed_with_reauth_flow(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migration raising ConfigEntryAuthFailed with a reauth flow."""
+    entry = MockConfigEntry(domain="comp", version=1, minor_version=1)
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_migrate_entry=AsyncMock(
+                side_effect=ConfigEntryAuthFailed("The password is no longer valid")
+            ),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 2
+        MINOR_VERSION = 1
+
+        async def async_step_reauth(self, entry_data):
+            """Test reauth step."""
+            return self.async_abort(reason="reauth_successful")
+
+    with mock_config_flow("comp", TestFlow):
+        assert await async_setup_component(hass, "comp", {})
+        await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == "The password is no longer valid"
+    assert (
+        "Config entry 'Mock Title' for comp integration could not authenticate: "
+        "The password is no longer valid" in caplog.text
+    )
+    assert "Error migrating entry" not in caplog.text
+    # Reauth flows assume post-migration config entry state
     assert hass.config_entries.flow.async_progress_by_handler("comp") == []
 
 
@@ -6914,7 +6962,11 @@ async def test_setup_raise_auth_failed_without_reauth_flow(
         await manager.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert "could not authenticate: The password is no longer valid" in caplog.text
+    assert (
+        "Error setting up entry test_title for test: The password is no longer valid"
+        in caplog.text
+    )
+    assert "could not authenticate" not in caplog.text
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
     assert entry.reason == "The password is no longer valid"
     assert len(hass.config_entries.flow.async_progress()) == 0
