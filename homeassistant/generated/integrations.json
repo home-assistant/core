@@ -1322,6 +1322,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "bmx_monitor": {
+      "name": "BM2 battery monitor",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bond": {
       "name": "Bond",
       "integration_type": "hub",
