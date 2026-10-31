@@ -1,7 +1,7 @@
 """Tests for Fritz!Tools sensor platform."""
 
 from datetime import UTC, datetime
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzConnectionException
@@ -189,3 +189,72 @@ async def test_sensor_cpu_temp_unknown_on_request_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
+async def test_sensor_addon_infos_not_supported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test transmission rate and traffic sensors are not created when not supported."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]),
+        patch.object(
+            FritzStatus,
+            "transmission_rate",
+            new_callable=PropertyMock,
+            side_effect=FritzConnectionException("Not available Action"),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for entity_id in (
+        "sensor.mock_title_upload_throughput",
+        "sensor.mock_title_download_throughput",
+        "sensor.mock_title_gb_sent",
+        "sensor.mock_title_gb_received",
+    ):
+        assert not entity_registry.async_is_registered(entity_id)
+    assert "Error adding entity" not in caplog.text
+
+
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
+async def test_sensor_not_updated_when_adding_fails(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sensor whose first update fails is not polled afterwards."""
+    entity_id = "sensor.mock_title_max_connection_upload_throughput"
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]),
+        patch.object(
+            FritzStatus,
+            "max_bit_rate",
+            new_callable=PropertyMock,
+            side_effect=FritzConnectionException("boom"),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert f"Error adding entity {entity_id}" in caplog.text
+        assert hass.states.get(entity_id) is None
+
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # A failing update would make the entry reload and the sensors unavailable
+    assert "Error while updating the data" not in caplog.text
+    assert (state := hass.states.get("sensor.mock_title_external_ip"))
+    assert state.state != STATE_UNAVAILABLE

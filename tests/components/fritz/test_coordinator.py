@@ -615,6 +615,7 @@ async def test_avmwrapper_passthrough_methods(
 
     wrapper.device_is_router = False
     assert await wrapper.async_ipv6_active() is False
+    assert await wrapper.async_addon_infos_supported() is False
 
     assert await wrapper.async_set_wlan_configuration(1, True) == {}
     assert await wrapper.async_set_deflection_enable(1, False) == {}
