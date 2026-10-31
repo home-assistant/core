@@ -17,3 +17,13 @@ def restricted_device(unit: ModbusUnit) -> Balco260:
         name for name in device.field_names() if name not in EXCLUDED_FIELDS
     )
     return device
+
+
+def bms_device(unit: ModbusUnit) -> Balco260:
+    """Return the power station restricted to its battery's BMS version.
+
+    Read once at setup: it only goes into the device's software version.
+    """
+    device = Balco260(unit)
+    device.restrict_fields({"b_ver_count", "b_ver_1"})
+    return device
