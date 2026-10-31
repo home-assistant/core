@@ -7,6 +7,7 @@ from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import AsyncMock, patch
 
 from lifx import (
+    Device,
     DiscoveredDevice,
     LifxDeviceNotFoundError,
     LifxUnsupportedDeviceError,
@@ -26,22 +27,18 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import DHCP_FORMATTED_MAC, IP_ADDRESS, LABEL, SERIAL
-from .helpers import LEGACY_SERIAL, create_mock_light
+from .helpers import LEGACY_SERIAL, create_mock_device_without_state, create_mock_light
 
 OLD_IP_ADDRESS = "127.0.0.2"
 
 DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
-DeviceMutator = Callable[[Light], None]
 
 
-def _remove_light_state(mock_light: Light) -> None:
-    """Remove the state returned after refresh."""
-    mock_light.state = None
-
-
-def _fail_light_refresh(mock_light: Light) -> None:
-    """Fail the public state refresh."""
-    mock_light.refresh_state.side_effect = OSError("refresh failed")
+def _create_light_failing_refresh() -> Light:
+    """Create a light whose state refresh fails."""
+    light = create_mock_light()
+    light.refresh_state.side_effect = OSError("refresh failed")
+    return light
 
 
 @pytest.fixture(autouse=True)
@@ -958,26 +955,25 @@ async def test_manual_host_cannot_connect(
 
 
 @pytest.mark.parametrize(
-    "mutate_device",
+    "factory",
     [
-        pytest.param(_remove_light_state, id="missing-state"),
-        pytest.param(_fail_light_refresh, id="refresh-error"),
+        pytest.param(create_mock_device_without_state, id="missing-state"),
+        pytest.param(_create_light_failing_refresh, id="refresh-error"),
     ],
 )
 async def test_manual_host_cannot_read_device_state(
     hass: HomeAssistant,
-    mock_light: Light,
-    mutate_device: DeviceMutator,
+    factory: Callable[[], Device],
 ) -> None:
     """Test manual setup rejects a device whose state cannot be read."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    mutate_device(mock_light)
+    device = factory()
 
     with patch(
         "homeassistant.components.lifx.config_flow.find_by_ip",
-        return_value=mock_light,
+        return_value=device,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -986,7 +982,7 @@ async def test_manual_host_cannot_read_device_state(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
-    mock_light.close.assert_awaited_once_with()
+    device.close.assert_awaited_once_with()
 
     with patch(
         "homeassistant.components.lifx.config_flow.find_by_ip",

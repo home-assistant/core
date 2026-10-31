@@ -1,7 +1,8 @@
 """Test helpers for the lifx integration."""
 
-from typing import Any, TypeVar, cast
-from unittest.mock import AsyncMock, MagicMock
+import inspect
+from typing import TypeVar
+from unittest.mock import AsyncMock
 
 from lifx import (
     HSBK,
@@ -9,7 +10,8 @@ from lifx import (
     CeilingLightState,
     CollectionInfo,
     Connectivity,
-    DeviceCapabilities,
+    Device,
+    DeviceVersion,
     FirmwareEffect,
     FirmwareInfo,
     HevConfig,
@@ -32,8 +34,13 @@ from lifx import (
     ThreadRoutingRole,
     TileInfo,
     WifiInfo,
+    mac_candidates_for_serial,
 )
-from lifx.products import get_mirror_layout
+from lifx.products import get_mirror_layout, get_product
+from lifx.protocol.models import (
+    MAC_OFFSET_FIRMWARE_MAJOR,
+    MAC_OFFSET_FIRMWARE_MIN_MINOR,
+)
 
 from homeassistant.components.lifx.light import LIFX_MIN_COLOR_RAMP
 
@@ -45,6 +52,40 @@ MAC_ADDRESS = "d0:73:d5:dd:ee:cc"
 LABEL = "My Bulb"
 GROUP = "My Group"
 INFRARED_SELECT_ENTITY_ID = "select.my_group_my_bulb_infrared_brightness"
+POWER_ON = 65535
+
+# Product ids, zone counts, tile sizes and firmware follow the lifx-emulator
+# product specs (lifx_emulator/products/specs.yml) unless noted otherwise
+COLOR_PRODUCT = 163
+COLOR_TEMPERATURE_PRODUCT = 18
+BRIGHTNESS_PRODUCT = 51
+INFRARED_PRODUCT = 29
+HEV_PRODUCT = 90
+LEGACY_MULTIZONE_PRODUCT = 31
+LEGACY_MULTIZONE_ZONES = 16
+EXTENDED_MULTIZONE_PRODUCT = 38
+EXTENDED_MULTIZONE_ZONES = 80
+TILE_PRODUCT = 55
+TILE_COUNT = 5
+LUNA_PRODUCT = 219
+LUNA_WIDTH = 7
+LUNA_HEIGHT = 5
+CEILING_PRODUCT = 176
+CEILING_WIDTH = 8
+CEILING_HEIGHT = 8
+MIRROR_PRODUCT = 267
+MIRROR_ZONES = 25
+
+# The emulator's default for a product without one in the specs
+DEFAULT_FIRMWARE = (3, 70)
+LEGACY_MULTIZONE_FIRMWARE = (2, 60)
+TILE_FIRMWARE = (3, 50)
+CEILING_FIRMWARE = (4, 10)
+# The release that widens the Luna and Mirror kelvin range
+LUNA_FIRMWARE = (4, 148)
+MIRROR_FIRMWARE = (4, 148)
+# Thread needs fourth generation hardware, and firmware 4.200 or later
+THREAD_FIRMWARE = (4, 200)
 
 type MockDevice = (
     Light
@@ -66,7 +107,6 @@ type MockState = (
 )
 
 _DeviceT = TypeVar("_DeviceT", bound=MockDevice)
-_StateT = TypeVar("_StateT", bound=MockState)
 
 
 def assert_color_written(
@@ -93,34 +133,51 @@ def assert_color_written(
     )
 
 
-def _create_mock_state(
-    state_type: type[_StateT],
+def set_connectivity(device: MockDevice, connectivity: Connectivity) -> None:
+    """Report the radio as discovery metadata would."""
+    device._set_connectivity(connectivity)
+
+
+def _mac_address(serial: str, firmware: FirmwareInfo) -> str:
+    """Return the MAC the library derives from the serial and firmware."""
+    direct_mac, offset_mac = mac_candidates_for_serial(serial)
+    if (
+        firmware.version_major == MAC_OFFSET_FIRMWARE_MAJOR
+        and firmware.version_minor >= MAC_OFFSET_FIRMWARE_MIN_MINOR
+    ):
+        return offset_mac
+    return direct_mac
+
+
+def _create_device(
+    device_type: type[_DeviceT],
+    product: int,
+    firmware: tuple[int, int],
     *,
+    color: HSBK,
+    ip: str = IP_ADDRESS,
     serial: str = SERIAL,
-    mac_address: str = MAC_ADDRESS,
-    **type_specific: Any,
-) -> _StateT:
-    """Create deterministic typed public state."""
-    host_firmware = FirmwareInfo(build=0, version_major=4, version_minor=0)
-    return state_type(
-        model="LIFX Original 1000",
+) -> tuple[_DeviceT, LightState]:
+    """Create a library device for a product and the light state it would fetch."""
+    device = device_type(serial=serial, ip=ip)
+    host_firmware = FirmwareInfo(
+        build=0, version_major=firmware[0], version_minor=firmware[1]
+    )
+    version = DeviceVersion(vendor=1, product=product)
+    device._version = version
+    device._host_firmware = host_firmware
+    device._process_capabilities(version, host_firmware)
+    assert device._capabilities is not None
+    light_state = LightState(
+        model=device._capabilities.name,
         label=LABEL,
-        serial=serial,
-        mac_address=mac_address,
-        capabilities=DeviceCapabilities(
-            has_color=True,
-            has_multizone=False,
-            has_chain=False,
-            has_matrix=False,
-            has_infrared=False,
-            has_hev=False,
-            has_extended_multizone=False,
-            kelvin_min=2500,
-            kelvin_max=9000,
-        ),
-        power=0,
+        serial=device.serial,
+        mac_address=_mac_address(device.serial, host_firmware),
+        capabilities=device._create_capabilities(),
+        power=POWER_ON,
         host_firmware=host_firmware,
-        wifi_firmware=FirmwareInfo(build=0, version_major=4, version_minor=0),
+        # The emulator reports the host firmware for the WiFi module too
+        wifi_firmware=host_firmware,
         # The signal is only read while the RSSI sensor is enabled, but the
         # unit the firmware reports in is always resolved
         wifi_info=WifiInfo(signal=None, host_firmware=host_firmware),
@@ -132,109 +189,50 @@ def _create_mock_state(
         group=CollectionInfo(
             uuid="00000000000000000000000000000002", label=GROUP, updated_at=0
         ),
+        color=color,
         last_updated=0.0,
-        color=HSBK(0.0, 0.0, 1.0, 3500),
-        **type_specific,
     )
+    return device, light_state
 
 
-def _create_mock_device(
-    device_type: type[_DeviceT], state: _StateT, *, ip: str = IP_ADDRESS
-) -> _DeviceT:
-    """Create a deterministic typed public device double."""
-    device = MagicMock(spec=device_type(serial=state.serial, ip=ip))
-    device.ip = ip
-    device.serial = state.serial
-    device.state = state
-    device.refresh_state = AsyncMock()
+def _mock_requests(device: Device) -> None:
+    """Stop every public request reaching the network."""
+    for name, _ in inspect.getmembers(type(device), inspect.iscoroutinefunction):
+        if not name.startswith("_"):
+            setattr(device, name, AsyncMock())
+
+
+def _attach_state(device: _DeviceT, state: MockState) -> _DeviceT:
+    """Give the device the state it would have fetched."""
+    state.last_updated = 0.0
+    device._state = state
+    _mock_requests(device)
     device.get_color = AsyncMock(return_value=(state.color, state.power, state.label))
-    device.close = AsyncMock()
-    device.set_power = AsyncMock()
-    device.set_color = AsyncMock()
-    device.set_waveform_optional = AsyncMock()
-    device.set_reboot = AsyncMock()
-    device.apply_theme = AsyncMock()
-    # The library only reads the signal strength once it is switched on
-    device.fetch_radio_info = False
-    device.connectivity = Connectivity.WIFI
-    return cast(_DeviceT, device)
-
-
-def create_mock_light_state(
-    *,
-    serial: str = SERIAL,
-    mac_address: str = MAC_ADDRESS,
-) -> LightState:
-    """Create deterministic refreshed light state."""
-    return _create_mock_state(LightState, serial=serial, mac_address=mac_address)
-
-
-def create_mock_light(
-    *,
-    ip: str = IP_ADDRESS,
-    serial: str = SERIAL,
-    mac_address: str = MAC_ADDRESS,
-) -> Light:
-    """Create a deterministic double of the public lifx-async boundary."""
-    state = create_mock_light_state(serial=serial, mac_address=mac_address)
-
-    return _create_mock_device(Light, state, ip=ip)
-
-
-def create_mock_hev_light() -> HevLight:
-    """Create a deterministic HEV light double."""
-    state = _create_mock_state(
-        HevLightState,
-        hev_cycle=HevCycleState(duration_s=7200, remaining_s=30, last_power=False),
-        hev_config=HevConfig(indication=False, duration_s=7200),
-        hev_result=LightLastHevCycleResult.SUCCESS,
-    )
-    state.capabilities.has_hev = True
-    device = _create_mock_device(HevLight, state)
-    device.set_hev_cycle = AsyncMock()
     return device
 
 
-def create_mock_infrared_light() -> InfraredLight:
-    """Create a deterministic infrared light double."""
-    state = _create_mock_state(InfraredLightState, infrared=1.0)
-    state.capabilities.has_infrared = True
-    device = _create_mock_device(InfraredLight, state)
-    device.set_infrared = AsyncMock()
+def create_mock_device_without_state() -> Device:
+    """Create a device found by address whose state has not been read."""
+    device = Device(serial=SERIAL, ip=IP_ADDRESS)
+    _mock_requests(device)
     return device
 
 
-def create_mock_multizone_light(*, extended: bool = True) -> MultiZoneLight:
-    """Create a deterministic multizone light double."""
-    zones = [HSBK(300.0, 1.0, 1.0, 3500), HSBK(255.0, 1.0, 1.0, 3500)]
-    state = _create_mock_state(
-        MultiZoneLightState,
-        zones=zones,
-        zone_count=len(zones),
-        effect=FirmwareEffect.OFF,
-    )
-    state.capabilities.has_multizone = True
-    state.capabilities.has_extended_multizone = extended
-    device = _create_mock_device(MultiZoneLight, state)
-    device.set_all_color_zones = AsyncMock()
-    return device
-
-
-def _create_mock_tile(
+def _create_tile(
     *,
+    product: int,
+    firmware: FirmwareInfo,
+    width: int,
+    height: int,
     tile_index: int = 0,
-    product: int = 55,
-    width: int = 8,
-    height: int = 8,
-    user_x: float = 0.0,
 ) -> TileInfo:
-    """Create deterministic public tile metadata."""
+    """Create the metadata a tile on the device chain reports."""
     return TileInfo(
         tile_index=tile_index,
         accel_meas_x=0,
         accel_meas_y=0,
         accel_meas_z=0,
-        user_x=user_x,
+        user_x=float(tile_index),
         user_y=0.0,
         width=width,
         height=height,
@@ -243,308 +241,57 @@ def _create_mock_tile(
         device_version_product=product,
         device_version_version=0,
         firmware_build=0,
-        firmware_version_minor=70,
-        firmware_version_major=3,
+        firmware_version_minor=firmware.version_minor,
+        firmware_version_major=firmware.version_major,
     )
 
 
-def create_mock_matrix_light() -> MatrixLight:
-    """Create a deterministic matrix light double."""
-    tile_colors = [HSBK(0.0, 0.0, 1.0, 3500)] * 64
-    state = _create_mock_state(
-        MatrixLightState,
-        chain=[_create_mock_tile()],
-        tile_orientations={0: "Right Side Up"},
-        tile_colors=tile_colors,
-        tile_count=1,
-        effect=FirmwareEffect.OFF,
-    )
-    state.capabilities.has_matrix = True
-    state.capabilities.has_chain = True
-    device = _create_mock_device(MatrixLight, state)
-    device.set_matrix_colors = AsyncMock()
-    return device
-
-
-def create_mock_ceiling_light() -> CeilingLight:
-    """Create a deterministic ceiling light double."""
-    downlight_colors = [HSBK(0.0, 0.0, 1.0, 3500)] * 64
-    state = _create_mock_state(
-        CeilingLightState,
-        chain=[_create_mock_tile()],
-        tile_orientations={0: "Right Side Up"},
-        tile_colors=downlight_colors,
-        tile_count=1,
-        effect=FirmwareEffect.OFF,
-        uplight_color=HSBK(0.0, 0.0, 1.0, 3500),
-        downlight_colors=downlight_colors,
-        uplight_is_on=False,
-        downlight_is_on=False,
-        uplight_zone=64,
-        downlight_zones=slice(0, 64),
-    )
-    state.model = "LIFX Ceiling"
-    state.capabilities.has_matrix = True
-    state.capabilities.has_chain = True
-    device = _create_mock_device(CeilingLight, state)
-    device.set_matrix_colors = AsyncMock()
-    return device
-
-
-def _apply_reference_common(
-    state: MockState,
-    *,
-    model: str,
-    color: HSBK,
-    kelvin_min: int,
-    kelvin_max: int,
-    firmware: tuple[int, int] = (3, 70),
-) -> None:
-    """Apply normalized fields captured from the released emulator."""
-    state.model = model
-    state.power = 65535
-    state.color = color
-    state.host_firmware = FirmwareInfo(0, *firmware)
-    state.wifi_firmware = FirmwareInfo(0, *firmware)
-    state.capabilities.kelvin_min = kelvin_min
-    state.capabilities.kelvin_max = kelvin_max
-
-
-def create_reference_color_light() -> Light:
-    """Create the normalized released-emulator color light."""
-    device = create_mock_light()
-    _apply_reference_common(
-        device.state,
-        model="Original",
-        color=HSBK(119.9981689453125, 1.0, 0.5, 3500),
-        kelvin_min=2500,
-        kelvin_max=9000,
-    )
-    return device
-
-
-def create_reference_color_temperature_light() -> Light:
-    """Create the normalized released-emulator tunable-white light."""
-    device = create_mock_light()
-    device.state.capabilities.has_color = False
-    _apply_reference_common(
-        device.state,
-        model="LIFX White 900 (BR30)",
-        color=HSBK(0.0, 0.0, 0.5, 3500),
-        kelvin_min=2700,
-        kelvin_max=6500,
-    )
-    return device
-
-
-def create_reference_brightness_light() -> Light:
-    """Create the normalized released-emulator brightness-only light."""
-    device = create_mock_light()
-    device.state.capabilities.has_color = False
-    _apply_reference_common(
-        device.state,
-        model="LIFX Mini W",
-        color=HSBK(0.0, 0.0, 0.5, 2700),
-        kelvin_min=2700,
-        kelvin_max=2700,
-    )
-    return device
-
-
-def create_reference_infrared_light() -> InfraredLight:
-    """Create the normalized released-emulator infrared light."""
-    device = create_mock_infrared_light()
-    _apply_reference_common(
-        device.state,
-        model="LIFX+ (A19)",
-        color=HSBK(0.0, 1.0, 0.5, 3500),
-        kelvin_min=2500,
-        kelvin_max=9000,
-    )
-    device.state.infrared = 16384 / 65535
-    return device
-
-
-def create_reference_hev_light() -> HevLight:
-    """Create the normalized released-emulator HEV light."""
-    device = create_mock_hev_light()
-    _apply_reference_common(
-        device.state,
-        model="LIFX Clean A19 1100lm",
-        color=HSBK(180.0, 1.0, 0.5, 3500),
-        kelvin_min=1500,
-        kelvin_max=9000,
-    )
-    device.state.hev_cycle.remaining_s = 0
-    device.state.hev_config.indication = True
-    return device
-
-
-def create_reference_multizone_light(*, extended: bool) -> MultiZoneLight:
-    """Create a normalized released-emulator multizone light."""
-    device = create_mock_multizone_light(extended=extended)
-    zone_count = 80 if extended else 16
-    zones = [
-        HSBK(int(index * 65535 / zone_count) * 360 / 65535, 1.0, 0.5, 3500)
-        for index in range(zone_count)
-    ]
-    device.state.zones = zones
-    device.state.zone_count = zone_count
-    _apply_reference_common(
-        device.state,
-        model="LIFX Beam" if extended else "LIFX Z",
-        color=HSBK(
-            177.7423095703125 if extended else 89.9945068359375,
-            1.0,
-            0.5,
-            3500,
-        ),
-        kelvin_min=2500,
-        kelvin_max=9000,
-    )
-    return device
-
-
-def create_reference_legacy_multizone_light() -> MultiZoneLight:
-    """Create the normalized released-emulator legacy multizone light."""
-    return create_reference_multizone_light(extended=False)
-
-
-def create_reference_extended_multizone_light() -> MultiZoneLight:
-    """Create the normalized released-emulator extended multizone light."""
-    return create_reference_multizone_light(extended=True)
-
-
-def create_reference_matrix_light() -> MatrixLight:
-    """Create the normalized released-emulator five-tile matrix light."""
-    device = create_mock_matrix_light()
+def _create_matrix_state(
+    light_state: LightState, product: int, chain_length: int, width: int, height: int
+) -> MatrixLightState:
+    """Create the matrix state of a chain of identical tiles."""
     chain = [
-        _create_mock_tile(tile_index=index, user_x=float(index)) for index in range(5)
+        _create_tile(
+            product=product,
+            firmware=light_state.host_firmware,
+            width=width,
+            height=height,
+            tile_index=index,
+        )
+        for index in range(chain_length)
     ]
-    tile_colors = [HSBK(0.0, 0.0, 0.5, 3500)] * 320
-    device.state.chain = chain
-    device.state.tile_orientations = dict.fromkeys(range(len(chain)), "Right Side Up")
-    device.state.tile_colors = tile_colors
-    device.state.tile_count = len(chain)
-    _apply_reference_common(
-        device.state,
-        model="LIFX Tile",
-        color=HSBK(0.0, 0.0, 0.5, 3500),
-        kelvin_min=2500,
-        kelvin_max=9000,
-    )
-    return device
-
-
-def _create_reference_ceiling_light(
-    *, model: str, product: int, width: int, zone_count: int
-) -> CeilingLight:
-    """Create a normalized released-emulator ceiling light."""
-    device = create_mock_ceiling_light()
-    color = HSBK(0.0, 0.0, 0.5, 3500)
-    chain = [_create_mock_tile(product=product, width=width)]
-    downlight_colors = [color] * zone_count
-    device.state.chain = chain
-    # tile_colors covers every zone of the tile: the downlight then the uplight
-    device.state.tile_colors = [*downlight_colors, color]
-    device.state.downlight_colors = downlight_colors
-    device.state.tile_count = 1
-    device.state.uplight_color = color
-    device.state.uplight_is_on = True
-    device.state.downlight_is_on = True
-    device.state.uplight_zone = zone_count
-    device.state.downlight_zones = slice(0, zone_count)
-    device.state.capabilities.has_chain = False
-    device.state.stored_uplight_color = color
-    device.state.stored_downlight_colors = downlight_colors
-    device.state.last_uplight_color = color
-    device.state.last_downlight_colors = downlight_colors
-    _apply_reference_common(
-        device.state,
-        model=model,
-        color=color,
-        kelvin_min=1500,
-        kelvin_max=9000,
-        firmware=(4, 10),
-    )
-    return device
-
-
-def create_reference_ceiling_light() -> CeilingLight:
-    """Create the normalized released-emulator 64-zone ceiling light."""
-    return _create_reference_ceiling_light(
-        model="LIFX Ceiling", product=176, width=8, zone_count=63
-    )
-
-
-def create_reference_ceiling_128_light() -> CeilingLight:
-    """Create the normalized released-emulator 128-zone ceiling light."""
-    return _create_reference_ceiling_light(
-        model="LIFX Ceiling 13x26", product=201, width=16, zone_count=127
-    )
-
-
-MIRROR_ZONES = 25
-MIRROR_PRODUCT = 267
-
-
-def create_mock_mirror_light() -> MirrorLight:
-    """Create a deterministic Mirror light double, laid out like the hardware."""
-    # The 50 zones are spread across a 4x13 buffer, so the tile has 52 colors
-    layout = get_mirror_layout(MIRROR_PRODUCT)
-    assert layout is not None
-    color = HSBK(0.0, 0.0, 1.0, 3500)
-    front_colors = [color] * MIRROR_ZONES
-    back_colors = [color] * MIRROR_ZONES
-    state = _create_mock_state(
-        MirrorLightState,
-        chain=[
-            _create_mock_tile(
-                product=MIRROR_PRODUCT, width=layout.width, height=layout.height
-            )
-        ],
-        tile_orientations={0: "Right Side Up"},
-        tile_colors=[color] * layout.buffer_size,
-        tile_count=1,
+    return MatrixLightState.from_light_state(
+        light_state,
+        chain=chain,
+        tile_orientations={
+            index: tile.nearest_orientation for index, tile in enumerate(chain)
+        },
+        tile_colors=[light_state.color] * (chain_length * width * height),
         effect=FirmwareEffect.OFF,
-        front_colors=front_colors,
-        back_colors=back_colors,
-        front_is_on=False,
-        back_is_on=False,
-        front_positions=layout.front_positions,
-        back_positions=layout.back_positions,
     )
-    state.model = "LIFX Mirror"
-    state.capabilities.has_matrix = True
-    device = _create_mock_device(MirrorLight, state)
-    device.set_matrix_colors = AsyncMock()
-    return device
 
 
-def create_reference_mirror_light() -> MirrorLight:
-    """Create a normalized Mirror light with both components on."""
-    device = create_mock_mirror_light()
-    color = HSBK(0.0, 0.0, 0.5, 3500)
-    device.state.front_colors = [color] * MIRROR_ZONES
-    device.state.back_colors = [color] * MIRROR_ZONES
-    device.state.tile_colors = [color] * len(device.state.tile_colors)
-    device.state.front_is_on = True
-    device.state.back_is_on = True
-    _apply_reference_common(
-        device.state,
-        model="LIFX Mirror",
-        color=color,
-        kelvin_min=1500,
-        kelvin_max=9000,
-        firmware=(4, 10),
+def create_mock_light(
+    *,
+    ip: str = IP_ADDRESS,
+    serial: str = SERIAL,
+) -> Light:
+    """Create a fourth generation color bulb."""
+    device, state = _create_device(
+        Light,
+        COLOR_PRODUCT,
+        THREAD_FIRMWARE,
+        color=HSBK(119.9981689453125, 1.0, 0.5, 3500),
+        ip=ip,
+        serial=serial,
     )
-    return device
+    return _attach_state(device, state)
 
 
-def create_reference_thread_light() -> Light:
-    """Create the normalized released-emulator color light on Thread."""
-    device = create_reference_color_light()
-    device.connectivity = Connectivity.THREAD
+def create_mock_thread_light() -> Light:
+    """Create a fourth generation color bulb connected over Thread."""
+    device = create_mock_light()
+    set_connectivity(device, Connectivity.THREAD)
     device.state.thread_info = ThreadInfo(
         rloc=1024,
         network_name="Private mesh",
@@ -555,3 +302,143 @@ def create_reference_thread_light() -> Light:
         link_margin_db=40,
     )
     return device
+
+
+def create_mock_color_temperature_light() -> Light:
+    """Create a tunable white bulb."""
+    device, state = _create_device(
+        Light,
+        COLOR_TEMPERATURE_PRODUCT,
+        DEFAULT_FIRMWARE,
+        color=HSBK(0.0, 0.0, 0.5, 3500),
+    )
+    return _attach_state(device, state)
+
+
+def create_mock_brightness_light() -> Light:
+    """Create a fixed white, brightness only bulb."""
+    device, state = _create_device(
+        Light,
+        BRIGHTNESS_PRODUCT,
+        DEFAULT_FIRMWARE,
+        color=HSBK(0.0, 0.0, 0.5, 2700),
+    )
+    return _attach_state(device, state)
+
+
+def create_mock_infrared_light() -> InfraredLight:
+    """Create a night vision bulb."""
+    device, light_state = _create_device(
+        InfraredLight,
+        INFRARED_PRODUCT,
+        DEFAULT_FIRMWARE,
+        color=HSBK(0.0, 1.0, 0.5, 3500),
+    )
+    state = InfraredLightState.from_light_state(light_state, infrared=16384 / 65535)
+    return _attach_state(device, state)
+
+
+def create_mock_hev_light() -> HevLight:
+    """Create a LIFX Clean bulb."""
+    device, light_state = _create_device(
+        HevLight,
+        HEV_PRODUCT,
+        DEFAULT_FIRMWARE,
+        color=HSBK(180.0, 1.0, 0.5, 3500),
+    )
+    state = HevLightState.from_light_state(
+        light_state,
+        hev_cycle=HevCycleState(duration_s=7200, remaining_s=0, last_power=False),
+        hev_config=HevConfig(indication=True, duration_s=7200),
+        hev_result=LightLastHevCycleResult.SUCCESS,
+    )
+    return _attach_state(device, state)
+
+
+def create_mock_multizone_light(*, extended: bool = True) -> MultiZoneLight:
+    """Create a Beam, or a LIFX Z on firmware without extended multizone."""
+    if extended:
+        product = EXTENDED_MULTIZONE_PRODUCT
+        zone_count = EXTENDED_MULTIZONE_ZONES
+        firmware = DEFAULT_FIRMWARE
+        color = HSBK(177.7423095703125, 1.0, 0.5, 3500)
+    else:
+        product = LEGACY_MULTIZONE_PRODUCT
+        zone_count = LEGACY_MULTIZONE_ZONES
+        firmware = LEGACY_MULTIZONE_FIRMWARE
+        color = HSBK(89.9945068359375, 1.0, 0.5, 3500)
+    device, light_state = _create_device(MultiZoneLight, product, firmware, color=color)
+    # A rainbow, as the library decodes the hues the emulator reports
+    zones = [
+        HSBK(int(index * 65535 / zone_count) * 360 / 0x10000, 1.0, 0.5, 3500)
+        for index in range(zone_count)
+    ]
+    state = MultiZoneLightState.from_light_state(
+        light_state, zones=zones, effect=FirmwareEffect.OFF
+    )
+    return _attach_state(device, state)
+
+
+def create_mock_matrix_light() -> MatrixLight:
+    """Create a chain of LIFX Tiles on their final firmware."""
+    device, light_state = _create_device(
+        MatrixLight, TILE_PRODUCT, TILE_FIRMWARE, color=HSBK(0.0, 0.0, 0.5, 3500)
+    )
+    state = _create_matrix_state(light_state, TILE_PRODUCT, TILE_COUNT, 8, 8)
+    return _attach_state(device, state)
+
+
+def create_mock_luna_light() -> MatrixLight:
+    """Create a LIFX Luna, a single tile that is not square."""
+    device, light_state = _create_device(
+        MatrixLight, LUNA_PRODUCT, LUNA_FIRMWARE, color=HSBK(0.0, 0.0, 0.5, 3500)
+    )
+    state = _create_matrix_state(light_state, LUNA_PRODUCT, 1, LUNA_WIDTH, LUNA_HEIGHT)
+    return _attach_state(device, state)
+
+
+def create_mock_ceiling_light() -> CeilingLight:
+    """Create a 64 zone LIFX Ceiling with both components on."""
+    product = get_product(CEILING_PRODUCT)
+    assert product is not None
+    assert product.uplight_coords is not None
+    x, y = product.uplight_coords
+    uplight_zone = x + y * CEILING_WIDTH
+    downlight_zones = slice(0, uplight_zone)
+    device, light_state = _create_device(
+        CeilingLight, CEILING_PRODUCT, CEILING_FIRMWARE, color=HSBK(0.0, 0.0, 0.5, 3500)
+    )
+    matrix_state = _create_matrix_state(
+        light_state, CEILING_PRODUCT, 1, CEILING_WIDTH, CEILING_HEIGHT
+    )
+    tile_colors = matrix_state.tile_colors
+    state = CeilingLightState.from_matrix_state(
+        matrix_state,
+        uplight_color=tile_colors[uplight_zone],
+        downlight_colors=tile_colors[downlight_zones],
+        uplight_zone=uplight_zone,
+        downlight_zones=downlight_zones,
+    )
+    return _attach_state(device, state)
+
+
+def create_mock_mirror_light() -> MirrorLight:
+    """Create a LIFX Mirror with both components on."""
+    # The 50 zones are spread across a 4x13 buffer, so the tile has 52 colors
+    layout = get_mirror_layout(MIRROR_PRODUCT)
+    assert layout is not None
+    device, light_state = _create_device(
+        MirrorLight, MIRROR_PRODUCT, MIRROR_FIRMWARE, color=HSBK(0.0, 0.0, 0.5, 3500)
+    )
+    matrix_state = _create_matrix_state(
+        light_state, MIRROR_PRODUCT, 1, layout.width, layout.height
+    )
+    tile_colors = matrix_state.tile_colors
+    state = MirrorLightState.from_matrix_state(
+        matrix_state,
+        front_colors=[tile_colors[position] for position in layout.front_positions],
+        back_colors=[tile_colors[position] for position in layout.back_positions],
+        front_positions=layout.front_positions,
+        back_positions=layout.back_positions,
+    )
+    return _attach_state(device, state)
