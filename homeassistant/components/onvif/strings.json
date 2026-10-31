@@ -4,7 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "no_h264": "There were no H.264 streams available. Check the profile configuration on your device.",
-      "no_mac": "Could not configure unique ID for ONVIF device."
+      "no_mac": "Could not configure unique ID for ONVIF device.",
+      "unique_id_mismatch": "The provided connection settings belong to a different ONVIF device."
     },
     "error": {
       "auth_failed": "Could not authenticate: {error}",
@@ -46,6 +47,17 @@
         },
         "description": "Some devices will reject authentication if the time is out of sync by more than 5 seconds. If authentication is unsuccessful, verify the time on the device is correct and try again.",
         "title": "Reauthenticate the ONVIF device"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "[%key:component::onvif::config::step::configure::data_description::host%]"
+        }
       },
       "user": {
         "data": {
