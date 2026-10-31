@@ -225,3 +225,4 @@ CAMERA_CONNECTION_WEBHOOKS = [
 # For NDB there is no monitoring attribute in status but only alim_status.
 # 2 = Full power/online for NDB (and also Correct power adapter for NACamera).
 NETATMO_ALIM_STATUS_ONLINE = 2
+NETATMO_DOORBELLS = ["NDB"]
