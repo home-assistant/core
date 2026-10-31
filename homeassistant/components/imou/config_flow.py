@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from . import async_migrate_entry
 from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +62,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Imou integration."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Validate credentials and close the temporary client."""
@@ -124,6 +125,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauthentication upon an API authentication error."""
+        await async_migrate_entry(self.hass, self._get_reauth_entry())
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -161,6 +163,9 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()
+        # Migrate before applying a new region. Otherwise a reload would treat
+        # the region the user just chose as a legacy value and swap it.
+        await async_migrate_entry(self.hass, reconfigure_entry)
         if user_input is not None:
             credentials = {
                 CONF_APP_ID: reconfigure_entry.data[CONF_APP_ID],

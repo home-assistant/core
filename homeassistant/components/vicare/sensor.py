@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import date
 import logging
 from typing import override
 
@@ -104,6 +105,11 @@ SUPPLY_TEMPERATURE_SENSOR: ViCareSensorEntityDescription = (
         state_class=SensorStateClass.MEASUREMENT,
     )
 )
+
+
+def _to_date(value: str | None) -> date | None:
+    """Return a date the API reports as an ISO string, None when unset."""
+    return date.fromisoformat(value) if value else None
 
 
 GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -1331,6 +1337,30 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         value_getter=lambda api: api.getExhaustVolumeFlow(),
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="holiday_start",
+        translation_key="holiday_start",
+        device_class=SensorDeviceClass.DATE,
+        value_getter=lambda api: _to_date(api.getHolidayStart()),
+    ),
+    ViCareSensorEntityDescription(
+        key="holiday_end",
+        translation_key="holiday_end",
+        device_class=SensorDeviceClass.DATE,
+        value_getter=lambda api: _to_date(api.getHolidayEnd()),
+    ),
+    ViCareSensorEntityDescription(
+        key="holiday_at_home_start",
+        translation_key="holiday_at_home_start",
+        device_class=SensorDeviceClass.DATE,
+        value_getter=lambda api: _to_date(api.getHolidayAtHomeStart()),
+    ),
+    ViCareSensorEntityDescription(
+        key="holiday_at_home_end",
+        translation_key="holiday_at_home_end",
+        device_class=SensorDeviceClass.DATE,
+        value_getter=lambda api: _to_date(api.getHolidayAtHomeEnd()),
     ),
 )
 

@@ -28,7 +28,6 @@ class FibaroEntity(Entity):
         self.controller = controller
 
         room_name = controller.get_room_name(fibaro_device.room_id)
-        self.ha_id = f"{slugify(room_name)}_{slugify(fibaro_device.name)}_{fibaro_device.fibaro_id}"
 
         self._attr_name = f"{room_name} {fibaro_device.name}"
         self._attr_unique_id = (

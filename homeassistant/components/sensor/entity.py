@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
+from homeassistant.helpers.typing import StateType, Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.variance import ignore_variance
@@ -140,7 +140,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
     _sensor_option_display_precision: int | None = None
-    _sensor_option_unit_of_measurement: str | UndefinedType | None = UNDEFINED
+    _sensor_option_unit_of_measurement: str | Undefined | None = Undefined
     _invalid_suggested_unit_of_measurement_reported = False
     _get_uptime: Callable[[datetime], datetime] | None = None
 
@@ -338,7 +338,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
         return False
 
-    def _get_initial_suggested_unit(self) -> str | UndefinedType:
+    def _get_initial_suggested_unit(self) -> str | Undefined:
         """Return the initial unit."""
         # Unit suggested by the integration
         suggested_unit_of_measurement = self.suggested_unit_of_measurement
@@ -361,11 +361,11 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         if suggested_unit_of_measurement is None:
-            return UNDEFINED
+            return Undefined
 
         # Make sure we can convert the units
         if not self._is_valid_suggested_unit(suggested_unit_of_measurement):
-            return UNDEFINED
+            return Undefined
 
         return suggested_unit_of_measurement
 
@@ -378,7 +378,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         suggested_unit_of_measurement = self._get_initial_suggested_unit()
 
-        if suggested_unit_of_measurement is UNDEFINED:
+        if suggested_unit_of_measurement is Undefined:
             return None
 
         return {
@@ -479,7 +479,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the unit of measurement of the entity, after unit conversion."""
         # Highest priority, for registered entities: unit set by user,with fallback to
         # unit suggested by integration or secondary fallback to unit conversion rules
-        if self._sensor_option_unit_of_measurement is not UNDEFINED:
+        if self._sensor_option_unit_of_measurement is not Undefined:
             return self._sensor_option_unit_of_measurement
 
         native_unit_of_measurement = self.__native_unit_of_measurement_compat
@@ -836,27 +836,27 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def _custom_unit_or_undef(
         self, primary_key: str, secondary_key: str
-    ) -> str | UndefinedType | None:
-        """Return a custom unit, or UNDEFINED if not compatible with the native unit."""
+    ) -> str | Undefined | None:
+        """Return a custom unit, or Undefined if not compatible with the native unit."""
         assert self.registry_entry
         if (
             sensor_options := self.registry_entry.options.get(primary_key)
         ) is None or secondary_key not in sensor_options:
-            return UNDEFINED
+            return Undefined
 
         if (device_class := self.device_class) not in UNIT_CONVERTERS:
-            return UNDEFINED
+            return Undefined
 
         if (
             self.__native_unit_of_measurement_compat
             not in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
-            return UNDEFINED
+            return Undefined
 
         if (custom_unit := sensor_options[secondary_key]) not in UNIT_CONVERTERS[
             device_class
         ].VALID_UNITS:
-            return UNDEFINED
+            return Undefined
 
         return cast(str, custom_unit)
 
@@ -889,7 +889,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._sensor_option_unit_of_measurement = self._custom_unit_or_undef(
             DOMAIN, CONF_UNIT_OF_MEASUREMENT
         )
-        if self._sensor_option_unit_of_measurement is UNDEFINED:
+        if self._sensor_option_unit_of_measurement is Undefined:
             self._sensor_option_unit_of_measurement = self._custom_unit_or_undef(
                 f"{DOMAIN}.private", "suggested_unit_of_measurement"
             )

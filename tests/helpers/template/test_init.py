@@ -18,7 +18,7 @@ from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
     DOMAIN_STATES_RATE_LIMIT,
 )
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
 from .helpers import assert_result_info, render, render_to_info
@@ -231,7 +231,7 @@ def test_render_with_possible_json_value_with_invalid_json(hass: HomeAssistant) 
     [
         pytest.param({"hello": "world"}, "raw True {'hello': 'world'}", id="parsed"),
         pytest.param(None, "raw True None", id="null"),
-        pytest.param(UNDEFINED, "raw False", id="not_json"),
+        pytest.param(Undefined, "raw False", id="not_json"),
     ],
 )
 def test_render_with_possible_json_value_with_value_json(

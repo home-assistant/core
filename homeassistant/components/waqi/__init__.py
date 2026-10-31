@@ -14,7 +14,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .const import CONF_STATION_NUMBER, DOMAIN, SUBENTRY_TYPE_STATION
 from .coordinator import WAQIConfigEntry, WAQIDataUpdateCoordinator
@@ -127,7 +127,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # The device registry will set the disabled_by flag to None when
             # moving a device disabled by CONFIG_ENTRY to an enabled config
             # entry, but we want to set it to USER instead.
-            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
+            device_disabled_by: dr.DeviceEntryDisabler | Undefined = Undefined
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled

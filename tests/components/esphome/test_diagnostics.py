@@ -131,6 +131,7 @@ async def test_diagnostics_with_bluetooth(
                 "bluetooth_proxy": {"feature_flags": 0, "mac_address": ""},
                 "sendspin": {"client_id": "", "feature_flags": 0},
                 "serial_proxies": [],
+                "store_yaml": {"supported": False},
                 "voice_assistant": {"feature_flags": 0},
                 "wizard": {"configured": False},
                 "zwave_proxy": {"feature_flags": 0, "home_id": 0},

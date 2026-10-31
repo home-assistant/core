@@ -39,9 +39,9 @@ from .const import ARANET_MANUFACTURER_NAME
 class AranetSensorEntityDescription(SensorEntityDescription):
     """Class to describe an Aranet sensor entity."""
 
-    # PassiveBluetoothDataUpdate does not support UNDEFINED
+    # PassiveBluetoothDataUpdate does not support Undefined
     # Restrict the type to satisfy the type checker and catch attempts
-    # to use UNDEFINED in the entity descriptions.
+    # to use Undefined in the entity descriptions.
     name: str | None = None
     scale: float | int = 1
 

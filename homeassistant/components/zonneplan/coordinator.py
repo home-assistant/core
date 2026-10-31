@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 import asyncio
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 import logging
@@ -11,6 +12,8 @@ from pyzonneplan import (
     Account,
     Battery,
     BatteryControlMode,
+    BatteryDayAheadArbitrage,
+    BatteryHomeOptimization,
     ChargePoint,
     Connection,
     ConsumerPrices,
@@ -27,7 +30,7 @@ from pyzonneplan.const import BatteryMode, ConsumptionChart, PriceChart
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
@@ -56,6 +59,7 @@ class ZonneplanRuntimeData:
     battery_coordinator: ZonneplanBatteryCoordinator
     battery_control_coordinator: ZonneplanBatteryControlCoordinator
     charge_point_coordinator: ZonneplanChargePointCoordinator
+    battery_settings_coordinator: ZonneplanBatterySettingsCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,6 +79,14 @@ class ZonneplanBatteryData:
 
     battery: Battery
     day_start: datetime | None
+
+
+@dataclass(frozen=True, kw_only=True)
+class ZonneplanBatterySettingsData:
+    """Settings of the Zonneplan home battery control modes, keyed by contract UUID."""
+
+    home_optimization: dict[str, BatteryHomeOptimization]
+    day_ahead_arbitrage: dict[str, BatteryDayAheadArbitrage]
 
 
 def _connection(account: Account, market_segment: str) -> Connection | None:
@@ -100,7 +112,7 @@ class ZonneplanBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         hass: HomeAssistant,
         entry: ZonneplanConfigEntry,
         zonneplan: Zonneplan,
-        update_interval: timedelta,
+        update_interval: timedelta | None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -159,6 +171,37 @@ class ZonneplanBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             )
 
         return data
+
+    async def async_call_zonneplan[_T](self, call: Awaitable[_T]) -> _T:
+        """Await a Zonneplan API call made by an action and map its errors."""
+        try:
+            return await call
+        except ZonneplanAuthenticationError as err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except ZonneplanTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+        except ZonneplanConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except ZonneplanRateLimitError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+            ) from err
+        except ZonneplanError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
 
 class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
@@ -262,6 +305,17 @@ class ZonneplanBatteryCoordinator(
             )
         return batteries
 
+    async def async_set_backup_reserve(
+        self, contract_uuid: str, reserved_wh: int
+    ) -> None:
+        """Set the energy a battery reserves for backup power and refresh."""
+        await self.async_call_zonneplan(
+            self.zonneplan.async_set_battery_backup_reserve(
+                self.connection_uuids[contract_uuid], contract_uuid, reserved_wh
+            )
+        )
+        await self.async_request_refresh()
+
 
 class ZonneplanChargePointCoordinator(ZonneplanBaseCoordinator[dict[str, ChargePoint]]):
     """Coordinator to manage fetching the Zonneplan charge points."""
@@ -331,8 +385,10 @@ class ZonneplanBatteryControlCoordinator(
     ) -> None:
         """Switch a battery to another control mode and refresh the control data."""
         try:
-            await self.zonneplan.async_set_battery_control_mode(
-                self.connection_uuids[contract_uuid], contract_uuid, mode
+            await self.async_call_zonneplan(
+                self.zonneplan.async_set_battery_control_mode(
+                    self.connection_uuids[contract_uuid], contract_uuid, mode
+                )
             )
         except ValueError as err:
             # Raised when day-ahead arbitrage was never set up in the app.
@@ -340,32 +396,149 @@ class ZonneplanBatteryControlCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="day_ahead_arbitrage_not_set_up",
             ) from err
-        except ZonneplanAuthenticationError as err:
-            self.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        except ZonneplanTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-            ) from err
-        except ZonneplanConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
-        except ZonneplanRateLimitError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="rate_limited",
-            ) from err
-        except ZonneplanError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-            ) from err
         finally:
             # A failed switch can leave the battery half switched.
             await self.async_request_refresh()
+
+
+class ZonneplanBatterySettingsCoordinator(
+    ZonneplanBaseCoordinator[ZonneplanBatterySettingsData]
+):
+    """Coordinator to manage the settings of the home battery control modes.
+
+    The settings are only fetched for the modes a battery supports, which come
+    with the control mode, so they refresh after every control mode update.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ZonneplanConfigEntry,
+        zonneplan: Zonneplan,
+        control_coordinator: ZonneplanBatteryControlCoordinator,
+    ) -> None:
+        """Initialize the coordinator on top of the control mode coordinator."""
+        super().__init__(hass, entry, zonneplan, None)
+        self.control_coordinator = control_coordinator
+        # Also keeps the control mode polling when no select listens to it.
+        entry.async_on_unload(
+            control_coordinator.async_add_listener(self._async_control_mode_updated)
+        )
+
+    @callback
+    def _async_control_mode_updated(self) -> None:
+        """Refresh the settings after the control mode was fetched."""
+        if self.control_coordinator.last_update_success:
+            self.config_entry.async_create_task(self.hass, self.async_request_refresh())
+        else:
+            self.async_set_update_error(
+                UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="control_mode_unavailable",
+                )
+            )
+
+    @override
+    async def _async_fetch(self) -> ZonneplanBatterySettingsData:
+        """Fetch the settings of the supported modes of every battery."""
+        if (control_modes := self.control_coordinator.data) is None:
+            # The supported modes come with the control mode.
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="control_mode_unavailable",
+            )
+        home_optimization_contracts = [
+            contract_uuid
+            for contract_uuid, control_mode in control_modes.items()
+            if BatteryMode.HOME_OPTIMIZATION in control_mode.available_modes
+        ]
+        day_ahead_arbitrage_contracts = [
+            contract_uuid
+            for contract_uuid, control_mode in control_modes.items()
+            if BatteryMode.DAY_AHEAD_ARBITRAGE in control_mode.available_modes
+        ]
+        home_optimization, day_ahead_arbitrage = await asyncio.gather(
+            asyncio.gather(
+                *(
+                    self.zonneplan.async_get_battery_home_optimization(contract_uuid)
+                    for contract_uuid in home_optimization_contracts
+                )
+            ),
+            asyncio.gather(
+                *(
+                    self.zonneplan.async_get_battery_day_ahead_arbitrage(contract_uuid)
+                    for contract_uuid in day_ahead_arbitrage_contracts
+                )
+            ),
+        )
+        return ZonneplanBatterySettingsData(
+            home_optimization=dict(
+                zip(home_optimization_contracts, home_optimization, strict=True)
+            ),
+            day_ahead_arbitrage=dict(
+                zip(
+                    day_ahead_arbitrage_contracts,
+                    day_ahead_arbitrage,
+                    strict=True,
+                )
+            ),
+        )
+
+    async def _async_ensure_control_mode(
+        self, contract_uuid: str, mode: BatteryMode, translation_key: str
+    ) -> None:
+        """Raise unless the battery runs in the mode, as writing its settings enables it."""
+        # Fetched fresh, as the mode may have changed in the app since the last poll.
+        control_mode = await self.async_call_zonneplan(
+            self.zonneplan.async_get_battery_control_mode(contract_uuid)
+        )
+        if control_mode.control_mode != mode:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=translation_key,
+            )
+
+    async def async_set_power_limits(
+        self,
+        contract_uuid: str,
+        max_charge_power_w: int | None,
+        max_discharge_power_w: int | None,
+    ) -> None:
+        """Set the power limits of home optimization and refresh."""
+        await self._async_ensure_control_mode(
+            contract_uuid, BatteryMode.HOME_OPTIMIZATION, "home_optimization_not_active"
+        )
+        await self.async_call_zonneplan(
+            self.zonneplan.async_enable_battery_home_optimization(
+                self.control_coordinator.connection_uuids[contract_uuid],
+                contract_uuid,
+                max_charge_power_w=max_charge_power_w,
+                max_discharge_power_w=max_discharge_power_w,
+            )
+        )
+        # Not debounced: the next write sends both limits from this data.
+        await self.async_refresh()
+
+    async def async_set_price_spread(
+        self, contract_uuid: str, price_spread: float
+    ) -> None:
+        """Set the price spread day-ahead arbitrage trades on and refresh."""
+        resolution = self.data.day_ahead_arbitrage[contract_uuid].market_time_resolution
+        if resolution is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="day_ahead_arbitrage_not_set_up",
+            )
+        await self._async_ensure_control_mode(
+            contract_uuid,
+            BatteryMode.DAY_AHEAD_ARBITRAGE,
+            "day_ahead_arbitrage_not_active",
+        )
+        await self.async_call_zonneplan(
+            self.zonneplan.async_enable_battery_day_ahead_arbitrage(
+                contract_uuid,
+                price_spread=price_spread,
+                market_time_resolution=resolution,
+            )
+        )
+        await self.async_refresh()

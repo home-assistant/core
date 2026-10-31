@@ -77,7 +77,7 @@ _LOGGER = logging.getLogger(__name__)
 OWM_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class OWMUpdateCoordinator(DataUpdateCoordinator):
+class OWMUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """OWM data update coordinator."""
 
     config_entry: OpenweathermapConfigEntry
@@ -106,7 +106,7 @@ class WeatherUpdateCoordinator(OWMUpdateCoordinator):
     """Weather data update coordinator."""
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update the data."""
         try:
             weather_report = await self._owm_client.get_weather(
