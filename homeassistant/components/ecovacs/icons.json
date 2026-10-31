@@ -89,6 +89,9 @@
       },
       "station_action_empty_dustbin": {
         "default": "mdi:delete-restore"
+      },
+      "station_action_wash_mop": {
+        "default": "mdi:water-sync"
       }
     },
     "event": {
@@ -103,6 +106,9 @@
       "cut_direction": {
         "default": "mdi:angle-acute"
       },
+      "mop_wash_interval": {
+        "default": "mdi:timer-refresh-outline"
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {
@@ -116,6 +122,9 @@
       },
       "auto_empty": {
         "default": "mdi:delete-empty"
+      },
+      "efficiency_mode": {
+        "default": "mdi:leaf"
       },
       "water_amount": {
         "default": "mdi:water"
@@ -243,6 +252,9 @@
     "switch": {
       "advanced_mode": {
         "default": "mdi:tune"
+      },
+      "auto_empty": {
+        "default": "mdi:delete-empty"
       },
       "border_spin": {
         "default": "mdi:rotate-right"

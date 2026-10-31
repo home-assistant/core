@@ -100,7 +100,6 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._host},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"name": self._box_name},

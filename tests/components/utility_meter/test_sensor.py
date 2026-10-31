@@ -26,10 +26,9 @@ from homeassistant.components.utility_meter.const import (
     DOMAIN,
     HOURLY,
     QUARTER_HOURLY,
+    UtilityMeterEntityStateAttribute,
 )
 from homeassistant.components.utility_meter.sensor import (
-    ATTR_LAST_RESET,
-    ATTR_STATUS,
     COLLECTING,
     PAUSED,
     UtilityMeterSensor,
@@ -120,19 +119,19 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     state = hass.states.get("sensor.energy_bill_onpeak")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     now = dt_util.utcnow() + timedelta(seconds=10)
@@ -148,17 +147,17 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     state = hass.states.get("sensor.energy_bill_onpeak")
     assert state is not None
     assert state.state == "1"
-    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -182,17 +181,17 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     state = hass.states.get("sensor.energy_bill_onpeak")
     assert state is not None
     assert state.state == "1"
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
 
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "3"
-    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     await hass.services.async_call(
         DOMAIN,
@@ -303,7 +302,7 @@ async def test_state_always_available(
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     now = dt_util.utcnow() + timedelta(seconds=10)
@@ -319,7 +318,7 @@ async def test_state_always_available(
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
     assert state.state == "1"
-    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     # test unavailable state
     hass.states.async_set(
@@ -760,8 +759,8 @@ async def test_restore_state(
                     "sensor.energy_bill_tariff0",
                     "0.1",
                     attributes={
-                        ATTR_STATUS: PAUSED,
-                        ATTR_LAST_RESET: last_reset_1,
+                        UtilityMeterEntityStateAttribute.STATUS: PAUSED,
+                        UtilityMeterEntityStateAttribute.LAST_RESET: last_reset_1,
                         ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
                     },
                 ),
@@ -785,8 +784,8 @@ async def test_restore_state(
                     "sensor.energy_bill_tariff1",
                     "1.1",
                     attributes={
-                        ATTR_STATUS: PAUSED,
-                        ATTR_LAST_RESET: last_reset_1,
+                        UtilityMeterEntityStateAttribute.STATUS: PAUSED,
+                        UtilityMeterEntityStateAttribute.LAST_RESET: last_reset_1,
                         ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
                     },
                 ),
@@ -822,17 +821,29 @@ async def test_restore_state(
     # restore from cache
     state = hass.states.get("sensor.energy_bill_tariff0")
     assert state.state == "0.2"
-    assert state.attributes.get("status") == COLLECTING
-    assert state.attributes.get("last_reset") == last_reset_2
-    assert state.attributes.get("last_valid_state") == "None"
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET)
+        == last_reset_2
+    )
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE)
+        == "None"
+    )
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.GALLONS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
 
     state = hass.states.get("sensor.energy_bill_tariff1")
     assert state.state == "1.2"
-    assert state.attributes.get("status") == PAUSED
-    assert state.attributes.get("last_reset") == last_reset_2
-    assert state.attributes.get("last_valid_state") == "None"
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET)
+        == last_reset_2
+    )
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE)
+        == "None"
+    )
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
@@ -845,11 +856,11 @@ async def test_restore_state(
     assert state.state == "tariff0"
 
     state = hass.states.get("sensor.energy_bill_tariff0")
-    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     for entity_id in ("sensor.energy_bill_tariff1",):
         state = hass.states.get(entity_id)
-        assert state.attributes.get("status") == PAUSED
+        assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
 
 
 @pytest.mark.parametrize(
@@ -919,7 +930,7 @@ async def test_service_reset_no_tariffs(
                     "sensor.energy_bill",
                     "3",
                     attributes={
-                        ATTR_LAST_RESET: last_reset,
+                        UtilityMeterEntityStateAttribute.LAST_RESET: last_reset,
                     },
                 ),
                 {
@@ -955,8 +966,10 @@ async def test_service_reset_no_tariffs(
     state = hass.states.get("sensor.energy_bill")
     assert state
     assert state.state == "3"
-    assert state.attributes.get("last_reset") == last_reset
-    assert state.attributes.get("last_period") == "0"
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET) == last_reset
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "0"
 
     now = dt_util.utcnow()
     with freeze_time(now):
@@ -973,8 +986,11 @@ async def test_service_reset_no_tariffs(
     state = hass.states.get("sensor.energy_bill")
     assert state
     assert state.state == "0"
-    assert state.attributes.get("last_reset") == now.isoformat()
-    assert state.attributes.get("last_period") == "3"
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET)
+        == now.isoformat()
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "3"
 
 
 @pytest.mark.parametrize(
@@ -1088,14 +1104,18 @@ async def test_service_reset_no_tariffs_correct_with_multi(
     state = hass.states.get("sensor.energy_bill")
     assert state
     assert state.state == "3"
-    assert state.attributes.get("last_reset") == last_reset
-    assert state.attributes.get("last_period") == "0"
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET) == last_reset
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "0"
 
     state = hass.states.get("sensor.water_bill")
     assert state
     assert state.state == "6"
-    assert state.attributes.get("last_reset") == last_reset
-    assert state.attributes.get("last_period") == "0"
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET) == last_reset
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "0"
 
     now = dt_util.utcnow()
     with freeze_time(now):
@@ -1112,14 +1132,19 @@ async def test_service_reset_no_tariffs_correct_with_multi(
     state = hass.states.get("sensor.energy_bill")
     assert state
     assert state.state == "0"
-    assert state.attributes.get("last_reset") == now.isoformat()
-    assert state.attributes.get("last_period") == "3"
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET)
+        == now.isoformat()
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "3"
 
     state = hass.states.get("sensor.water_bill")
     assert state
     assert state.state == "6"
-    assert state.attributes.get("last_reset") == last_reset
-    assert state.attributes.get("last_period") == "0"
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET) == last_reset
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "0"
 
 
 @pytest.mark.parametrize(
@@ -1345,7 +1370,7 @@ async def test_delta_values(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -1371,7 +1396,7 @@ async def test_delta_values(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -1455,7 +1480,7 @@ async def test_non_periodically_resetting(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -1470,8 +1495,10 @@ async def test_non_periodically_resetting(
 
     state = hass.states.get("sensor.energy_bill")
     assert state.state == "2"
-    assert state.attributes.get("last_valid_state") == "3"
-    assert state.attributes.get("status") == COLLECTING
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE) == "3"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -1486,8 +1513,10 @@ async def test_non_periodically_resetting(
 
     state = hass.states.get("sensor.energy_bill")
     assert state.state == "2"
-    assert state.attributes.get("last_valid_state") == "3"
-    assert state.attributes.get("status") == COLLECTING
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE) == "3"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -1502,8 +1531,10 @@ async def test_non_periodically_resetting(
 
     state = hass.states.get("sensor.energy_bill")
     assert state.state == "5"
-    assert state.attributes.get("last_valid_state") == "6"
-    assert state.attributes.get("status") == COLLECTING
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE) == "6"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -1519,8 +1550,10 @@ async def test_non_periodically_resetting(
 
     state = hass.states.get("sensor.energy_bill")
     assert state.state == "8"
-    assert state.attributes.get("last_valid_state") == "9"
-    assert state.attributes.get("status") == COLLECTING
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE) == "9"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
 
 @pytest.mark.parametrize(
@@ -1586,15 +1619,20 @@ async def test_non_periodically_resetting_meter_with_tariffs(
     state = hass.states.get("sensor.energy_bill_low")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("status") == COLLECTING
-    assert state.attributes.get("last_valid_state") == "2"
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE) == "2"
+    )
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_high")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("status") == PAUSED
-    assert state.attributes.get("last_valid_state") == "None"
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE)
+        == "None"
+    )
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     now = dt_util.utcnow() + timedelta(seconds=10)
@@ -1610,14 +1648,19 @@ async def test_non_periodically_resetting_meter_with_tariffs(
     state = hass.states.get("sensor.energy_bill_low")
     assert state is not None
     assert state.state == "1"
-    assert state.attributes.get("last_valid_state") == "3"
-    assert state.attributes.get("status") == COLLECTING
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE) == "3"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     state = hass.states.get("sensor.energy_bill_high")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("last_valid_state") == "None"
-    assert state.attributes.get("status") == PAUSED
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE)
+        == "None"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -1628,12 +1671,18 @@ async def test_non_periodically_resetting_meter_with_tariffs(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill_low")
-    assert state.attributes.get("last_valid_state") == "None"
-    assert state.attributes.get("status") == PAUSED
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE)
+        == "None"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
 
     state = hass.states.get("sensor.energy_bill_high")
-    assert state.attributes.get("last_valid_state") == "None"
-    assert state.attributes.get("status") == COLLECTING
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE)
+        == "None"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
     now = dt_util.utcnow() + timedelta(seconds=20)
     with freeze_time(now):
@@ -1648,14 +1697,19 @@ async def test_non_periodically_resetting_meter_with_tariffs(
     state = hass.states.get("sensor.energy_bill_low")
     assert state is not None
     assert state.state == "1"
-    assert state.attributes.get("last_valid_state") == "None"
-    assert state.attributes.get("status") == PAUSED
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE)
+        == "None"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == PAUSED
 
     state = hass.states.get("sensor.energy_bill_high")
     assert state is not None
     assert state.state == "3"
-    assert state.attributes.get("last_valid_state") == "6"
-    assert state.attributes.get("status") == COLLECTING
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_VALID_STATE) == "6"
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.STATUS) == COLLECTING
 
 
 def gen_config(cycle, offset=None):
@@ -1729,9 +1783,10 @@ async def _test_self_reset(
 
     state = hass.states.get("sensor.energy_bill")
     if expect_reset:
-        assert state.attributes.get("last_period") == "2"
+        assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "2"
         assert (
-            state.attributes.get("last_reset") == dt_util.as_utc(now).isoformat()
+            state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET)
+            == dt_util.as_utc(now).isoformat()
         )  # last_reset is kept in UTC
         assert state.state == "3"
         # In first event state should be 0
@@ -1739,10 +1794,13 @@ async def _test_self_reset(
         assert events[0].data.get("new_state").state == "0"
         assert events[1].data.get("new_state").state == "0"
     else:
-        assert state.attributes.get("last_period") == "0"
+        assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "0"
         assert state.state == "5"
         start_time_str = dt_util.parse_datetime(start_time).isoformat()
-        assert state.attributes.get("last_reset") == start_time_str
+        assert (
+            state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET)
+            == start_time_str
+        )
 
     # Check next day when nothing should happen for weekly,
     # monthly, bimonthly and yearly
@@ -1766,10 +1824,10 @@ async def _test_self_reset(
         await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_bill")
     if expect_reset:
-        assert state.attributes.get("last_period") == "2"
+        assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "2"
         assert state.state == "7"
     else:
-        assert state.attributes.get("last_period") == "0"
+        assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "0"
         assert state.state == "9"
 
 
@@ -1836,7 +1894,9 @@ async def test_quarter_hourly_offset(
 
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
-    assert state.attributes.get("next_reset") == next_reset
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.NEXT_RESET) == next_reset
+    )
 
 
 async def test_self_reset_hourly(hass: HomeAssistant) -> None:
@@ -1868,12 +1928,18 @@ async def test_self_reset_hourly_dst2(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.energy_bill")
     last_reset = dt_util.parse_datetime("2024-10-27T00:00:00.000000+02:00")
     assert (
-        dt_util.as_local(dt_util.parse_datetime(state.attributes.get("last_reset")))
+        dt_util.as_local(
+            dt_util.parse_datetime(
+                state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET)
+            )
+        )
         == last_reset
     )
 
     next_reset = dt_util.parse_datetime("2024-10-28T00:00:00.000000+01:00").isoformat()
-    assert state.attributes.get("next_reset") == next_reset
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.NEXT_RESET) == next_reset
+    )
 
 
 async def test_tz_changes(hass: HomeAssistant) -> None:
@@ -1885,12 +1951,18 @@ async def test_tz_changes(hass: HomeAssistant) -> None:
         hass, gen_config("daily"), "2024-10-26T23:59:00.000000+02:00"
     )
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("next_reset") == "2024-10-28T00:00:00+01:00"
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.NEXT_RESET)
+        == "2024-10-28T00:00:00+01:00"
+    )
 
     await hass.config.async_update(time_zone="Pacific/Fiji")
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("next_reset") != "2024-10-28T00:00:00+01:00"
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.NEXT_RESET)
+        != "2024-10-28T00:00:00+01:00"
+    )
 
 
 async def test_next_reset_not_shifted_on_restore(hass: HomeAssistant) -> None:
@@ -1910,8 +1982,8 @@ async def test_next_reset_not_shifted_on_restore(hass: HomeAssistant) -> None:
                     "sensor.energy_bill",
                     "3",
                     attributes={
-                        ATTR_STATUS: COLLECTING,
-                        ATTR_LAST_RESET: last_reset,
+                        UtilityMeterEntityStateAttribute.STATUS: COLLECTING,
+                        UtilityMeterEntityStateAttribute.LAST_RESET: last_reset,
                         ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
                     },
                 ),
@@ -1945,8 +2017,10 @@ async def test_next_reset_not_shifted_on_restore(hass: HomeAssistant) -> None:
     # and recording the previous period value. Without the fix, last_reset
     # stays at the original value because the scheduler starts from now()
     # and skips the missed period entirely.
-    assert state.attributes.get("last_reset") != last_reset
-    assert state.attributes.get("last_period") == "3"
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.LAST_RESET) != last_reset
+    )
+    assert state.attributes.get(UtilityMeterEntityStateAttribute.LAST_PERIOD) == "3"
     assert state.state == "0"
 
 
@@ -1990,7 +2064,9 @@ async def test_weekly_offset(
 
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
-    assert state.attributes.get("next_reset") == next_reset
+    assert (
+        state.attributes.get(UtilityMeterEntityStateAttribute.NEXT_RESET) == next_reset
+    )
 
 
 async def test_self_reset_monthly(hass: HomeAssistant) -> None:

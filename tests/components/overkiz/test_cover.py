@@ -50,6 +50,7 @@ from .helpers import (
     async_deliver_events,
     device_state_changed_event,
     device_unavailable_event,
+    execution_registered_event,
     execution_state_changed_event,
 )
 
@@ -609,6 +610,58 @@ async def test_merged_action_groups_keep_per_device_tracking(
 
     assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
     assert hass.states.get(GARAGE.entity_id).state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
+    ("command_name", "expected_state"),
+    [
+        pytest.param("open", CoverState.OPENING, id="open"),
+        pytest.param("close", CoverState.CLOSING, id="close"),
+    ],
+)
+async def test_external_execution_tracks_movement(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    command_name: str,
+    expected_state: CoverState,
+) -> None:
+    """Test that an execution started outside Home Assistant reports movement."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_registered_event(
+                exec_id="app-exec",
+                device_url=SHUTTER.device_url,
+                command_name=command_name,
+                label="Shutter - TaHoma PC",
+                source="mobile:pc",
+            )
+        ],
+    )
+
+    assert hass.states.get(SHUTTER.entity_id).state == expected_state
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id="app-exec",
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
+            )
+        ],
+    )
+
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
@@ -1296,50 +1349,50 @@ async def test_tilt_position_none_value(
     [
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [0, OverkizCommandParam.LOWSPEED],
-            id="open-low",
+            id="open-slow",
         ),
         pytest.param(
             SERVICE_CLOSE_COVER,
-            {ATTR_SPEED: "low"},
+            {ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [100, OverkizCommandParam.LOWSPEED],
-            id="close-low",
+            id="close-slow",
         ),
         pytest.param(
             SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 35, ATTR_SPEED: "low"},
+            {ATTR_POSITION: 35, ATTR_SPEED: "slow"},
             "setClosureAndLinearSpeed",
             [65, OverkizCommandParam.LOWSPEED],
-            id="set-position-low",
+            id="set-position-slow",
         ),
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "default"},
+            {ATTR_SPEED: "fast"},
             "open",
             None,
-            id="open-default",
+            id="open-fast",
         ),
         pytest.param(
             SERVICE_CLOSE_COVER,
-            {ATTR_SPEED: "default"},
+            {ATTR_SPEED: "fast"},
             "close",
             None,
-            id="close-default",
+            id="close-fast",
         ),
         pytest.param(
             SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 35, ATTR_SPEED: "default"},
+            {ATTR_POSITION: 35, ATTR_SPEED: "fast"},
             "setClosure",
             [65],
-            id="set-position-default",
+            id="set-position-fast",
         ),
         # An unsupported speed is dropped, so the cover opens at its default speed
         pytest.param(
             SERVICE_OPEN_COVER,
-            {ATTR_SPEED: "fast"},
+            {ATTR_SPEED: "medium"},
             "open",
             None,
             id="open-unsupported",
@@ -1389,7 +1442,7 @@ async def test_cover_speed_supported(
 
     state = hass.states.get(LOW_SPEED.entity_id)
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED
-    assert state.attributes["supported_speeds"] == ["default", "low"]
+    assert state.attributes["supported_speeds"] == ["fast", "slow"]
 
     state = hass.states.get(DEPRECATED_LOW_SPEED_ENTITY_ID)
     assert not state.attributes[ATTR_SUPPORTED_FEATURES] & CoverEntityFeature.SPEED

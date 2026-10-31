@@ -399,7 +399,10 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         If self.device_class is `date`, `timestamp`, or `uptime`,
         it will try to parse the value to a date/datetime object.
         """
-        if self.device_class not in (
+        # Value templates render to strings, so a template rendering none gives "None"
+        if value == "None":
+            self._attr_native_value = None
+        elif self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
             SensorDeviceClass.UPTIME,

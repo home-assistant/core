@@ -13,7 +13,7 @@ from homeassistant.components.calendar import (
     CalendarEvent,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ENTITIES, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import CONF_ENTITIES, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
@@ -25,6 +25,7 @@ from homeassistant.helpers.event import async_track_state_report_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Calendar group"
@@ -118,7 +119,9 @@ class CalendarGroup(GroupEntity, CalendarEntity):
         """Initialize a calendar group."""
         self._entity_ids = entity_ids
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
         self._member_events: list[CalendarEvent] = []
 

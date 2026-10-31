@@ -10,6 +10,7 @@ import wave
 
 from google.genai import types
 from google.genai.errors import APIError
+from google.genai.voices import Voice, VoiceListResponse
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -86,6 +87,7 @@ def mock_genai_client() -> Generator[AsyncMock]:
             )
         )
     )
+    client.voices.list = Mock(return_value=VoiceListResponse(voices=[]))
     with patch(
         "homeassistant.components.google_generative_ai_conversation.Client",
         return_value=client,
@@ -98,15 +100,21 @@ async def setup_fixture(
     hass: HomeAssistant,
     config: dict[str, Any],
     mock_genai_client: AsyncMock,
+    request: pytest.FixtureRequest,
 ) -> None:
-    """Set up the test environment."""
+    """Set up the test environment.
+
+    The chat model defaults to TEST_CHAT_MODEL; override it by indirectly
+    parametrizing this fixture.
+    """
+    model = getattr(request, "param", TEST_CHAT_MODEL)
     config_entry = MockConfigEntry(domain=DOMAIN, data=config, version=2)
     config_entry.add_to_hass(hass)
 
     sub_entry = ConfigSubentry(
         data={
             tts.CONF_LANG: "en-US",
-            CONF_CHAT_MODEL: TEST_CHAT_MODEL,
+            CONF_CHAT_MODEL: model,
         },
         subentry_type="tts",
         title="Google AI TTS",
@@ -120,7 +128,7 @@ async def setup_fixture(
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.fixture(name="config")
@@ -187,6 +195,122 @@ async def test_tts_service_speak(
             temperature=RECOMMENDED_TEMPERATURE,
         ),
     )
+
+
+def _library_voice(voice_id: str, language_code: str) -> Voice:
+    """Build a voice returned by the voices API."""
+    return Voice(
+        id=voice_id,
+        display_name=voice_id.title(),
+        gender="female",
+        language_code=language_code,
+        type="prebuilt",
+    )
+
+
+async def _reload_entry(hass: HomeAssistant) -> None:
+    """Reload the config entry so the entity loads the voice library again."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.parametrize("setup", ["models/gemini-3.8-flash-tts"], indirect=True)
+@pytest.mark.usefixtures("setup")
+async def test_tts_voice_library(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+) -> None:
+    """Test the voice library is loaded page by page and grouped by language."""
+    voices_list = mock_genai_client.return_value.voices.list
+    voices_list.reset_mock()
+    voices_list.side_effect = [
+        VoiceListResponse(
+            voices=[
+                _library_voice("zephyr", "en-US"),
+                _library_voice("ko-kr-advisor-1", "ko-KR"),
+            ],
+            next_page_token="page-2",
+        ),
+        VoiceListResponse(
+            voices=[
+                _library_voice("fr-fr-narrator-1", "fr-FR"),
+                Voice(id="fr-fr-bare", language_code="fr-FR", type="prebuilt"),
+                Voice(id="no-language", type="prebuilt"),
+            ]
+        ),
+    ]
+    await _reload_entry(hass)
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+
+    assert [call.kwargs["page_token"] for call in voices_list.call_args_list] == [
+        None,
+        "page-2",
+    ]
+    assert all(
+        call.kwargs["type_"] == ["prebuilt"] for call in voices_list.call_args_list
+    )
+    default_voices = entity.async_get_supported_voices("de-DE")
+    assert len(default_voices) == 30
+    assert entity.async_get_supported_voices("en-US") == default_voices
+    assert entity.async_get_supported_voices("ko-KR") == [
+        *default_voices,
+        tts.Voice("ko-kr-advisor-1", "Ko-Kr-Advisor-1 (female)"),
+    ]
+    assert entity.async_get_supported_voices("fr-FR")[30:] == [
+        tts.Voice("fr-fr-narrator-1", "Fr-Fr-Narrator-1 (female)"),
+        tts.Voice("fr-fr-bare", "fr-fr-bare"),
+    ]
+
+
+@pytest.mark.parametrize("setup", ["models/gemini-3.8-flash-tts"], indirect=True)
+@pytest.mark.usefixtures("setup")
+async def test_tts_voice_library_error(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the prebuilt voices are kept when the voice library cannot be loaded."""
+    mock_genai_client.return_value.voices.list.side_effect = RuntimeError("boom")
+    await _reload_entry(hass)
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+
+    assert "Could not load the Google AI voice library: boom" in caplog.text
+    assert len(entity.async_get_supported_voices("ko-KR")) == 30
+
+
+@pytest.mark.parametrize("setup", ["models/gemini-3.8-flash-tts"], indirect=True)
+@pytest.mark.usefixtures("setup")
+async def test_tts_voice_library_page_limit(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the voice library stops paging when the API never ends the listing."""
+    voices_list = mock_genai_client.return_value.voices.list
+    voices_list.reset_mock()
+    voices_list.side_effect = None
+    voices_list.return_value = VoiceListResponse(
+        voices=[_library_voice("fr-fr-narrator-1", "fr-FR")],
+        next_page_token="again",
+    )
+    await _reload_entry(hass)
+
+    assert voices_list.call_count == 10
+    assert "Stopped loading the Google AI voice library after 10 pages" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "setup", ["gemini-3.1-flash-tts-preview", TEST_CHAT_MODEL], indirect=True
+)
+@pytest.mark.usefixtures("setup")
+async def test_tts_voice_library_not_loaded_for_older_model(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+) -> None:
+    """Test models without voice library support do not query the voices API."""
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_genai_client.return_value.voices.list.assert_not_called()
 
 
 @pytest.mark.usefixtures("setup")

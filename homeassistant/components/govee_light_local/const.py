@@ -16,3 +16,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 # UDP response plus some jitter before flapping the entity state.
 DEVICE_TIMEOUT = SCAN_INTERVAL * 3
 DISCOVERY_TIMEOUT = 5
+# Addresses that failed to bind are retried on this cadence rather than every
+# poll: the library warns on each address that still fails.
+REBIND_INTERVAL = timedelta(minutes=5)

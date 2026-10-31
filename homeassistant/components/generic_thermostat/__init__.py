@@ -15,9 +15,20 @@ from homeassistant.helpers.helper_integration import (
     async_remove_helper_devices,
 )
 
-from .const import CONF_DUR_COOLDOWN, CONF_HEATER, CONF_MIN_DUR, CONF_SENSOR, PLATFORMS
+from .const import (
+    CONF_DUR_COOLDOWN,
+    CONF_HEATER,
+    CONF_MIN_DUR,
+    CONF_SENSOR,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "DOMAIN",
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

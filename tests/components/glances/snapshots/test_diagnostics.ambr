@@ -1,0 +1,111 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'api_version': 4,
+    'config_entry': dict({
+      'port': 61208,
+      'ssl': False,
+      'verify_ssl': True,
+    }),
+    'data': dict({
+      'diskio': dict({
+        'nvme0n1': dict({
+          'read': 184320,
+          'write': 23863296,
+        }),
+        'sda': dict({
+          'read': 3859,
+          'write': 25954,
+        }),
+      }),
+      'docker': dict({
+        'docker_active': 2,
+        'docker_cpu_use': 77.2,
+        'docker_memory_use': 1149.6,
+      }),
+      'fs': dict({
+        '/media': dict({
+          'disk_free': 426.5,
+          'disk_size': 476.2,
+          'disk_use': 30.7,
+          'disk_use_percent': 6.7,
+        }),
+        '/ssl': dict({
+          'disk_free': 426.5,
+          'disk_size': 476.2,
+          'disk_use': 30.7,
+          'disk_use_percent': 6.7,
+        }),
+      }),
+      'gpu': dict({
+        'NVIDIA GeForce RTX 3080 (GPU 0)': dict({
+          'fan_speed': 0,
+          'mem': 8.41064453125,
+          'proc': 26,
+          'temperature': 51,
+        }),
+      }),
+      'mem': dict({
+        'memory_free': 2745.0,
+        'memory_use': 1047.1,
+        'memory_use_percent': 27.6,
+      }),
+      'network': dict({
+        'dummy0': dict({
+          'is_up': False,
+          'rx': 0.0,
+          'speed': 0.0,
+          'tx': 0.0,
+        }),
+        'eth0': dict({
+          'is_up': True,
+          'rx': 3953,
+          'speed': 9.8,
+          'tx': 5995,
+        }),
+        'lo': dict({
+          'is_up': True,
+          'rx': 7646,
+          'speed': 0.0,
+          'tx': 7646,
+        }),
+      }),
+      'raid': dict({
+        'md1': dict({
+          'available': '2',
+          'components': dict({
+            'sde': '1',
+            'sdg': '0',
+          }),
+          'config': 'UU',
+          'status': 'active',
+          'type': 'raid1',
+          'used': '2',
+        }),
+        'md3': dict({
+          'available': '2',
+          'components': dict({
+            'sdh1': '2',
+            'sdi1': '0',
+          }),
+          'config': 'UU',
+          'status': 'active',
+          'type': 'raid1',
+          'used': '2',
+        }),
+      }),
+      'sensors': dict({
+        'cpu_thermal 1': dict({
+          'temperature_core': 59,
+        }),
+        'err_temp': dict({
+          'temperature_hdd': 'unavailable',
+        }),
+        'na_temp': dict({
+          'temperature_hdd': 'unavailable',
+        }),
+      }),
+      'uptime': '3 days, 10:25:20',
+    }),
+  })
+# ---

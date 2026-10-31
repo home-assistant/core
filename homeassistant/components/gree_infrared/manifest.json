@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/gree_infrared",
   "integration_type": "device",
   "iot_class": "assumed_state",
-  "quality_scale": "silver"
+  "quality_scale": "platinum"
 }

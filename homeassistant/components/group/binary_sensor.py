@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_ENTITIES,
     CONF_NAME,
@@ -30,6 +29,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Binary Sensor Group"
@@ -120,7 +120,9 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         super().__init__()
         self._entity_ids = entity_ids
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
         self._device_class = device_class
         self.mode = any

@@ -36,7 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
+from homeassistant.helpers.typing import StateType, Undefined
 
 from . import EcovacsConfigEntry
 from .const import LEGACY_SUPPORTED_LIFESPANS, SUPPORTED_LIFESPANS
@@ -53,8 +53,8 @@ from .util import get_name_key, get_options, get_supported_entities
 class EcovacsSensorDeviceTypeOverride:
     """Description values, which differ for a specific device type."""
 
-    native_unit_of_measurement: str | UndefinedType | None = UNDEFINED
-    translation_key: str | UndefinedType | None = UNDEFINED
+    native_unit_of_measurement: str | Undefined | None = Undefined
+    translation_key: str | Undefined | None = Undefined
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -79,7 +79,7 @@ class EcovacsSensorEntityDescription[EventT: Event](
             **{
                 f.name: value
                 for f in fields(overrides)
-                if (value := getattr(overrides, f.name)) is not UNDEFINED
+                if (value := getattr(overrides, f.name)) is not Undefined
             },
         )
 

@@ -1,9 +1,13 @@
 """Test the Music Assistant integration init."""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from music_assistant_client.exceptions import ConnectionFailed, InvalidState
+from music_assistant_client.exceptions import (
+    CannotConnect,
+    ConnectionFailed,
+    InvalidState,
+)
 from music_assistant_models.config_entries import PlayerConfig
 from music_assistant_models.dashboard import DashboardDevice
 from music_assistant_models.enums import DashboardType, EventType
@@ -12,12 +16,14 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 
+from homeassistant.components.hassio import HassioNotReadyError
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
     DASHBOARD_DEVICE_MODEL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -31,6 +37,155 @@ from .common import (
     setup_integration_from_fixtures,
     trigger_subscription_callback,
 )
+
+
+@pytest.mark.parametrize("error", [CannotConnect, TimeoutError])
+@pytest.mark.parametrize("app_state", ["stopped", "error", "startup"])
+@pytest.mark.parametrize(
+    "app_hostname",
+    ["d5369777-music-assistant", "d5369777-music-assistant-beta"],
+)
+async def test_offline_app_setup_retries(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    error: type[Exception],
+    app_state: str,
+    app_hostname: str,
+) -> None:
+    """Explain connection failures using the configured app's Supervisor state."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={CONF_URL: f"http://{app_hostname}:8094"}
+    )
+    music_assistant_client.connect.side_effect = error("Connection failed")
+
+    with (
+        patch(
+            "homeassistant.components.music_assistant.app.is_hassio", return_value=True
+        ),
+        patch(
+            "homeassistant.components.music_assistant.app.get_addons_info",
+            return_value={
+                "music_assistant": {
+                    "hostname": app_hostname,
+                    "name": "Music Assistant",
+                    "state": app_state,
+                }
+            },
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == "The Music Assistant app is not running yet"
+    music_assistant_client.start_listening.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("on_supervisor", "app_hostname", "app_state"),
+    [
+        pytest.param(False, "mass.local", "stopped", id="no_supervisor"),
+        pytest.param(True, "another-app", "stopped", id="external_server"),
+        pytest.param(True, "mass.local", "started", id="running_app"),
+        pytest.param(True, "mass.local", "unknown", id="unknown_state"),
+    ],
+)
+async def test_connection_failure_without_offline_app(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    on_supervisor: bool,
+    app_hostname: str,
+    app_state: str,
+) -> None:
+    """Do not attribute unrelated connection failures to an offline app."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={CONF_URL: "http://mass.local:8095"}
+    )
+    music_assistant_client.connect.side_effect = CannotConnect("Connection failed")
+
+    with (
+        patch(
+            "homeassistant.components.music_assistant.app.is_hassio",
+            return_value=on_supervisor,
+        ),
+        patch(
+            "homeassistant.components.music_assistant.app.get_addons_info",
+            return_value={
+                "music_assistant": {
+                    "hostname": app_hostname,
+                    "name": "Music Assistant",
+                    "state": app_state,
+                }
+            },
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == (
+        "Failed to connect to music assistant server http://mass.local:8095"
+    )
+
+
+@pytest.mark.parametrize(
+    ("app_info", "error"),
+    [
+        pytest.param({}, None, id="no_apps"),
+        pytest.param({"music_assistant": None}, None, id="missing_app_info"),
+        pytest.param({}, HassioNotReadyError, id="supervisor_not_ready"),
+    ],
+)
+async def test_connection_failure_without_app_info(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    app_info: dict[str, None],
+    error: type[Exception] | None,
+) -> None:
+    """Preserve the connection error when Supervisor has no app information."""
+    mock_config_entry.add_to_hass(hass)
+    music_assistant_client.connect.side_effect = CannotConnect("Connection failed")
+
+    with (
+        patch(
+            "homeassistant.components.music_assistant.app.is_hassio", return_value=True
+        ),
+        patch(
+            "homeassistant.components.music_assistant.app.get_addons_info",
+            return_value=app_info,
+            side_effect=error,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == (
+        "Failed to connect to music assistant server http://localhost:8095"
+    )
+
+
+async def test_successful_connection_does_not_check_app_state(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A healthy connection does not depend on cached Supervisor app state."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.music_assistant.async_check_app_running"
+    ) as check_app_running:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    check_app_running.assert_not_called()
+    music_assistant_client.connect.assert_awaited_once()
 
 
 async def test_remove_config_entry_device(

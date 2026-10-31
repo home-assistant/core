@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import override
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -15,11 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import RainMachineConfigEntry
 from .const import DATA_PROVISION_SETTINGS, DATA_RESTRICTIONS_CURRENT
 from .entity import RainMachineEntity, RainMachineEntityDescription
-from .util import (
-    EntityDomainReplacementStrategy,
-    async_finish_entity_domain_replacements,
-    key_exists,
-)
+from .util import key_exists
 
 TYPE_FLOW_SENSOR = "flow_sensor"
 TYPE_FREEZE = "freeze"
@@ -99,27 +94,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up RainMachine binary sensors based on a config entry."""
     data = entry.runtime_data
-
-    async_finish_entity_domain_replacements(
-        hass,
-        entry,
-        (
-            EntityDomainReplacementStrategy(
-                BINARY_SENSOR_DOMAIN,
-                f"{data.controller.mac}_freeze_protection",
-                f"switch.{data.controller.name.lower()}_freeze_protect_enabled",
-                breaks_in_ha_version="2022.12.0",
-                remove_old_entity=True,
-            ),
-            EntityDomainReplacementStrategy(
-                BINARY_SENSOR_DOMAIN,
-                f"{data.controller.mac}_extra_water_on_hot_days",
-                f"switch.{data.controller.name.lower()}_hot_days_extra_watering",
-                breaks_in_ha_version="2022.12.0",
-                remove_old_entity=True,
-            ),
-        ),
-    )
 
     api_category_sensor_map = {
         DATA_PROVISION_SETTINGS: ProvisionSettingsBinarySensor,

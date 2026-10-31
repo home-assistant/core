@@ -17,7 +17,6 @@ DATA_TIMER: HassKey[TimerData] = HassKey(DOMAIN)
 DEFAULT_DURATION: Final = 0
 DEFAULT_RESTORE = False
 
-ATTR_DURATION: Final = "duration"
 ATTR_FINISHED_AT = "finished_at"
 
 CONF_DURATION = "duration"

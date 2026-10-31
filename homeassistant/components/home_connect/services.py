@@ -31,6 +31,7 @@ from .const import (
     ATTR_PROGRAM,
     ATTR_VALUE,
     DOMAIN,
+    FAVORITE_PROGRAMS,
     PROGRAM_ENUM_OPTIONS,
     SERVICE_SET_PROGRAM_AND_OPTIONS,
     SERVICE_SETTING,
@@ -348,6 +349,21 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
             translation_key="no_program_to_start",
         )
     program = program_obj.key
+    if program in FAVORITE_PROGRAMS:
+        base_program = next(
+            (
+                option
+                for option in program_obj.options or []
+                if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM
+            ),
+            None,
+        )
+        if not base_program:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="favorite_program_missing_base_program",
+            )
+        program = ProgramKey(base_program.value)
 
     # Fetch the writable option schema for this program on this appliance.
     # Only options present in this response are accepted by PUT /programs/active.
