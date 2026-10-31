@@ -1,8 +1,11 @@
 """Test cleaning up the Assist pipeline debug recordings."""
 
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager
 from datetime import timedelta
 import os
 from pathlib import Path
+import shutil
 import time
 from typing import Any
 from unittest.mock import patch
@@ -67,7 +70,7 @@ def _write_recordings(recording_dir: Path, days_old: int) -> None:
     (recording_dir / EMPTY_DIR).mkdir()
 
 
-def _delete_one_then_fail(recording_dir: Path) -> None:
+def _delete_one_then_fail(recording_dir: Path, skip_dirs: list[Path]) -> None:
     """Delete one recording, then fail like a file without write access."""
     (recording_dir / WAKE).unlink()
     raise PermissionError
@@ -157,21 +160,98 @@ async def test_left_over_after_changing_directory(
     assert _stored_dirs(hass_storage) == [str(left_over_dir), str(new_dir)]
 
 
+def _delete_recordings(recording_dir: Path) -> None:
+    """Delete the recordings, like a user cleaning up by hand."""
+    for recording in RECORDINGS:
+        (recording_dir / recording).unlink()
+
+
+def _make_recordings_active(recording_dir: Path) -> None:
+    """Mark the recordings as just written, like a run that is still recording."""
+    for recording in RECORDINGS:
+        os.utime(recording_dir / recording)
+
+
+def _walk_with_error(
+    top: Path, onerror: Callable[[OSError], None]
+) -> Iterator[tuple[str, list[str], list[str]]]:
+    """Fail like a directory that can't be listed."""
+    onerror(PermissionError())
+    return iter([])
+
+
+@pytest.mark.parametrize(
+    "remove",
+    [
+        pytest.param(_delete_recordings, id="recordings"),
+        pytest.param(shutil.rmtree, id="directory"),
+    ],
+)
 @pytest.mark.usefixtures("init_supporting_components")
 async def test_left_over_deleted_manually(
     hass: HomeAssistant,
     left_over_dir: Path,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
+    remove: Callable[[Path], None],
 ) -> None:
     """Test a previous directory without recordings is forgotten."""
-    await hass.async_add_executor_job(
-        lambda: [(left_over_dir / path).unlink() for path in RECORDINGS]
-    )
+    await hass.async_add_executor_job(remove, left_over_dir)
     await _async_setup(hass, None)
 
     assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEFT_OVER) is None
     assert _stored_dirs(hass_storage) == []
+
+
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_left_over_kept_while_recording_active(
+    hass: HomeAssistant,
+    left_over_dir: Path,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a previous directory with skipped recordings is kept to check again."""
+    await hass.async_add_executor_job(_make_recordings_active, left_over_dir)
+    await _async_setup(hass, None)
+
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEFT_OVER) is None
+    assert _stored_dirs(hass_storage) == [str(left_over_dir)]
+
+
+@pytest.mark.parametrize(
+    ("patcher", "stored_dirs"),
+    [
+        pytest.param(
+            patch.object(Path, "lstat", side_effect=PermissionError),
+            1,
+            id="unreadable_recording",
+        ),
+        pytest.param(
+            patch.object(Path, "lstat", side_effect=FileNotFoundError),
+            0,
+            id="recording_removed",
+        ),
+        pytest.param(
+            patch.object(os, "walk", side_effect=_walk_with_error),
+            1,
+            id="unlistable_directory",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_supporting_components", "left_over_dir")
+async def test_left_over_scan_errors(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    patcher: AbstractContextManager[Any],
+    stored_dirs: int,
+) -> None:
+    """Test a previous directory is only forgotten when nothing was skipped."""
+    with patcher:
+        await _async_setup(hass, None)
+
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEFT_OVER) is None
+    assert len(_stored_dirs(hass_storage)) == stored_dirs
 
 
 @pytest.mark.usefixtures("init_supporting_components")
@@ -263,6 +343,52 @@ def _write_symlinked_recordings(recording_dir: Path, external_dir: Path) -> None
     run_dir = recording_dir / "Home Assistant" / "5"
     run_dir.mkdir(parents=True)
     (run_dir / "00_wake-linked.wav").symlink_to(external_dir / WAKE)
+
+
+@pytest.mark.parametrize(
+    ("current", "previous"),
+    [
+        pytest.param("new", "", id="current_in_previous"),
+        pytest.param("", "old", id="previous_in_current"),
+    ],
+)
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_nested_directories(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    current: str,
+    previous: str,
+) -> None:
+    """Test recordings of a nested directory are not counted or deleted as another's."""
+    current_dir = tmp_path / current
+    previous_dir = tmp_path / previous
+    await hass.async_add_executor_job(_write_recordings, previous_dir, 8)
+    await hass.async_add_executor_job(_write_recordings, current_dir, 8)
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": STORAGE_KEY,
+        "data": {"recording_dirs": [str(previous_dir)]},
+    }
+    await _async_setup(hass, current_dir)
+
+    for issue_id in (ISSUE_LEFT_OVER, ISSUE_STILL_ENABLED):
+        issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+        assert issue is not None
+        assert issue.translation_placeholders["count"] == "4"
+
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+    flow = await start_repair_fix_flow(client, DOMAIN, ISSUE_LEFT_OVER)
+    result = await process_repair_fix_flow(client, flow["flow_id"])
+    assert result["type"] == "create_entry"
+
+    for recording in RECORDINGS:
+        assert not await hass.async_add_executor_job((previous_dir / recording).exists)
+        assert await hass.async_add_executor_job((current_dir / recording).exists)
 
 
 @pytest.mark.usefixtures("init_supporting_components")

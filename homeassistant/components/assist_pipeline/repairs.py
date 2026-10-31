@@ -44,7 +44,9 @@ class DebugRecordingsRepairFlow(ConfirmRepairFlow):
         try:
             for recording_dir in recording_dirs:
                 await self.hass.async_add_executor_job(
-                    delete_debug_recordings, recording_dir
+                    delete_debug_recordings,
+                    recording_dir,
+                    debug_recordings.other_dirs(recording_dir),
                 )
         except OSError:
             _LOGGER.exception("Could not delete the debug recordings")

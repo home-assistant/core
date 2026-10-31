@@ -60,7 +60,7 @@
         },
         "step": {
           "confirm": {
-            "description": "Debug recording for Assist is turned off, but {count} recordings ({size} MB) it saved earlier are still kept in `{path}`.\n\nSelect **Submit** to delete them.",
+            "description": "Assist saved {count} debug recordings ({size} MB) in directories that are no longer used as `debug_recording_dir`: `{path}`.\n\nSelect **Submit** to delete them.",
             "title": "[%key:component::assist_pipeline::issues::debug_recordings_left_over::title%]"
           }
         }
