@@ -1,0 +1,708 @@
+# serializer version: 1
+# name: test_humidifier_status[deerma.humidifier.jsq1][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Medium',
+        'High',
+        'Humidity',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsq1][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Medium',
+        'High',
+        'Humidity',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Low',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsq2w][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Mid',
+        'High',
+        'Auto',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 40,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsq2w][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Mid',
+        'High',
+        'Auto',
+      ]),
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 40,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Auto',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsq3][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Mid',
+        'High',
+        'Auto',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 40,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsq3][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Mid',
+        'High',
+        'Auto',
+      ]),
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 40,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Auto',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsq5][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Mid',
+        'High',
+        'Auto',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 40,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsq5][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Mid',
+        'High',
+        'Auto',
+      ]),
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 40,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Auto',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsq][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Medium',
+        'High',
+        'Humidity',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsq][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Medium',
+        'High',
+        'Humidity',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Low',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsqs][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Mid',
+        'High',
+        'Auto',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 40,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.jsqs][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Mid',
+        'High',
+        'Auto',
+      ]),
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 40,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Auto',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.mjjsq][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Medium',
+        'High',
+        'Humidity',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[deerma.humidifier.mjjsq][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Low',
+        'Medium',
+        'High',
+        'Humidity',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Low',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_status[zhimi.humidifier.ca1][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Silent',
+        'Medium',
+        'High',
+        'Auto',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[zhimi.humidifier.ca1][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Silent',
+        'Medium',
+        'High',
+        'Auto',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Silent',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_status[zhimi.humidifier.ca4][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Auto',
+        'Low',
+        'Mid',
+        'High',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[zhimi.humidifier.ca4][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Auto',
+        'Low',
+        'Mid',
+        'High',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Auto',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_status[zhimi.humidifier.v1][humidifier.test_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Silent',
+        'Medium',
+        'High',
+        'Strong',
+      ]),
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.test_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'xiaomi_miio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_humidifier_status[zhimi.humidifier.v1][humidifier.test_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
+        'Silent',
+        'Medium',
+        'High',
+        'Strong',
+      ]),
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_humidifier',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 55,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'Silent',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.test_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
