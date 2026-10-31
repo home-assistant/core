@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
+from egauge_async.exceptions import (
+    EgaugeAuthenticationError,
+    EgaugeException,
+    EgaugePermissionError,
+)
 from egauge_async.json.models import RegisterInfo, RegisterType
 from httpx2 import ConnectError
 import pytest
@@ -376,14 +380,24 @@ async def test_options_flow_does_not_offer_a_register_without_a_sensor(
     assert select.config["options"] == ["Grid", "Solar"]
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(EgaugeAuthenticationError, id="invalid_auth"),
+        pytest.param(EgaugePermissionError, id="missing_permission"),
+        pytest.param(EgaugeException, id="egauge_error"),
+        pytest.param(ConnectError("unreachable"), id="cannot_connect"),
+    ],
+)
 async def test_options_flow_aborts_when_the_refresh_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_egauge_client: MagicMock,
     init_integration: MockConfigEntry,
+    side_effect: type[Exception] | Exception,
 ) -> None:
-    """Test an unreachable device aborts rather than offering cached registers."""
-    mock_egauge_client.get_register_info.side_effect = ConnectError("unreachable")
+    """Test a failed register read aborts rather than offering cached registers."""
+    mock_egauge_client.get_register_info.side_effect = side_effect
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
