@@ -183,3 +183,28 @@ async def test_form_setup_exception(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_new_entry_defaults_to_lifetime_sensors(hass: HomeAssistant) -> None:
+    """Test newly created entries do not get the legacy energy sensors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with (
+        patch(
+            "homeassistant.components.iotawatt.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].version == 2
+    assert result["result"].options == {}
