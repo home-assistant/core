@@ -36,12 +36,10 @@ async def test_device_tracker_entities(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Device 1 added and state home
     state_phone = hass.states.get("device_tracker.phone")
     assert state_phone is not None
     assert state_phone.state == STATE_HOME
 
-    # Coordinator refresh with a new device added
     with patch(
         "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
         return_value=DEVICE_BOTH,
@@ -54,11 +52,11 @@ async def test_device_tracker_entities(hass: HomeAssistant) -> None:
     assert state_laptop is not None
     assert state_laptop.state == STATE_HOME
 
-    # Coordinator refresh where Phone disconnects
     with patch(
         "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
         return_value={MAC_2: "Laptop"},
     ):
+        coordinator = entry.runtime_data
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 

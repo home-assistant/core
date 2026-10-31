@@ -1,6 +1,5 @@
 """Support for BT Home Hub 5."""
 
-import logging
 from typing import Any
 
 from homeassistant.components.device_tracker import (
@@ -17,8 +16,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import BTHomeHub5ConfigEntry, BTHomeHub5DataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_scanner(
@@ -99,6 +96,11 @@ class BTHomeHub5ScannerEntity(
     def mac_address(self) -> str:
         """Return the MAC address of the device."""
         return self._mac
+
+    @property
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        return self._attr_name
 
     @property
     def is_connected(self) -> bool:
