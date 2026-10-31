@@ -76,7 +76,7 @@ async def test_setup(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "SenseCAP"
     assert result["data"] == {}
-    assert result["result"].unique_id == "sensecap_lorawan"
+    assert result["result"].unique_id is None
     setup.assert_called_once()
 
 
