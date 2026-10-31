@@ -27,6 +27,7 @@ from .validators import check_conditions
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable-next=home-assistant-coordinator-missing-type-parameter
 class TriggerUpdateCoordinator(DataUpdateCoordinator):
     """Data update coordinator for trigger based template entities."""
 
