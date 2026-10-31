@@ -102,18 +102,22 @@ from .const import (
     HASSIO_ISSUES_UPDATE_INTERVAL,
     HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
+    ISSUE_BREAKS_IN_HA_VERSION,
     ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
+    ISSUE_LEARN_MORE_URLS,
     ISSUE_MOUNT_MOUNT_FAILED,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
+    PLACEHOLDER_KEY_BREAKS_IN_HA_VERSION,
     PLACEHOLDER_KEY_FREE_SPACE,
     PLACEHOLDER_KEY_PORT,
     PLACEHOLDER_KEY_REASON,
@@ -158,6 +162,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     "issue_system_ntp_sync_failed",
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST,
 }
 
 
@@ -425,11 +430,16 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             else:
                 placeholders[PLACEHOLDER_KEY_FREE_SPACE] = "<2"
 
+        if breaks_in_ha_version := ISSUE_BREAKS_IN_HA_VERSION.get(issue.key):
+            placeholders[PLACEHOLDER_KEY_BREAKS_IN_HA_VERSION] = breaks_in_ha_version
+
         async_create_issue(
             self.hass,
             DOMAIN,
             issue.uuid.hex,
+            breaks_in_ha_version=breaks_in_ha_version,
             is_fixable=bool(presentable),
+            learn_more_url=ISSUE_LEARN_MORE_URLS.get(issue.key),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,

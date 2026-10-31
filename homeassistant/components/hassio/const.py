@@ -189,6 +189,7 @@ PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
 PLACEHOLDER_KEY_ADDON_DOCUMENTATION = "addon_documentation"
 PLACEHOLDER_KEY_ADDON_URL = "addon_url"
+PLACEHOLDER_KEY_BREAKS_IN_HA_VERSION = "breaks_in_ha_version"
 PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
 PLACEHOLDER_KEY_FREE_SPACE = "free_space"
@@ -201,6 +202,7 @@ ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
 ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING = "issue_addon_detached_addon_missing"
 ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
 ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
+ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST = "issue_core_deprecated_tcp_api_request"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_SYSTEM_REBOOT_REQUIRED = "issue_system_reboot_required"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
@@ -236,6 +238,19 @@ EXTRA_PLACEHOLDERS = {
     },
     ISSUE_KEY_ADDON_DEPRECATED: APP_REMOVE_URLS,
     ISSUE_KEY_ADDON_DEPRECATED_ARCH: APP_REMOVE_URLS,
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST: {
+        "supervisor_token": "SUPERVISOR_TOKEN",
+        "command_line_url": "https://www.home-assistant.io/integrations/command_line/",
+        "shell_command_url": "https://www.home-assistant.io/integrations/shell_command/",
+    },
+}
+
+ISSUE_LEARN_MORE_URLS = {
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST: "https://www.home-assistant.io/more-info/supervisor-token",
+}
+
+ISSUE_BREAKS_IN_HA_VERSION = {
+    ISSUE_KEY_CORE_DEPRECATED_TCP_API_REQUEST: "2027.6.0",
 }
 
 
