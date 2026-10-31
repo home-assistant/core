@@ -1095,7 +1095,6 @@ class SpeechManager:
                         continue
                     os.remove(voice_file)
                 except FileNotFoundError:
-                    # File was already removed, ignore :)
                     pass
                 except OSError as err:
                     _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
