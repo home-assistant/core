@@ -121,8 +121,6 @@ async def async_setup_entry(
 class InverterSensorEntity(CoordinatorEntity, SensorEntity):
     """Class for a sensor."""
 
-    _attr_should_poll = False
-
     def __init__(
         self,
         coordinator: SolaxDataUpdateCoordinator,
