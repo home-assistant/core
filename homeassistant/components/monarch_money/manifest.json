@@ -1,6 +1,7 @@
 {
   "domain": "monarch_money",
   "name": "Monarch Money",
+  "after_dependencies": ["recorder"],
   "categories": ["finance"],
   "codeowners": ["@jeeftor", "@bradleyseanf"],
   "config_flow": true,
