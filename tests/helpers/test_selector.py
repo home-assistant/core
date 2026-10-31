@@ -50,6 +50,7 @@ def test_invalid_base_schema(schema) -> None:
     [
         pytest.param(selector.Selector, id="base"),
         pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.ImageRegionSelector, id="image_region"),
         pytest.param(selector.MediaSelector, id="media"),
         pytest.param(selector.StateSelector, id="state"),
         pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
@@ -67,6 +68,7 @@ def test_allowed_context_keys_read_only(
     "selector_class",
     [
         pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.ImageRegionSelector, id="image_region"),
         pytest.param(selector.MediaSelector, id="media"),
         pytest.param(selector.StateSelector, id="state"),
         pytest.param(selector.UnitOfMeasurementSelector, id="unit_of_measurement"),
@@ -2232,6 +2234,71 @@ def test_duration_selector_invalid_config(schema: dict[str, Any]) -> None:
 def test_icon_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test icon selector."""
     _test_selector("icon", schema, valid_selections, invalid_selections)
+
+
+TRIANGLE = [{"x": 0, "y": 0}, {"x": 100, "y": 0}, {"x": 50.5, "y": 100}]
+SQUARE = [
+    {"x": 10, "y": 10},
+    {"x": 90, "y": 10},
+    {"x": 90, "y": 90},
+    {"x": 10, "y": 90},
+]
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            None,
+            (TRIANGLE, TRIANGLE * 5),
+            (
+                None,
+                TRIANGLE[0],
+                TRIANGLE[:2],
+                [{"x": 101, "y": 0}] * 3,
+                [{"x": 0, "y": -1}] * 3,
+                [{"x": 0}] * 3,
+                [{"x": "a", "y": 0}] * 3,
+            ),
+        ),
+        (
+            {"entity_id": "camera.front_door", "min_points": 4, "max_points": 4},
+            (SQUARE,),
+            (TRIANGLE, SQUARE + TRIANGLE),
+        ),
+    ],
+)
+def test_image_region_selector_schema(
+    schema: dict[str, Any] | None,
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
+    """Test image region selector."""
+    _test_selector(
+        "image_region",
+        schema,
+        valid_selections,
+        invalid_selections,
+        lambda points: [{"x": float(p["x"]), "y": float(p["y"])} for p in points],
+    )
+
+
+@pytest.mark.parametrize(
+    ("schema", "message"),
+    [
+        ({"min_points": 2}, "value must be at least 3"),
+        ({"max_points": 2}, "value must be at least 3"),
+        ({"min_points": 5, "max_points": 4}, "max_points can not be lower than"),
+        ({"entity_id": "not an entity"}, "Entity ID not an entity is an invalid"),
+        ({"entity_id": "sensor.image"}, "does not belong to domain"),
+    ],
+)
+def test_image_region_selector_invalid_config(
+    schema: dict[str, Any], message: str
+) -> None:
+    """Test invalid image region selector configs."""
+    with pytest.raises(probatio.Invalid, match=message):
+        selector.validate_selector({"image_region": schema})
 
 
 @pytest.mark.parametrize(
