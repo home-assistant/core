@@ -574,6 +574,49 @@ async def test_call_tool(
     assert result == expected_result
 
 
+async def test_call_tool_structured_content(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_mcp_server: FakeMcpServer,
+) -> None:
+    """Test calling a tool whose structured content is checked against its output schema."""
+    fake_mcp_server.tools = [
+        Tool(
+            name="get_weather",
+            description="Get the current weather.",
+            inputSchema={"type": "object", "properties": {}},
+            outputSchema={
+                "type": "object",
+                "required": ["temperature"],
+                "properties": {"temperature": {"type": "number"}},
+            },
+        )
+    ]
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    apis = llm.async_get_apis(hass)
+    api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    tool = api_instance.tools[0]
+
+    fake_mcp_server.call_tool_result = CallToolResult(
+        content=[TextContent(type="text", text='{"temperature": 21.5}')],
+        structuredContent={"temperature": 21.5},
+    )
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(tool_name="get_weather", tool_args={}),
+        create_llm_context(),
+    )
+    assert result == llm.ToolResult(
+        data={
+            "content": [{"text": '{"temperature": 21.5}', "type": "text"}],
+            "structuredContent": {"temperature": 21.5},
+        }
+    )
+
+
 @pytest.mark.parametrize(
     ("error", "expected_message"),
     [
