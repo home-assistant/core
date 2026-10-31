@@ -1,9 +1,16 @@
 """Tests for Broadlink helper functions."""
 
+from unittest.mock import MagicMock, patch
+
 import probatio
 import pytest
 
-from homeassistant.components.broadlink.helpers import data_packet, mac_address
+from homeassistant.components.broadlink import helpers
+from homeassistant.components.broadlink.helpers import (
+    async_find_device_by_mac,
+    data_packet,
+    mac_address,
+)
 from homeassistant.core import HomeAssistant
 
 
@@ -54,3 +61,44 @@ async def test_invalid_mac_address(hass: HomeAssistant) -> None:
     for mac in invalid:
         with pytest.raises((ValueError, probatio.Invalid)):
             mac_address(mac)
+
+
+@pytest.mark.no_mock_rediscovery
+async def test_find_device_by_mac_non_rfc1918() -> None:
+    """Test rediscovery rejects non-RFC1918 addresses."""
+    assert await async_find_device_by_mac("AABBCCDDEEFF", "8.8.8.8") is None
+    assert await async_find_device_by_mac("AABBCCDDEEFF", "127.0.0.1") is None
+    assert await async_find_device_by_mac("AABBCCDDEEFF", "invalid_ip") is None
+
+
+@pytest.mark.no_mock_rediscovery
+async def test_find_device_by_mac_discovery_and_cache() -> None:
+    """Test device rediscovery and cache behavior."""
+    helpers._DISCOVERED_CACHE.clear()
+    helpers._SUBNET_LAST_SCANNED.clear()
+
+    mock_dev = MagicMock()
+    mock_dev.mac = bytes.fromhex("aabbccddeeff")
+
+    async def mock_hello(ip: str) -> MagicMock:
+        if ip == "192.168.1.50":
+            return mock_dev
+        raise TimeoutError
+
+    with patch(
+        "homeassistant.components.broadlink.helpers.blk.hello", side_effect=mock_hello
+    ) as mock_blk:
+        result = await async_find_device_by_mac("AA:BB:CC:DD:EE:FF", "192.168.1.1")
+        assert result is not None
+        assert result[0] == "192.168.1.50"
+        assert result[1] is mock_dev
+        first_call_count = mock_blk.call_count
+
+        # Second lookup should hit positive cache without invoking hello again
+        cached_result = await async_find_device_by_mac("aabbccddeeff", "192.168.1.1")
+        assert cached_result is not None
+        assert cached_result[0] == "192.168.1.50"
+        assert mock_blk.call_count == first_call_count
+
+    helpers._DISCOVERED_CACHE.clear()
+    helpers._SUBNET_LAST_SCANNED.clear()
