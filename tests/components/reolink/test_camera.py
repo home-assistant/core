@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
+    CameraEntityFeature,
     CameraState,
     async_get_image,
     async_get_stream_source,
@@ -147,3 +148,38 @@ async def test_camera_no_stream_source(
 
     entity_id = f"{Platform.CAMERA}.{TEST_NVR_NAME}_lens_0_snapshots_fluent"
     assert hass.states.get(entity_id).state == CameraState.IDLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("stream", "replay", "hdd_info", "has_feature"),
+    [
+        pytest.param("fluent", True, [{"capacity": 1}], True, id="replay"),
+        pytest.param("fluent", False, [{"capacity": 1}], False, id="no_replay"),
+        pytest.param("fluent", True, [], False, id="no_storage"),
+        # The library replays the wide lens for the telephoto streams.
+        pytest.param("telephoto_fluent", True, [{"capacity": 1}], False, id="tele"),
+    ],
+)
+async def test_camera_past_image_feature(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    stream: str,
+    replay: bool,
+    hdd_info: list[dict[str, int]],
+    has_feature: bool,
+) -> None:
+    """Past images need replay support and storage, and the wide lens."""
+    reolink_host.supported = lambda ch, capability: (
+        replay if capability == "replay" else capability != "ext_stream"
+    )
+    reolink_host.hdd_info = hdd_info
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
+        await setup_integration(hass, config_entry)
+
+    state = hass.states.get(f"{Platform.CAMERA}.{TEST_CAM_NAME}_{stream}")
+    assert (
+        CameraEntityFeature.PAST_IMAGE in state.attributes["supported_features"]
+    ) is has_feature

@@ -1,7 +1,8 @@
 """The tests for the camera component."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from datetime import datetime
 import errno
 from http import HTTPStatus
 import io
@@ -42,6 +43,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, SomeTestProvider, mock_turbo_jpeg
+from .conftest import HISTORY_ID, LIVE_ID, PAST, HistoryCamera
 
 
 @pytest.fixture(name="image_mock_url")
@@ -1492,3 +1494,108 @@ async def test_camera_prefs_update_provider_callback_error(
     assert msg["success"]
     assert msg["result"][PREF_PRELOAD_STREAM] is True
     mock_prefs_update.assert_called_once_with(camera_obj)
+
+
+@pytest.fixture
+def snapshot_file(hass: HomeAssistant) -> Generator[Mock]:
+    """Capture what the snapshot action writes."""
+    mopen = mock_open()
+    with (
+        patch("homeassistant.components.camera.services.open", mopen, create=True),
+        patch("homeassistant.components.camera.services.os.makedirs"),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+    ):
+        yield mopen
+
+
+async def _snapshot_past(
+    hass: HomeAssistant, entity_id: str, timestamp: datetime
+) -> None:
+    await hass.services.async_call(
+        camera.DOMAIN,
+        camera.SERVICE_SNAPSHOT,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            camera.ATTR_FILENAME: "/test/past.jpg",
+            camera.CameraServiceArgument.TIMESTAMP: timestamp,
+        },
+        blocking=True,
+    )
+
+
+async def test_snapshot_service_past(
+    hass: HomeAssistant, history_camera: HistoryCamera, snapshot_file: Mock
+) -> None:
+    """A timestamp writes the recorded image, read as local time when naive."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+
+    await _snapshot_past(hass, HISTORY_ID, datetime(2020, 10, 20, 8))
+
+    snapshot_file().write.assert_called_once_with(b"past")
+    assert history_camera.past_calls == [PAST]
+
+
+@pytest.mark.usefixtures("history_camera", "snapshot_file")
+@pytest.mark.parametrize(
+    ("entity_id", "timestamp", "translation_key", "placeholders"),
+    [
+        pytest.param(
+            LIVE_ID,
+            PAST,
+            "past_image_not_supported",
+            {"entity_id": LIVE_ID},
+            id="not_supported",
+        ),
+        pytest.param(
+            HISTORY_ID,
+            datetime(2999, 1, 1, tzinfo=dt_util.UTC),
+            "past_image_in_future",
+            {"timestamp": "2999-01-01T00:00:00+00:00"},
+            id="future",
+        ),
+    ],
+)
+async def test_snapshot_service_past_rejected(
+    hass: HomeAssistant,
+    entity_id: str,
+    timestamp: datetime,
+    translation_key: str,
+    placeholders: dict[str, str],
+) -> None:
+    """Cameras without history and future timestamps are rejected."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _snapshot_past(hass, entity_id, timestamp)
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == placeholders
+
+
+@pytest.mark.usefixtures("snapshot_file")
+async def test_snapshot_service_past_camera_off(
+    hass: HomeAssistant, history_camera: HistoryCamera
+) -> None:
+    """A camera that is off gives no past image."""
+    history_camera._attr_is_on = False
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _snapshot_past(hass, HISTORY_ID, PAST)
+
+    assert type(exc_info.value) is HomeAssistantError
+    assert exc_info.value.translation_key == "camera_off"
+    assert history_camera.past_calls == []
+
+
+@pytest.mark.usefixtures("snapshot_file")
+async def test_snapshot_service_past_timeout(
+    hass: HomeAssistant, history_camera: HistoryCamera
+) -> None:
+    """A recording that takes too long raises."""
+    with (
+        patch.object(
+            history_camera, "async_camera_image_past", side_effect=TimeoutError
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await _snapshot_past(hass, HISTORY_ID, PAST)
+
+    assert exc_info.value.translation_key == "snapshot_timeout"
+    assert exc_info.value.translation_placeholders == {"timeout": "30"}

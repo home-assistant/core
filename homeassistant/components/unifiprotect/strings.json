@@ -846,6 +846,12 @@
     "motion_detection_public_only": {
       "message": "Motion detection cannot be changed over the public API; configure it in the UniFi Protect app"
     },
+    "no_media_permission": {
+      "message": "The account used for UniFi Protect cannot read recordings of {camera_name}."
+    },
+    "no_recording": {
+      "message": "Could not get a recorded image of {camera_name} at {timestamp}."
+    },
     "no_users_found": {
       "message": "No users found, please check Protect permissions"
     },

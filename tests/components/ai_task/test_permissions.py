@@ -10,6 +10,9 @@ from homeassistant.exceptions import Unauthorized, UnknownUser
 
 from .conftest import TEST_ENTITY_ID
 
+# A past camera image, the permission check applies to the entity before it.
+PAST_SUFFIX = "/2026-10-20T06:00:00Z"
+
 
 @pytest.mark.parametrize("context", [None, Context()])
 async def test_system_context(hass: HomeAssistant, context: Context | None) -> None:
@@ -62,11 +65,13 @@ async def test_default_entity(
 
 @pytest.mark.parametrize("domain", ["camera", "image"])
 @pytest.mark.parametrize("entity_id", [None, TEST_ENTITY_ID])
+@pytest.mark.parametrize("suffix", ["", PAST_SUFFIX], ids=["live", "past"])
 async def test_attachment_denied(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
     domain: str,
     entity_id: str | None,
+    suffix: str,
 ) -> None:
     """Entity attachments need read permission even with a default task entity."""
     hass_admin_user.mock_policy(
@@ -78,7 +83,13 @@ async def test_attachment_denied(
         await async_check_permissions(
             hass,
             entity_id,
-            [{"media_content_id": f"media-source://{domain}/{attachment_entity_id}"}],
+            [
+                {
+                    "media_content_id": (
+                        f"media-source://{domain}/{attachment_entity_id}{suffix}"
+                    )
+                }
+            ],
             context,
         )
     assert err.value.context is context
@@ -87,14 +98,15 @@ async def test_attachment_denied(
 
 
 @pytest.mark.parametrize("domain", ["camera", "image"])
+@pytest.mark.parametrize("suffix", ["", PAST_SUFFIX], ids=["live", "past"])
 async def test_attachment_allowed(
-    hass: HomeAssistant, hass_read_only_user: MockUser, domain: str
+    hass: HomeAssistant, hass_read_only_user: MockUser, domain: str, suffix: str
 ) -> None:
     """Read permission is sufficient for an entity attachment."""
     await async_check_permissions(
         hass,
         None,
-        [{"media_content_id": f"media-source://{domain}/{domain}.test"}],
+        [{"media_content_id": f"media-source://{domain}/{domain}.test{suffix}"}],
         Context(user_id=hass_read_only_user.id),
     )
 
