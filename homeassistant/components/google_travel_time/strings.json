@@ -6,6 +6,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_referrer": "The HTTP referrer is not allowed for this API key. Check the website application restrictions of the API key.",
       "permission_denied": "The Routes API is not enabled for this API key. Please see the setup instructions for detailed information.",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     },
@@ -16,7 +17,18 @@
           "destination": "[%key:component::google_travel_time::config::step::user::data::destination%]",
           "origin": "[%key:component::google_travel_time::config::step::user::data::origin%]"
         },
-        "description": "[%key:component::google_travel_time::config::step::user::description%]"
+        "description": "[%key:component::google_travel_time::config::step::user::description%]",
+        "sections": {
+          "api_key_options": {
+            "data": {
+              "referrer": "HTTP referrer"
+            },
+            "data_description": {
+              "referrer": "Specify this only if the API key has a [website application restriction]({restricting_api_keys_url})"
+            },
+            "name": "Optional API key options"
+          }
+        }
       },
       "user": {
         "data": {
@@ -24,7 +36,18 @@
           "destination": "Destination",
           "origin": "Origin"
         },
-        "description": "You can specify the origin and destination in the form of an address, latitude/longitude coordinates or an entity ID that provides this information in its state, an entity ID with latitude and longitude attributes, or a zone's friendly name (case-sensitive)"
+        "description": "You can specify the origin and destination in the form of an address, latitude/longitude coordinates or an entity ID that provides this information in its state, an entity ID with latitude and longitude attributes, or a zone's friendly name (case-sensitive)",
+        "sections": {
+          "api_key_options": {
+            "data": {
+              "referrer": "HTTP referrer"
+            },
+            "data_description": {
+              "referrer": "Specify this only if the API key has a [website application restriction]({restricting_api_keys_url})"
+            },
+            "name": "Optional API key options"
+          }
+        }
       }
     }
   },

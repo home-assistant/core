@@ -273,8 +273,9 @@ async def test_sensor_auth_error_no_issue(
 ) -> None:
     """Test that a non Routes API disabled auth error does not create an issue."""
     routes_mock.async_compute_routes.side_effect = GoogleMapsRoutingApiAuthError(
-        "API key not valid. Please pass a valid API key.",
-        reason="API_KEY_INVALID",
+        "Requests from referer <empty> are blocked.",
+        status="PERMISSION_DENIED",
+        reason="API_KEY_HTTP_REFERRER_BLOCKED",
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
