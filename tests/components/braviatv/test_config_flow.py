@@ -1,5 +1,6 @@
 """Define tests for the Bravia TV config flow."""
 
+from typing import Any
 from unittest.mock import patch
 
 from pybravia import (
@@ -637,3 +638,235 @@ async def test_user_flow_with_empty_cid(
         sorted(entry.unique_id for entry in hass.config_entries.async_entries(DOMAIN))
         == expected_unique_ids
     )
+
+
+@pytest.fixture
+def reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Add a config entry to reconfigure."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="very_unique_string",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_USE_SSL: False,
+        },
+        title="TV-Model",
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "connect_kwargs"),
+    [
+        pytest.param({CONF_USE_PSK: True}, {"psk": "1234"}, id="psk"),
+        pytest.param(
+            {CONF_USE_PSK: False, CONF_CLIENT_ID: "client", CONF_NICKNAME: "nick"},
+            {"pin": "1234", "clientid": "client", "nickname": "nick"},
+            id="pin",
+        ),
+        pytest.param(
+            {},
+            {"pin": "1234", "clientid": "HomeAssistant", "nickname": NICKNAME_PREFIX},
+            id="legacy",
+        ),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    entry_data: dict[str, Any],
+    connect_kwargs: dict[str, str],
+) -> None:
+    """Test reconfiguring the host keeps the existing authorization."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="very_unique_string",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            **entry_data,
+        },
+        title="TV-Model",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch("pybravia.BraviaClient.connect") as mock_connect,
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "10.0.0.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_connect.assert_called_once_with(**connect_kwargs)
+    assert config_entry.data == {
+        CONF_HOST: "10.0.0.2",
+        CONF_PIN: "1234",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        **entry_data,
+    }
+
+
+async def test_reconfigure_invalid_host(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring with an invalid host shows an error and recovers."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "invalid/host"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOST: "invalid_host"}
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "10.0.0.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert reconfigure_entry.data[CONF_HOST] == "10.0.0.2"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_message"),
+    [
+        pytest.param(BraviaAuthError, "invalid_auth", id="invalid_auth"),
+        pytest.param(BraviaNotSupported, "unsupported_model", id="unsupported_model"),
+        pytest.param(BraviaConnectionError, "cannot_connect", id="cannot_connect"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    reconfigure_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    error_message: str,
+) -> None:
+    """Test reconfiguring shows errors and recovers from them."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    with (
+        patch("pybravia.BraviaClient.connect", side_effect=side_effect) as mock_connect,
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "10.0.0.2"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        assert result["errors"] == {"base": error_message}
+
+        mock_connect.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "10.0.0.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert reconfigure_entry.data[CONF_HOST] == "10.0.0.2"
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to a different TV aborts without changing its settings."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.set_wol_mode") as mock_set_wol_mode,
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO | {"cid": "other_tv"},
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "10.0.0.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert reconfigure_entry.data[CONF_HOST] == "bravia-host"
+    mock_set_wol_mode.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("entry_mac", "mac", "reason", "host"),
+    [
+        pytest.param(
+            "AA:BB:CC:DD:EE:FF",
+            "AA:BB:CC:DD:EE:FF",
+            "reconfigure_successful",
+            "10.0.0.2",
+            id="same_tv",
+        ),
+        pytest.param(
+            "AA:BB:CC:DD:EE:FF",
+            "11:22:33:44:55:66",
+            "unique_id_mismatch",
+            "bravia-host",
+            id="other_tv",
+        ),
+        pytest.param("", "", "unique_id_mismatch", "bravia-host", id="no_mac"),
+    ],
+)
+async def test_reconfigure_entry_without_unique_id(
+    hass: HomeAssistant, entry_mac: str, mac: str, reason: str, host: str
+) -> None:
+    """Test reconfiguring a legacy entry without unique ID compares the MAC address."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+            CONF_MAC: entry_mac,
+            CONF_USE_PSK: True,
+        },
+        disabled_by=ConfigEntryDisabler.USER,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO | {"cid": "", "macAddr": mac},
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "10.0.0.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert config_entry.data[CONF_HOST] == host
+    # The migration sets the unique ID once the entry is enabled
+    assert config_entry.unique_id == ""

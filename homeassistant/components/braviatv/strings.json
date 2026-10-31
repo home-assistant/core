@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_ip_control": "IP Control is disabled on your TV or the TV is not supported.",
-      "not_bravia_device": "The device is not a Bravia TV."
+      "not_bravia_device": "The device is not a Bravia TV.",
+      "unique_id_mismatch": "The host you entered belongs to a different Bravia TV."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -46,6 +47,15 @@
         },
         "description": "To set up PSK on your TV, go to: Settings -> Network -> Home Network Setup -> IP Control. Set «Authentication» to «Normal and Pre-Shared Key» or «Pre-Shared Key» and define your Pre-Shared-Key string (e.g. sony). \n\nThen enter your PSK here.",
         "title": "[%key:component::braviatv::config::step::authorize::title%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::braviatv::config::step::user::data_description::host%]"
+        },
+        "description": "Update the hostname or IP address of your Sony Bravia TV. The existing authorization is kept, so make sure the TV is turned on."
       },
       "user": {
         "data": {
