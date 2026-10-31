@@ -51,7 +51,6 @@ REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 _DataT = TypeVar("_DataT", default=dict[str, Any])
 
 RESTORE_SAVE_DELAY = 10
-RESTORE_DEFAULT_STORAGE_KEY = "__restore_coordinator_default_key"
 
 
 class UpdateFailed(HomeAssistantError):
@@ -693,7 +692,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         config_entry: config_entries.ConfigEntry | None,
         domain: str | None = None,
         name: str,
-        storage_key: str = RESTORE_DEFAULT_STORAGE_KEY,
+        storage_key: str = "",
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
         setup_method: Callable[[], Awaitable[None]] | None = None,
