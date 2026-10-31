@@ -12,6 +12,8 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+from hassfest.manifest_util import sort_manifest as util_sort_manifest
+from hassfest.model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 import probatio
 from probatio.humanize import humanize_error
 
@@ -20,8 +22,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import LORAWAN_SCHEMA
 
 from .icons import integration_category_keys
-from .manifest_util import sort_manifest as util_sort_manifest
-from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"

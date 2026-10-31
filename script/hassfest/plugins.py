@@ -3,7 +3,7 @@
 from importlib import import_module
 from types import ModuleType
 
-from .model import Config
+from hassfest.model import Config
 
 INTEGRATION_PLUGINS = [
     "application_credentials",
@@ -45,13 +45,16 @@ CORE_PLUGINS = [
 ]
 
 ALL_PLUGIN_NAMES = [*INTEGRATION_PLUGINS, *CORE_PLUGINS]
+LOCAL_PLUGINS = {
+    name: f"{__package__}.{name}" for name in ALL_PLUGIN_NAMES if name != "json"
+}
 
 
 def load_plugins(config: Config) -> list[ModuleType]:
     """Load selected plugins in validation order for this run."""
     names = INTEGRATION_PLUGINS if config.specific_integrations else ALL_PLUGIN_NAMES
     return [
-        import_module(f".{name}", __package__)
+        import_module(LOCAL_PLUGINS.get(name, f"hassfest.{name}"))
         for name in names
         if name in config.plugins
     ]

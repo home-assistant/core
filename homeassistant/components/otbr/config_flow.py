@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_yellow import hardware as yellow_har
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -121,6 +122,8 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return True if another config entry's OTBR has the same border agent id."""
         config_entry: OTBRConfigEntry
         for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            if config_entry.entry_id == self.context.get("entry_id"):
+                continue
             data = config_entry.runtime_data
             try:
                 other_border_agent_id = await data.get_border_agent_id()
@@ -147,6 +150,10 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         api = python_otbr_api.OTBR(otbr_url, async_get_clientsession(self.hass), 10)
         border_agent_id = await api.get_border_agent_id()
         _LOGGER.debug("border agent id for url %s: %s", otbr_url, border_agent_id.hex())
+
+        if self.source == SOURCE_RECONFIGURE:
+            await self.async_set_unique_id(border_agent_id.hex())
+            self._abort_if_unique_id_mismatch()
 
         if await self._is_border_agent_id_configured(border_agent_id):
             raise AlreadyConfigured
@@ -185,6 +192,47 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = probatio.Schema({CONF_URL: str})
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the OTBR URL."""
+        errors = {}
+        entry = self._get_reconfigure_entry()
+
+        if entry.source == SOURCE_HASSIO:
+            return self.async_abort(reason="addon_managed")
+
+        if user_input is not None:
+            url = user_input[CONF_URL].rstrip("/")
+            try:
+                await self._connect_and_configure_router(url)
+            except AlreadyConfigured:
+                errors["base"] = "already_configured"
+            except (
+                python_otbr_api.OTBRError,
+                aiohttp.ClientError,
+                TimeoutError,
+            ) as exc:
+                _LOGGER.debug("Failed to communicate with OTBR@%s: %s", url, exc)
+                errors["base"] = "cannot_connect"
+            else:
+                # The update listener is only registered after a successful setup
+                if entry.update_listeners:
+                    return self.async_update_and_abort(
+                        entry, data_updates={CONF_URL: url}
+                    )
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_URL: url}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({CONF_URL: str}), user_input or entry.data
+            ),
+            errors=errors,
         )
 
     @callback

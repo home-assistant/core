@@ -1,11 +1,11 @@
 """Support for Modbus services."""
 
 from collections.abc import Callable
+from enum import StrEnum
 from typing import Any
 
 import probatio
 
-from homeassistant.const import ATTR_STATE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -15,11 +15,6 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_SLAVE,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_COILS,
     CALL_TYPE_WRITE_REGISTER,
@@ -28,12 +23,29 @@ from .const import (
     DEFAULT_HUB,
     DOMAIN,
     LOGGER,
-    SERVICE_STOP,
-    SERVICE_WRITE_COIL,
-    SERVICE_WRITE_REGISTER,
     SIGNAL_STOP_ENTITY,
 )
 from .modbus import ModbusHub, async_modbus_setup
+
+
+class ModbusService(StrEnum):
+    """Store keys for Modbus services."""
+
+    RELOAD = "reload"
+    STOP = "stop"
+    WRITE_COIL = "write_coil"
+    WRITE_REGISTER = "write_register"
+
+
+class ModbusServiceArgument(StrEnum):
+    """Store keys for Modbus service arguments."""
+
+    ADDRESS = "address"
+    HUB = "hub"
+    SLAVE = "slave"
+    STATE = "state"
+    UNIT = "unit"
+    VALUE = "value"
 
 
 def _write_service_schema(
@@ -42,10 +54,12 @@ def _write_service_schema(
     """Return the schema shared by the write actions."""
     return probatio.Schema(
         {
-            probatio.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-            probatio.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
-            probatio.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
-            probatio.Required(ATTR_ADDRESS): cv.positive_int,
+            probatio.Optional(
+                ModbusServiceArgument.HUB, default=DEFAULT_HUB
+            ): cv.string,
+            probatio.Exclusive(ModbusServiceArgument.SLAVE, "unit"): cv.positive_int,
+            probatio.Exclusive(ModbusServiceArgument.UNIT, "unit"): cv.positive_int,
+            probatio.Required(ModbusServiceArgument.ADDRESS): cv.positive_int,
             probatio.Required(attr): probatio.Any(
                 cv.positive_int, probatio.All(probatio.EnsureList(), [validator])
             ),
@@ -66,9 +80,11 @@ def _get_hubs(hass: HomeAssistant) -> dict[str, ModbusHub]:
 
 def _get_service_call_details(service: ServiceCall) -> tuple[ModbusHub, int, int]:
     """Return the details required to process the service call."""
-    device_address = service.data.get(ATTR_SLAVE, service.data.get(ATTR_UNIT, 1))
-    address = service.data[ATTR_ADDRESS]
-    hub = _get_hubs(service.hass)[service.data[ATTR_HUB]]
+    device_address = service.data.get(
+        ModbusServiceArgument.SLAVE, service.data.get(ModbusServiceArgument.UNIT, 1)
+    )
+    address = service.data[ModbusServiceArgument.ADDRESS]
+    hub = _get_hubs(service.hass)[service.data[ModbusServiceArgument.HUB]]
     return (hub, device_address, address)
 
 
@@ -76,7 +92,7 @@ async def _async_write_register(service: ServiceCall) -> None:
     """Write Modbus registers."""
     hub, device_address, address = _get_service_call_details(service)
 
-    value = service.data[ATTR_VALUE]
+    value = service.data[ModbusServiceArgument.VALUE]
     if isinstance(value, list):
         await hub.async_pb_call(
             device_address, address, value, CALL_TYPE_WRITE_REGISTERS
@@ -91,7 +107,7 @@ async def _async_write_coil(service: ServiceCall) -> None:
     """Write Modbus coil."""
     hub, device_address, address = _get_service_call_details(service)
 
-    state = service.data[ATTR_STATE]
+    state = service.data[ModbusServiceArgument.STATE]
 
     if isinstance(state, list):
         await hub.async_pb_call(device_address, address, state, CALL_TYPE_WRITE_COILS)
@@ -102,7 +118,7 @@ async def _async_write_coil(service: ServiceCall) -> None:
 async def _async_stop_hub(service: ServiceCall) -> None:
     """Stop Modbus hub."""
     hass = service.hass
-    hub = _get_hubs(hass)[service.data[ATTR_HUB]]
+    hub = _get_hubs(hass)[service.data[ModbusServiceArgument.HUB]]
     async_dispatcher_send(hass, SIGNAL_STOP_ENTITY.format(hub.name))
     await hub.async_close()
 
@@ -137,22 +153,26 @@ async def _async_reload_config(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Modbus services."""
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _async_reload_config)
+    async_register_admin_service(
+        hass, DOMAIN, ModbusService.RELOAD, _async_reload_config
+    )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_WRITE_REGISTER,
+        ModbusService.WRITE_REGISTER,
         _async_write_register,
-        schema=_write_service_schema(ATTR_VALUE, cv.positive_int),
+        schema=_write_service_schema(ModbusServiceArgument.VALUE, cv.positive_int),
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_WRITE_COIL,
+        ModbusService.WRITE_COIL,
         _async_write_coil,
-        schema=_write_service_schema(ATTR_STATE, cv.boolean),
+        schema=_write_service_schema(ModbusServiceArgument.STATE, cv.boolean),
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_STOP,
+        ModbusService.STOP,
         _async_stop_hub,
-        schema=probatio.Schema({probatio.Required(ATTR_HUB): cv.string}),
+        schema=probatio.Schema(
+            {probatio.Required(ModbusServiceArgument.HUB): cv.string}
+        ),
     )

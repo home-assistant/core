@@ -195,7 +195,6 @@ class WaterFurnaceSensor(WaterFurnaceEntity, SensorEntity):
     """Implementing the Waterfurnace sensor."""
 
     entity_description: SensorEntityDescription
-    _attr_should_poll = False
 
     def __init__(
         self, coordinator: WaterFurnaceCoordinator, description: SensorEntityDescription

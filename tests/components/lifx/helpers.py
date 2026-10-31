@@ -1,6 +1,6 @@
 """Test helpers for the lifx integration."""
 
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 from lifx import (
@@ -65,9 +65,6 @@ type MockState = (
     | InfraredLightState
 )
 
-_DeviceT = TypeVar("_DeviceT", bound=MockDevice)
-_StateT = TypeVar("_StateT", bound=MockState)
-
 
 def assert_color_written(
     device: MockDevice,
@@ -93,7 +90,7 @@ def assert_color_written(
     )
 
 
-def _create_mock_state(
+def _create_mock_state[_StateT: MockState](
     state_type: type[_StateT],
     *,
     serial: str = SERIAL,
@@ -138,8 +135,8 @@ def _create_mock_state(
     )
 
 
-def _create_mock_device(
-    device_type: type[_DeviceT], state: _StateT, *, ip: str = IP_ADDRESS
+def _create_mock_device[_DeviceT: MockDevice](
+    device_type: type[_DeviceT], state: MockState, *, ip: str = IP_ADDRESS
 ) -> _DeviceT:
     """Create a deterministic typed public device double."""
     device = MagicMock(spec=device_type(serial=state.serial, ip=ip))

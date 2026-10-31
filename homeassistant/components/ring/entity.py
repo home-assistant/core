@@ -83,7 +83,6 @@ class RingBaseEntity(
     """Base implementation for Ring device."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -104,7 +103,10 @@ class RingBaseEntity(
         )
 
 
-class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEntity):
+class RingEntity(
+    RingBaseEntity[RingDataCoordinator, RingDeviceT],
+    CoordinatorEntity[RingDataCoordinator],
+):
     """Implementation for Ring devices."""
 
     def _get_coordinator_data(self) -> RingDevices:

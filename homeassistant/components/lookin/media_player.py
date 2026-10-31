@@ -70,8 +70,6 @@ async def async_setup_entry(
 class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
     """A lookin media player."""
 
-    _attr_should_poll = False
-
     def __init__(
         self,
         coordinator: LookinDataUpdateCoordinator,

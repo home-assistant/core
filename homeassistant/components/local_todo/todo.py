@@ -24,7 +24,7 @@ from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
 from . import LocalTodoConfigEntry
-from .const import CONF_TODO_LIST_NAME
+from .const import CONF_TODO_LIST_NAME, DOMAIN
 from .store import LocalTodoListStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -230,11 +230,18 @@ class LocalTodoListEntity(TodoListEntity):
             item_idx: dict[str, int] = {itm.uid: idx for idx, itm in enumerate(todos)}
             if uid not in item_idx:
                 raise HomeAssistantError(
-                    f"Item '{uid}' not found in todo list {self.entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="item_not_found",
+                    translation_placeholders={"uid": uid, "entity_id": self.entity_id},
                 )
             if previous_uid and previous_uid not in item_idx:
                 raise HomeAssistantError(
-                    f"Item '{previous_uid}' not found in todo list {self.entity_id}"
+                    translation_domain=DOMAIN,
+                    translation_key="item_not_found",
+                    translation_placeholders={
+                        "uid": previous_uid,
+                        "entity_id": self.entity_id,
+                    },
                 )
             dst_idx = item_idx[previous_uid] + 1 if previous_uid else 0
             src_idx = item_idx[uid]

@@ -23,7 +23,7 @@ from homeassistant.components.stt import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_when_setup
 
@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # STT v2 detects the end of speech itself and works best on untouched audio.
 STT_V2_AUDIO_PROCESSING = SpeechAudioProcessing(
-    requires_external_vad=True,
+    requires_external_vad=False,
     prefers_auto_gain_enabled=False,
     prefers_noise_reduction_enabled=False,
 )
@@ -112,11 +112,20 @@ class CloudProviderEntity(SpeechToTextEntity):
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_MONO]
 
-    @property
+    def _use_stt_v2(self, metadata: SpeechMetadata) -> bool:
+        """Return if a request is handled by the v2 speech to text service."""
+        # STT v2 covers fewer languages, so fall back for the rest.
+        return self._stt_v2_enabled and bool(
+            self.cloud.stt_v2.resolve_language(metadata.language)
+        )
+
+    @callback
     @override
-    def audio_processing(self) -> SpeechAudioProcessing:
-        """Return required/preferred input audio processing settings."""
-        if self._stt_v2_enabled:
+    def async_get_audio_processing(
+        self, metadata: SpeechMetadata
+    ) -> SpeechAudioProcessing:
+        """Return required/preferred input audio processing settings for a request."""
+        if self._use_stt_v2(metadata):
             return STT_V2_AUDIO_PROCESSING
         return DEFAULT_AUDIO_PROCESSING
 
@@ -162,13 +171,8 @@ class CloudProviderEntity(SpeechToTextEntity):
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
-        # STT v2 covers fewer languages, so fall back for the rest.
-        use_stt_v2 = self._stt_v2_enabled and bool(
-            self.cloud.stt_v2.resolve_language(metadata.language)
-        )
-
         try:
-            if use_stt_v2:
+            if self._use_stt_v2(metadata):
                 result = await self._async_process_stt_v2(metadata, stream)
             else:
                 result = await self._async_process_azure_stt(metadata, stream)

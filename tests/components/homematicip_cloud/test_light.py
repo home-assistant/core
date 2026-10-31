@@ -757,7 +757,10 @@ async def test_hmip_wired_push_button_led(
     assert ha_state.attributes[ATTR_BRIGHTNESS] == 127
     assert ha_state.attributes[ATTR_COLOR_NAME] == "GREEN"
 
-    service_call_counter = len(hmip_device.mock_calls)
+    functional_channel = next(
+        ch for ch in hmip_device.functionalChannels if ch.index == 7
+    )
+    service_call_counter = len(functional_channel.mock_calls)
 
     # Test turning on with color and brightness
     await hass.services.async_call(
@@ -766,14 +769,13 @@ async def test_hmip_wired_push_button_led(
         {"entity_id": entity_id, ATTR_HS_COLOR: [240.0, 100.0], ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
-    assert hmip_device.mock_calls[-1][0] == "set_optical_signal_async"
-    assert hmip_device.mock_calls[-1][2] == {
-        "channelIndex": 7,
+    assert functional_channel.mock_calls[-1][0] == "async_set_optical_signal"
+    assert functional_channel.mock_calls[-1][2] == {
         "opticalSignalBehaviour": OpticalSignalBehaviour.ON,
         "rgb": "BLUE",
         "dimLevel": 0.5,
     }
-    assert len(hmip_device.mock_calls) == service_call_counter + 1
+    assert len(functional_channel.mock_calls) == service_call_counter + 1
 
     # Test turning on with effect
     await hass.services.async_call(
@@ -782,12 +784,12 @@ async def test_hmip_wired_push_button_led(
         {"entity_id": entity_id, ATTR_EFFECT: "blinking"},
         blocking=True,
     )
-    assert hmip_device.mock_calls[-1][0] == "set_optical_signal_async"
+    assert functional_channel.mock_calls[-1][0] == "async_set_optical_signal"
     assert (
-        hmip_device.mock_calls[-1][2]["opticalSignalBehaviour"]
+        functional_channel.mock_calls[-1][2]["opticalSignalBehaviour"]
         == OpticalSignalBehaviour.BLINKING_MIDDLE
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 2
+    assert len(functional_channel.mock_calls) == service_call_counter + 2
 
 
 async def test_hmip_wired_push_button_led_turn_off(
@@ -807,7 +809,10 @@ async def test_hmip_wired_push_button_led_turn_off(
 
     assert ha_state.state == STATE_ON
 
-    service_call_counter = len(hmip_device.mock_calls)
+    functional_channel = next(
+        ch for ch in hmip_device.functionalChannels if ch.index == 7
+    )
+    service_call_counter = len(functional_channel.mock_calls)
 
     # Test turning off
     await hass.services.async_call(
@@ -816,14 +821,13 @@ async def test_hmip_wired_push_button_led_turn_off(
         {"entity_id": entity_id},
         blocking=True,
     )
-    assert hmip_device.mock_calls[-1][0] == "set_optical_signal_async"
-    assert hmip_device.mock_calls[-1][2] == {
-        "channelIndex": 7,
+    assert functional_channel.mock_calls[-1][0] == "async_set_optical_signal"
+    assert functional_channel.mock_calls[-1][2] == {
         "opticalSignalBehaviour": OpticalSignalBehaviour.OFF,
         "rgb": "GREEN",
         "dimLevel": 0.0,
     }
-    assert len(hmip_device.mock_calls) == service_call_counter + 1
+    assert len(functional_channel.mock_calls) == service_call_counter + 1
 
     # Verify state after turning off
     await async_manipulate_test_data(
@@ -856,7 +860,10 @@ async def test_hmip_wired_push_button_led_2(
     assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
     assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.EFFECT
 
-    service_call_counter = len(hmip_device.mock_calls)
+    functional_channel = next(
+        ch for ch in hmip_device.functionalChannels if ch.index == 8
+    )
+    service_call_counter = len(functional_channel.mock_calls)
 
     # Test turning on second LED
     await hass.services.async_call(
@@ -865,9 +872,8 @@ async def test_hmip_wired_push_button_led_2(
         {"entity_id": entity_id},
         blocking=True,
     )
-    assert hmip_device.mock_calls[-1][0] == "set_optical_signal_async"
-    assert hmip_device.mock_calls[-1][2]["channelIndex"] == 8
-    assert len(hmip_device.mock_calls) == service_call_counter + 1
+    assert functional_channel.mock_calls[-1][0] == "async_set_optical_signal"
+    assert len(functional_channel.mock_calls) == service_call_counter + 1
 
 
 async def test_hmip_combination_signalling_light(

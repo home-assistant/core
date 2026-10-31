@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
     },
     "error": {
       "bulb_time_out": "Cannot connect to the bulb. Maybe the bulb is offline or a wrong IP was entered. Please turn on the light and try again!",
@@ -20,6 +21,11 @@
       "pick_device": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
         }
       },
       "user": {
@@ -41,6 +47,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to the WiZ device at {ip_address}"
+    },
     "communication_error": {
       "message": "Error while communicating with the WiZ device"
     },
@@ -49,6 +58,12 @@
     },
     "timeout": {
       "message": "Timed out waiting for the WiZ device to respond"
+    },
+    "unexpected_device": {
+      "message": "Found WiZ device {mac} at {ip_address}, expected {expected_mac}"
+    },
+    "update_failed": {
+      "message": "Failed to update the WiZ device at {ip_address}"
     }
   }
 }

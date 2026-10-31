@@ -29,7 +29,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityCategory,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CoreState,
+    Event,
+    HomeAssistant,
+    callback,
+    valid_entity_id,
+)
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import (
     area_registry as ar,
@@ -39,7 +45,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
@@ -2428,9 +2434,9 @@ async def test_migration_1_11(
     deleted_entry = registry.deleted_entities[
         ("test", "super_duper_platform", "very_very_unique")
     ]
-    assert deleted_entry.disabled_by is UNDEFINED
-    assert deleted_entry.hidden_by is UNDEFINED
-    assert deleted_entry.options is UNDEFINED
+    assert deleted_entry.disabled_by is Undefined
+    assert deleted_entry.hidden_by is Undefined
+    assert deleted_entry.options is Undefined
 
     # Check migrated data
     await flush_store(registry._store)
@@ -4172,14 +4178,14 @@ async def test_restore_entity_disabled_by_undefined_config_entry_pref(
             config_subentry_id=None,
             created_at=utcnow(),
             device_class=None,
-            disabled_by=UNDEFINED,
-            hidden_by=UNDEFINED,
+            disabled_by=Undefined,
+            hidden_by=Undefined,
             icon=None,
             id="legacy-id",
             labels=set(),
             modified_at=utcnow(),
             name=None,
-            options=UNDEFINED,
+            options=Undefined,
             orphaned_timestamp=None,
         )
     )
@@ -4338,7 +4344,7 @@ async def test_restore_states_disabled_by_changed_keeps_live_state(
 @pytest.mark.parametrize(
     ("initial_disabled_by", "new_disabled_by"),
     [
-        pytest.param(None, UNDEFINED, id="rename"),
+        pytest.param(None, Undefined, id="rename"),
         pytest.param(None, er.RegistryEntryDisabler.USER, id="rename_disable"),
         pytest.param(er.RegistryEntryDisabler.USER, None, id="rename_enable"),
     ],
@@ -4348,7 +4354,7 @@ async def test_restore_states_renamed(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     initial_disabled_by: er.RegistryEntryDisabler | None,
-    new_disabled_by: er.RegistryEntryDisabler | UndefinedType | None,
+    new_disabled_by: er.RegistryEntryDisabler | Undefined | None,
 ) -> None:
     """Test a restored state follows a registry entry rename."""
     hass.set_state(CoreState.not_running)
@@ -5474,6 +5480,23 @@ async def test_entity_max_length_exceeded(
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
 
 
+async def test_entity_id_truncation_strips_trailing_underscore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a truncated entity ID does not end with an underscore."""
+    # The entity ID is cut at 255 characters, right after the underscore
+    name = "a" * 247 + "_" + "b" * 10
+    new_id = entity_registry.async_get_available_entity_id("sensor", name)
+    assert new_id == "sensor." + "a" * 247
+    assert valid_entity_id(new_id)
+
+    # The stripped entity ID is taken, the next one gets a suffix
+    hass.states.async_reserve(new_id)
+    new_id = entity_registry.async_get_available_entity_id("sensor", name)
+    assert new_id == "sensor." + "a" * 246 + "_2"
+    assert valid_entity_id(new_id)
+
+
 async def test_resolve_entity_ids(entity_registry: er.EntityRegistry) -> None:
     """Test resolving entity IDs."""
 
@@ -6241,7 +6264,7 @@ async def test_restore_migrated_entity_disabled_by(
 
     deleted_entry = entity_registry.deleted_entities[("light", "hue", "1234")]
     entity_registry.deleted_entities[("light", "hue", "1234")] = attr.evolve(
-        deleted_entry, disabled_by=UNDEFINED
+        deleted_entry, disabled_by=Undefined
     )
 
     # Re-add entity, integration has changed
@@ -6366,7 +6389,7 @@ async def test_restore_migrated_entity_hidden_by(
 
     deleted_entry = entity_registry.deleted_entities[("light", "hue", "1234")]
     entity_registry.deleted_entities[("light", "hue", "1234")] = attr.evolve(
-        deleted_entry, hidden_by=UNDEFINED
+        deleted_entry, hidden_by=Undefined
     )
 
     # Re-add entity, integration has changed
@@ -6482,7 +6505,7 @@ async def test_restore_migrated_entity_initial_options(
 
     deleted_entry = entity_registry.deleted_entities[("light", "hue", "1234")]
     entity_registry.deleted_entities[("light", "hue", "1234")] = attr.evolve(
-        deleted_entry, options=UNDEFINED
+        deleted_entry, options=Undefined
     )
 
     # Re-add entity, integration has changed

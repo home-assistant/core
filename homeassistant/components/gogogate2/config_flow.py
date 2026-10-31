@@ -94,8 +94,6 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
                 title = data_dict.get(
                     "gogogatename", data_dict.get("ismartgatename", "Cover")
                 )
-                await self.async_set_unique_id(re.sub("\\..*$", "", data.remoteaccess))
-                return self.async_create_entry(title=title, data=user_input)
 
             except ApiError as api_error:
                 device_type = user_input[CONF_DEVICE]
@@ -123,6 +121,10 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
+
+            else:
+                await self.async_set_unique_id(re.sub("\\..*$", "", data.remoteaccess))
+                return self.async_create_entry(title=title, data=user_input)
 
         if self._ip_address and self._device_type:
             self.context["title_placeholders"] = {
