@@ -24,7 +24,11 @@ rules:
     status: todo
     comment: |
       The documentation does not include removal instructions.
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities receive updates via coordinators and do not subscribe
+      to any event sources.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
