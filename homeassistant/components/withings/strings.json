@@ -177,6 +177,9 @@
       "maximum_respiratory_rate": {
         "name": "Maximum respiratory rate"
       },
+      "metabolic_age": {
+        "name": "Metabolic age"
+      },
       "minimum_heart_rate": {
         "name": "Minimum heart rate"
       },
