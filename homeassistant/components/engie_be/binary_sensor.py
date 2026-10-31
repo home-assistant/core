@@ -1,7 +1,9 @@
 """Binary sensor platform for the ENGIE Belgium integration."""
 
-from datetime import timedelta
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, override
+
+from aioengiebelgium import EpexGranularity
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import EntityCategory
@@ -12,12 +14,22 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import ATTRIBUTION
-from .coordinator import BRUSSELS_TIME_ZONE, EngieBeEpexCoordinator, epex_day_available
+from .coordinator import (
+    EngieBeEpexCoordinator,
+    epex_day_available,
+    epex_is_negative,
+    epex_tomorrow,
+)
 
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
 
 PARALLEL_UPDATES = 0
+
+_EPEX_NEGATIVE_TRANSLATION_KEYS: Mapping[EpexGranularity, str] = {
+    EpexGranularity.HOURLY: "epex_hour_negative",
+    EpexGranularity.QUARTER_HOURLY: "epex_quarter_hour_negative",
+}
 
 
 async def async_setup_entry(
@@ -30,8 +42,8 @@ async def async_setup_entry(
     known_bans: set[str] = set()
 
     @callback
-    def _async_add_tomorrow_available_sensors() -> None:
-        """Add the tomorrow-available binary sensors for the dynamic households."""
+    def _async_add_epex_binary_sensors() -> None:
+        """Add the EPEX binary sensors for the dynamic households."""
         if (epex := runtime_data.epex) is None:
             return
         new_bans = [
@@ -50,9 +62,19 @@ async def async_setup_entry(
             )
             for ban in new_bans
         )
+        async_add_entities(
+            EngieBeEpexNegativeSensor(
+                epex,
+                ban=ban,
+                granularity=granularity,
+                device_info=runtime_data.households[ban].prices.device_info,
+            )
+            for ban in new_bans
+            for granularity in EpexGranularity
+        )
 
-    runtime_data.epex_ready_callbacks.append(_async_add_tomorrow_available_sensors)
-    _async_add_tomorrow_available_sensors()
+    runtime_data.epex_ready_callbacks.append(_async_add_epex_binary_sensors)
+    _async_add_epex_binary_sensors()
 
 
 class EngieBeEpexTomorrowAvailableSensor(
@@ -80,6 +102,39 @@ class EngieBeEpexTomorrowAvailableSensor(
     @property
     @override
     def is_on(self) -> bool:
-        """Return True when both granularities have slots for tomorrow."""
-        tomorrow = dt_util.now(BRUSSELS_TIME_ZONE).date() + timedelta(days=1)
-        return epex_day_available(self.coordinator.data, tomorrow)
+        """Return True when both granularities fully cover tomorrow."""
+        return epex_day_available(
+            self.coordinator.data, epex_tomorrow(dt_util.utcnow())
+        )
+
+
+class EngieBeEpexNegativeSensor(
+    CoordinatorEntity[EngieBeEpexCoordinator], BinarySensorEntity
+):
+    """Binary sensor that is on when the current EPEX price is negative."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: EngieBeEpexCoordinator,
+        *,
+        ban: str,
+        granularity: EpexGranularity,
+        device_info: DeviceInfo,
+    ) -> None:
+        """Initialize the negative-price binary sensor."""
+        super().__init__(coordinator)
+        self._granularity = granularity
+        self._attr_device_info = device_info
+        self._attr_translation_key = _EPEX_NEGATIVE_TRANSLATION_KEYS[granularity]
+        self._attr_unique_id = f"{ban}_{self._attr_translation_key}"
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return True when the slot covering now has a negative price."""
+        return epex_is_negative(
+            self.coordinator.data, self._granularity, dt_util.utcnow()
+        )

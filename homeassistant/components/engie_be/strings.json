@@ -1,4 +1,70 @@
 {
+  "common": {
+    "above_description": "Only match when the price is above this value, in EUR/kWh. Set Above, Below or both. Above must be lower than Below.",
+    "above_name": "Above",
+    "below_description": "Only match when the price is below this value, in EUR/kWh. Set Above, Below or both. Below must be higher than Above.",
+    "below_name": "Below",
+    "device_description": "The ENGIE Belgium contracts with a dynamic tariff to watch.",
+    "device_name": "Contracts"
+  },
+  "conditions": {
+    "epex_hour_price_is_in_range": {
+      "description": "Tests if the current hourly EPEX price of all selected contracts is in the configured range.",
+      "fields": {
+        "above": {
+          "description": "[%key:component::engie_be::common::above_description%]",
+          "name": "[%key:component::engie_be::common::above_name%]"
+        },
+        "below": {
+          "description": "[%key:component::engie_be::common::below_description%]",
+          "name": "[%key:component::engie_be::common::below_name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX hourly price is in range"
+    },
+    "epex_hour_price_is_negative": {
+      "description": "Tests if the current hourly EPEX price of all selected contracts is negative.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX hourly price is negative"
+    },
+    "epex_quarter_hour_price_is_in_range": {
+      "description": "Tests if the current quarter-hourly EPEX price of all selected contracts is in the configured range.",
+      "fields": {
+        "above": {
+          "description": "[%key:component::engie_be::common::above_description%]",
+          "name": "[%key:component::engie_be::common::above_name%]"
+        },
+        "below": {
+          "description": "[%key:component::engie_be::common::below_description%]",
+          "name": "[%key:component::engie_be::common::below_name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX quarter-hourly price is in range"
+    },
+    "epex_quarter_hour_price_is_negative": {
+      "description": "Tests if the current quarter-hourly EPEX price of all selected contracts is negative.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX quarter-hourly price is negative"
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
@@ -47,6 +113,12 @@
   },
   "entity": {
     "binary_sensor": {
+      "epex_hour_negative": {
+        "name": "EPEX current hourly price is negative"
+      },
+      "epex_quarter_hour_negative": {
+        "name": "EPEX current quarter-hourly price is negative"
+      },
       "epex_tomorrow_available": {
         "name": "EPEX tomorrow prices available"
       }
@@ -392,6 +464,130 @@
         "email": "Email",
         "sms": "SMS"
       }
+    }
+  },
+  "triggers": {
+    "epex_current_hour_crossed_threshold": {
+      "description": "Triggers when the current hourly EPEX price of one or more contracts enters the configured range.",
+      "fields": {
+        "above": {
+          "description": "[%key:component::engie_be::common::above_description%]",
+          "name": "[%key:component::engie_be::common::above_name%]"
+        },
+        "below": {
+          "description": "[%key:component::engie_be::common::below_description%]",
+          "name": "[%key:component::engie_be::common::below_name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX current hourly price crossed threshold"
+    },
+    "epex_current_quarter_hour_crossed_threshold": {
+      "description": "Triggers when the current quarter-hourly EPEX price of one or more contracts enters the configured range.",
+      "fields": {
+        "above": {
+          "description": "[%key:component::engie_be::common::above_description%]",
+          "name": "[%key:component::engie_be::common::above_name%]"
+        },
+        "below": {
+          "description": "[%key:component::engie_be::common::below_description%]",
+          "name": "[%key:component::engie_be::common::below_name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX current quarter-hourly price crossed threshold"
+    },
+    "epex_hour_price_became_negative": {
+      "description": "Triggers when the current hourly EPEX price of one or more contracts becomes negative.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX hourly price became negative"
+    },
+    "epex_hour_price_no_longer_negative": {
+      "description": "Triggers when the current hourly EPEX price of one or more contracts is no longer negative.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX hourly price no longer negative"
+    },
+    "epex_next_hour_crossed_threshold": {
+      "description": "Triggers when the next hourly EPEX price of one or more contracts enters the configured range.",
+      "fields": {
+        "above": {
+          "description": "[%key:component::engie_be::common::above_description%]",
+          "name": "[%key:component::engie_be::common::above_name%]"
+        },
+        "below": {
+          "description": "[%key:component::engie_be::common::below_description%]",
+          "name": "[%key:component::engie_be::common::below_name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX next hourly price crossed threshold"
+    },
+    "epex_next_quarter_hour_crossed_threshold": {
+      "description": "Triggers when the next quarter-hourly EPEX price of one or more contracts enters the configured range.",
+      "fields": {
+        "above": {
+          "description": "[%key:component::engie_be::common::above_description%]",
+          "name": "[%key:component::engie_be::common::above_name%]"
+        },
+        "below": {
+          "description": "[%key:component::engie_be::common::below_description%]",
+          "name": "[%key:component::engie_be::common::below_name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX next quarter-hourly price crossed threshold"
+    },
+    "epex_quarter_hour_price_became_negative": {
+      "description": "Triggers when the current quarter-hourly EPEX price of one or more contracts becomes negative.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX quarter-hourly price became negative"
+    },
+    "epex_quarter_hour_price_no_longer_negative": {
+      "description": "Triggers when the current quarter-hourly EPEX price of one or more contracts is no longer negative.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX quarter-hourly price no longer negative"
+    },
+    "epex_tomorrow_prices_published": {
+      "description": "Triggers when the EPEX prices for tomorrow are published for one or more contracts.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::engie_be::common::device_description%]",
+          "name": "[%key:component::engie_be::common::device_name%]"
+        }
+      },
+      "name": "EPEX prices for tomorrow published"
     }
   }
 }
