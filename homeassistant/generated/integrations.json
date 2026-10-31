@@ -10892,6 +10892,15 @@
       "config_flow": false,
       "iot_class": "calculated"
     },
+    "spacexsi": {
+      "name": "SpaceXSI",
+      "integration_type": "service",
+      "categories": [
+        "ai_voice.ai_models"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "spc": {
       "name": "Vanderbilt SPC",
       "integration_type": "hub",
