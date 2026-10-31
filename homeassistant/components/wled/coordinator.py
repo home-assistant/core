@@ -208,7 +208,6 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                     self.update_interval = None
                     await self.wled.listen(callback=self._async_handle_websocket_update)
                 except WLEDConnectionClosedError as err:
-                    self.last_update_success = False
                     self.logger.info(err)
                 except WLEDError as err:
                     self.last_update_success = False
