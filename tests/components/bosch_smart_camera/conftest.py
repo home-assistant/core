@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from bosch_shc_camera_client.actions import ActionResult
 from bosch_shc_camera_client.cameras import Camera, CameraModel
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -56,6 +57,17 @@ def mock_list_cameras() -> Generator[AsyncMock]:
             new=mock,
         ),
     ):
+        yield mock
+
+
+@pytest.fixture
+def mock_soft_reset() -> Generator[AsyncMock]:
+    """Mock the restart of the library."""
+    with patch(
+        "homeassistant.components.bosch_smart_camera.coordinator.soft_reset",
+        autospec=True,
+        return_value=ActionResult(ok=True, status=204),
+    ) as mock:
         yield mock
 
 

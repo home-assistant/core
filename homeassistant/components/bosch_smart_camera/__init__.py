@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import BoschCameraConfigEntry, BoschCameraCoordinator
 
-PLATFORMS = [Platform.CAMERA]
+PLATFORMS = [Platform.BUTTON, Platform.CAMERA]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> None:
