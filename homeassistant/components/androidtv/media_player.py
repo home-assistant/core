@@ -1,12 +1,18 @@
 """Support for functionality to interact with Android / Fire TV devices."""
 
+import base64
 from datetime import datetime, timedelta
+import gzip
 import hashlib
+from io import BytesIO
 import logging
+import struct
 from typing import override
+import zlib
 
 from androidtv.constants import APPS, KEYS
 from androidtv.setup_async import AndroidTVAsync, FireTVAsync
+from PIL import Image
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
@@ -47,6 +53,55 @@ ANDROIDTV_STATES = {
     "playing": MediaPlayerState.PLAYING,
     "paused": MediaPlayerState.PAUSED,
 }
+
+# Android 8.0/API 26 introduced wide-color support.
+SCREENCAP_WIDE_COLOR_API_LEVEL = 26
+# Android 8.1/API 27 added the dataspace word to the raw screenshot header.
+SCREENCAP_DATASPACE_HEADER_API_LEVEL = 27
+# The raw screencap header uses 1 for sRGB; other spaces use the PNG fallback.
+SCREENCAP_DATASPACE_SRGB = 1
+# Keep decompression bounded while allowing a 4K RGBA frame.
+MAX_SCREENSHOT_SIZE_BYTES = 64 * 1024 * 1024
+
+
+def _encode_raw_screencap(encoded: str, sdk_version: int) -> bytes | None:
+    """Encode Android raw pixels on the host instead of the TV CPU."""
+    header_bytes = 16 if sdk_version >= SCREENCAP_DATASPACE_HEADER_API_LEVEL else 12
+    if sdk_version == SCREENCAP_WIDE_COLOR_API_LEVEL:
+        # API 26 supports wide color, but its raw header omits the dataspace.
+        return None
+    with gzip.GzipFile(fileobj=BytesIO(base64.b64decode(encoded))) as raw:
+        header = raw.read(header_bytes)
+        if len(header) != header_bytes:
+            raise ValueError("Truncated screenshot header")
+        width, height, pixel_format = struct.unpack_from("<III", header)
+        if sdk_version >= SCREENCAP_DATASPACE_HEADER_API_LEVEL:
+            dataspace = struct.unpack_from("<I", header, 12)[0]
+            if dataspace != SCREENCAP_DATASPACE_SRGB:
+                return None
+        formats = {
+            1: ("RGBA", "RGBA", 4),
+            2: ("RGB", "RGBX", 4),
+            3: ("RGB", "RGB", 3),
+            4: ("RGB", "BGR;16", 2),
+            5: ("RGBA", "BGRA", 4),
+        }
+        if pixel_format not in formats:
+            return None
+        mode, raw_mode, bytes_per_pixel = formats[pixel_format]
+        pixel_bytes = width * height * bytes_per_pixel
+        if width == 0 or height == 0:
+            raise ValueError("Invalid screenshot dimensions")
+        if header_bytes + pixel_bytes > MAX_SCREENSHOT_SIZE_BYTES:
+            # Too large to decode on the host; let the device encode a PNG.
+            return None
+        pixels = raw.read(pixel_bytes + 1)
+        if len(pixels) != pixel_bytes:
+            raise ValueError("Invalid screenshot pixel length")
+    image = Image.frombytes(mode, (width, height), pixels, "raw", raw_mode)
+    output = BytesIO()
+    image.save(output, format="PNG", compress_level=1)
+    return output.getvalue()
 
 
 async def async_setup_entry(
@@ -144,6 +199,30 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
     @adb_decorator()
     async def _adb_screencap(self) -> bytes | None:
         """Take a screen capture from the device."""
+        response = await self.aftv.adb_shell(
+            "if command -v gzip >/dev/null && command -v base64 >/dev/null "
+            "&& command -v getprop >/dev/null; then "
+            "printf '%s\\n' \"$(getprop ro.build.version.sdk)\"; "
+            "screencap | gzip -1 | base64; fi"
+        )
+        if not isinstance(response, str):
+            return None
+        sdk_version_text, separator, encoded = response.partition("\n")
+        sdk_version_text = sdk_version_text.strip()
+        encoded = encoded.strip()
+        if not separator or not sdk_version_text.isdecimal() or not encoded:
+            return await self.aftv.adb_screencap()  # type: ignore[no-any-return]
+        sdk_version = int(sdk_version_text)
+        try:
+            image = await self.hass.async_add_executor_job(
+                _encode_raw_screencap, encoded, sdk_version
+            )
+        except (ValueError, OSError, EOFError, zlib.error) as err:
+            _LOGGER.warning("Unable to decode raw screenshot: %s", err)
+            return None
+        if image is not None:
+            return image
+        # Use native PNG encoding when raw format, color space, or size is unsupported.
         return await self.aftv.adb_screencap()  # type: ignore[no-any-return]
 
     async def _async_get_screencap(self, prev_app_id: str | None = None) -> None:
