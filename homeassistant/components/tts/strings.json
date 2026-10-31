@@ -46,6 +46,10 @@
         "options": {
           "description": "A dictionary containing integration-specific options.",
           "name": "Options"
+        },
+        "pregenerate": {
+          "description": "Generates the entire audio before sending it to the media player. This avoids playback stopping early on long messages but delays the start of playback.",
+          "name": "Pregenerate"
         }
       },
       "name": "Say a TTS message"
@@ -72,6 +76,10 @@
         "options": {
           "description": "[%key:component::tts::services::say::fields::options::description%]",
           "name": "[%key:component::tts::services::say::fields::options::name%]"
+        },
+        "pregenerate": {
+          "description": "[%key:component::tts::services::say::fields::pregenerate::description%]",
+          "name": "[%key:component::tts::services::say::fields::pregenerate::name%]"
         }
       },
       "name": "Speak"

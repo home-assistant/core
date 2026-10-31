@@ -56,6 +56,7 @@ from .const import (
     ATTR_MEDIA_PLAYER_ENTITY_ID,
     ATTR_MESSAGE,
     ATTR_OPTIONS,
+    ATTR_PREGENERATE,
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_TIME_MEMORY,
@@ -850,6 +851,15 @@ class ResultStream:
             yield chunk
 
         self.last_used = monotonic()
+
+    async def async_wait_for_result(self) -> None:
+        """Wait until the result has been fully generated.
+
+        The result is kept in memory, and only stored on disk if the file cache
+        is used.
+        """
+        async for _ in self.async_stream_result():
+            pass
 
     def async_override_result(self, media_path: str | Path) -> None:
         """Override the TTS stream with a different media path."""
@@ -1699,6 +1709,7 @@ class TextToSpeechUrlView(HomeAssistantView):
         engine = data.get("engine_id") or data[ATTR_PLATFORM]
         message = data[ATTR_MESSAGE]
         use_file_cache = data.get(ATTR_CACHE)
+        pregenerate = data.get(ATTR_PREGENERATE, False)
         language = data.get(ATTR_LANGUAGE)
         options = data.get(ATTR_OPTIONS)
 
@@ -1714,6 +1725,15 @@ class TextToSpeechUrlView(HomeAssistantView):
             return self.json({"error": err}, HTTPStatus.BAD_REQUEST)
 
         stream.async_set_message(message)
+
+        if pregenerate:
+            try:
+                await stream.async_wait_for_result()
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error("Error generating tts: %s", err)
+                return self.json_message(
+                    "Error generating audio", HTTPStatus.INTERNAL_SERVER_ERROR
+                )
 
         base = get_url(self.manager.hass)
         url = base + stream.url

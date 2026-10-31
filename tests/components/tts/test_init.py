@@ -1041,6 +1041,51 @@ async def test_service_without_cache(
     ).is_file()
 
 
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_setup",
+            "test_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+                tts.ATTR_PREGENERATE: True,
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.test",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+                tts.ATTR_PREGENERATE: True,
+            },
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_service_pregenerate(
+    hass: HomeAssistant,
+    setup: str,
+    tts_service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test the pregenerate flag is passed on to the media source."""
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert "pregenerate=true" in calls[0].data[ATTR_MEDIA_CONTENT_ID]
+
+
 class MockProviderBoom(MockTTSProvider):
     """Mock provider that blows up."""
 
