@@ -4,7 +4,7 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional service actions.
-      Light functionality is exposed through the standard light entity actions.
+      Functionality is exposed through the standard light and button entity actions.
   appropriate-polling:
     status: exempt
     comment: |
@@ -113,27 +113,20 @@ rules:
   entity-category:
     status: exempt
     comment: |
-      The integration currently exposes only the light entity, which is not a
-      configuration or diagnostic entity, so no entity category is required.
+      The light and remote buttons are controls, not configuration or diagnostic
+      entities, so no entity category is required.
   entity-device-class:
     status: exempt
     comment: |
-      Light entities do not require a device class.
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      The integration currently exposes only the light entity, which should be
-      enabled by default.
+      Light and remote button entities do not require a device class.
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations:
     status: todo
     comment: |
       Ensure any user-facing HomeAssistantError exceptions use translation
       keys instead of hard-coded messages.
-  icon-translations:
-    status: exempt
-    comment: |
-      The integration does not define custom entity icons.
+  icon-translations: done
   reconfiguration-flow:
     status: todo
     comment: |
