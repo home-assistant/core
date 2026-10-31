@@ -14,6 +14,7 @@ DOMAIN = "broadlink"
 
 DOMAINS_AND_TYPES = {
     Platform.BINARY_SENSOR: {"HYS"},
+    Platform.BUTTON: {"HYS"},
     Platform.CLIMATE: {"HYS"},
     Platform.INFRARED: {"RM4MINI", "RM4PRO", "RM5PLUS", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.LIGHT: {"LB1", "LB2"},
@@ -54,6 +55,8 @@ DOMAINS_AND_TYPES = {
     Platform.TIME: {"HYS"},
 }
 DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
+
+CONF_AUTO_SYNC_TIME = "auto_sync_time"
 
 DEFAULT_PORT = 80
 DEFAULT_TIMEOUT = 5
