@@ -212,6 +212,7 @@ FLOWS = {
         "ekeybionyx",
         "electrasmart",
         "electric_kiwi",
+        "elecway",
         "elevenlabs",
         "elgato",
         "elkm1",
