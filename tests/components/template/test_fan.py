@@ -1,5 +1,6 @@
 """The tests for the Template fan platform."""
 
+from collections.abc import Awaitable, Callable
 from enum import StrEnum
 from itertools import chain
 from typing import Any
@@ -360,6 +361,126 @@ async def test_percentage_template(
     """Test templates with fan percentages from other entities."""
     await async_trigger(hass, TEST_STATE_ENTITY_ID, percent)
     _verify(hass, STATE_ON, expected, None, None, None)
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    (
+        "config",
+        "extra_config",
+        "attribute",
+        "action",
+        "initial_source",
+        "initial_verify",
+        "requested",
+        "coro",
+    ),
+    [
+        pytest.param(
+            {
+                "state": "{{ 1 == 1 }}",
+                "percentage": "{{ states('sensor.test_sensor') }}",
+                "attributes": {"watts": "{{ states('sensor.test_extra_attributes') }}"},
+            },
+            OPTIMISTIC_PERCENTAGE_CONFIG,
+            "percentage",
+            "set_percentage",
+            "50",
+            {"expected_percentage": 50},
+            100,
+            common.async_set_percentage,
+            id="percentage",
+        ),
+        pytest.param(
+            {
+                "state": "{{ 1 == 1 }}",
+                "preset_modes": ["auto", "smart"],
+                "preset_mode": "{{ states('sensor.test_sensor') }}",
+                "attributes": {"watts": "{{ states('sensor.test_extra_attributes') }}"},
+            },
+            {**OPTIMISTIC_ON_OFF_ACTIONS, **PRESET_MODE_ACTION},
+            "preset_mode",
+            "set_preset_mode",
+            "auto",
+            {"expected_preset_mode": "auto"},
+            "smart",
+            common.async_set_preset_mode,
+            id="preset_mode",
+        ),
+        pytest.param(
+            {
+                "state": "{{ 1 == 1 }}",
+                "oscillating": "{{ is_state('sensor.test_sensor', 'on') }}",
+                "attributes": {"watts": "{{ states('sensor.test_extra_attributes') }}"},
+            },
+            OPTIMISTIC_OSCILLATE_CONFIG,
+            "oscillating",
+            "set_oscillating",
+            STATE_ON,
+            {"expected_oscillating": True},
+            False,
+            common.async_oscillate,
+            id="oscillating",
+        ),
+        pytest.param(
+            {
+                "state": "{{ 1 == 1 }}",
+                "direction": "{{ states('sensor.test_sensor') }}",
+                "attributes": {"watts": "{{ states('sensor.test_extra_attributes') }}"},
+            },
+            OPTIMISTIC_DIRECTION_CONFIG,
+            "direction",
+            "set_direction",
+            DIRECTION_FORWARD,
+            {"expected_direction": DIRECTION_FORWARD},
+            DIRECTION_REVERSE,
+            common.async_set_direction,
+            id="direction",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_fan")
+async def test_set_does_not_stick_when_template_does_not_confirm(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    attribute: str,
+    action: str,
+    initial_source: str,
+    initial_verify: dict[str, int | str | bool],
+    requested: int | str | bool,
+    coro: Callable[[HomeAssistant, str, int | str | bool], Awaitable[None]],
+) -> None:
+    """A set_* call must not override a templated attribute the request did not confirm.
+
+    Regression test for async_set_percentage(), async_set_preset_mode(),
+    async_oscillate() and async_set_direction() all writing their `_attr_*`
+    unconditionally, clobbering a configured template even though the
+    template is the actual source of truth for that attribute.
+    """
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, initial_source)
+    _verify(hass, STATE_ON, **initial_verify)
+
+    # Ask for a new value. The configured action script does not touch
+    # sensor.test_sensor, so nothing about the underlying reality changes.
+    await coro(hass, TEST_FAN.entity_id, requested)
+
+    # The action must still receive the requested value, even though it is
+    # not taken as the new truth.
+    assert_action(TEST_FAN, calls, 1, action, **{attribute: requested})
+
+    # Fire an unrelated attribute template's own trigger (not the one behind
+    # `attribute`). This is what a live wattage reading does every time it
+    # updates: it forces a state write for the whole entity, without giving
+    # the templated attribute's own template a reason to re-render.
+    await async_trigger(hass, "sensor.test_extra_attributes", "1")
+
+    # The template is the source of truth: the entity must still reflect it,
+    # not the unconfirmed value that was requested and never took effect.
+    _verify(hass, STATE_ON, **initial_verify)
 
 
 @pytest.mark.parametrize(
