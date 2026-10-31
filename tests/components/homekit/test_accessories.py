@@ -5,6 +5,15 @@ This includes tests for all mock object types.
 
 from unittest.mock import Mock, patch
 
+from pyhap.const import (
+    HAP_REPR_AID,
+    HAP_REPR_CHARS,
+    HAP_REPR_IID,
+    HAP_REPR_STATUS,
+    HAP_REPR_VALUE,
+    HAP_SERVER_STATUS,
+    STANDALONE_AID,
+)
 import pytest
 from pytest_homeassistant.common import async_mock_service
 
@@ -888,3 +897,102 @@ def test_home_driver(iid_storage) -> None:
 
     mock_unpair.assert_called_with("client_uuid")
     mock_show_msg.assert_called_with("hass", "entry_id", "title (any)", pin, "X-HM://0")
+
+
+def _make_home_driver(iid_storage) -> HomeDriver:
+    """Create a HomeDriver without touching the network."""
+    with patch("pyhap.accessory_driver.AccessoryDriver.__init__"):
+        return HomeDriver(
+            "hass",
+            "entry_id",
+            "name",
+            "title",
+            iid_storage=iid_storage,
+            address="127.0.0.1",
+            port=51826,
+            persist_file=".homekit.state",
+        )
+
+
+def test_home_driver_get_characteristics_root_available(iid_storage) -> None:
+    """Test standalone (accessory mode) characteristics are untouched when available."""
+    driver = _make_home_driver(iid_storage)
+    driver.accessory = Mock(available=True)
+    raw_result = {
+        HAP_REPR_CHARS: [
+            {
+                HAP_REPR_AID: STANDALONE_AID,
+                HAP_REPR_IID: 1,
+                HAP_REPR_VALUE: "on",
+                HAP_REPR_STATUS: HAP_SERVER_STATUS.SUCCESS,
+            }
+        ]
+    }
+    with patch(
+        "pyhap.accessory_driver.AccessoryDriver.get_characteristics",
+        return_value=raw_result,
+    ):
+        result = driver.get_characteristics([f"{STANDALONE_AID}.1"])
+
+    char = result[HAP_REPR_CHARS][0]
+    assert char[HAP_REPR_STATUS] == HAP_SERVER_STATUS.SUCCESS
+    assert char[HAP_REPR_VALUE] == "on"
+
+
+def test_home_driver_get_characteristics_root_unavailable(iid_storage) -> None:
+    """Test standalone (accessory mode) characteristics report No Response.
+
+    pyhap hardcodes the standalone/root accessory as always available, so
+    without HomeDriver's override an unavailable entity exposed in HomeKit
+    accessory mode would never surface as "No Response" in Apple Home.
+    """
+    driver = _make_home_driver(iid_storage)
+    driver.accessory = Mock(available=False)
+    raw_result = {
+        HAP_REPR_CHARS: [
+            {
+                HAP_REPR_AID: STANDALONE_AID,
+                HAP_REPR_IID: 1,
+                HAP_REPR_VALUE: "on",
+                HAP_REPR_STATUS: HAP_SERVER_STATUS.SUCCESS,
+            }
+        ]
+    }
+    with patch(
+        "pyhap.accessory_driver.AccessoryDriver.get_characteristics",
+        return_value=raw_result,
+    ):
+        result = driver.get_characteristics([f"{STANDALONE_AID}.1"])
+
+    char = result[HAP_REPR_CHARS][0]
+    assert char[HAP_REPR_STATUS] == HAP_SERVER_STATUS.SERVICE_COMMUNICATION_FAILURE
+    assert HAP_REPR_VALUE not in char
+
+
+def test_home_driver_get_characteristics_bridge_mode_unaffected(iid_storage) -> None:
+    """Test bridged (non-root) characteristics are passed through unchanged.
+
+    In bridge mode the driver's root is a HomeBridge, which is always
+    available, so HomeDriver's override is a no-op; bridged children already
+    get correct No Response handling from pyhap itself.
+    """
+    driver = _make_home_driver(iid_storage)
+    driver.accessory = Mock(available=True)
+    raw_result = {
+        HAP_REPR_CHARS: [
+            {
+                HAP_REPR_AID: 2,
+                HAP_REPR_IID: 1,
+                HAP_REPR_STATUS: HAP_SERVER_STATUS.SERVICE_COMMUNICATION_FAILURE,
+            }
+        ]
+    }
+    with patch(
+        "pyhap.accessory_driver.AccessoryDriver.get_characteristics",
+        return_value=raw_result,
+    ):
+        result = driver.get_characteristics(["2.1"])
+
+    char = result[HAP_REPR_CHARS][0]
+    assert char[HAP_REPR_STATUS] == HAP_SERVER_STATUS.SERVICE_COMMUNICATION_FAILURE
+    assert HAP_REPR_VALUE not in char
