@@ -11,6 +11,7 @@ which a broad ``except Exception`` swallows and reports as an unknown error.
 
 from collections.abc import Iterator
 
+import astroid
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
@@ -18,6 +19,7 @@ from pylint.lint import PyLinter
 from pylint_home_assistant.helpers.ast_utils import extended_ancestors
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
+_ABORT_FLOW_QNAME = "homeassistant.data_entry_flow.AbortFlow"
 _FLOW_HANDLER_QNAME = "homeassistant.data_entry_flow.FlowHandler"
 _FLOW_METHODS = frozenset(
     {
@@ -53,12 +55,21 @@ def _catches_abort_flow(node: nodes.Try) -> bool:
     for handler in node.handlers:
         if handler.type is None:
             continue
-        for child in handler.type.nodes_of_class((nodes.Name, nodes.Attribute)):
-            match child:
-                case (
-                    nodes.Name(name="AbortFlow") | nodes.Attribute(attrname="AbortFlow")
-                ):
-                    return True
+        exception_types = (
+            handler.type.elts
+            if isinstance(handler.type, nodes.Tuple)
+            else [handler.type]
+        )
+        for exception_type in exception_types:
+            try:
+                inferred = list(exception_type.infer())
+            except astroid.exceptions.InferenceError:
+                continue
+            if any(
+                isinstance(item, nodes.ClassDef) and item.qname() == _ABORT_FLOW_QNAME
+                for item in inferred
+            ):
+                return True
     return False
 
 
@@ -67,7 +78,8 @@ def _flow_calls(node: nodes.NodeNG) -> Iterator[nodes.Call]:
 
     Calls in nested functions and classes run later, outside the ``try``
     block, so they are skipped. The body of a nested ``try`` statement with
-    handlers is checked when that statement is visited.
+    handlers is checked when that statement is visited, unless it catches
+    ``AbortFlow`` itself: then its calls are still inside this ``try`` block.
     """
     if isinstance(node, (nodes.FunctionDef, nodes.Lambda, nodes.ClassDef)):
         return
@@ -78,7 +90,9 @@ def _flow_calls(node: nodes.NodeNG) -> Iterator[nodes.Call]:
             yield node
     children = (
         (*node.handlers, *node.orelse, *node.finalbody)
-        if isinstance(node, nodes.Try) and node.handlers
+        if isinstance(node, nodes.Try)
+        and node.handlers
+        and not _catches_abort_flow(node)
         else node.get_children()
     )
     for child in children:

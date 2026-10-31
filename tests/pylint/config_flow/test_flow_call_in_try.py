@@ -106,6 +106,42 @@ class MyFlow(ConfigFlow, domain="test_int"):
         pytest.param(
             """
 from homeassistant.config_entries import ConfigFlow
+from homeassistant.data_entry_flow import AbortFlow as FlowAbort
+
+class MyFlow(ConfigFlow, domain="test_int"):
+    async def async_step_user(self, user_input=None):
+        try:
+            await self.async_set_unique_id(user_input["serial_number"])
+            self._abort_if_unique_id_configured()
+        except FlowAbort:
+            await close()
+            raise
+        return self.async_create_entry(title="Test", data=user_input)
+""",
+            _MODULE,
+            id="catches_aliased_abort_flow",
+        ),
+        pytest.param(
+            """
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.data_entry_flow import AbortFlow
+
+class MyFlow(ConfigFlow, domain="test_int"):
+    async def async_step_user(self, user_input=None):
+        try:
+            await self.async_set_unique_id(user_input["serial_number"])
+            self._abort_if_unique_id_configured()
+        except (AbortFlow, CannotConnect):
+            await close()
+            raise
+        return self.async_create_entry(title="Test", data=user_input)
+""",
+            _MODULE,
+            id="catches_abort_flow_in_tuple",
+        ),
+        pytest.param(
+            """
+from homeassistant.config_entries import ConfigFlow
 
 class MyFlow(ConfigFlow, domain="test_int"):
     async def async_step_user(self, user_input=None):
@@ -242,6 +278,45 @@ class MyFlow(ConfigFlow, domain="test_int"):
             # The outer try statement is visited first
             ("async_show_form", "_async_abort_entries_match"),
             id="nested_try",
+        ),
+        pytest.param(
+            """
+from homeassistant.config_entries import ConfigFlow
+
+class AbortFlow(Exception):
+    pass
+
+class MyFlow(ConfigFlow, domain="test_int"):
+    async def async_step_user(self, user_input=None):
+        try:
+            await self.async_set_unique_id(user_input["serial_number"])
+        except AbortFlow:
+            return self.async_abort(reason="unknown")
+        return self.async_create_entry(title="Test", data=user_input)
+""",
+            ("async_set_unique_id",),
+            id="other_class_named_abort_flow",
+        ),
+        pytest.param(
+            """
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.data_entry_flow import AbortFlow
+
+class MyFlow(ConfigFlow, domain="test_int"):
+    async def async_step_user(self, user_input=None):
+        try:
+            try:
+                await self.async_set_unique_id(user_input["serial_number"])
+                self._abort_if_unique_id_configured()
+            except AbortFlow:
+                await close()
+                raise
+        except Exception:
+            return self.async_abort(reason="unknown")
+        return self.async_create_entry(title="Test", data=user_input)
+""",
+            ("async_set_unique_id", "_abort_if_unique_id_configured"),
+            id="nested_try_reraises_abort_flow",
         ),
     ],
 )
