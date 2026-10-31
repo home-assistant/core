@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "pairing_failure": "Unable to pair: {error_id}"
+      "pairing_failure": "Unable to pair: {error_id}",
+      "unique_id_mismatch": "The host you entered belongs to a different Philips TV."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -17,6 +18,12 @@
         },
         "description": "Enter the PIN displayed on your TV",
         "title": "Pair"
+      },
+      "reconfigure": {
+        "data": {
+          "api_version": "[%key:component::philips_js::config::step::user::data::api_version%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        }
       },
       "user": {
         "data": {

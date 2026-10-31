@@ -1,14 +1,21 @@
 """Test the Philips TV config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import ANY, MagicMock
+from typing import Any
+from unittest.mock import ANY, AsyncMock, MagicMock
 
-from haphilipsjs import PairingFailure
+from haphilipsjs import ConnectionFailure, PairingFailure
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
+from homeassistant.const import (
+    CONF_API_VERSION,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -324,3 +331,97 @@ async def test_zeroconf_probe_failed(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_failure"
+
+
+@pytest.mark.parametrize(
+    "credentials",
+    [
+        pytest.param({}, id="unpaired"),
+        pytest.param(
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD}, id="paired"
+        ),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    credentials: dict[str, str],
+) -> None:
+    """Test reconfiguring the host keeps the pairing credentials."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG | credentials,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL_NO,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "1"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == MOCK_CONFIG | credentials | {CONF_HOST: "2.2.2.2"}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("system", "get_system_side_effect"),
+    [
+        pytest.param(None, None, id="empty_system"),
+        pytest.param(MOCK_SYSTEM, ConnectionFailure("Timeout"), id="connection"),
+    ],
+)
+async def test_reconfigure_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tv: MagicMock,
+    system: dict[str, Any] | None,
+    get_system_side_effect: Exception | None,
+) -> None:
+    """Test reconfiguring shows an error when the TV can't be reached and recovers."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_tv.system = system
+    mock_tv.getSystem.side_effect = get_system_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "1"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_tv.system = MOCK_SYSTEM
+    mock_tv.getSystem.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "1"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "2.2.2.2"
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tv: MagicMock
+) -> None:
+    """Test reconfiguring to a different TV aborts."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_tv.system = MOCK_SYSTEM | {"serialnumber": "other_serial"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "1"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == MOCK_CONFIG
