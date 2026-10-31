@@ -11135,7 +11135,7 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
 ) -> None:
     """Test disabled_by=DEVICE matching a deleted device restores nothing.
 
-    A legacy deleted device (its stored disabled_by is UNDEFINED) restores with the
+    A legacy deleted device (its stored disabled_by is Undefined) restores with the
     caller's disabled_by verbatim, so without an early guard a caller-passed DEVICE
     would restore a main device disabled by DEVICE. The rejection must run before the
     restore.
@@ -11143,7 +11143,7 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
     match = "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child device"
     identifiers = {("test", "restore")}
     device_id = "restore-device-id"
-    # A legacy deleted device carries no recorded disabled_by (UNDEFINED), so restore
+    # A legacy deleted device carries no recorded disabled_by (Undefined), so restore
     # returns the caller's disabled_by verbatim - no config-entry reconciliation clears
     # a DEVICE value.
     device_registry._deleted_devices[device_id] = attr.evolve(
