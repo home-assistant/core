@@ -723,11 +723,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     def _parse_ac_time(self, time_raw: Any) -> str:
-        """Parse a classic Mix schedule time, rejecting values that do not parse.
-
-        _format_time maps anything unparsable to 00:00, which a read-merge-write
-        would then write over the device's real period.
-        """
+        """Parse a classic Mix schedule time, rejecting values that do not parse."""
+        # _format_time maps anything unparsable to 00:00, which a read-merge-write
+        # would then write over the device's real period.
         try:
             hour, minute = (int(part) for part in str(time_raw).split(":"))
         except ValueError as err:
@@ -821,10 +819,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 RequestException,
                 json.JSONDecodeError,
             ) as err:
+                _LOGGER.debug("Write failed for %s: %s", self.device_id, err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
-                    translation_placeholders={"error": str(err)},
+                    translation_key="mix_write_failed",
                 ) from err
             if not isinstance(result, dict) or result.get("success") is not True:
                 _LOGGER.debug("Write rejected for %s: %r", self.device_id, result)
@@ -894,10 +892,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 RequestException,
                 json.JSONDecodeError,
             ) as err:
+                _LOGGER.debug("Write failed for %s: %s", self.device_id, err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
-                    translation_placeholders={"error": str(err)},
+                    translation_key="mix_write_failed",
                 ) from err
             if not isinstance(result, dict) or result.get("success") is not True:
                 _LOGGER.debug("Write rejected for %s: %r", self.device_id, result)

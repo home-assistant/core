@@ -1439,7 +1439,7 @@ async def test_write_ac_charge_times_classic_auth_transport_error(
 
     mock_growatt_classic_api.update_mix_inverter_setting.side_effect = side_effect
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_charge_times",
@@ -1451,6 +1451,10 @@ async def test_write_ac_charge_times_classic_auth_transport_error(
             },
             blocking=True,
         )
+
+    # The raw error (which can contain a URL with the serial) must not leak.
+    assert excinfo.value.translation_key == "mix_write_failed"
+    assert not excinfo.value.translation_placeholders
 
 
 @pytest.mark.parametrize(
@@ -1480,7 +1484,7 @@ async def test_write_ac_discharge_times_classic_auth_transport_error(
 
     mock_growatt_classic_api.update_mix_inverter_setting.side_effect = side_effect
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_discharge_times",
@@ -1491,6 +1495,10 @@ async def test_write_ac_discharge_times_classic_auth_transport_error(
             },
             blocking=True,
         )
+
+    # The raw error (which can contain a URL with the serial) must not leak.
+    assert excinfo.value.translation_key == "mix_write_failed"
+    assert not excinfo.value.translation_placeholders
 
 
 async def test_write_ac_charge_times_classic_auth_encodes_all_periods(
