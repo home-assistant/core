@@ -1,6 +1,7 @@
 """Support for monitoring OctoPrint 3D printers."""
 
 import logging
+from typing import Any
 
 import aiohttp
 import probatio
@@ -21,8 +22,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
@@ -94,41 +101,34 @@ SENSOR_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    probatio.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: probatio.All(
-                probatio.EnsureList(),
-                [
-                    probatio.Schema(
-                        {
-                            probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
-                            probatio.Required(CONF_HOST): cv.string,
-                            probatio.Optional(CONF_SSL, default=False): cv.boolean,
-                            probatio.Optional(CONF_PORT, default=80): probatio.Port(),
-                            probatio.Optional(
-                                CONF_PATH, default="/"
-                            ): ensure_valid_path,
-                            # Following values are not longer used in the configuration
-                            # of the integration and are here for historical purposes
-                            probatio.Optional(
-                                CONF_NAME, default=DEFAULT_NAME
-                            ): cv.string,
-                            probatio.Optional(
-                                CONF_NUMBER_OF_TOOLS, default=0
-                            ): cv.positive_int,
-                            probatio.Optional(CONF_BED, default=False): cv.boolean,
-                            probatio.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                            probatio.Optional(
-                                CONF_BINARY_SENSORS, default={}
-                            ): BINARY_SENSOR_SCHEMA,
-                        }
-                    )
-                ],
-                has_all_unique_names,
-            )
-        },
-    ),
+    {
+        DOMAIN: probatio.All(
+            probatio.EnsureList(),
+            [
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+                        probatio.Required(CONF_HOST): cv.string,
+                        probatio.Optional(CONF_SSL, default=False): cv.boolean,
+                        probatio.Optional(CONF_PORT, default=80): probatio.Port(),
+                        probatio.Optional(CONF_PATH, default="/"): ensure_valid_path,
+                        # Following values are not longer used in the configuration
+                        # of the integration and are here for historical purposes
+                        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                        probatio.Optional(
+                            CONF_NUMBER_OF_TOOLS, default=0
+                        ): cv.positive_int,
+                        probatio.Optional(CONF_BED, default=False): cv.boolean,
+                        probatio.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                        probatio.Optional(
+                            CONF_BINARY_SENSORS, default={}
+                        ): BINARY_SENSOR_SCHEMA,
+                    }
+                )
+            ],
+            has_all_unique_names,
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 
@@ -143,10 +143,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for conf in domain_config:
         hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
+            _async_import_yaml(
+                hass,
+                {
                     CONF_API_KEY: conf[CONF_API_KEY],
                     CONF_HOST: conf[CONF_HOST],
                     CONF_PATH: conf[CONF_PATH],
@@ -157,6 +156,50 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     return True
+
+
+async def _async_import_yaml(hass: HomeAssistant, import_data: dict[str, Any]) -> None:
+    """Import a YAML printer into a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=import_data,
+    )
+
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": DEFAULT_NAME,
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": DEFAULT_NAME,
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> None:
