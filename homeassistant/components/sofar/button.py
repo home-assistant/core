@@ -8,7 +8,7 @@ from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SofarConfigEntry
@@ -54,11 +54,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sofar button platform."""
     runtime_data = entry.runtime_data
-    device = runtime_data.readings.device
-    async_add_entities(
-        SofarButton(runtime_data, description)
-        for description in BUTTON_DESCRIPTIONS
-        if description.supported_fn(device)
+    added: set[str] = set()
+
+    @callback
+    def _async_add_supported() -> None:
+        """Add a button the first time the inverter's type supports it."""
+        new = [
+            description
+            for description in BUTTON_DESCRIPTIONS
+            if description.key not in added
+            and description.supported_fn(runtime_data.readings.device)
+        ]
+        if not new:
+            return
+        added.update(description.key for description in new)
+        async_add_entities(
+            SofarButton(runtime_data, description) for description in new
+        )
+
+    _async_add_supported()
+    entry.async_on_unload(
+        runtime_data.readings.async_add_listener(_async_add_supported)
     )
 
 

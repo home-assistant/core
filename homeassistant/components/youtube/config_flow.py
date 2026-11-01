@@ -156,11 +156,6 @@ class OAuth2FlowHandler(
                 async for channel in youtube.get_user_channels()
                 if channel.snippet is not None
             ]
-            if not own_channels:
-                return self.async_abort(
-                    reason="no_channel",
-                    description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
-                )
         except ForbiddenError as ex:
             error = ex.args[0]
             return self.async_abort(
@@ -170,6 +165,11 @@ class OAuth2FlowHandler(
         except Exception as ex:  # noqa: BLE001
             LOGGER.error("Unknown error occurred: %s", ex.args)
             return self.async_abort(reason="unknown")
+        if not own_channels:
+            return self.async_abort(
+                reason="no_channel",
+                description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
+            )
         self._title = own_channels[0].snippet.title
         self._data = data
 
