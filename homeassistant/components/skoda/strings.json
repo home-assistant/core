@@ -110,6 +110,19 @@
       "total_range": {
         "name": "Total range"
       }
+    },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to send the command to the vehicle: {error}"
+    },
+    "rate_limit_exceeded": {
+      "message": "The Škoda API rate limit for this vehicle has been reached or its 12V battery is low. Try again later."
     }
   }
 }

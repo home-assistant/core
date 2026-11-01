@@ -1,11 +1,17 @@
 """Entity base for the Škoda integration."""
 
+from collections.abc import Awaitable, Callable
+from typing import Any
+
+from skoda_public_api.api_layer.exceptions import OpenApiError, OpenApiRateLimitError
+from skoda_public_api.api_layer.open_api_client import OpenAPIClient
 from skoda_public_api.models.air_conditioning import AirConditioning
 from skoda_public_api.models.auxiliary_heating import AuxiliaryHeating
 from skoda_public_api.models.charging import Charging
 from skoda_public_api.models.driving_range import FuelStatus
 from skoda_public_api.models.vehicle import Odometer, VehicleObject
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,6 +41,23 @@ class SkodaEntity(CoordinatorEntity[SkodaUpdateCoordinator]):
             model=vehicle_name,
             serial_number=vin,
         )
+
+    async def async_send_command(
+        self, command: Callable[[OpenAPIClient, str], Awaitable[Any]]
+    ) -> None:
+        """Send a command to the vehicle."""
+        try:
+            await command(self.coordinator.openapi, self.vin)
+        except OpenApiRateLimitError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="rate_limit_exceeded"
+            ) from err
+        except OpenApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     @property
     def open_api_vehicle(self) -> VehicleObject:
