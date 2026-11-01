@@ -13,9 +13,6 @@
       "last_reading_date": {
         "default": "mdi:clock-outline"
       },
-      "oil_consumption": {
-        "default": "mdi:fire"
-      },
       "oil_level": {
         "default": "mdi:gauge"
       },

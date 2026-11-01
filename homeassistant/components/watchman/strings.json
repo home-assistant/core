@@ -72,9 +72,6 @@
       "last_reading_date": {
         "name": "Last Reading Date"
       },
-      "oil_consumption": {
-        "name": "Oil Consumption"
-      },
       "oil_level": {
         "name": "Oil Level"
       },

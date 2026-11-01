@@ -12,7 +12,6 @@ from typing import override
 from connectsensor.analysis import TankData
 
 from homeassistant.components.sensor import (
-    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -27,10 +26,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .const import CONF_OIL_ENERGY_DENSITY, DEFAULT_OIL_ENERGY_DENSITY
-from .coordinator import SENSiTConfigEntry, SENSiTDataUpdateCoordinator
+from .coordinator import SENSiTConfigEntry
 from .entity import SENSiTEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -129,16 +127,6 @@ SENSOR_DESCRIPTIONS: tuple[SENSiTSensorEntityDescription, ...] = (
     ),
 )
 
-OIL_CONSUMPTION_DESCRIPTION = SensorEntityDescription(
-    key="oil_consumption",
-    translation_key="oil_consumption",
-    entity_registry_enabled_default=False,
-    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    device_class=SensorDeviceClass.ENERGY,
-    suggested_display_precision=1,
-)
-
 
 async def async_setup_entry(
     _hass: HomeAssistant,
@@ -161,14 +149,6 @@ async def async_setup_entry(
                     )
                     for description in SENSOR_DESCRIPTIONS
                 )
-                new_entities.append(
-                    OilConsumptionSensor(
-                        coordinator,
-                        config_entry,
-                        tank.serial_number,
-                        OIL_CONSUMPTION_DESCRIPTION,
-                    )
-                )
         if new_entities:
             async_add_entities(new_entities)
 
@@ -186,78 +166,3 @@ class SENSiTSensor(SENSiTEntity, SensorEntity):
     def native_value(self) -> float | int | Decimal | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.tank_data, self.config_entry)
-
-
-class OilConsumptionSensor(SENSiTEntity, RestoreSensor):
-    """Sensor that tracks cumulative energy consumption."""
-
-    def __init__(
-        self,
-        coordinator: SENSiTDataUpdateCoordinator,
-        config_entry: SENSiTConfigEntry,
-        serial_number: str,
-        entity_description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the cumulative oil consumption sensor."""
-        super().__init__(coordinator, config_entry, serial_number, entity_description)
-        self._consumption_total: float | None = None
-        self._consumption_last_read: datetime | None = None
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Restore previous cumulative consumption state."""
-        await super().async_added_to_hass()
-        if (old_state := await self.async_get_last_state()) is not None:
-            raw_last_read = old_state.attributes.get("consumption_last_read")
-            if raw_last_read is not None:
-                self._consumption_last_read = dt_util.parse_datetime(str(raw_last_read))
-            raw_total = old_state.attributes.get("consumption_total")
-            if raw_total is not None:
-                self._consumption_total = round(float(raw_total), 1)
-            _LOGGER.debug(
-                "Restoring consumption: %s kWh at %s",
-                self._consumption_total,
-                self._consumption_last_read,
-            )
-        self._update_consumption()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_consumption()
-        super()._handle_coordinator_update()
-
-    def _update_consumption(self) -> None:
-        """Calculate and update cumulative energy consumption when a new reading arrives."""
-        last_read = self.tank_data.last_read
-        if self._consumption_last_read is None:
-            self._consumption_last_read = last_read
-            self._consumption_total = 0.0
-            return
-
-        if last_read is not None and self._consumption_last_read != last_read:
-            usage_rate = self.tank_data.usage_rate
-            energy_density = _get_energy_density(self.config_entry)
-            base_total = self._consumption_total or 0.0
-            self._consumption_total = round(
-                base_total + (energy_density * round(usage_rate, 1)), 1
-            )
-            self._consumption_last_read = last_read
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, object]:
-        """Return extra state attributes for restoration."""
-        base_attrs = super().extra_state_attributes or {}
-        return {
-            **base_attrs,
-            "consumption_last_read": self._consumption_last_read,
-            "consumption_total": self._consumption_total,
-        }
-
-    @property
-    @override
-    def native_value(self) -> Decimal | None:
-        """Return the cumulative energy consumption value."""
-        return Decimal(f"{self._consumption_total:.1f}")

@@ -11,29 +11,22 @@ from connectsensor.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache,
-)
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 import homeassistant
 from homeassistant.components.watchman.const import DEFAULT_OIL_ENERGY_DENSITY, DOMAIN
 from homeassistant.components.watchman.coordinator import TankData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import get_time_zone, set_default_time_zone
 
 from .const import (
     MOCK_CONFIG,
     MOCK_TANK_CAPACITY,
     MOCK_TANK_LEVEL,
-    MOCK_TANK_MODEL,
     MOCK_TANK_NAME,
-    MOCK_TANK_SERIAL_NUMBER,
     HistoryType,
 )
 
@@ -131,110 +124,6 @@ async def test_current_energy_usage(
     await hass.async_block_till_done()
     assert unload_ok
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_oil_consumption(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_sensor_client
-) -> None:
-    """Test oil consumption read too early."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry.async_update_entity(
-        "sensor.tanky_mctankface_oil_consumption",
-        disabled_by=None,
-    )
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.tanky_mctankface_oil_consumption")
-    assert state is not None
-    assert state.state == "0.0"
-
-    unload_ok = await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert unload_ok
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-@pytest.mark.parametrize(("cached_consumption_total"), [("20000.0"), (None)])
-async def test_oil_consumption_restore(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-    cached_consumption_total,
-    mock_sensor_client,
-) -> None:
-    """Test sensor saved state and cumulative update processing."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    config_entry.add_to_hass(hass)
-
-    if cached_consumption_total is not None:
-        restore_state = State(
-            "sensor.tanky_mctankface_oil_consumption",
-            cached_consumption_total,
-            {
-                "consumption_total": cached_consumption_total,
-                "consumption_last_read": str(dt_util.utcnow() - timedelta(hours=24)),
-            },
-        )
-        consumption_total = float(cached_consumption_total)
-    else:
-        # Corrupted state shouldn't happen, but we defend against it
-        restore_state = State(
-            "sensor.tanky_mctankface_oil_consumption", "", attributes={}
-        )
-        consumption_total = 0.0
-    mock_restore_cache(hass, [restore_state])
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry.async_update_entity(
-        "sensor.tanky_mctankface_oil_consumption",
-        disabled_by=None,
-    )
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.tanky_mctankface_current_usage")
-    if cached_consumption_total is not None:
-        consumption_total += round(float(state.state) * DEFAULT_OIL_ENERGY_DENSITY, 1)
-    state = hass.states.get("sensor.tanky_mctankface_oil_consumption")
-    assert state is not None
-    assert state.state == str(consumption_total)
-
-    new_tank_data = TankData(
-        level=800.0,
-        capacity=MOCK_TANK_CAPACITY,
-        model=MOCK_TANK_MODEL,
-        name=MOCK_TANK_NAME,
-        serial_number=MOCK_TANK_SERIAL_NUMBER,
-        last_read=dt_util.utcnow() + timedelta(days=1),
-        history=[],
-        usage_rate=5.0,
-        forecast_empty=10,
-    )
-
-    # Inject data directly to verify the sensor correctly added the new usage
-    coordinator = config_entry.runtime_data
-    coordinator.async_set_updated_data([new_tank_data])
-    await hass.async_block_till_done()
-
-    expected_new_total = round(
-        consumption_total + (5.0 * DEFAULT_OIL_ENERGY_DENSITY), 1
-    )
-    state = hass.states.get("sensor.tanky_mctankface_oil_consumption")
-    assert state.state == str(expected_new_total)
-
-    # Trigger a refresh with the SAME data to test totals are not re-computed
-    coordinator.async_set_updated_data([new_tank_data])
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.tanky_mctankface_oil_consumption")
-    assert state.state == str(expected_new_total)
 
 
 @pytest.mark.parametrize(
