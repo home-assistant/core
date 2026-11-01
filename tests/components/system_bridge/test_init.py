@@ -546,6 +546,10 @@ async def test_power_state_marks_unavailable(
     assert state
     assert state.state == STATE_UNAVAILABLE
     mock_websocket_client.close.assert_awaited_once()
+
+    # A repeated event during the same outage isn't logged again
+    await power_state_callback(PowerStateEvent(state=power_state))
+    await hass.async_block_till_done()
     assert f"TestSystem is unavailable: {power_state}" in caplog.text
 
     # Reconnects fail quietly while the host is away

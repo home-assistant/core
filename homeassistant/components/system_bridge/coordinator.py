@@ -169,8 +169,12 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         """Go unavailable as soon as the host says it's sleeping or shutting down."""
         if event.state is PowerState.RESUMED:
             return
-        self.logger.info("%s is unavailable: %s", self.title, event.state)
-        self._unavailable_logged = True
+        if (
+            not self._unavailable_logged
+            and self.config_entry.state is ConfigEntryState.LOADED
+        ):
+            self.logger.info("%s is unavailable: %s", self.title, event.state)
+            self._unavailable_logged = True
         await self.clean_disconnect()
         # A sleeping host can leave the socket open, which would stop reconnects.
         # Close it in its own task, as clean_disconnect cancels this listener
