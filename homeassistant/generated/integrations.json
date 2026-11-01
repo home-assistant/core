@@ -3102,6 +3102,9 @@
         "diy_makers.boards_hardware",
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "onewire"
+      ],
       "supported_by": "onewire"
     },
     "esphome": {
@@ -8149,6 +8152,9 @@
       "categories": [
         "diy_makers.boards_hardware",
         "sensors.temperature_humidity"
+      ],
+      "connectivity": [
+        "onewire"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
