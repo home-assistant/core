@@ -48,6 +48,7 @@ async def test_setup_entry_player_unreachable(
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "setup_cannot_connect"
 
 
 async def test_unload_entry_while_player_is_offline(
