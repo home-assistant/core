@@ -112,7 +112,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
         self._finished_event = asyncio.Event()
         self._firmware: Firmware | None = None
-        self._unload: list[Callable] = []
+        self._unload: list[Callable[[], None]] = []
         self.idx = idx
 
         if (
