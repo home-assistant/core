@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration does not register custom actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -12,10 +10,7 @@ rules:
     status: done
     comment: |
       The dependency is skoda-public-api on pypi.
-  docs-actions:
-    status: exempt
-    comment: |
-      This integration does not have any custom actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
@@ -37,9 +32,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not have any custom actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo

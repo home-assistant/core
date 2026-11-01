@@ -111,5 +111,22 @@
         "name": "Total range"
       }
     }
+  },
+  "exceptions": {
+    "render_unavailable": {
+      "message": "The vehicle render is currently unavailable."
+    }
+  },
+  "services": {
+    "get_image_url": {
+      "description": "Retrieves the URL of the vehicle render image.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The vehicle to retrieve the render image URL for.",
+          "name": "Vehicle"
+        }
+      },
+      "name": "Get image URL"
+    }
   }
 }
