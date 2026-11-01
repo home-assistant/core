@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+import threading
 from typing import TYPE_CHECKING, Any, override
 
 from pymonoprice import Monoprice, ZoneStatus
@@ -61,15 +62,27 @@ class MonopriceCoordinator(DataUpdateCoordinator[dict[int, ZoneStatus | None]]):
     async def _async_read_zones(
         self, zones: tuple[int, ...]
     ) -> dict[int, ZoneStatus | None]:
-        """Read zones one executor job each, while the caller holds the lock.
+        """Read zones in one executor job, while the caller holds the lock.
 
-        Cancelling a poll on unload then stops after the read in flight. That
-        read still completes, since a running serial call cannot be interrupted.
+        Cancelling the poll, for example on unload, sets a stop signal that the
+        job checks before each read. The job stops when it sees the signal, so a
+        read that is already past that check can still run, and a running
+        serial call cannot be interrupted.
         """
-        return {
-            zone: await self.hass.async_add_executor_job(self._read_zone, zone)
-            for zone in zones
-        }
+        stop = threading.Event()
+
+        def read_zones() -> dict[int, ZoneStatus | None]:
+            statuses: dict[int, ZoneStatus | None] = {}
+            for zone in zones:
+                if stop.is_set():
+                    break
+                statuses[zone] = self._read_zone(zone)
+            return statuses
+
+        try:
+            return await self.hass.async_add_executor_job(read_zones)
+        finally:
+            stop.set()
 
     @override
     async def _async_update_data(self) -> dict[int, ZoneStatus | None]:

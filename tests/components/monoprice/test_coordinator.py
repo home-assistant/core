@@ -1,10 +1,12 @@
 """Tests for shared amplifier polling and per-zone results."""
 
 import asyncio
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from datetime import timedelta
 from threading import Event
 from typing import Any
-from unittest.mock import DEFAULT, MagicMock, call
+from unittest.mock import DEFAULT, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -12,6 +14,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from serialx import SerialException
 
 from homeassistant.components.monoprice.const import DOMAIN
+from homeassistant.components.monoprice.coordinator import MonopriceCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,6 +26,20 @@ async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def _wait_for(
+    hass: HomeAssistant, flag: Event, what: str, timeout: float = 5
+) -> None:
+    """Wait for a flag set by a worker thread, failing the test after a real timeout.
+
+    asyncio.wait_for cannot do this: the freezer also freezes the event loop's clock,
+    so its timeout never fires and a stuck worker would hang the test. A
+    threading.Event times out on the real clock.
+    """
+    assert await hass.async_add_executor_job(flag.wait, timeout), (
+        f"{what} did not happen within {timeout} seconds"
+    )
 
 
 async def test_enabled_zones_and_context_deduplication(
@@ -132,12 +149,11 @@ async def test_command_and_poll_are_serialized(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """A poll cannot run between a command and its read-back."""
-    started = asyncio.Event()
+    started = Event()
     release = Event()
-    loop = asyncio.get_running_loop()
 
     def command() -> None:
-        loop.call_soon_threadsafe(started.set)
+        started.set()
         assert release.wait(5)
         client.set_power(11, False)
 
@@ -145,7 +161,7 @@ async def test_command_and_poll_are_serialized(
     client.zone_status.reset_mock()
     task = asyncio.create_task(coordinator.async_command(11, command))
     try:
-        await asyncio.wait_for(started.wait(), 5)
+        await _wait_for(hass, started, "the command's worker starting")
         freezer.tick(timedelta(seconds=10))
         async_fire_time_changed(hass)
         for _ in range(10):
@@ -264,13 +280,12 @@ async def test_first_discovery_with_silent_optional_zones(
     assert len(hass.states.async_entity_ids("media_player")) == 6
 
 
-def _hold_first_read(client: MagicMock, entered: asyncio.Event, release: Event) -> None:
+def _hold_first_read(client: MagicMock, entered: Event, release: Event) -> None:
     """Make the next read of zone 11 block until released, then answer normally."""
-    loop = asyncio.get_running_loop()
 
     def zone_status(zone: int) -> Any:
         if zone == 11 and not release.is_set():
-            loop.call_soon_threadsafe(entered.set)
+            entered.set()
             assert release.wait(5)
         return DEFAULT
 
@@ -283,20 +298,24 @@ async def test_unload_stops_poll_after_current_zone(
     client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Unloading during a poll reads no further zones once the read in flight returns."""
+    """Unloading during a poll stops it at its next check, after the read in flight."""
     coordinator = entry.runtime_data.coordinator
     remove = coordinator.async_add_listener(lambda: None, context=13)
-    entered = asyncio.Event()
+    entered = Event()
     release = Event()
     _hold_first_read(client, entered, release)
     client.zone_status.reset_mock()
-    freezer.tick(timedelta(seconds=10))
-    async_fire_time_changed(hass)
-    try:
-        await asyncio.wait_for(entered.wait(), 5)
-        assert await hass.config_entries.async_unload(entry.entry_id)
-    finally:
-        release.set()
+    with _tracked_poll_jobs(hass) as jobs:
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        try:
+            await _wait_for(hass, entered, "the poll's first read")
+            assert await hass.config_entries.async_unload(entry.entry_id)
+        finally:
+            release.set()
+        # Unloading cancelled the poll and waited for it, so the stop signal was set
+        # before the held read returned. Wait for the worker itself to return.
+        await _wait_for(hass, jobs[0], "the poll's worker returning")
     await hass.async_block_till_done(wait_background_tasks=True)
     remove()
     assert client.zone_status.call_args_list == [call(11)]
@@ -311,14 +330,14 @@ async def test_command_waits_for_whole_poll(
     """A command issued during a poll runs after the poll's last zone, not between zones."""
     coordinator = entry.runtime_data.coordinator
     remove = coordinator.async_add_listener(lambda: None, context=13)
-    entered = asyncio.Event()
+    entered = Event()
     release = Event()
     _hold_first_read(client, entered, release)
     client.reset_mock()
     freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
     try:
-        await asyncio.wait_for(entered.wait(), 5)
+        await _wait_for(hass, entered, "the poll's first read")
         task = asyncio.create_task(
             hass.services.async_call(
                 "media_player",
@@ -342,3 +361,142 @@ async def test_command_waits_for_whole_poll(
         call.set_power(12, False),
         call.zone_status(12),
     ]
+
+
+def _poll_task() -> asyncio.Task[Any]:
+    """Return the background task running the scheduled poll."""
+    (task,) = (
+        task
+        for task in asyncio.all_tasks()
+        if "Monoprice" in (name := task.get_name()) and name.endswith("- refresh")
+    )
+    return task
+
+
+@contextmanager
+def _tracked_poll_jobs(hass: HomeAssistant) -> Iterator[list[Event]]:
+    """Record the coordinator's executor jobs, each with a flag set when it returns.
+
+    The flags are set from the worker thread when the job function returns, so a
+    test can wait for the worker itself instead of for a fixed time.
+    """
+    run_in_executor = hass.async_add_executor_job
+    returned: list[Event] = []
+
+    def tracking_job(target: Callable[..., Any], *args: Any) -> asyncio.Future[Any]:
+        if getattr(target, "__module__", None) != MonopriceCoordinator.__module__:
+            return run_in_executor(target, *args)
+        done = Event()
+        returned.append(done)
+
+        def tracked() -> Any:
+            try:
+                return target(*args)
+            finally:
+                done.set()
+
+        return run_in_executor(tracked)
+
+    with patch.object(hass, "async_add_executor_job", tracking_job):
+        yield returned
+
+
+async def test_poll_reads_every_zone_in_one_executor_job(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A poll of several zones takes one executor job, not one per zone."""
+    remove = entry.runtime_data.coordinator.async_add_listener(lambda: None, context=13)
+    client.zone_status.reset_mock()
+    with _tracked_poll_jobs(hass) as jobs:
+        await _poll(hass, freezer)
+    remove()
+    assert client.zone_status.call_args_list == [call(11), call(12), call(13)]
+    assert len(jobs) == 1
+
+
+async def test_cancelled_poll_stops_and_the_next_poll_reads_every_zone(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A cancelled poll stops at its next check, and the next poll reads every zone."""
+    coordinator = entry.runtime_data.coordinator
+    remove = coordinator.async_add_listener(lambda: None, context=13)
+    entered = Event()
+    release = Event()
+    _hold_first_read(client, entered, release)
+    client.zone_status.reset_mock()
+    with _tracked_poll_jobs(hass) as jobs:
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        try:
+            await _wait_for(hass, entered, "the poll's first read")
+            task = _poll_task()
+            task.cancel()
+            await asyncio.wait([task])
+        finally:
+            release.set()
+        # The stop signal was set before the held read returned, so the worker
+        # sees it at its next check. Wait for the worker itself to return.
+        await _wait_for(hass, jobs[0], "the poll's worker returning")
+        assert client.zone_status.call_args_list == [call(11)]
+
+        # The stop signal belongs to the cancelled poll, and the lock is free again.
+        client.zone_status.reset_mock()
+        await _poll(hass, freezer)
+    remove()
+    assert client.zone_status.call_args_list == [call(11), call(12), call(13)]
+    assert hass.states.get("media_player.zone_11").state == "on"
+
+
+async def test_queued_command_runs_after_cancelled_poll(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A queued command still runs when its poll is cancelled, and the poll stops."""
+    remove = entry.runtime_data.coordinator.async_add_listener(lambda: None, context=13)
+    entered = Event()
+    release = Event()
+    _hold_first_read(client, entered, release)
+    client.reset_mock()
+    with _tracked_poll_jobs(hass) as jobs:
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        try:
+            await _wait_for(hass, entered, "the poll's first read")
+            command = asyncio.create_task(
+                hass.services.async_call(
+                    "media_player",
+                    "turn_off",
+                    {"entity_id": "media_player.zone_12"},
+                    blocking=True,
+                )
+            )
+            for _ in range(10):
+                await asyncio.sleep(0)
+            client.set_power.assert_not_called()
+            task = _poll_task()
+            task.cancel()
+            await asyncio.wait([task])
+        finally:
+            release.set()
+        await command
+        # The stop signal was set before the held read returned. Once the poll's
+        # worker has returned, no further read of that poll can follow.
+        await _wait_for(hass, jobs[0], "the poll's worker returning")
+        assert client.mock_calls == [
+            call.zone_status(11),
+            call.set_power(12, False),
+            call.zone_status(12),
+        ]
+
+        # A cancelled poll marks the update as failed until the next poll succeeds.
+        await _poll(hass, freezer)
+    remove()
+    assert hass.states.get("media_player.zone_12").state == "off"
