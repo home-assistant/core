@@ -51,6 +51,25 @@ async def test_setup_entry_player_unreachable(
     assert config_entry.error_reason_translation_key == "setup_cannot_connect"
 
 
+@pytest.mark.parametrize("method", ["presets", "inputs", "status"])
+async def test_setup_entry_first_refresh_player_unreachable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    player_mocks: PlayerMocks,
+    method: str,
+) -> None:
+    """Test setup is retried when the player is unreachable during the first refresh."""
+    getattr(
+        player_mocks.player_data.player, method
+    ).side_effect = PlayerUnreachableError("Player not reachable")
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "player_unreachable"
+
+
 async def test_unload_entry_while_player_is_offline(
     hass: HomeAssistant,
     setup_config_entry: None,

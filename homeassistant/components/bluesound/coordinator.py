@@ -13,7 +13,9 @@ from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,9 +81,16 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
 
     @override
     async def _async_setup(self) -> None:
-        preset = await self.player.presets()
-        inputs = await self.player.inputs()
-        status = await self.player.status()
+        try:
+            preset = await self.player.presets()
+            inputs = await self.player.inputs()
+            status = await self.player.status()
+        except PlayerUnreachableError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="player_unreachable",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
         self.async_set_updated_data(
             BluesoundData(
