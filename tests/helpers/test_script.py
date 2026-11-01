@@ -53,7 +53,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.condition import Condition
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -7021,7 +7021,7 @@ async def test_conversation_response_not_set(
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     result = await script_obj.async_run(context=Context())
-    assert result.conversation_response is UNDEFINED
+    assert result.conversation_response is Undefined
 
     assert_action_trace({})
 

@@ -17,7 +17,8 @@ from uiprotect.data import (
     SmartDetectObjectType,
 )
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
-from uiprotect.data.types import EventButtonType
+from uiprotect.data.public_devices import PublicSensor, SensorFeatureCapability
+from uiprotect.data.types import EventButtonType, SensorAlarmType
 
 from homeassistant.components.event import (
     DoorbellEventType,
@@ -25,6 +26,7 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -51,6 +53,7 @@ from .entity import (
     ProtectDeviceEntity,
     ProtectEventMixin,
     _async_capability_supported,
+    async_remove_unsupported_sense_entities,
 )
 
 PARALLEL_UPDATES = 0
@@ -108,10 +111,16 @@ _VEHICLE_EVENT_TYPES = (EventType.SMART_DETECT, EventType.SMART_DETECT_LINE)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class ProtectDetectionEventEntityDescription(ProtectEventEntityDescription):
-    """Describes a category detection event entity driven by the public events WS."""
+class ProtectPublicEventEntityDescription(ProtectEventEntityDescription):
+    """Describes an event entity fired from the public events WS."""
 
     ufp_public_event_types: tuple[EventType, ...]
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ProtectDetectionEventEntityDescription(ProtectPublicEventEntityDescription):
+    """Describes a category detection event entity driven by the public events WS."""
+
     include_event_source: bool = False
 
 
@@ -678,6 +687,84 @@ class ProtectFobButtonEventEntity(
         self._fire_once(event, button_type, {ATTR_EVENT_ID: event.id})
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ProtectSensorEventEntityDescription(ProtectPublicEventEntityDescription):
+    """Describes a sensor event entity driven by the public events WS."""
+
+    ufp_event_type_fn: Callable[[ProtectEvent], str | None]
+
+
+class ProtectSensorEventEntity(ProtectDevicePublicEventEntity):
+    """A sensor event entity that fires the mapped type of each public event."""
+
+    entity_description: ProtectSensorEventEntityDescription
+
+    @override
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_sensor_event)
+            for event_type in self.entity_description.ufp_public_event_types
+        )
+
+    @callback
+    def _async_sensor_event(self, event: ProtectEvent) -> None:
+        if (event_type := self.entity_description.ufp_event_type_fn(event)) is None:
+            return
+        self._fire_once(event, event_type, {ATTR_EVENT_ID: event.id})
+
+
+_SENSOR_ALARM_EVENT_TYPES: dict[SensorAlarmType, str] = {
+    SensorAlarmType.SMOKE: "smoke",
+    SensorAlarmType.CO: "co",
+}
+
+
+def _sensor_alarm_event_type(event: ProtectEvent) -> str | None:
+    """Event type of a ``sensorAlarm``; other alarm types are not surfaced."""
+    if (alarm_type := event.alarm_type) is None:
+        return None
+    return _SENSOR_ALARM_EVENT_TYPES.get(alarm_type)
+
+
+_MAINTENANCE_EVENT_TYPES: dict[EventType, str] = {
+    EventType.SENSOR_SMOKE_TEST: "self_test",
+    EventType.SENSOR_SMOKE_BATTERY_LOW: "battery_low",
+    EventType.SENSOR_SMOKE_NEEDS_CLEANING: "needs_cleaning",
+    EventType.SENSOR_SMOKE_FAULT: "smoke_fault",
+    EventType.SENSOR_CO_FAULT: "co_fault",
+    EventType.SENSOR_SMOKE_END_OF_LIFE: "end_of_life",
+}
+
+
+def _maintenance_event_type(event: ProtectEvent) -> str:
+    """Event type of a smoke detector maintenance event."""
+    return _MAINTENANCE_EVENT_TYPES[event.type]
+
+
+SENSOR_EVENT_DESCRIPTIONS: tuple[ProtectSensorEventEntityDescription, ...] = (
+    ProtectSensorEventEntityDescription(
+        key="alarm",
+        translation_key="alarm",
+        event_types=list(_SENSOR_ALARM_EVENT_TYPES.values()),
+        ufp_capability=SensorFeatureCapability.SMOKE,
+        ufp_public_event_types=(EventType.SENSOR_ALARM,),
+        ufp_event_type_fn=_sensor_alarm_event_type,
+        entity_class=ProtectSensorEventEntity,
+    ),
+    ProtectSensorEventEntityDescription(
+        key="maintenance",
+        translation_key="maintenance",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        event_types=list(_MAINTENANCE_EVENT_TYPES.values()),
+        ufp_capability=SensorFeatureCapability.SMOKE,
+        ufp_public_event_types=tuple(_MAINTENANCE_EVENT_TYPES),
+        ufp_event_type_fn=_maintenance_event_type,
+        entity_class=ProtectSensorEventEntity,
+    ),
+)
+
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
@@ -779,6 +866,19 @@ def _async_public_event_entities(
     ]
 
 
+@callback
+def _async_sensor_event_entities(
+    data: ProtectData, device: ProtectDeviceType, public: PublicDeviceModel | None
+) -> list[ProtectDeviceEntity]:
+    # A sensor not yet mirrored publicly has no feature flags to check; it is
+    # built and stays unavailable until its public object arrives.
+    return [
+        description.entity_class(data, device, description)
+        for description in SENSOR_EVENT_DESCRIPTIONS
+        if _async_capability_supported(public, None, description)
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -793,9 +893,15 @@ async def async_setup_entry(
             async_add_entities([ProtectFobButtonEventEntity(data, device)])
         elif isinstance(device, PublicCamera):
             async_add_entities(_async_public_event_entities(data, device))
+        elif isinstance(device, PublicSensor):
+            async_add_entities(_async_sensor_event_entities(data, device, device))
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+
+    async_remove_unsupported_sense_entities(
+        hass, Platform.EVENT, data, SENSOR_EVENT_DESCRIPTIONS
     )
 
     # The public bootstrap is primed only with an API key and supported NVR
@@ -814,6 +920,12 @@ async def async_setup_entry(
             if public is not None
             for entity in _async_public_event_entities(data, public)
         )
+        async_add_entities(
+            entity
+            for public, _ in data.get_public_devices(ModelType.SENSOR)
+            if public is not None
+            for entity in _async_sensor_event_entities(data, public, public)
+        )
         return
 
     # Everything below is driven by the private bootstrap, which public-only
@@ -824,6 +936,18 @@ async def async_setup_entry(
         # AiPort inherits from Camera but should not create camera-specific entities
         if device.is_adopted and device.model is ModelType.CAMERA:
             async_add_entities(_async_event_entities(data, ufp_device=device))
+        elif device.model is ModelType.SENSOR:
+            async_add_entities(
+                _async_sensor_event_entities(
+                    data, device, data.async_get_public_device(device)
+                )
+            )
 
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(_async_event_entities(data))
+    async_add_entities(
+        entity
+        for public, private in data.get_public_devices(ModelType.SENSOR)
+        if private is not None
+        for entity in _async_sensor_event_entities(data, private, public)
+    )
