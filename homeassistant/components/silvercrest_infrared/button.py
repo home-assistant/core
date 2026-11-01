@@ -10,16 +10,10 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_DEVICE_TYPE,
-    CONF_INFRARED_ENTITY_ID,
-    DEVICE_NAMES,
-    DOMAIN,
-    MISTING_FANS,
-)
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, MISTING_FANS
+from .entity import SilverCrestIrBaseEntity
 
 PARALLEL_UPDATES = 1
 
@@ -99,7 +93,9 @@ async def async_setup_entry(
     )
 
 
-class SilverCrestIrButtonEntity(InfraredEmitterConsumerEntity, ButtonEntity):
+class SilverCrestIrButtonEntity(
+    SilverCrestIrBaseEntity, InfraredEmitterConsumerEntity, ButtonEntity
+):
     """Represents a SilverCrest Infrared button entity."""
 
     entity_description: SilverCrestIrButtonEntityDescription
@@ -112,15 +108,9 @@ class SilverCrestIrButtonEntity(InfraredEmitterConsumerEntity, ButtonEntity):
         description: SilverCrestIrButtonEntityDescription,
     ) -> None:
         """Initialize the entity."""
+        super().__init__(entry)
         self._infrared_emitter_entity_id = infrared_entity_id
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="SilverCrest",
-            translation_key=entry.data[CONF_DEVICE_TYPE],
-            model=DEVICE_NAMES[entry.data[CONF_DEVICE_TYPE]],
-        )
-
         self.entity_description = description
 
     @override
