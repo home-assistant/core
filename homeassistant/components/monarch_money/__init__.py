@@ -3,10 +3,11 @@
 from typedmonarchmoney import TypedMonarchMoney
 
 from homeassistant.components.recorder.statistics import (
+    async_list_statistic_ids,
     async_update_statistics_metadata,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import CONF_TOKEN, Platform
+from homeassistant.const import CONF_TOKEN, CURRENCY_DOLLAR, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.recorder import DATA_INSTANCE
@@ -35,11 +36,11 @@ async def async_migrate_entry(
 ) -> None:
     """Migrate old config entries."""
     if entry.version == 1 and entry.minor_version < 2:
-        _async_migrate_statistics_currency(hass, entry)
+        await _async_migrate_statistics_currency(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
 
-def _async_migrate_statistics_currency(
+async def _async_migrate_statistics_currency(
     hass: HomeAssistant, entry: MonarchMoneyConfigEntry
 ) -> None:
     """Migrate monetary sensor statistics from '$' to USD.
@@ -52,16 +53,24 @@ def _async_migrate_statistics_currency(
         return
 
     entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    monetary_entity_ids = {
+        entity_entry.entity_id
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        )
+        if entity_entry.domain == SENSOR_DOMAIN
+        and entity_entry.original_device_class == SensorDeviceClass.MONETARY
+    }
+    if not monetary_entity_ids:
+        return
 
-    for entity_entry in entries:
-        if (
-            entity_entry.domain == SENSOR_DOMAIN
-            and entity_entry.original_device_class == SensorDeviceClass.MONETARY
-        ):
+    # Only rewrite statistics actually recorded with the old invalid unit,
+    # so a user-customized unit is not relabeled without conversion
+    for statistic in await async_list_statistic_ids(hass, monetary_entity_ids):
+        if statistic["statistics_unit_of_measurement"] == CURRENCY_DOLLAR:
             async_update_statistics_metadata(
                 hass,
-                entity_entry.entity_id,
+                statistic["statistic_id"],
                 new_unit_of_measurement=DEFAULT_CURRENCY,
                 new_unit_class=None,
             )

@@ -385,17 +385,42 @@ async def test_statistics_migration_called_for_monetary_sensors(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test statistics migration updates existing monetary sensors."""
+    """Test statistics migration only rewrites stats recorded with '$'."""
     await hass.config.async_update(country="US", currency="USD")
 
     mock_config_entry.add_to_hass(hass)
     _add_migration_entity_registry_entries(entity_registry, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.monarch_money.async_update_statistics_metadata"
-    ) as mock_update_stats:
+    with (
+        patch(
+            "homeassistant.components.monarch_money.async_list_statistic_ids",
+            return_value=[
+                {
+                    "statistic_id": "sensor.cashflow_income_year_to_date",
+                    "statistics_unit_of_measurement": "$",
+                },
+                {
+                    "statistic_id": "sensor.rando_bank_checking_balance",
+                    "statistics_unit_of_measurement": "$",
+                },
+                {
+                    "statistic_id": "sensor.canadian_savings",
+                    "statistics_unit_of_measurement": "CAD",
+                },
+            ],
+        ) as mock_list_statistic_ids,
+        patch(
+            "homeassistant.components.monarch_money.async_update_statistics_metadata"
+        ) as mock_update_stats,
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
+
+    assert mock_list_statistic_ids.call_args.args[1] == {
+        "sensor.cashflow_income_year_to_date",
+        "sensor.rando_bank_checking_balance",
+        "sensor.canadian_savings",
+    }
 
     called_entity_ids = {call.args[1] for call in mock_update_stats.call_args_list}
     assert called_entity_ids == {
@@ -455,4 +480,12 @@ def _add_migration_entity_registry_entries(
         config_entry=mock_config_entry,
         original_device_class=SensorDeviceClass.TIMESTAMP,
         suggested_object_id="rando_bank_checking_data_age",
+    )
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "222260252323873333_savings_currentBalance",
+        config_entry=mock_config_entry,
+        original_device_class=SensorDeviceClass.MONETARY,
+        suggested_object_id="canadian_savings",
     )
