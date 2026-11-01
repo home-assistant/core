@@ -23,12 +23,13 @@ def _async_create_repair_issue(
         hass,
         DOMAIN,
         f"credentials_{config_entry.entry_id}",
-        is_fixable=True,
+        is_fixable=False,
         is_persistent=True,
         issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
+        severity=ir.IssueSeverity.ERROR,
         translation_key="auth_failed",
         translation_placeholders={"title": config_entry.title},
+        config_entry_id=config_entry.entry_id,
     )
 
 

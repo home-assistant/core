@@ -167,7 +167,8 @@ async def test_setup_auth_failures(
             DOMAIN, f"credentials_{config_entry.entry_id}"
         )
         assert issue is not None
-        assert issue.is_fixable is True
+        assert issue.is_fixable is False
+        assert issue.config_entry_id == config_entry.entry_id
 
 
 @pytest.mark.parametrize("mock_sensor_client", [{"num_tanks": 0}], indirect=True)
