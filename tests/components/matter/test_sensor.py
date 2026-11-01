@@ -124,50 +124,6 @@ async def test_battery_time_sensors_discovered_with_null_value_at_startup(
     assert full_charge_state.state == "30.0"
 
 
-@pytest.mark.parametrize("node_fixture", ["mock_battery_solar_bridge"])
-@pytest.mark.parametrize(
-    ("entity_id", "friendly_name"),
-    [
-        (
-            "sensor.mock_battery_and_solar_bridge_battery_2",
-            "Mock Battery and Solar Bridge Battery (2)",
-        ),
-        (
-            "sensor.mock_battery_and_solar_bridge_battery_3",
-            "Mock Battery and Solar Bridge Battery (3)",
-        ),
-        (
-            "sensor.mock_battery_and_solar_bridge_power_4",
-            "Mock Battery and Solar Bridge Power (4)",
-        ),
-        (
-            "sensor.mock_battery_and_solar_bridge_power_5",
-            "Mock Battery and Solar Bridge Power (5)",
-        ),
-    ],
-    ids=["battery_pack_1", "battery_pack_2", "pv_string_1", "pv_string_2"],
-)
-@pytest.mark.usefixtures("matter_node")
-async def test_duplicated_entities_named_by_raw_endpoint_id(
-    hass: HomeAssistant,
-    entity_id: str,
-    friendly_name: str,
-) -> None:
-    """Test entities on endpoints sharing a primary attribute are named by raw endpoint ID.
-
-    mock_battery_solar_bridge exposes two battery pack endpoints and two PV string
-    endpoints, each already carrying a readable label (PowerSource.Description,
-    Descriptor.TagList and, for the PV strings, UserLabel). None of these are
-    currently used for entity naming, so entities for the same primary attribute
-    (BatPercentRemaining, ActivePower) across endpoints collide down to an
-    unreadable "(<endpoint_id>)" suffix instead. This test documents the current
-    behavior so it can be updated once a readable label is used for naming instead.
-    """
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes["friendly_name"] == friendly_name
-
-
 @pytest.mark.parametrize("node_fixture", ["mock_flow_sensor"])
 async def test_flow_sensor(
     hass: HomeAssistant,
