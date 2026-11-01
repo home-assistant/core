@@ -3732,6 +3732,9 @@
           "categories": [
             "hubs_protocols.smart_home_hubs"
           ],
+          "connectivity": [
+            "dect"
+          ],
           "name": "FRITZ!SmartHome"
         },
         "fritzbox_callmonitor": {
