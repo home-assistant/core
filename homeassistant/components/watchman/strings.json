@@ -11,7 +11,8 @@
       "invalid_auth": "Username/Password is wrong.",
       "no_data": "No tank level data found for this account.",
       "timeout": "Timed out while connecting to the Kingspan service.",
-      "unknown": "Unexpected error occurred."
+      "unknown": "Unexpected error occurred.",
+      "wrong_account": "The username does not match the original account."
     },
     "step": {
       "reauth_confirm": {

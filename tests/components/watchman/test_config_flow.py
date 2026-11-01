@@ -291,3 +291,43 @@ async def test_credential_update_invalid_auth(
     assert result3["reason"] == (
         "reconfigure_successful" if step_id == "reconfigure" else "reauth_successful"
     )
+
+
+async def test_reauth_wrong_account(hass: HomeAssistant) -> None:
+    """Test reauth rejects credentials for a different account, then recovers."""
+    # pylint is generating a false-positive W7441
+    # pylint: disable=home-assistant-tests-config-flow-error-recovery
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=MOCK_CONFIG[CONF_USERNAME].casefold(),
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    # Attempt reauth with the wrong account
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "different_account@example.com",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "wrong_account"}
+
+    # Recover with the correct account
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: MOCK_CONFIG[CONF_USERNAME],
+            CONF_PASSWORD: "fixed-password",
+        },
+    )
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_PASSWORD] == "fixed-password"

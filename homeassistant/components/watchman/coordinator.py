@@ -69,7 +69,7 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
 
         try:
             async with AsyncSensorClient(
-                version=APIVersion.KNECT_V1,
+                version=APIVersion.CONNECT_V1,
                 client=self._httpx_client,
                 timeout=API_TIMEOUT,
             ) as client:

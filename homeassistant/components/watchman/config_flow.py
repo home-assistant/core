@@ -111,17 +111,20 @@ class SENSiTFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            error = await self._test_credentials(username, password)
-            if error is None:
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={
-                        **reauth_entry.data,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
-                )
-            self._errors["base"] = error
+            if username.casefold() != reauth_entry.data[CONF_USERNAME].casefold():
+                self._errors["base"] = "wrong_account"
+            else:
+                error = await self._test_credentials(username, password)
+                if error is None:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry,
+                        data_updates={
+                            **reauth_entry.data,
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                        },
+                    )
+                self._errors["base"] = error
 
         defaults = {
             CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME, ""),
