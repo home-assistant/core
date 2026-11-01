@@ -54,31 +54,29 @@ async def test_update_auth_failed(
 
 
 @pytest.mark.parametrize(
-    "mock_api_get",
+    "data",
     [
-        AsyncMock(
-            return_value=[
-                {
-                    "dateObserved": "2020-12-20",
-                    "hourObserved": "15:00",
-                    "localTimeZone": "PST",
-                    "parameterName": "OZONE",
-                    "nowcastAQI": 0,
-                    "aqiCategoryName": "Good",
-                }
-            ]
-        )
+        [
+            {
+                "dateObserved": "2020-12-20",
+                "hourObserved": "15:00",
+                "localTimeZone": "PST",
+                "parameterName": "OZONE",
+                "nowcastAQI": 0,
+                "aqiCategoryName": "Good",
+            }
+        ]
     ],
 )
-@pytest.mark.usefixtures("setup_airnow")
-async def test_zero_aqi(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_zero_aqi(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_api_get: AsyncMock
+) -> None:
     """Test an AQI of 0 keeps its category."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("pyairnow.WebServiceAPI._get", mock_api_get):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
-    data = config_entry.runtime_data.data
-    assert data["AQI"] == 0
-    assert data["Category.Name"] == "Good"
-    assert data["Category.Number"] == 1
-    assert data["Pollutant"] == "O3"
+    state = hass.states.get("sensor.airnow_air_quality_index")
+    assert state.state == "0"
+    assert state.attributes["description"] == "Good"
+    assert state.attributes["level"] == 1
