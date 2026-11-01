@@ -126,6 +126,26 @@ async def test_import_flow_accepts_multicharacter_route_id_string(
     }
 
 
+async def test_import_flow_without_route_ids(hass: HomeAssistant) -> None:
+    """Test importing configuration without selected route IDs."""
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        _mock_api(
+            mock_api_class,
+            lines=[SimpleNamespace(id="A", route="Route A")],
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_STOP_ID: "1234"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_line_id"
+
+
 async def test_import_flow_accepts_whitespace_and_comma_separated_route_ids(
     hass: HomeAssistant,
 ) -> None:
