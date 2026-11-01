@@ -1,15 +1,11 @@
 """Data types for type hint pattern matching."""
 
 from dataclasses import dataclass
-from enum import Enum
 
 from astroid import nodes
+from typing_extensions import Sentinel as sentinel
 
-
-class _Special(Enum):
-    """Sentinel values."""
-
-    UNDEFINED = 1
+_Undefined = sentinel("_Undefined")
 
 
 @dataclass
@@ -17,7 +13,7 @@ class TypeHintMatch:
     """Class for pattern matching."""
 
     function_name: str
-    return_type: list[str | _Special | None] | str | _Special | None
+    return_type: list[str | _Undefined | None] | str | _Undefined | None
     arg_types: dict[int, str] | None = None
     """arg_types is for positional arguments"""
     named_arg_types: dict[str, str] | None = None

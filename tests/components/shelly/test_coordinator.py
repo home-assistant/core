@@ -1338,7 +1338,7 @@ async def test_sub_device_area_from_main_device(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test Shelly sub-device area is set to main device area when created."""
+    """Test Shelly sub-devices inherit the main device area."""
     device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
@@ -1360,7 +1360,6 @@ async def test_sub_device_area_from_main_device(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # verify sub-devices have the same area as main device
     for relay_index in range(2):
         entity_id = f"switch.living_room_test_name_output_{relay_index}"
         assert hass.states.get(entity_id) is not None
@@ -1368,8 +1367,9 @@ async def test_sub_device_area_from_main_device(
         assert entry
 
         device_entry = device_registry.async_get(entry.device_id)
-        assert device_entry
-        assert device_entry.area_id == "living_room"
+        assert isinstance(device_entry, dr.ChildDeviceEntry)
+        assert device_entry.area_id is None
+        assert dr.async_get_effective_area_id(hass, device_entry) == "living_room"
 
 
 @pytest.mark.parametrize("restart_required", [True, False])

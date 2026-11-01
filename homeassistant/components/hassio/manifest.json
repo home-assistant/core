@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/hassio",
   "iot_class": "local_polling",
   "quality_scale": "internal",
-  "requirements": ["aiohasupervisor==0.8.1"],
+  "requirements": ["aiohasupervisor==0.9.0"],
   "single_config_entry": true
 }
