@@ -13,8 +13,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from serialx import SerialException
 
-from homeassistant.components.monoprice.const import DOMAIN
-from homeassistant.components.monoprice.coordinator import MonopriceCoordinator
+from homeassistant.components.monoprice.const import CONF_NOT_FIRST_RUN, DOMAIN
+from homeassistant.components.monoprice.coordinator import (
+    ZONE_IDS,
+    MonopriceCoordinator,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -500,3 +503,27 @@ async def test_queued_command_runs_after_cancelled_poll(
         await _poll(hass, freezer)
     remove()
     assert hass.states.get("media_player.zone_12").state == "off"
+
+
+async def test_startup_reads_enabled_and_new_zones_once(
+    hass: HomeAssistant, client: MagicMock, entity_registry: er.EntityRegistry
+) -> None:
+    """Setup reads the enabled and the not yet registered zones, each once."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_CONFIG, CONF_NOT_FIRST_RUN: True}
+    )
+    config_entry.add_to_hass(hass)
+    for zone, disabled_by in ((11, None), (12, er.RegistryEntryDisabler.USER)):
+        entity_registry.async_get_or_create(
+            "media_player",
+            DOMAIN,
+            f"{config_entry.entry_id}_{zone}",
+            suggested_object_id=f"zone_{zone}",
+            config_entry=config_entry,
+            disabled_by=disabled_by,
+        )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert client.zone_status.call_args_list == [
+        call(zone) for zone in ZONE_IDS if zone != 12
+    ]
