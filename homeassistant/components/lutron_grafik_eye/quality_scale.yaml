@@ -7,7 +7,7 @@ rules:
   brands: done # TODO: Create a PR in home-assistant/brands adding core_integrations/lutron_grafik_eye/icon.png and logo.png.
   common-modules: done
   config-flow: done
-  config-flow-test-coverage: done # TODO: Add tests/components/lutron_grafik_eye/test_config_flow.py in home-assistant/core, covering success, authentication errors, connection failures, and duplicate entries.
+  config-flow-test-coverage: done
   dependency-transparency: done # TODO: Publish grafikeye to PyPI and pin its version in homeassistant/components/lutron_grafik_eye/manifest.json.
   docs-actions:
     status: exempt
