@@ -10,7 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import issue_registry as ir, translation
 from homeassistant.setup import async_setup_component
 
 YAML_CONFIG = {
@@ -162,3 +162,25 @@ async def test_import_yaml_partial_failure(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
     assert len(issue_registry.issues) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_yaml_finishes_before_setup_returns(
+    hass: HomeAssistant, mock_discovery_info: AsyncMock
+) -> None:
+    """Test all YAML printers are imported before the integration setup returns."""
+    await translation.async_load_integrations(hass, {DOMAIN})
+    mock_discovery_info.side_effect = [
+        DiscoverySettings({"upnpUuid": "uuid"}),
+        DiscoverySettings({"upnpUuid": "uuid2"}),
+    ]
+    config = {
+        DOMAIN: [
+            YAML_CONFIG[DOMAIN],
+            {**YAML_CONFIG[DOMAIN], "host": "2.2.2.2", "name": "Second printer"},
+        ]
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
