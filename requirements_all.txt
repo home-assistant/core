@@ -2065,7 +2065,7 @@ py-melissa-climate==3.0.3
 py-nanotts==0.1.2
 
 # homeassistant.components.national_grid_us
-py-nationalgrid==0.6.7
+py-nationalgrid==0.6.8
 
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
