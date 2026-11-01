@@ -6726,6 +6726,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "matter"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
