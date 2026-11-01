@@ -1454,8 +1454,8 @@
       "name": "BT Home Hub 5",
       "integration_type": "hub",
       "categories": [
-        "network",
-        "presence_detection"
+        "presence_location.network_presence",
+        "computers_network.routers_network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"

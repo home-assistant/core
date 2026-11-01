@@ -10,6 +10,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -92,6 +93,9 @@ class BTHomeHub5ScannerEntity(
         self._mac = mac
         self._attr_unique_id = mac
         self._attr_name = name
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, mac)},
+        )
 
     @property
     @override

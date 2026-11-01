@@ -1,5 +1,14 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -9,21 +18,12 @@
           "host": "IP address or hostname of your BT Home Hub 5."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "issues": {
     "deprecated_yaml": {
-      "title": "BT Home Hub 5 YAML configuration is deprecated",
-      "description": "Configuring BT Home Hub 5 via YAML is deprecated and will be removed in a future release.\n\nYour existing configuration has been imported automatically. Please remove the `bt_home_hub_5` configuration from your configuration.yaml file."
+      "description": "Configuring BT Home Hub 5 via YAML is deprecated and will be removed in a future release.\n\nYour existing configuration has been imported automatically. Please remove the `bt_home_hub_5` configuration from your configuration.yaml file.",
+      "title": "BT Home Hub 5 YAML configuration is deprecated"
     }
   }
 }
