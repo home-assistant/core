@@ -1,5 +1,6 @@
 """Support for HomematicIP Cloud devices."""
 
+import asyncio
 import logging
 
 import probatio
@@ -64,20 +65,27 @@ async def _async_import_yaml(
     hass: HomeAssistant, accesspoints: list[ConfigType]
 ) -> None:
     """Import YAML access points into config entries."""
-    for conf in accesspoints:
-        if conf[CONF_ACCESSPOINT] not in {
-            entry.data[HMIPC_HAPID]
-            for entry in hass.config_entries.async_entries(DOMAIN)
-        }:
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    HMIPC_HAPID: conf[CONF_ACCESSPOINT],
-                    HMIPC_AUTHTOKEN: conf[CONF_AUTHTOKEN],
-                    HMIPC_NAME: conf[CONF_NAME],
-                },
+    configured = {
+        entry.data[HMIPC_HAPID] for entry in hass.config_entries.async_entries(DOMAIN)
+    }
+    # Eager tasks register the import flows before setup waits for them.
+    await asyncio.gather(
+        *(
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data={
+                        HMIPC_HAPID: conf[CONF_ACCESSPOINT],
+                        HMIPC_AUTHTOKEN: conf[CONF_AUTHTOKEN],
+                        HMIPC_NAME: conf[CONF_NAME],
+                    },
+                )
             )
+            for conf in accesspoints
+            if conf[CONF_ACCESSPOINT] not in configured
+        )
+    )
 
     # The import flow can only create an entry or abort as already configured.
     ir.async_create_issue(
