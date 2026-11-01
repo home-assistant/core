@@ -8,7 +8,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
+from systembridgeconnector.models.audio_control import AudioControl
 from systembridgeconnector.models.display_control import DisplayControl
+from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
 from systembridgeconnector.models.fixtures.modules.displays import FIXTURE_DISPLAYS
 from systembridgeconnector.models.modules import Module
 from systembridgeconnector.models.modules.displays import DisplayPowerState
@@ -106,6 +108,33 @@ async def test_display_power(
 
     mock_websocket_client.display_control.assert_awaited_once_with(
         DisplayControl(id="abc123", power_state=power_state)
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "muted"),
+    [
+        pytest.param(SERVICE_TURN_ON, True, id="mute"),
+        pytest.param(SERVICE_TURN_OFF, False, id="unmute"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_input_mute(
+    hass: HomeAssistant,
+    mock_websocket_client: MagicMock,
+    service: str,
+    muted: bool,
+) -> None:
+    """Test muting and unmuting an input sends an audio control."""
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "switch.hostname_microphone_input_mute"},
+        blocking=True,
+    )
+
+    mock_websocket_client.audio_control.assert_awaited_once_with(
+        AudioControl(id=FIXTURE_AUDIO.inputs[0].id, muted=muted)
     )
 
 

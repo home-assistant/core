@@ -147,9 +147,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if res.status_code == HTTPStatus.UNAUTHORIZED:
                 errors["base"] = "invalid_auth"
-            elif res.status_code == HTTPStatus.FORBIDDEN:
-                return self.async_abort(reason="forbidden")
-            else:
+            elif res.status_code != HTTPStatus.FORBIDDEN:
                 res.raise_for_status()
         except TimeoutException as err:
             errors["base"] = "timeout_connect"
@@ -160,6 +158,8 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
             _LOGGER.debug("An error occurred: %s", str(err) or type(err).__name__)
         else:
+            if res.status_code == HTTPStatus.FORBIDDEN:
+                return self.async_abort(reason="forbidden")
             if not errors:
                 try:
                     await parse_calendar(self.hass, res.text)

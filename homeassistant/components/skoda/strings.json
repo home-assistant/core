@@ -29,6 +29,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bonnet": {
+        "name": "Hood"
+      },
+      "doors": {
+        "name": "Doors"
+      },
+      "lights": {
+        "name": "Lights"
+      },
+      "sunroof": {
+        "name": "Sunroof"
+      },
+      "trunk": {
+        "name": "Trunk"
+      },
+      "windows": {
+        "name": "Windows"
+      }
+    },
     "sensor": {
       "aux_heating_duration": {
         "name": "Auxiliary heating remaining duration"

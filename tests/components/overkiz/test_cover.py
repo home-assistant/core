@@ -115,7 +115,13 @@ DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
 POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe_2.json",
     "io://1234-5678-1516/3656107",
-    "cover.maple_residence_hallway_shutter",
+    "cover.front_door_shutter",
+)
+# Device that only reports TargetClosureState (no ClosureState/OpenClosedState)
+POSITIONABLE_SCREEN_UNO = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe_2.json",
+    "io://1234-5678-1516/3959838",
+    "cover.patio_screen",
 )
 POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
     "setup/cloud_somfy_tahoma_switch_sc_europe.json",
@@ -462,6 +468,21 @@ async def test_cover_entities_snapshot(
             None,
             STATE_UNKNOWN,
         ),
+        (
+            POSITIONABLE_SCREEN_UNO,
+            SERVICE_OPEN_COVER,
+            "open",
+            None,
+            CoverState.OPENING,
+        ),
+        (
+            POSITIONABLE_SCREEN_UNO,
+            SERVICE_CLOSE_COVER,
+            "close",
+            None,
+            CoverState.CLOSING,
+        ),
+        (POSITIONABLE_SCREEN_UNO, SERVICE_STOP_COVER, "stop", None, CoverState.OPEN),
     ],
     ids=[
         "open-roller-shutter",
@@ -532,6 +553,9 @@ async def test_cover_entities_snapshot(
         "open-tilt-sheer-screen-rts",
         "close-tilt-sheer-screen-rts",
         "stop-tilt-sheer-screen-rts",
+        "open-positionable-screen-uno",
+        "close-positionable-screen-uno",
+        "stop-positionable-screen-uno",
     ],
 )
 async def test_cover_service_actions(
@@ -713,6 +737,13 @@ async def test_cover_command_connection_error_raises(
             [75],
             25,
         ),
+        (
+            POSITIONABLE_SCREEN_UNO,
+            POSITIONABLE_SCREEN_UNO.entity_id,
+            "setDeployment",
+            [75],
+            25,
+        ),
     ],
     ids=[
         "roller-shutter",
@@ -720,6 +751,7 @@ async def test_cover_command_connection_error_raises(
         "dynamic-pergola",
         "pergola-horizontal-awning",
         "dynamic-venetian-blind",
+        "positionable-screen-uno",
     ],
 )
 async def test_cover_set_position(
@@ -1773,3 +1805,84 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         )
 
     assert mock_client.execute_action_group.await_count == 0
+
+
+@pytest.mark.parametrize(
+    ("device", "device_states", "expected_state", "expected_position"),
+    [
+        pytest.param(
+            POSITIONABLE_SCREEN_UNO,
+            {OverkizState.CORE_TARGET_CLOSURE: 0},
+            CoverState.OPEN,
+            100,
+            id="screen-uno-open",
+        ),
+        pytest.param(
+            POSITIONABLE_SCREEN_UNO,
+            {OverkizState.CORE_TARGET_CLOSURE: 40},
+            CoverState.OPEN,
+            60,
+            id="screen-uno-intermediate",
+        ),
+        pytest.param(
+            POSITIONABLE_SCREEN_UNO,
+            {OverkizState.CORE_TARGET_CLOSURE: 100},
+            CoverState.CLOSED,
+            0,
+            id="screen-uno-closed",
+        ),
+        # TargetClosureState is both the position and the 124 fallback state
+        pytest.param(
+            POSITIONABLE_SCREEN_UNO,
+            {OverkizState.CORE_TARGET_CLOSURE: 124},
+            STATE_UNKNOWN,
+            None,
+            id="screen-uno-unknown",
+        ),
+        pytest.param(
+            POSITIONABLE_ROLLER_SHUTTER_UNO,
+            {OverkizState.CORE_CLOSURE: 124, OverkizState.CORE_TARGET_CLOSURE: 30},
+            CoverState.OPEN,
+            70,
+            id="unknown-closure-falls-back-to-target-closure",
+        ),
+        pytest.param(
+            POSITIONABLE_ROLLER_SHUTTER_UNO,
+            {OverkizState.CORE_CLOSURE: 124, OverkizState.CORE_TARGET_CLOSURE: 124},
+            STATE_UNKNOWN,
+            None,
+            id="unknown-closure-and-target-closure",
+        ),
+    ],
+)
+async def test_cover_position_from_closure_states(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+    device: FixtureDevice,
+    device_states: dict[OverkizState, int],
+    expected_state: CoverState | str,
+    expected_position: int | None,
+) -> None:
+    """Test position and state derived from (Target)ClosureState, including 124."""
+    await setup_overkiz_integration(fixture=device.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=device.device_url,
+                device_states=[
+                    {"name": name.value, "type": 1, "value": value}
+                    for name, value in device_states.items()
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(device.entity_id)
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
