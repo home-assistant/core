@@ -4,6 +4,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@chpego"],
   "config_flow": true,
+  "connectivity": ["modbus"],
   "dependencies": ["modbus"],
   "documentation": "https://www.home-assistant.io/integrations/bluetti_modbus",
   "integration_type": "device",
