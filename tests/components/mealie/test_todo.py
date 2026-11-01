@@ -82,6 +82,18 @@ async def test_food_item_uses_concise_summary(
     assert item["summary"] == "acorn squashes"
     assert item["description"] == "1 can acorn squash"
 
+    food_without_plural = mock_mealie_client.get_shopping_items.return_value.items[3]
+    item = next(
+        item for item in items if item["uid"] == food_without_plural.item_id
+    )
+    assert item["summary"] == "flour"
+    assert item["description"] == "1 US cup flour"
+
+    note_item = mock_mealie_client.get_shopping_items.return_value.items[0]
+    item = next(item for item in items if item["uid"] == note_item.item_id)
+    assert item["summary"] == "2 Apples"
+    assert item.get("description") is None
+
 
 async def test_complete_concise_food_item_preserves_structured_data(
     hass: HomeAssistant,
