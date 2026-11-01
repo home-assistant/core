@@ -4924,6 +4924,9 @@
           "categories": [
             "lighting"
           ],
+          "connectivity": [
+            "rf"
+          ],
           "name": "Honeywell String Lights"
         }
       }
@@ -5847,6 +5850,9 @@
       "integration_type": "device",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
@@ -7874,6 +7880,9 @@
         "appliances_cleaning.cooking",
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -8748,6 +8757,9 @@
         "hubs_protocols.wireless_protocols",
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -9438,6 +9450,9 @@
       "categories": [
         "plugs_switches"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": false,
       "iot_class": "assumed_state"
     },
@@ -9611,6 +9626,9 @@
         "hubs_protocols.wireless_protocols",
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": false,
       "iot_class": "assumed_state"
     },
@@ -9619,6 +9637,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -11476,6 +11497,9 @@
           "categories": [
             "hubs_protocols.wireless_protocols"
           ],
+          "connectivity": [
+            "rf"
+          ],
           "name": "TellStick"
         }
       }
@@ -12598,6 +12622,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": false,
       "iot_class": "local_push"
