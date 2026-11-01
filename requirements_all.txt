@@ -364,7 +364,7 @@ aiolookin==1.0.0
 aiolyric==2.2.1
 
 # homeassistant.components.mealie
-aiomealie==2.1.3
+aiomealie==2.1.4
 
 # homeassistant.components.melcloud_home
 aiomelcloudhome==0.3.1
@@ -478,7 +478,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.3.0
+aioswitcher==6.4.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -2729,7 +2729,7 @@ pysmhi==2.1.0
 pysml==0.1.9
 
 # homeassistant.components.smlight
-pysmlight==0.5.3
+pysmlight==0.6.2
 
 # homeassistant.components.snmp
 pysnmp==7.1.27
