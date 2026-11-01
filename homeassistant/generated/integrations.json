@@ -2133,6 +2133,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "zigbee"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5217,6 +5220,9 @@
           "categories": [
             "hubs_protocols.smart_home_hubs",
             "lighting.bulbs_lamps"
+          ],
+          "connectivity": [
+            "zigbee"
           ],
           "name": "IKEA TR\u00c5DFRI"
         },
@@ -8437,6 +8443,9 @@
       "categories": [
         "lighting.lighting_systems"
       ],
+      "connectivity": [
+        "zigbee"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -8682,6 +8691,9 @@
           "iot_class": "local_push",
           "categories": [
             "lighting.lighting_systems"
+          ],
+          "connectivity": [
+            "zigbee"
           ],
           "name": "Philips Hue"
         },
@@ -9370,6 +9382,9 @@
           "categories": [
             "energy.meters_monitoring"
           ],
+          "connectivity": [
+            "zigbee"
+          ],
           "name": "Rainforest Eagle"
         },
         "rainforest_raven": {
@@ -9378,6 +9393,9 @@
           "iot_class": "local_polling",
           "categories": [
             "energy.meters_monitoring"
+          ],
+          "connectivity": [
+            "zigbee"
           ],
           "name": "Rainforest RAVEn"
         }
@@ -12970,6 +12988,9 @@
           "categories": [
             "hubs_protocols.smart_home_hubs"
           ],
+          "connectivity": [
+            "zigbee"
+          ],
           "name": "Xiaomi Gateway (Aqara)"
         },
         "xiaomi_ble": {
@@ -13265,6 +13286,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "zigbee"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
