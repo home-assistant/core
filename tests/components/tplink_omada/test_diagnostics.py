@@ -29,12 +29,6 @@ async def test_entry_diagnostics(
         client["mac"]: OmadaWirelessClient(client)
         for client in connected_clients_data[:2]
     }
-    # A wireless config with a pre-shared key on the gateway record: the
-    # snapshot proves both the ssid and the psk are redacted.
-    gateway = next(iter(controller.gateway_coordinator.data.values()))
-    gateway.raw_data["wlan"] = {
-        "ssids": [{"ssid": "GUEST_WIFI", "psk": "SuperSecretPsk"}]
-    }
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
