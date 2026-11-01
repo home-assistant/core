@@ -4,7 +4,7 @@ rules:
     status: exempt
     comment: The integration does not provide custom actions.
   appropriate-polling: done
-  brands: done # TODO: Create a PR in home-assistant/brands adding core_integrations/lutron_grafik_eye/icon.png and logo.png.
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
