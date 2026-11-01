@@ -47,7 +47,6 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import storage, translation
 from .debounce import Debouncer
-from .deprecation import deprecated_function
 from .frame import (
     MissingIntegrationFrame,
     ReportBehavior,
@@ -93,10 +92,9 @@ CONNECTION_ZIGBEE = "zigbee"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
-# suggested_area can be removed when suggested_area is removed from DeviceEntry.
 # pending_move can be removed once add_config_entry_id and remove_config_entry_id
 # are removed from the device registry API.
-RUNTIME_ONLY_ATTRS = {"suggested_area", "pending_move"}
+RUNTIME_ONLY_ATTRS = {"pending_move"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -700,8 +698,6 @@ class DeviceEntry(BaseDeviceEntry):
     # Core 2027.8.
     has_composite_identifiers: bool = attr.ib(default=False)
     serial_number: str | None = attr.ib(default=None)
-    # Suggested area is deprecated and will be removed from DeviceEntry in HA Core 2026.9.
-    _suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
     # Transient pending move target (config_entry_id, config_subentry_id) initiated by
@@ -830,14 +826,6 @@ class DeviceEntry(BaseDeviceEntry):
             }
         )
 
-    @property
-    @deprecated_function(
-        "code which ignores suggested_area", breaks_in_ha_version="2026.9"
-    )
-    def suggested_area(self) -> str | None:
-        """Return the suggested area for this device entry."""
-        return self._suggested_area
-
 
 _CHILD_DEVICE_COMPAT_ATTRS = frozenset(
     {
@@ -849,7 +837,6 @@ _CHILD_DEVICE_COMPAT_ATTRS = frozenset(
         "model",
         "model_id",
         "serial_number",
-        # "suggested_area",  # Excluded, to be removed in 2026.9
         "sw_version",
         "via_device_id",
     }
@@ -2855,7 +2842,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name=name,
             has_composite_identifiers=has_composite_identifiers,
             new_config_subentry_id=config_subentry_id,
-            suggested_area=suggested_area,
             via_device_id=via_device_id,
             **identifiers_connections,
             **validated_fields,
@@ -3317,8 +3303,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         serial_number: str | UndefinedType | None = UNDEFINED,
-        # Can be removed when suggested_area is removed from DeviceEntry
-        suggested_area: str | UndefinedType | None = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
@@ -3728,15 +3712,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
 
-        # Can be removed when suggested_area is removed from DeviceEntry
-        if suggested_area is not UNDEFINED and suggested_area != old._suggested_area:  # noqa: SLF001
-            new_values["suggested_area"] = suggested_area
-            old_values["suggested_area"] = old._suggested_area  # noqa: SLF001
-
         if not new_values and not is_new:
             return old
 
-        # This condition can be removed when suggested_area is removed from DeviceEntry
         if not RUNTIME_ONLY_ATTRS.issuperset(new_values):
             # Change modified_at if we are changing something that we store
             new_values["modified_at"] = utcnow()
@@ -3764,13 +3742,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         ):
             del self._deleted_devices[deleted_device_id]
 
-        # If its only run time attributes (suggested_area)
+        # If its only run time attributes (pending_move)
         # that do not get saved we do not want to write
         # to disk or fire an event as we would end up
         # firing events for data we have nothing to compare
         # against since its never saved on disk
         if RUNTIME_ONLY_ATTRS.issuperset(new_values):
-            # This can be removed when suggested_area is removed from DeviceEntry
             return new
 
         self.async_schedule_save()
@@ -3995,8 +3972,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
         serial_number: str | UndefinedType | None = UNDEFINED,
-        # suggested_area is deprecated and will be removed in 2026.9
-        suggested_area: str | UndefinedType | None = UNDEFINED,
         sw_version: str | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
     ) -> DeviceEntry | None:
@@ -4076,7 +4051,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "remove_config_entry_id": remove_config_entry_id,
                 "remove_config_subentry_id": remove_config_subentry_id,
                 "serial_number": serial_number,
-                "suggested_area": suggested_area,
                 "sw_version": sw_version,
                 "via_device_id": via_device_id,
             }
@@ -4099,12 +4073,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 core_behavior=ReportBehavior.ERROR,
                 core_integration_behavior=ReportBehavior.ERROR,
                 breaks_in_ha_version="2027.8.0",
-            )
-        if suggested_area is not UNDEFINED:
-            report_usage(
-                "passes a suggested_area to device_registry.async_update device",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2026.9.0",
             )
         if merge_connections is not UNDEFINED or merge_identifiers is not UNDEFINED:
             report_usage(
@@ -4145,7 +4113,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             new_identifiers=new_identifiers,
             remove_config_entry_id=remove_config_entry_id,
             remove_config_subentry_id=remove_config_subentry_id,
-            suggested_area=suggested_area,
             via_device_id=via_device_id,
             **validated_fields,
         )

@@ -1,4 +1,4 @@
-"""Tests for the WattWächter Plus update platform."""
+"""Tests for the WattWächter update platform."""
 
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch

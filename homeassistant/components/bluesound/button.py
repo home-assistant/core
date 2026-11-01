@@ -17,6 +17,8 @@ from .entity import BluesoundEntity
 if TYPE_CHECKING:
     from .coordinator import BluesoundConfigEntry
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

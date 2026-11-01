@@ -62,7 +62,7 @@ async def async_get_config_entry_diagnostics(
                 ],
                 "data": coordinator.data,
             }
-            for coordinator in solar_net.modbus_inverter_coordinators
+            for coordinator in solar_net.modbus.inverter_coordinators
         },
     }
 

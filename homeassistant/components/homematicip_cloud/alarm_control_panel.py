@@ -48,6 +48,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
+        self._hap = hap
         self._home: AsyncHome = hap.home
 
     @property
@@ -97,20 +98,26 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         result = await self._home.set_security_zones_activation_async(
             internal, external
         )
+        problems = sorted(
+            label.strip()
+            for label in self._home.get_security_zone_activation_problems(result)
+        )
         # a request-based panel answers 200 without arming when a sensor blocks it
-        if result.success:
+        if result.success and not problems:
+            # the access point does not push a refusal, so the reply is published here
+            self._hap.async_set_arming_blocked(False)
             return
 
-        problems = self._home.get_security_zone_activation_problems(result)
         if not problems:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="alarm_activation_failed",
             )
+        self._hap.async_set_arming_blocked(True)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="alarm_activation_blocked",
-            translation_placeholders={"devices": ", ".join(sorted(problems))},
+            translation_placeholders={"devices": ", ".join(problems)},
         )
 
     @override

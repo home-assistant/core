@@ -1,0 +1,120 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unique_id_mismatch": "You logged in with a different account. Log in with the account that was set up before."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_otp": "The two-factor authentication code is incorrect."
+    },
+    "step": {
+      "libraries": {
+        "data": {
+          "libraries": "Libraries"
+        },
+        "data_description": {
+          "libraries": "Libraries to add. Each library gets its own device with sensors. More libraries can be added later."
+        },
+        "description": "Encrypted libraries are not supported."
+      },
+      "otp": {
+        "data": {
+          "otp": "Two-factor authentication code"
+        },
+        "data_description": {
+          "otp": "The code from your authenticator app."
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::seafile::config::step::user::data_description::password%]",
+          "username": "[%key:component::seafile::config::step::user::data_description::username%]"
+        },
+        "description": "The access token of this Seafile account is no longer valid. Log in again to create a new one."
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "password": "The password of your Seafile account. It is only used to create an access token and is not stored.",
+          "url": "The address you use to open Seafile in your browser.",
+          "username": "The email address or login ID of your Seafile account.",
+          "verify_ssl": "Turn off for servers with a self-signed certificate."
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "library": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The Seafile account is not loaded. Make sure it is set up and running before adding a library.",
+        "no_libraries": "All libraries of this account have been added already, or they are encrypted."
+      },
+      "entry_type": "Library",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure library",
+        "user": "Add library"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "backup": "[%key:component::seafile::config_subentries::library::step::user::data::backup%]",
+            "backup_path": "[%key:component::seafile::config_subentries::library::step::user::data::backup_path%]"
+          },
+          "data_description": {
+            "backup": "[%key:component::seafile::config_subentries::library::step::user::data_description::backup%]",
+            "backup_path": "[%key:component::seafile::config_subentries::library::step::user::data_description::backup_path%]"
+          }
+        },
+        "user": {
+          "data": {
+            "backup": "Store backups",
+            "backup_path": "Backup folder",
+            "library_id": "Library"
+          },
+          "data_description": {
+            "backup": "Make this library available as a backup location in Home Assistant.",
+            "backup_path": "The folder in the library to store backups in. It is created when the first backup is uploaded.",
+            "library_id": "The library to add. Encrypted libraries are not supported."
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "file_count": {
+        "name": "Files",
+        "unit_of_measurement": "files"
+      },
+      "last_modified": {
+        "name": "Last modified"
+      },
+      "size": {
+        "name": "Size"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while retrieving data from the Seafile server."
+    },
+    "invalid_auth": {
+      "message": "The access token of the Seafile account is no longer valid."
+    },
+    "timeout_connect": {
+      "message": "Timed out while connecting to the Seafile server."
+    }
+  }
+}

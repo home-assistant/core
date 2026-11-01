@@ -7,11 +7,17 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
+from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
 from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
 from systembridgeconnector.models.fixtures.modules.networks import FIXTURE_NETWORKS
 from systembridgeconnector.models.modules import Module
+from systembridgeconnector.models.modules.battery import (
+    BatteryInfo,
+    BatteryScope,
+    BatteryState,
+)
 from systembridgeconnector.models.modules.disks import Disk, DiskIOCounters, Disks
 from systembridgeconnector.models.modules.networks import (
     Network,
@@ -102,6 +108,116 @@ async def test_sensor_load_average_missing(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.hostname_load") is not None
     assert hass.states.get("sensor.hostname_load_average_1_min") is None
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_sensor_battery_empty(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test battery sensors are added when setup happens at 0% charge."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value,
+        battery=replace(FIXTURE_BATTERY, percentage=0, state=BatteryState.EMPTY),
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("sensor.hostname_battery")
+    assert state
+    assert state.state == "0"
+    state = hass.states.get("sensor.hostname_battery_state")
+    assert state
+    assert state.state == BatteryState.EMPTY
+
+
+@pytest.mark.usefixtures("mock_version")
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("sensor.hostname_battery_state", id="system"),
+        pytest.param("sensor.hostname_mouse_battery_state", id="device"),
+    ],
+)
+@pytest.mark.parametrize(
+    "unknown_state",
+    [
+        pytest.param(BatteryState.UNKNOWN, id="enum"),
+        pytest.param("unknown", id="raw"),
+    ],
+)
+async def test_sensor_battery_state_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    entity_id: str,
+    unknown_state: BatteryState | str,
+) -> None:
+    """Test an unknown battery state is reported as unknown, not as an option."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value,
+        battery=replace(
+            FIXTURE_BATTERY,
+            state=unknown_state,
+            batteries=[
+                replace(battery, state=unknown_state)
+                for battery in FIXTURE_BATTERY.batteries
+            ],
+        ),
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+    assert BatteryState.UNKNOWN not in state.attributes["options"]
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+@pytest.mark.parametrize(
+    ("entity_id", "disabled_by"),
+    [
+        pytest.param(
+            "sensor.hostname_model_battery",
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="system_level",
+        ),
+        pytest.param(
+            "sensor.hostname_model_battery_state",
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="system_state",
+        ),
+        pytest.param("sensor.hostname_mouse_battery", None, id="device_level"),
+        pytest.param("sensor.hostname_mouse_battery_state", None, id="device_state"),
+    ],
+)
+async def test_sensor_battery_info_enabled_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test only peripheral battery sensors are enabled by default."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.disabled_by is disabled_by
 
 
 @pytest.mark.usefixtures("mock_version")
@@ -268,6 +384,54 @@ async def test_sensor_network_interface_wifi_added(
 
     assert (state := hass.states.get("sensor.hostname_wlan1_ssid"))
     assert state.state == "Home"
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_sensor_battery_added(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test sensors are added for batteries that appear after setup."""
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.hostname_headset_battery") is None
+
+    await mock_config_entry.runtime_data.async_handle_module(
+        Module.BATTERY,
+        replace(
+            FIXTURE_BATTERY,
+            batteries=[
+                *FIXTURE_BATTERY.batteries,
+                BatteryInfo(
+                    name="hidpp_battery_2",
+                    model="headset",
+                    scope=BatteryScope.DEVICE,
+                    state=BatteryState.CHARGING,
+                    percentage=40,
+                ),
+            ],
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.hostname_headset_battery"))
+    assert state.state == "40"
+    assert (state := hass.states.get("sensor.hostname_headset_battery_state"))
+    assert state.state == BatteryState.CHARGING
+
+    await mock_config_entry.runtime_data.async_handle_module(
+        Module.BATTERY, FIXTURE_BATTERY
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.hostname_headset_battery"))
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("mock_version", "entity_registry_enabled_by_default")

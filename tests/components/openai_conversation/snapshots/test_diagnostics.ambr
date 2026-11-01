@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'entry_version': '2.8',
+    'state': 'loaded',
+    'subentries': list([
+      dict({
+        'data': dict({
+          'chat_model': 'gpt-5-mini',
+          'llm_hass_api': list([
+            'assist',
+          ]),
+          'max_tokens': 1500,
+          'reasoning_effort': 'medium',
+          'recommended': False,
+          'search_context_size': 'high',
+          'temperature': 0.7,
+          'user_location': True,
+          'web_search': True,
+        }),
+        'subentry_type': 'conversation',
+        'title': 'OpenAI Conversation',
+      }),
+      dict({
+        'data': dict({
+          'recommended': True,
+        }),
+        'subentry_type': 'ai_task_data',
+        'title': 'OpenAI AI Task',
+      }),
+      dict({
+        'data': dict({
+          'chat_model': 'gpt-6-luna',
+        }),
+        'subentry_type': 'ai_task_evaluate',
+        'title': 'OpenAI Evaluation',
+      }),
+      dict({
+        'data': dict({
+        }),
+        'subentry_type': 'stt',
+        'title': 'OpenAI STT',
+      }),
+      dict({
+        'data': dict({
+          'chat_model': 'gpt-4o-mini-tts',
+        }),
+        'subentry_type': 'tts',
+        'title': 'OpenAI TTS',
+      }),
+    ]),
+  })
+# ---

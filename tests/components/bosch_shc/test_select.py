@@ -9,6 +9,7 @@ from boschshcpy.services_impl import (
     OutdoorSirenService,
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
+    SmartSensitivityControlService,
     SmokeSensitivityService,
     SwitchConfiguration,
     TerminalConfiguration,
@@ -844,3 +845,80 @@ async def test_relay_output_mode_unsupported(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(OUTPUT_MODE_ENTITY_ID) is None
+
+
+SECURITY_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_alarm_system"
+COMFORT_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_other_cases"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(
+                    supports_smart_sensitivity=True,
+                    smart_sensitivity={"SECURITY": "HIGH", "COMFORT": "LOW"},
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The smart sensitivity levels are reported and written per context."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID).state == "high"
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID).state == "low"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: COMFORT_LEVEL_ENTITY_ID, "option": "middle"},
+        blocking=True,
+    )
+    device.set_smart_sensitivity_manual_level.assert_called_once_with(
+        SmartSensitivityControlService.SmartSensitivityContext.COMFORT,
+        SmartSensitivityControlService.MotionSensitivity.MIDDLE,
+    )
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No smart sensitivity selects are created without support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID) is None
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(supports_smart_sensitivity=True)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels_not_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The levels stay unknown while the controller reports none."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID).state == STATE_UNKNOWN

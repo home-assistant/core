@@ -84,10 +84,7 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bitcoin"
-    assert result["data"] == {
-        CONF_CURRENCY: "EUR",
-        CONF_DISPLAY_OPTIONS: ["exchangerate"],
-    }
+    assert result["data"] == {CONF_CURRENCY: "EUR"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -100,10 +97,7 @@ async def test_import_flow_lowercase_currency(hass: HomeAssistant) -> None:
         data={**YAML_CONFIG, CONF_CURRENCY: "eur"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_CURRENCY: "EUR",
-        CONF_DISPLAY_OPTIONS: ["exchangerate"],
-    }
+    assert result["data"] == {CONF_CURRENCY: "EUR"}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

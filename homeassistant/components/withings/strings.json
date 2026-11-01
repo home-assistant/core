@@ -6,6 +6,7 @@
     "abort": {
       "already_configured": "Configuration updated for profile.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "unique_id_mismatch": "Authenticated account does not match the account of this entry. Please log in with the correct account.",
       "wrong_account": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account."
     },
     "create_entry": {

@@ -15,10 +15,11 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     UnitOfLength,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import DistanceConverter
 
@@ -58,7 +59,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GeoNet NZ Volcano component."""
     if DOMAIN not in config:
         return True
-
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "GeoNet NZ Volcano",
+        },
+    )
     conf = config[DOMAIN]
 
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)

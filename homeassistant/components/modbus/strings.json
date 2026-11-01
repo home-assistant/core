@@ -1,5 +1,8 @@
 {
   "exceptions": {
+    "device_in_use": {
+      "message": "Modbus device {endpoint} is already in use with different link settings: {existing_params} against {params}."
+    },
     "not_loaded": {
       "message": "Modbus is not loaded, so this action cannot be performed."
     }

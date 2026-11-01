@@ -583,6 +583,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         schema is cv.entity_id
         or schema is cv.entity_id_or_uuid
         or schema is cv.strict_entity_id
+        or schema is cv.service
     ):
         return {"type": "string"}
     if schema is cv.boolean:

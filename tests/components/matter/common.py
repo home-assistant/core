@@ -21,6 +21,7 @@ FIXTURES = [
     "air_quality_sensor",
     "aqara_camera_hub_g350",
     "aqara_door_window_p2",
+    "aqara_led_strip_t2",
     "aqara_light_switch_h2_us_4099",
     "aqara_light_switch_h2_us_4100",
     "aqara_light_switch_h2_us_4101",

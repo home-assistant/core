@@ -874,3 +874,42 @@ async def test_wago_window_covering_numbers_set_value(
         ),
         value=written_value,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_led_strip_t2"])
+async def test_aqara_led_strip_t2(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test number entities on Aqara LED Strip T2."""
+    state = hass.states.get("number.aqara_led_strip_t2_music_sync_sensitivity")
+    assert state
+    assert state.state == "59"
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.aqara_led_strip_t2_music_sync_sensitivity",
+            "value": 80,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncSensitivity,
+        ),
+        value=80,
+    )
+
+    set_node_attribute(matter_node, 1, 291503119, 22, 80)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("number.aqara_led_strip_t2_music_sync_sensitivity")
+    assert state
+    assert state.state == "80"
