@@ -283,16 +283,16 @@ class FakeSchedule:
 
     async def fire_until(self, end: dt.datetime) -> None:
         """Simulate the passage of time by firing alarms until the time is reached."""
-
+        end_utc = dt_util.as_utc(end)
         current_time = dt_util.as_utc(self.freezer())
-        if (end - current_time) > (TEST_UPDATE_INTERVAL * 2):
+        if (end_utc - current_time) > (TEST_UPDATE_INTERVAL * 2):
             # Jump ahead to right before the target alarm them to remove
             # unnecessary waiting, before advancing in smaller increments below.
             # This leaves time for multiple update intervals to refresh the set
             # of upcoming events
-            await self.fire_time(end - TEST_UPDATE_INTERVAL * 2)
+            await self.fire_time(end_utc - TEST_UPDATE_INTERVAL * 2)
 
-        while dt_util.utcnow() < end:
+        while dt_util.utcnow() < end_utc:
             self.freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
             await self.fire_time(dt_util.utcnow())
 
@@ -1092,6 +1092,54 @@ async def test_event_start_trigger_dst_fall_back(
             ),
             trigger_format.get_expected_call_data(
                 CALENDAR_ENTITY_ID, EVENT_START, event5_data
+            ),
+        ]
+
+
+async def test_event_start_trigger_dst_fall_back_same_window(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entity: MockCalendarEntity,
+    freezer: FrozenDateTimeFactory,
+    trigger_format: TriggerFormat,
+) -> None:
+    """Test ordering of opposite-fold events queued within a single scan window."""
+    await hass.config.async_set_time_zone("America/Los_Angeles")
+    tzinfo = zoneinfo.ZoneInfo("America/Los_Angeles")
+    # Initial 7-minute scan [01:55 PDT, 01:02 PST) spans the 2am -> 1am transition
+    freezer.move_to("2023-11-05 01:55:00-07:00")
+
+    pdt_event = test_entity.create_event(
+        summary="PDT Event",
+        start=dt.datetime(2023, 11, 5, 1, 58, tzinfo=tzinfo, fold=0),
+        end=dt.datetime(2023, 11, 5, 1, 59, tzinfo=tzinfo, fold=0),
+    )
+    pst_event = test_entity.create_event(
+        summary="PST Event",
+        start=dt.datetime(2023, 11, 5, 1, 1, tzinfo=tzinfo, fold=1),
+        end=dt.datetime(2023, 11, 5, 1, 10, tzinfo=tzinfo, fold=1),
+    )
+
+    async with create_automation(hass, trigger_format, EVENT_START):
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 1, 59, tzinfo=tzinfo, fold=0),
+        )
+        assert calls_data() == [
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, pdt_event
+            ),
+        ]
+
+        await fake_schedule.fire_until(
+            dt.datetime(2023, 11, 5, 1, 2, tzinfo=tzinfo, fold=1),
+        )
+        assert calls_data() == [
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, pdt_event
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, pst_event
             ),
         ]
 
