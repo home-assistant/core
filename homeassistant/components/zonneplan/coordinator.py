@@ -68,6 +68,7 @@ class ZonneplanData:
 
     account: Account
     electricity_prices: ConsumerPrices | None = None
+    electricity_quarter_prices: ConsumerPrices | None = None
     gas_prices: ConsumerPrices | None = None
     electricity_usage: ElectricityChart | None = None
     gas_usage: GasChart | None = None
@@ -215,12 +216,15 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
 
     async def _async_fetch_electricity(
         self, account: Account, today: date
-    ) -> tuple[ConsumerPrices | None, ElectricityChart | None]:
+    ) -> tuple[ConsumerPrices | None, ConsumerPrices | None, ElectricityChart | None]:
         """Fetch electricity prices and usage, if the account has electricity."""
         if (connection := _connection(account, "electricity")) is None:
-            return None, None
+            return None, None, None
         return await asyncio.gather(
             self.zonneplan.async_get_consumer_prices(PriceChart.ELECTRICITY_HOURLY),
+            self.zonneplan.async_get_consumer_prices(
+                PriceChart.ELECTRICITY_QUARTER_HOURLY
+            ),
             self.zonneplan.async_get_electricity_chart(
                 connection.uuid, today, ConsumptionChart.DAYS
             ),
@@ -246,7 +250,7 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
         # The consumption charts cover the month of the given local day.
         today = dt_util.now().date()
         (
-            (electricity_prices, electricity_usage),
+            (electricity_prices, electricity_quarter_prices, electricity_usage),
             (gas_prices, gas_usage),
         ) = await asyncio.gather(
             self._async_fetch_electricity(account, today),
@@ -255,6 +259,7 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
         return ZonneplanData(
             account=account,
             electricity_prices=electricity_prices,
+            electricity_quarter_prices=electricity_quarter_prices,
             gas_prices=gas_prices,
             electricity_usage=electricity_usage,
             gas_usage=gas_usage,

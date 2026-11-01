@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import ATTR_LAST_RESET
@@ -19,6 +23,11 @@ from .conftest import MOCK_ACCOUNT
 BATTERY_STATE_ENTITY_ID = "sensor.thuisbatterij_battery_state"
 INVERTER_STATE_ENTITY_ID = "sensor.thuisbatterij_inverter_state"
 EARNED_TODAY_ENTITY_ID = "sensor.thuisbatterij_earned_today"
+CURRENT_PRICE_ENTITY_ID = "sensor.zonneplan_current_electricity_price"
+CURRENT_TARIFF_GROUP_ENTITY_ID = "sensor.zonneplan_current_electricity_tariff_group"
+CURRENT_QUARTER_PRICE_ENTITY_ID = (
+    "sensor.zonneplan_current_quarter_hour_electricity_price"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -53,6 +62,71 @@ async def test_sensor(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("before", "after", "expected_before", "expected_after"),
+    [
+        pytest.param(
+            "2026-08-29T14:59:59+00:00",
+            "2026-08-29T15:00:00+00:00",
+            {
+                CURRENT_PRICE_ENTITY_ID: "0.1591923",
+                CURRENT_TARIFF_GROUP_ENTITY_ID: "low",
+                CURRENT_QUARTER_PRICE_ENTITY_ID: "0.1441923",
+            },
+            {
+                CURRENT_PRICE_ENTITY_ID: "0.2542771",
+                CURRENT_TARIFF_GROUP_ENTITY_ID: "normal",
+                CURRENT_QUARTER_PRICE_ENTITY_ID: "0.2692771",
+            },
+            id="hour",
+        ),
+        pytest.param(
+            "2026-08-29T15:14:59+00:00",
+            "2026-08-29T15:15:00+00:00",
+            {
+                CURRENT_PRICE_ENTITY_ID: "0.2542771",
+                CURRENT_QUARTER_PRICE_ENTITY_ID: "0.2692771",
+            },
+            {
+                CURRENT_PRICE_ENTITY_ID: "0.2542771",
+                CURRENT_QUARTER_PRICE_ENTITY_ID: "0.2592771",
+            },
+            id="quarter_hour",
+        ),
+    ],
+)
+async def test_price_sensors_update_on_the_quarter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    before: str,
+    after: str,
+    expected_before: dict[str, str],
+    expected_after: dict[str, str],
+) -> None:
+    """Test the price sensors move to the new period's price without an API call."""
+    freezer.move_to(before)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert {
+        entity_id: hass.states.get(entity_id).state for entity_id in expected_before
+    } == expected_before
+    api_calls = len(mock_zonneplan_client.method_calls)
+
+    freezer.move_to(after)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert {
+        entity_id: hass.states.get(entity_id).state for entity_id in expected_after
+    } == expected_after
+    # The new price comes from the prices already fetched.
+    assert len(mock_zonneplan_client.method_calls) == api_calls
 
 
 @pytest.mark.parametrize(

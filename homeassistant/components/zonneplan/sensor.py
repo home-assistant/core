@@ -23,8 +23,9 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
@@ -66,6 +67,26 @@ ZONNEPLAN_SENSORS: tuple[ZonneplanPriceSensorEntityDescription, ...] = (
             else None
         ),
         supported_fn=lambda coordinator: bool(coordinator.data.electricity_prices),
+    ),
+    ZonneplanPriceSensorEntityDescription(
+        key="current_quarter_hour_electricity_price",
+        translation_key="current_quarter_hour_electricity_price",
+        native_unit_of_measurement=f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda coordinator: (
+            float(point.price_tax_included.euro)
+            if coordinator.data.electricity_quarter_prices is not None
+            and (
+                point := coordinator.data.electricity_quarter_prices.price_at(
+                    dt_util.utcnow()
+                )
+            )
+            else None
+        ),
+        supported_fn=lambda coordinator: bool(
+            coordinator.data.electricity_quarter_prices
+        ),
     ),
     ZonneplanPriceSensorEntityDescription(
         key="next_hour_electricity_price",
@@ -530,6 +551,24 @@ class ZonneplanPriceSensor(ZonneplanEntity, SensorEntity):
     """Representation of a Zonneplan electricity price sensor."""
 
     entity_description: ZonneplanPriceSensorEntityDescription
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Re-evaluate at every quarter hour, as prices start and end on the quarter."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_track_time_change(
+                self.hass,
+                self._async_quarter_changed,
+                minute=[0, 15, 30, 45],
+                second=0,
+            )
+        )
+
+    @callback
+    def _async_quarter_changed(self, now: datetime) -> None:
+        """Write the state when a new quarter hour starts."""
+        self.async_write_ha_state()
 
     @property
     @override
