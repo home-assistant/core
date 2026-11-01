@@ -45,7 +45,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test user step failure due to connection error."""
+    """Test user step failure due to connection error and recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -62,9 +62,27 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch(
+            "homeassistant.components.bt_home_hub_5.config_flow.get_devicelist",
+            return_value=DEVICE_LIST,
+        ),
+        patch(
+            "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
+            return_value=DEVICE_LIST,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: MOCK_HOST},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_none_data(hass: HomeAssistant) -> None:
-    """Test user step failure when router returns None."""
+    """Test user step failure when router returns None and recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -81,9 +99,27 @@ async def test_user_flow_none_data(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch(
+            "homeassistant.components.bt_home_hub_5.config_flow.get_devicelist",
+            return_value=DEVICE_LIST,
+        ),
+        patch(
+            "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
+            return_value=DEVICE_LIST,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: MOCK_HOST},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_index_error(hass: HomeAssistant) -> None:
-    """Test user step failure due to parsing IndexError."""
+    """Test user step failure due to parsing IndexError and recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -100,9 +136,27 @@ async def test_user_flow_index_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    with (
+        patch(
+            "homeassistant.components.bt_home_hub_5.config_flow.get_devicelist",
+            return_value=DEVICE_LIST,
+        ),
+        patch(
+            "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
+            return_value=DEVICE_LIST,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: MOCK_HOST},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
-    """Test user step failure due to generic unexpected exception."""
+    """Test user step failure due to generic unexpected exception and recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -118,6 +172,24 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.bt_home_hub_5.config_flow.get_devicelist",
+            return_value=DEVICE_LIST,
+        ),
+        patch(
+            "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
+            return_value=DEVICE_LIST,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: MOCK_HOST},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:

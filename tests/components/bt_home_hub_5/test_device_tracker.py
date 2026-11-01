@@ -1,12 +1,13 @@
 """Tests for the BT Home Hub 5 device tracker platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 
-from homeassistant.components.bt_home_hub_5.const import DOMAIN
+from homeassistant.components.bt_home_hub_5.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.bt_home_hub_5.device_tracker import async_setup_scanner
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_HOME, STATE_NOT_HOME
@@ -21,7 +22,10 @@ DEVICE_BOTH = {MAC_1: "Phone", MAC_2: "Laptop"}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_device_tracker_entities(hass: HomeAssistant) -> None:
+async def test_device_tracker_entities(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test device tracker entities track connected status dynamically."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -37,6 +41,8 @@ async def test_device_tracker_entities(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    assert entry.state is ConfigEntryState.LOADED
+
     state_phone = hass.states.get("device_tracker.phone")
     assert state_phone is not None
     assert state_phone.state == STATE_HOME
@@ -45,8 +51,8 @@ async def test_device_tracker_entities(hass: HomeAssistant) -> None:
         "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
         return_value=DEVICE_BOTH,
     ):
-        coordinator = entry.runtime_data
-        await coordinator.async_refresh()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     state_laptop = hass.states.get("device_tracker.laptop")
@@ -57,8 +63,8 @@ async def test_device_tracker_entities(hass: HomeAssistant) -> None:
         "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
         return_value={MAC_2: "Laptop"},
     ):
-        coordinator = entry.runtime_data
-        await coordinator.async_refresh()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     state_phone = hass.states.get("device_tracker.phone")
@@ -123,9 +129,11 @@ async def test_coordinator_index_error(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_scanner_legacy(hass: HomeAssistant) -> None:
+async def test_async_setup_scanner_legacy(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test legacy YAML async_setup_scanner registers issue and creates import flow."""
-    issue_reg = ir.async_get(hass)
     with (
         patch(
             "homeassistant.components.bt_home_hub_5.config_flow.get_devicelist",
@@ -137,14 +145,14 @@ async def test_async_setup_scanner_legacy(hass: HomeAssistant) -> None:
         ),
     ):
         result = await async_setup_scanner(
-            hass, {CONF_HOST: MOCK_HOST}, see=None, discovery_info=None
+            hass, {CONF_HOST: MOCK_HOST}, see=AsyncMock(), discovery_info=None
         )
         assert result is True
         await hass.async_block_till_done()
 
-    # Assert repair issue was recorded
     assert (
-        issue_reg.async_get_issue(DOMAIN, "deprecated_yaml_device_tracker") is not None
+        issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_device_tracker")
+        is not None
     )
 
 
@@ -161,12 +169,10 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
         return_value=DEVICE_1,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED

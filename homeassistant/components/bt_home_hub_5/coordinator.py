@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for BT Home Hub 5."""
 
 import logging
+from typing import override
 
 from bthomehub5_devicelist import get_devicelist
 import requests
@@ -33,6 +34,7 @@ class BTHomeHub5DataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         )
         self.host = entry.data[CONF_HOST]
 
+    @override
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch the device list from the router."""
         try:

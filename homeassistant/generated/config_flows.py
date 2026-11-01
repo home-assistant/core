@@ -125,6 +125,7 @@ FLOWS = {
         "brunt",
         "bryant_evolution",
         "bsblan",
+        "bt_home_hub_5",
         "bthome",
         "buienradar",
         "caldav",
