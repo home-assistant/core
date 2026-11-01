@@ -51,7 +51,6 @@ async def test_user_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "GRAFIK Eye (192.168.1.100)"
     assert result["data"] == USER_INPUT
-
     mock_controller.assert_called_once_with(
         host=USER_INPUT[CONF_HOST],
         port=USER_INPUT[CONF_PORT],
