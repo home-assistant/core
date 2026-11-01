@@ -13,6 +13,27 @@
     'device family': 'mine',
     'device type': 'echo',
     'features': dict({
+      'motionSensor': dict({
+        '2': dict({
+          'friendly_name': None,
+          'maximum_value': None,
+          'minimum_value': None,
+          'precision': None,
+          'properties': list([
+            'detectionState',
+          ]),
+          'raw_configuration': dict({
+          }),
+          'sensor_keys': dict({
+            'detectionState': 'detectionState',
+          }),
+          'supported_modes': list([
+          ]),
+          'supported_operations': list([
+          ]),
+          'unit_of_measure': None,
+        }),
+      }),
       'temperatureSensor': dict({
         '1': dict({
           'friendly_name': None,
@@ -38,6 +59,18 @@
     'online': True,
     'primary display category': 'ALEXA_VOICE_ENABLED',
     'sensors': dict({
+      'detectionState': dict({
+        'error': False,
+        'error_msg': None,
+        'error_type': None,
+        'feature_name': 'motionSensor',
+        'instance': '2',
+        'name': 'detectionState',
+        'property_name': 'detectionState',
+        'scale': None,
+        'time_of_sample': None,
+        'value': 'DETECTED',
+      }),
       'dnd': dict({
         'error': False,
         'error_msg': None,
@@ -114,6 +147,27 @@
           'device family': 'mine',
           'device type': 'echo',
           'features': dict({
+            'motionSensor': dict({
+              '2': dict({
+                'friendly_name': None,
+                'maximum_value': None,
+                'minimum_value': None,
+                'precision': None,
+                'properties': list([
+                  'detectionState',
+                ]),
+                'raw_configuration': dict({
+                }),
+                'sensor_keys': dict({
+                  'detectionState': 'detectionState',
+                }),
+                'supported_modes': list([
+                ]),
+                'supported_operations': list([
+                ]),
+                'unit_of_measure': None,
+              }),
+            }),
             'temperatureSensor': dict({
               '1': dict({
                 'friendly_name': None,
@@ -139,6 +193,18 @@
           'online': True,
           'primary display category': 'ALEXA_VOICE_ENABLED',
           'sensors': dict({
+            'detectionState': dict({
+              'error': False,
+              'error_msg': None,
+              'error_type': None,
+              'feature_name': 'motionSensor',
+              'instance': '2',
+              'name': 'detectionState',
+              'property_name': 'detectionState',
+              'scale': None,
+              'time_of_sample': None,
+              'value': 'DETECTED',
+            }),
             'dnd': dict({
               'error': False,
               'error_msg': None,

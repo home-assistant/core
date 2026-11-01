@@ -143,7 +143,7 @@ async def test_block_sensor_em3(
     monkeypatch.setattr(mock_block_device, "blocks", blocks)
     await init_integration(hass, 1, model=MODEL_EM3)
 
-    assert hass.states.get(f"{SENSOR_DOMAIN}.grid_l1_power")
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_grid_l1_power")
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_b_power")
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_c_power")
 

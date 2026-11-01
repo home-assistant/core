@@ -1,6 +1,6 @@
 """Constants for the Marketplace."""
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.util.signal_type import SignalType
@@ -12,16 +12,10 @@ DOMAIN = "marketplace"
 CLIENT_ID = "395a8e669c5de9f7c6e8"
 CLIENT_NAME = f"HomeAssistantMarketplace/{HAVERSION}"
 
-# aiohttp's 8190 byte default is too small for some servers, e.g. GitHub's
-# release download redirects carry a ~9 KiB Content-Security-Policy header.
-WEBSESSION_MAX_HEADER_SIZE = 65536
-
 # Installed dashboard resources live in www/community, which the frontend
 # serves as /local.
 DASHBOARD_RESOURCE_BASE = "/local/community"
 LEGACY_DASHBOARD_RESOURCE_BASE = "/hacsfiles"
-
-TV = TypeVar("TV")
 
 # A first install, the platforms add the entities of that repository. Not one
 # of the signals the panel subscribes to, it carries the repository itself.

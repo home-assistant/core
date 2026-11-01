@@ -15,7 +15,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('bsblan', '00:80:41:19:69:90-water-heater')]>,
     'disabled_by': None,

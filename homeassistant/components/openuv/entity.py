@@ -8,7 +8,7 @@ from .const import DOMAIN
 from .coordinator import OpenUvCoordinator
 
 
-class OpenUvEntity(CoordinatorEntity):
+class OpenUvEntity(CoordinatorEntity[OpenUvCoordinator]):
     """Define a generic OpenUV entity."""
 
     _attr_has_entity_name = True

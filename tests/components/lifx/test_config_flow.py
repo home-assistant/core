@@ -30,8 +30,8 @@ from .helpers import LEGACY_SERIAL, create_mock_light
 
 OLD_IP_ADDRESS = "127.0.0.2"
 
-DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
-DeviceMutator = Callable[[Light], None]
+type DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
+type DeviceMutator = Callable[[Light], None]
 
 
 def _remove_light_state(mock_light: Light) -> None:

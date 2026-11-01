@@ -44,7 +44,7 @@ def _requires_mfa_reauth(exc: VerisureLoginError) -> bool:
     return _MFA_REQUIRED_MESSAGE in str(exc)
 
 
-class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
+class VerisureDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """A Verisure Data Update Coordinator."""
 
     config_entry: VerisureConfigEntry

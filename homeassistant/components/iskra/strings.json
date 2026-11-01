@@ -121,7 +121,7 @@
   "selector": {
     "protocol": {
       "options": {
-        "modbus_tcp": "Modbus TCP",
+        "modbus_tcp": "[%key:component::modbus::common::modbus_tcp%]",
         "rest_api": "REST API"
       }
     }

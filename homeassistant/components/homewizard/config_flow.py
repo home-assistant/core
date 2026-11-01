@@ -198,8 +198,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_IP_ADDRESS: self.ip_address},
                 )
 
-        self._set_confirm_only()
-
         # We won't be adding mac/serial to the title for devices
         # that users generally don't have multiple of.
         name = self.product_name
