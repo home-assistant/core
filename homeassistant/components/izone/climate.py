@@ -2,11 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from pizone import Controller, Zone
 
 from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -25,7 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -169,7 +170,12 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         zone_device = self.zones.get(owner)
         if zone_device is None:
             return None
-        return zone_device.entity_id
+        if TYPE_CHECKING:
+            assert zone_device.unique_id is not None
+        # A zone disabled at load never sees registry renames on its entity_id.
+        return er.async_get(self.hass).async_get_entity_id(
+            CLIMATE_DOMAIN, DOMAIN, zone_device.unique_id
+        )
 
     @property
     @override

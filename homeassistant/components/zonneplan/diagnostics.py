@@ -36,6 +36,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data = entry.runtime_data.coordinator.data
+    settings_data = entry.runtime_data.battery_settings_coordinator.data
 
     return async_redact_data(
         {
@@ -70,6 +71,20 @@ async def async_get_config_entry_diagnostics(
                     entry.runtime_data.charge_point_coordinator.data.values()
                 )
             ],
+            "battery_settings": (
+                {
+                    "home_optimization": [
+                        settings.to_dict()
+                        for settings in settings_data.home_optimization.values()
+                    ],
+                    "day_ahead_arbitrage": [
+                        settings.to_dict()
+                        for settings in settings_data.day_ahead_arbitrage.values()
+                    ],
+                }
+                if settings_data is not None
+                else None
+            ),
         },
         TO_REDACT,
     )

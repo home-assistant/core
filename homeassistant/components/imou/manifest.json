@@ -1,7 +1,11 @@
 {
   "domain": "imou",
   "name": "Imou",
-  "categories": ["security_safety.cameras"],
+  "categories": [
+    "security_safety.cameras",
+    "security_safety.alarm_systems",
+    "plugs_switches"
+  ],
   "codeowners": ["@Imou-OpenPlatform"],
   "config_flow": true,
   "dhcp": [

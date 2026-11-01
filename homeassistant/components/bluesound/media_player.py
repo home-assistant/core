@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -30,12 +30,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
 from .coordinator import BluesoundCoordinator
-from .entity import BluesoundEntity
-from .utils import (
-    DISPATCHER_ENTITY_ID_CHANGED_SIGNAL,
-    dispatcher_unjoin_signal,
-    id_to_paired_player,
-)
+from .entity import BluesoundEntity, bluesound_exception_handler
+from .utils import DISPATCHER_ENTITY_ID_CHANGED_SIGNAL, id_to_paired_player
 
 if TYPE_CHECKING:
     from .coordinator import BluesoundConfigEntry
@@ -112,14 +108,6 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         """Start the polling task."""
         await super().async_added_to_hass()
 
-        assert self._sync_status.id is not None
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                dispatcher_unjoin_signal(self._sync_status.id),
-                self.async_remove_follower,
-            )
-        )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -424,6 +412,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         return self._group_members
 
     @override
+    @bluesound_exception_handler
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         if self.entity_id in group_members:
@@ -444,13 +433,19 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
             await self._player.add_followers(paired_players)
 
     @override
+    @bluesound_exception_handler
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         if self._sync_status.leader is not None:
             leader_id = f"{self._sync_status.leader.ip}:{self._sync_status.leader.port}"
-            async_dispatcher_send(
-                self.hass, dispatcher_unjoin_signal(leader_id), self.host, self.port
-            )
+            leader_player = self._loaded_player(leader_id)
+            if leader_player is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="leader_not_loaded",
+                    translation_placeholders={"leader_id": leader_id},
+                )
+            await leader_player.remove_follower(self.host, self.port)
 
         if self._sync_status.followers is not None:
             await self._player.remove_follower(self.host, self.port)
@@ -560,16 +555,25 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
 
         return result
 
-    async def async_remove_follower(self, host: str, port: int) -> None:
-        """Remove follower to leader."""
-        await self._player.remove_follower(host, port)
+    def _loaded_player(self, player_id: str) -> Player | None:
+        """Return the player of the loaded config entry with this ip:port id."""
+        config_entries: list[BluesoundConfigEntry] = (
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
+        )
+        for config_entry in config_entries:
+            runtime_data = config_entry.runtime_data
+            if runtime_data.coordinator.data.sync_status.id == player_id:
+                return runtime_data.player
+        return None
 
     @override
+    @bluesound_exception_handler
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
         await self._player.shuffle(shuffle)
 
     @override
+    @bluesound_exception_handler
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.is_grouped and not self.is_leader:
@@ -588,6 +592,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         raise ServiceValidationError(f"Source {source} not found")
 
     @override
+    @bluesound_exception_handler
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         if self.is_grouped and not self.is_leader:
@@ -596,6 +601,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         await self._player.clear()
 
     @override
+    @bluesound_exception_handler
     async def async_media_next_track(self) -> None:
         """Send media_next command to media player."""
         if self.is_grouped and not self.is_leader:
@@ -604,6 +610,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         await self._player.skip()
 
     @override
+    @bluesound_exception_handler
     async def async_media_previous_track(self) -> None:
         """Send media_previous command to media player."""
         if self.is_grouped and not self.is_leader:
@@ -612,6 +619,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         await self._player.back()
 
     @override
+    @bluesound_exception_handler
     async def async_media_play(self) -> None:
         """Send media_play command to media player."""
         if self.is_grouped and not self.is_leader:
@@ -620,6 +628,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         await self._player.play()
 
     @override
+    @bluesound_exception_handler
     async def async_media_pause(self) -> None:
         """Send media_pause command to media player."""
         if self.is_grouped and not self.is_leader:
@@ -628,6 +637,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         await self._player.pause()
 
     @override
+    @bluesound_exception_handler
     async def async_media_stop(self) -> None:
         """Send stop command."""
         if self.is_grouped and not self.is_leader:
@@ -636,6 +646,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         await self._player.stop()
 
     @override
+    @bluesound_exception_handler
     async def async_media_seek(self, position: float) -> None:
         """Send media_seek command to media player."""
         if self.is_grouped and not self.is_leader:
@@ -644,6 +655,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         await self._player.play(seek=int(position))
 
     @override
+    @bluesound_exception_handler
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -662,6 +674,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         await self._player.play_url(url)
 
     @override
+    @bluesound_exception_handler
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
         volume = round(volume * 100)
@@ -671,6 +684,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
         await self._player.volume(level=volume)
 
     @override
+    @bluesound_exception_handler
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command to media player."""
         await self._player.volume(mute=mute)
