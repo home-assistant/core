@@ -54,7 +54,7 @@ DISABLED_SENSOR_KEYS = (
     KEY_NETWORK_INBOUND,
     KEY_NETWORK_OUTBOUND,
 )
-DEFAULT_ENABLED_SENSOR_KEYS = tuple(
+ENABLED_SENSOR_KEYS = tuple(
     sensor_key for sensor_key in SENSOR_KEYS if sensor_key not in DISABLED_SENSOR_KEYS
 )
 GAME_SERVER_IDENTIFIERS = (SERVER_1_IDENTIFIER, SERVER_2_IDENTIFIER)
@@ -72,9 +72,8 @@ async def test_sensor(
     with patch("homeassistant.components.pterodactyl._PLATFORMS", [Platform.SENSOR]):
         mock_config_entry = await setup_integration(hass, mock_config_entry)
 
-        assert len(hass.states.async_all(Platform.SENSOR)) == len(
-            GAME_SERVER_IDENTIFIERS
-        ) * len(SENSOR_KEYS)
+        sensors = len(hass.states.async_all(Platform.SENSOR))
+        assert sensors == len(GAME_SERVER_IDENTIFIERS) * len(SENSOR_KEYS)
         await snapshot_platform(
             hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
@@ -89,9 +88,9 @@ async def test_sensor_disabled_by_default(
     """Test limit and network sensors are disabled by default."""
     await setup_integration(hass, mock_config_entry)
 
-    assert len(hass.states.async_all(Platform.SENSOR)) == len(
-        GAME_SERVER_IDENTIFIERS
-    ) * (len(SENSOR_KEYS) - len(DISABLED_SENSOR_KEYS))
+    sensors = len(hass.states.async_all(Platform.SENSOR))
+    assert sensors == len(GAME_SERVER_IDENTIFIERS) * len(ENABLED_SENSOR_KEYS)
+
     for server_identifier in GAME_SERVER_IDENTIFIERS:
         for sensor_key in DISABLED_SENSOR_KEYS:
             entity_id = f"sensor.test_server_{server_identifier}_{sensor_key}"
@@ -112,8 +111,9 @@ async def test_sensor_update(
     await setup_integration(hass, mock_config_entry)
 
     initial_sensor_states = {}
+
     for server_identifier in GAME_SERVER_IDENTIFIERS:
-        for sensor_key in DEFAULT_ENABLED_SENSOR_KEYS:
+        for sensor_key in ENABLED_SENSOR_KEYS:
             entity_id = f"sensor.test_server_{server_identifier}_{sensor_key}"
             state = hass.states.get(entity_id)
             assert state is not None
@@ -141,11 +141,13 @@ async def test_sensor_update(
         KEY_MEMORY_USAGE: "2.222",
         KEY_DISK_USAGE: "4.444",
     }
+
     for server_identifier in GAME_SERVER_IDENTIFIERS:
-        for sensor_key in DEFAULT_ENABLED_SENSOR_KEYS:
+        for sensor_key in ENABLED_SENSOR_KEYS:
             entity_id = f"sensor.test_server_{server_identifier}_{sensor_key}"
             state = hass.states.get(entity_id)
             assert state is not None
+
             if sensor_key == KEY_UPTIME:
                 assert state.state != initial_sensor_states[entity_id]
             else:
@@ -223,9 +225,7 @@ async def test_sensor_update_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     sensors = hass.states.async_all(Platform.SENSOR)
-    assert len(sensors) == len(GAME_SERVER_IDENTIFIERS) * (
-        len(SENSOR_KEYS) - len(DISABLED_SENSOR_KEYS)
-    )
+    assert len(sensors) == len(GAME_SERVER_IDENTIFIERS) * len(ENABLED_SENSOR_KEYS)
     assert all(state.state == STATE_UNAVAILABLE for state in sensors)
     flows = hass.config_entries.flow.async_progress()
     assert [flow["context"]["source"] for flow in flows] == expected_flow_sources
@@ -241,8 +241,9 @@ async def test_sensor_recovery_after_update_error(
     await setup_integration(hass, mock_config_entry)
 
     initial_sensor_states = {}
+
     for server_identifier in GAME_SERVER_IDENTIFIERS:
-        for sensor_key in DEFAULT_ENABLED_SENSOR_KEYS:
+        for sensor_key in ENABLED_SENSOR_KEYS:
             entity_id = f"sensor.test_server_{server_identifier}_{sensor_key}"
             state = hass.states.get(entity_id)
             assert state is not None
@@ -257,9 +258,7 @@ async def test_sensor_recovery_after_update_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     sensors = hass.states.async_all(Platform.SENSOR)
-    assert len(sensors) == len(GAME_SERVER_IDENTIFIERS) * (
-        len(SENSOR_KEYS) - len(DISABLED_SENSOR_KEYS)
-    )
+    assert len(sensors) == len(GAME_SERVER_IDENTIFIERS) * len(ENABLED_SENSOR_KEYS)
     assert all(state.state == STATE_UNAVAILABLE for state in sensors)
 
     get_server.side_effect = original_side_effect
@@ -268,13 +267,13 @@ async def test_sensor_recovery_after_update_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     sensors = hass.states.async_all(Platform.SENSOR)
-    assert len(sensors) == len(GAME_SERVER_IDENTIFIERS) * (
-        len(SENSOR_KEYS) - len(DISABLED_SENSOR_KEYS)
-    )
+    assert len(sensors) == len(GAME_SERVER_IDENTIFIERS) * len(ENABLED_SENSOR_KEYS)
     recovered_sensor_states = {state.entity_id: state.state for state in sensors}
     assert recovered_sensor_states.keys() == initial_sensor_states.keys()
+
     for entity_id, initial_state in initial_sensor_states.items():
         recovered_state = recovered_sensor_states[entity_id]
+
         if entity_id.endswith(f"_{KEY_UPTIME}"):
             assert recovered_state != initial_state
         else:
