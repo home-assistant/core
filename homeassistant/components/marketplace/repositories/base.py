@@ -996,13 +996,17 @@ class Repository:
         if not (languages := language_util.matches(language, readmes)):
             return ""
 
+        filename = readmes[languages[0]]
+        # The tree named the file, so it comes from the version of the tree. An
+        # installed repository shows the README of the installed version.
+        version = None if self.data.installed else self.tree_ref
         try:
-            return await self.get_documentation(filename=readmes[languages[0]]) or ""
+            return (
+                await self.get_documentation(filename=filename, version=version) or ""
+            )
         except UnicodeDecodeError:
             # README.md is still there to show
-            self.logger.warning(
-                "%s %s is not UTF-8", self.string, readmes[languages[0]]
-            )
+            self.logger.warning("%s %s is not UTF-8", self.string, filename)
             return ""
 
     def remove(self) -> None:

@@ -826,7 +826,26 @@ async def test_translated_readme(
     ) as get_documentation:
         assert await repository.async_get_translated_readme(language) == "Translated"
 
-    get_documentation.assert_called_once_with(filename=expected_filename)
+    get_documentation.assert_called_once_with(filename=expected_filename, version=None)
+
+
+async def test_translated_readme_from_the_version_of_the_tree(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the README in the language comes from the version its tree is for."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    # 1.0.0 was selected while 2.0.0 is the latest release
+    repository.tree_ref = "1.0.0"
+    repository.data.last_version = "2.0.0"
+    url = (
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
+    )
+    response_mocker.add(url, mocked_response(url, content=b"1.0.0"))
+
+    assert await repository.async_get_translated_readme("de") == "1.0.0"
 
 
 async def test_translated_readme_not_utf8(
