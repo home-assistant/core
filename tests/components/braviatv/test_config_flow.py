@@ -387,12 +387,21 @@ async def test_create_entry_pin(
 
 async def test_reauth_successful_psk(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_braviatv_client: AsyncMock,
 ) -> None:
-    """Test that the reauthorization with a PSK is successful."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
+    """Test that the reauthorization of a legacy PIN entry with a PSK is successful."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        unique_id="very_unique_string",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_PIN: "1234",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authorize"
 
@@ -405,7 +414,13 @@ async def test_reauth_successful_psk(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_PIN] == "newpsk"
+    assert config_entry.data == {
+        CONF_HOST: "bravia-host",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        CONF_PIN: "newpsk",
+        CONF_USE_PSK: True,
+        CONF_USE_SSL: False,
+    }
     mock_braviatv_client.connect.assert_called_once_with(psk="newpsk")
     mock_braviatv_client.set_wol_mode.assert_called_once_with(True)
 
@@ -431,7 +446,15 @@ async def test_reauth_successful_pin(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_PIN] == "7777"
+    assert mock_config_entry.data == {
+        CONF_HOST: "bravia-host",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        CONF_PIN: "7777",
+        CONF_USE_PSK: False,
+        CONF_USE_SSL: False,
+        CONF_CLIENT_ID: uuid,
+        CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
+    }
     mock_braviatv_client.connect.assert_called_once_with(
         pin="7777", clientid=uuid, nickname=f"{NICKNAME_PREFIX} {uuid[:6]}"
     )
