@@ -47,6 +47,7 @@ async def _get_diagnostics_for_device(
 ) -> JsonObjectType:
     """Return the diagnostics for the specified device."""
     assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
     client = await hass_client()
     response = await client.get(

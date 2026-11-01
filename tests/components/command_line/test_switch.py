@@ -632,7 +632,7 @@ async def test_updating_to_often(
         "Updating Command Line Switch Test took longer"
         " than the scheduled update interval" not in caplog.text
     )
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
     await hass.async_block_till_done()
     assert called
     called.clear()
@@ -644,9 +644,9 @@ async def test_updating_to_often(
 
     # Simulate update takes too long
     wait_till_event.clear()
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await asyncio.sleep(0)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     wait_till_event.set()
 
     # Finish processing update
@@ -695,7 +695,7 @@ async def test_updating_manually(
         )
         await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
     assert called
     called.clear()

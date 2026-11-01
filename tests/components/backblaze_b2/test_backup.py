@@ -1,7 +1,7 @@
 """Backblaze B2 backup agent tests."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Iterator
 from io import StringIO
 import json
 import logging
@@ -10,11 +10,12 @@ import time
 from typing import Any
 from unittest.mock import Mock, patch
 
+from aiohttp import ClientPayloadError
 from b2sdk._internal.raw_simulator import BucketSimulator
 from b2sdk.v2 import AbstractProgressListener
 from b2sdk.v2.exception import B2Error
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 from pytest_homeassistant.typing import (
     ClientSessionGenerator,
     MagicMock,
@@ -34,11 +35,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
+from .conftest import BackblazeFixture
 from .const import BACKUP_METADATA, TEST_BACKUP
 
 from tests.components.backup.common import collect_upload_events, upload_backup_via_http
 
 BACKUP_MODULE = "homeassistant.components.backblaze_b2.backup"
+
+
+# Protected with password "hunter2", padded beyond the 4 MiB read buffer so the
+# backup is not read to the end when checking the password or decrypting it
+PROTECTED_BACKUP_DATA = (
+    get_fixture_path("test_backups/c0cb53bd.tar", BACKUP_DOMAIN).read_bytes()
+    + b"\0" * 12 * 2**20
+)
 
 
 @pytest.fixture(autouse=True)
@@ -1319,3 +1329,108 @@ async def test_metadata_download_timeout_during_get_backup(
     assert (
         f"{DOMAIN}.{mock_config_entry.entry_id}" in response["result"]["agent_errors"]
     )
+
+
+@pytest.mark.parametrize(
+    ("backup_protected", "backup_data"),
+    [pytest.param(True, PROTECTED_BACKUP_DATA, id="protected_backup")],
+)
+@pytest.mark.parametrize(
+    ("password", "success"),
+    [
+        pytest.param("hunter2", True, id="correct_password"),
+        pytest.param("wrong", False, id="wrong_password"),
+    ],
+)
+async def test_can_decrypt_on_download_closes_response(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    downloaded_responses: list[Mock],
+    password: str,
+    success: bool,
+) -> None:
+    """Test the download is closed after checking the password of a backup."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": TEST_BACKUP.backup_id,
+            "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
+            "password": password,
+        }
+    )
+    assert (await client.receive_json())["success"] is success
+
+    assert len(downloaded_responses) == 1
+    downloaded_responses[0].close.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("backup_protected", "backup_data"),
+    [pytest.param(True, PROTECTED_BACKUP_DATA, id="protected_backup")],
+)
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("", id="no_password"),
+        pytest.param("&password=hunter2", id="correct_password"),
+        pytest.param("&password=wrong", id="wrong_password"),
+    ],
+)
+async def test_agents_download_closes_response(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    downloaded_responses: list[Mock],
+    query: str,
+) -> None:
+    """Test the download is closed when the backup is downloaded."""
+    client = await hass_client()
+
+    resp = await client.get(
+        f"/api/backup/download/{TEST_BACKUP.backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}{query}"
+    )
+    assert resp.status == 200
+    await resp.read()
+
+    assert len(downloaded_responses) == 1
+    downloaded_responses[0].close.assert_called_once()
+
+
+async def test_agents_download_closes_response_on_read_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    b2_fixture: BackblazeFixture,
+    mock_config_entry: MockConfigEntry,
+    downloaded_responses: list[Mock],
+) -> None:
+    """Test the download is closed when reading the backup fails."""
+
+    def failing_chunks() -> Iterator[bytes]:
+        raise OSError("connection reset")
+        yield b""
+
+    download_file_by_id = b2_fixture.sim.download_file_by_id
+
+    def download_failing_file_by_id(*args: Any, **kwargs: Any) -> Any:
+        downloaded_file = download_file_by_id(*args, **kwargs)
+        if downloaded_file.response in downloaded_responses:
+            downloaded_file.response.iter_content.return_value = failing_chunks()
+        return downloaded_file
+
+    client = await hass_client()
+
+    with patch.object(
+        b2_fixture.sim, "download_file_by_id", download_failing_file_by_id
+    ):
+        resp = await client.get(
+            f"/api/backup/download/{TEST_BACKUP.backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
+        )
+        with pytest.raises(ClientPayloadError):
+            await resp.read()
+    # The response is closed in the executor without waiting
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(downloaded_responses) == 1
+    downloaded_responses[0].close.assert_called_once()

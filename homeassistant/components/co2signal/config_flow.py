@@ -11,7 +11,12 @@ from aioelectricitymaps import (
 )
 import probatio
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COUNTRY_CODE,
@@ -43,6 +48,18 @@ DESCRIPTION_PLACEHOLDER = {
     "register_link": "https://app.electricitymaps.com/home-assistant",
 }
 
+LOCATION_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        translation_key="location",
+        mode=SelectSelectorMode.LIST,
+        options=[
+            TYPE_USE_HOME,
+            TYPE_SPECIFY_COORDINATES,
+            TYPE_SPECIFY_COUNTRY,
+        ],
+    )
+)
+
 
 class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Co2signal."""
@@ -57,17 +74,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         data_schema = probatio.Schema(
             {
-                probatio.Required("location"): SelectSelector(
-                    SelectSelectorConfig(
-                        translation_key="location",
-                        mode=SelectSelectorMode.LIST,
-                        options=[
-                            TYPE_USE_HOME,
-                            TYPE_SPECIFY_COORDINATES,
-                            TYPE_SPECIFY_COUNTRY,
-                        ],
-                    )
-                ),
+                probatio.Required("location"): LOCATION_SELECTOR,
                 probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
             }
         )
@@ -79,17 +86,58 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders=DESCRIPTION_PLACEHOLDER,
             )
 
-        data = {CONF_API_KEY: user_input[CONF_API_KEY]}
+        return await self._async_handle_location(
+            "user", data_schema, user_input["location"], user_input[CONF_API_KEY]
+        )
 
-        if user_input["location"] == TYPE_SPECIFY_COORDINATES:
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the location."""
+        entry_data = self._get_reconfigure_entry().data
+        data_schema = probatio.Schema(
+            {probatio.Required("location"): LOCATION_SELECTOR}
+        )
+
+        if user_input is None:
+            location_type = TYPE_USE_HOME
+            if CONF_COUNTRY_CODE in entry_data:
+                location_type = TYPE_SPECIFY_COUNTRY
+            elif CONF_LATITUDE in entry_data:
+                location_type = TYPE_SPECIFY_COORDINATES
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self.add_suggested_values_to_schema(
+                    data_schema, {"location": location_type}
+                ),
+            )
+
+        return await self._async_handle_location(
+            "reconfigure",
+            data_schema,
+            user_input["location"],
+            entry_data[CONF_API_KEY],
+        )
+
+    async def _async_handle_location(
+        self,
+        step_id: str,
+        data_schema: probatio.Schema,
+        location_type: str,
+        api_key: str,
+    ) -> ConfigFlowResult:
+        """Continue with the step for the selected location type."""
+        data = {CONF_API_KEY: api_key}
+
+        if location_type == TYPE_SPECIFY_COORDINATES:
             self._data = data
             return await self.async_step_coordinates()
 
-        if user_input["location"] == TYPE_SPECIFY_COUNTRY:
+        if location_type == TYPE_SPECIFY_COUNTRY:
             self._data = data
             return await self.async_step_country()
 
-        return await self._validate_and_create("user", data_schema, data)
+        return await self._validate_and_create(step_id, data_schema, data)
 
     async def async_step_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -103,13 +151,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            user_input
-            or {
-                CONF_LOCATION: {
-                    CONF_LATITUDE: self.hass.config.latitude,
-                    CONF_LONGITUDE: self.hass.config.longitude,
-                }
-            },
+            user_input or {CONF_LOCATION: self._suggested_coordinates()},
         )
         if user_input is None:
             return self.async_show_form(step_id="coordinates", data_schema=data_schema)
@@ -129,6 +171,10 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(CONF_COUNTRY_CODE): cv.string,
             }
         )
+        if self.source == SOURCE_RECONFIGURE:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema, user_input or self._get_reconfigure_entry().data
+            )
         if user_input is None:
             return self.async_show_form(step_id="country", data_schema=data_schema)
 
@@ -137,6 +183,20 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._validate_and_create(
             "country", data_schema, {**self._data, **user_input}
         )
+
+    def _suggested_coordinates(self) -> dict[str, float]:
+        """Return the coordinates to prefill the coordinates step with."""
+        if self.source == SOURCE_RECONFIGURE:
+            entry_data = self._get_reconfigure_entry().data
+            if CONF_LATITUDE in entry_data:
+                return {
+                    CONF_LATITUDE: entry_data[CONF_LATITUDE],
+                    CONF_LONGITUDE: entry_data[CONF_LONGITUDE],
+                }
+        return {
+            CONF_LATITUDE: self.hass.config.latitude,
+            CONF_LONGITUDE: self.hass.config.longitude,
+        }
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -181,6 +241,11 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_update_reload_and_abort(
                         self._get_reauth_entry(),
                         data_updates={CONF_API_KEY: data[CONF_API_KEY]},
+                    )
+                if self.source == SOURCE_RECONFIGURE:
+                    # Replace the data so keys of the previous location type are dropped
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data=data
                     )
 
                 return self.async_create_entry(

@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
@@ -76,6 +77,7 @@ def _options_schema(
                     for llm_api_id, name in llm_apis.items()
                 ],
                 multiple=True,
+                mode=SelectSelectorMode.LIST,
             )
         ),
     }
