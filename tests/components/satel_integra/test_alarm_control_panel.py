@@ -18,6 +18,7 @@ from satel_integra import (
     SatelResultCode,
 )
 from satel_integra.commands import SatelWriteCommand
+from satel_integra.exceptions import SatelCommandExpiredError, SatelNotConnectedError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
@@ -243,32 +244,25 @@ async def test_alarm_control_panel_disarming(
     ],
 )
 @pytest.mark.parametrize(
-    ("result_code", "translation_key", "error_type"),
+    ("result_code", "translation_key"),
     [
         (
             SatelResultCode.USER_CODE_NOT_FOUND,
             "command_invalid_access_code",
-            ServiceValidationError,
         ),
-        (
-            SatelResultCode.NO_ACCESS,
-            "command_no_access",
-            ServiceValidationError,
-        ),
-        (0x8A, "command_rejected", HomeAssistantError),
+        (SatelResultCode.NO_ACCESS, "command_no_access"),
     ],
 )
-async def test_alarm_command_rejected(
+async def test_alarm_command_validation_error(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
     service: str,
     method: str,
-    result_code: SatelResultCode | int,
+    result_code: SatelResultCode,
     translation_key: str,
-    error_type: type[HomeAssistantError],
 ) -> None:
-    """Test alarm actions report a command rejected by the panel."""
+    """Test alarm actions report validation errors."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
     getattr(mock_satel, method).side_effect = SatelCommandRejectedError(
@@ -276,7 +270,7 @@ async def test_alarm_command_rejected(
         SatelCommandResult(result_code),
     )
 
-    with pytest.raises(error_type) as err:
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             ALARM_DOMAIN,
             service,
@@ -286,11 +280,6 @@ async def test_alarm_command_rejected(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == translation_key
-    assert type(err.value) is error_type
-    if translation_key == "command_rejected":
-        assert err.value.translation_placeholders == {"result_code": "0x8A"}
-    else:
-        assert err.value.translation_placeholders is None
 
 
 @pytest.mark.parametrize(
@@ -301,17 +290,52 @@ async def test_alarm_command_rejected(
         (SERVICE_ALARM_DISARM, "disarm"),
     ],
 )
-async def test_alarm_command_outcome_unknown(
+@pytest.mark.parametrize(
+    ("exception", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            SatelCommandRejectedError(
+                SatelWriteCommand.PARTITIONS_ARM_MODE_0,
+                SatelCommandResult(0x8A),
+            ),
+            "command_rejected",
+            {"result_code": "0x8A"},
+            id="rejected",
+        ),
+        pytest.param(
+            SatelNoResponseError(),
+            "command_outcome_unknown",
+            None,
+            id="outcome-unknown",
+        ),
+        pytest.param(
+            SatelCommandExpiredError(),
+            "command_not_sent",
+            None,
+            id="expired",
+        ),
+        pytest.param(
+            SatelNotConnectedError(),
+            "command_not_sent",
+            None,
+            id="not-connected",
+        ),
+    ],
+)
+async def test_alarm_command_error(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
     service: str,
     method: str,
+    exception: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
 ) -> None:
-    """Test alarm actions report when the panel returns no command result."""
+    """Test alarm actions report command errors."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
-    getattr(mock_satel, method).side_effect = SatelNoResponseError
+    getattr(mock_satel, method).side_effect = exception
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
@@ -322,7 +346,9 @@ async def test_alarm_command_outcome_unknown(
         )
 
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "command_outcome_unknown"
+    assert err.value.translation_key == translation_key
+    assert type(err.value) is HomeAssistantError
+    assert err.value.translation_placeholders == translation_placeholders
 
 
 async def test_clear_alarm_command_rejected(

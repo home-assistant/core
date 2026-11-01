@@ -73,7 +73,6 @@ class LunatoneLight(
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_should_poll = False
     _attr_min_color_temp_kelvin = 1000
     _attr_max_color_temp_kelvin = 10000
 
