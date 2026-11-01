@@ -1,12 +1,13 @@
 """Test reconfiguring Last.fm credentials."""
 
 import asyncio
+from datetime import timedelta
 from threading import Event
 from unittest.mock import patch
 
-from pylast import NetworkError, WSError
+from pylast import MalformedResponseError, NetworkError, WSError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
@@ -15,7 +16,6 @@ from homeassistant.components.lastfm.const import (
     CONF_SESSION_KEY,
     CONF_USERS,
     DOMAIN,
-    ERROR_CODE_TOKEN_UNAUTHORIZED,
 )
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -25,10 +25,12 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
+from homeassistant.util import dt as dt_util
 
 from . import (
     API_KEY,
     API_SECRET,
+    AUTH_URL,
     CONF_DATA,
     CONF_DATA_WITH_SESSION_KEY,
     NEW_SESSION_KEY,
@@ -39,7 +41,6 @@ from . import (
     BlockingUser,
     MockSessionKeyGenerator,
     MockUser,
-    get_session_key_polling_task,
     patch_setup_entry,
 )
 
@@ -245,14 +246,17 @@ async def test_reconfigure_authorization(
     entry: MockConfigEntry = request.getfixturevalue(entry_fixture)
     entry.add_to_hass(hass)
     original_options = dict(entry.options)
+    generator = MockSessionKeyGenerator(
+        session_key=NEW_SESSION_KEY, session_username=session_username
+    )
     with (
         patch("pylast.User", return_value=hidden_user),
-        patch(
-            SESSION_KEY_GENERATOR_PATH,
-            return_value=MockSessionKeyGenerator(
-                session_key=NEW_SESSION_KEY, session_username=session_username
-            ),
-        ),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=generator),
+        patch.object(
+            generator,
+            "get_web_auth_session_key_username",
+            wraps=generator.get_web_auth_session_key_username,
+        ) as exchange_session,
         patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry() as setup_entry,
     ):
@@ -267,19 +271,20 @@ async def test_reconfigure_authorization(
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert entry.options == original_options
-        polling_task = get_session_key_polling_task(hass, result["flow_id"])
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
         assert result["step_id"] == "finish_reconfigure"
         assert entry.options == original_options
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        exchange_session.assert_called_once_with(AUTH_URL)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.options == expected_options
     assert hass.config_entries.async_entries(DOMAIN) == [entry]
-    assert polling_task.cancelled()
     setup_entry.assert_called_once_with(hass, entry)
 
 
@@ -528,15 +533,19 @@ async def test_reconfigure_automatic_authorization(
     with (
         patch("pylast.User", return_value=hidden_user),
         patch(SESSION_KEY_GENERATOR_PATH, return_value=MockSessionKeyGenerator()),
-        patch(POLLING_INTERVAL_PATH, 0),
+        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         result = await config_entry.start_reconfigure_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=RECONFIGURE_DATA
         )
-        await get_session_key_polling_task(hass, result["flow_id"])
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert hass.config_entries.flow.async_get(result["flow_id"])["step_id"] == (
+            "finish_reconfigure"
+        )
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
@@ -552,9 +561,15 @@ async def test_reconfigure_abort(
 ) -> None:
     """Cancel polling and retain credentials when reconfiguration is abandoned."""
     authenticated_config_entry.add_to_hass(hass)
+    generator = MockSessionKeyGenerator()
     with (
         patch("pylast.User", return_value=default_user),
-        patch(SESSION_KEY_GENERATOR_PATH, return_value=MockSessionKeyGenerator()),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=generator),
+        patch.object(
+            generator,
+            "get_web_auth_session_key_username",
+            wraps=generator.get_web_auth_session_key_username,
+        ) as exchange_session,
         patch(POLLING_INTERVAL_PATH, 60),
     ):
         result = await authenticated_config_entry.start_reconfigure_flow(hass)
@@ -562,11 +577,13 @@ async def test_reconfigure_abort(
             result["flow_id"],
             user_input={**RECONFIGURE_DATA, CONF_API_SECRET: NEW_API_SECRET},
         )
-        polling_task = get_session_key_polling_task(hass, result["flow_id"])
-        hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done()
+        exchange_session.assert_not_called()
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        exchange_session.assert_not_called()
 
-    assert polling_task.cancelled()
     assert authenticated_config_entry.options == CONF_DATA_WITH_SESSION_KEY
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
@@ -601,7 +618,6 @@ async def test_reconfigure_queued_invalid_submission_preserves_authorization(
     result = await config_entry.start_reconfigure_flow(hass)
     first_user = BlockingAccountUser()
     second_started = asyncio.Event()
-    session_release = Event()
     generator = MockSessionKeyGenerator()
     submissions: list[asyncio.Task[ConfigFlowResult]] = []
 
@@ -612,11 +628,6 @@ async def test_reconfigure_queued_invalid_submission_preserves_authorization(
             result["flow_id"], user_input=user_input
         )
 
-    def exchange_session_key(url: str, token: str = "") -> tuple[str, str]:
-        """Wait for the invalid submission before completing authorization."""
-        assert session_release.wait(5)
-        return SESSION_KEY, USERNAME_1
-
     with (
         patch(
             "pylast.User",
@@ -626,9 +637,9 @@ async def test_reconfigure_queued_invalid_submission_preserves_authorization(
         patch.object(
             generator,
             "get_web_auth_session_key_username",
-            side_effect=exchange_session_key,
-        ),
-        patch(POLLING_INTERVAL_PATH, 0),
+            return_value=(SESSION_KEY, USERNAME_1),
+        ) as exchange_session,
+        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         submissions.append(
@@ -647,17 +658,19 @@ async def test_reconfigure_queued_invalid_submission_preserves_authorization(
             first_user.validation_release.set()
             first_result = await submissions[0]
             assert first_result["type"] is FlowResultType.EXTERNAL_STEP
-            polling_task = get_session_key_polling_task(hass, result["flow_id"])
             second_result = await submissions[1]
 
-            session_release.set()
-            await polling_task
             await hass.async_block_till_done()
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+            await hass.async_block_till_done(wait_background_tasks=True)
+            exchange_session.assert_called_once_with(AUTH_URL)
+            assert hass.config_entries.flow.async_get(result["flow_id"])["step_id"] == (
+                "finish_reconfigure"
+            )
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
             await hass.async_block_till_done()
         finally:
             first_user.validation_release.set()
-            session_release.set()
             await asyncio.gather(*submissions, return_exceptions=True)
             await hass.async_block_till_done()
 
@@ -667,6 +680,101 @@ async def test_reconfigure_queued_invalid_submission_preserves_authorization(
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.options == CONF_DATA_WITH_SESSION_KEY
     assert hass.config_entries.async_entries(DOMAIN) == [config_entry]
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(NetworkError("network", Exception()), id="network"),
+        pytest.param(MalformedResponseError("network", Exception()), id="malformed"),
+        pytest.param(WSError("network", "16", "Service unavailable"), id="retryable"),
+        pytest.param(WSError("network", "10", "Invalid API key"), id="invalid_auth"),
+        pytest.param(WSError("network", "6", "Invalid parameters"), id="other_api"),
+        pytest.param(RuntimeError, id="unexpected"),
+    ],
+)
+async def test_reconfigure_queued_token_failure_preserves_authorization(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    error: Exception | type[Exception],
+) -> None:
+    """A failed replacement token must leave the original authorization usable."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    first_user = BlockingAccountUser()
+    second_user = BlockingAccountUser()
+    second_started = asyncio.Event()
+    generator = MockSessionKeyGenerator()
+    submissions: list[asyncio.Task[ConfigFlowResult]] = []
+
+    async def submit_second() -> ConfigFlowResult:
+        """Queue replacement credentials before authorization starts."""
+        second_started.set()
+        return await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                **RECONFIGURE_DATA,
+                CONF_API_KEY: NEW_API_KEY,
+                CONF_API_SECRET: NEW_API_SECRET,
+            },
+        )
+
+    with (
+        patch("pylast.User", side_effect=[first_user, second_user]),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=generator),
+        patch.object(generator, "get_web_auth_url", side_effect=[AUTH_URL, error]),
+        patch.object(
+            generator,
+            "get_web_auth_session_key_username",
+            return_value=(SESSION_KEY, USERNAME_1),
+        ) as exchange_session,
+        patch(POLLING_INTERVAL_PATH, 60),
+        patch_setup_entry(),
+    ):
+        submissions.append(
+            hass.async_create_task(
+                hass.config_entries.flow.async_configure(
+                    result["flow_id"], user_input=RECONFIGURE_DATA
+                )
+            )
+        )
+        try:
+            assert await hass.async_add_executor_job(
+                first_user.validation_started.wait, 5
+            )
+            submissions.append(hass.async_create_task(submit_second()))
+            await second_started.wait()
+            first_user.validation_release.set()
+            first_result = await submissions[0]
+            assert first_result["type"] is FlowResultType.EXTERNAL_STEP
+            assert await hass.async_add_executor_job(
+                second_user.validation_started.wait, 5
+            )
+            second_user.validation_release.set()
+            second_result = await submissions[1]
+            assert second_result == first_result
+            assert hass.config_entries.flow.async_get(result["flow_id"])["step_id"] == (
+                "auth_url"
+            )
+            assert config_entry.options == CONF_DATA
+
+            await hass.async_block_till_done()
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+            await hass.async_block_till_done(wait_background_tasks=True)
+            exchange_session.assert_called_once_with(AUTH_URL)
+            assert hass.config_entries.flow.async_get(result["flow_id"])["step_id"] == (
+                "finish_reconfigure"
+            )
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            assert result["reason"] == "reconfigure_successful"
+            assert config_entry.options == CONF_DATA_WITH_SESSION_KEY
+        finally:
+            first_user.validation_release.set()
+            second_user.validation_release.set()
+            await asyncio.gather(*submissions, return_exceptions=True)
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
+                hass.config_entries.flow.async_abort(flow["flow_id"])
+            await hass.async_block_till_done()
 
 
 async def test_reconfigure_overlapping_submissions_restart_polling(
@@ -679,11 +787,9 @@ async def test_reconfigure_overlapping_submissions_restart_polling(
     first_user = BlockingAccountUser()
     second_user = BlockingAccountUser()
     second_started = asyncio.Event()
-    generator = MockSessionKeyGenerator(
-        session_key_error=WSError(
-            "network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Token not authorized"
-        )
-    )
+    first_generator = MockSessionKeyGenerator()
+    second_generator = MockSessionKeyGenerator()
+    replacement_url = f"{AUTH_URL}-replacement"
 
     async def submit_second() -> ConfigFlowResult:
         """Queue another submission while the first validation is pending."""
@@ -694,8 +800,24 @@ async def test_reconfigure_overlapping_submissions_restart_polling(
 
     with (
         patch("pylast.User", side_effect=[first_user, second_user]),
-        patch(SESSION_KEY_GENERATOR_PATH, return_value=generator),
+        patch(
+            SESSION_KEY_GENERATOR_PATH, side_effect=[first_generator, second_generator]
+        ),
+        patch.object(
+            second_generator, "get_web_auth_url", return_value=replacement_url
+        ),
+        patch.object(
+            first_generator,
+            "get_web_auth_session_key_username",
+            wraps=first_generator.get_web_auth_session_key_username,
+        ) as first_exchange,
+        patch.object(
+            second_generator,
+            "get_web_auth_session_key_username",
+            wraps=second_generator.get_web_auth_session_key_username,
+        ) as second_exchange,
         patch(POLLING_INTERVAL_PATH, 60),
+        patch_setup_entry(),
     ):
         first_submission = hass.async_create_task(
             hass.config_entries.flow.async_configure(
@@ -712,7 +834,7 @@ async def test_reconfigure_overlapping_submissions_restart_polling(
             first_user.validation_release.set()
             first_result = await first_submission
             assert first_result["type"] is FlowResultType.EXTERNAL_STEP
-            first_polling_task = get_session_key_polling_task(hass, result["flow_id"])
+            assert first_result["url"] == AUTH_URL
 
             assert await hass.async_add_executor_job(
                 second_user.validation_started.wait, 5
@@ -720,16 +842,24 @@ async def test_reconfigure_overlapping_submissions_restart_polling(
             second_user.validation_release.set()
             second_result = await second_submission
             assert second_result["type"] is FlowResultType.EXTERNAL_STEP
-            assert first_polling_task.cancelled()
-            assert (
-                get_session_key_polling_task(hass, result["flow_id"])
-                is not first_polling_task
-            )
+            assert second_result["url"] == replacement_url
             assert config_entry.options == CONF_DATA
+            await hass.async_block_till_done()
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+            await hass.async_block_till_done(wait_background_tasks=True)
+            first_exchange.assert_not_called()
+            second_exchange.assert_called_once_with(replacement_url)
+            assert hass.config_entries.flow.async_get(result["flow_id"])["step_id"] == (
+                "finish_reconfigure"
+            )
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            assert result["reason"] == "reconfigure_successful"
+            assert config_entry.options == CONF_DATA_WITH_SESSION_KEY
         finally:
             first_user.validation_release.set()
             second_user.validation_release.set()
-            hass.config_entries.flow.async_abort(result["flow_id"])
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
+                hass.config_entries.flow.async_abort(flow["flow_id"])
             await hass.async_block_till_done()
 
 

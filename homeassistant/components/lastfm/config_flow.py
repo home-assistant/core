@@ -262,7 +262,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         candidate = (self.data if data is None else data).copy()
         candidate.pop(CONF_SESSION_KEY, None)
         async with self._session_key_lock:
-            await self._async_cancel_polling_task()
             try:
                 (
                     session_key_generator,
@@ -284,6 +283,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return "unknown"
+            await self._async_cancel_polling_task()
             self._raise_if_removed()
             self.data = candidate
             self._session_key_generator = session_key_generator
@@ -432,12 +432,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 if _credentials_changed(entry.options, self._original_options):
                     return self.async_abort(reason="configuration_changed")
                 self._raise_if_removed()
-            if (
-                errors
-                and self.cur_step is not None
-                and self.cur_step["step_id"] != "reconfigure"
-            ):
-                return self.cur_step
             if not errors:
                 if CONF_API_SECRET in candidate:
                     if (
@@ -458,6 +452,8 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         await self._async_cancel_polling_task()
                         self.data = candidate
                         return await self.async_step_finish_reconfigure()
+            if self.cur_step is not None and self.cur_step["step_id"] != "reconfigure":
+                return self.cur_step
         schema: dict[probatio.Marker, Any] = {
             probatio.Required(probatio.Secret(CONF_API_KEY)): str,
             probatio.Required(CONF_ENABLE_AUTHENTICATION): bool,

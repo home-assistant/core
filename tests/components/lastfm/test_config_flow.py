@@ -1,12 +1,13 @@
 """Test Lastfm config flow."""
 
 import asyncio
+from datetime import timedelta
 from threading import Event
 from unittest.mock import MagicMock, call, patch
 
 from pylast import MalformedResponseError, NetworkError, WSError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
@@ -21,6 +22,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.util import dt as dt_util
 
 from . import (
     API_KEY,
@@ -40,7 +42,6 @@ from . import (
     BlockingUser,
     MockSessionKeyGenerator,
     MockUser,
-    get_session_key_polling_task,
     patch_setup_entry,
 )
 from .conftest import ComponentSetup
@@ -49,26 +50,6 @@ FLOW_MODULE = "homeassistant.components.lastfm.config_flow"
 SESSION_KEY_GENERATOR_PATH = f"{FLOW_MODULE}.SessionKeyGenerator"
 POLLING_INTERVAL_PATH = f"{FLOW_MODULE}.POLLING_INTERVAL"
 MAX_POLLING_ATTEMPTS_PATH = f"{FLOW_MODULE}.MAX_POLLING_ATTEMPTS"
-
-
-class BlockingSessionKeyGenerator(MockSessionKeyGenerator):
-    """Block a session exchange until the test releases it."""
-
-    def __init__(self) -> None:
-        """Initialize the blocking session key generator."""
-        super().__init__()
-        self.exchange_calls = 0
-        self.exchange_started = Event()
-        self.exchange_release = Event()
-
-    def get_web_auth_session_key_username(
-        self, url: str, token: str = ""
-    ) -> tuple[str, str]:
-        """Wait before returning the session key and username."""
-        self.exchange_calls += 1
-        self.exchange_started.set()
-        assert self.exchange_release.wait(1)
-        return super().get_web_auth_session_key_username(url, token)
 
 
 async def test_user_overlapping_candidates_keep_validated_credentials(
@@ -239,10 +220,16 @@ async def test_full_user_flow_with_session_key(
     hass: HomeAssistant, default_user: MockUser
 ) -> None:
     """Test the full user configuration flow with web authentication."""
+    session_key_generator = MockSessionKeyGenerator()
     with (
         patch("pylast.User", return_value=default_user),
-        patch(SESSION_KEY_GENERATOR_PATH, return_value=MockSessionKeyGenerator()),
-        patch(POLLING_INTERVAL_PATH, 0),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
+        patch.object(
+            session_key_generator,
+            "get_web_auth_session_key_username",
+            wraps=session_key_generator.get_web_auth_session_key_username,
+        ) as session_exchange,
+        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -258,8 +245,11 @@ async def test_full_user_flow_with_session_key(
         assert result["step_id"] == "auth_url"
         assert result["url"] == AUTH_URL
 
-        await get_session_key_polling_task(hass, result["flow_id"])
         await hass.async_block_till_done()
+        session_exchange.assert_not_called()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        session_exchange.assert_called_once_with(AUTH_URL)
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
@@ -277,11 +267,25 @@ async def test_session_key_exchange_is_serialized(
     hass: HomeAssistant, default_user: MockUser
 ) -> None:
     """Test polling and Submit share one session exchange."""
-    session_key_generator = BlockingSessionKeyGenerator()
+    session_key_generator = MockSessionKeyGenerator()
+    exchange_started = asyncio.Event()
+    exchange_release = Event()
+
+    def blocked_exchange(url: str, token: str = "") -> tuple[str, str]:
+        """Wait for Submit before returning the session key and username."""
+        hass.loop.call_soon_threadsafe(exchange_started.set)
+        assert exchange_release.wait(5)
+        return SESSION_KEY, USERNAME_1
+
     with (
         patch("pylast.User", return_value=default_user),
         patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
-        patch(POLLING_INTERVAL_PATH, 0),
+        patch.object(
+            session_key_generator,
+            "get_web_auth_session_key_username",
+            side_effect=blocked_exchange,
+        ) as session_exchange,
+        patch(POLLING_INTERVAL_PATH, 60),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -290,23 +294,25 @@ async def test_session_key_exchange_is_serialized(
             result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        polling_task = get_session_key_polling_task(hass, result["flow_id"])
-        assert await hass.async_add_executor_job(
-            session_key_generator.exchange_started.wait, 1
-        )
-
-        submit_task = hass.async_create_task(
-            hass.config_entries.flow.async_configure(result["flow_id"])
-        )
-        session_key_generator.exchange_release.set()
-
-        await polling_task
-        submit_result = await submit_task
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        try:
+            await exchange_started.wait()
+            submit_task = hass.async_create_task(
+                hass.config_entries.flow.async_configure(result["flow_id"])
+            )
+        finally:
+            exchange_release.set()
 
-    assert session_key_generator.exchange_calls == 1
-    assert submit_result["type"] is FlowResultType.EXTERNAL_STEP_DONE
-    hass.config_entries.flow.async_abort(result["flow_id"])
+        submit_result = await submit_task
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert submit_result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+        session_exchange.assert_called_once_with(AUTH_URL)
+
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        session_exchange.assert_called_once_with(AUTH_URL)
 
 
 async def test_flow_rejects_session_for_different_user(
@@ -354,7 +360,12 @@ async def test_flow_restarts_polling_after_timeout(
     with (
         patch("pylast.User", return_value=default_user),
         patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
-        patch(POLLING_INTERVAL_PATH, 0),
+        patch.object(
+            session_key_generator,
+            "get_web_auth_session_key_username",
+            wraps=session_key_generator.get_web_auth_session_key_username,
+        ) as session_exchange,
+        patch(POLLING_INTERVAL_PATH, 60),
         patch(MAX_POLLING_ATTEMPTS_PATH, 1),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -364,14 +375,24 @@ async def test_flow_restarts_polling_after_timeout(
             result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        await get_session_key_polling_task(hass, result["flow_id"])
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        session_exchange.assert_called_once_with(AUTH_URL)
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        session_exchange.assert_called_once_with(AUTH_URL)
 
         session_key_generator.session_key_error = None
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        await get_session_key_polling_task(hass, result["flow_id"])
+        assert result["step_id"] == "auth_url"
         await hass.async_block_till_done()
+        session_exchange.assert_called_once_with(AUTH_URL)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert session_exchange.call_args_list == [call(AUTH_URL), call(AUTH_URL)]
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -390,13 +411,16 @@ async def test_flow_session_key_error(
     hass: HomeAssistant, default_user: MockUser, error: Exception
 ) -> None:
     """Test terminal session key errors abort the flow."""
+    session_key_generator = MockSessionKeyGenerator(session_key_error=error)
     with (
         patch("pylast.User", return_value=default_user),
-        patch(
-            SESSION_KEY_GENERATOR_PATH,
-            return_value=MockSessionKeyGenerator(session_key_error=error),
-        ),
-        patch(POLLING_INTERVAL_PATH, 0),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
+        patch.object(
+            session_key_generator,
+            "get_web_auth_session_key_username",
+            wraps=session_key_generator.get_web_auth_session_key_username,
+        ) as session_exchange,
+        patch(POLLING_INTERVAL_PATH, 60),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -405,13 +429,18 @@ async def test_flow_session_key_error(
             result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        await get_session_key_polling_task(hass, result["flow_id"])
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        session_exchange.assert_called_once_with(AUTH_URL)
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "auth_failed"
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "auth_failed"
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        session_exchange.assert_called_once_with(AUTH_URL)
 
 
 async def test_reauth_flow(
@@ -512,6 +541,16 @@ async def test_reauth_overlapping_confirmations(
         patch.object(
             second_generator, "get_web_auth_url", return_value=f"{AUTH_URL}-second"
         ),
+        patch.object(
+            first_generator,
+            "get_web_auth_session_key_username",
+            wraps=first_generator.get_web_auth_session_key_username,
+        ) as first_exchange,
+        patch.object(
+            second_generator,
+            "get_web_auth_session_key_username",
+            wraps=second_generator.get_web_auth_session_key_username,
+        ) as second_exchange,
         patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
@@ -535,12 +574,18 @@ async def test_reauth_overlapping_confirmations(
             authorization_release.set()
             first_result = await submissions[0]
             second_result = await submissions[1]
-            polling_task = get_session_key_polling_task(hass, result["flow_id"])
-
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
             assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
             await hass.async_block_till_done()
+            assert first_exchange.call_args_list + second_exchange.call_args_list == [
+                call(expected_url)
+            ]
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
+            await hass.async_block_till_done(wait_background_tasks=True)
+            assert first_exchange.call_args_list + second_exchange.call_args_list == [
+                call(expected_url)
+            ]
         finally:
             authorization_release.set()
             await asyncio.gather(*submissions, return_exceptions=True)
@@ -556,7 +601,7 @@ async def test_reauth_overlapping_confirmations(
         **CONF_DATA_WITH_SESSION_KEY,
         CONF_SESSION_KEY: NEW_SESSION_KEY,
     }
-    assert polling_task.cancelled()
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 async def test_reauth_flow_wrong_account(
@@ -649,6 +694,11 @@ async def test_reauth_flow_start_retry(
     authenticated_config_entry.add_to_hass(hass)
     with (
         patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
+        patch.object(
+            session_key_generator,
+            "get_web_auth_session_key_username",
+            wraps=session_key_generator.get_web_auth_session_key_username,
+        ) as session_exchange,
         patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
@@ -665,13 +715,16 @@ async def test_reauth_flow_start_retry(
             result["flow_id"], user_input={}
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        polling_task = get_session_key_polling_task(hass, result["flow_id"])
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
+        session_exchange.assert_called_once_with(AUTH_URL)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        session_exchange.assert_called_once_with(AUTH_URL)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -679,16 +732,22 @@ async def test_reauth_flow_start_retry(
         **CONF_DATA_WITH_SESSION_KEY,
         CONF_SESSION_KEY: NEW_SESSION_KEY,
     }
-    assert polling_task.cancelled()
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 async def test_flow_abort_cancels_session_key_polling(
     hass: HomeAssistant, default_user: MockUser
 ) -> None:
     """Test aborting the flow cancels session key polling."""
+    session_key_generator = MockSessionKeyGenerator()
     with (
         patch("pylast.User", return_value=default_user),
-        patch(SESSION_KEY_GENERATOR_PATH, return_value=MockSessionKeyGenerator()),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
+        patch.object(
+            session_key_generator,
+            "get_web_auth_session_key_username",
+            wraps=session_key_generator.get_web_auth_session_key_username,
+        ) as session_exchange,
         patch(POLLING_INTERVAL_PATH, 60),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -698,12 +757,14 @@ async def test_flow_abort_cancels_session_key_polling(
             result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        polling_task = get_session_key_polling_task(hass, result["flow_id"])
+        await hass.async_block_till_done()
+        session_exchange.assert_not_called()
 
         hass.config_entries.flow.async_abort(result["flow_id"])
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        session_exchange.assert_not_called()
 
-    assert polling_task.cancelled()
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
@@ -711,15 +772,18 @@ async def test_flow_abort_after_terminal_polling_error(
     hass: HomeAssistant, default_user: MockUser
 ) -> None:
     """Test aborting the flow before terminal polling advances it."""
+    session_key_generator = MockSessionKeyGenerator(
+        session_key_error=WSError("network", "15", "Token expired")
+    )
     with (
         patch("pylast.User", return_value=default_user),
-        patch(
-            SESSION_KEY_GENERATOR_PATH,
-            return_value=MockSessionKeyGenerator(
-                session_key_error=WSError("network", "15", "Token expired")
-            ),
-        ),
-        patch(POLLING_INTERVAL_PATH, 0),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
+        patch.object(
+            session_key_generator,
+            "get_web_auth_session_key_username",
+            wraps=session_key_generator.get_web_auth_session_key_username,
+        ) as session_exchange,
+        patch(POLLING_INTERVAL_PATH, 60),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -728,30 +792,35 @@ async def test_flow_abort_after_terminal_polling_error(
             result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
-        polling_task = get_session_key_polling_task(hass, result["flow_id"])
+        await hass.async_block_till_done()
 
+        advancement_started = asyncio.Event()
         release_advancement = asyncio.Event()
-        advancement_task: asyncio.Task[None] | None = None
         async_configure = hass.config_entries.flow.async_configure
 
         async def delayed_configure(flow_id: str) -> ConfigFlowResult:
-            nonlocal advancement_task
-            advancement_task = asyncio.current_task()
+            """Pause the automatic transition until the flow is aborted."""
+            advancement_started.set()
             await release_advancement.wait()
             return await async_configure(flow_id)
 
         with patch.object(
             hass.config_entries.flow, "async_configure", side_effect=delayed_configure
-        ):
-            await polling_task
-            assert advancement_task is not None
-            hass.config_entries.flow.async_abort(result["flow_id"])
-            release_advancement.set()
-            await advancement_task
+        ) as configure:
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+            try:
+                await advancement_started.wait()
+                session_exchange.assert_called_once_with(AUTH_URL)
+                hass.config_entries.flow.async_abort(result["flow_id"])
+            finally:
+                release_advancement.set()
+            await hass.async_block_till_done(wait_background_tasks=True)
+            configure.assert_awaited_once_with(result["flow_id"])
 
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        session_exchange.assert_called_once_with(AUTH_URL)
 
-    assert polling_task.exception() is None
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 

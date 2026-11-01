@@ -1,6 +1,5 @@
 """The tests for lastfm."""
 
-import asyncio
 from threading import Event
 from typing import Any
 from unittest.mock import patch
@@ -15,7 +14,6 @@ from homeassistant.components.lastfm.const import (
     DOMAIN as DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import Undefined
 
 API_KEY = "asdasdasdasdasd"
@@ -200,12 +198,3 @@ def patch_user(user: MockUser) -> MockUser:
 def patch_setup_entry() -> bool:
     """Patch interface."""
     return patch("homeassistant.components.lastfm.async_setup_entry", return_value=None)
-
-
-def get_session_key_polling_task(
-    hass: HomeAssistant, flow_id: str
-) -> asyncio.Task[None]:
-    """Return the session key polling task of the given flow."""
-    task = hass.config_entries.flow._progress[flow_id]._polling_task
-    assert task is not None
-    return task
