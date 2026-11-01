@@ -157,8 +157,8 @@ class Timespan:
         Advances through time using interval as a hint, extending past now if
         the current interval has drifted behind.
         """
-        next_end = max(dt_util.as_utc(self.end), dt_util.as_utc(now)) + interval
-        return Timespan(self.end, dt_util.as_local(next_end))
+        next_end_utc = max(dt_util.as_utc(self.end), dt_util.as_utc(now)) + interval
+        return Timespan(self.end, dt_util.as_local(next_end_utc))
 
     @override
     def __str__(self) -> str:
