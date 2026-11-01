@@ -210,15 +210,23 @@ def _async_reconnect_on_announcement(
 ) -> None:
     """Reconnect the bulb when it announces itself, e.g. after a power cut."""
     if not (unique_id := entry.unique_id or device.unique_id):
+        # Announcements carry the bulb id, so without one they cannot be matched
+        _LOGGER.debug(
+            "No id known for %s, not reconnecting on announcements", device.host
+        )
         return
 
     async def _async_reconnect() -> None:
         try:
             await device.async_reconnect()
         except (TimeoutError, OSError, BulbException) as ex:
-            # The library stopped retrying when the connection was dropped
             _LOGGER.debug("Failed to reconnect to %s: %s", device.host, ex)
-            hass.config_entries.async_schedule_reload(entry.entry_id)
+        except Exception:
+            _LOGGER.exception("Unexpected error reconnecting to %s", device.host)
+        else:
+            return
+        # The library stopped retrying when the connection was dropped
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     @callback
     def _async_announced(announced_host: str) -> None:

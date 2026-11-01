@@ -222,19 +222,25 @@ class YeelightDevice:
             return
         self._reconnecting = True
         try:
+            # Bulbs also announce themselves every 2 hours. This cannot be told
+            # apart from a boot, so a healthy connection is renewed too.
             _LOGGER.debug("%s announced itself, reconnecting", self._host)
             music_mode = self.bulb.music_mode
             # Drops the connection, also a music mode one, and connects again
             await self.bulb.async_stop_music(force=True)
+            # A power cut may have changed the state of the bulb. Read it before
+            # music mode starts again, as music mode only returns cached values.
+            # Errors are raised, so the caller can reload the entry.
+            await self.bulb.async_get_properties(UPDATE_REQUEST_PROPERTIES)
+            self._available = True
             if music_mode:
                 # Raises if the light turned music mode on again in the meantime
                 with contextlib.suppress(AssertionError):
                     await self.bulb.async_start_music()
-            # A power cut may have changed the state of the bulb
-            await self.async_update(True)
+            self._connected_at = time.monotonic()
         finally:
             self._reconnecting = False
-            self._connected_at = time.monotonic()
+        async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
     async def _async_forced_update(self, _now):
         """Call a forced update."""

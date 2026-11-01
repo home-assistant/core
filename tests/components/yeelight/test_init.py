@@ -2,7 +2,8 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+import time
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -10,6 +11,7 @@ from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
 from homeassistant.components.yeelight.const import (
+    ALIVE_RECONNECT_GRACE,
     CONF_DETECTED_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -721,33 +723,45 @@ async def _async_setup_announcing_bulb(
 
 
 @pytest.mark.parametrize(
-    ("music_mode", "start_music_error", "music_mode_starts"),
+    ("music_mode", "start_music_error", "expected_calls"),
     [
-        pytest.param(False, None, 0, id="normal_mode"),
-        pytest.param(True, None, 1, id="music_mode"),
-        pytest.param(True, AssertionError, 1, id="music_mode_turned_on_meanwhile"),
+        pytest.param(False, None, ["stop", "read"], id="normal_mode"),
+        pytest.param(True, None, ["stop", "read", "music"], id="music_mode"),
+        pytest.param(
+            True,
+            AssertionError,
+            ["stop", "read", "music"],
+            id="music_mode_turned_on_meanwhile",
+        ),
     ],
 )
 async def test_reconnect_on_announcement(
     hass: HomeAssistant,
     music_mode: bool,
     start_music_error: type[Exception] | None,
-    music_mode_starts: int,
+    expected_calls: list[str],
 ) -> None:
-    """Test a bulb that announces itself is reconnected and its state read."""
+    """Test a reconnect reads the state before music mode starts again."""
     mocked_bulb = _mocked_bulb()
     mocked_bulb.music_mode = music_mode
-    mocked_bulb.async_start_music.side_effect = start_music_error
     config_entry = await _async_setup_announcing_bulb(hass, mocked_bulb)
-    mocked_bulb.async_get_properties.reset_mock()
+    calls: list[str] = []
+    mocked_bulb.async_stop_music.side_effect = lambda **_: calls.append("stop")
+    mocked_bulb.async_get_properties.side_effect = lambda *_: calls.append("read")
+
+    def _start_music() -> None:
+        calls.append("music")
+        if start_music_error:
+            raise start_music_error
+
+    mocked_bulb.async_start_music.side_effect = _start_music
 
     with patch(f"{MODULE}.device.ALIVE_RECONNECT_GRACE", 0):
         _async_announce(CAPABILITIES)
         await hass.async_block_till_done()
 
     mocked_bulb.async_stop_music.assert_awaited_once_with(force=True)
-    assert mocked_bulb.async_start_music.await_count == music_mode_starts
-    mocked_bulb.async_get_properties.assert_awaited_once()
+    assert calls == expected_calls
     assert config_entry.state is ConfigEntryState.LOADED
 
 
@@ -801,6 +815,33 @@ async def test_announcement_without_reconnect(
     mocked_bulb.async_stop_music.assert_not_awaited()
 
 
+@pytest.mark.parametrize(
+    ("library_reconnected", "reconnects"),
+    [
+        pytest.param(True, 0, id="library_reconnected"),
+        pytest.param(False, 1, id="connected_long_ago"),
+    ],
+)
+async def test_announcement_after_library_reconnect(
+    hass: HomeAssistant, library_reconnected: bool, reconnects: int
+) -> None:
+    """Test a connection the library just restored is not dropped again."""
+    mocked_bulb = _mocked_bulb()
+    await _async_setup_announcing_bulb(hass, mocked_bulb)
+
+    with patch(
+        f"{MODULE}.device.time.monotonic",
+        return_value=time.monotonic() + ALIVE_RECONNECT_GRACE * 2,
+    ):
+        if library_reconnected:
+            mocked_bulb._async_callback({KEY_CONNECTED: False})
+            mocked_bulb._async_callback({KEY_CONNECTED: True})
+        _async_announce(CAPABILITIES)
+        await hass.async_block_till_done()
+
+    assert mocked_bulb.async_stop_music.await_count == reconnects
+
+
 async def test_announcement_after_unload(hass: HomeAssistant) -> None:
     """Test an announcement after unloading does not reconnect the bulb."""
     mocked_bulb = _mocked_bulb()
@@ -851,17 +892,32 @@ async def test_announcement_while_reconnecting(hass: HomeAssistant) -> None:
     mocked_bulb.async_stop_music.assert_awaited_once()
 
 
-async def test_reconnect_on_announcement_fails(hass: HomeAssistant) -> None:
-    """Test a failed reconnect reloads the config entry."""
+@pytest.mark.parametrize(
+    ("method", "error"),
+    [
+        pytest.param("async_stop_music", BulbException, id="drop_fails"),
+        pytest.param("async_get_properties", TimeoutError, id="read_fails"),
+        pytest.param("async_stop_music", RuntimeError, id="unexpected_error"),
+    ],
+)
+async def test_reconnect_on_announcement_fails(
+    hass: HomeAssistant, method: str, error: type[Exception]
+) -> None:
+    """Test a failed reconnect reloads the entry and does not start the grace time."""
     mocked_bulb = _mocked_bulb()
-    mocked_bulb.async_stop_music.side_effect = BulbException
     config_entry = await _async_setup_announcing_bulb(hass, mocked_bulb)
+    getattr(mocked_bulb, method).side_effect = error
 
     with (
-        patch(f"{MODULE}.device.ALIVE_RECONNECT_GRACE", 0),
+        patch(
+            f"{MODULE}.device.time.monotonic",
+            return_value=time.monotonic() + ALIVE_RECONNECT_GRACE * 2,
+        ),
         patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
     ):
-        _async_announce(CAPABILITIES)
-        await hass.async_block_till_done()
+        for _ in range(2):
+            _async_announce(CAPABILITIES)
+            await hass.async_block_till_done()
 
-    mock_reload.assert_called_once_with(config_entry.entry_id)
+    assert mocked_bulb.async_stop_music.await_count == 2
+    assert mock_reload.call_args_list == [call(config_entry.entry_id)] * 2
