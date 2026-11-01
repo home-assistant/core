@@ -202,10 +202,10 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         return None
 
     @callback
-    def _update_progress(self, progress: MessageEvent) -> None:
+    def _update_progress(self, event: MessageEvent) -> None:
         """Update install progress on event."""
 
-        progress = int(progress.data)
+        progress = int(event.data)
         self._attr_update_percentage = progress
         self.async_write_ha_state()
 

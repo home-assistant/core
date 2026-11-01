@@ -106,6 +106,7 @@ async def test_update_firmware(
 ) -> None:
     """Test firmware updates."""
     await setup_integration(hass, mock_config_entry)
+    mock_smlight_client.get_firmware_version.reset_mock()
     entity_id = "update.mock_title_core_firmware"
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -145,6 +146,7 @@ async def test_update_firmware(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.7.5"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
+    mock_smlight_client.get_firmware_version.assert_not_called()
 
 
 async def test_update_zigbee2_firmware(
