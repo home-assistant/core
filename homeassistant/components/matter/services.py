@@ -2,16 +2,21 @@
 
 import probatio
 
+from homeassistant.components.climate import ATTR_PRESET_MODE, DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
+    ATTR_COOLING_SETPOINT,
     ATTR_CREDENTIAL_DATA,
     ATTR_CREDENTIAL_INDEX,
     ATTR_CREDENTIAL_RULE,
     ATTR_CREDENTIAL_TYPE,
+    ATTR_HEATING_SETPOINT,
+    ATTR_PRESET_NAME,
+    ATTR_PRESET_SCENARIO,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
     ATTR_USER_STATUS,
@@ -20,6 +25,7 @@ from .const import (
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
     DOMAIN,
+    PRESET_SCENARIO_REVERSE_MAP,
     SERVICE_CREDENTIAL_TYPES,
     USER_TYPE_REVERSE_MAP,
 )
@@ -51,6 +57,35 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
         },
         func="async_set_boost",
+    )
+
+    # Thermostat services - Preset CRUD
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "set_thermostat_preset",
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Optional(ATTR_PRESET_MODE): cv.string,
+            probatio.Optional(ATTR_PRESET_SCENARIO): probatio.In(
+                PRESET_SCENARIO_REVERSE_MAP.keys()
+            ),
+            probatio.Optional(ATTR_PRESET_NAME): cv.string,
+            probatio.Optional(ATTR_HEATING_SETPOINT): probatio.Coerce(float),
+            probatio.Optional(ATTR_COOLING_SETPOINT): probatio.Coerce(float),
+        },
+        func="async_set_thermostat_preset",
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "clear_thermostat_preset",
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Required(ATTR_PRESET_MODE): cv.string,
+        },
+        func="async_clear_thermostat_preset",
     )
 
     # Lock services - Full user CRUD
