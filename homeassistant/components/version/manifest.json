@@ -4,6 +4,7 @@
   "categories": ["computers_network.monitoring"],
   "codeowners": ["@ludeeus"],
   "config_flow": true,
+  "connectivity": ["cloud", "host"],
   "documentation": "https://www.home-assistant.io/integrations/version",
   "iot_class": "local_push",
   "loggers": ["pyhaversion"],

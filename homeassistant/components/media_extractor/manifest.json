@@ -4,6 +4,7 @@
   "categories": ["media_entertainment"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["media_player"],
   "documentation": "https://www.home-assistant.io/integrations/media_extractor",
   "iot_class": "calculated",

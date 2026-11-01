@@ -4,6 +4,7 @@
   "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@erwindouna"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/downloader",
   "integration_type": "service",
   "quality_scale": "internal",
