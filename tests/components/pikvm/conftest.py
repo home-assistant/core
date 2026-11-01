@@ -50,7 +50,10 @@ async def device_info(
     data = await async_load_json_object_fixture(hass, "info.json", DOMAIN)
     data["msd"] = await async_load_json_object_fixture(hass, "msd.json", DOMAIN)
     if missing := getattr(request, "param", None):
-        del data[missing]
+        if missing == "health":
+            del data["hw"]["health"]
+        else:
+            del data[missing]
     return PiKVMDeviceInfo.from_dict(data)
 
 
