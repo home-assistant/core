@@ -54,6 +54,15 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
         """Return the current value."""
         return self.coordinator.data.humidity
 
+    @property
+    @override
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        # The controller lowers the allowed steamer level as the target temperature rises.
+        if (maximum := self.coordinator.data.maximum_target_humidity) is None:
+            return super().native_max_value
+        return maximum
+
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
