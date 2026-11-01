@@ -36,6 +36,10 @@ TOTP_SECRET = "JBSWY3DPEHPK3PXP"
     [
         pytest.param(USER_INPUT, id="defaults"),
         pytest.param({**USER_INPUT, CONF_TOTP: TOTP_SECRET}, id="with_totp"),
+        pytest.param(
+            {**USER_INPUT, CONF_TOTP: "23456723456723456723456723456723"},
+            id="with_numeric_base32_totp",
+        ),
         pytest.param({**USER_INPUT, CONF_VERIFY_SSL: True}, id="verify_ssl"),
     ],
 )
