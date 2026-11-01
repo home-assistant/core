@@ -51,6 +51,14 @@ def _todo_summary(item: ShoppingItem) -> str:
     return item.display
 
 
+def _todo_description(item: ShoppingItem, summary: str) -> str | None:
+    """Return shopping details and the Mealie food description."""
+    description_parts = [item.display] if summary != item.display else []
+    if item.food and (food_description := item.food.description.strip()):
+        description_parts.append(food_description)
+    return "\n\n".join(description_parts) or None
+
+
 def _convert_api_item(item: ShoppingItem) -> TodoItem:
     """Convert Mealie shopping list items into a TodoItem."""
 
@@ -63,7 +71,7 @@ def _convert_api_item(item: ShoppingItem) -> TodoItem:
             TodoItemStatus.NEEDS_ACTION,
         ),
         due=None,
-        description=item.display if summary != item.display else None,
+        description=_todo_description(item, summary),
     )
 
 
