@@ -87,7 +87,9 @@ async def async_setup_entry(
     )
 
 
-class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
+class SensorCommunitySensor(
+    CoordinatorEntity[LuftdatenDataUpdateCoordinator], SensorEntity
+):
     """Implementation of a Sensor.Community sensor."""
 
     _attr_attribution = "Data provided by Sensor.Community"
