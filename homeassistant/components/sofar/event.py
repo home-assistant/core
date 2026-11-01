@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
-from .const import LAST_HANDLED_FAULT
+from .const import FAULT_LOG, LAST_HANDLED_FAULT
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -41,7 +41,7 @@ class SofarEventEntityDescription(EventEntityDescription, SofarEntityDescription
 EVENT_DESCRIPTIONS: tuple[SofarEventEntityDescription, ...] = (
     SofarEventEntityDescription(
         key="fault",
-        component="fault_log",
+        component=FAULT_LOG,
         translation_key="fault",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_types=[fault.key for fault in FAULTS],
