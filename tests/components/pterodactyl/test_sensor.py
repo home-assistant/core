@@ -31,6 +31,7 @@ from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .const import SERVER_1_IDENTIFIER, SERVER_2_IDENTIFIER, TEST_URL
@@ -141,6 +142,9 @@ async def test_sensor_update(
         KEY_MEMORY_USAGE: "2.222",
         KEY_DISK_USAGE: "4.444",
     }
+    expected_uptime = (dt_util.utcnow() - timedelta(milliseconds=7777)).isoformat(
+        timespec="seconds"
+    )
 
     for server_identifier in GAME_SERVER_IDENTIFIERS:
         for sensor_key in ENABLED_SENSOR_KEYS:
@@ -149,7 +153,7 @@ async def test_sensor_update(
             assert state is not None
 
             if sensor_key == KEY_UPTIME:
-                assert state.state != initial_sensor_states[entity_id]
+                assert state.state == expected_uptime
             else:
                 assert state.state == expected_sensor_values[sensor_key]
 
@@ -270,11 +274,14 @@ async def test_sensor_recovery_after_update_error(
     assert len(sensors) == len(GAME_SERVER_IDENTIFIERS) * len(ENABLED_SENSOR_KEYS)
     recovered_sensor_states = {state.entity_id: state.state for state in sensors}
     assert recovered_sensor_states.keys() == initial_sensor_states.keys()
+    expected_uptime = (dt_util.utcnow() - timedelta(milliseconds=6666)).isoformat(
+        timespec="seconds"
+    )
 
     for entity_id, initial_state in initial_sensor_states.items():
         recovered_state = recovered_sensor_states[entity_id]
 
         if entity_id.endswith(f"_{KEY_UPTIME}"):
-            assert recovered_state != initial_state
+            assert recovered_state == expected_uptime
         else:
             assert recovered_state == initial_state
