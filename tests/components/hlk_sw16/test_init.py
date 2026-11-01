@@ -9,7 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.hlk_sw16.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import issue_registry as ir, translation
 from homeassistant.setup import async_setup_component
 
 from . import create_mock_hlk_sw16_connection
@@ -139,3 +139,31 @@ async def test_import_partial_failure_keeps_yaml(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
     assert len(issue_registry.issues) == 1
+
+
+async def test_import_finishes_before_setup_returns(hass: HomeAssistant) -> None:
+    """Test all YAML devices are imported before the integration setup returns."""
+    await translation.async_load_integrations(hass, {DOMAIN})
+    config = {
+        DOMAIN: {
+            **YAML_CONFIG[DOMAIN],
+            "device2": {
+                CONF_HOST: "127.0.0.2",
+                CONF_PORT: 8080,
+                "switches": {0: {"name": "Relay 0"}},
+            },
+        }
+    }
+    with (
+        patch(
+            "homeassistant.components.hlk_sw16.config_flow.connect_client",
+            return_value=await create_mock_hlk_sw16_connection(False),
+        ),
+        patch(
+            "homeassistant.components.hlk_sw16.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 2

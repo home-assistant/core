@@ -81,10 +81,13 @@ async def _async_import_yaml(
     hass: HomeAssistant, import_data: list[dict[str, Any]]
 ) -> None:
     """Import the YAML devices into config entries."""
+    # Eager tasks register the import flows before setup waits for them.
     results = await asyncio.gather(
         *(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+                )
             )
             for data in import_data
         )
