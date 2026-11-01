@@ -10,10 +10,10 @@
       'audio': dict({
         'apps': list([
           dict({
-            'id': 'app:120',
+            'id': '**REDACTED**',
             'muted': False,
-            'name': 'Firefox',
-            'output': 'alsa_output.usb-Generic_USB_Audio-00.HiFi__Speaker__sink',
+            'name': '**REDACTED**',
+            'output': '**REDACTED**',
             'playing': True,
             'title': '**REDACTED**',
             'volume': 75,
@@ -22,25 +22,25 @@
         'inputs': list([
           dict({
             'default': True,
-            'id': 'alsa_input.usb-Generic_USB_Audio-00.HiFi__Mic__source',
+            'id': '**REDACTED**',
             'muted': False,
-            'name': 'Microphone',
+            'name': '**REDACTED**',
             'volume': 80,
           }),
         ]),
         'outputs': list([
           dict({
             'default': True,
-            'id': 'alsa_output.usb-Generic_USB_Audio-00.HiFi__Speaker__sink',
+            'id': '**REDACTED**',
             'muted': False,
-            'name': 'Headphones',
+            'name': '**REDACTED**',
             'volume': 50,
           }),
           dict({
             'default': False,
-            'id': 'alsa_output.pci-0000_00_1f.3.hdmi-stereo',
+            'id': '**REDACTED**',
             'muted': True,
-            'name': 'HDMI Output',
+            'name': '**REDACTED**',
             'volume': 100,
           }),
         ]),

@@ -57,6 +57,9 @@ async def async_get_config_entry_diagnostics(
     if data["disks"] is not None:
         # Disks are named after their device path, and mount options can hold paths
         data["disks"] = async_redact_data(data["disks"], {"name", "options"})
+    if data["audio"] is not None:
+        # Bluetooth device IDs hold the MAC, and app names can fall back to the title
+        data["audio"] = async_redact_data(data["audio"], {"id", "name", "output"})
     if data["system"] is not None and data["system"]["failed_units"] is not None:
         # Unit names and descriptions can hold paths, such as for mount units
         data["system"]["failed_units"] = async_redact_data(
