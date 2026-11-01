@@ -1,6 +1,6 @@
 """Test Device Tracker config entry things."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from typing import Any
 from unittest.mock import patch
 
@@ -1935,8 +1935,12 @@ async def test_scanner_entity_device_info(
         name="Office printer",
         via_device_id=router.id,
     )
-    await create_mock_platform(hass, config_entry, [scanner_entity])
+    with patch(
+        "homeassistant.components.device_tracker.entity.report_usage"
+    ) as mock_report_usage:
+        await create_mock_platform(hass, config_entry, [scanner_entity])
 
+    mock_report_usage.assert_not_called()
     entity_entry = entity_registry.async_get("device_tracker.office_printer")
     assert entity_entry is not None
     assert entity_entry.original_name is None
@@ -1973,8 +1977,14 @@ async def test_scanner_entity_default_device_info_new_device(
         unique_id="scanner",
         legacy=True,
     )
-    await create_mock_platform(hass, config_entry, [scanner_entity])
+    with patch(
+        "homeassistant.components.device_tracker.entity.report_usage"
+    ) as mock_report_usage:
+        await create_mock_platform(hass, config_entry, [scanner_entity])
 
+    mock_report_usage.assert_called_once()
+    assert mock_report_usage.call_args.kwargs["integration_domain"] == TEST_DOMAIN
+    assert mock_report_usage.call_args.kwargs["breaks_in_ha_version"] == "2028.11.0"
     entity_id = entity_registry.async_get_entity_id(DOMAIN, TEST_DOMAIN, "scanner")
     assert entity_id is not None
     entity_entry = entity_registry.async_get(entity_id)
@@ -2014,33 +2024,57 @@ async def test_scanner_entity_default_device_info_existing_device(
         unique_id="scanner",
         legacy=True,
     )
-    await create_mock_platform(hass, config_entry, [scanner_entity])
+    with patch("homeassistant.components.device_tracker.entity.report_usage"):
+        await create_mock_platform(hass, config_entry, [scanner_entity])
 
     device = device_registry.async_get(device.id)
     assert device is not None
     assert device.name == expected_device_name
 
 
-async def test_scanner_entity_overriding_device_info_without_device(
+class NoDeviceScannerEntity(MockScannerEntity):
+    """Test scanner entity overriding device info without a device."""
+
+    @property
+    def device_info(self) -> None:
+        """Return no device info."""
+        return None
+
+
+def _empty_device_info_scanner_entity() -> MockScannerEntity:
+    """Return a scanner entity with an empty device info."""
+    scanner_entity = MockScannerEntity(
+        mac_address=TEST_MAC_ADDRESS, unique_id="scanner", legacy=True
+    )
+    scanner_entity._attr_device_info = dr.DeviceInfo()
+    return scanner_entity
+
+
+@pytest.mark.parametrize(
+    "scanner_entity_factory",
+    [
+        pytest.param(
+            lambda: NoDeviceScannerEntity(
+                mac_address=TEST_MAC_ADDRESS, unique_id="scanner"
+            ),
+            id="device_info_property",
+        ),
+        pytest.param(_empty_device_info_scanner_entity, id="empty_device_info"),
+    ],
+)
+async def test_scanner_entity_without_device(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    scanner_entity_factory: Callable[[], MockScannerEntity],
 ) -> None:
-    """Test a tracker overriding device info without a device gets no default."""
+    """Test a tracker can opt out of a device without a deprecation warning."""
+    with patch(
+        "homeassistant.components.device_tracker.entity.report_usage"
+    ) as mock_report_usage:
+        await create_mock_platform(hass, config_entry, [scanner_entity_factory()])
 
-    class NoDeviceScannerEntity(MockScannerEntity):
-        """Test scanner entity without a device."""
-
-        @property
-        def device_info(self) -> None:
-            """Return no device info."""
-            return None
-
-    scanner_entity = NoDeviceScannerEntity(
-        mac_address=TEST_MAC_ADDRESS, unique_id="scanner"
-    )
-    await create_mock_platform(hass, config_entry, [scanner_entity])
-
+    mock_report_usage.assert_not_called()
     entity_id = entity_registry.async_get_entity_id(DOMAIN, TEST_DOMAIN, "scanner")
     assert entity_id is not None
     entity_entry = entity_registry.async_get(entity_id)

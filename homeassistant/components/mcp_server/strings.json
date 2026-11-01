@@ -4,11 +4,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "create_entry": {
-      "default": "The Model Context Protocol server is active. To expose only some LLM APIs, select **Configure** on the integration."
+      "default": "The Model Context Protocol server is active. To change which tools its main URL exposes, select **Configure** on the integration."
     },
     "step": {
       "user": {
-        "description": "The Model Context Protocol server exposes all LLM APIs. See the [integration documentation]({more_info_url}) for setup instructions."
+        "description": "The Model Context Protocol server exposes all tools. See the [integration documentation]({more_info_url}) for setup instructions."
       }
     }
   },
@@ -19,23 +19,23 @@
   },
   "options": {
     "error": {
-      "llm_api_required": "Select at least one LLM API or expose all LLM APIs."
+      "llm_api_required": "Select at least one set of tools or expose all AI tools."
     },
     "step": {
       "init": {
         "data": {
-          "all_llm_apis": "Expose all LLM APIs",
+          "all_llm_apis": "Expose all AI tools",
           "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
           "read_only": "Read-only",
           "require_admin": "Require an administrator account"
         },
         "data_description": {
-          "all_llm_apis": "Expose every LLM API, including LLM APIs added later.",
-          "llm_hass_api": "The methods for controlling Home Assistant to expose with the Model Context Protocol.",
-          "read_only": "Only expose controls that do not change anything.",
-          "require_admin": "Only allow administrator accounts to use this Model Context Protocol endpoint."
+          "all_llm_apis": "Also exposes sets of tools that integrations add later.",
+          "llm_hass_api": "**Device control** only accesses the entities you expose to voice assistants. **Home Assistant** accesses everything and requires an administrator account.",
+          "read_only": "Only expose tools that are marked as not changing anything.",
+          "require_admin": "Only allow administrator accounts to use the main URL. Some tools always require an administrator account."
         },
-        "description": "See the [integration documentation]({more_info_url}) for setup instructions."
+        "description": "These settings apply to the main URL (`/api/mcp`). Each set of tools also has its own URL, which ignores these settings. See the [integration documentation]({more_info_url}) for setup instructions."
       }
     }
   }

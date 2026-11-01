@@ -1,8 +1,9 @@
 """Config flow for the Seafile integration."""
 
+from collections.abc import Mapping
 from contextlib import suppress
 import hashlib
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from uuid import uuid4
 
 from aioseafile import (
@@ -16,6 +17,7 @@ import probatio
 from yarl import URL
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -66,6 +68,19 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
             )
         ),
         probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
+        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
     }
 )
 
@@ -155,9 +170,23 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             # The account's internal user ID, which never changes; it is a
             # random virtual ID, except for the account created at server setup.
             await self.async_set_unique_id(account.email)
+            if self.source == SOURCE_REAUTH:
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_TOKEN: self._take_token()},
+                )
             self._abort_if_unique_id_configured()
             return await self.async_step_libraries()
         return None
+
+    def _take_token(self) -> str:
+        """Hand the token to the entry, so async_remove doesn't revoke it."""
+        token = self._token
+        if TYPE_CHECKING:
+            assert token is not None
+        self._token = None
+        return token
 
     async def _async_revoke_token(self, client: Seafile) -> None:
         """Don't leave a token that won't be used on the server."""
@@ -193,6 +222,34 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a token that is no longer valid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Log in again to get a new token."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            entry = self._get_reauth_entry()
+            self._user_input = {
+                CONF_URL: entry.data[CONF_URL],
+                CONF_VERIFY_SSL: entry.data[CONF_VERIFY_SSL],
+                **user_input,
+            }
+            if result := await self._async_login(errors):
+                return result
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_REAUTH_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
     async def async_step_otp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -211,10 +268,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
         """Let the user pick the libraries to add."""
         if user_input is not None:
             names = {library.id: library.name for library in self._libraries}
-            token = self._token
-            assert token is not None
-            # The entry owns the token now, so async_remove must not revoke it.
-            self._token = None
+            token = self._take_token()
             return self.async_create_entry(
                 title=f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})",
                 data={

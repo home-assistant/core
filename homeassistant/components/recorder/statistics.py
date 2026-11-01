@@ -42,7 +42,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.recorder import DATA_RECORDER, get_instance, session_scope
 from homeassistant.helpers.singleton import singleton
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.collection import chunked_or_all
@@ -1017,14 +1017,14 @@ def async_update_statistics_metadata(
     hass: HomeAssistant,
     statistic_id: str,
     *,
-    new_statistic_id: str | UndefinedType = UNDEFINED,
-    new_unit_class: str | UndefinedType | None = UNDEFINED,
-    new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
+    new_statistic_id: str | Undefined = Undefined,
+    new_unit_class: str | Undefined | None = Undefined,
+    new_unit_of_measurement: str | Undefined | None = Undefined,
     on_done: Callable[[], None] | None = None,
     _called_from_ws_api: bool = False,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
-    if new_unit_of_measurement is not UNDEFINED and new_unit_class is UNDEFINED:
+    if new_unit_of_measurement is not Undefined and new_unit_class is Undefined:
         if not _called_from_ws_api:
             report_usage(
                 (
@@ -1042,10 +1042,10 @@ def async_update_statistics_metadata(
             new_unit_class = None
 
     if TYPE_CHECKING:
-        # After the above check, new_unit_class is guaranteed to not be UNDEFINED
-        assert new_unit_class is not UNDEFINED
+        # After the above check, new_unit_class is guaranteed to not be Undefined
+        assert new_unit_class is not Undefined
 
-    if new_unit_of_measurement is not UNDEFINED and new_unit_class is not None:
+    if new_unit_of_measurement is not Undefined and new_unit_class is not None:
         if (converter := UNIT_CLASS_TO_UNIT_CONVERTER.get(new_unit_class)) is None:
             raise HomeAssistantError(f"Unsupported unit_class: '{new_unit_class}'")
 
@@ -1067,18 +1067,18 @@ def async_update_statistics_metadata(
 def update_statistics_metadata(
     instance: Recorder,
     statistic_id: str,
-    new_statistic_id: str | UndefinedType | None,
-    new_unit_class: str | UndefinedType | None,
-    new_unit_of_measurement: str | UndefinedType | None,
+    new_statistic_id: str | Undefined | None,
+    new_unit_class: str | Undefined | None,
+    new_unit_of_measurement: str | Undefined | None,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
     statistics_meta_manager = instance.statistics_meta_manager
-    if new_unit_class is not UNDEFINED and new_unit_of_measurement is not UNDEFINED:
+    if new_unit_class is not Undefined and new_unit_of_measurement is not Undefined:
         with session_scope(session=instance.get_session()) as session:
             statistics_meta_manager.update_unit_of_measurement(
                 session, statistic_id, new_unit_class, new_unit_of_measurement
             )
-    if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
+    if new_statistic_id is not Undefined and new_statistic_id is not None:
         with session_scope(
             session=instance.get_session(),
             exception_filter=filter_unique_constraint_integrity_error(

@@ -9,6 +9,17 @@ from homeassistant.helpers import device_registry as dr
 from .const import CONF_BINDKEY, CONF_DISCOVERED_EVENT_CLASSES
 from .types import BTHomeConfigEntry
 
+MASKED_ADDRESS = "*" * 12
+
+
+def _mask_address(data: bytes, address: str) -> str:
+    """Return data as hex with the address masked, as payloads can embed the MAC."""
+    octets = address.lower().split(":")
+    hex_data = data.hex()
+    for needle in ("".join(octets), "".join(reversed(octets))):
+        hex_data = hex_data.replace(needle, MASKED_ADDRESS)
+    return hex_data
+
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: BTHomeConfigEntry
@@ -53,7 +64,14 @@ async def async_get_config_entry_diagnostics(
             "rssi": service_info.rssi,
             "tx_power": service_info.tx_power,
             "connectable": service_info.connectable,
-            # Raw service/manufacturer data is omitted as it can embed the MAC address
             "service_uuids": service_info.service_uuids,
+            "service_data": {
+                uuid: _mask_address(data, coordinator.address)
+                for uuid, data in service_info.service_data.items()
+            },
+            "manufacturer_data": {
+                str(company_id): _mask_address(data, coordinator.address)
+                for company_id, data in service_info.manufacturer_data.items()
+            },
         },
     }

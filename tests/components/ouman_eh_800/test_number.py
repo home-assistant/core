@@ -48,7 +48,7 @@ async def test_entities(
     ("entity_id", "endpoint", "initial_value", "target_value", "set_value"),
     [
         pytest.param(
-            "number.heating_circuit_1_patterilammitys_curve_0degc_temperature",
+            "number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature",
             L1ThreePointCurve.CURVE_0_TEMP,
             41.0,
             42.0,
@@ -56,7 +56,7 @@ async def test_entities(
             id="int_setpoint",
         ),
         pytest.param(
-            "number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning",
+            "number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning",
             L1RoomSensor.ROOM_TEMPERATURE_FINE_TUNING,
             0.0,
             1.5,
@@ -124,7 +124,7 @@ async def test_async_set_native_value_errors(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.heating_circuit_1_patterilammitys_water_out_minimum_temperature",
+                ATTR_ENTITY_ID: "number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature",
                 ATTR_VALUE: 20,
             },
             blocking=True,
