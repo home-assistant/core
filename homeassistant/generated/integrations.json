@@ -3291,6 +3291,9 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "zwave"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -12384,6 +12387,9 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "zwave"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -13240,6 +13246,9 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "zwave"
+      ],
       "supported_by": "fibaro"
     },
     "zerproc": {
@@ -13359,6 +13368,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "zwave"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -13367,6 +13379,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "zwave"
       ],
       "config_flow": true,
       "iot_class": "local_push"
