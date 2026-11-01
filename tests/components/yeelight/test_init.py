@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -763,6 +764,28 @@ async def test_reconnect_on_announcement(
     mocked_bulb.async_stop_music.assert_awaited_once_with(force=True)
     assert calls == expected_calls
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_reconnect_on_announcement_refreshes_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test a reconnect makes the light available and shows the state read."""
+    mocked_bulb = _mocked_bulb()
+    await _async_setup_announcing_bulb(hass, mocked_bulb)
+    mocked_bulb._async_callback({KEY_CONNECTED: False})
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
+
+    def _read_power_off(*_) -> None:
+        mocked_bulb.last_properties["power"] = "off"
+
+    mocked_bulb.async_get_properties.side_effect = _read_power_off
+
+    with patch(f"{MODULE}.device.ALIVE_RECONNECT_GRACE", 0):
+        _async_announce(CAPABILITIES)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
 
 
 @pytest.mark.parametrize(
