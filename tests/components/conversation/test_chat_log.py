@@ -354,6 +354,7 @@ async def test_unavailable_llm_api_restored(
 async def test_unavailable_llm_api_is_reused(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the LLM API instance is reused while a requested API stays unavailable."""
     with chat_session.async_get_chat_session(hass, context=None) as session:
@@ -367,6 +368,7 @@ async def test_unavailable_llm_api_is_reused(
             )
             llm_api = chat_log.llm_api
 
+        caplog.clear()
         with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
             await chat_log.async_provide_llm_data(
                 mock_conversation_input.as_llm_context("test"),
@@ -376,6 +378,7 @@ async def test_unavailable_llm_api_is_reused(
     assert llm_api is not None
     assert llm_api.api.id == "assist"
     assert chat_log.llm_api is llm_api
+    assert "LLM API unknown-api for test is not available" in caplog.text
 
 
 async def test_all_llm_apis_unavailable(
