@@ -20,9 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> None
         unit = async_get_unit(hass, entry, create_modbus_params(entry.data), UNIT_ID)
     except HomeAssistantError as err:
         raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="link_settings_in_use",
-            translation_placeholders={"error": str(err)},
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
         ) from err
     device = E3dcPowerStation(unit)
     entry.async_on_unload(device.close)

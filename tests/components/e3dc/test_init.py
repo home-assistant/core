@@ -99,14 +99,25 @@ async def test_setup_fails_when_the_link_is_held_with_other_settings(
 ) -> None:
     """Test a shared link held with other settings fails setup for good."""
     mock_config_entry.add_to_hass(hass)
+    placeholders = {
+        "endpoint": "192.168.1.100:502",
+        "existing_params": "port 503",
+        "params": "port 502",
+    }
     with patch(
         "homeassistant.components.e3dc.async_get_unit",
-        side_effect=HomeAssistantError("in use with baudrate 9600"),
+        side_effect=HomeAssistantError(
+            translation_domain="modbus",
+            translation_key="device_in_use",
+            translation_placeholders=placeholders,
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.error_reason_translation_key == "link_settings_in_use"
+    assert mock_config_entry.error_reason_translation_domain == "modbus"
+    assert mock_config_entry.error_reason_translation_key == "device_in_use"
+    assert mock_config_entry.error_reason_translation_placeholders == placeholders
 
 
 async def test_setup_fails_for_another_power_station(

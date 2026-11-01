@@ -65,9 +65,6 @@
     }
   },
   "exceptions": {
-    "link_settings_in_use": {
-      "message": "The power station is already in use with other Modbus link settings: {error}"
-    },
     "modbus_error": {
       "message": "Error communicating with the power station."
     },
