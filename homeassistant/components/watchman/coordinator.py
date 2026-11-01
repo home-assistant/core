@@ -78,6 +78,7 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
                 results: list[TankData] = []
 
                 for tank in tanks:
+                    tank_name = "Unknown"
                     try:
                         tank.clear_cache()
                         tank_name = str(await tank.name)
