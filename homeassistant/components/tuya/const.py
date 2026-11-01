@@ -96,6 +96,8 @@ class DeviceCategory(StrEnum):
     """Refrigerator"""
     BXX = "bxx"
     """Safe box"""
+    CDSXJ = "cdsxj"
+    """Security camera (undocumented category)"""
     CJKG = "cjkg"
     """Scene switch"""
     CKMKZQ = "ckmkzq"
