@@ -362,7 +362,7 @@ async def test_resolve_path_browsed(hass: HomeAssistant, dms_device_mock: Mock) 
         call(
             "path_id",
             metadata_filter=["id", "upnp:class", "dc:title"],
-            requested_count=MAX_BROWSE_CHILDREN,
+            requested_count=0,
         )
     ]
 
@@ -370,7 +370,10 @@ async def test_resolve_path_browsed(hass: HomeAssistant, dms_device_mock: Mock) 
 async def test_resolve_path_browsed_later_page(
     hass: HomeAssistant, dms_device_mock: Mock
 ) -> None:
-    """Test async_resolve_path: browsing finds a child past the first page."""
+    """Test async_resolve_path: browsing finds a child past the first page.
+
+    The browse UI limit does not apply to path resolution.
+    """
     dms_device_mock.async_search_directory.side_effect = UpnpActionError()
     dms_device_mock.async_browse_direct_children.side_effect = [
         DmsDevice.BrowseResult(_browse_items("a", "b"), 2, 3, 0),
@@ -383,14 +386,15 @@ async def test_resolve_path_browsed_later_page(
         res=[didl_lite.Resource(uri="c.mp3", protocol_info="http-get:*:audio/mpeg:")],
     )
 
-    result = await async_resolve_media(hass, "c")
+    with patch("homeassistant.components.dlna_dms.dms.MAX_BROWSE_CHILDREN", 2):
+        result = await async_resolve_media(hass, "c")
 
     assert result.didl_metadata.id == "c_id"
     assert dms_device_mock.async_browse_direct_children.await_args_list == [
         call(
             "0",
             metadata_filter=["id", "upnp:class", "dc:title"],
-            requested_count=MAX_BROWSE_CHILDREN,
+            requested_count=0,
         ),
         call(
             "0",
@@ -747,6 +751,25 @@ def _browse_items(*titles: str) -> BrowseResultList:
             1,
             [(0, 2)],
             id="capped_first_page",
+        ),
+        pytest.param(
+            [
+                DmsDevice.BrowseResult(
+                    [
+                        *_browse_items("a"),
+                        didl_lite.Descriptor(id="desc", name_space="urn:x"),
+                    ],
+                    1,
+                    2,
+                    0,
+                ),
+                DmsDevice.BrowseResult([], 0, 2, 0),
+            ],
+            10000,
+            ["a"],
+            1,
+            [(0, 10000), (1, 1)],
+            id="descriptor_not_counted",
         ),
         pytest.param(
             [

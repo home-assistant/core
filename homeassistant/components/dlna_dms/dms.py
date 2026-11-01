@@ -450,7 +450,7 @@ class DmsDeviceSource:
 
             # Nothing was found via search, fall back to iterating children
             result = await self._async_browse_direct_children_paged(
-                object_id, metadata_filter=DLNA_PATH_FILTER
+                object_id, limit=None, metadata_filter=DLNA_PATH_FILTER
             )
 
             if result.total_matches == 0 or not result.result:
@@ -500,25 +500,32 @@ class DmsDeviceSource:
 
         children = await self._async_browse_direct_children_paged(
             object_id,
+            limit=MAX_BROWSE_CHILDREN,
             metadata_filter=DLNA_BROWSE_FILTER,
             sort_criteria=self._sort_criteria,
         )
 
         media = self._didl_to_media_source(base_object, children)
-        media.not_shown = max(0, children.total_matches - len(children.result))
+        media.not_shown = max(0, children.total_matches - len(media.children or []))
         return media
 
     async def _async_browse_direct_children_paged(
-        self, object_id: str, **kwargs: Any
+        self, object_id: str, limit: int | None, **kwargs: Any
     ) -> DmsDevice.BrowseResult:
-        """Browse direct children, requesting more pages if the server limits them."""
+        """Browse direct children, requesting more pages if the server limits them.
+
+        A limit of None fetches every child.
+        """
         assert self._device
 
         for _ in range(MAX_BROWSE_ATTEMPTS):
+            # A requested count of 0 asks the server for all children
             children = await self._device.async_browse_direct_children(
-                object_id, requested_count=MAX_BROWSE_CHILDREN, **kwargs
+                object_id, requested_count=limit or 0, **kwargs
             )
-            wanted = min(children.total_matches, MAX_BROWSE_CHILDREN)
+            wanted = children.total_matches
+            if limit is not None:
+                wanted = min(wanted, limit)
             returned = page_returned = children.number_returned
             while page_returned > 0 and returned < wanted:
                 page = await self._device.async_browse_direct_children(
@@ -536,8 +543,9 @@ class DmsDeviceSource:
             else:
                 break
 
-        # Servers may return more than requested
-        del children.result[MAX_BROWSE_CHILDREN:]
+        if limit is not None:
+            # Servers may return more than requested
+            del children.result[limit:]
         return children
 
     @catch_request_errors
