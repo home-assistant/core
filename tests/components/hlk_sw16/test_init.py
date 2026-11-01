@@ -1,5 +1,6 @@
 """Test the Hi-Link HLK-SW16 setup."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -96,4 +97,45 @@ async def test_import_abort_creates_issue(
         "domain": DOMAIN,
         "integration_title": "Hi-Link HLK-SW16",
     }
+    assert len(issue_registry.issues) == 1
+
+
+async def test_import_partial_failure_keeps_yaml(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a failed device import prevents the remove-your-YAML issue."""
+    client = await create_mock_hlk_sw16_connection(False)
+
+    async def connect(hass: HomeAssistant, user_input: dict[str, Any]) -> object:
+        if user_input[CONF_HOST] == "127.0.0.2":
+            raise TimeoutError
+        return client
+
+    config = {
+        DOMAIN: {
+            **YAML_CONFIG[DOMAIN],
+            "device2": {
+                CONF_HOST: "127.0.0.2",
+                CONF_PORT: 8080,
+                "switches": {0: {"name": "Relay 0"}},
+            },
+        }
+    }
+    with (
+        patch(
+            "homeassistant.components.hlk_sw16.config_flow.connect_client",
+            side_effect=connect,
+        ),
+        patch(
+            "homeassistant.components.hlk_sw16.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
     assert len(issue_registry.issues) == 1
