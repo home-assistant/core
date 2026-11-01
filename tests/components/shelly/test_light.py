@@ -859,6 +859,31 @@ async def test_rpc_rgbw_white_light_restores_level(
     )
 
 
+@pytest.mark.usefixtures("rgbw_profile")
+async def test_rpc_rgbw_white_light_default_level(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test turning on without brightness or a known level uses full white."""
+    register_entity(
+        hass, LIGHT_DOMAIN, "test_name_test_rgbw_0_white", "rgbw:0-rgbw_white"
+    )
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbw:0", "white", 0)
+    await init_integration(hass, 2)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: RGBW_WHITE_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBW.Set", {"id": 0, "on": True, "white": 255}
+    )
+
+
 @pytest.mark.parametrize(
     ("service", "expected_params"),
     [
