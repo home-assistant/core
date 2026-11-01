@@ -1,6 +1,6 @@
 """Switch platform for PAJ GPS alert toggles."""
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any, override
 
 from pajgps_api.models.device import Device
@@ -95,22 +95,25 @@ async def async_setup_entry(
     """Set up PAJ GPS alert switch entities from a config entry."""
     coordinator = config_entry.runtime_data
 
-    known_device_ids: set[int] = set()
+    known_keys: set[tuple[int, str]] = set()
 
     @callback
     def _async_add_new_devices() -> None:
-        """Add entities for any device IDs not yet tracked."""
-        current_ids = set(coordinator.data.devices.keys())
-        new_ids = current_ids - known_device_ids
-        if new_ids:
-            sorted_new_ids = sorted(new_ids)
-            async_add_entities(
-                PajGpsAlertSwitch(coordinator, device_id, description)
-                for device_id in sorted_new_ids
-                for description in ALERT_SWITCH_DESCRIPTIONS
-                if _is_supported(coordinator.data.devices[device_id], description)
-            )
-            known_device_ids.update(sorted_new_ids)
+        """Add alert switches that do not exist yet."""
+        new_switches = [
+            (device_id, description)
+            for device_id, device in coordinator.data.devices.items()
+            for description in ALERT_SWITCH_DESCRIPTIONS
+            if (device_id, description.key) not in known_keys
+            and _is_supported(device, description)
+        ]
+        known_keys.update(
+            (device_id, description.key) for device_id, description in new_switches
+        )
+        async_add_entities(
+            PajGpsAlertSwitch(coordinator, device_id, description)
+            for device_id, description in new_switches
+        )
 
     _async_add_new_devices()
 
@@ -135,9 +138,10 @@ class PajGpsAlertSwitch(PajGpsEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
-        """Return True when the alert is enabled on the device."""
-        return bool(getattr(self.device, self.entity_description.key))
+    def is_on(self) -> bool | None:
+        """Return the alert state, or None when the device does not report it."""
+        value = getattr(self.device, self.entity_description.key)
+        return None if value is None else bool(value)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -150,17 +154,11 @@ class PajGpsAlertSwitch(PajGpsEntity, SwitchEntity):
         await self._async_set_alert(0)
 
     async def _async_set_alert(self, value: int) -> None:
-        """Send the new alert value and store the device state returned by the API."""
+        """Send the new alert value to the coordinator."""
         key = self.entity_description.key
         try:
-            updated = await self.coordinator.api.update_device(
-                self._device_id, **{key: value}
-            )
+            await self.coordinator.async_set_alert(self._device_id, key, value)
         except PajGpsApiError as exc:
             raise HomeAssistantError(
                 f"Failed to update {key} for device {self._device_id}: {exc}"
             ) from exc
-
-        devices = {**self.coordinator.data.devices, self._device_id: updated}
-        self.coordinator.data = replace(self.coordinator.data, devices=devices)
-        self.coordinator.async_update_listeners()
