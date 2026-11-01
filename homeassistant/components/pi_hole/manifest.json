@@ -4,6 +4,7 @@
   "categories": ["computers_network.routers_network"],
   "codeowners": ["@shenxn"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/pi_hole",
   "integration_type": "device",
   "iot_class": "local_polling",

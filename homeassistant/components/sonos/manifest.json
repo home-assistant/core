@@ -5,6 +5,7 @@
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@peterager", "@jjlawren"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/sonos",
   "integration_type": "hub",

@@ -4,6 +4,7 @@
   "categories": ["ai_voice.ai_models", "other_ecosystems"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http", "conversation"],
   "documentation": "https://www.home-assistant.io/integrations/mcp_server",
   "integration_type": "service",

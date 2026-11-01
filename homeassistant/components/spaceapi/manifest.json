@@ -4,6 +4,7 @@
   "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@fabaff"],
   "config_flow": false,
+  "connectivity": ["network"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/spaceapi",
   "integration_type": "service",
