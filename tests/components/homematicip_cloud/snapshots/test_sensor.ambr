@@ -1,4 +1,364 @@
 # serializer version: 1
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000BBBBB1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fal230_valve_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve Position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:heating-coil',
+    'original_name': 'Valve Position',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3014F7110000000000BBBBB1_1_ftb_valve_position',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
+      'id': '3014F7110000000000BBBBB1',
+      'is_group': False,
+      'model_type': 'HmIP-FAL230-C6',
+      'rssi_device': -62,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fal230_valve_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000BBBBB1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fal230_valve_position_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve Position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:heating-coil',
+    'original_name': 'Valve Position',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3014F7110000000000BBBBB1_2_ftb_valve_position',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
+      'id': '3014F7110000000000BBBBB1',
+      'is_group': False,
+      'model_type': 'HmIP-FAL230-C6',
+      'rssi_device': -62,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fal230_valve_position_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000BBBBB1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fal230_valve_position_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve Position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:heating-coil',
+    'original_name': 'Valve Position',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3014F7110000000000BBBBB1_3_ftb_valve_position',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
+      'id': '3014F7110000000000BBBBB1',
+      'is_group': False,
+      'model_type': 'HmIP-FAL230-C6',
+      'rssi_device': -62,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fal230_valve_position_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000BBBBB1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fal230_valve_position_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve Position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:heating-coil',
+    'original_name': 'Valve Position',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3014F7110000000000BBBBB1_4_ftb_valve_position',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
+      'id': '3014F7110000000000BBBBB1',
+      'is_group': False,
+      'model_type': 'HmIP-FAL230-C6',
+      'rssi_device': -62,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fal230_valve_position_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000BBBBB1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fal230_valve_position_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve Position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:heating-coil',
+    'original_name': 'Valve Position',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3014F7110000000000BBBBB1_5_ftb_valve_position',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
+      'id': '3014F7110000000000BBBBB1',
+      'is_group': False,
+      'model_type': 'HmIP-FAL230-C6',
+      'rssi_device': -62,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fal230_valve_position_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000BBBBB1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fal230_valve_position_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve Position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:heating-coil',
+    'original_name': 'Valve Position',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3014F7110000000000BBBBB1_6_ftb_valve_position',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
+      'id': '3014F7110000000000BBBBB1',
+      'is_group': False,
+      'model_type': 'HmIP-FAL230-C6',
+      'rssi_device': -62,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fal230_valve_position_6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_hmip_motion_detector_switch_outdoor_illuminance[sensor.bewegungsmelder_haustur_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

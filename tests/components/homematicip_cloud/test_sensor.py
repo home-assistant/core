@@ -4,7 +4,10 @@ from unittest.mock import patch
 
 from homematicip.base.enums import ValveState, WindowState
 import pytest
-from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homematicip_cloud import DOMAIN
@@ -649,6 +652,49 @@ async def test_hmip_floor_terminal_block_mechanic_channel_1_valve_position(
         hass, hmip_device, "valveState", ValveState.ADAPTION_DONE
     )
     ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes["icon"] == "mdi:heating-coil"
+
+
+async def test_hmip_floor_terminal_block_thermal_valve_position(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the valve positions of a floor terminal block with thermal actuators."""
+    fixture = await async_load_json_object_fixture(
+        hass, "homematicip_cloud.json", DOMAIN
+    )
+    # the fixture's floor terminal blocks share a label, give this one its own
+    device = fixture["devices"]["3014F7110000000000BBBBB1"]
+    device["label"] = "FAL230"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["FAL230"], test_groups=[], extra_devices=[device]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    entity_id = next(
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_hap.config_entry.entry_id
+        )
+        if entry.unique_id == "3014F7110000000000BBBBB1_2_ftb_valve_position"
+    )
+    assert hass.states.get(entity_id).state == "100"
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "valvePosition", 0.0, channel=0, channel_real_index=2
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "0"
+    # no valveState on these channels, so no adaption warning either
     assert ha_state.attributes["icon"] == "mdi:heating-coil"
 
 
