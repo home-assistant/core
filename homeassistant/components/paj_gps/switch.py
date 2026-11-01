@@ -162,6 +162,5 @@ class PajGpsAlertSwitch(PajGpsEntity, SwitchEntity):
             ) from exc
 
         devices = {**self.coordinator.data.devices, self._device_id: updated}
-        self.coordinator.async_set_updated_data(
-            replace(self.coordinator.data, devices=devices)
-        )
+        self.coordinator.data = replace(self.coordinator.data, devices=devices)
+        self.coordinator.async_update_listeners()
