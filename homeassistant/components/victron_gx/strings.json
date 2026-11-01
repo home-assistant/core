@@ -86,6 +86,8 @@
     "recharging": "Recharging",
     "repeated_absorption": "Repeated absorption",
     "reserved": "Reserved",
+    "reverse_charging": "Reverse charging",
+    "reverse_charging_blocked": "Reverse charging blocked",
     "ripple_alarm": "Ripple alarm",
     "running": "Running",
     "scheduled_recharging": "Scheduled recharging",
@@ -461,8 +463,8 @@
         "state": {
           "not_possible": "Not possible",
           "not_started": "Not started",
-          "start": "[%key:common::action::start%]",
-          "started": "Started"
+          "started": "Started",
+          "starting": "Starting"
         }
       },
       "battery_bms_mode": {
@@ -670,6 +672,8 @@
           "power_supply": "[%key:component::victron_gx::common::power_supply%]",
           "recharging": "[%key:component::victron_gx::common::recharging%]",
           "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "reverse_charging": "[%key:component::victron_gx::common::reverse_charging%]",
+          "reverse_charging_blocked": "[%key:component::victron_gx::common::reverse_charging_blocked%]",
           "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
           "starting_up": "[%key:component::victron_gx::common::starting_up%]",
           "storage": "[%key:component::victron_gx::common::storage%]",
@@ -1019,6 +1023,8 @@
           "power_supply": "[%key:component::victron_gx::common::power_supply%]",
           "recharging": "[%key:component::victron_gx::common::recharging%]",
           "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "reverse_charging": "[%key:component::victron_gx::common::reverse_charging%]",
+          "reverse_charging_blocked": "[%key:component::victron_gx::common::reverse_charging_blocked%]",
           "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
           "starting_up": "[%key:component::victron_gx::common::starting_up%]",
           "storage": "[%key:component::victron_gx::common::storage%]",
@@ -1064,6 +1070,8 @@
           "power_supply": "[%key:component::victron_gx::common::power_supply%]",
           "recharging": "[%key:component::victron_gx::common::recharging%]",
           "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "reverse_charging": "[%key:component::victron_gx::common::reverse_charging%]",
+          "reverse_charging_blocked": "[%key:component::victron_gx::common::reverse_charging_blocked%]",
           "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
           "starting_up": "[%key:component::victron_gx::common::starting_up%]",
           "storage": "[%key:component::victron_gx::common::storage%]",
@@ -1542,6 +1550,8 @@
           "power_supply": "[%key:component::victron_gx::common::power_supply%]",
           "recharging": "[%key:component::victron_gx::common::recharging%]",
           "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "reverse_charging": "[%key:component::victron_gx::common::reverse_charging%]",
+          "reverse_charging_blocked": "[%key:component::victron_gx::common::reverse_charging_blocked%]",
           "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
           "starting_up": "[%key:component::victron_gx::common::starting_up%]",
           "storage": "[%key:component::victron_gx::common::storage%]",
@@ -1720,6 +1730,8 @@
           "power_supply": "[%key:component::victron_gx::common::power_supply%]",
           "recharging": "[%key:component::victron_gx::common::recharging%]",
           "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "reverse_charging": "[%key:component::victron_gx::common::reverse_charging%]",
+          "reverse_charging_blocked": "[%key:component::victron_gx::common::reverse_charging_blocked%]",
           "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
           "starting_up": "[%key:component::victron_gx::common::starting_up%]",
           "storage": "[%key:component::victron_gx::common::storage%]",
@@ -1737,16 +1749,16 @@
         "name": "[%key:component::victron_gx::common::yield_yesterday%]"
       },
       "platform_device_hq_serial_number": {
-        "name": "Hq serial number"
+        "name": "HQ serial number"
       },
       "platform_device_model": {
         "name": "[%key:common::generic::model%]"
       },
       "platform_device_product_id": {
-        "name": "Product id"
+        "name": "Product ID"
       },
       "platform_device_unique_id": {
-        "name": "Unique id"
+        "name": "Unique ID"
       },
       "platform_firmware_installed_build": {
         "name": "Build"
@@ -1758,10 +1770,10 @@
         "name": "Available build"
       },
       "platform_network_ethernet_link_local_ip_address": {
-        "name": "Link local ip address"
+        "name": "Link local IP address"
       },
       "platform_network_has_bluetooth_support": {
-        "name": "Has bluetooth support"
+        "name": "Has Bluetooth support"
       },
       "platform_network_wifi_signal_strength": {
         "name": "Signal strength"
@@ -1905,6 +1917,8 @@
           "power_supply": "[%key:component::victron_gx::common::power_supply%]",
           "recharging": "[%key:component::victron_gx::common::recharging%]",
           "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "reverse_charging": "[%key:component::victron_gx::common::reverse_charging%]",
+          "reverse_charging_blocked": "[%key:component::victron_gx::common::reverse_charging_blocked%]",
           "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
           "starting_up": "[%key:component::victron_gx::common::starting_up%]",
           "storage": "[%key:component::victron_gx::common::storage%]",
@@ -2217,6 +2231,8 @@
           "power_supply": "[%key:component::victron_gx::common::power_supply%]",
           "recharging": "[%key:component::victron_gx::common::recharging%]",
           "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "reverse_charging": "[%key:component::victron_gx::common::reverse_charging%]",
+          "reverse_charging_blocked": "[%key:component::victron_gx::common::reverse_charging_blocked%]",
           "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
           "starting_up": "[%key:component::victron_gx::common::starting_up%]",
           "storage": "[%key:component::victron_gx::common::storage%]",
@@ -2494,6 +2510,8 @@
           "power_supply": "[%key:component::victron_gx::common::power_supply%]",
           "recharging": "[%key:component::victron_gx::common::recharging%]",
           "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "reverse_charging": "[%key:component::victron_gx::common::reverse_charging%]",
+          "reverse_charging_blocked": "[%key:component::victron_gx::common::reverse_charging_blocked%]",
           "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
           "starting_up": "[%key:component::victron_gx::common::starting_up%]",
           "storage": "[%key:component::victron_gx::common::storage%]",
@@ -2549,10 +2567,10 @@
         "name": "Relay on Multi RS state"
       },
       "platform_network_ethernet_gateway_enabled": {
-        "name": "Allow using ethernet for internet access"
+        "name": "Allow using Ethernet for internet access"
       },
       "platform_network_wifi_gateway_enabled": {
-        "name": "Allow using wifi for internet access"
+        "name": "Allow using Wi-Fi for internet access"
       },
       "platform_services_access_point_enabled": {
         "name": "Create access point"
