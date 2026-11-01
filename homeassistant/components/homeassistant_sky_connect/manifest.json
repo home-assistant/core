@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
+  "connectivity": ["serial"],
   "dependencies": ["hardware", "usb", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_sky_connect",
   "integration_type": "hardware",
