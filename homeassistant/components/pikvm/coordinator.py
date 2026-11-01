@@ -21,10 +21,13 @@ type PiKVMConfigEntry = ConfigEntry[PiKVMDataUpdateCoordinator]
 
 def create_client(hass: HomeAssistant, data: Mapping[str, Any]) -> PiKVMClient:
     """Create a PiKVM API client from config entry data."""
+    host = data[CONF_HOST].strip()
+    if "://" in host and not host.lower().startswith("https://"):
+        raise ValueError("Only HTTPS URLs or bare hostnames are supported")
     # Stock PiKVM certificates are self-signed, so verification is opt-in.
     verify_ssl = data.get(CONF_VERIFY_SSL, False)
     return PiKVMClient(
-        host=data[CONF_HOST],
+        host=host,
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
         totp_secret=data.get(CONF_TOTP) or None,

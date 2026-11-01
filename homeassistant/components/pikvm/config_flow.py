@@ -32,7 +32,7 @@ class PiKVMConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> PiKVMDeviceInfo | None:
         """Return the device info, or None and fill in errors."""
         # A one-time 6 or 8 digit code would work once and then expire.
-        totp = data.get(CONF_TOTP, "").replace(" ", "")
+        totp = data.get(CONF_TOTP, "").strip().replace(" ", "")
         if len(totp) in (6, 8) and totp.isdigit():
             errors[CONF_TOTP] = "invalid_totp"
             return None

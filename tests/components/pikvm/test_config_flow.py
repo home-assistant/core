@@ -114,10 +114,22 @@ async def test_user_flow_errors(
             id="one_time_code",
         ),
         pytest.param(
+            {**USER_INPUT, CONF_TOTP: "123456\n"},
+            None,
+            {CONF_TOTP: "invalid_totp"},
+            id="one_time_code_with_whitespace",
+        ),
+        pytest.param(
             {**USER_INPUT, CONF_TOTP: "not-base32!"},
             PiKVMAuthenticationError,
             {CONF_TOTP: "invalid_totp"},
             id="invalid_totp_secret",
+        ),
+        pytest.param(
+            {**USER_INPUT, CONF_HOST: "http://192.168.1.50"},
+            None,
+            {CONF_HOST: "invalid_host"},
+            id="http_scheme_rejected",
         ),
         pytest.param(
             {**USER_INPUT, CONF_HOST: "pikvm.local:99999"},
