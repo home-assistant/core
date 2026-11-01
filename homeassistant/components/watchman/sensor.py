@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
-    UnitOfEnergy,
+    UnitOfPower,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -118,12 +118,12 @@ SENSOR_DESCRIPTIONS: tuple[SENSiTSensorEntityDescription, ...] = (
         key="current_energy_usage",
         translation_key="current_energy_usage",
         entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=1,
         value_fn=lambda tank, entry: round(
-            float(tank.usage_rate * _get_energy_density(entry)), 1
+            float((tank.usage_rate / 24) * _get_energy_density(entry)), 1
         ),
     ),
 )

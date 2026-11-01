@@ -119,7 +119,7 @@ async def test_current_energy_usage(
     coordinator = config_entry.runtime_data
     assert state is not None
     assert state.state == str(
-        round(coordinator.data[0].usage_rate * DEFAULT_OIL_ENERGY_DENSITY, 1)
+        round((coordinator.data[0].usage_rate / 24) * DEFAULT_OIL_ENERGY_DENSITY, 1)
     )
 
     unload_ok = await hass.config_entries.async_unload(config_entry.entry_id)
