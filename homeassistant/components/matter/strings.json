@@ -368,6 +368,14 @@
           "stretch": "Stretch"
         }
       },
+      "night_vision": {
+        "name": "Night vision",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
       "power_level": {
         "name": "Power level (W)"
       },
@@ -745,9 +753,6 @@
       },
       "music_sync": {
         "name": "Music sync"
-      },
-      "night_vision": {
-        "name": "Night vision"
       },
       "one_touch_locking": {
         "name": "One-touch locking"
