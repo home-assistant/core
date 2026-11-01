@@ -6,6 +6,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import songpal
+from homeassistant.components.songpal.const import CONF_ENDPOINT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -67,12 +68,18 @@ async def test_setup(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> N
     assert len(issue_registry.issues) == 1
 
 
+@pytest.mark.parametrize(
+    "mocked_device",
+    [
+        pytest.param(_create_mocked_device(), id="online"),
+        pytest.param(_create_mocked_device(throw_exception=True), id="offline"),
+    ],
+)
 async def test_setup_already_configured(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mocked_device: MagicMock
 ) -> None:
     """Test YAML import of an existing device creates the deprecation issue."""
     MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA).add_to_hass(hass)
-    mocked_device = _create_mocked_device()
 
     with _patch_config_flow_device(mocked_device), _patch_media_setup():
         assert await async_setup_component(
@@ -142,3 +149,33 @@ async def test_unload(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     mocked_device.stop_listen_notifications.assert_called_once()
+
+
+async def test_setup_import_partial_failure(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a failed device import prevents the remove-your-YAML issue."""
+    offline_endpoint = "http://0.0.0.1:10000/sony"
+    devices = {
+        CONF_DATA[CONF_ENDPOINT]: _create_mocked_device(),
+        offline_endpoint: _create_mocked_device(throw_exception=True),
+    }
+    config = [CONF_DATA, {**CONF_DATA, CONF_ENDPOINT: offline_endpoint}]
+
+    with (
+        patch(
+            "homeassistant.components.songpal.config_flow.Device",
+            side_effect=devices.__getitem__,
+        ),
+        _patch_media_setup(),
+    ):
+        assert await async_setup_component(
+            hass, songpal.DOMAIN, {songpal.DOMAIN: config}
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(songpal.DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        songpal.DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert len(issue_registry.issues) == 1

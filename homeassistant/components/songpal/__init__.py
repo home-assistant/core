@@ -1,5 +1,6 @@
 """The songpal component."""
 
+import asyncio
 from typing import Any
 
 import probatio
@@ -41,37 +42,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if (conf := config.get(DOMAIN)) is None:
         return True
-    for config_entry in conf:
-        hass.async_create_task(_async_import_yaml(hass, config_entry))
+    hass.async_create_task(_async_import_yaml(hass, conf))
     return True
 
 
-async def _async_import_yaml(hass: HomeAssistant, import_data: dict[str, Any]) -> None:
-    """Import a YAML device into a config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=import_data,
+async def _async_import_yaml(
+    hass: HomeAssistant, import_data: list[dict[str, Any]]
+) -> None:
+    """Import the YAML devices into config entries."""
+    results = await asyncio.gather(
+        *(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+            )
+            for data in import_data
+        )
     )
-
-    if (
-        result["type"] is FlowResultType.ABORT
+    failed_reasons = {
+        result["reason"]
+        for result in results
+        if result["type"] is FlowResultType.ABORT
         and result["reason"] != "already_configured"
-    ):
+    }
+    for reason in failed_reasons:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_{result['reason']}",
+            f"deprecated_yaml_import_issue_{reason}",
             breaks_in_ha_version="2027.6.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": INTEGRATION_TITLE,
             },
         )
+    # The shared issue tells users to remove all YAML, which would drop failed devices.
+    if failed_reasons:
         return
 
     ir.async_create_issue(
