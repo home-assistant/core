@@ -9,6 +9,7 @@ from functools import partial
 import io
 import os
 from pathlib import Path
+import re
 import shutil
 import tempfile
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -26,7 +27,7 @@ import attr
 import probatio
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, language as language_util
 from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN, MAX_ARCHIVE_MEMBERS, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
@@ -81,6 +82,12 @@ README_FILENAMES = (
     "README.MD",
     "README",
     "readme",
+)
+
+# A README in another language next to README.md, such as README.de.md or
+# README.pt-BR.md, named with the language tags of the translations
+TRANSLATED_README = re.compile(
+    r"readme\.([a-z]{2,3}(?:-[a-z0-9]+)*)\.md", re.IGNORECASE
 )
 
 TOPIC_FILTER = (
@@ -459,6 +466,8 @@ class Repository:
         """Initialize the repository."""
         self.marketplace = marketplace
         self.additional_info = ""
+        # The translated READMEs fetched for the version of additional_info
+        self.translated_readmes: dict[str, str] = {}
         self.data = RepositoryData()
         self.content = RepositoryContent(
             path=RepositoryPath(remote=self.remote_path), single=self.single_file
@@ -718,6 +727,7 @@ class Repository:
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
 
         self.additional_info = await self.async_get_readme_contents()
+        self.translated_readmes.clear()
 
         self.data.last_fetched = dt_util.utcnow()
 
@@ -972,6 +982,28 @@ class Repository:
             ):
                 return content
         return ""
+
+    async def async_get_translated_readme(self, language: str) -> str:
+        """Get the README in the language, empty when the repository has none.
+
+        Only READMEs in the tree are used, so a repository without translations
+        costs no request. The best match of the language wins, as for the
+        languages of conversation agents.
+        """
+        readmes = {
+            match.group(1): filename
+            for filename in self.treefiles
+            if (match := TRANSLATED_README.fullmatch(filename))
+        }
+        if not (languages := language_util.matches(language, readmes)):
+            return ""
+
+        filename = readmes[languages[0]]
+        if filename not in self.translated_readmes:
+            self.translated_readmes[filename] = (
+                await self.get_documentation(filename=filename) or ""
+            )
+        return self.translated_readmes[filename]
 
     def remove(self) -> None:
         """Forget the repository, its files stay where they are."""

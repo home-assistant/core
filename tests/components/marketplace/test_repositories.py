@@ -797,6 +797,63 @@ async def test_repository_page_ignores_info_file(
     assert not get_documentation.called
 
 
+@pytest.mark.parametrize(
+    ("language", "expected_filename"),
+    [
+        pytest.param("de", "README.de.md", id="language"),
+        pytest.param("de-CH", "README.de.md", id="region"),
+        pytest.param("pt-BR", "README.pt-BR.md", id="region_file"),
+        pytest.param("pt", "README.pt-BR.md", id="language_of_region_file"),
+    ],
+)
+async def test_translated_readme(
+    marketplace: MarketplaceManager,
+    language: str,
+    expected_filename: str,
+) -> None:
+    """Test the README in the language is the best match in the tree."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = [
+        "README.md",
+        "README.de.md",
+        "README.pt-BR.md",
+        "docs/README.fr.md",
+    ]
+
+    with patch.object(
+        repository, "get_documentation", return_value="Translated"
+    ) as get_documentation:
+        assert await repository.async_get_translated_readme(language) == "Translated"
+        # Fetched once for the version of the README
+        assert await repository.async_get_translated_readme(language) == "Translated"
+
+    get_documentation.assert_called_once_with(filename=expected_filename)
+
+
+@pytest.mark.parametrize(
+    "treefiles",
+    [
+        pytest.param(["README.md", "docs/README.fr.md"], id="only_in_folder"),
+        pytest.param(["README.md", "README.de.md"], id="other_language"),
+        pytest.param([], id="without_tree"),
+    ],
+)
+async def test_translated_readme_missing(
+    marketplace: MarketplaceManager,
+    treefiles: list[str],
+) -> None:
+    """Test a repository without a README in the language costs no request."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = treefiles
+
+    with patch.object(repository, "get_documentation") as get_documentation:
+        assert await repository.async_get_translated_readme("fr") == ""
+
+    assert not get_documentation.called
+
+
 async def test_get_documentation_without_filename(
     marketplace: MarketplaceManager,
 ) -> None:
