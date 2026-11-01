@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
@@ -537,7 +537,7 @@ class ZonneplanPriceSensor(ZonneplanEntity, SensorEntity):
         """Re-evaluate at every hour, as prices start and end on the hour."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            async_track_time_change(
+            async_track_utc_time_change(
                 self.hass, self._async_hour_changed, minute=0, second=0
             )
         )

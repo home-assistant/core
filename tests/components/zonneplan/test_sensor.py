@@ -61,13 +61,22 @@ async def test_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "time_zone",
+    [
+        pytest.param("Europe/Amsterdam", id="whole_hour_offset"),
+        pytest.param("Asia/Kolkata", id="half_hour_offset"),
+    ],
+)
 async def test_price_sensors_update_on_the_hour(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_zonneplan_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    time_zone: str,
 ) -> None:
     """Test the price sensors move to the new hour's price without an API call."""
+    await hass.config.async_set_time_zone(time_zone)
     freezer.move_to("2026-08-29T14:59:59+00:00")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
