@@ -47,6 +47,12 @@
       "frost_protection": {
         "name": "Frost protection"
       },
+      "holiday": {
+        "name": "Holiday"
+      },
+      "holiday_at_home": {
+        "name": "Holiday at home"
+      },
       "identification_mode": {
         "name": "Identification mode"
       },
@@ -161,6 +167,18 @@
           "heating": "Heating",
           "standby": "[%key:common::state::standby%]"
         }
+      },
+      "air_flap_primary_position": {
+        "name": "Primary air flap position"
+      },
+      "air_flap_secondary_position": {
+        "name": "Secondary air flap position"
+      },
+      "ash_level": {
+        "name": "Ash level"
+      },
+      "boiler_circuit_pump_power": {
+        "name": "Boiler circuit pump"
       },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
@@ -432,6 +450,18 @@
       },
       "heating_rod_starts": {
         "name": "Heating rod starts"
+      },
+      "holiday_at_home_end": {
+        "name": "Holiday at home end"
+      },
+      "holiday_at_home_start": {
+        "name": "Holiday at home start"
+      },
+      "holiday_end": {
+        "name": "Holiday end"
+      },
+      "holiday_start": {
+        "name": "Holiday start"
       },
       "hot_gas_pressure": {
         "name": "Hot gas pressure"

@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from .model import Config, Integration
+from hassfest.model import Config, Integration
 
 PATH = "homeassistant/generated/integration_connectivity.json"
 

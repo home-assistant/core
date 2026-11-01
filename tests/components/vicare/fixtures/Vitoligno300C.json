@@ -1,0 +1,230 @@
+{
+  "data": [
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "device.serial",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "deviceSerialVitoligno300C"
+        }
+      },
+      "timestamp": "2024-07-30T20:03:40.073Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/device.serial"
+    },
+    {
+      "properties": {},
+      "commands": {},
+      "components": [],
+      "apiVersion": 1,
+      "uri": "https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/device",
+      "gatewayId": "################",
+      "feature": "device",
+      "timestamp": "2021-08-25T03:29:46.401Z",
+      "isEnabled": true,
+      "isReady": true,
+      "deviceId": "0"
+    },
+    {
+      "properties": {},
+      "commands": {},
+      "components": ["sensors", "serial", "temperature"],
+      "apiVersion": 1,
+      "uri": "https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler",
+      "gatewayId": "################",
+      "feature": "heating.boiler",
+      "timestamp": "2021-08-25T03:29:46.401Z",
+      "isEnabled": true,
+      "isReady": true,
+      "deviceId": "0"
+    },
+    {
+      "properties": {
+        "unit": {
+          "value": "celsius",
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "value": 5,
+          "unit": "celsius"
+        }
+      },
+      "commands": {},
+      "components": [],
+      "apiVersion": 1,
+      "uri": "https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler.temperature",
+      "gatewayId": "################",
+      "feature": "heating.boiler.temperature",
+      "timestamp": "2021-08-25T14:16:46.376Z",
+      "isEnabled": true,
+      "isReady": true,
+      "deviceId": "0"
+    },
+    {
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "################"
+        }
+      },
+      "commands": {},
+      "components": [],
+      "apiVersion": 1,
+      "uri": "https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler.serial",
+      "gatewayId": "################",
+      "feature": "heating.boiler.serial",
+      "timestamp": "2021-08-25T03:29:46.840Z",
+      "isEnabled": true,
+      "isReady": true,
+      "deviceId": "0"
+    },
+    {
+      "properties": {
+        "unit": {
+          "value": "celsius",
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "value": 63,
+          "unit": "celsius"
+        },
+        "status": {
+          "type": "string",
+          "value": "connected"
+        }
+      },
+      "commands": {},
+      "components": [],
+      "apiVersion": 1,
+      "uri": "https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler.sensors.temperature.main",
+      "gatewayId": "################",
+      "feature": "heating.boiler.sensors.temperature.main",
+      "timestamp": "2021-08-25T15:13:19.598Z",
+      "isEnabled": true,
+      "isReady": true,
+      "deviceId": "0"
+    },
+    {
+      "properties": {},
+      "commands": {},
+      "components": [],
+      "apiVersion": 1,
+      "uri": "https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler.sensors",
+      "gatewayId": "################",
+      "feature": "heating.boiler.sensors",
+      "timestamp": "2021-08-25T03:29:46.401Z",
+      "isEnabled": true,
+      "isReady": true,
+      "deviceId": "0"
+    },
+    {
+      "properties": {},
+      "commands": {},
+      "components": ["time"],
+      "apiVersion": 1,
+      "uri": "https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.device",
+      "gatewayId": "################",
+      "feature": "heating.device",
+      "timestamp": "2021-08-25T03:29:46.401Z",
+      "isEnabled": true,
+      "isReady": true,
+      "deviceId": "0"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "heating.boiler.ash.level.current",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "number",
+          "unit": "percent",
+          "value": 18.2
+        }
+      },
+      "timestamp": "2024-07-30T20:03:40.073Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/heating.boiler.ash.level.current"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "heating.boiler.airflaps.0.position.current",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "number",
+          "unit": "percent",
+          "value": 45
+        }
+      },
+      "timestamp": "2024-07-30T20:03:40.073Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/heating.boiler.airflaps.0.position.current"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "heating.boiler.airflaps.1.position.current",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "number",
+          "unit": "percent",
+          "value": 60
+        }
+      },
+      "timestamp": "2024-07-30T20:03:40.073Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/heating.boiler.airflaps.1.position.current"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "heating.boiler.pumps.circuit.power.current",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "number",
+          "unit": "percent",
+          "value": 35
+        }
+      },
+      "timestamp": "2024-07-30T20:03:40.073Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/heating.boiler.pumps.circuit.power.current"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "heating.boiler.operating.phase",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "off"
+        }
+      },
+      "timestamp": "2024-07-30T20:03:40.073Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/heating.boiler.operating.phase"
+    }
+  ]
+}

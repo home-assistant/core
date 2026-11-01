@@ -11,6 +11,11 @@ from pycync.exceptions import AuthFailedError, CyncError, TwoFactorRequiredError
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     CONF_AUTHORIZE_STRING,
@@ -26,7 +31,11 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_EMAIL): str,
-        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
     }
 )
 
@@ -38,7 +47,11 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    cync_auth: Auth = None
+    cync_auth: Auth
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.user_pass: dict[str, Any] = {}
 
     @override
     async def async_step_user(
@@ -51,6 +64,10 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 errors = await self._validate_credentials(user_input)
             except TwoFactorRequiredError:
+                self.user_pass = {
+                    CONF_EMAIL: user_input[CONF_EMAIL],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                }
                 return await self.async_step_two_factor()
 
             if not errors:
@@ -63,21 +80,16 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_two_factor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Attempt login with the two factor auth code sent to the user."""
-        errors: dict[str, str] = {}
-
+        """Collect the two-factor code."""
         if user_input:
-            errors = await self._validate_credentials(user_input)
-
-            if not errors:
-                return await self._create_config_entry(self.cync_auth.username)
-            # pylint: disable-next=home-assistant-step_id-match-method
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-            )
-
+            merged = {**self.user_pass, **user_input}
+            if self.source == SOURCE_REAUTH:
+                return await self.async_step_reauth_confirm(merged)
+            return await self.async_step_user(merged)
         return self.async_show_form(
-            step_id="two_factor", data_schema=STEP_TWO_FACTOR_SCHEMA, errors=errors
+            step_id="two_factor",
+            data_schema=STEP_TWO_FACTOR_SCHEMA,
+            errors={},
         )
 
     async def async_step_reauth(
@@ -98,6 +110,10 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 errors = await self._validate_credentials(user_input)
             except TwoFactorRequiredError:
+                self.user_pass = {
+                    CONF_EMAIL: user_input[CONF_EMAIL],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                }
                 return await self.async_step_two_factor()
 
             if not errors:
@@ -114,12 +130,11 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         """Attempt to log in with user email and password, and return the error dict."""
         errors: dict[str, str] = {}
 
-        if not self.cync_auth:
-            self.cync_auth = Auth(
-                async_get_clientsession(self.hass),
-                username=user_input[CONF_EMAIL],
-                password=user_input[CONF_PASSWORD],
-            )
+        self.cync_auth = Auth(
+            async_get_clientsession(self.hass),
+            username=user_input[CONF_EMAIL],
+            password=user_input[CONF_PASSWORD],
+        )
 
         try:
             await self.cync_auth.login(user_input.get(CONF_TWO_FACTOR_CODE))

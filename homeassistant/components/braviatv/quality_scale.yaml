@@ -32,11 +32,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      async_source_find and async_play_media raise ValueError for an unknown source
-      or invalid media type; it should be ServiceValidationError.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -84,7 +80,7 @@ rules:
   entity-translations: done
   exception-translations:
     status: todo
-    comment: The ValueError raised for an unknown source or invalid media type is not translated.
+    comment: The BrowseError raised in async_browse_media is not translated.
   icon-translations:
     status: exempt
     comment: The integration does not provide any custom icons.

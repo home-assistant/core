@@ -5,5 +5,6 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/london_air",
   "iot_class": "cloud_polling",
-  "quality_scale": "legacy"
+  "quality_scale": "legacy",
+  "requirements": ["pylondonair==0.1.1"]
 }

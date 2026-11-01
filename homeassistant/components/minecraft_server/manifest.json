@@ -8,6 +8,6 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["dnspython", "mcstatus"],
-  "quality_scale": "silver",
+  "quality_scale": "platinum",
   "requirements": ["mcstatus==14.2.0"]
 }

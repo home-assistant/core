@@ -838,6 +838,11 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
+    def max_interval(self) -> int:
+        """Return the longest interval between two fetches, in minutes."""
+        return self._max_interval
+
+    @property
     def devices(self) -> dict[str, IcloudDevice]:
         """Return the account devices."""
         return self._devices
@@ -922,12 +927,58 @@ class IcloudDevice:
         # Deliberately not nested under the battery block above: a device
         # iCloud reports no battery for still has a location worth reading.
         location = self._status.get(DEVICE_LOCATION)
-        if location and _is_usable_location(location):
+        if location and _is_usable_location(location) and not self._is_stale(location):
             announce = announce or self._location is None
             self._location = location
         else:
+            # Without a location the tracker reports "unknown" rather than the
+            # place the device has since left.
             self._location = None
         return announce
+
+    def _is_stale(self, location: dict[str, Any]) -> bool:
+        """Return whether a location fix is too old to be trusted.
+
+        Both signals are needed, because neither is sufficient alone:
+
+        `isOld` says iCloud served a cached fix rather than a fresh one, but
+        not why. A device that was briefly unreachable looks exactly like one
+        that has genuinely moved away, so acting on the flag by itself would
+        drop locations that are still perfectly good.
+
+        The age of the fix alone is no better: a device sitting still keeps
+        reporting the same old timestamp while iCloud still considers that fix
+        current, and discarding those would throw away the only location such
+        a device ever reports.
+
+        Requiring both means a fix is only discarded once iCloud has marked it
+        cached *and* it is older than the longest gap between two fetches - by
+        which point a fresher one should already have superseded it. The half
+        interval of headroom keeps a fix that merely lands late from being
+        treated as stale.
+
+        The configured maximum is used rather than the current fetch interval,
+        which is recomputed after this runs and drops as low as fifteen
+        seconds while devices are still pending - a threshold that short would
+        discard every cached fix there is.
+        """
+        if not location.get(DEVICE_LOCATION_IS_OLD):
+            return False
+
+        timestamp = location.get(DEVICE_LOCATION_TIMESTAMP)
+        if isinstance(timestamp, bool) or not isinstance(timestamp, int | float):
+            # Without a time there is nothing to judge the fix by, and one that
+            # is not a number cannot be read as one.
+            return False
+
+        try:
+            # iCloud reports the fix time in milliseconds.
+            fixed_at = datetime.fromtimestamp(timestamp / 1000, tz=UTC)
+        except OverflowError, OSError, ValueError:
+            # NaN, infinity and values outside the range of a date.
+            return False
+        age = utcnow() - fixed_at
+        return age.total_seconds() > self._account.max_interval * 60 * 1.5
 
     def play_sound(self) -> None:
         """Play sound on the device."""
