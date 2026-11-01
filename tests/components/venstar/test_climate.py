@@ -175,3 +175,71 @@ async def test_import_yaml_error(
     assert not issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+
+
+async def test_import_yaml_partial_failure(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a failed thermostat import prevents the remove-your-YAML issue."""
+
+    def update_info(self: VenstarColorTouchMock) -> bool:
+        if self.addr == TEST_HOST:
+            return VenstarColorTouchMock.update_info(self)
+        return VenstarColorTouchMock.failed_update_info(self)
+
+    with (
+        patch(
+            "homeassistant.components.venstar.config_flow.VenstarColorTouch.update_info",
+            new=update_info,
+        ),
+        patch(
+            "homeassistant.components.venstar.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        assert await async_setup_component(
+            hass,
+            CLIMATE_DOMAIN,
+            {
+                CLIMATE_DOMAIN: [
+                    {CONF_PLATFORM: DOMAIN, CONF_HOST: host}
+                    for host in (TEST_HOST, "2.2.2.2")
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert len(issue_registry.issues) == 1
+
+
+async def test_import_yaml_failure_removes_shared_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a failed import removes the issue raised by an earlier import."""
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": "Venstar"},
+    )
+
+    with patch(
+        "homeassistant.components.venstar.config_flow.VenstarColorTouch.update_info",
+        new=VenstarColorTouchMock.failed_update_info,
+    ):
+        assert await async_setup_component(hass, CLIMATE_DOMAIN, YAML_CONFIG)
+        await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
