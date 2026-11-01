@@ -171,3 +171,37 @@ async def test_yaml_import_creates_issue(
         "domain": DOMAIN,
         "integration_title": "Lutron Caséta",
     }
+
+
+async def test_yaml_import_partial_failure(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a failed bridge import prevents the remove-your-YAML issue."""
+    bridges = {
+        "2.2.2.2": MockBridge(can_connect=True),
+        "3.3.3.3": MockBridge(can_connect=False),
+    }
+    yaml_bridges = [
+        {CONF_HOST: host, CONF_KEYFILE: "", CONF_CERTFILE: "", CONF_CA_CERTS: ""}
+        for host in bridges
+    ]
+
+    with (
+        patch.object(
+            Smartbridge,
+            "create_tls",
+            side_effect=lambda hostname, *args, **kwargs: bridges[hostname],
+        ),
+        patch(
+            "homeassistant.components.lutron_caseta.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: yaml_bridges})
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert len(issue_registry.issues) == 1
