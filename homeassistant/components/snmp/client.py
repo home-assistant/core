@@ -30,7 +30,12 @@ from .const import (
     DEFAULT_VERSION,
     INVALID_CREDENTIAL_INDICATIONS,
 )
-from .util import async_create_transport_target, async_get_snmp_engine, create_auth_data
+from .util import (
+    async_create_transport_target,
+    async_get_snmp_engine,
+    create_auth_data,
+    is_unknown_context,
+)
 
 # Number of varbinds requested per bulk walk request
 MAX_REPETITIONS = 50
@@ -38,6 +43,10 @@ MAX_REPETITIONS = 50
 
 class SnmpWalkError(Exception):
     """Error while walking part of the MIB."""
+
+
+class SnmpUnknownContext(SnmpWalkError):
+    """Error to indicate the SNMPv3 context does not exist on the device."""
 
 
 @dataclass
@@ -97,6 +106,8 @@ class SnmpClient:
                 message = f"SNMPLIB error: {errindication}"
                 if errindication in INVALID_CREDENTIAL_INDICATIONS:
                     raise ConfigEntryAuthFailed(message)
+                if is_unknown_context(errindication):
+                    raise SnmpUnknownContext(message)
                 cause = (
                     errindication if isinstance(errindication, BaseException) else None
                 )

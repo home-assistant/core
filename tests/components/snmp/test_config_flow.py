@@ -316,7 +316,8 @@ async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
         ),
         pytest.param(
             "3",
-            errind.noSuchContext,
+            # pysnmp reports an unknown context as the report PDU's OID
+            errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"),
             {
                 "username": "user",
                 "auth_key": "pass",

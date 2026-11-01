@@ -46,7 +46,6 @@ from .const import (
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
     CONF_VERSION,
-    CONTEXT_ERROR_INDICATIONS,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
     DEFAULT_PORT,
@@ -66,6 +65,7 @@ from .util import (
     async_create_transport_target,
     async_validate_oid,
     create_auth_data,
+    is_unknown_context,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -169,7 +169,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
             raise UsmWrongDigests(str(err_indication))
         if err_indication in AUTH_ERROR_INDICATIONS:
             raise InvalidAuth(str(err_indication))
-        if err_indication in CONTEXT_ERROR_INDICATIONS:
+        if is_unknown_context(err_indication):
             raise InvalidContext(str(err_indication))
         raise CannotConnect(str(err_indication))
 

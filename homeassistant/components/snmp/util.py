@@ -36,6 +36,7 @@ from .const import (
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
+    UNKNOWN_CONTEXT_MARKERS,
 )
 
 DATA_SNMP_ENGINE = "snmp_engine"
@@ -57,6 +58,11 @@ type RequestArgsType = tuple[
     ContextData,
     ObjectType,
 ]
+
+
+def is_unknown_context(error_indication: Any) -> bool:
+    """Return True when the device reports that the SNMPv3 context is unknown."""
+    return any(marker in str(error_indication) for marker in UNKNOWN_CONTEXT_MARKERS)
 
 
 def create_auth_data(

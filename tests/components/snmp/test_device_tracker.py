@@ -522,6 +522,9 @@ async def test_ip_extraction_oid_too_short(
     [
         pytest.param(errind.requestTimedOut, id="timeout"),
         pytest.param(PySnmpError("Some error"), id="exception"),
+        pytest.param(
+            errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"), id="unknown_context"
+        ),
     ],
 )
 async def test_walk_errindication(

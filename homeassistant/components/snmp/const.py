@@ -81,9 +81,13 @@ AUTH_ERROR_INDICATIONS: Final = (
     errind.authenticationError,
 )
 
-# Indications which mean the requested SNMPv3 context does not exist on the
-# agent, which is a fixable configuration mistake rather than a network problem.
-CONTEXT_ERROR_INDICATIONS: Final = (errind.noSuchContext,)
+# A device answers a request for an unknown SNMPv3 context with a report PDU
+# carrying the snmpUnknownContexts counter. pysnmp raises errind.noSuchContext
+# on the agent side only, so a manager sees the report's OID instead.
+UNKNOWN_CONTEXT_MARKERS: Final = (
+    "1.3.6.1.6.3.12.1.5",  # snmpUnknownContexts
+    "snmpUnknownContexts",
+)
 
 # Any indication which means the credentials are not accepted, so reauthenticating
 # can fix it.
