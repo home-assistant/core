@@ -6534,6 +6534,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "lorawan"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -10086,6 +10089,9 @@
       "integration_type": "hub",
       "categories": [
         "sensors"
+      ],
+      "connectivity": [
+        "lorawan"
       ],
       "config_flow": true,
       "iot_class": "local_push",
