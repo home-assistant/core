@@ -12,7 +12,10 @@ from aiohttp import WSMsgType, web
 from aiohttp.http_websocket import WebSocketWriter
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.components.http.const import is_supervisor_unix_socket_request
+from homeassistant.components.http.const import (
+    MAX_UNAUTHENTICATED_BODY_SIZE,
+    is_supervisor_unix_socket_request,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -424,6 +427,8 @@ class WebSocketHandler:
                     f"Received non-Text message of type {msg.type} during auth phase"
                 )
 
+            if len(msg.data) > MAX_UNAUTHENTICATED_BODY_SIZE:
+                raise Disconnect("Received too large message during auth phase")
             try:
                 auth_msg_data = json_loads(msg.data)
             except ValueError as err:

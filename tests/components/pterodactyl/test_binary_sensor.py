@@ -2,10 +2,11 @@
 
 from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import ClientConnectionError
+from aiohttp import ClientConnectionError, ClientError, ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
+from pydactyl.exceptions import BadRequestError, PterodactylApiError
 from pydactyl.responses import PaginatedResponse
 import pytest
 from pytest_homeassistant.common import (
@@ -15,12 +16,15 @@ from pytest_homeassistant.common import (
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
+from yarl import URL
 
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .const import SERVER_1_IDENTIFIER, TEST_URL
 
 
 @pytest.mark.usefixtures("mock_pterodactyl")
@@ -93,7 +97,7 @@ async def test_binary_sensor_suspended_server(
         "client",
         server_list_data_suspended,
     )
-    server_data = {"1": server_1_data_suspended}
+    server_data = {SERVER_1_IDENTIFIER: server_1_data_suspended}
     mock_pterodactyl.client.servers.get_server.side_effect = lambda identifier: (
         server_data[identifier]
     )
@@ -133,7 +137,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
         "client",
         server_list_data_suspended,
     )
-    server_data = {"1": server_1_data}
+    server_data = {SERVER_1_IDENTIFIER: server_1_data}
     mock_pterodactyl.client.servers.get_server.side_effect = lambda identifier: (
         server_data[identifier]
     )
@@ -150,7 +154,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
     )
 
     mock_pterodactyl.client.servers.get_server_utilization.reset_mock()
-    server_data["1"] = server_1_data_suspended
+    server_data[SERVER_1_IDENTIFIER] = server_1_data_suspended
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -165,7 +169,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
     mock_pterodactyl.client.servers.get_server_utilization.assert_not_called()
 
     mock_pterodactyl.client.servers.get_server_utilization.reset_mock()
-    server_data["1"] = server_1_data
+    server_data[SERVER_1_IDENTIFIER] = server_1_data
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -181,18 +185,46 @@ async def test_binary_sensor_suspended_server_transition_runtime(
     mock_pterodactyl.client.servers.get_server_utilization.assert_called_once()
 
 
-async def test_binary_sensor_update_failure(
+@pytest.mark.parametrize(
+    "api_error",
+    [
+        pytest.param(
+            PterodactylApiError,
+            id="pterodactyl_api_error",
+        ),
+        pytest.param(
+            BadRequestError,
+            id="bad_request_error",
+        ),
+        pytest.param(
+            ClientError,
+            id="client_error",
+        ),
+        pytest.param(
+            TimeoutError,
+            id="timeout",
+        ),
+        pytest.param(
+            ClientResponseError(
+                request_info=Mock(real_url=URL(TEST_URL)),
+                history=[],
+                status=500,
+            ),
+            id="connection_error",
+        ),
+    ],
+)
+async def test_binary_sensor_update_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pterodactyl: Generator[AsyncMock],
     freezer: FrozenDateTimeFactory,
+    api_error: Exception | type[Exception],
 ) -> None:
-    """Test failed binary sensor update."""
+    """Test failed binary sensor updates."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_pterodactyl.client.servers.get_server.side_effect = ClientConnectionError(
-        "Simulated connection error"
-    )
+    mock_pterodactyl.client.servers.get_server.side_effect = api_error
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -214,4 +246,77 @@ async def test_binary_sensor_update_failure(
     assert (
         hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_2_suspended").state
         == STATE_UNAVAILABLE
+    )
+    assert hass.config_entries.flow.async_progress() == []
+
+
+async def test_binary_sensor_update_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pterodactyl: Generator[AsyncMock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an authorization error during updates starts reauthentication."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_pterodactyl.client.servers.get_server.side_effect = ClientResponseError(
+        request_info=Mock(real_url=URL(TEST_URL)),
+        history=[],
+        status=401,
+    )
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state
+        == STATE_UNAVAILABLE
+    )
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+
+
+async def test_binary_sensor_recovery_after_update_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pterodactyl: Generator[AsyncMock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test binary sensors recover after a failed update."""
+    await setup_integration(hass, mock_config_entry)
+
+    get_server = mock_pterodactyl.client.servers.get_server
+    original_side_effect = get_server.side_effect
+    get_server.side_effect = ClientConnectionError("Simulated connection error")
+
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state
+        == STATE_UNAVAILABLE
+    )
+
+    get_server.side_effect = original_side_effect
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state
+        == STATE_ON
+    )
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_2_status").state
+        == STATE_ON
+    )
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_suspended").state
+        == "off"
+    )
+    assert (
+        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_2_suspended").state
+        == "off"
     )

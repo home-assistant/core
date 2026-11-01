@@ -2,10 +2,10 @@
   "domain": "zoneminder",
   "name": "ZoneMinder",
   "categories": ["security_safety.cameras"],
-  "codeowners": ["@rohankapoorcom", "@nabbi"],
+  "codeowners": ["@SteveGilvarry", "@nabbi", "@rohankapoorcom"],
   "documentation": "https://www.home-assistant.io/integrations/zoneminder",
   "iot_class": "local_polling",
   "loggers": ["zoneminder"],
   "quality_scale": "legacy",
-  "requirements": ["zm-py==0.5.4"]
+  "requirements": ["zm-py==0.5.9"]
 }

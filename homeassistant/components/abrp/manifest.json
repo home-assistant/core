@@ -1,0 +1,15 @@
+{
+  "domain": "abrp",
+  "name": "A Better Routeplanner",
+  "after_dependencies": ["cloud"],
+  "categories": ["vehicles_transport.cars_evs"],
+  "codeowners": ["@mtandersson"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/abrp",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["aioabrp"],
+  "quality_scale": "bronze",
+  "requirements": ["aioabrp==0.6.0"]
+}

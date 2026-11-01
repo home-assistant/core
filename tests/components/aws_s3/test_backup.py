@@ -1,15 +1,19 @@
 """Test the AWS S3 backup platform."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from io import StringIO
 import json
+from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
+from aiobotocore.response import StreamingBody
+from aiohttp import ClientConnectionError, ClientPayloadError
 from botocore.exceptions import ConnectTimeoutError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 from pytest_homeassistant.typing import (
     ClientSessionGenerator,
     MagicMock,
@@ -39,6 +43,14 @@ from tests.components.backup.common import collect_upload_events, upload_backup_
 
 MIB = 2**20
 CHUNK_SIZES_MIB = (12, 12, 10, 12, 5)
+
+
+# Protected with password "hunter2", padded beyond the 4 MiB read buffer so the
+# backup is not read to the end when checking the password or decrypting it
+PROTECTED_BACKUP_DATA = (
+    get_fixture_path("test_backups/c0cb53bd.tar", BACKUP_DOMAIN).read_bytes()
+    + b"\0" * 12 * 2**20
+)
 
 
 @pytest.fixture(autouse=True)
@@ -756,3 +768,112 @@ async def test_agent_download_backup_parametrized(
     expected_tar_key = f"{expected_key_prefix}{tar_filename}"
 
     mock_client.get_object.assert_any_call(Bucket="test", Key=expected_tar_key)
+
+
+@pytest.fixture
+def downloaded_bodies(mock_client: MagicMock) -> list[StreamingBody]:
+    """Return the bodies of downloaded backup archives."""
+    bodies: list[StreamingBody] = []
+    get_object = mock_client.get_object.side_effect
+
+    def get_object_and_track(**kwargs: Any) -> dict[str, Any]:
+        response = get_object(**kwargs)
+        if kwargs["Key"].endswith(".tar"):
+            bodies.append(response["Body"])
+        return response
+
+    mock_client.get_object.side_effect = get_object_and_track
+    return bodies
+
+
+@pytest.mark.parametrize(
+    ("backup_protected", "backup_data"),
+    [pytest.param(True, PROTECTED_BACKUP_DATA, id="protected_backup")],
+)
+@pytest.mark.parametrize(
+    ("password", "success"),
+    [
+        pytest.param("hunter2", True, id="correct_password"),
+        pytest.param("wrong", False, id="wrong_password"),
+    ],
+)
+async def test_can_decrypt_on_download_closes_body(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    downloaded_bodies: list[StreamingBody],
+    password: str,
+    success: bool,
+) -> None:
+    """Test the download is closed after checking the password of a backup."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": "23e64aec",
+            "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
+            "password": password,
+        }
+    )
+    assert (await client.receive_json())["success"] is success
+
+    assert len(downloaded_bodies) == 1
+    downloaded_bodies[0].close.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("backup_protected", "backup_data"),
+    [pytest.param(True, PROTECTED_BACKUP_DATA, id="protected_backup")],
+)
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("", id="no_password"),
+        pytest.param("&password=hunter2", id="correct_password"),
+        pytest.param("&password=wrong", id="wrong_password"),
+    ],
+)
+async def test_agents_download_closes_body(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    downloaded_bodies: list[StreamingBody],
+    query: str,
+) -> None:
+    """Test the download is closed when the backup is downloaded."""
+    client = await hass_client()
+
+    resp = await client.get(
+        f"/api/backup/download/23e64aec?agent_id={DOMAIN}.{mock_config_entry.entry_id}{query}"
+    )
+    assert resp.status == 200
+    await resp.read()
+
+    assert len(downloaded_bodies) == 1
+    downloaded_bodies[0].close.assert_called_once()
+
+
+async def test_agents_download_closes_body_on_read_error(
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the download is closed when reading the backup fails."""
+    reader = asyncio.StreamReader()
+    reader.set_exception(ClientConnectionError())
+    response = MagicMock(content=reader)
+    get_object = mock_client.get_object.side_effect
+    mock_client.get_object.side_effect = lambda **kwargs: (
+        {"Body": StreamingBody(response, "11")}
+        if kwargs["Key"].endswith(".tar")
+        else get_object(**kwargs)
+    )
+    client = await hass_client()
+
+    resp = await client.get(
+        f"/api/backup/download/23e64aec?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
+    )
+    with pytest.raises(ClientPayloadError):
+        await resp.read()
+
+    response.close.assert_called_once()

@@ -131,7 +131,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='location' title='Home'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('google_weather', 'home-subentry-id')]>,
     'disabled_by': None,

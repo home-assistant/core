@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
     lat = config_entry.data.get(CONF_LATITUDE)
     lon = config_entry.data.get(CONF_LONGITUDE)
     station = config_entry.data.get(CONF_STATION)
-    lang = config_entry.data.get(CONF_LANGUAGE, "English")
+    lang = config_entry.data.get(CONF_LANGUAGE, "english")
 
     errors = 0
 

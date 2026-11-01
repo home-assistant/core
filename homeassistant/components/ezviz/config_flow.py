@@ -30,11 +30,17 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
+    CONF_ENCRYPTION_PASSWORD,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RFSESSION_ID,
     CONF_SESSION_ID,
@@ -401,21 +407,30 @@ class EzvizOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = probatio.Schema(
-            {
+        fields: dict[probatio.Marker, Any] = {
+            probatio.Optional(
+                CONF_TIMEOUT,
+                default=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            ): int,
+            probatio.Optional(
+                CONF_FFMPEG_ARGUMENTS,
+                default=self.config_entry.options.get(
+                    CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
+                ),
+            ): str,
+        }
+        # Alarm pictures can be encrypted with a password that differs from
+        # the verification code used for the RTSP stream.
+        if self.config_entry.data[CONF_TYPE] == ATTR_TYPE_CAMERA:
+            fields[
                 probatio.Optional(
-                    CONF_TIMEOUT,
-                    default=self.config_entry.options.get(
-                        CONF_TIMEOUT, DEFAULT_TIMEOUT
-                    ),
-                ): int,
-                probatio.Optional(
-                    CONF_FFMPEG_ARGUMENTS,
-                    default=self.config_entry.options.get(
-                        CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
-                    ),
-                ): str,
-            }
-        )
+                    CONF_ENCRYPTION_PASSWORD,
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_ENCRYPTION_PASSWORD
+                        )
+                    },
+                )
+            ] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
-        return self.async_show_form(step_id="init", data_schema=options)
+        return self.async_show_form(step_id="init", data_schema=probatio.Schema(fields))

@@ -1,8 +1,4 @@
 {
-  "common": {
-    "release_notes_installation_notice": "The update process can take a while, especially for battery powered devices. Please be patient and wait until the update process is fully completed. Do not remove power from the device while it's updating. The device may restart during the update process and be unavailable for several minutes.",
-    "release_notes_not_official_source": "Update provided by {update_source}. Installing this update is at your own risk and you may run into unexpected problems such as the need to re-add and factory reset your device."
-  },
   "config": {
     "abort": {
       "addon_get_discovery_info_failed": "Failed to get Matter Server app discovery info.",
@@ -257,6 +253,9 @@
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
       },
+      "music_sync_sensitivity": {
+        "name": "Music sync sensitivity"
+      },
       "occupied_setback": {
         "name": "Occupied setback"
       },
@@ -313,6 +312,13 @@
       }
     },
     "select": {
+      "blind_type": {
+        "name": "Blind type",
+        "state": {
+          "roller_shutter": "Roller shutter",
+          "venetian_blind": "Venetian blind"
+        }
+      },
       "clean_mode": {
         "name": "Clean mode"
       },
@@ -352,6 +358,15 @@
       },
       "mode": {
         "name": "Mode"
+      },
+      "music_sync_effect": {
+        "name": "Music sync effect",
+        "state": {
+          "dash": "Dash",
+          "flash": "Flash",
+          "pulse": "Pulse",
+          "stretch": "Stretch"
+        }
       },
       "power_level": {
         "name": "Power level (W)"
@@ -727,6 +742,9 @@
       },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "music_sync": {
+        "name": "Music sync"
       },
       "one_touch_locking": {
         "name": "One-touch locking"

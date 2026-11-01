@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -189,13 +190,14 @@ async def test_set_temperature(
         blocking=True,
     )
 
-    assert mock_client.execute_action_group.await_count == 2
-    first = mock_client.execute_action_group.await_args_list[0].kwargs["actions"]
-    second = mock_client.execute_action_group.await_args_list[1].kwargs["actions"]
-    assert first[0].device_url == DHW_CE_FLAT_C2.device_url
-    assert first[0].commands[0].name == "setTargetTemperature"
-    assert first[0].commands[0].parameters == [55.0]
-    assert second[0].commands[0].name == "refreshWaterTargetTemperature"
+    assert_commands_call(
+        mock_client,
+        device_url=DHW_CE_FLAT_C2.device_url,
+        commands=[
+            ("setTargetTemperature", [55.0]),
+            ("refreshWaterTargetTemperature", None),
+        ],
+    )
 
 
 async def test_set_operation_mode_auto(
@@ -277,6 +279,92 @@ async def test_current_operation_reports_performance_when_boost_on(
     state = hass.states.get(DHW_CE_FLAT_C2.entity_id)
     assert state is not None
     assert state.attributes[ATTR_OPERATION_MODE] == STATE_PERFORMANCE
+
+
+@pytest.mark.parametrize(
+    ("device", "device_states", "operation_mode", "expected_commands"),
+    [
+        pytest.param(
+            DHW_CE_FLAT_C2,
+            [
+                {"name": OverkizState.IO_DHW_BOOST_MODE, "type": 3, "value": "on"},
+                {"name": OverkizState.IO_DHW_ABSENCE_MODE, "type": 3, "value": "on"},
+            ],
+            "manual",
+            [
+                ("setBoostMode", ["off"]),
+                ("setAbsenceMode", ["off"]),
+                ("setDHWMode", ["manualEcoInactive"]),
+            ],
+            id="ce_flat_c2_manual_from_boost_and_away",
+        ),
+        pytest.param(
+            DHW_CE_FLAT_C2,
+            [{"name": OverkizState.IO_DHW_ABSENCE_MODE, "type": 3, "value": "on"}],
+            STATE_PERFORMANCE,
+            [
+                ("setAbsenceMode", ["off"]),
+                ("refreshBoostStartDate", None),
+                ("refreshBoostEndDate", None),
+                ("setBoostMode", ["on"]),
+            ],
+            id="ce_flat_c2_performance_from_away",
+        ),
+        pytest.param(
+            DHW_ATLANTIC_IO,
+            [
+                {
+                    "name": OverkizState.CORE_BOOST_MODE_DURATION,
+                    "type": 1,
+                    "value": 7,
+                },
+                {
+                    "name": OverkizState.IO_AWAY_MODE_DURATION,
+                    "type": 3,
+                    "value": "always",
+                },
+            ],
+            "manual",
+            [
+                ("setCurrentOperatingMode", [{"relaunch": "off", "absence": "off"}]),
+                ("refreshBoostModeDuration", None),
+                ("setCurrentOperatingMode", [{"relaunch": "off", "absence": "off"}]),
+                ("refreshAwayModeDuration", None),
+                ("setDHWMode", ["manualEcoInactive"]),
+            ],
+            id="atlantic_io_manual_from_boost_and_away",
+        ),
+    ],
+)
+async def test_set_operation_mode_sends_one_execution(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    device: FixtureDevice,
+    device_states: list[dict[str, Any]],
+    operation_mode: str,
+    expected_commands: list[tuple[str, list[Any] | None]],
+) -> None:
+    """Leaving boost and away and setting the mode is a single action group."""
+    await setup_overkiz_integration(fixture=device.fixture)
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [device_state_changed_event(device.device_url, device_states)],
+    )
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {"entity_id": device.entity_id, ATTR_OPERATION_MODE: operation_mode},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client, device_url=device.device_url, commands=expected_commands
+    )
 
 
 # --- Hitachi Yutaki DHW (modbus:YutakiV2DHWTComponent) ---
