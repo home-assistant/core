@@ -15,6 +15,7 @@ from homeassistant import loader
 from homeassistant.components import hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant
+from homeassistant.generated.zeroconf import ZEROCONF
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
@@ -893,6 +894,32 @@ async def test_get_zeroconf(hass: HomeAssistant) -> None:
         assert zeroconf["_test_2._tcp.local."] == [
             {"domain": "test_2", "name": "test_2*"}
         ]
+
+
+async def test_get_zeroconf_does_not_mutate_generated(hass: HomeAssistant) -> None:
+    """Verify custom matchers for an existing type do not leak into the generated table."""
+    integration = loader.Integration(
+        hass,
+        "custom_components.test_http",
+        None,
+        {
+            "name": "test_http",
+            "domain": "test_http",
+            "config_flow": True,
+            "dependencies": [],
+            "requirements": [],
+            "zeroconf": ["_http._tcp.local."],
+        },
+    )
+    generated = list(ZEROCONF["_http._tcp.local."])
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {"test_http": integration}
+        await loader.async_get_zeroconf(hass)
+        zeroconf = await loader.async_get_zeroconf(hass)
+
+    assert zeroconf["_http._tcp.local."] == [*generated, {"domain": "test_http"}]
+    assert ZEROCONF["_http._tcp.local."] == generated
 
 
 async def test_get_application_credentials(hass: HomeAssistant) -> None:

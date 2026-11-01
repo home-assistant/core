@@ -72,22 +72,22 @@ HTTP_SCHEMA: Final = probatio.All(
     probatio.Schema(
         {
             probatio.Optional(CONF_SERVER_HOST): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
             ),
             # No default: the YAML migration needs to tell an explicitly
             # configured port apart from an omitted one, which it keeps on the
             # previous default port instead of the Supervisor default.
-            probatio.Optional(CONF_SERVER_PORT): cv.port,
+            probatio.Optional(CONF_SERVER_PORT): probatio.Port(),
             probatio.Optional(CONF_BASE_URL): cv.string,
             probatio.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
             probatio.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
             probatio.Optional(CONF_SSL_KEY): cv.isfile,
             probatio.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
             probatio.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): probatio.All(
-                cv.ensure_list, [ip_network]
+                probatio.EnsureList(), [ip_network]
             ),
             probatio.Optional(
                 CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD

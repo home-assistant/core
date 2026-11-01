@@ -61,7 +61,7 @@ SERVICE_MESSAGE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 SERVICE_CHART_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_DATA): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
     }
 )
@@ -90,7 +90,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             call,
             [
                 Simple(
-                    icon=call.data.get(CONF_ICON),
+                    icon=call.data.get(CONF_ICON, "a7956"),
                     text=call.data[CONF_MESSAGE],
                 )
             ],

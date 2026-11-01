@@ -220,7 +220,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "opengarage": {"open-garage": {"async-timeout"}},
     "overkiz": {"pyoverkiz": {"backoff"}},
     "prosegur": {"pyprosegur": {"backoff"}},
-    "radio_browser": {"radios": {"backoff"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
@@ -238,14 +237,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "tailwind": {"gotailwind": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
-    "travisci": {
-        # https://github.com/menegazzo/travispy seems to be unmaintained
-        # and unused https://www.home-assistant.io/integrations/travisci
-        # travispy > pytest-rerunfailures > pytest
-        "pytest-rerunfailures": {"pytest"},
-        # travispy > pytest
-        "travispy": {"pytest"},
-    },
     "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "weatherflow_cloud": {"weatherflow4py": {"dataclasses-json"}},

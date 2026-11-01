@@ -20,7 +20,20 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform, mock_platform
+from .test_init import (
+    MockNotifyEntity,
+    help_async_setup_entry_init,
+    help_async_unload_entry,
+)
+
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 
 class NotificationService(notify.BaseNotificationService):
@@ -310,6 +323,61 @@ async def test_reload_with_notify_builtin_platform_reload(
     await notify.async_reload(hass, "testnotify")
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
     assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations", [["component.testnotify.services.reload."]]
+)
+async def test_reload_keeps_entity_component(
+    hass: HomeAssistant, tmp_path: Path, config_flow_fixture: None
+) -> None:
+    """Test reloading a legacy platform keeps config entry entities manageable."""
+
+    async def async_get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> NotificationService:
+        """Get notify service for mocked platform."""
+        return NotificationService(hass, {"a": 1}, "testnotify")
+
+    mock_notify_platform(
+        hass, tmp_path, "testnotify", async_get_service=async_get_service
+    )
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "testnotify"}]})
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        [MockNotifyEntity(name="test", entity_id="notify.test")],
+        from_config_entry=True,
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert hass.states.get("notify.test") is not None
+
+    component = hass.data[notify.DATA_COMPONENT]
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config_file.write_text(yaml.dump({"notify": [{"platform": "testnotify"}]}))
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+        await hass.services.async_call("testnotify", SERVICE_RELOAD, {}, blocking=True)
+        await hass.async_block_till_done()
+
+    assert hass.data[notify.DATA_COMPONENT] is component
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.states.get("notify.test") is None
 
 
 @pytest.mark.parametrize(

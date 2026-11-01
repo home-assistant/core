@@ -99,7 +99,7 @@ async def test_resolving(hass: HomeAssistant) -> None:
     hass.config.components.add("stream")
 
     with patch(
-        "homeassistant.components.camera.media_source._async_stream_endpoint_url",
+        "homeassistant.components.camera.media_source.async_stream_endpoint_url",
         return_value="http://example.com/stream",
     ):
         item = await media_source.async_resolve_media(

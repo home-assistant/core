@@ -70,7 +70,7 @@ class AirQCoordinator(DataUpdateCoordinator):
             )
             _LOGGER.debug(
                 "Updated AirQCoordinator.device_info for 'name' %s",
-                self.device_info.get("name"),
+                info["name"],
             )
         data: dict = await self.airq.get_latest_data(
             return_average=self.return_average,

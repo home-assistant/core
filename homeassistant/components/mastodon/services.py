@@ -155,10 +155,10 @@ SERVICE_UPDATE_PROFILE_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_BOT): bool,
         probatio.Optional(ATTR_DISCOVERABLE): bool,
         probatio.Optional(ATTR_FIELDS): probatio.All(
-            cv.ensure_list, probatio.Length(max=4), [dict[str, str]]
+            probatio.EnsureList(), probatio.Length(max=4), [dict[str, str]]
         ),
         probatio.Optional(ATTR_ATTRIBUTION_DOMAINS): probatio.All(
-            cv.ensure_list, [str]
+            probatio.EnsureList(), [str]
         ),
     }
 )

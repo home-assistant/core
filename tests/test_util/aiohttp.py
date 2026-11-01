@@ -336,6 +336,7 @@ class AiohttpClientMockResponse:
         exc_tb: TracebackType | None,
     ) -> None:
         """Exit the context manager."""
+        self.release()
 
 
 @contextmanager

@@ -1,4 +1,4 @@
-"""Test the Sofar Inverter Modbus config flow."""
+"""Tests for the Sofar config flow."""
 
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager

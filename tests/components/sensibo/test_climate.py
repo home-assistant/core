@@ -1263,6 +1263,53 @@ async def test_climate_full_ac_state(
     assert state.attributes["temperature"] == 22
 
 
+async def test_climate_full_ac_state_keeps_device_data(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test the Full AC state service does not modify the coordinator data."""
+    ac_states = load_int.runtime_data.data.parsed["ABC999111"].ac_states
+    original_ac_states = ac_states.copy()
+    service_data = {
+        ATTR_ENTITY_ID: "climate.hallway_hallway",
+        ATTR_MODE: "cool",
+        ATTR_TARGET_TEMPERATURE: 22,
+    }
+    expected_payload = {
+        "on": True,
+        "mode": "cool",
+        "fanLevel": "high",
+        "targetTemperature": 22,
+        "swing": "stopped",
+        "horizontalSwing": "stopped",
+        "light": "on",
+    }
+
+    # A failed call does not refresh the coordinator, so the next call
+    # works on the same device data.
+    mock_client.async_set_ac_states.return_value = {"result": {"status": "Failed"}}
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_FULL_STATE, service_data, blocking=True
+        )
+
+    assert ac_states == original_ac_states
+    mock_client.async_set_ac_states.assert_called_once_with(
+        "ABC999111", expected_payload
+    )
+
+    mock_client.async_set_ac_states.reset_mock()
+    mock_client.async_set_ac_states.return_value = {"result": {"status": "Success"}}
+    await hass.services.async_call(
+        DOMAIN, SERVICE_FULL_STATE, service_data, blocking=True
+    )
+
+    mock_client.async_set_ac_states.assert_called_once_with(
+        "ABC999111", expected_payload
+    )
+
+
 async def test_climate_fan_mode_and_swing_mode_not_supported(
     hass: HomeAssistant,
     load_int: ConfigEntry,

@@ -11,6 +11,19 @@ if TYPE_CHECKING:
 
 DOMAIN: Final = "vacuum"
 
+ATTR_FAN_SPEED: Final = "fan_speed"
+ATTR_PARAMS: Final = "params"
+
+SERVICE_CLEAN_AREA: Final = "clean_area"
+SERVICE_CLEAN_SPOT: Final = "clean_spot"
+SERVICE_LOCATE: Final = "locate"
+SERVICE_PAUSE: Final = "pause"
+SERVICE_RETURN_TO_BASE: Final = "return_to_base"
+SERVICE_SEND_COMMAND: Final = "send_command"
+SERVICE_SET_FAN_SPEED: Final = "set_fan_speed"
+SERVICE_START: Final = "start"
+SERVICE_STOP: Final = "stop"
+
 DATA_COMPONENT: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
 
 

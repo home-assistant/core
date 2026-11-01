@@ -782,8 +782,12 @@ class EsphomeAssistSatellite(
         """Yield audio chunks from the queue until None."""
         while True:
             chunk = await self._audio_queue.get()
-            if not chunk:
+            if chunk is None:
                 break
+
+            # The device can send an empty frame in the middle of the audio
+            if not chunk:
+                continue
 
             yield chunk
 

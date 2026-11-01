@@ -140,6 +140,11 @@ def mock_portainer_client(mock_portainer_watcher: MagicMock) -> Generator[AsyncM
 
 
 @pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
+    """Enable all entities when they are registered."""
+
+
+@pytest.fixture(autouse=True)
 def mock_portainer_event_listeners() -> Generator[dict[int, MagicMock]]:
     """Mock PortainerEventListener; one MagicMock instance per endpoint_id.
 

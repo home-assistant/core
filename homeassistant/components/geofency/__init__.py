@@ -35,7 +35,7 @@ CONFIG_SCHEMA = probatio.Schema(
         probatio.Optional(DOMAIN): probatio.Schema(
             {
                 probatio.Optional(CONF_MOBILE_BEACONS, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 )
             }
         )

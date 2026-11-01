@@ -11,6 +11,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,

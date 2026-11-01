@@ -84,4 +84,5 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set the zone to override/on ({'setpoint': true}) for x seconds."""
-        await self._zone.set_override(1, kwargs.get(ATTR_DURATION, 3600))
+        duration: timedelta = kwargs.get(ATTR_DURATION, timedelta(hours=1))
+        await self._zone.set_override(1, int(duration.total_seconds()))

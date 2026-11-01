@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_CLIENT_ID): cv.string,
         probatio.Required(CONF_CLIENT_SECRET): cv.string,
         probatio.Optional(CONF_INCLUDE, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
     }
 )

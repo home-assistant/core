@@ -233,6 +233,21 @@ async def test_form_errors(
     assert result2["errors"] == {"base": error}
 
 
+async def test_options_flow_entry_not_loaded(hass: HomeAssistant) -> None:
+    """Test the options flow aborts while the entry is not set up."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="abcde12345",
+        data={CONF_HOST: "1.2.3.4", CONF_NAME: "Guest Room"},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
 async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(

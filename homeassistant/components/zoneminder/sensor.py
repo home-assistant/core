@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
             CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED
         ): cv.boolean,
         probatio.Optional(CONF_MONITORED_CONDITIONS, default=["all"]): probatio.All(
-            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
+            probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         ),
     }
 )

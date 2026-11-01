@@ -4,11 +4,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
+      "already_configured": "This API key is already used by another entry.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cannot_retrieve": "[%key:component::axle_energy::exceptions::cannot_connect::message%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::axle_energy::config::step::user::data_description::api_key%]"
+        },
+        "description": "Your Axle API key is no longer accepted. Open the [Home Assistant page in your Axle account]({token_url}) and copy your Home Assistant token. If **Generate Token** is available, select it first. Enter the token in **API key**. If the token is still rejected, contact Axle support."
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

@@ -11,6 +11,9 @@ if TYPE_CHECKING:
     from . import CalendarEntity
 
 DOMAIN: Final = "calendar"
+
+CREATE_EVENT_SERVICE: Final = "create_event"
+SERVICE_GET_EVENTS: Final = "get_events"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
 

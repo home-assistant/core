@@ -83,6 +83,53 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door_open": {
+        "name": "Door open"
+      },
+      "input_tray_empty": {
+        "name": "Input tray empty"
+      },
+      "input_tray_missing": {
+        "name": "Input tray missing"
+      },
+      "jammed": {
+        "name": "Paper jam"
+      },
+      "low_ink": {
+        "name": "Low ink"
+      },
+      "low_paper": {
+        "name": "Low paper"
+      },
+      "low_toner": {
+        "name": "Low toner"
+      },
+      "no_ink": {
+        "name": "No ink"
+      },
+      "no_paper": {
+        "name": "No paper"
+      },
+      "no_toner": {
+        "name": "No toner"
+      },
+      "output_full": {
+        "name": "Output tray full"
+      },
+      "output_near_full": {
+        "name": "Output tray near full"
+      },
+      "output_tray_missing": {
+        "name": "Output tray missing"
+      },
+      "overdue_prevent_maint": {
+        "name": "Preventive maintenance overdue"
+      },
+      "service_requested": {
+        "name": "Service requested"
+      }
+    },
     "sensor": {
       "belt_unit_remaining_life": {
         "name": "Belt unit remaining lifetime"
@@ -129,6 +176,15 @@
       "cyan_toner_remaining": {
         "name": "Cyan toner remaining"
       },
+      "device_status": {
+        "name": "Device status",
+        "state": {
+          "down": "Down",
+          "running": "Running",
+          "testing": "Testing",
+          "warning": "Warning"
+        }
+      },
       "drum_page_counter": {
         "name": "Drum page counter",
         "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
@@ -146,6 +202,9 @@
       },
       "fuser_remaining_life": {
         "name": "Fuser remaining lifetime"
+      },
+      "ink_capture_box_remaining_life": {
+        "name": "Ink capture box remaining lifetime"
       },
       "laser_remaining_life": {
         "name": "Laser remaining lifetime"
@@ -176,6 +235,15 @@
       },
       "pf_kit_mp_remaining_life": {
         "name": "PF Kit MP remaining lifetime"
+      },
+      "printer_status": {
+        "name": "Printer status",
+        "state": {
+          "idle": "Idle",
+          "other": "Other",
+          "printing": "Printing",
+          "warmup": "Warming up"
+        }
       },
       "status": {
         "name": "Status"

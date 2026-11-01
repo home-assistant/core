@@ -19,6 +19,7 @@ from homeassistant.components.map_tiles.const import (
     TILE_MAX_AGE,
     TILEJSON_URL,
     TOKEN_CHANGE_INTERVAL,
+    TOKEN_HEADER,
     VECTOR_URL,
 )
 from homeassistant.components.map_tiles.views import MapTilesVectorView
@@ -604,6 +605,52 @@ async def test_unauthenticated_request_is_forbidden(
 
     assert resp.status == HTTPStatus.FORBIDDEN
     assert aioclient_mock.call_count == 0
+
+
+async def test_token_header_authenticates(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a token in the header authenticates, keeping it out of the URL."""
+    aioclient_mock.get(VECTOR_UPSTREAM, content=VECTOR_TILE)
+
+    token = hass.data[DATA_ACCESS_TOKENS][-1]
+    client = await hass_client_no_auth()
+    resp = await client.get(VECTOR_PATH, headers={TOKEN_HEADER: token})
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == VECTOR_TILE
+
+
+async def test_rotated_out_token_header_is_rejected(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a header token stops authenticating after two rotations."""
+    token = hass.data[DATA_ACCESS_TOKENS][-1]
+    client = await hass_client_no_auth()
+
+    for _ in range(2):
+        freezer.tick(TOKEN_CHANGE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    resp = await client.get(VECTOR_PATH, headers={TOKEN_HEADER: token})
+
+    assert resp.status == HTTPStatus.FORBIDDEN
+
+
+async def test_invalid_token_header_is_forbidden(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test that a wrong header token does not count as a failed login."""
+    client = await hass_client_no_auth()
+    resp = await client.get(VECTOR_PATH, headers={TOKEN_HEADER: "not-a-token"})
+
+    assert resp.status == HTTPStatus.FORBIDDEN
 
 
 async def test_invalid_token_is_forbidden(

@@ -1,7 +1,6 @@
 """The Matter integration."""
 
 import asyncio
-from functools import cache
 from typing import TYPE_CHECKING
 
 from aiohasupervisor.models import InterfaceMethod
@@ -63,7 +62,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
-@cache
 def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:

@@ -66,7 +66,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Required(CONF_USERNAME): cv.string,
                 probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
                 probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
                 probatio.Optional(
                     CONF_REPORT_SERVER_CODES, default={}
                 ): SERVER_CODE_SCHEMA,
@@ -75,7 +75,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 ): cv.boolean,
                 probatio.Optional(
                     CONF_REPORT_SERVER_PORT, default=DEFAULT_REPORT_SERVER_PORT
-                ): cv.port,
+                ): probatio.Port(),
             }
         )
     },

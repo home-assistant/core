@@ -22,7 +22,7 @@ VALID_BRIGHTNESS_PCT = probatio.All(
 VALID_RATE = probatio.All(probatio.Coerce(float), probatio.Clamp(min=-1, max=3600))
 
 UPB_BRIGHTNESS_RATE_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT),
+    probatio.AtLeastOne(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT),
     cv.make_entity_service_schema(
         {
             probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,

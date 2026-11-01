@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                 probatio.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
                 probatio.Optional(CONF_HEADING): cv.string,
                 probatio.Optional(CONF_LINES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_NAME): cv.string,
             }

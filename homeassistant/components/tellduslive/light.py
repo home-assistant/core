@@ -30,10 +30,12 @@ async def async_setup_entry(
         client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveLight(client, device_id)])
 
-    async_dispatcher_connect(
-        hass,
-        TELLDUS_DISCOVERY_NEW.format(light.DOMAIN, DOMAIN),
-        async_discover_light,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            TELLDUS_DISCOVERY_NEW.format(light.DOMAIN, DOMAIN),
+            async_discover_light,
+        )
     )
 
 

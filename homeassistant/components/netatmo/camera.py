@@ -68,7 +68,11 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SET_PERSONS_HOME,
-        {probatio.Required(ATTR_PERSONS): probatio.All(cv.ensure_list, [cv.string])},
+        {
+            probatio.Required(ATTR_PERSONS): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            )
+        },
         "_service_set_persons_home",
     )
     platform.async_register_entity_service(

@@ -1,8 +1,9 @@
 """Support for Wyoming speech-to-text services."""
 
-from collections.abc import AsyncIterable
+import asyncio
+from collections.abc import AsyncIterable, AsyncIterator
 import logging
-from typing import override
+from typing import Protocol, override, runtime_checkable
 
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
@@ -19,6 +20,55 @@ from .error import WyomingError, error_event_message
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@runtime_checkable
+class _ClosableAsyncIterator(Protocol):
+    """Async iterator that can be closed."""
+
+    async def aclose(self) -> None:
+        """Close the iterator."""
+
+
+async def _async_upload_audio(
+    client: AsyncTcpClient, stream: AsyncIterable[bytes]
+) -> None:
+    """Upload an audio stream to a Wyoming service."""
+    stream_iterator: AsyncIterator[bytes] = aiter(stream)
+    try:
+        async for audio_bytes in stream_iterator:
+            chunk = AudioChunk(
+                rate=SAMPLE_RATE,
+                width=SAMPLE_WIDTH,
+                channels=SAMPLE_CHANNELS,
+                audio=audio_bytes,
+            )
+            await client.write_event(chunk.event())
+
+        await client.write_event(AudioStop().event())
+    finally:
+        if isinstance(stream_iterator, _ClosableAsyncIterator):
+            await stream_iterator.aclose()
+
+
+async def _async_receive_result(client: AsyncTcpClient) -> stt.SpeechResult:
+    """Receive a transcription result from a Wyoming service."""
+    while True:
+        event = await client.read_event()
+        if event is None:
+            _LOGGER.debug("Connection lost")
+            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+        if Error.is_type(event.type):
+            _LOGGER.error(error_event_message(Error.from_event(event)))
+            return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+
+        if Transcript.is_type(event.type):
+            transcript = Transcript.from_event(event)
+            return stt.SpeechResult(
+                transcript.text,
+                stt.SpeechResultState.SUCCESS,
+            )
 
 
 async def async_setup_entry(
@@ -53,6 +103,11 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
                 model_languages.update(asr_model.languages)
 
         self._supported_languages = list(model_languages)
+        self._audio_processing = stt.SpeechAudioProcessing(
+            requires_external_vad=asr_service.requires_external_vad,
+            prefers_auto_gain_enabled=asr_service.prefers_auto_gain_enabled,
+            prefers_noise_reduction_enabled=asr_service.prefers_noise_reduction_enabled,
+        )
         self._attr_name = asr_service.name
         self._attr_unique_id = f"{config_entry.entry_id}-stt"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
@@ -92,6 +147,12 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
         """Return a list of supported channels."""
         return [stt.AudioChannels.CHANNEL_MONO]
 
+    @property
+    @override
+    def audio_processing(self) -> stt.SpeechAudioProcessing:
+        """Return required/preferred input audio processing settings."""
+        return self._audio_processing
+
     @override
     async def async_process_audio_stream(
         self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
@@ -111,38 +172,26 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
                     ).event(),
                 )
 
-                async for audio_bytes in stream:
-                    chunk = AudioChunk(
-                        rate=SAMPLE_RATE,
-                        width=SAMPLE_WIDTH,
-                        channels=SAMPLE_CHANNELS,
-                        audio=audio_bytes,
+                upload_task = asyncio.create_task(_async_upload_audio(client, stream))
+                receive_task = asyncio.create_task(_async_receive_result(client))
+                tasks = (upload_task, receive_task)
+                try:
+                    done, _ = await asyncio.wait(
+                        tasks, return_when=asyncio.FIRST_COMPLETED
                     )
-                    await client.write_event(chunk.event())
 
-                # End audio stream
-                await client.write_event(AudioStop().event())
+                    if receive_task in done:
+                        return receive_task.result()
 
-                while True:
-                    event = await client.read_event()
-                    if event is None:
-                        _LOGGER.debug("Connection lost")
-                        return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
+                    upload_task.result()
+                    return await receive_task
+                finally:
+                    for task in tasks:
+                        if not task.done():
+                            task.cancel()
 
-                    if Error.is_type(event.type):
-                        _LOGGER.error(error_event_message(Error.from_event(event)))
-                        return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
-
-                    if Transcript.is_type(event.type):
-                        transcript = Transcript.from_event(event)
-                        text = transcript.text
-                        break
+                    await asyncio.gather(*tasks, return_exceptions=True)
 
         except OSError, WyomingError:
             _LOGGER.exception("Error processing audio stream")
             return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
-
-        return stt.SpeechResult(
-            text,
-            stt.SpeechResultState.SUCCESS,
-        )

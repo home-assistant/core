@@ -4530,7 +4530,7 @@ async def test_update_log_config(
     )
     msg = await ws_client.receive_json()
     assert not msg["success"]
-    assert "error" in msg and "must contain at least one of" in msg["error"]["message"]
+    assert "error" in msg and "at least one of" in msg["error"]["message"]
 
     # Test error if we set logToFile to True without providing filename
     await ws_client.send_json(

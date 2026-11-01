@@ -125,7 +125,7 @@ multidict>=6.0.2
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.13.4
+pydantic==2.13.5
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
@@ -242,6 +242,25 @@ auth0-python<5.0
 backoff==2.2.1
 python-backoff<2.4.0
 
+# bitstring 5.0.0 removed ConstBitStream, which pysml (used by edl21) still imports
+# https://github.com/home-assistant/core/issues/185883
+# https://codeberg.org/obi/pysml/issues/33
+# Remove once pysml supports bitstring>=5
+bitstring<5
+
+# graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
+# (used by pydrawise) still imports
+# https://github.com/home-assistant/core/issues/184918
+graphql-core<3.3
+
+# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# https://github.com/home-assistant/core/issues/185645
+# https://github.com/c-ares/c-ares/pull/1256
+pycares==5.0.1
+
+# pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
+pypasser<1.0.0
+
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
 # https://github.com/xolox/python-coloredlogs -> unmaintained
@@ -269,7 +288,6 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "check-json",
     "no-commit-to-branch",
     "prettier",
-    "python-typing-update",
     "ruff-format",  # it's just ruff
 )
 

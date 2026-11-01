@@ -96,10 +96,8 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      Only config-flow tests exist (tests/components/weatherflow/
-      test_config_flow.py). There are no tests for the sensor or event
-      platform entities, nor for async_setup_entry / async_unload_entry
-      behaviour. Coverage is well below the 95% Silver threshold.
+      There are no tests for the event platform entities, nor for
+      async_unload_entry / device removal behaviour.
 
   # Gold
   devices: done

@@ -64,20 +64,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> 
                 hass, f"nanoleaf_gesture_{nanoleaf.serial_no}", gesture_type
             )
 
-    event_listener = asyncio.create_task(
-        nanoleaf.listen_events(
-            state_callback=light_event_callback,
-            effects_callback=light_event_callback,
-            touch_callback=touch_event_callback if supports_touch else None,
+    if nanoleaf.supports_events:
+        event_listener = asyncio.create_task(
+            nanoleaf.listen_events(
+                state_callback=light_event_callback,
+                effects_callback=light_event_callback,
+                touch_callback=touch_event_callback if supports_touch else None,
+            )
         )
-    )
 
-    async def _cancel_listener() -> None:
-        event_listener.cancel()
-        with suppress(asyncio.CancelledError):
-            await event_listener
+        async def _cancel_listener() -> None:
+            event_listener.cancel()
+            with suppress(asyncio.CancelledError):
+                await event_listener
 
-    entry.async_on_unload(_cancel_listener)
+        entry.async_on_unload(_cancel_listener)
 
     entry.runtime_data = coordinator
 

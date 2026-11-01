@@ -3,56 +3,20 @@
 import contextlib
 import logging
 import os
-import shutil
 import subprocess
 import tempfile
 from typing import Any, override
 
-import probatio
-
-from homeassistant.components.tts import (
-    CONF_LANG,
-    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
-    Provider,
-    TextToSpeechEntity,
-    TtsAudioType,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.tts import CONF_LANG, TextToSpeechEntity, TtsAudioType
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DEFAULT_LANG, DOMAIN, SUPPORT_LANGUAGES
-from .issue import deprecate_yaml_issue
+from .const import DOMAIN, SUPPORT_LANGUAGES
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
-    {probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(SUPPORT_LANGUAGES)}
-)
-
-
-async def async_get_engine(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> Provider | None:
-    """Set up Pico speech component."""
-    if await hass.async_add_executor_job(shutil.which, "pico2wave") is None:
-        _LOGGER.error("'pico2wave' was not found")
-        return None
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
-    deprecate_yaml_issue(hass)
-
-    return PicoProvider(config[CONF_LANG])
 
 
 async def async_setup_entry(
@@ -117,53 +81,3 @@ class PicoTTSEntity(TextToSpeechEntity):
                 os.remove(fname)
 
         return "wav", data
-
-
-class PicoProvider(Provider):
-    """The Pico TTS API provider."""
-
-    def __init__(self, lang: str) -> None:
-        """Initialize Pico TTS provider."""
-        self._lang = lang
-        self.name = "PicoTTS"
-
-    @property
-    @override
-    def default_language(self) -> str:
-        """Return the default language."""
-        return self._lang
-
-    @property
-    @override
-    def supported_languages(self) -> list[str]:
-        """Return list of supported languages."""
-        return SUPPORT_LANGUAGES
-
-    @override
-    def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
-        """Load TTS using pico2wave."""
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
-            fname = tmpf.name
-
-        cmd = ["pico2wave", "--wave", fname, "-l", language]
-        result = subprocess.run(cmd, text=True, input=message, check=False)
-        data = None
-        try:
-            if result.returncode != 0:
-                _LOGGER.error(
-                    "Error running pico2wave, return code: %s", result.returncode
-                )
-                return None, None
-            with open(fname, "rb") as voice:
-                data = voice.read()
-        except OSError:
-            _LOGGER.error("Error trying to read %s", fname)
-            return None, None
-        finally:
-            os.remove(fname)
-
-        if data:
-            return ("wav", data)
-        return None, None

@@ -487,9 +487,6 @@
           "r": "mdi:alpha-r"
         }
       },
-      "energy_left": {
-        "default": "mdi:battery"
-      },
       "energy_remaining": {
         "default": "mdi:battery-medium"
       },
@@ -724,9 +721,6 @@
       },
       "total_home_usage": {
         "default": "mdi:home-lightning-bolt"
-      },
-      "total_pack_energy": {
-        "default": "mdi:battery-high"
       },
       "total_solar_production": {
         "default": "mdi:solar-power-variant"

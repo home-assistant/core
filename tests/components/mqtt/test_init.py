@@ -802,6 +802,8 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
 
 
 @pytest.mark.usefixtures("mqtt_client_mock")
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_reload_entry_with_restored_subscriptions(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,

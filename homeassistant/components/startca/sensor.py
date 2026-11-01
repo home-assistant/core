@@ -129,7 +129,7 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_MONITORED_VARIABLES): probatio.All(
-            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
+            probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         ),
         probatio.Required(CONF_API_KEY): cv.string,
         probatio.Required(CONF_TOTAL_BANDWIDTH): cv.positive_int,

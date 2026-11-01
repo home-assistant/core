@@ -31,7 +31,7 @@ def create_modbus_params(
 def solaredge_exception_handler[_EntityT: SolarEdgeModbusEntity, **_P](
     func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
-    """Decorate SolarEdge writes to serialize them and translate library errors.
+    """Decorate SolarEdge writes to translate what the library raises.
 
     A successful write updates the library's decoded cache, so listeners are
     nudged to re-read entity state without waiting for the next poll.
@@ -39,8 +39,7 @@ def solaredge_exception_handler[_EntityT: SolarEdgeModbusEntity, **_P](
 
     async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
-            async with self.coordinator.config_entry.runtime_data.write_lock:
-                await func(self, *args, **kwargs)
+            await func(self, *args, **kwargs)
             self.coordinator.async_update_listeners()
 
         except SolarEdgeConnectionError as error:

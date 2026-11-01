@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -79,7 +79,10 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match(
-                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
             )
             try:
                 api = await get_api(self.hass, user_input)
@@ -151,7 +154,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class TransmissionOptionsFlowHandler(OptionsFlow):
+class TransmissionOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Transmission client options."""
 
     async def async_step_init(

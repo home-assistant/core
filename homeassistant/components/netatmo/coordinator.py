@@ -537,9 +537,10 @@ class NetatmoDataHandler:
         self, home: pyatmo.Home, signal_home: str
     ) -> None:
         """Set up climate schedule per home."""
-        if NetatmoDeviceCategory.climate in [
-            next(iter(x)) for x in [room.features for room in home.rooms.values()] if x
-        ]:
+        if any(
+            NetatmoDeviceCategory.climate in room.features
+            for room in home.rooms.values()
+        ):
             self.schedules[home.entity_id] = self.account.homes[
                 home.entity_id
             ].schedules

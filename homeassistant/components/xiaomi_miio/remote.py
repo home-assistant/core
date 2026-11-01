@@ -44,7 +44,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_SLOT = 1
 
 COMMAND_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_COMMAND): probatio.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_COMMAND): probatio.All(probatio.EnsureList(), [cv.string])}
 )
 
 PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(

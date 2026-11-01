@@ -8,6 +8,7 @@ from typing import override
 from wled import Device as WLEDDevice
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -20,7 +21,8 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfInformation,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
@@ -38,6 +40,12 @@ class WLEDSensorEntityDescription(SensorEntityDescription):
 
     exists_fn: Callable[[WLEDDevice], bool] = lambda _: True
     value_fn: Callable[[WLEDDevice], datetime | StateType]
+
+
+def _connected_over_wifi(device: WLEDDevice) -> bool:
+    """Return whether the device is connected over Wi-Fi, not wired."""
+    # Without a Wi-Fi connection, the library reports no signal strength.
+    return device.info.wifi is not None and device.info.wifi.rssi is not None
 
 
 SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
@@ -89,6 +97,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_signal",
         translation_key="wifi_signal",
+        exists_fn=_connected_over_wifi,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -98,6 +107,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_rssi",
         translation_key="wifi_rssi",
+        exists_fn=_connected_over_wifi,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -108,6 +118,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_channel",
         translation_key="wifi_channel",
+        exists_fn=_connected_over_wifi,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.channel if device.info.wifi else None,
@@ -115,6 +126,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_bssid",
         translation_key="wifi_bssid",
+        exists_fn=_connected_over_wifi,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.bssid if device.info.wifi else None,
@@ -135,11 +147,41 @@ async def async_setup_entry(
 ) -> None:
     """Set up WLED sensor based on a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        WLEDSensorEntity(coordinator, description)
-        for description in SENSORS
-        if description.exists_fn(coordinator.data)
-    )
+    added: set[str] = set()
+
+    # Sensors added before stay, even when the device doesn't report what they
+    # need right now, like the current while the light is off.
+    registered = {
+        registry_entry.unique_id
+        for registry_entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+        if registry_entry.domain == SENSOR_DOMAIN
+    }
+    mac_address = coordinator.data.info.mac_address
+
+    @callback
+    def _async_add_sensors() -> None:
+        """Add the sensors the device reports, as soon as it does.
+
+        Some only show up later: WLED reports no current while the light is
+        off, so a device that's off when set up gets those sensors once it's on.
+        """
+        sensors = [
+            WLEDSensorEntity(coordinator, description)
+            for description in SENSORS
+            if description.key not in added
+            and (
+                description.exists_fn(coordinator.data)
+                or f"{mac_address}_{description.key}" in registered
+            )
+        ]
+        added.update(sensor.entity_description.key for sensor in sensors)
+        if sensors:
+            async_add_entities(sensors)
+
+    _async_add_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_sensors))
 
 
 class WLEDSensorEntity(WLEDEntity, SensorEntity):

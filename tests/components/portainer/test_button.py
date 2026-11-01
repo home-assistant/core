@@ -1,5 +1,6 @@
 """Tests for the Portainer button platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from pyportainer.exceptions import (
@@ -7,10 +8,12 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
+from pyportainer.models.stacks import Stack, StackType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -18,9 +21,14 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 
 BUTTON_DOMAIN = "button"
+UPDATE_STACK_ENTITY_ID = "button.webstack_update_stack"
 
 
 async def test_all_button_entities_snapshot(
@@ -162,3 +170,70 @@ async def test_buttons_endpoints_exceptions(
             {ATTR_ENTITY_ID: "button.my_environment_prune_unused_images"},
             blocking=True,
         )
+
+
+async def test_button_update_stack(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing the update stack button redeploys the stack."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: UPDATE_STACK_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_portainer_client.update_stack.assert_called_once_with(
+        1, 1, timeout=timedelta(minutes=10)
+    )
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (PortainerAuthenticationError("auth"), "invalid_auth"),
+        (PortainerConnectionError("conn"), "cannot_connect"),
+        (PortainerTimeoutError("timeout"), "timeout_connect"),
+    ],
+)
+async def test_button_update_stack_exceptions(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test the update stack button raises a translated error when the update fails."""
+    await setup_integration(hass, mock_config_entry)
+    mock_portainer_client.update_stack.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: UPDATE_STACK_ENTITY_ID},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
+
+
+async def test_button_update_stack_not_for_kubernetes(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test Kubernetes stacks don't get an update button."""
+    stacks = await async_load_json_array_fixture(hass, "stacks.json", DOMAIN)
+    stacks[0]["Type"] = StackType.KUBERNETES
+    mock_portainer_client.get_stacks.return_value = [
+        Stack.from_dict(stack) for stack in stacks
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(UPDATE_STACK_ENTITY_ID) is None
+    assert hass.states.get("button.dashy_update_stack") is not None

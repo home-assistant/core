@@ -278,6 +278,9 @@ OTA_ERROR = "ota_error"
 OTA_PROGRESS = "ota_progress"
 OTA_SUCCESS = "ota_success"
 
+# Time allowed for a device to come back online after a firmware update
+OTA_REBOOT_TIMEOUT: Final = 300
+
 GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
 GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
 GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"

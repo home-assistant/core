@@ -46,6 +46,7 @@ def async_get_tools(
             f"{DOMAIN}__"
             + unicode_slug.slugify(handler.intent_type, separator="_", lowercase=False),
             handler,
+            integration=DOMAIN,
         )
         for handler in handlers
     ]

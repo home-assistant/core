@@ -279,17 +279,17 @@ CORE_CONFIG_SCHEMA = probatio.All(
             probatio.Optional(CONF_INTERNAL_URL): cv.url,
             probatio.Optional(CONF_EXTERNAL_URL): cv.url,
             probatio.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): probatio.All(
-                cv.ensure_list, [probatio.IsDir()]
+                probatio.EnsureList(), [probatio.IsDir()]
             ),
             probatio.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): probatio.All(
-                cv.ensure_list, [probatio.IsDir()]
+                probatio.EnsureList(), [probatio.IsDir()]
             ),
             probatio.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): probatio.All(
-                cv.ensure_list, [cv.url]
+                probatio.EnsureList(), [cv.url]
             ),
             probatio.Optional(CONF_PACKAGES, default={}): _PACKAGES_CONFIG_SCHEMA,
             probatio.Optional(CONF_AUTH_PROVIDERS): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [
                     auth_providers.AUTH_PROVIDER_SCHEMA.extend(
                         {
@@ -306,7 +306,7 @@ CORE_CONFIG_SCHEMA = probatio.All(
                 _no_duplicate_auth_provider,
             ),
             probatio.Optional(CONF_AUTH_MFA_MODULES): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [
                     auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
                         {
@@ -330,12 +330,13 @@ CORE_CONFIG_SCHEMA = probatio.All(
             probatio.Optional(CONF_WEBRTC): probatio.Schema(
                 {
                     probatio.Required(CONF_ICE_SERVERS): probatio.All(
-                        cv.ensure_list,
+                        probatio.EnsureList(),
                         [
                             probatio.Schema(
                                 {
                                     probatio.Required(CONF_URL): probatio.All(
-                                        cv.ensure_list, [validate_stun_or_turn_url]
+                                        probatio.EnsureList(),
+                                        [validate_stun_or_turn_url],
                                     ),
                                     probatio.Optional(CONF_USERNAME): cv.string,
                                     probatio.Optional(CONF_CREDENTIAL): cv.string,

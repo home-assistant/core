@@ -45,6 +45,26 @@
         "name": "Target temperature"
       }
     },
+    "select": {
+      "heating_mode": {
+        "name": "Heating mode",
+        "state": {
+          "auto_saver": "Auto saver",
+          "auto_with_boost": "Auto with boost",
+          "chill": "Chill",
+          "heat_saver": "Heat saver",
+          "heat_with_boost": "Heat with boost"
+        }
+      },
+      "jet": {
+        "name": "Jet {jet}",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
     "sensor": {
       "control_box_version": {
         "name": "Control box version"

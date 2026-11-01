@@ -160,7 +160,7 @@ BASIC_INFO_SCHEMA = probatio.Schema(
 )
 
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {probatio.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list}
+    {probatio.Optional(CONF_FEATURE_LIST, default=None): probatio.EnsureList()}
 )
 
 CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(

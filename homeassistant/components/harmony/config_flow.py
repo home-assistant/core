@@ -16,6 +16,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -196,6 +197,9 @@ class OptionsFlowHandler(OptionsFlow):
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
+
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
 
         remote = self.config_entry.runtime_data
         data_schema = probatio.Schema(

@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, Final, override
 
+from synology_dsm.exceptions import SynologyDSMAPIErrorException
+
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
@@ -12,6 +14,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -87,4 +90,11 @@ class SynologyDSMButton(ButtonEntity):
             self.entity_description.key,
             self.syno_api.network.hostname,
         )
-        await self.entity_description.press_action(self.syno_api)()
+        try:
+            await self.entity_description.press_action(self.syno_api)()
+        except SynologyDSMAPIErrorException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=f"{self.entity_description.key}_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err

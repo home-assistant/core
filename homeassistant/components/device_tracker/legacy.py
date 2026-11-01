@@ -115,7 +115,7 @@ PLATFORM_SCHEMA_BASE: Final[probatio.Schema] = cv.PLATFORM_SCHEMA_BASE.extend(
 
 SERVICE_SEE_PAYLOAD_SCHEMA: Final[probatio.Schema] = probatio.Schema(
     probatio.All(
-        cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID),
+        probatio.AtLeastOne(ATTR_MAC, ATTR_DEV_ID),
         {
             ATTR_MAC: cv.string,
             ATTR_DEV_ID: cv.string,

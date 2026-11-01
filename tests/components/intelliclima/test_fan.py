@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
 from pyintelliclima.const import FanMode, FanSpeed
+from pyintelliclima.intelliclima_types import IntelliClimaDevices
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -192,6 +193,29 @@ async def test_fan_turn_on_defaulting_behavior(
 
     mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
         "11223344", expected_mode, expected_speed
+    )
+    mock_cloud_interface.ecocomfort.turn_off.assert_not_awaited()
+
+
+async def test_fan_turn_on_when_off_without_percentage(
+    hass: HomeAssistant,
+    mock_cloud_interface: AsyncMock,
+    single_eco_device: IntelliClimaDevices,
+) -> None:
+    """turn_on without percentage on an off fan turns it on at sleep speed."""
+    eco = single_eco_device.ecocomfort2_devices["56789"]
+    eco.mode_set = FanMode.off
+    eco.speed_set = FanSpeed.off
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
+        "11223344", FanMode.alternate, FanSpeed.sleep
     )
     mock_cloud_interface.ecocomfort.turn_off.assert_not_awaited()
 

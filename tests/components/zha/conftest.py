@@ -62,7 +62,7 @@ class _FakeApp(ControllerApplication):
     async def disconnect(self):
         pass
 
-    async def force_remove(self, dev: zigpy.device.Device):
+    async def force_remove(self, dev: zigpy.device.ZigbeeDevice):
         pass
 
     async def load_network_info(self, *, load_devices: bool = False):
@@ -92,7 +92,7 @@ class _FakeApp(ControllerApplication):
 
     async def request(
         self,
-        device: zigpy.device.Device,
+        device: zigpy.device.ZigbeeDevice,
         profile: zigpy.types.uint16_t,
         cluster: zigpy.types.uint16_t,
         src_ep: zigpy.types.uint8_t,
@@ -178,7 +178,7 @@ async def zigpy_app_controller():
     ep.add_input_cluster(Basic.cluster_id)
     ep.add_input_cluster(Groups.cluster_id)
 
-    with patch("zigpy.device.Device.request", return_value=[Status.SUCCESS]):
+    with patch("zigpy.device.ZigbeeDevice.request", return_value=[Status.SUCCESS]):
         # The mock wrapping accesses deprecated attributes, so we suppress the warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
@@ -356,7 +356,7 @@ def network_backup() -> zigpy.backups.NetworkBackup:
 
 
 @pytest.fixture
-def zigpy_device_mock(zigpy_app_controller) -> Callable[..., zigpy.device.Device]:
+def zigpy_device_mock(zigpy_app_controller) -> Callable[..., zigpy.device.ZigbeeDevice]:
     """Make a fake device using the specified cluster classes."""
 
     def _mock_dev(
@@ -371,7 +371,7 @@ def zigpy_device_mock(zigpy_app_controller) -> Callable[..., zigpy.device.Device
         attributes=None,
     ):
         """Make a fake device using the specified cluster classes."""
-        device = zigpy.device.Device(
+        device = zigpy.device.ZigbeeDevice(
             zigpy_app_controller, zigpy.types.EUI64.convert(ieee), nwk
         )
         device.manufacturer = manufacturer

@@ -269,7 +269,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         if self.fritz_status.has_wan_support:
             self.device_conn_type = self.fritz_status.connection_service
-            self.device_is_router = self.fritz_status.has_wan_enabled
+            try:
+                self.device_is_router = self.fritz_status.has_wan_enabled
+            except FritzActionError:
+                LOGGER.debug("assume that device has no wan enabled", exc_info=True)
+                self.device_is_router = False
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
 
@@ -450,11 +454,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     ),
                 )
         except Exception as ex:
-            if not self.hass.is_stopping:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="error_refresh_hosts_info",
-                ) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_refresh_hosts_info",
+            ) from ex
 
         hosts: dict[str, Device] = {}
         if hosts_attributes:
@@ -575,10 +578,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new network devices."""
-
-        if self.hass.is_stopping:
-            ha_is_stopping("scan devices")
-            return
 
         LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()

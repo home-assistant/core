@@ -44,7 +44,8 @@ RTM_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [RTM_SCHEMA])}, extra=probatio.ALLOW_EXTRA
+    {DOMAIN: probatio.All(probatio.EnsureList(), [RTM_SCHEMA])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_CREATE_TASK = "create_task"

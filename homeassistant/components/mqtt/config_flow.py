@@ -1219,7 +1219,9 @@ ENTITY_CONFIG_VALIDATOR: dict[
 class PlatformField:
     """Stores a platform config field schema, required flag and validator."""
 
-    selector: Selector[Any] | Callable[[dict[str, Any]], Selector[Any]]
+    selector: (
+        Selector[Any] | probatio.All[Any] | Callable[[dict[str, Any]], Selector[Any]]
+    )
     required: bool
     validator: Callable[[Any], Any] | None = None
     error: str | None = None

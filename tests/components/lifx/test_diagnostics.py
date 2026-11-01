@@ -20,6 +20,7 @@ from .helpers import (
     create_reference_infrared_light,
     create_reference_legacy_multizone_light,
     create_reference_matrix_light,
+    create_reference_thread_light,
 )
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -41,6 +42,7 @@ from tests.typing import ClientSessionGenerator
         pytest.param(create_reference_matrix_light, id="matrix"),
         pytest.param(create_reference_ceiling_light, id="ceiling"),
         pytest.param(create_reference_ceiling_128_light, id="ceiling_128"),
+        pytest.param(create_reference_thread_light, id="thread"),
     ],
 )
 async def test_diagnostics(

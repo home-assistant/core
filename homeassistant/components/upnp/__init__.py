@@ -90,8 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
     if not force_poll:
         await device.async_subscribe_services()
 
-    # Unsubscribe services on unload.
-    entry.async_on_unload(device.async_unsubscribe_services)
+    entry.async_on_unload(device.async_stop)
 
     # Track the original UDN such that existing sensors do not change their unique_id.
     if CONFIG_ENTRY_ORIGINAL_UDN not in entry.data:

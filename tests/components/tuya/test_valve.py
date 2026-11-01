@@ -8,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
+from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
     SERVICE_CLOSE_VALVE,
@@ -15,7 +16,7 @@ from homeassistant.components.valve import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
@@ -27,6 +28,38 @@ def platform_autouse():
     """Platform fixture."""
     with patch("homeassistant.components.tuya.PLATFORMS", [Platform.VALVE]):
         yield
+
+
+@pytest.mark.parametrize("mock_device_code", ["sfkzq_ed7frwissyqrejic"])
+async def test_single_channel_device_has_no_child_devices(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a device exposing a single channel keeps its entities on the device."""
+    for channel in range(2, 9):
+        for container in (
+            mock_device.function,
+            mock_device.status_range,
+            mock_device.status,
+        ):
+            container.pop(f"switch_{channel}", None)
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    assert not dr.async_child_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    entity_entry = entity_registry.async_get("valve.jie_hashui_fa_valve_1")
+    assert entity_entry
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), mock_config_entry.entry_id
+    )
+    assert device_entry
+    assert entity_entry.device_id == device_entry.id
 
 
 @pytest.mark.usefixtures("no_quirk")

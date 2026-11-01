@@ -3,7 +3,6 @@
     "abort": {
       "address_already_configured": "An Elk-M1 with this address is already configured",
       "already_configured": "An Elk-M1 with this prefix is already configured",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "reconfigure_successful": "Successfully reconfigured Elk-M1 integration",

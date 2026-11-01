@@ -26,7 +26,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema={
             probatio.Required(ATTR_COMMAND): cv.string,
             probatio.Optional(ATTR_PARAMETERS): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
             ),
         },
         func="async_call_method",
@@ -39,7 +39,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema={
             probatio.Required(ATTR_COMMAND): cv.string,
             probatio.Optional(ATTR_PARAMETERS): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
             ),
         },
         func="async_call_query",

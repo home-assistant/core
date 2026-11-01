@@ -1,8 +1,33 @@
 {
   "entity": {
+    "binary_sensor": {
+      "electricity_price_low": {
+        "default": "mdi:cash-minus",
+        "state": {
+          "off": "mdi:cash-plus",
+          "on": "mdi:cash-minus"
+        }
+      }
+    },
     "sensor": {
       "current_electricity_price": {
         "default": "mdi:cash-multiple"
+      },
+      "current_electricity_tariff_group": {
+        "default": "mdi:cash",
+        "state": {
+          "high": "mdi:cash-plus",
+          "low": "mdi:cash-minus"
+        }
+      },
+      "current_sustainability_score": {
+        "default": "mdi:leaf"
+      },
+      "electricity_cost_this_month": {
+        "default": "mdi:cash"
+      },
+      "electricity_delivered_this_month": {
+        "default": "mdi:transmission-tower-import"
       },
       "electricity_price_low_today_end_time": {
         "default": "mdi:clock-end"
@@ -23,6 +48,15 @@
           "incoming": "mdi:calendar-clock"
         }
       },
+      "electricity_produced_this_month": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "gas_cost_this_month": {
+        "default": "mdi:cash"
+      },
+      "gas_delivered_this_month": {
+        "default": "mdi:fire"
+      },
       "gas_price_today": {
         "default": "mdi:cash-multiple"
       },
@@ -36,6 +70,9 @@
         "default": "mdi:cash-multiple"
       },
       "lowest_electricity_price_tomorrow": {
+        "default": "mdi:cash-multiple"
+      },
+      "next_hour_electricity_price": {
         "default": "mdi:cash-multiple"
       }
     }

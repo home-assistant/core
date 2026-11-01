@@ -13,5 +13,5 @@
     "momonga.sk_wrapper_logger"
   ],
   "quality_scale": "bronze",
-  "requirements": ["momonga==0.3.0"]
+  "requirements": ["momonga==0.7.0"]
 }

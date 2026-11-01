@@ -51,7 +51,9 @@ from .utils import (
     make_public_camera,
     make_public_light,
     make_public_sensor,
+    make_streamless_public_camera,
     public_device_ws_message,
+    registered_keys,
     remove_entities,
     setup_public_camera,
     setup_public_light,
@@ -180,7 +182,9 @@ async def test_number_no_mic_level_for_hot_plugged_mic(
 
     await init_entry(hass, ufp, [camera])
 
-    assert "mic_level" not in _number_keys(entity_registry, camera.mac)
+    assert "mic_level" not in registered_keys(
+        entity_registry, Platform.NUMBER, camera.mac
+    )
 
 
 async def test_number_setup_camera_missing_attr(
@@ -765,29 +769,12 @@ async def test_chime_ring_volume_unavailable_when_unpaired(
     assert state.state == "unavailable"
 
 
-def _number_keys(entity_registry: er.EntityRegistry, mac: str) -> set[str]:
-    """Return the description keys of the numbers registered for a device."""
-    prefix = f"{mac}_"
-    return {
-        entry.unique_id.removeprefix(prefix)
-        for entry in entity_registry.entities.values()
-        if entry.domain == Platform.NUMBER and entry.unique_id.startswith(prefix)
-    }
-
-
-def _make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
-    """Build a public camera without RTSPS streams (snapshot-only)."""
-    public = make_public_camera(camera, **kwargs)
-    public.rtsps_streams = None
-    return public
-
-
 @pytest.mark.parametrize(
     ("fixture_name", "make", "key", "value", "setter", "present_keys", "absent_keys"),
     [
         pytest.param(
             "camera",
-            partial(_make_streamless_public_camera, mic_volume=42),
+            partial(make_streamless_public_camera, mic_volume=42),
             "mic_level",
             "42",
             "set_mic_volume",
@@ -797,7 +784,7 @@ def _make_streamless_public_camera(camera: Camera, **kwargs: Any) -> Mock:
         ),
         pytest.param(
             "doorbell",
-            partial(_make_streamless_public_camera, mic_volume=42),
+            partial(make_streamless_public_camera, mic_volume=42),
             "mic_level",
             "42",
             "set_mic_volume",
@@ -859,7 +846,7 @@ async def test_public_only_number_end_to_end(
     await setup_public_only()
 
     assert ufp_public_only.entry.state is ConfigEntryState.LOADED
-    keys = _number_keys(entity_registry, device.mac)
+    keys = registered_keys(entity_registry, Platform.NUMBER, device.mac)
     assert key in keys
     assert present_keys <= keys
     assert not keys & absent_keys
@@ -935,7 +922,7 @@ async def test_public_only_number_chime_has_no_numbers(
 
 def _make_public_camera_without_mic(camera: Camera) -> Mock:
     """Build a public camera whose feature flags carry no built-in microphone."""
-    public = _make_streamless_public_camera(camera)
+    public = make_streamless_public_camera(camera)
     public.feature_flags.has_mic = False
     return public
 
@@ -974,7 +961,7 @@ async def test_public_only_number_gated_out(
 
     await setup_public_only()
 
-    assert _number_keys(entity_registry, device.mac) == set()
+    assert registered_keys(entity_registry, Platform.NUMBER, device.mac) == set()
 
 
 async def test_public_only_number_added_after_setup(
@@ -1000,7 +987,7 @@ async def test_public_only_number_added_after_setup(
     ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
-    assert _number_keys(entity_registry, light.mac) == {
+    assert registered_keys(entity_registry, Platform.NUMBER, light.mac) == {
         "sensitivity",
         "duration",
     }

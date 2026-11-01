@@ -12,7 +12,7 @@ from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
-from homeassistant.components.unifi.coordinator import POLL_INTERVAL
+from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
@@ -85,7 +85,7 @@ async def test_coordinators_preserve_handler_update_sources(
         api.traffic_routes,
     ):
         coordinator = loader.get_data_update_coordinator(handler)
-        assert coordinator.update_interval == POLL_INTERVAL
+        assert coordinator.update_interval == IDLE_POLL_INTERVAL
 
 
 async def test_get_data_update_coordinator_requires_registered_handler(
@@ -109,6 +109,11 @@ async def test_polling_coordinator_refreshes_after_interval(
     coordinator = loader.get_data_update_coordinator(
         api.object_oriented_network_configs
     )
+
+    assert coordinator.update_interval == IDLE_POLL_INTERVAL
+
+    with patch.object(coordinator.handler, "items", return_value=[("id", object())]):
+        await coordinator.async_refresh()
 
     assert coordinator.update_interval == POLL_INTERVAL
 
@@ -157,7 +162,7 @@ async def test_endpoint_not_found_disables_object_oriented_network_config_pollin
         await hass.async_block_till_done()
 
     assert mock_update.call_count == 2
-    assert traffic_rules_coordinator.update_interval == POLL_INTERVAL
+    assert traffic_rules_coordinator.update_interval == IDLE_POLL_INTERVAL
     assert (
         caplog.text.count(
             "UniFi ObjectOrientedNetworkConfigs endpoint is unavailable; disabling polling"

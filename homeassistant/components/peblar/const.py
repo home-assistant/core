@@ -11,6 +11,11 @@ DOMAIN: Final = "peblar"
 CONF_EVCC_ID: Final = "evcc_id"
 CONF_UID: Final = "uid"
 
+# How far back to look for the session the charger is on. Wide enough to
+# still find one after a quiet week, narrow enough to stay a few kilobytes:
+# asking without a bound hands back the charger's entire history.
+SESSION_HISTORY_WINDOW: Final = timedelta(days=7)
+
 # The stream only makes the poll quicker, so there is no hurry, and no
 # point hammering a charger that is switched off.
 EVENT_STREAM_RETRY_MINIMUM: Final = timedelta(seconds=5)

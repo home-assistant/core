@@ -614,31 +614,33 @@ async def test_stream_tts_with_request_ids(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("eleven_v3", id="eleven_v3"),
+        pytest.param("eleven_v3_conversational", id="eleven_v3_conversational"),
+    ],
+)
 async def test_stream_tts_without_previous_info(
     setup: AsyncMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     capture_stream_calls,
     stream_sentence_helpers,
-    monkeypatch: pytest.MonkeyPatch,
     message: list[list[str]],
     chunks: list[bytes],
     request_ids: list[str],
+    model: str,
 ) -> None:
-    """Test streaming TTS without request-id stitching (eleven_v3)."""
+    """Test streaming TTS without request-id stitching for eleven_v3 models."""
     calls, set_next_return, patch_stream = capture_stream_calls
     tts_entity = hass.data[tts.DOMAIN].get_entity("tts.elevenlabs_text_to_speech")
     patch_stream(tts_entity)
-    monkeypatch.setattr(
-        "homeassistant.components.elevenlabs.tts.MODELS_PREVIOUS_INFO_NOT_SUPPORTED",
-        ("model1",),
-        raising=False,
-    )
 
     queue = asyncio.Queue()
     sentence_iter = iter(zip(message, chunks, request_ids, strict=False))
     get_next_part, message_gen = stream_sentence_helpers(sentence_iter, queue)
-    options = {tts.ATTR_VOICE: "voice1", "model": "model1"}
+    options = {tts.ATTR_VOICE: "voice1", "model": model}
     req = TTSAudioRequest(message_gen=message_gen(), language="en", options=options)
 
     resp = await tts_entity.async_stream_tts_audio(req)

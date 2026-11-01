@@ -8,7 +8,6 @@ import pytest
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
     SOURCE_ZEROCONF,
@@ -99,23 +98,6 @@ async def test_user_flow_no_serial(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OpenEVSE 10.0.0.131"
-    assert result["result"].unique_id is None
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow_no_serial(
-    hass: HomeAssistant, mock_charger: MagicMock
-) -> None:
-    """Test import flow handles missing serial gracefully."""
-    mock_charger.test_and_get.side_effect = [{}, MissingSerial]
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: "10.0.0.131"}
-    )
-
-    # Assert the flow continued to create the entry
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OpenEVSE 10.0.0.131"
     assert result["result"].unique_id is None
@@ -221,46 +203,6 @@ async def test_user_flow_with_missing_serial(
         CONF_PASSWORD: "muchpassword",
     }
     assert result["result"].unique_id is None
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow(hass: HomeAssistant, mock_charger: MagicMock) -> None:
-    """Test import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: "10.0.0.131"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OpenEVSE 10.0.0.131"
-    assert result["data"] == {CONF_HOST: "10.0.0.131"}
-    assert result["result"].unique_id == "deadbeeffeed"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow_bad(hass: HomeAssistant, mock_charger: MagicMock) -> None:
-    """Test import flow with bad charger."""
-    mock_charger.test_and_get.side_effect = TimeoutError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: "10.0.0.131"}
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unavailable_host"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_flow_duplicate(
-    hass: HomeAssistant, mock_config_entry: MagicMock, mock_charger: MagicMock
-) -> None:
-    """Test import flow aborts when config entry already exists."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: "192.168.1.100"},
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

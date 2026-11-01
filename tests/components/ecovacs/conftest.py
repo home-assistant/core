@@ -9,7 +9,7 @@ from deebot_client import const
 from deebot_client.command import DeviceCommandResult
 from deebot_client.device import Device
 from deebot_client.exceptions import ApiError
-from deebot_client.models import Credentials
+from deebot_client.models import AccountCredentials, Credentials
 import pytest
 from sucks import EventEmitter
 
@@ -67,8 +67,8 @@ def device_fixture() -> str:
 
 
 @pytest.fixture
-def mock_authenticator(device_fixture: str) -> Generator[Mock]:
-    """Mock the authenticator."""
+def mock_authenticator_class(device_fixture: str) -> Generator[Mock]:
+    """Mock the authenticator class."""
     with (
         patch(
             "homeassistant.components.ecovacs.controller.Authenticator",
@@ -81,6 +81,9 @@ def mock_authenticator(device_fixture: str) -> Generator[Mock]:
     ):
         authenticator = mock.return_value
         authenticator.authenticate.return_value = Credentials("token", "user_id", 0)
+        authenticator.account_credentials = AccountCredentials(
+            "account_token", "account_user_id"
+        )
 
         devices = [
             load_json_object_fixture(f"devices/{device_fixture}/device.json", DOMAIN)
@@ -102,7 +105,13 @@ def mock_authenticator(device_fixture: str) -> Generator[Mock]:
                     raise ApiError("Path not mocked: {path}")
 
         authenticator.post_authenticated.side_effect = post_authenticated
-        yield authenticator
+        yield mock
+
+
+@pytest.fixture
+def mock_authenticator(mock_authenticator_class: Mock) -> Mock:
+    """Mock the authenticator."""
+    return mock_authenticator_class.return_value
 
 
 @pytest.fixture

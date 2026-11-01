@@ -140,10 +140,10 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         """Set mode and speed.
 
         If percentage is None, it first defaults to the respective property.
-        If that is also None, then percentage defaults to 25 (sleep)
+        If that is None or 0, then percentage defaults to 25 (sleep)
         """
-        percentage = self.percentage if percentage is None else percentage
-        percentage = 25 if percentage is None else percentage
+        if percentage is None:
+            percentage = self.percentage or 25
 
         if preset_mode == "auto":
             # auto is a special case with special mode and speed setting

@@ -1098,6 +1098,36 @@ async def test_ws_delete(
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, timer_id) is None
 
 
+async def test_ws_delete_running_timer(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
+) -> None:
+    """Test deleting a running timer does not fire the finished event."""
+    assert await storage_setup()
+    timer_entity_id = f"{DOMAIN}.{DOMAIN}_from_storage"
+    events = async_capture_events(hass, EVENT_TIMER_FINISHED)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_START,
+        {CONF_ENTITY_ID: timer_entity_id, CONF_DURATION: 10},
+        blocking=True,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 6, "type": f"{DOMAIN}/delete", f"{DOMAIN}_id": "from_storage"}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done()
+
+    assert not events
+
+
 async def test_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

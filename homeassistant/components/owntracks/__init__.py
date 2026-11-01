@@ -54,7 +54,7 @@ CONFIG_SCHEMA = probatio.All(
                     CONF_MQTT_TOPIC, default=DEFAULT_OWNTRACKS_TOPIC
                 ): mqtt.valid_subscribe_topic,
                 probatio.Optional(CONF_WAYPOINT_WHITELIST): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_SECRET): probatio.Any(
                     probatio.Schema({probatio.Optional(cv.string): cv.string}),

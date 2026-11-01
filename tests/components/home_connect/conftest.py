@@ -149,6 +149,10 @@ async def mock_integration_setup(
     config_entry.add_to_hass(hass)
 
     async def run(client: MagicMock) -> bool:
+        def init_side_effect(auth) -> MagicMock:
+            client._auth = auth
+            return client
+
         assert config_entry.state is ConfigEntryState.NOT_LOADED
         with (
             patch("homeassistant.components.home_connect.PLATFORMS", platforms),
@@ -156,7 +160,7 @@ async def mock_integration_setup(
                 "homeassistant.components.home_connect.HomeConnectClient"
             ) as client_mock,
         ):
-            client_mock.return_value = client
+            client_mock.side_effect = init_side_effect
             result = await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
         return result

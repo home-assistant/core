@@ -52,7 +52,9 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_CLIENT_SECRET): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Required(CONF_PASSWORD): cv.string,
-        probatio.Required(CONF_SUBREDDITS): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_SUBREDDITS): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_SORT_BY, default="hot"): probatio.All(
             cv.string, probatio.In(LIST_TYPES)
         ),

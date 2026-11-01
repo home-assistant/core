@@ -119,7 +119,7 @@ BOARD_CONFIG_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [BOARD_CONFIG_SCHEMA])},
+    {DOMAIN: probatio.All(probatio.EnsureList(), [BOARD_CONFIG_SCHEMA])},
     extra=probatio.ALLOW_EXTRA,
 )
 

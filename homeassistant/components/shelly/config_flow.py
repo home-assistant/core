@@ -46,7 +46,7 @@ from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -69,6 +69,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.network import is_ip_address
 
 from .ble_provisioning import (
     ProvisioningState,
@@ -90,12 +91,14 @@ from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
+    get_device_from_manufacturer_data,
     get_http_port,
     get_info_auth,
     get_info_gen,
     get_model_name,
     get_rpc_device_wakeup_period,
     get_ws_context,
+    is_device_supported,
     mac_address_from_name,
 )
 
@@ -440,6 +443,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.info[CONF_MAC], raise_on_progress=False)
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
+        if not is_device_supported(self.info):
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": get_model_name(self.info)},
+            )
+
         self.host = host
         self.port = port
         self.verify_ssl = verify_ssl
@@ -503,6 +512,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device_name = device_data.name
             await self.async_set_unique_id(device_data.mac, raise_on_progress=False)
             self._abort_if_unique_id_configured()
+            if (
+                device := get_device_from_manufacturer_data(
+                    device_data.discovery_info.manufacturer_data
+                )
+            ) and not device.supported:
+                return self.async_abort(
+                    reason="unsupported_device",
+                    description_placeholders={"model": device.name},
+                )
             self.context.update(
                 {
                     "title_placeholders": {"name": self.device_name},
@@ -718,12 +736,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_discovered_mac(self, mac: str, host: str) -> None:
         """Abort and reconnect soon if the device with the mac is already configured."""
-        if (
-            current_entry := await self.async_set_unique_id(mac)
-        ) and current_entry.data.get(CONF_HOST) == host:
+        current_entry = await self.async_set_unique_id(mac)
+        current_host = current_entry.data.get(CONF_HOST) if current_entry else None
+        # A user-configured hostname must not be replaced by the resolved IP
+        keep_hostname = current_host is not None and not is_ip_address(current_host)
+        if current_entry and (current_host == host or keep_hostname):
             LOGGER.debug("async_reconnect_soon: host: %s, mac: %s", host, mac)
             await async_reconnect_soon(self.hass, current_entry)
-        if host == INTERNAL_WIFI_AP_IP:
+        if keep_hostname:
+            self._abort_if_unique_id_configured()
+        elif host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip
             # we can't connect to it, so we should not update the
             # entry with the new host as it will be unreachable
@@ -764,6 +786,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         # Check if already configured - abort if device is already set up
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured()
+        if (
+            device := get_device_from_manufacturer_data(
+                discovery_info.manufacturer_data
+            )
+        ) and not device.supported:
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": device.name},
+            )
 
         # Store BLE device and name for WiFi provisioning
         self.ble_device = async_ble_device_from_address(
@@ -1179,6 +1210,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             mac = self.info[CONF_MAC]
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
 
+        if not is_device_supported(self.info):
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": get_model_name(self.info)},
+            )
+
         self.host = host
         self.port = port
         self.verify_ssl = verify_ssl
@@ -1387,7 +1424,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         ) in RPC_GENERATIONS and not config_entry.data.get(CONF_SLEEP_PERIOD)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle the option flow for shelly."""
 
     async def async_step_init(
@@ -1404,7 +1441,7 @@ class OptionsFlowHandler(OptionsFlow):
             return self.async_abort(reason="zigbee_firmware")
 
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",

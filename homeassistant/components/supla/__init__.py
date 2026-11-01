@@ -42,7 +42,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_SERVERS): probatio.All(
-                    cv.ensure_list, [SERVER_CONFIG]
+                    probatio.EnsureList(), [SERVER_CONFIG]
                 )
             }
         )

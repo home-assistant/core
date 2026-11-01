@@ -68,8 +68,8 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
-    status: done
-    comment: Integration creates repair issues for YAML deprecation.
+    status: exempt
+    comment: Integration does not raise repair issues.
   stale-devices:
     status: exempt
     comment: Integration supports a single device per config entry.

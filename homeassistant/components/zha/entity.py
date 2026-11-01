@@ -178,7 +178,6 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
             self.entity_id,
             self.entity_data,
-            self.device_info,
             self.remove_future,
         )
 

@@ -178,6 +178,33 @@ async def test_user_pair_leading_zero_pin(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mrp_device", "pairing")
+async def test_user_adds_previously_ignored_device(hass: HomeAssistant) -> None:
+    """Test adding a device that was ignored before creates an entry."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="mrpid",
+        source=config_entries.SOURCE_IGNORE,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device_input": "MRP Device"},
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1111"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    entries = hass.config_entries.async_entries(DOMAIN, include_ignore=True)
+    assert len(entries) == 1
+    assert entries[0].source == config_entries.SOURCE_USER
+
+
 @pytest.mark.usefixtures("mrp_device")
 @pytest.mark.parametrize("invalid_pin", ["abcd", "12ab", "١٢٣٤", "123\n"])
 async def test_user_pair_non_numeric_pin(

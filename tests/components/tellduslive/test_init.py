@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from homeassistant.components.tellduslive import NEW_CLIENT_TASK
 from homeassistant.components.tellduslive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -38,8 +39,12 @@ async def test_device_via_device_links(
     )
     assert child_device is not None
     assert child_device.via_device_id == hub_device.id
+    assert hass.states.async_all("switch")
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert all(
+        state.state == STATE_UNAVAILABLE for state in hass.states.async_all("switch")
+    )
 
 
 async def test_device_added_without_hub(

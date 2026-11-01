@@ -64,9 +64,11 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_API_KEY): cv.string,
         probatio.Optional(CONF_FOREIGN_EXCHANGE): probatio.All(
-            cv.ensure_list, [CURRENCY_SCHEMA]
+            probatio.EnsureList(), [CURRENCY_SCHEMA]
         ),
-        probatio.Optional(CONF_SYMBOLS): probatio.All(cv.ensure_list, [SYMBOL_SCHEMA]),
+        probatio.Optional(CONF_SYMBOLS): probatio.All(
+            probatio.EnsureList(), [SYMBOL_SCHEMA]
+        ),
     }
 )
 

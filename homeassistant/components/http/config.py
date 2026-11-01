@@ -59,7 +59,7 @@ def default_server_port() -> int:
     if (env_value := os.environ.get(ENV_SETUP_PORT)) is None:
         return default
     try:
-        return cast(int, cv.port(env_value))
+        return probatio.Port()(env_value)
     except probatio.Invalid:
         _LOGGER.warning(
             "Invalid port %r in %s environment variable; falling back to %s",
@@ -141,18 +141,20 @@ HTTP_STORAGE_SCHEMA: Final = probatio.Schema(
         # the stored config never contains it.
         probatio.Remove(CONF_BASE_URL): object,
         probatio.Optional(CONF_SERVER_HOST): probatio.All(
-            cv.ensure_list, probatio.Length(min=1), [cv.string]
+            probatio.EnsureList(), probatio.Length(min=1), [cv.string]
         ),
-        probatio.Optional(CONF_SERVER_PORT, default=default_server_port): cv.port,
+        probatio.Optional(
+            CONF_SERVER_PORT, default=default_server_port
+        ): probatio.Port(),
         probatio.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
         probatio.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
         probatio.Optional(CONF_SSL_KEY): cv.isfile,
         probatio.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_USE_X_FORWARDED_FOR): cv.boolean,
         probatio.Optional(CONF_TRUSTED_PROXIES): probatio.All(
-            cv.ensure_list, [_ip_network_str]
+            probatio.EnsureList(), [_ip_network_str]
         ),
         probatio.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD

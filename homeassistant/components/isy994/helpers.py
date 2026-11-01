@@ -22,7 +22,7 @@ from pyisy.constants import (
 from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, Platform
+from homeassistant.const import Platform
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
@@ -292,15 +292,7 @@ def _add_backlight_if_supported(isy_data: IsyData, node: Node) -> None:
 def _generate_device_info(node: Node, via_device_id: str | None) -> DeviceInfo:
     """Generate the device info for a root node device."""
     isy = node.isy
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, f"{isy.uuid}_{node.address}")},
-        manufacturer=node.protocol.title(),
-        name=node.name,
-        configuration_url=isy.conn.url,
-        suggested_area=node.folder,
-    )
-    if via_device_id is not None:
-        device_info["via_device_id"] = via_device_id
+    manufacturer = node.protocol.title()
 
     # ISYv5 Device Types can provide model and manufacturer
     model: str = str(node.address).rpartition(" ")[0] or node.address
@@ -317,14 +309,22 @@ def _generate_device_info(node: Node, via_device_id: str | None) -> DeviceInfo:
         and node.zwave_props
         and node.zwave_props.mfr_id != "0"
     ):
-        device_info[ATTR_MANUFACTURER] = (
-            f"Z-Wave MfrID:{int(node.zwave_props.mfr_id):#0{6}x}"
-        )
+        manufacturer = f"Z-Wave MfrID:{int(node.zwave_props.mfr_id):#0{6}x}"
         model += (
             f"Type:{int(node.zwave_props.prod_type_id):#0{6}x} "
             f"Product:{int(node.zwave_props.product_id):#0{6}x}"
         )
-    device_info[ATTR_MODEL] = model
+
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, f"{isy.uuid}_{node.address}")},
+        manufacturer=manufacturer,
+        model=model,
+        name=node.name,
+        configuration_url=isy.conn.url,
+        suggested_area=node.folder,
+    )
+    if via_device_id is not None:
+        device_info["via_device_id"] = via_device_id
 
     return device_info
 

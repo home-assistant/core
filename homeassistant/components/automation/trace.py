@@ -64,7 +64,8 @@ def trace_automation(
     trace = AutomationTrace(
         automation_id, config, blueprint_inputs, context, not_triggered=not_triggered
     )
-    async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
+    if automation_id:
+        async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
 
     try:
         yield trace

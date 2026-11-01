@@ -121,7 +121,9 @@ ALEXA_ENTITY_SCHEMA = probatio.Schema(
 GOOGLE_ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_ALIASES): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_ALIASES): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(google_assistant.CONF_ROOM_HINT): cv.string,
     }
 )
@@ -287,10 +289,16 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
-    if not hass.data[DATA_CLOUD].client.prefs.remote_enabled:
+    cloud = hass.data[DATA_CLOUD]
+    if not cloud.client.prefs.remote_enabled:
         raise CloudNotAvailable
 
-    if not (remote_domain := hass.data[DATA_CLOUD].client.prefs.remote_domain):
+    # Fall back to the domain in the preferences while the remote backend is
+    # not loaded.
+    if not (
+        remote_domain := cloud.remote.instance_domain
+        or cloud.client.prefs.remote_domain
+    ):
         raise CloudNotAvailable
 
     return f"https://{remote_domain}"
@@ -375,7 +383,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _on_initialized() -> None:
         """Update preferences."""
-        await prefs.async_update(remote_domain=cloud.remote.instance_domain)
+        if (remote_domain := cloud.remote.instance_domain) != prefs.remote_domain:
+            await prefs.async_update(remote_domain=remote_domain)
 
     hass.data[DATA_PENDING_AUTO_LOGIN] = None
 

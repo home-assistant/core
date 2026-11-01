@@ -100,7 +100,10 @@ class CameraPreferences:
                 bool,
                 self._preload_prefs.get(entity_id, {}).get(PREF_PRELOAD_STREAM, False),
             ),
-            orientation=er_prefs.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM),
+            # Stored in the entity registry, where it is loaded as a plain int
+            orientation=Orientation(
+                er_prefs.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM)
+            ),
         )
         self._dynamic_stream_settings_by_entity_id[entity_id] = settings
         return settings

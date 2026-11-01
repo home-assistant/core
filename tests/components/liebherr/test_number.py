@@ -58,6 +58,35 @@ async def test_temperature_step(hass: HomeAssistant) -> None:
     assert bottom_zone.attributes["step"] == 1
 
 
+async def test_non_uniform_temperature_steps(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_liebherr_client: MagicMock,
+    platforms: list[Platform],
+) -> None:
+    """Test non-uniform temperature steps fall back to one degree."""
+    device_state = copy.deepcopy(MOCK_DEVICE_STATE)
+    temperature_control = device_state.controls[0]
+    assert isinstance(temperature_control, TemperatureControl)
+    device_state.controls[0] = replace(
+        temperature_control,
+        set_temperature_steps=[2, 4, 7],
+        set_temperature_steps_enabled=True,
+    )
+    mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+        device_state
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_fridge_top_zone_setpoint")
+    assert state is not None
+    assert state.attributes["step"] == 1
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_numbers(
     hass: HomeAssistant,

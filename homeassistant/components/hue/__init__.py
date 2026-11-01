@@ -3,7 +3,7 @@
 from aiohue.util import normalize_bridge_id
 
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -21,6 +21,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_services(hass)
 
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.minor_version < 2:
+        _migrate_zigbee_connections(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
+
+
+@callback
+def _migrate_zigbee_connections(hass: HomeAssistant, entry: HueConfigEntry) -> None:
+    """Migrate zigbee macs that were incorrectly stored as network macs."""
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        # Zigbee macs have 8 octets, network macs have 6.
+        zigbee_connections = {
+            (conn_type, value)
+            for conn_type, value in device.connections
+            if conn_type == dr.CONNECTION_NETWORK_MAC and value.count(":") == 7
+        }
+        if not zigbee_connections:
+            continue
+        new_connections = (device.connections - zigbee_connections) | {
+            (dr.CONNECTION_ZIGBEE, value) for _, value in zigbee_connections
+        }
+        dev_reg.async_update_device(device.id, new_connections=new_connections)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:

@@ -88,5 +88,5 @@ async def test_button_press_sends_correct_code(
 async def test_button_availability_follows_ir_entity(hass: HomeAssistant) -> None:
     """Test a button becomes unavailable when the IR entity is unavailable."""
     await assert_availability_follows_source_entity(
-        hass, BUTTON_ENTITY_ID_MODE, MOCK_INFRARED_EMITTER_ENTITY_ID
+        hass, BUTTON_ENTITY_ID_MODE, [MOCK_INFRARED_EMITTER_ENTITY_ID]
     )

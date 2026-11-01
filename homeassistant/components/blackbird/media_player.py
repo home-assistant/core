@@ -54,7 +54,7 @@ ZONE_IDS = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=8))
 SOURCE_IDS = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=8))
 
 PLATFORM_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
+    probatio.AtLeastOne(CONF_PORT, CONF_HOST),
     MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         {
             probatio.Exclusive(CONF_PORT, CONF_TYPE): cv.string,

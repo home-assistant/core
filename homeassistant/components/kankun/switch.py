@@ -33,7 +33,7 @@ SWITCH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
         probatio.Optional(CONF_USERNAME): cv.string,
         probatio.Optional(CONF_PASSWORD): cv.string,

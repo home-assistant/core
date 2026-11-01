@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_APP_ID): cv.string,
         probatio.Required(CONF_APP_KEY): cv.string,
         probatio.Required(CONF_BUS_STOPS): probatio.All(
-            cv.ensure_list, [LINE_STOP_SCHEMA]
+            probatio.EnsureList(), [LINE_STOP_SCHEMA]
         ),
     }
 )

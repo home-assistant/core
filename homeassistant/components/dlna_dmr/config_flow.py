@@ -388,7 +388,7 @@ class DlnaDmrOptionsFlowHandler(OptionsFlow):
                 ] = validator
 
         # listen_port can be blank or 0 for "bind any free port"
-        _add_with_suggestion(CONF_LISTEN_PORT, cv.port)
+        _add_with_suggestion(CONF_LISTEN_PORT, probatio.Port())
         _add_with_suggestion(CONF_CALLBACK_URL_OVERRIDE, str)
         _add_with_suggestion(CONF_POLL_AVAILABILITY, bool)
         _add_with_suggestion(CONF_BROWSE_UNFILTERED, bool)

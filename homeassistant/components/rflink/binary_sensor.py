@@ -42,7 +42,7 @@ RFLINK_PLATFORM = {
                 ): cv.boolean,
                 probatio.Optional(CONF_OFF_DELAY): cv.positive_int,
                 probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
             }
         )

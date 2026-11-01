@@ -51,7 +51,7 @@ type ElevenLabsConfigEntry = ConfigEntry[ElevenLabsData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> bool:
     """Set up ElevenLabs text-to-speech from a config entry."""
-    entry.add_update_listener(update_listener)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
     httpx_client = get_async_client(hass)
     client = AsyncElevenLabs(
         api_key=entry.data[CONF_API_KEY], httpx_client=httpx_client

@@ -17,6 +17,7 @@ from uiprotect.data import (
 from uiprotect.data.public_devices import PublicCamera
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform, issue_registry as ir
@@ -271,6 +272,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._attr_name = get_camera_base_name(quality)
         # only the default (first active) quality channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default
+        # RTSPS uses a self-signed certificate on the console IP
+        self.stream_options[CONF_VERIFY_SSL] = False
         # Set the stream source before finishing the init
         # because async_added_to_hass is too late and camera
         # integration uses async_internal_added_to_hass to access

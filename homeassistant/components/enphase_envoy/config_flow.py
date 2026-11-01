@@ -260,6 +260,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if not errors:
                 # successful authentication, update config
+                # Shares the local string with the unique ID abort in async_step_user
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates=user_input
@@ -268,6 +269,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         if isinstance(envoy.auth, EnvoyTokenAuth)
                         else {}
                     ),
+                    reason="reauth_successful",
                 )
             if token:
                 token_days_left = token_lifetime(token)

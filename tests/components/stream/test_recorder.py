@@ -29,6 +29,7 @@ from .common import (
     assert_mp4_has_transform_matrix,
     dynamic_stream_settings,
     generate_h264_video,
+    generate_h265_video,
     remux_with_audio,
 )
 
@@ -79,6 +80,36 @@ async def test_record_stream(hass: HomeAssistant, filename, h264_video) -> None:
 
     # Assert
     assert os.path.exists(filename)
+
+
+async def test_record_stream_h265_is_hvc1(hass: HomeAssistant, filename: str) -> None:
+    """Test a h265 recording gets muxed as hvc1, so Apple devices can play it."""
+    worker_finished = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
+
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
+
+    source = await hass.async_add_executor_job(generate_h265_video)
+    with patch("homeassistant.components.stream.Stream", wraps=MockStream):
+        stream = create_stream(hass, source, {}, dynamic_stream_settings())
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        make_recording = hass.async_create_task(stream.async_record(filename))
+        await worker_finished.wait()
+
+        # Fire the IdleTimer
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+
+        await make_recording
+
+    with av.open(filename) as recording:
+        assert recording.streams.video[0].codec_tag == "hvc1"
 
 
 async def test_record_lookback(hass: HomeAssistant, filename, h264_video) -> None:

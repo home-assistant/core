@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from simplepush import BadRequest, UnknownError, send
+from simplepush.legacy import BadRequest, UnknownError, send
 
 from homeassistant.components.notify import (
     ATTR_DATA,

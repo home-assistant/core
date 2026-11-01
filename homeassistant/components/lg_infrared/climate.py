@@ -236,7 +236,7 @@ class LgAcClimateEntity(
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature, switching the HVAC mode when one is given."""
-        temp = int(kwargs[ATTR_TEMPERATURE])
+        temp = round(kwargs[ATTR_TEMPERATURE])
         hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
         if hvac_mode is not None:
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)

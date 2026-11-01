@@ -37,7 +37,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path
+from tests.common import MockConfigEntry, get_fixture_path
 
 VALUES = [17, 20, 15.3]
 
@@ -235,6 +235,33 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
     assert state.attributes.get("max_entity_id") is None
+
+
+@pytest.mark.parametrize(
+    "sensor_type",
+    ["min", "max", "mean", "median", "last", "range", "stdev", "sum", "product"],
+)
+async def test_no_members(hass: HomeAssistant, sensor_type: str) -> None:
+    """Test a group without members does not try to calculate a value."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": [],
+            "group_type": "sensor",
+            "hide_members": False,
+            "ignore_non_numeric": False,
+            "name": "My sensor group",
+            "type": sensor_type,
+        },
+        title="My sensor group",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_sensor_group")
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_reload(hass: HomeAssistant) -> None:

@@ -1,4 +1,7 @@
-"""Constants for the Generic Thermostat helper."""
+"""Constants for the Generic Thermostat helper.
+
+DEVELOPMENT OF THE GENERIC THERMOSTAT INTEGRATION IS FROZEN.
+"""
 
 from homeassistant.components.climate import (
     PRESET_ACTIVITY,

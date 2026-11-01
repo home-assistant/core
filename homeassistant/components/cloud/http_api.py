@@ -34,7 +34,6 @@ from homeassistant.components.system_health import get_info as get_system_health
 from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -287,7 +286,7 @@ class CloudLoginView(HomeAssistantView):
                     probatio.Exclusive("password", "login"): str,
                     probatio.Exclusive("code", "login"): str,
                 },
-                cv.has_at_least_one_key("password", "code"),
+                probatio.AtLeastOne("password", "code"),
             )
         )
     )

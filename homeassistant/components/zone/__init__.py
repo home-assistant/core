@@ -96,7 +96,7 @@ def empty_value(value: Any) -> Any:
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN, default=[]): probatio.Any(
-            probatio.All(cv.ensure_list, [probatio.Schema(CREATE_FIELDS)]),
+            probatio.All(probatio.EnsureList(), [probatio.Schema(CREATE_FIELDS)]),
             empty_value,
         )
     },

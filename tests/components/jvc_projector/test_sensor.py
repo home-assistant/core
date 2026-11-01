@@ -2,9 +2,10 @@
 
 from unittest.mock import MagicMock
 
-from jvcprojector import Command, command as cmd
+from jvcprojector import Command, JvcProjectorTimeoutError, command as cmd
 import pytest
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -44,6 +45,45 @@ async def test_diagnostic_sensor_state(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "mock_device",
+    [
+        {
+            "fixture_override": {
+                cmd.Source: JvcProjectorTimeoutError,
+                cmd.Colorimetry: JvcProjectorTimeoutError,
+                cmd.LinkRate: JvcProjectorTimeoutError,
+            }
+        }
+    ],
+    indirect=True,
+)
+async def test_diagnostic_sensor_timeout_is_unknown(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
+    mock_integration: MockConfigEntry,
+) -> None:
+    """Test optional diagnostic sensor timeouts do not make entities unavailable."""
+    entity_ids = (
+        "sensor.jvc_projector_resolution",
+        "sensor.jvc_projector_colorimetry",
+        "sensor.jvc_projector_link_rate",
+    )
+    for entity_id in entity_ids:
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    await hass.config_entries.async_reload(mock_integration.entry_id)
+    await hass.async_block_till_done()
+    await mock_integration.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
 
 
 async def test_entity_state(

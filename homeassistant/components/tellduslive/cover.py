@@ -28,10 +28,12 @@ async def async_setup_entry(
         client: TelldusLiveClient = hass.data[DOMAIN]
         async_add_entities([TelldusLiveCover(client, device_id)])
 
-    async_dispatcher_connect(
-        hass,
-        TELLDUS_DISCOVERY_NEW.format(cover.DOMAIN, DOMAIN),
-        async_discover_cover,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            TELLDUS_DISCOVERY_NEW.format(cover.DOMAIN, DOMAIN),
+            async_discover_cover,
+        )
     )
 
 

@@ -113,10 +113,10 @@ def mock_client_context() -> Generator[None]:
 
     with (
         patch(
-            "homeassistant.components.smtp.config_flow.client_context"
+            "homeassistant.components.smtp.config_flow.create_client_context"
         ) as mock_client,
         patch(
-            "homeassistant.components.smtp.client_context",
+            "homeassistant.components.smtp.create_client_context",
             new=mock_client,
         ),
     ):

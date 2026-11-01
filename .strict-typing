@@ -251,6 +251,7 @@ homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
 homeassistant.components.google_cloud.*
 homeassistant.components.google_drive.*
+homeassistant.components.google_generative_ai_conversation.*
 homeassistant.components.google_health.*
 homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
@@ -451,6 +452,7 @@ homeassistant.components.openuv.*
 homeassistant.components.opnsense.*
 homeassistant.components.opower.*
 homeassistant.components.oralb.*
+homeassistant.components.osram_infrared.*
 homeassistant.components.otbr.*
 homeassistant.components.otp.*
 homeassistant.components.ouman_eh_800.*
@@ -647,6 +649,7 @@ homeassistant.components.velbus.*
 homeassistant.components.velux.*
 homeassistant.components.victron_gx.*
 homeassistant.components.vistapool.*
+homeassistant.components.vitesy.*
 homeassistant.components.vivotek.*
 homeassistant.components.vizio.*
 homeassistant.components.vlc_telnet.*

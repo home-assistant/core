@@ -114,24 +114,6 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, data: dict[str, str]) -> ConfigFlowResult:
-        """Handle the initial step."""
-
-        self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
-        errors, serial = await self.check_status(data[CONF_HOST])
-
-        if not errors:
-            if serial is not None:
-                await self.async_set_unique_id(serial)
-                self._abort_if_unique_id_configured()
-        else:
-            return self.async_abort(reason="unavailable_host")
-
-        return self.async_create_entry(
-            title=f"OpenEVSE {data[CONF_HOST]}",
-            data=data,
-        )
-
     @override
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo

@@ -70,7 +70,11 @@ CONF_COMMIT_INTERVAL = "commit_interval"
 
 
 EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
-    {probatio.Optional(CONF_EVENT_TYPES): probatio.All(cv.ensure_list, [cv.string])}
+    {
+        probatio.Optional(CONF_EVENT_TYPES): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        )
+    }
 )
 
 FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(

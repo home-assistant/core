@@ -69,7 +69,7 @@ SET_DEHUMIDIFY_SCHEMA: VolDictType = {
 }
 
 SET_HVAC_RUN_MODE_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(ATTR_RUN_MODE, ATTR_HVAC_MODE),
+    probatio.AtLeastOne(ATTR_RUN_MODE, ATTR_HVAC_MODE),
     cv.make_entity_service_schema(
         {
             probatio.Optional(ATTR_RUN_MODE): probatio.In(

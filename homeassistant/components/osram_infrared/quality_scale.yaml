@@ -1,0 +1,164 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional service actions.
+      Light functionality is exposed through the standard light entity actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide custom automation conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide custom automation triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: exempt
+    comment: |
+      This integration does not store runtime data.
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      This integration only proxies commands through an existing infrared
+      entity, so there is no separate connection to validate during setup.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not provide additional service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not authenticate with a device or service.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: |
+      Evaluate whether diagnostics add useful information for this
+      assumed-state infrared integration.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration does not use discovery.
+  discovery:
+    status: exempt
+    comment: |
+      The integration is configured manually by selecting an existing infrared
+      emitter entity.
+  docs-data-update:
+    status: exempt
+    comment: |
+      This integration does not fetch data from devices.
+  docs-examples:
+    status: todo
+    comment: |
+      Add example automations for setting a color, brightness, and an effect.
+  docs-known-limitations:
+    status: todo
+    comment: |
+      Document assumed state, possible state drift when using the physical
+      remote, discrete hue presets, and approximate relative brightness
+      tracking.
+  docs-supported-devices:
+    status: todo
+    comment: |
+      Document the tested OSRAM LEDVANCE bulb models and any known unsupported
+      variants.
+  docs-supported-functions:
+    status: todo
+    comment: |
+      Document on/off control, discrete HS colors, white mode, relative
+      brightness, and native effects.
+  docs-troubleshooting:
+    status: todo
+    comment: |
+      Document emitter availability checks and common infrared transmission
+      issues.
+  docs-use-cases:
+    status: todo
+    comment: |
+      Describe replacing the original OSRAM infrared remote with a Home
+      Assistant-controlled infrared emitter.
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Each config entry represents one manually configured infrared-controlled
+      light. Devices are not discovered dynamically.
+  entity-category:
+    status: exempt
+    comment: |
+      The integration currently exposes only the light entity, which is not a
+      configuration or diagnostic entity, so no entity category is required.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Light entities do not require a device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      The integration currently exposes only the light entity, which should be
+      enabled by default.
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: |
+      Ensure any user-facing HomeAssistantError exceptions use translation
+      keys instead of hard-coded messages.
+  icon-translations:
+    status: exempt
+    comment: |
+      The integration does not define custom entity icons.
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Add a reconfiguration flow so that the infrared emitter entity can be
+      changed without removing and recreating the integration.
+  repair-issues:
+    status: exempt
+    comment: |
+      No conditions currently require repair issues.
+  stale-devices:
+    status: exempt
+    comment: |
+      Each config entry represents exactly one manually configured light
+      device. There are no dynamically managed devices.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: |
+      This integration has no external dependencies.
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not make HTTP requests.
+  strict-typing: done

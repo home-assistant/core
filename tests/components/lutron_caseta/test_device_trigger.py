@@ -1,5 +1,6 @@
 """The tests for Lutron Caséta device triggers."""
 
+from pylutron_caseta import BUTTON_STATUS_PRESSED
 import pytest
 from pytest_unordered import unordered
 
@@ -14,7 +15,9 @@ from homeassistant.components.lutron_caseta import (
 )
 from homeassistant.components.lutron_caseta.const import (
     ACTION_LONG_PRESS,
+    ACTION_PRESS,
     ACTION_RELEASE,
+    ATTR_BUTTON_NUMBER,
     ATTR_BUTTON_TYPE,
     ATTR_LEAP_BUTTON_NUMBER,
     BUTTON_STATUS_LONG_HOLD,
@@ -405,6 +408,35 @@ async def test_unknown_leap_event_type_maps_to_release_action(
 
     assert len(captured) == 1
     assert captured[0].data[ATTR_ACTION] == ACTION_RELEASE
+
+
+class MockUnknownButtonBridge(MockBridge):
+    """Mock bridge with a button number its keypad type doesn't list."""
+
+    def load_buttons(self):
+        """Load mock buttons with an unknown button number."""
+        buttons = super().load_buttons()
+        buttons["111"]["button_number"] = 26
+        return buttons
+
+
+async def test_unknown_leap_button_number_fires_event(
+    hass: HomeAssistant,
+) -> None:
+    """Test a button number missing from the keypad mapping still fires an event."""
+    config_entry_id = await _async_setup_lutron_with_picos(
+        hass, MockUnknownButtonBridge
+    )
+    bridge = hass.config_entries.async_get_entry(config_entry_id).runtime_data.bridge
+    captured = async_capture_events(hass, LUTRON_CASETA_BUTTON_EVENT)
+
+    bridge.call_button_subscribers("111", BUTTON_STATUS_PRESSED)
+    await hass.async_block_till_done()
+
+    assert len(captured) == 1
+    assert captured[0].data[ATTR_LEAP_BUTTON_NUMBER] == 26
+    assert captured[0].data[ATTR_BUTTON_NUMBER] is None
+    assert captured[0].data[ATTR_ACTION] == ACTION_PRESS
 
 
 async def test_if_fires_on_button_event_without_lip(

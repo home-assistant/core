@@ -5,7 +5,7 @@ from dataclasses import replace
 import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from arcam.fmj.client import ConnectionFailed
+from arcam.fmj.errors import ConnectionFailed
 import pytest
 
 from homeassistant.components.arcam_fmj.const import DOMAIN

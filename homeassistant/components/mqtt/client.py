@@ -1158,8 +1158,10 @@ class MQTT:
             await self._async_wait_for_mid_or_raise(mid, result)
 
         # Remove stored subscription identifiers for topics that were just unsubscribed
+        # Keep the ID if the topic was subscribed again while waiting for the UNSUBACK
         for topic in topics:
-            self._mqtt_data.subscription_id_generator.release(topic)
+            if not self.is_active_subscription(topic):
+                self._mqtt_data.subscription_id_generator.release(topic)
 
     async def _async_resubscribe_and_publish_birth_message(
         self, birth_message: PublishMessage

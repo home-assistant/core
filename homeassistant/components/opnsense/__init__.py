@@ -33,7 +33,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Required(CONF_API_SECRET): cv.string,
                 probatio.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
                 probatio.Optional(CONF_TRACKER_INTERFACES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
             }
         )

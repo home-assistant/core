@@ -7,6 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
+from .conftest import setup_bridge
+
 from tests.common import MockConfigEntry
 
 
@@ -229,3 +231,40 @@ async def test_group_entity_migration_with_v2_group_id(
     migrated_entity = entity_registry.async_get("light.hue_migrated_grouped_light")
     assert migrated_entity is not None
     assert migrated_entity.unique_id == "e937f8db-2f0e-49a0-936e-027e60e15b34"
+
+
+async def test_zigbee_connection_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+) -> None:
+    """Test that a zigbee mac stored as a network mac is migrated."""
+    config_entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "mock-host", "api_version": 2, "api_key": ""},
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    zigbee_mac = "00:17:88:01:0b:aa:bb:99"
+    network_mac = "aa:bb:cc:dd:ee:ff"
+    zigbee_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")},
+        connections={
+            (dr.CONNECTION_NETWORK_MAC, zigbee_mac),
+            (dr.CONNECTION_NETWORK_MAC, network_mac),
+        },
+    )
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_bridge(hass, mock_bridge_v2, config_entry)
+
+    migrated_device = device_registry.async_get(zigbee_device.id)
+    assert migrated_device is not None
+    assert migrated_device.connections == {
+        (dr.CONNECTION_ZIGBEE, zigbee_mac),
+        (dr.CONNECTION_NETWORK_MAC, network_mac),
+    }
+    assert config_entry.minor_version == 2

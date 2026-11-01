@@ -202,7 +202,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="auth",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PIN): probatio.All(
+                    probatio.Required(probatio.Secret(CONF_PIN)): probatio.All(
                         int, probatio.Range(min=1, max=9999)
                     ),
                 }

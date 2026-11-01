@@ -210,11 +210,17 @@
       "block_dailymotion": {
         "name": "Block Dailymotion"
       },
+      "block_data_drop_services": {
+        "name": "Block data-drop services"
+      },
       "block_dating": {
         "name": "Block dating"
       },
       "block_ddns": {
         "name": "Block dynamic DNS hostnames"
+      },
+      "block_decentralized_web_gateways": {
+        "name": "Block decentralized web gateways"
       },
       "block_discord": {
         "name": "Block Discord"
@@ -233,6 +239,9 @@
       },
       "block_fortnite": {
         "name": "Block Fortnite"
+      },
+      "block_free_hosting_domains": {
+        "name": "Block free hosting domains"
       },
       "block_gambling": {
         "name": "Block gambling"
@@ -297,6 +306,9 @@
       "block_reddit": {
         "name": "Block Reddit"
       },
+      "block_residential_hosting": {
+        "name": "Block residential hosting"
+      },
       "block_roblox": {
         "name": "Block Roblox"
       },
@@ -329,6 +341,9 @@
       },
       "block_tumblr": {
         "name": "Block Tumblr"
+      },
+      "block_tunneling_endpoints": {
+        "name": "Block tunneling endpoints"
       },
       "block_twitch": {
         "name": "Block Twitch"

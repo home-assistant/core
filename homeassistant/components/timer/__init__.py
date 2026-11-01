@@ -450,6 +450,13 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         )
 
     @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel the running timer when the entity is removed."""
+        if self._listener:
+            self._listener()
+            self._listener = None
+
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config

@@ -332,7 +332,9 @@ async def _async_dump_hap_config(service: ServiceCall) -> None:
         json_state = await entry.runtime_data.home.download_configuration_async()
         json_state = handle_config(json_state, anonymize)
 
-        config_file.write_text(json_state, encoding="utf8")
+        await service.hass.async_add_executor_job(
+            config_file.write_text, json_state, "utf8"
+        )
 
 
 async def _async_reset_energy_counter(service: ServiceCall):

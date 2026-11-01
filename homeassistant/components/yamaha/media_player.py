@@ -75,10 +75,10 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_HOST): cv.string,
         probatio.Optional(CONF_SOURCE_IGNORE, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_ZONE_IGNORE, default=[]): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
         probatio.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},

@@ -85,7 +85,7 @@ class EntityServiceDescription:
 
 REMOVE_FROM_QUEUE_SCHEMA: Final[VolDictType] = {
     probatio.Required(ATTR_QUEUE_IDS): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [probatio.All(cv.positive_int, probatio.Range(min=1))],
         probatio.Unique(),
     )
@@ -95,7 +95,7 @@ GROUP_VOLUME_SET_SCHEMA: Final[VolDictType] = {
 }
 MOVE_QEUEUE_ITEM_SCHEMA: Final[VolDictType] = {
     probatio.Required(ATTR_QUEUE_IDS): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=1000))],
         probatio.Unique(),
     ),

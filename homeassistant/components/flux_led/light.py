@@ -83,7 +83,7 @@ SERVICE_SET_MUSIC_MODE: Final = "set_music_mode"
 
 CUSTOM_EFFECT_DICT: VolDictType = {
     probatio.Required(CONF_COLORS): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         probatio.Length(min=1, max=16),
         [
             probatio.All(
@@ -121,7 +121,7 @@ SET_MUSIC_MODE_DICT: VolDictType = {
 
 SET_ZONES_DICT: VolDictType = {
     probatio.Required(CONF_COLORS): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         probatio.Length(min=1, max=2048),
         [
             probatio.All(

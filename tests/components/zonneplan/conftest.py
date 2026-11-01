@@ -5,7 +5,15 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pyzonneplan import Account, ConsumerPrices, OtpChallenge, Token, Zonneplan
+from pyzonneplan import (
+    Account,
+    ConsumerPrices,
+    ElectricityChart,
+    GasChart,
+    OtpChallenge,
+    Token,
+    Zonneplan,
+)
 from pyzonneplan.const import PriceChart
 
 from homeassistant.components.zonneplan.const import DOMAIN
@@ -59,6 +67,12 @@ def mock_zonneplan_client() -> Generator[AsyncMock]:
         ),
     }
     client.async_get_consumer_prices.side_effect = lambda chart: prices_by_chart[chart]
+    client.async_get_electricity_chart.return_value = ElectricityChart.from_dict(
+        load_json_object_fixture("get_electricity_chart_days.json", DOMAIN)
+    )
+    client.async_get_gas_chart.return_value = GasChart.from_dict(
+        load_json_object_fixture("get_gas_chart_days.json", DOMAIN)
+    )
 
     with (
         patch("homeassistant.components.zonneplan.Zonneplan", return_value=client),

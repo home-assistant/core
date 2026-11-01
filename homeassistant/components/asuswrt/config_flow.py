@@ -24,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaFlowFormStep,
@@ -157,7 +156,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             probatio.Required(CONF_MORE_OPTIONS): section(
                 probatio.Schema(
                     {
-                        probatio.Optional(CONF_PORT): cv.port,
+                        probatio.Optional(CONF_PORT): probatio.Port(),
                         probatio.Optional(CONF_SSH_KEY): str,
                     }
                 ),

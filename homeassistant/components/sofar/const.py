@@ -11,6 +11,4 @@ SETTINGS_SCAN_INTERVAL = 60
 
 CONF_UNIT_ID = "unit_id"
 
-BATTERY_COMPONENTS = {
-    n: "battery_1_2" if n <= 2 else "battery_3_8" for n in range(1, 9)
-}
+METER_ENERGY = "meter_energy"

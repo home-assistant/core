@@ -85,7 +85,7 @@ AMCREST_SCHEMA = probatio.Schema(
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Required(CONF_PASSWORD): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(
             CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION
         ): probatio.All(probatio.In(AUTHENTICATION_LIST)),
@@ -98,23 +98,23 @@ AMCREST_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
         probatio.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
         probatio.Optional(CONF_BINARY_SENSORS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.In(BINARY_SENSOR_KEYS)],
             probatio.Unique(),
             check_binary_sensors,
         ),
         probatio.Optional(CONF_SWITCHES): probatio.All(
-            cv.ensure_list, [probatio.In(SWITCH_KEYS)], probatio.Unique()
+            probatio.EnsureList(), [probatio.In(SWITCH_KEYS)], probatio.Unique()
         ),
         probatio.Optional(CONF_SENSORS): probatio.All(
-            cv.ensure_list, [probatio.In(SENSOR_KEYS)], probatio.Unique()
+            probatio.EnsureList(), [probatio.In(SENSOR_KEYS)], probatio.Unique()
         ),
         probatio.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
     }
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)},
+    {DOMAIN: probatio.All(probatio.EnsureList(), [AMCREST_SCHEMA], _has_unique_names)},
     extra=probatio.ALLOW_EXTRA,
 )
 

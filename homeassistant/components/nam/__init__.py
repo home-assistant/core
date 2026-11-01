@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except (ApiError, ClientError) as err:
+    except (ApiError, ClientError, TimeoutError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_communication_error",

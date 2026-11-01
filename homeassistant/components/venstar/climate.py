@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
             probatio.Coerce(int), probatio.Range(min=1)
         ),
         probatio.Optional(CONF_USERNAME): cv.string,
-        probatio.Optional(CONF_PIN): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PIN)): cv.string,
     }
 )
 

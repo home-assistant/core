@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_EMAIL): cv.string,
         probatio.Required(CONF_PASSWORD): cv.string,
         probatio.Required(CONF_DEVICES): probatio.All(
-            cv.ensure_list, probatio.Length(min=1)
+            probatio.EnsureList(), probatio.Length(min=1)
         ),
     }
 )

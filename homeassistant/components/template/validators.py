@@ -350,6 +350,7 @@ def item_in_list[T](
     attribute: str,
     items: list[Any] | str | None,
     items_attribute: str | None = None,
+    stringify_result: bool = False,
     **kwargs: Any,
 ) -> Callable[[Any], Any | None]:
     """Assert the result of the template is an item inside a list.
@@ -380,6 +381,9 @@ def item_in_list[T](
                 )
 
             return None
+
+        if stringify_result:
+            result = str(result)
 
         if result not in _items:
             log_validation_result_error(

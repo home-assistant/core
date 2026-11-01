@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 import dataclasses
 import logging
+import re
 from typing import Any, override
 
 import probatio
@@ -37,6 +38,9 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from .const import CONF_GROUP, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
+
+# Example hostnames: sma3015638141, sma3015598606-2856
+HOSTNAME_SERIAL = re.compile(r"^sma-?(\d+)(?:-|$)", re.IGNORECASE)
 
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
@@ -93,8 +97,10 @@ async def validate_input(
 
     # new_session raises SmaAuthenticationException on failure
     await sma.new_session()
-    device_info = await sma.device_info()
-    await sma.close_session()
+    try:
+        device_info = await sma.device_info()
+    finally:
+        await sma.close_session()
 
     return dataclasses.asdict(device_info)
 
@@ -274,31 +280,12 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_data[CONF_MAC],
         )
 
-        existing_entries_with_host = [
-            entry
-            for entry in self._async_current_entries(include_ignore=False)
-            if entry.data.get(CONF_HOST) == self._data[CONF_HOST]
-            and not entry.data.get(CONF_MAC)
-        ]
-
-        # If we have an existing entry with the same host but no MAC address,
-        # we update the entry with the MAC address and reload it.
-        if existing_entries_with_host:
-            entry = existing_entries_with_host[0]
-            self.async_update_reload_and_abort(
-                entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
-            )
-
-        # Finally, check if the hostname
-        # (which represents the SMA serial number) is unique
-        serial_number = discovery_info.hostname.lower()
-        # Example hostname: sma12345678-01
-        # Remove 'sma' prefix and strip everything after the dash (including the dash)
-        if serial_number.startswith("sma"):
-            serial_number = serial_number.removeprefix("sma")
-        serial_number = serial_number.split("-", 1)[0]
-        await self.async_set_unique_id(serial_number)
-        self._abort_if_unique_id_configured()
+        if not (match := HOSTNAME_SERIAL.match(discovery_info.hostname)):
+            return self.async_abort(reason="not_supported")
+        await self.async_set_unique_id(match.group(1))
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._data[CONF_HOST], CONF_MAC: self._data[CONF_MAC]}
+        )
 
         return await self.async_step_discovery_confirm()
 

@@ -447,10 +447,12 @@ async def test_reconfigure_flow_new_line_settings_while_retrying(
     states: list[ConfigEntryState] = []
     probe = SolarEdge.async_probe
 
-    async def probe_watching_the_entry(unit: ModbusUnit) -> SolarEdge:
+    async def probe_watching_the_entry(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
         """Record whether the entry could still be reaching for the bus."""
         states.append(entry.state)
-        return await probe(unit)
+        return await probe(unit, assume_absent=assume_absent)
 
     result = await entry.start_reconfigure_flow(hass)
     with patch.object(SolarEdge, "async_probe", probe_watching_the_entry):

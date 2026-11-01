@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_NAME, default="Thermostat"): cv.string,
-        probatio.Optional(CONF_PORT, default=80): cv.port,
+        probatio.Optional(CONF_PORT, default=80): probatio.Port(),
         probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
         probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
     }

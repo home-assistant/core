@@ -55,7 +55,7 @@ SWITCH_SCHEMA = probatio.Schema(
     {
         probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(AVAILABLE_PUMPS)
-        ): probatio.All(cv.ensure_list, [probatio.In(AVAILABLE_PUMPS)])
+        ): probatio.All(probatio.EnsureList(), [probatio.In(AVAILABLE_PUMPS)])
     }
 )
 
@@ -63,7 +63,7 @@ SENSOR_SCHEMA = probatio.Schema(
     {
         probatio.Optional(
             CONF_MONITORED_CONDITIONS, default=list(AVAILABLE_SENSORS)
-        ): probatio.All(cv.ensure_list, [probatio.In(AVAILABLE_SENSORS)])
+        ): probatio.All(probatio.EnsureList(), [probatio.In(AVAILABLE_SENSORS)])
     }
 )
 

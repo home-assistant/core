@@ -1,7 +1,7 @@
 """Test the SSDP integration."""
 
 from ipaddress import IPv4Address
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, call, patch
 
 from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp_listener import SsdpListener
@@ -899,12 +899,15 @@ async def test_flow_dismiss_on_byebye(
     )
 
     mock_ssdp_advertisement["nts"] = "ssdp:byebye"
-    # ssdp:byebye advertisement should dismiss existing flows
+    # ssdp:byebye dismisses existing flows, but not one the user is working through
     with (
         patch.object(
             hass.config_entries.flow,
             "async_progress_by_init_data_type",
-            return_value=[{"flow_id": "mock_flow_id"}],
+            return_value=[
+                {"flow_id": "mock_flow_id", "context": {}},
+                {"flow_id": "pairing", "context": {"dismiss_protected": True}},
+            ],
         ) as mock_async_progress_by_init_data_type,
         patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
     ):
@@ -912,7 +915,7 @@ async def test_flow_dismiss_on_byebye(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_async_progress_by_init_data_type.mock_calls) == 1
-    assert mock_async_abort.mock_calls[0][1][0] == "mock_flow_id"
+    assert mock_async_abort.mock_calls == [call("mock_flow_id")]
 
 
 @patch(

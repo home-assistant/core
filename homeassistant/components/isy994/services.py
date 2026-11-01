@@ -120,7 +120,7 @@ SERVICE_DELETE_USER_CODE_SCHEMA: VolDictType = {
 }
 
 SERVICE_SEND_PROGRAM_COMMAND_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(CONF_ADDRESS, CONF_NAME),
+    probatio.AtLeastOne(CONF_ADDRESS, CONF_NAME),
     probatio.Schema(
         {
             probatio.Exclusive(CONF_NAME, SCHEMA_GROUP): cv.string,

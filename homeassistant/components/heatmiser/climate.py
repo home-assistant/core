@@ -31,7 +31,7 @@ CONF_THERMOSTATS = "tstats"
 
 TSTATS_SCHEMA = probatio.Schema(
     probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [
             {
                 probatio.Required(CONF_ID): cv.positive_int,

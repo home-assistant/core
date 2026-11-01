@@ -585,15 +585,20 @@ class TelegramNotificationService:
             )
             _LOGGER.debug("downloaded: %s", entry.get(ATTR_URL) or entry.get(ATTR_FILE))
 
-            caption: str | None = entry.get(ATTR_CAPTION)
+            # The parse mode of the media group itself only applies to a caption
+            # of the whole group, so each caption needs its own
+            caption_kwargs: dict[str, Any] = {
+                "caption": entry.get(ATTR_CAPTION),
+                "parse_mode": params[ATTR_PARSER],
+            }
             if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
-                media.append(InputMediaAudio(file_content, caption=caption))
+                media.append(InputMediaAudio(file_content, **caption_kwargs))
             elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
-                media.append(InputMediaDocument(file_content, caption=caption))
+                media.append(InputMediaDocument(file_content, **caption_kwargs))
             elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
-                media.append(InputMediaPhoto(file_content, caption=caption))
+                media.append(InputMediaPhoto(file_content, **caption_kwargs))
             else:
-                media.append(InputMediaVideo(file_content, caption=caption))
+                media.append(InputMediaVideo(file_content, **caption_kwargs))
 
         return await self._send_msg_formatted(
             self.bot.send_media_group,
@@ -604,7 +609,6 @@ class TelegramNotificationService:
             protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            parse_mode=params[ATTR_PARSER],
             context=context,
         )
 

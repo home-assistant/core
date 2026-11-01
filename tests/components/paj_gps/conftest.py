@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 from pajgps_api.models.auth import AuthResponse
 from pajgps_api.models.device import Device
+from pajgps_api.models.sensordata import SensorData
 from pajgps_api.models.trackpoint import TrackPoint
 import pytest
 
@@ -63,4 +64,5 @@ def mock_paj_gps_api() -> Generator[AsyncMock]:
         api.get_all_last_positions.return_value = [
             TrackPoint(**load_json_object_fixture("trackpoint.json", DOMAIN))
         ]
+        api.get_last_sensor_data.return_value = SensorData(did=1, volt=12400)
         yield api

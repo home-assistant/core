@@ -9,10 +9,10 @@ import pytest
 from homeassistant.components.water_heater import (
     DOMAIN,
     SERVICE_SET_OPERATION_MODE,
-    SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
+from homeassistant.components.water_heater.services import SET_TEMPERATURE_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant

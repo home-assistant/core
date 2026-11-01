@@ -20,6 +20,7 @@ from homeassistant.const import CONF_PACKAGES, __version__
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigValidationError, HomeAssistantError
 from homeassistant.helpers import check_config, config_validation as cv
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.util.yaml import SECRET_YAML, load_yaml_dict
@@ -1529,6 +1530,33 @@ async def test_stringify_invalid_suggests_close_keys(
             hass, exc_info.value.errors[0], "mqtt", config, None, 500
         )
         == f"Invalid config for 'mqtt': {expected}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("key", "expected_value"),
+    [
+        pytest.param(probatio.Required("password"), "'hunter2'", id="plain"),
+        pytest.param(
+            probatio.Required(probatio.Secret("password")), REDACTED, id="secret"
+        ),
+    ],
+)
+async def test_stringify_invalid_redacts_a_secret(
+    hass: HomeAssistant, key: probatio.Marker, expected_value: str
+) -> None:
+    """Test a key marked secret reports the reason without its value."""
+    schema = probatio.Schema({key: probatio.All(str, probatio.Length(min=12))})
+    config = {"password": "hunter2"}
+
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        schema(config)
+
+    assert config_util.stringify_invalid(
+        hass, exc_info.value.errors[0], "demo", config, None, 500
+    ) == (
+        "Invalid config for 'demo': length of value must be at least 12 for "
+        f"dictionary value 'password', got {expected_value}"
     )
 
 

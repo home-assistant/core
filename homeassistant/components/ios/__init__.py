@@ -113,7 +113,7 @@ PUSH_ACTION_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-PUSH_ACTION_LIST_SCHEMA = probatio.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+PUSH_ACTION_LIST_SCHEMA = probatio.All(probatio.EnsureList(), [PUSH_ACTION_SCHEMA])
 
 PUSH_CATEGORY_SCHEMA = probatio.Schema(
     {
@@ -123,7 +123,7 @@ PUSH_CATEGORY_SCHEMA = probatio.Schema(
     }
 )
 
-PUSH_CATEGORY_LIST_SCHEMA = probatio.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
+PUSH_CATEGORY_LIST_SCHEMA = probatio.All(probatio.EnsureList(), [PUSH_CATEGORY_SCHEMA])
 
 ACTION_SCHEMA = probatio.Schema(
     {
@@ -143,7 +143,7 @@ ACTION_SCHEMA = probatio.Schema(
     },
 )
 
-ACTION_LIST_SCHEMA = probatio.All(cv.ensure_list, [ACTION_SCHEMA])
+ACTION_LIST_SCHEMA = probatio.All(probatio.EnsureList(), [ACTION_SCHEMA])
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -201,7 +201,7 @@ IDENTIFY_SCHEMA = probatio.Schema(
         probatio.Required(ATTR_PUSH_TOKEN): cv.string,
         probatio.Required(ATTR_APP): IDENTIFY_APP_SCHEMA_CONTAINER,
         probatio.Required(ATTR_PERMISSIONS): probatio.All(
-            cv.ensure_list, [probatio.In(PERMISSIONS)]
+            probatio.EnsureList(), [probatio.In(PERMISSIONS)]
         ),
         probatio.Required(ATTR_PUSH_ID): cv.string,
         probatio.Required(ATTR_DEVICE_ID): cv.string,

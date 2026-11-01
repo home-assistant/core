@@ -1986,6 +1986,21 @@ class ConfigEntriesFlowManager(
         return False
 
     @callback
+    def async_dismiss_discovery_flows(
+        self, init_data_type: type, matcher: Callable[[Any], bool]
+    ) -> None:
+        """Abort discovery flows for a thing that is no longer reachable.
+
+        Flows the user has started interacting with are left alone, because a
+        device often stops answering discovery precisely because it is being
+        paired.
+        """
+        for flow in self.async_progress_by_init_data_type(init_data_type, matcher):
+            if flow["context"].get("dismiss_protected"):
+                continue
+            self.async_abort(flow["flow_id"])
+
+    @callback
     def async_has_matching_flow(self, flow: ConfigFlow) -> bool:
         """Check if an existing matching flow is in progress."""
         if not (flows := self._handler_progress_index.get(flow.handler)):

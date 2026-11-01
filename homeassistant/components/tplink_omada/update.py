@@ -113,22 +113,19 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
     def _update_attrs(self) -> None:
         """Update installed and latest controller versions."""
         update = self._update_data
-        if update is None:
+        if update is None or (active_update := update.update) is None:
             self._attr_installed_version = self.coordinator.data.current_version
             self._attr_latest_version = self._attr_installed_version
             self._attr_supported_features = UpdateEntityFeature(0)
             return
 
-        active_update = update.update
         self._attr_installed_version = (
-            active_update.current_version
-            if update.hardware is not None and active_update is not None
-            else self.coordinator.data.current_version or update.current_version
+            active_update.current_version or self.coordinator.data.current_version
+            if update.hardware is not None
+            else self.coordinator.data.current_version or active_update.current_version
         )
         self._attr_latest_version = (
-            active_update.latest_version
-            if active_update is not None
-            else self._attr_installed_version
+            active_update.latest_version or self._attr_installed_version
         )
         self._attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
         if update.hardware is not None:
@@ -169,7 +166,7 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
             )
 
         target_version = version or update.latest_version
-        if target_version is None:
+        if not target_version:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="firmware_update_rejected",
