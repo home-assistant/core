@@ -182,6 +182,53 @@ async def test_percent_state_on_cover(
     "mock_device_code",
     ["cl_zah67ekd"],
 )
+@pytest.mark.parametrize(
+    ("control_back_mode", "expected_position", "requested_position", "expected_raw"),
+    [
+        pytest.param("forward", 80, 25, 75, id="forward-inverted"),
+        pytest.param("back", 20, 25, 25, id="back-not-inverted"),
+    ],
+)
+async def test_control_back_mode_position_mapping(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    control_back_mode: str,
+    expected_position: int,
+    requested_position: int,
+    expected_raw: int,
+) -> None:
+    """Test control_back_mode is applied to reported and requested positions."""
+    mock_device.status["control_back_mode"] = control_back_mode
+    mock_device.status["percent_state"] = 20
+
+    entity_id = "cover.kitchen_blinds_curtain"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.attributes[ATTR_CURRENT_POSITION] == expected_position
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_POSITION: requested_position,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id,
+        [{"code": "percent_control", "value": expected_raw}],
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cl_zah67ekd"],
+)
 async def test_set_tilt_position_not_supported(
     hass: HomeAssistant,
     mock_manager: Manager,
