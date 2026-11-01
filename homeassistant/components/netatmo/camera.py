@@ -202,6 +202,11 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+        if self.device.alim_status != NETATMO_ALIM_STATUS_ONLINE:
+            _LOGGER.debug(
+                "Camera %s is offline, cannot fetch live image", self.device.entity_id
+            )
+            return None
 
         try:
             return cast(bytes, await self.device.async_get_live_snapshot())
@@ -222,22 +227,18 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def is_on(self) -> bool:
         """Return true if camera is on (monitoring)."""
         if self.device_type in NETATMO_DOORBELLS:
-            return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+            return True
         if self._override_on is not None:
-            return (
-                self._override_on
-                and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
-            )
-        return (
-            bool(self.device.monitoring)
-            and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
-        )
+            return self._override_on
+        return bool(self.device.monitoring)
 
     @property
     @override
     def motion_detection_enabled(self) -> bool:
         """Return motion detection state derived directly from camera state."""
-        return self.is_on and self.device_type not in NETATMO_DOORBELLS
+        if self.device_type in NETATMO_DOORBELLS:
+            return False
+        return self.is_on
 
     @property
     @override
@@ -279,7 +280,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        if self.is_on:
+        if self.is_on or self.device.alim_status != NETATMO_ALIM_STATUS_ONLINE:
             return
         try:
             await self.device.async_monitoring_on()
