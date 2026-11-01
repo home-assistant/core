@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 from hass_nabucasa import (
     AutoLoginController,
@@ -11,6 +11,7 @@ from hass_nabucasa import (
     LoginFailedReason,
     LogoutEvent,
 )
+from hass_nabucasa.remote import Certificate
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 
@@ -23,6 +24,7 @@ from homeassistant.components.cloud import (
     async_listen_cloudhook_change,
     async_listen_connection_change,
     async_remote_ui_url,
+    async_remote_ui_urls,
 )
 from homeassistant.components.cloud.const import (
     DATA_CLOUD,
@@ -50,6 +52,7 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 REMOTE_UI_UNIQUE_ID = "cloud-remote-ui-connectivity"
 
@@ -302,6 +305,50 @@ async def test_remote_ui_url(hass: HomeAssistant) -> None:
         cl.client.prefs._prefs["remote_domain"] = None
         with patch.object(cl.remote, "_instance_domain", "live.example.com"):
             assert async_remote_ui_url(hass) == "https://live.example.com"
+
+
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_remote_ui_urls(hass: HomeAssistant) -> None:
+    """Test getting the remote ui urls with custom domains first."""
+    cl = hass.data[DATA_CLOUD]
+
+    with pytest.raises(CloudNotAvailable):
+        async_remote_ui_urls(hass)
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch.object(cl.remote, "connect"),
+        patch.object(type(cl.remote), "alias", new_callable=PropertyMock) as alias,
+        patch.object(
+            type(cl.remote), "certificate", new_callable=PropertyMock
+        ) as certificate,
+    ):
+        await cl.client.prefs.async_update(remote_enabled=True)
+        await hass.async_block_till_done()
+        cl.client.prefs._prefs["remote_domain"] = "example.com"
+        alias.return_value = ["ha.example.com"]
+
+        # No certificate loaded yet
+        certificate.return_value = None
+        assert async_remote_ui_urls(hass) == ["https://example.com"]
+
+        # The certificate does not cover the custom domain
+        certificate.return_value = Certificate(
+            "example.com", utcnow(), "fingerprint", alternative_names=["example.com"]
+        )
+        assert async_remote_ui_urls(hass) == ["https://example.com"]
+
+        # The certificate covers the custom domain
+        certificate.return_value = Certificate(
+            "example.com",
+            utcnow(),
+            "fingerprint",
+            alternative_names=["example.com", "ha.example.com"],
+        )
+        assert async_remote_ui_urls(hass) == [
+            "https://ha.example.com",
+            "https://example.com",
+        ]
 
 
 @pytest.mark.parametrize(

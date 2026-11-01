@@ -1141,7 +1141,7 @@ class Repository:
         )
 
     def async_dispatch_changed(self, action: str) -> None:
-        """Tell the panel the repository changed."""
+        """Tell the panel and the entities the repository changed."""
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY,
             {
@@ -1150,6 +1150,7 @@ class Repository:
                 "repository_id": self.data.id,
             },
         )
+        self.marketplace.coordinators[self.data.category].async_update_listeners()
 
     @contextmanager
     def _install_failure_names_the_version(self, version: str | None) -> Iterator[None]:

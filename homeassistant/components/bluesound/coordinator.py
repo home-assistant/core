@@ -137,8 +137,6 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
                 )
             except PlayerUnreachableError as ex:
                 self.async_set_update_error(ex)
-            except asyncio.CancelledError:
-                return
             except Exception as ex:  # noqa: BLE001 - this loop should never stop
                 self.async_set_update_error(ex)
 
@@ -158,8 +156,6 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
             except PlayerUnreachableError as ex:
                 self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
-            except asyncio.CancelledError:
-                return
             except Exception as ex:  # noqa: BLE001 - this loop should never stop
                 self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
@@ -180,8 +176,6 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
             except PlayerUnreachableError as ex:
                 self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
-            except asyncio.CancelledError:
-                raise
             except Exception as ex:  # noqa: BLE001 - this loop should never stop
                 self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
