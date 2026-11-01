@@ -78,25 +78,36 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
                 results: list[TankData] = []
 
                 for tank in tanks:
-                    tank.clear_cache()
-                    raw_history = await tank.history()
-                    filtered = filter_history(raw_history, usage_window)  # pyright: ignore[reportArgumentType]
+                    try:
+                        tank.clear_cache()
+                        tank_name = str(await tank.name)
+                        raw_history = await tank.history()
+                        filtered = filter_history(raw_history, usage_window)  # pyright: ignore[reportArgumentType]
 
-                    rate = calculate_usage_rate(filtered)
-                    forecast = calculate_forecast_empty(filtered, rate)
+                        rate = calculate_usage_rate(filtered)
+                        forecast = calculate_forecast_empty(filtered, rate)
 
-                    tank_data = TankData(
-                        level=float(await tank.level),
-                        serial_number=str(await tank.serial_number),
-                        model=str(await tank.model),
-                        name=str(await tank.name),
-                        capacity=float(await tank.capacity),
-                        last_read=as_local(await tank.last_read),
-                        history=raw_history or [],  # pyright: ignore[reportArgumentType]
-                        usage_rate=rate,
-                        forecast_empty=forecast,
-                    )
-                    results.append(tank_data)
+                        tank_data = TankData(
+                            level=float(await tank.level),
+                            serial_number=str(await tank.serial_number),
+                            model=str(await tank.model),
+                            name=tank_name,
+                            capacity=float(await tank.capacity),
+                            last_read=as_local(await tank.last_read),
+                            history=raw_history or [],  # pyright: ignore[reportArgumentType]
+                            usage_rate=rate,
+                            forecast_empty=forecast,
+                        )
+                        results.append(tank_data)
+                    except KingspanAPIError as err:
+                        if err.code == KingspanErrorCode.NO_DATA:
+                            _LOGGER.warning(
+                                "Skipping tank '%s' (missing data): %s",
+                                tank_name,
+                                err.message,
+                            )
+                            continue
+                        raise
 
         except KingspanAPIError as err:
             if err.code == KingspanErrorCode.AUTH_FAILED:

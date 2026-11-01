@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 from connectsensor.exceptions import (
     KingspanAPIError,
     KingspanErrorCode,
+    KingspanNoDataError,
     KingspanTimeoutError,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -22,6 +23,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.dt import get_time_zone, set_default_time_zone
 
+from .conftest import MockAsyncTank
 from .const import (
     MOCK_CONFIG,
     MOCK_TANK_CAPACITY,
@@ -270,3 +272,76 @@ async def test_dynamic_device_addition(
 
         # Verify the new tank entities were dynamically added without a restart
         assert hass.states.get("sensor.tanky_mctankface_2_oil_level") is not None
+
+
+@pytest.mark.parametrize(
+    "mock_sensor_client",
+    [
+        {
+            "tank_level": MOCK_TANK_CAPACITY,
+            "history_type": HistoryType.DECREASING,
+            "num_tanks": 2,
+        }
+    ],
+    indirect=True,
+)
+async def test_skip_tank_with_missing_readings(
+    hass: HomeAssistant, mock_sensor_client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that a tank raising NO_DATA is skipped without dropping the whole account."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+
+    # Grab the original mocked method so we can allow the second tank to succeed
+    original_history = MockAsyncTank.history
+
+    async def mock_history(self):
+        if self._tank_num == 1:
+            raise KingspanNoDataError("no history data for tank 1")
+        return await original_history(self)
+
+    with patch(
+        "tests.components.watchman.conftest.MockAsyncTank.history", new=mock_history
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The first tank should be skipped, so its sensors won't exist
+    assert hass.states.get("sensor.tanky_mctankface_1_oil_level") is None
+    assert "Skipping tank 'Tanky McTankFace #1' (missing data)" in caplog.text
+
+    # The second tank should successfully load
+    assert hass.states.get("sensor.tanky_mctankface_2_oil_level") is not None
+    assert float(hass.states.get("sensor.tanky_mctankface_2_oil_level").state) == float(
+        MOCK_TANK_CAPACITY
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_sensor_client",
+    [{"tank_level": MOCK_TANK_CAPACITY, "history_type": HistoryType.DECREASING}],
+    indirect=True,
+)
+async def test_inner_loop_critical_error_re_raises(
+    hass: HomeAssistant, mock_sensor_client
+) -> None:
+    """Test that a non-NO_DATA error on a single tank aborts the coordinator update."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data
+
+    async def mock_history(self):
+        raise KingspanTimeoutError("Connection dropped while fetching tank history")
+
+    with (
+        patch(
+            "tests.components.watchman.conftest.MockAsyncTank.history", new=mock_history
+        ),
+        pytest.raises(UpdateFailed) as exc,
+    ):
+        await coordinator._async_update_data()
+
+    assert exc.value.translation_key == "timed_out"
