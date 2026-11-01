@@ -112,3 +112,53 @@ async def test_import_yaml_failed(
     assert not issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_yaml_already_configured_offline(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_discovery_info: AsyncMock,
+) -> None:
+    """Test an imported printer that is offline still raises a deprecation issue."""
+    MockConfigEntry(
+        domain=DOMAIN, unique_id="uuid", data=YAML_CONFIG[DOMAIN]
+    ).add_to_hass(hass)
+    mock_discovery_info.side_effect = ApiError
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    mock_discovery_info.assert_not_called()
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert len(issue_registry.issues) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_yaml_partial_failure(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_discovery_info: AsyncMock,
+) -> None:
+    """Test a failed printer import prevents the remove-your-YAML issue."""
+    mock_discovery_info.side_effect = [
+        DiscoverySettings({"upnpUuid": "uuid"}),
+        ApiError,
+    ]
+    config = {
+        DOMAIN: [
+            YAML_CONFIG[DOMAIN],
+            {**YAML_CONFIG[DOMAIN], "host": "2.2.2.2", "name": "Second printer"},
+        ]
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert len(issue_registry.issues) == 1

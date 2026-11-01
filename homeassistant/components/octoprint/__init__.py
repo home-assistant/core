@@ -1,5 +1,6 @@
 """Support for monitoring OctoPrint 3D printers."""
 
+import asyncio
 import logging
 from typing import Any
 
@@ -139,51 +140,60 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    domain_config = config[DOMAIN]
-
-    for conf in domain_config:
-        hass.async_create_task(
-            _async_import_yaml(
-                hass,
+    hass.async_create_task(
+        _async_import_yaml(
+            hass,
+            [
                 {
                     CONF_API_KEY: conf[CONF_API_KEY],
                     CONF_HOST: conf[CONF_HOST],
                     CONF_PATH: conf[CONF_PATH],
                     CONF_PORT: conf[CONF_PORT],
                     CONF_SSL: conf[CONF_SSL],
-                },
-            )
+                }
+                for conf in config[DOMAIN]
+            ],
         )
+    )
 
     return True
 
 
-async def _async_import_yaml(hass: HomeAssistant, import_data: dict[str, Any]) -> None:
-    """Import a YAML printer into a config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=import_data,
+async def _async_import_yaml(
+    hass: HomeAssistant, import_data: list[dict[str, Any]]
+) -> None:
+    """Import the YAML devices into config entries."""
+    results = await asyncio.gather(
+        *(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+            )
+            for data in import_data
+        )
     )
-
-    if (
-        result["type"] is FlowResultType.ABORT
+    failed_reasons = {
+        result["reason"]
+        for result in results
+        if result["type"] is FlowResultType.ABORT
         and result["reason"] != "already_configured"
-    ):
+    }
+    for reason in failed_reasons:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_yaml_import_issue_{result['reason']}",
+            f"deprecated_yaml_import_issue_{reason}",
             breaks_in_ha_version="2027.6.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": DEFAULT_NAME,
             },
         )
+    # The shared issue tells users to remove all YAML, which would drop failed devices.
+    if failed_reasons:
         return
 
     ir.async_create_issue(
