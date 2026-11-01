@@ -408,6 +408,33 @@ async def test_sources(
 
 @pytest.mark.parametrize("node_fixture", ["mock_basic_video_player"])
 @pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/1287/0": [
+                {"0": 1, "1": 4, "2": "", "3": "Game console"},
+                {"0": 2, "1": 4, "2": "", "3": ""},
+                {"0": 4, "1": 10, "2": "USB", "3": ""},
+            ],
+            "1/1287/1": 2,
+        }
+    ],
+)
+@pytest.mark.usefixtures("matter_node")
+async def test_blank_source_names(hass: HomeAssistant) -> None:
+    """Test inputs without a name use their description or index."""
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
+        "Game console",
+        "Input 2",
+        "USB",
+    ]
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Input 2"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_basic_video_player"])
+@pytest.mark.parametrize(
     ("attributes", "source_list", "selected", "index"),
     [
         pytest.param(

@@ -61,16 +61,20 @@ def source_names(
 ) -> dict[int, str]:
     """Return a unique source name per input index.
 
+    A blank name falls back to the description, then to the input index.
     Duplicate names get their input index. If that still collides with another
     input's name, all names get their index, which is unique by itself.
     """
-    name_counts = Counter(x.name for x in inputs)
+    base_names = {
+        x.index: x.name or x.description or f"Input {x.index}" for x in inputs
+    }
+    name_counts = Counter(base_names.values())
     names = {
-        x.index: x.name if name_counts[x.name] == 1 else f"{x.name} ({x.index})"
-        for x in inputs
+        index: name if name_counts[name] == 1 else f"{name} ({index})"
+        for index, name in base_names.items()
     }
     if len(set(names.values())) < len(names):
-        return {x.index: f"{x.name} ({x.index})" for x in inputs}
+        return {index: f"{name} ({index})" for index, name in base_names.items()}
     return names
 
 
