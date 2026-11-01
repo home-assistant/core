@@ -644,6 +644,9 @@
       "categories": [
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "esphome"
+      ],
       "supported_by": "esphome"
     },
     "appalachianpower": {
@@ -3110,6 +3113,9 @@
       "categories": [
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "esphome"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3184,6 +3190,9 @@
       "integration_type": "virtual",
       "categories": [
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "esphome"
       ],
       "supported_by": "esphome"
     },
@@ -5457,6 +5466,9 @@
       "categories": [
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "esphome"
+      ],
       "supported_by": "esphome"
     },
     "iotty": {
@@ -5897,6 +5909,9 @@
           "supported_by": "esphome",
           "categories": [
             "diy_makers.boards_hardware"
+          ],
+          "connectivity": [
+            "esphome"
           ],
           "name": "Konnected"
         }
