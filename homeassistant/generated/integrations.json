@@ -7157,6 +7157,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "x10"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -12947,6 +12950,9 @@
       "categories": [
         "hubs_protocols",
         "lighting"
+      ],
+      "connectivity": [
+        "x10"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
