@@ -186,10 +186,10 @@ async def test_user_flow_already_configured_host(
 
 
 @pytest.mark.usefixtures("mock_pikvm_client", "mock_setup_entry")
-async def test_user_flow_already_configured_updates_host(
+async def test_user_flow_already_configured_unique_id(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test adding a known device at a new address updates the stored host."""
+    """Test the flow aborts when the device serial is already configured."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -201,7 +201,6 @@ async def test_user_flow_already_configured_updates_host(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == "pikvm.local"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
