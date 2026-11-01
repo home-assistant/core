@@ -24,8 +24,6 @@ from homeassistant.helpers import device_registry as dr
 from . import MOCK_SERIAL, seed, seed_identity
 
 PV_POWER = "sensor.s10_x_pv_power"
-# The first register of each block a readings poll reads
-READINGS_BLOCKS = (40068, 40096, 40088, 40105, 40137, 40188, 40200, 40202, 41000)
 
 
 async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
@@ -126,18 +124,30 @@ async def test_setup_fails_for_another_power_station(
     assert mock_config_entry.error_reason_translation_key == "serial_mismatch"
 
 
+async def test_poll_reads_only_the_power_block(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    init_integration: MockConfigEntry,
+    mock_unit: MockModbusUnit,
+) -> None:
+    """Test a poll reads the power flows and nothing else."""
+    mock_unit.read_events.clear()
+    await _poll(hass, freezer)
+
+    assert [event.address for event in mock_unit.read_events] == [register(40068)]
+
+
 async def test_refused_power_block_goes_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test the sensors go unavailable while their block is refused."""
+    """Test the sensors go unavailable while the power block is refused."""
     mock_unit.fail_read(register(40068), IllegalDataAddressError())
     await _poll(hass, freezer)
 
-    # Other blocks still answered, so the poll as a whole succeeded
-    assert init_integration.runtime_data.last_update_success
+    assert not init_integration.runtime_data.last_update_success
     assert hass.states.get(PV_POWER).state == STATE_UNAVAILABLE
 
     mock_unit.fail_read(register(40068), None)
@@ -159,27 +169,6 @@ async def test_dead_link_makes_everything_unavailable(
     assert hass.states.get(PV_POWER).state == STATE_UNAVAILABLE
 
     mock_unit.fail_requests(None)
-    await _poll(hass, freezer)
-
-    assert hass.states.get(PV_POWER).state == "5321"
-
-
-async def test_every_component_failing_marks_the_poll_failed(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    init_integration: MockConfigEntry,
-    mock_unit: MockModbusUnit,
-) -> None:
-    """Test a poll where no component answers fails as a whole."""
-    for index in READINGS_BLOCKS:
-        mock_unit.fail_read(register(index), IllegalDataAddressError())
-    await _poll(hass, freezer)
-
-    assert not init_integration.runtime_data.last_update_success
-    assert hass.states.get(PV_POWER).state == STATE_UNAVAILABLE
-
-    for index in READINGS_BLOCKS:
-        mock_unit.fail_read(register(index), None)
     await _poll(hass, freezer)
 
     assert hass.states.get(PV_POWER).state == "5321"

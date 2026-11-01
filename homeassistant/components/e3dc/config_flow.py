@@ -48,8 +48,12 @@ async def _async_probe(
     """Connect to the power station and read its identity, or raise."""
     params = create_modbus_params(data)
     async with async_get_temporary_unit(hass, params, UNIT_ID) as unit:
-        device = await E3dcPowerStation.async_detect(unit)
-        device.close()
+        device = E3dcPowerStation(unit)
+        try:
+            await device.async_ensure_setup()
+        finally:
+            # The station listens to the shared connection until it is closed
+            device.close()
         return device
 
 

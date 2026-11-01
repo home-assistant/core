@@ -71,9 +71,6 @@
     "modbus_error": {
       "message": "Error communicating with the power station."
     },
-    "no_component_answered": {
-      "message": "No component answered."
-    },
     "not_e3dc": {
       "message": "The device is not an E3/DC power station in E3/DC protocol mode."
     },

@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import E3dcConfigEntry
-from .entity import E3dcEntity, E3dcEntityDescription
+from .entity import E3dcEntity
 
 PARALLEL_UPDATES = 0
 
@@ -30,7 +30,7 @@ def _enum_options(enum_type: type[IntEnum]) -> list[str]:
 
 
 @dataclass(frozen=True, kw_only=True)
-class E3dcSensorDescription(SensorEntityDescription, E3dcEntityDescription):
+class E3dcSensorDescription(SensorEntityDescription):
     """Describe an E3/DC sensor."""
 
     value_fn: Callable[[E3dcPowerStation], StateType | IntEnum]
@@ -43,7 +43,6 @@ def _power(
     return E3dcSensorDescription(
         key=key,
         translation_key=key,
-        component="power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -61,7 +60,6 @@ SENSORS: tuple[E3dcSensorDescription, ...] = (
     _power("wallbox_solar_power", lambda device: device.power.wallbox_solar_power),
     E3dcSensorDescription(
         key="battery_soc",
-        component="power",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -70,7 +68,6 @@ SENSORS: tuple[E3dcSensorDescription, ...] = (
     E3dcSensorDescription(
         key="autarky",
         translation_key="autarky",
-        component="power",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.power.autarky,
@@ -78,7 +75,6 @@ SENSORS: tuple[E3dcSensorDescription, ...] = (
     E3dcSensorDescription(
         key="self_consumption",
         translation_key="self_consumption",
-        component="power",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.power.self_consumption,
@@ -86,7 +82,6 @@ SENSORS: tuple[E3dcSensorDescription, ...] = (
     E3dcSensorDescription(
         key="emergency_power_status",
         translation_key="emergency_power_status",
-        component="power",
         device_class=SensorDeviceClass.ENUM,
         options=_enum_options(EmergencyPowerStatus),
         value_fn=lambda device: device.power.emergency_power_status,
