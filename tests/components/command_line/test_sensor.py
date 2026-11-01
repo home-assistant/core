@@ -610,7 +610,7 @@ async def test_updating_to_often(
         await hass.async_block_till_done()
 
     assert called
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=15))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))
     wait_till_event.set()
     await asyncio.sleep(0)
 
@@ -621,9 +621,9 @@ async def test_updating_to_often(
 
     # Simulate update takes too long
     wait_till_event.clear()
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await asyncio.sleep(0)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     wait_till_event.set()
     await asyncio.sleep(0)
 
