@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components import songpal
 from homeassistant.components.songpal.const import CONF_ENDPOINT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import issue_registry as ir, translation
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -179,3 +179,27 @@ async def test_setup_import_partial_failure(
         songpal.DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
     assert len(issue_registry.issues) == 1
+
+
+async def test_setup_import_finishes_before_setup_returns(hass: HomeAssistant) -> None:
+    """Test all YAML devices are imported before the integration setup returns."""
+    await translation.async_load_integrations(hass, {songpal.DOMAIN})
+    second_endpoint = "http://0.0.0.1:10000/sony"
+    devices = {
+        CONF_DATA[CONF_ENDPOINT]: _create_mocked_device(),
+        second_endpoint: _create_mocked_device(),
+    }
+    config = [CONF_DATA, {**CONF_DATA, CONF_ENDPOINT: second_endpoint}]
+
+    with (
+        patch(
+            "homeassistant.components.songpal.config_flow.Device",
+            side_effect=devices.__getitem__,
+        ),
+        _patch_media_setup(),
+    ):
+        assert await async_setup_component(
+            hass, songpal.DOMAIN, {songpal.DOMAIN: config}
+        )
+
+        assert len(hass.config_entries.async_entries(songpal.DOMAIN)) == 2
