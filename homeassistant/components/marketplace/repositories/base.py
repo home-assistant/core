@@ -996,7 +996,14 @@ class Repository:
         if not (languages := language_util.matches(language, readmes)):
             return ""
 
-        return await self.get_documentation(filename=readmes[languages[0]]) or ""
+        try:
+            return await self.get_documentation(filename=readmes[languages[0]]) or ""
+        except UnicodeDecodeError:
+            # README.md is still there to show
+            self.logger.warning(
+                "%s %s is not UTF-8", self.string, readmes[languages[0]]
+            )
+            return ""
 
     def remove(self) -> None:
         """Forget the repository, its files stay where they are."""

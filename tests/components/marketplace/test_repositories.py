@@ -829,6 +829,23 @@ async def test_translated_readme(
     get_documentation.assert_called_once_with(filename=expected_filename)
 
 
+async def test_translated_readme_not_utf8(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test a translated README that is not UTF-8 leaves README.md to show."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.data.last_version = "1.0.0"
+    url = (
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
+    )
+    response_mocker.add(url, mocked_response(url, content="Größe".encode("latin-1")))
+
+    assert await repository.async_get_translated_readme("de") == ""
+
+
 async def test_translated_readme_follows_the_installed_version(
     marketplace: MarketplaceManager,
     response_mocker: MarketplaceResponses,
