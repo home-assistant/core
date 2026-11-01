@@ -38,7 +38,7 @@ def mock_walk() -> Iterator[Mock]:
         yield mock
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_udp_transport() -> Iterator[Mock]:
     """Avoid real network calls when a transport target is created."""
     with patch(

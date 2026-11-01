@@ -28,6 +28,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -313,6 +314,10 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], Scanner
         self._attr_mac_address = mac
         self._attr_name = mac
         self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
+        # A tracker has no device: the MAC belongs to a third party device which is
+        # not managed here, and the same MAC may be tracked by several subentries of
+        # the entry, while a device can only belong to one subentry.
+        self._attr_device_info = DeviceInfo()
 
     @property
     @override

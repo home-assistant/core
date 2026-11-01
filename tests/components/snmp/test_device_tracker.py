@@ -77,16 +77,25 @@ async def _async_advance_poll(
 
 @pytest.fixture
 def enable_tracker(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> Callable[[str], None]:
-    """Return a helper which makes a tracker enabled by registering its MAC."""
+    """Return a helper which enables a tracker before the platform adds it.
+
+    ScannerEntity creates its entities disabled, so a test which wants a state has
+    to have the registry entry in place before the platform adds the entity.
+    """
 
     def _enable(mac: str) -> None:
-        other_entry = MockConfigEntry(domain="other_integration")
-        other_entry.add_to_hass(hass)
-        device_registry.async_get_or_create(
-            config_entry_id=other_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        (entry,) = hass.config_entries.async_entries(DOMAIN)
+        subentry_id = next(iter(entry.subentries))
+        entity_registry.async_get_or_create(
+            DEVICE_TRACKER_DOMAIN,
+            DOMAIN,
+            f"{subentry_id}_{mac}",
+            config_entry=entry,
+            config_subentry_id=subentry_id,
+            suggested_object_id=mac,
+            disabled_by=None,
         )
 
     return _enable
@@ -278,31 +287,6 @@ async def test_device_tracker_name_resolves_to_mac_address(
 
 
 @pytest.mark.usefixtures("mock_walk")
-async def test_device_tracker_enabled_if_device_exists(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    enable_tracker: Callable[[str], None],
-) -> None:
-    """Test that an entity is enabled if its device already exists in the registry.
-
-    ScannerEntity only enables new entities when a device with the same MAC is
-    already known to Home Assistant.
-    """
-    entry = mock_entry()
-    entry.add_to_hass(hass)
-    enable_tracker(MAC)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = _tracker_entity_id(entity_registry, entry, MAC)
-    assert entity_id is not None
-
-    reg_entry = entity_registry.async_get(entity_id)
-    assert reg_entry is not None
-    assert reg_entry.disabled_by is None
-
-
 async def test_device_tracker_initial_macs(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
