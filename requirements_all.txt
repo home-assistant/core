@@ -1975,7 +1975,7 @@ phone-modem==0.1.1
 pigpio==1.78
 
 # homeassistant.components.pikvm
-pikvm-aio==0.1.5
+pikvm-aio==0.1.6
 
 # homeassistant.components.plex
 plexauth==0.0.6

@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["pikvm_aio"],
   "quality_scale": "bronze",
-  "requirements": ["pikvm-aio==0.1.5"]
+  "requirements": ["pikvm-aio==0.1.6"]
 }
