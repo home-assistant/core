@@ -1,5 +1,6 @@
 """Services for the automation integration."""
 
+import asyncio
 from typing import TYPE_CHECKING
 
 import probatio
@@ -93,10 +94,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     reload_helper = ReloadServiceHelper(_async_reload_service_handler, _reload_targets)
+
+    async def async_reload(service_call: ServiceCall) -> None:
+        # Removing the calling automation must not cancel the reload.
+        await asyncio.shield(
+            hass.async_create_task(
+                reload_helper.execute_service(service_call),
+                "automation reload",
+                eager_start=True,
+            )
+        )
+
     async_register_admin_service(
         hass,
         DOMAIN,
         SERVICE_RELOAD,
-        reload_helper.execute_service,
+        async_reload,
         schema=probatio.Schema({probatio.Optional(CONF_ID): str}),
     )
