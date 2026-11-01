@@ -332,6 +332,12 @@
             }
           }
         }
+      },
+      "rgbw_white": {
+        "name": "White"
+      },
+      "rgbw_white_with_channel_name": {
+        "name": "{channel_name} white"
       }
     },
     "number": {
