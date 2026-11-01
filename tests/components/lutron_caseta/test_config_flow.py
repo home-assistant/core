@@ -3,6 +3,7 @@
 from ipaddress import ip_address
 from pathlib import Path
 import ssl
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY
@@ -19,8 +20,6 @@ from homeassistant.components.lutron_caseta.const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
-    ERROR_CANNOT_CONNECT,
-    STEP_IMPORT_FAILED,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -84,79 +83,37 @@ async def test_bridge_import_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_bridge_cannot_connect(hass: HomeAssistant) -> None:
-    """Test checking for connection and cannot_connect error."""
-
-    entry_mock_data = {
-        CONF_HOST: "not.a.valid.host",
-        CONF_KEYFILE: "",
-        CONF_CERTFILE: "",
-        CONF_CA_CERTS: "",
-    }
-
-    with patch.object(Smartbridge, "create_tls") as create_tls:
-        create_tls.return_value = MockBridge(can_connect=False)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_mock_data,
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == STEP_IMPORT_FAILED
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
-    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
+def _mock_bridge_timeout() -> MockBridge:
+    """Return a mock bridge that times out while connecting."""
+    bridge = MockBridge()
+    bridge.connect = AsyncMock(side_effect=TimeoutError)
+    return bridge
 
 
-async def test_bridge_cannot_connect_unknown_error(hass: HomeAssistant) -> None:
-    """Test checking for connection and encountering an unknown error."""
+@pytest.mark.parametrize(
+    "create_tls_kwargs",
+    [
+        pytest.param(
+            {"return_value": MockBridge(can_connect=False)}, id="cannot_connect"
+        ),
+        pytest.param({"return_value": _mock_bridge_timeout()}, id="timeout"),
+        pytest.param({"side_effect": ssl.SSLError}, id="invalid_ssl"),
+    ],
+)
+async def test_bridge_import_cannot_connect(
+    hass: HomeAssistant, create_tls_kwargs: dict[str, Any]
+) -> None:
+    """Test the import flow aborts when it cannot connect to the bridge."""
 
-    with patch.object(Smartbridge, "create_tls") as create_tls:
-        mock_bridge = MockBridge()
-        mock_bridge.connect = AsyncMock(side_effect=TimeoutError)
-        create_tls.return_value = mock_bridge
+    with patch.object(Smartbridge, "create_tls", **create_tls_kwargs):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data=EMPTY_MOCK_CONFIG_ENTRY,
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == STEP_IMPORT_FAILED
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
-    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
-
-
-async def test_bridge_invalid_ssl_error(hass: HomeAssistant) -> None:
-    """Test checking for connection and encountering invalid ssl certs."""
-
-    with patch.object(Smartbridge, "create_tls", side_effect=ssl.SSLError):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=EMPTY_MOCK_CONFIG_ENTRY,
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == STEP_IMPORT_FAILED
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
-    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_duplicate_bridge_import(hass: HomeAssistant) -> None:

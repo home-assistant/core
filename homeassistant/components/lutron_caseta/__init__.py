@@ -10,14 +10,16 @@ import probatio
 from pylutron_caseta import BUTTON_STATUS_MULTITAP, BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -77,6 +79,7 @@ from .util import area_name_from_id, serial_to_unique_id
 _LOGGER = logging.getLogger(__name__)
 
 DATA_BRIDGE_CONFIG = "lutron_caseta_bridges"
+INTEGRATION_TITLE = "Lutron Caséta"
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -110,14 +113,12 @@ PLATFORMS = [
 async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Lutron component."""
     if DOMAIN in base_config:
-        bridge_configs = base_config[DOMAIN]
-        for config in bridge_configs:
+        for config in base_config[DOMAIN]:
             hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
+                _async_import_yaml(
+                    hass,
                     # extract the config keys one-by-one just to be explicit
-                    data={
+                    {
                         CONF_HOST: config[CONF_HOST],
                         CONF_KEYFILE: config[CONF_KEYFILE],
                         CONF_CERTFILE: config[CONF_CERTFILE],
@@ -127,6 +128,48 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
             )
 
     return True
+
+
+async def _async_import_yaml(hass: HomeAssistant, import_data: dict[str, Any]) -> None:
+    """Import a YAML configured bridge into a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
+    )
+
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
 
 async def _async_migrate_unique_ids(

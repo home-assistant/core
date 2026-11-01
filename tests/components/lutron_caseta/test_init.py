@@ -3,13 +3,21 @@
 import ssl
 from unittest.mock import patch
 
+from pylutron_caseta.smartbridge import Smartbridge
 import pytest
 
 from homeassistant.components import lutron_caseta
-from homeassistant.components.lutron_caseta.const import DOMAIN
+from homeassistant.components.lutron_caseta.const import (
+    CONF_CA_CERTS,
+    CONF_CERTFILE,
+    CONF_KEYFILE,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.const import CONF_HOST
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from . import MockBridge, async_setup_integration, make_mock_entry
 
@@ -91,3 +99,75 @@ async def test_keypad_device_via_device_id(
     assert keypad_device is not None
     assert keypad_device.via_device_id == bridge_device.id
     assert bridge_device.via_device_id is None
+
+
+@pytest.mark.parametrize(
+    ("host", "can_connect", "issue_domain", "issue_id"),
+    [
+        pytest.param(
+            "2.2.2.2",
+            True,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            id="imported",
+        ),
+        pytest.param(
+            "1.1.1.1",
+            True,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            id="already_configured",
+        ),
+        pytest.param(
+            "2.2.2.2",
+            False,
+            DOMAIN,
+            "deprecated_yaml_import_issue_cannot_connect",
+            id="cannot_connect",
+        ),
+    ],
+)
+async def test_yaml_import_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    host: str,
+    can_connect: bool,
+    issue_domain: str,
+    issue_id: str,
+) -> None:
+    """Test importing YAML creates the matching deprecation issue."""
+    # The existing entry uses host 1.1.1.1, so importing that host aborts.
+    make_mock_entry().add_to_hass(hass)
+
+    with (
+        patch.object(
+            Smartbridge, "create_tls", return_value=MockBridge(can_connect=can_connect)
+        ),
+        patch(
+            "homeassistant.components.lutron_caseta.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_HOST: host,
+                    CONF_KEYFILE: "",
+                    CONF_CERTFILE: "",
+                    CONF_CA_CERTS: "",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(issue_domain, issue_id)
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.issue_domain == DOMAIN
+    assert issue.translation_placeholders == {
+        "domain": DOMAIN,
+        "integration_title": "Lutron Caséta",
+    }
