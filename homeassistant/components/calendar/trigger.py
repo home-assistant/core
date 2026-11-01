@@ -152,11 +152,9 @@ class Timespan:
         )
 
     def next_upcoming(self, now: dt.datetime, interval: dt.timedelta) -> Timespan:
-        """Return an adjacent, non-overlapping time span following this one.
-
-        Advances through time using interval as a hint, extending past now if
-        the current interval has drifted behind.
-        """
+        """Return an adjacent, non-overlapping time span following this one."""
+        # Refresh timers drift slightly past self.end (e.g. fetch latency or
+        # event loop delay); use max() to catch up rather than falling behind.
         next_end_utc = max(dt_util.as_utc(self.end), dt_util.as_utc(now)) + interval
         return Timespan(self.end, dt_util.as_local(next_end_utc))
 
