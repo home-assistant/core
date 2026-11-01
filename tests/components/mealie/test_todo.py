@@ -63,9 +63,12 @@ async def test_food_item_uses_concise_summary(
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a food item uses its food name and keeps its display as a description."""
+    """Test a food item uses its name and keeps shopping and food details."""
     shopping_item = mock_mealie_client.get_shopping_items.return_value.items[1]
     shopping_item.food.plural_name = "acorn squashes"
+    shopping_item.food.description = "Best roasted with olive oil"
+    food_matching_display = mock_mealie_client.get_shopping_items.return_value.items[2]
+    food_matching_display.food.description = "A purple variety of eggplant"
 
     await setup_integration(hass, mock_config_entry)
 
@@ -80,12 +83,16 @@ async def test_food_item_uses_concise_summary(
     items = result["todo.mealie_supermarket"]["items"]
     item = next(item for item in items if item["uid"] == shopping_item.item_id)
     assert item["summary"] == "acorn squashes"
-    assert item["description"] == "1 can acorn squash"
+    assert item["description"] == "1 can acorn squash\n\nBest roasted with olive oil"
 
     food_without_plural = mock_mealie_client.get_shopping_items.return_value.items[3]
     item = next(item for item in items if item["uid"] == food_without_plural.item_id)
     assert item["summary"] == "flour"
     assert item["description"] == "1 US cup flour"
+
+    item = next(item for item in items if item["uid"] == food_matching_display.item_id)
+    assert item["summary"] == "aubergine"
+    assert item["description"] == "A purple variety of eggplant"
 
     note_item = mock_mealie_client.get_shopping_items.return_value.items[0]
     item = next(item for item in items if item["uid"] == note_item.item_id)
