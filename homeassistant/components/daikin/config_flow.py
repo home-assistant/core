@@ -147,7 +147,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
-        devices = Discovery().poll(ip=discovery_info.host)
+        devices = await self.hass.async_add_executor_job(
+            lambda: Discovery().poll(ip=discovery_info.host)
+        )
         if not devices:
             _LOGGER.debug(
                 (
