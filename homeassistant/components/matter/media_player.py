@@ -165,8 +165,8 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
     async def _send_playback_command(self, command: ClusterCommand) -> None:
         """Send a Media Playback command and check its PlaybackResponse."""
         response = await self.send_device_command(command)
-        status = response["status"]
-        if status == PlaybackStatus.kSuccess:
+        # matterjs-server returns no response for commands to imported test nodes
+        if not response or (status := response["status"]) == PlaybackStatus.kSuccess:
             return
         placeholders = None
         if (translation_key := PLAYBACK_STATUS_ERRORS.get(status)) is None:

@@ -273,6 +273,29 @@ async def test_playback_command_rejected(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_basic_video_player"])
+async def test_playback_command_without_response(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a command that gets no response, as from an imported test node."""
+    matter_client.send_device_command.return_value = None
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PAUSE,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args_list == [
+        call(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            command=clusters.MediaPlayback.Commands.Pause(),
+        )
+    ]
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_basic_video_player"])
 @pytest.mark.usefixtures("matter_node")
 async def test_select_unknown_source(
     hass: HomeAssistant,
