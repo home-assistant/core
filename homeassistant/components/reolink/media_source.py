@@ -22,7 +22,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .util import get_host
-from .views import async_generate_playback_proxy_url
+from .views import async_generate_playback_proxy_url, async_generate_thumbnail_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -443,6 +443,9 @@ class ReolinkVODMediaSource(MediaSource):
                     title=file_name,
                     can_play=True,
                     can_expand=False,
+                    thumbnail=async_generate_thumbnail_url(
+                        config_entry_id, channel, file.start_time_id
+                    ),
                 )
             )
 

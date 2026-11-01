@@ -253,6 +253,9 @@ async def test_browsing(
     )
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
+    assert browse.children[0].thumbnail == (
+        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/{TEST_START}"
+    )
     reolink_host.request_vod_files.assert_called_with(
         int(TEST_CHANNEL),
         TEST_START_TIME,

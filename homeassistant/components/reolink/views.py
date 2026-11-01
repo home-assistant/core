@@ -1,6 +1,9 @@
 """Reolink Integration views."""
 
+import asyncio
 from base64 import urlsafe_b64decode, urlsafe_b64encode
+from collections import defaultdict
+import datetime as dt
 from http import HTTPStatus
 import logging
 
@@ -8,6 +11,7 @@ from aiohttp import ClientError, ClientTimeout, web
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError
 
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant, callback
@@ -17,6 +21,9 @@ from homeassistant.util.ssl import SSLCipherList
 from .util import get_host
 
 _LOGGER = logging.getLogger(__name__)
+
+# Each thumbnail costs a Baichuan request and an ffmpeg decode.
+MAX_PARALLEL_THUMBNAILS = 2
 
 
 @callback
@@ -32,6 +39,18 @@ def async_generate_playback_proxy_url(
         filename=urlsafe_b64encode(filename.encode("utf-8")).decode("utf-8"),
         stream_res=stream_res,
         vod_type=vod_type,
+    )
+
+
+@callback
+def async_generate_thumbnail_url(
+    config_entry_id: str, channel: int, start_time_id: str
+) -> str:
+    """Generate URL for the thumbnail of a recording."""
+    return ThumbnailView.url.format(
+        config_entry_id=config_entry_id,
+        channel=channel,
+        start_time_id=start_time_id,
     )
 
 
@@ -196,3 +215,72 @@ class PlaybackProxyView(HomeAssistantView):
 
         await response.write_eof()
         return response
+
+
+class ThumbnailView(HomeAssistantView):
+    """View to get a thumbnail of a Reolink recording."""
+
+    requires_auth = True
+    url = "/api/reolink/thumbnail/{config_entry_id}/{channel}/{start_time_id}"
+    name = "api:reolink_thumbnail"
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize a thumbnail view."""
+        self.hass = hass
+        self._semaphores: defaultdict[str, asyncio.Semaphore] = defaultdict(
+            lambda: asyncio.Semaphore(MAX_PARALLEL_THUMBNAILS)
+        )
+
+    async def get(
+        self,
+        request: web.Request,
+        config_entry_id: str,
+        channel: str,
+        start_time_id: str,
+    ) -> web.Response:
+        """Get the key frame at the start of a recording as JPEG."""
+        try:
+            host = get_host(self.hass, config_entry_id)
+        except Unresolvable:
+            _LOGGER.debug(
+                "Thumbnail requested for unknown config entry %s", config_entry_id
+            )
+            err_str = (
+                f"Reolink thumbnail could not find config entry id: {config_entry_id}"
+            )
+            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+
+        try:
+            ch = int(channel)
+            # start_time_id is in camera local time, as snapshot_past expects.
+            start_time = dt.datetime.strptime(start_time_id, "%Y%m%d%H%M%S")
+        except ValueError:
+            err_str = (
+                f"Reolink thumbnail invalid channel {channel}"
+                f" or start time {start_time_id}"
+            )
+            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+
+        async with self._semaphores[config_entry_id]:
+            try:
+                image = await host.api.baichuan.snapshot_past(
+                    ch,
+                    start_time,
+                    "sub",
+                    get_ffmpeg_manager(self.hass).binary,
+                )
+            except ReolinkError as err:
+                _LOGGER.debug(
+                    "Error getting thumbnail of channel %s at %s: %s",
+                    ch,
+                    start_time_id,
+                    err,
+                )
+                return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
+
+        # Recordings do not change, so the thumbnail can be cached.
+        return web.Response(
+            body=image,
+            content_type="image/jpeg",
+            headers={"Cache-Control": "private, max-age=86400"},
+        )
