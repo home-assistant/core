@@ -2726,7 +2726,7 @@ pysmhi==2.1.0
 pysml==0.1.9
 
 # homeassistant.components.smlight
-pysmlight==0.5.3
+pysmlight==0.6.0
 
 # homeassistant.components.snmp
 pysnmp==7.1.27
