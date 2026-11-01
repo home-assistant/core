@@ -151,6 +151,7 @@ async def async_setup_entry(
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
             entity_description=description,
+            room_name=session.room(device.room_id).name,
         )
         for device in session.device_helper.climate_controls
         for description in CLIMATE_CONTROL_DESCRIPTIONS
@@ -172,10 +173,15 @@ class SHCBinarySensor[_DeviceT: SHCDevice](SHCEntity, BinarySensorEntity):
         parent_id: str,
         entry_id: str,
         entity_description: SHCBinarySensorEntityDescription[_DeviceT],
+        room_name: str | None = None,
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = entity_description
         super().__init__(hass, device, parent_id, entry_id)
+        if room_name is not None:
+            if TYPE_CHECKING:
+                assert self._attr_device_info is not None
+            self._attr_device_info.name = room_name
         self._attr_unique_id = f"{device.serial}_{entity_description.key}"
 
     @property

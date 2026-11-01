@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.bosch_shc.binary_sensor import RETRY_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     climate_control_device,
@@ -241,22 +242,22 @@ async def test_twinguard_smoke_looks_up_once(
 @pytest.mark.parametrize(
     ("device_kwargs", "entity_id", "expected"),
     [
-        ({"has_demand": True}, "binary_sensor.room_climate_call_for_heat", STATE_ON),
-        ({}, "binary_sensor.room_climate_call_for_heat", STATE_OFF),
+        ({"has_demand": True}, "binary_sensor.living_room_call_for_heat", STATE_ON),
+        ({}, "binary_sensor.living_room_call_for_heat", STATE_OFF),
         (
             {"has_demand": True, "supports_cooling": True, "cooling_mode": True},
-            "binary_sensor.room_climate_call_for_heat",
+            "binary_sensor.living_room_call_for_heat",
             STATE_OFF,
         ),
         (
             {"setpoint_temperature_offset_active": True},
-            "binary_sensor.room_climate_schedule_override_active",
+            "binary_sensor.living_room_schedule_override_active",
             STATE_ON,
         ),
-        ({"summer_mode": True}, "binary_sensor.room_climate_heating_break", STATE_ON),
+        ({"summer_mode": True}, "binary_sensor.living_room_heating_break", STATE_ON),
         (
             {"ventilation_mode": True},
-            "binary_sensor.room_climate_sustainable_ventilation",
+            "binary_sensor.living_room_sustainable_ventilation",
             STATE_ON,
         ),
     ],
@@ -266,6 +267,8 @@ async def test_climate_control_binary_sensors(
     hass: HomeAssistant,
     mock_session: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     device_kwargs: dict[str, bool],
     entity_id: str,
     expected: str,
@@ -274,8 +277,14 @@ async def test_climate_control_binary_sensors(
     mock_session.device_helper.climate_controls = [
         climate_control_device(**device_kwargs)
     ]
+    mock_session.room.return_value.name = "Living Room"
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.name == "Living Room"
