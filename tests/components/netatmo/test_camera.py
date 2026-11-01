@@ -675,7 +675,7 @@ async def test_camera_reconnect_webhook(
     camera_type: str,
     camera_id: str,
     camera_entity: str,
-    expected_motion_detection: bool | None,
+    expected_motion_detection: bool,
 ) -> None:
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0
@@ -1480,22 +1480,26 @@ async def test_camera_initial_setup_and_images(
 
         # State checks after status change
         assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
-        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection")
+            is expected_motion_detection
+        )
+        assert hass.states.get(camera_entity).attributes.get("alim_status") == 1
 
         # Validate image fetch raises exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
+        with pytest.raises(HomeAssistantError, match="Unable to get image"):
             await camera.async_get_image(hass, camera_entity)
 
 
 @pytest.mark.parametrize(
-    ("attributes_payload", "expected_monitoring"),
+    ("attributes_payload", "expected_monitoring", "expected_alim_status"),
     [
-        ({"monitoring": "on", "alim_status": 1}, False),
-        ({"monitoring": "off", "alim_status": 1}, False),
-        ({"monitoring": "off", "alim_status": None}, False),
-        ({"monitoring": None, "alim_status": None}, False),
-        ({"monitoring": None, "alim_status": 1}, False),
+        ({"monitoring": "on", "alim_status": 1}, True, 1),
+        ({"monitoring": "off", "alim_status": 1}, False, 1),
+        ({"monitoring": "off", "alim_status": None}, False, None),
+        ({"monitoring": None, "alim_status": None}, False, None),
+        ({"monitoring": None, "alim_status": 1}, False, 1),
     ],
     ids=[
         "low_power",
@@ -1511,6 +1515,7 @@ async def test_camera_unhealthy_status_scenarios(
     freezer: FrozenDateTimeFactory,
     attributes_payload: dict[str, Any],
     expected_monitoring: bool | None,
+    expected_alim_status: int | None,
 ) -> None:
     """Test camera availability state across various degraded status payloads."""
     camera_entity = "camera.hall"
@@ -1561,4 +1566,8 @@ async def test_camera_unhealthy_status_scenarios(
         assert (
             hass.states.get(camera_entity).attributes.get("monitoring")
             is expected_monitoring
+        )
+        assert (
+            hass.states.get(camera_entity).attributes.get("alim_status")
+            is expected_alim_status
         )
