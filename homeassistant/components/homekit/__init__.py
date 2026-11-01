@@ -92,6 +92,7 @@ from .const import (
     ATTR_INTEGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
     ATTR_SW_VERSION,
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
@@ -368,8 +369,9 @@ class HomeKit:
         self._port = port
         self._ip_address = ip_address
         self._filter = entity_filter
+        # Copy so that registry values do not leak into the config entry options
         self._config: defaultdict[str, dict[str, Any]] = defaultdict(
-            dict, entity_config
+            dict, {entity_id: dict(cfg) for entity_id, cfg in entity_config.items()}
         )
         self._exclude_accessory_mode = exclude_accessory_mode
         self._advertise_ips = advertise_ips
@@ -1054,15 +1056,17 @@ class HomeKit:
     def _fill_config_from_device_registry_entry(
         self, device_entry: dr.DeviceEntry, config: dict[str, Any]
     ) -> None:
-        """Populate a config dict from the registry."""
+        """Populate a config dict from the registry, keeping configured values."""
         if device_entry.manufacturer:
-            config[ATTR_MANUFACTURER] = device_entry.manufacturer
+            config.setdefault(ATTR_MANUFACTURER, device_entry.manufacturer)
         if device_entry.model:
-            config[ATTR_MODEL] = device_entry.model
+            config.setdefault(ATTR_MODEL, device_entry.model)
         if device_entry.sw_version:
-            config[ATTR_SW_VERSION] = device_entry.sw_version
+            config.setdefault(ATTR_SW_VERSION, device_entry.sw_version)
         if device_entry.hw_version:
-            config[ATTR_HW_VERSION] = device_entry.hw_version
+            config.setdefault(ATTR_HW_VERSION, device_entry.hw_version)
+        if device_entry.serial_number:
+            config.setdefault(ATTR_SERIAL_NUMBER, device_entry.serial_number)
         if entry := self.hass.config_entries.async_get_entry(
             device_entry.config_entry_id
         ):
