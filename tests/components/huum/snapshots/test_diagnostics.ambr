@@ -13,7 +13,7 @@
       'humidity': 5,
       'is_private': None,
       'light': 1,
-      'maximum_target_humidity': None,
+      'maximum_target_humidity': 20,
       'measured_humidity': None,
       'payment_end_date': None,
       'remote_safety_state': None,
