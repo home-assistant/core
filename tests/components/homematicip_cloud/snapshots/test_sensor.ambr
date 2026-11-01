@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position-entry]
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.fal230_valve_position',
+    'entity_id': 'sensor.fal230_valve_position_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,12 +23,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Valve Position',
+    'object_id_base': 'Valve Position 1',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:heating-coil',
-    'original_name': 'Valve Position',
+    'original_name': 'Valve Position 1',
     'platform': 'homematicip_cloud',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -38,11 +38,11 @@
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
-# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position-state]
+# name: test_hmip_floor_terminal_block_thermal_valve_position[sensor.fal230_valve_position_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position 1',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
       'id': '3014F7110000000000BBBBB1',
       'is_group': False,
@@ -52,7 +52,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.fal230_valve_position',
+    'entity_id': 'sensor.fal230_valve_position_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -83,12 +83,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Valve Position',
+    'object_id_base': 'Valve Position 2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:heating-coil',
-    'original_name': 'Valve Position',
+    'original_name': 'Valve Position 2',
     'platform': 'homematicip_cloud',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -102,7 +102,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position 2',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
       'id': '3014F7110000000000BBBBB1',
       'is_group': False,
@@ -143,12 +143,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Valve Position',
+    'object_id_base': 'Valve Position 3',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:heating-coil',
-    'original_name': 'Valve Position',
+    'original_name': 'Valve Position 3',
     'platform': 'homematicip_cloud',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -162,7 +162,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position 3',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
       'id': '3014F7110000000000BBBBB1',
       'is_group': False,
@@ -203,12 +203,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Valve Position',
+    'object_id_base': 'Valve Position 4',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:heating-coil',
-    'original_name': 'Valve Position',
+    'original_name': 'Valve Position 4',
     'platform': 'homematicip_cloud',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -222,7 +222,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position 4',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
       'id': '3014F7110000000000BBBBB1',
       'is_group': False,
@@ -263,12 +263,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Valve Position',
+    'object_id_base': 'Valve Position 5',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:heating-coil',
-    'original_name': 'Valve Position',
+    'original_name': 'Valve Position 5',
     'platform': 'homematicip_cloud',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -282,7 +282,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position 5',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
       'id': '3014F7110000000000BBBBB1',
       'is_group': False,
@@ -323,12 +323,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Valve Position',
+    'object_id_base': 'Valve Position 6',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:heating-coil',
-    'original_name': 'Valve Position',
+    'original_name': 'Valve Position 6',
     'platform': 'homematicip_cloud',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -342,7 +342,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FAL230 Valve Position 6',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:heating-coil',
       'id': '3014F7110000000000BBBBB1',
       'is_group': False,
