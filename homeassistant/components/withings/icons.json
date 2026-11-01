@@ -22,6 +22,9 @@
       "average_heart_rate": {
         "default": "mdi:heart-pulse"
       },
+      "basal_metabolic_rate": {
+        "default": "mdi:fire"
+      },
       "battery": {
         "default": "mdi:battery-off",
         "state": {

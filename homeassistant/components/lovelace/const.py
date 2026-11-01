@@ -1,5 +1,6 @@
 """Constants for Lovelace."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import probatio
@@ -53,6 +54,14 @@ RESOURCE_UPDATE_FIELDS: VolDictType = {
 }
 
 SERVICE_RELOAD_RESOURCES = "reload_resources"
+
+
+class LovelaceService(StrEnum):
+    """Store keys for Lovelace services."""
+
+    RELOAD_RESOURCES = "reload_resources"
+
+
 RESOURCE_RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
 CONF_RESOURCE_MODE = "resource_mode"

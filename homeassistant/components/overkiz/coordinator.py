@@ -191,8 +191,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         return areas
 
     @callback
-    def async_execution_started(self) -> None:
-        """Show the in-progress state and poll fast until executions finish."""
+    def async_execution_started(self, exec_id: str, actions: list[Action]) -> None:
+        """Track a new execution, show its in-progress state and poll fast."""
+        # ExecutionRegisteredEvent only arrives with the next event poll, so
+        # track the execution now for entities to reflect it straight away.
+        self.register_execution(exec_id, actions)
         self.async_update_listeners()
         if not self.is_stateless and self.update_interval != UPDATE_INTERVAL_EXECUTION:
             self.update_interval = UPDATE_INTERVAL_EXECUTION
@@ -303,7 +306,8 @@ async def on_execution_registered(
     coordinator: OverkizDataUpdateCoordinator, event: ExecutionRegisteredEvent
 ) -> None:
     """Handle execution registered event."""
-    coordinator.executions.setdefault(event.exec_id, set())
+    # Also covers executions started outside Home Assistant (e.g. the TaHoma app)
+    coordinator.register_execution(event.exec_id, event.actions)
 
     if not coordinator.is_stateless:
         coordinator.update_interval = UPDATE_INTERVAL_EXECUTION
