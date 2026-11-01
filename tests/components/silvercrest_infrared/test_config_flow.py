@@ -92,10 +92,7 @@ async def test_form_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_DEVICE_TYPE: SilverCrestIrDeviceType.STVD45A1,
-            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
-        },
+        {CONF_DEVICE_TYPE: SilverCrestIrDeviceType.STVD45A1, **user_input},
     )
     await hass.async_block_till_done()
 
