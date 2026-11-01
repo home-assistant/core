@@ -466,8 +466,6 @@ class Repository:
         """Initialize the repository."""
         self.marketplace = marketplace
         self.additional_info = ""
-        # The translated READMEs fetched for the version of additional_info
-        self.translated_readmes: dict[str, str] = {}
         self.data = RepositoryData()
         self.content = RepositoryContent(
             path=RepositoryPath(remote=self.remote_path), single=self.single_file
@@ -727,7 +725,6 @@ class Repository:
                 self.repository_manifest = RepositoryManifest.from_dict(manifest)
 
         self.additional_info = await self.async_get_readme_contents()
-        self.translated_readmes.clear()
 
         self.data.last_fetched = dt_util.utcnow()
 
@@ -988,7 +985,8 @@ class Repository:
 
         Only READMEs in the tree are used, so a repository without translations
         costs no request. The best match of the language wins, as for the
-        languages of conversation agents.
+        languages of conversation agents. It is fetched for every page, like the
+        README after a restart, so it always matches the version to install.
         """
         readmes = {
             match.group(1): filename
@@ -998,12 +996,7 @@ class Repository:
         if not (languages := language_util.matches(language, readmes)):
             return ""
 
-        filename = readmes[languages[0]]
-        if filename not in self.translated_readmes:
-            self.translated_readmes[filename] = (
-                await self.get_documentation(filename=filename) or ""
-            )
-        return self.translated_readmes[filename]
+        return await self.get_documentation(filename=readmes[languages[0]]) or ""
 
     def remove(self) -> None:
         """Forget the repository, its files stay where they are."""

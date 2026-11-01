@@ -825,10 +825,28 @@ async def test_translated_readme(
         repository, "get_documentation", return_value="Translated"
     ) as get_documentation:
         assert await repository.async_get_translated_readme(language) == "Translated"
-        # Fetched once for the version of the README
-        assert await repository.async_get_translated_readme(language) == "Translated"
 
     get_documentation.assert_called_once_with(filename=expected_filename)
+
+
+async def test_translated_readme_follows_the_installed_version(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the README in the language is fetched for the current version."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.data.installed = True
+    for version in ("1.0.0", "2.0.0"):
+        url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/{version}/README.de.md"
+        response_mocker.add(url, mocked_response(url, content=version.encode()))
+
+    repository.data.installed_version = "1.0.0"
+    assert await repository.async_get_translated_readme("de") == "1.0.0"
+    # As after an install from the catalog, which does not refresh the repository
+    repository.data.installed_version = "2.0.0"
+    assert await repository.async_get_translated_readme("de") == "2.0.0"
 
 
 @pytest.mark.parametrize(
