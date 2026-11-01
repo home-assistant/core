@@ -369,7 +369,11 @@ def llama_cpp_config_option_schema(
             ): TemplateSelector(),
             probatio.Optional(
                 CONF_LLM_HASS_API,
-            ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=hass_apis, multiple=True, mode=SelectSelectorMode.LIST
+                )
+            ),
         }
     )
     schema.update(

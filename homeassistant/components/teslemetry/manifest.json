@@ -18,8 +18,8 @@
   },
   "quality_scale": "platinum",
   "requirements": [
-    "aiopowerwall==0.9.0",
-    "tesla-fleet-api==1.19.0",
+    "aiopowerwall==0.10.0",
+    "tesla-fleet-api==1.20.0",
     "teslemetry-stream==1.3.0"
   ]
 }

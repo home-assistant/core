@@ -523,6 +523,8 @@ def thermostat_gen2_device(
     temperature: float = 21.0,
     humidity: float | None = None,
     terminal_temperature: float | None = None,
+    display_brightness: int | None = None,
+    display_on_time: int | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -564,6 +566,14 @@ def thermostat_gen2_device(
         device.supports_humidity = humidity is not None
         device.humidity = humidity
         device.terminal_temperature = terminal_temperature
+    device.display_brightness = display_brightness
+    device.display_on_time = display_on_time
+    device.display_brightness_min = 0
+    device.display_brightness_max = 100
+    device.display_brightness_step_size = 1
+    device.display_on_time_min = 0
+    device.display_on_time_max = 3600
+    device.display_on_time_step_size = 1
     return device
 
 
