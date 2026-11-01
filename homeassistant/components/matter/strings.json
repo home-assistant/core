@@ -923,7 +923,7 @@
           "name": "Color"
         },
         "name": {
-          "description": "The name of the zone, up to 32 bytes. Letters like ä take more than 1 byte.",
+          "description": "The name of the zone, up to 32 bytes. Accented characters like \"ä\" take more than 1 byte.",
           "name": "Name"
         },
         "use": {
