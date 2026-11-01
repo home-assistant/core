@@ -247,6 +247,14 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     retry_after=self._reconnect_delay.total_seconds(),
                 ) from exception
 
+            # A power event during registration stops the listener, and the
+            # register call then times out without raising
+            if self.listen_task.done() or self.listen_task.cancelling():
+                raise UpdateFailed(
+                    f"Connection lost while registering for {self.title}",
+                    retry_after=self._reconnect_delay.total_seconds(),
+                )
+
             self.logger.debug("Registered data listener for %s", self.title)
             self._reconnect_delay = UPDATE_INTERVAL
             if self._unavailable_logged:

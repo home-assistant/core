@@ -568,6 +568,38 @@ async def test_power_state_marks_unavailable(
     assert caplog.text.count("TestSystem is available again") == 1
 
 
+@pytest.mark.usefixtures("mock_version")
+async def test_power_state_during_registration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a sleep event while registering doesn't report the host as back."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    mock_websocket_client.connected = False
+
+    async def register_then_sleep(*args: Any) -> None:
+        await coordinator.async_handle_power_state(
+            PowerStateEvent(state=PowerState.SLEEPING)
+        )
+
+    mock_websocket_client.register_data_listener.side_effect = register_then_sleep
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert "TestSystem is available again" not in caplog.text
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_power_state_resumed_ignored(
     hass: HomeAssistant,
