@@ -217,7 +217,7 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()
         assert info.radios is not None
-        esp_firmware = None
+        esp_firmware: FirmwareList = []
         zb_firmware: list[FirmwareList] = []
 
         try:

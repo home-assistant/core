@@ -9,6 +9,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pybravia"],
+  "quality_scale": "bronze",
   "requirements": ["pybravia==0.5.3"],
   "ssdp": [
     {

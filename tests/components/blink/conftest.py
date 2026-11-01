@@ -50,6 +50,20 @@ def camera() -> MagicMock:
     return mock_blink_camera
 
 
+@pytest.fixture
+def sync_module() -> MagicMock:
+    """Set up a Blink sync module fixture."""
+    mock_sync_module = create_autospec(
+        blinkpy.sync_module.BlinkSyncModule, instance=True
+    )
+    mock_sync_module.serial = "67890"
+    mock_sync_module.version = "4.5.41"
+    mock_sync_module.attributes = {}
+    mock_sync_module.cameras = {}
+    mock_sync_module.arm = False
+    return mock_sync_module
+
+
 @pytest.fixture(name="mock_blink_api")
 def blink_api_fixture(camera) -> MagicMock:
     """Set up Blink API fixture."""

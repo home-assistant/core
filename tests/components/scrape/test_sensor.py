@@ -263,6 +263,37 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
     assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
+async def test_scrape_numeric_value_template_none(hass: HomeAssistant) -> None:
+    """Test a numeric Scrape sensor is unknown when the value template renders none."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".current-temp h3",
+                        "name": "Current Temp",
+                        "value_template": "{{ none }}",
+                        "unit_of_measurement": "°C",
+                        "device_class": "temperature",
+                        "state_class": "measurement",
+                    }
+                ]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_uom_and_classes")
+    with patch(
+        "homeassistant.components.rest.util.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.current_temp")
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_scrape_unique_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:

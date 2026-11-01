@@ -2,7 +2,6 @@
 
 import logging
 from numbers import Number
-import re
 from typing import Any
 
 from aiohasupervisor import SupervisorError
@@ -51,17 +50,6 @@ from .update_helper import update_addon, update_core
 SCHEMA_WEBSOCKET_EVENT = probatio.Schema(
     {probatio.Required(ATTR_WS_EVENT): cv.string},
     extra=probatio.ALLOW_EXTRA,
-)
-
-# Endpoints needed for ingress can't require admin because
-# add-ons can set `panel_admin: false`
-RE_ADDONS_INFO_ENDPOINT = r"/addons/[^/]+/info"
-WS_ADDONS_INFO_ENDPOINT = re.compile(r"^" + RE_ADDONS_INFO_ENDPOINT + r"$")
-WS_NO_ADMIN_ENDPOINTS = re.compile(
-    r"^(?:"
-    r"/ingress/(session|validate_session)"
-    f"|{RE_ADDONS_INFO_ENDPOINT}"
-    r")$"
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -117,6 +105,7 @@ def websocket_supervisor_event(
     async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         probatio.Required(WS_TYPE): WS_TYPE_API,
@@ -132,10 +121,6 @@ async def websocket_supervisor_api(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Websocket handler to call Supervisor API."""
-    if not connection.user.is_admin and not WS_NO_ADMIN_ENDPOINTS.match(
-        msg[ATTR_ENDPOINT]
-    ):
-        raise Unauthorized
     supervisor = hass.data[DATA_COMPONENT]
 
     command = msg[ATTR_ENDPOINT]
@@ -164,12 +149,7 @@ async def websocket_supervisor_api(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
         )
     else:
-        data = result.get(ATTR_DATA, {})
-        # Remove options from add-on info for non-admin users, as options can contain
-        # sensitive information and the frontend does not require it for ingress.
-        if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
-            data.pop("options", None)
-        connection.send_result(msg[WS_ID], data)
+        connection.send_result(msg[WS_ID], result.get(ATTR_DATA, {}))
 
 
 async def _async_check_ingress_access(

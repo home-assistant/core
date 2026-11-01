@@ -63,6 +63,12 @@ ALL_FEATURES = (
 )
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.MEDIA_PLAYER
+
+
 @pytest.fixture(name="attributes")
 def attributes_fixture(request: pytest.FixtureRequest) -> dict[str, Any]:
     """Override node attributes for a parametrized test."""

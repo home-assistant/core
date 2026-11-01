@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -40,7 +40,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'air-purifier')]>,
       'disabled_by': None,
@@ -88,7 +88,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -124,7 +124,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55')]>,
       'disabled_by': None,
@@ -159,7 +159,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55')]>,
       'disabled_by': None,
@@ -220,7 +220,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -256,7 +256,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '400s-purifier')]>,
       'disabled_by': None,
@@ -291,7 +291,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '400s-purifier')]>,
       'disabled_by': None,
@@ -352,7 +352,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -388,7 +388,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '600s-purifier')]>,
       'disabled_by': None,
@@ -423,7 +423,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '600s-purifier')]>,
       'disabled_by': None,
@@ -484,7 +484,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -520,7 +520,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'vital200s-purifier')]>,
       'disabled_by': None,
@@ -555,7 +555,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'vital200s-purifier')]>,
       'disabled_by': None,
@@ -616,7 +616,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -652,7 +652,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -688,7 +688,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -724,7 +724,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'corebreeze432s')]>,
       'disabled_by': None,
@@ -759,7 +759,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'corebreeze432s')]>,
       'disabled_by': None,
@@ -820,7 +820,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -856,7 +856,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -892,7 +892,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -928,7 +928,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '200s-humidifier4321')]>,
       'disabled_by': None,
@@ -963,7 +963,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '200s-humidifier4321')]>,
       'disabled_by': None,
@@ -1024,7 +1024,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1060,7 +1060,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
@@ -1095,7 +1095,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
@@ -1130,7 +1130,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
@@ -1165,7 +1165,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
@@ -1252,7 +1252,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1288,7 +1288,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '600s-humidifier')]>,
       'disabled_by': None,
@@ -1323,7 +1323,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', '600s-humidifier')]>,
       'disabled_by': None,
@@ -1384,7 +1384,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1420,7 +1420,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'outlet')]>,
       'disabled_by': None,
@@ -1469,7 +1469,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1505,7 +1505,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'smarttowerfan')]>,
       'disabled_by': None,
@@ -1553,7 +1553,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1589,7 +1589,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1625,7 +1625,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
       'device_id': <DeviceEntry identifiers=[('vesync', 'switch')]>,
       'disabled_by': None,

@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant, callback, verify_event_loop_thread
+from homeassistant.core import Event, HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -23,7 +23,7 @@ from .normalized_name_base_registry import (
 from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with dataclasses
@@ -345,14 +345,14 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self,
         area_id: str,
         *,
-        aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | UndefinedType | None = UNDEFINED,
-        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
-        icon: str | UndefinedType | None = UNDEFINED,
-        labels: set[str] | UndefinedType = UNDEFINED,
-        name: str | UndefinedType = UNDEFINED,
-        picture: str | UndefinedType | None = UNDEFINED,
-        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
+        aliases: set[str] | Undefined = Undefined,
+        floor_id: str | Undefined | None = Undefined,
+        humidity_entity_id: str | Undefined | None = Undefined,
+        icon: str | Undefined | None = Undefined,
+        labels: set[str] | Undefined = Undefined,
+        name: str | Undefined = Undefined,
+        picture: str | Undefined | None = Undefined,
+        temperature_entity_id: str | Undefined | None = Undefined,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
@@ -382,14 +382,15 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self,
         area_id: str,
         *,
-        aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | UndefinedType | None = UNDEFINED,
-        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
-        icon: str | UndefinedType | None = UNDEFINED,
-        labels: set[str] | UndefinedType = UNDEFINED,
-        name: str | UndefinedType = UNDEFINED,
-        picture: str | UndefinedType | None = UNDEFINED,
-        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
+        aliases: set[str] | Undefined = Undefined,
+        floor_id: str | Undefined | None = Undefined,
+        humidity_entity_id: str | Undefined | None = Undefined,
+        icon: str | Undefined | None = Undefined,
+        labels: set[str] | Undefined = Undefined,
+        name: str | Undefined = Undefined,
+        picture: str | Undefined | None = Undefined,
+        temperature_entity_id: str | Undefined | None = Undefined,
+        validate: bool = True,
     ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
@@ -405,16 +406,24 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 ("picture", picture),
                 ("temperature_entity_id", temperature_entity_id),
             )
-            if value is not UNDEFINED and value != getattr(old, attr_name)
+            if value is not Undefined and value != getattr(old, attr_name)
         }
 
-        if "humidity_entity_id" in new_values and humidity_entity_id is not None:
+        if (
+            validate
+            and "humidity_entity_id" in new_values
+            and humidity_entity_id is not None
+        ):
             _validate_humidity_entity(self.hass, new_values["humidity_entity_id"])
 
-        if "temperature_entity_id" in new_values and temperature_entity_id is not None:
+        if (
+            validate
+            and "temperature_entity_id" in new_values
+            and temperature_entity_id is not None
+        ):
             _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
 
-        if name is not UNDEFINED and name != old.name:
+        if name is not Undefined and name != old.name:
             new_values["name"] = name
 
         if not new_values:
@@ -502,6 +511,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     def _async_setup_cleanup(self) -> None:
         """Set up the area registry cleanup."""
         from . import (  # Circular dependencies  # noqa: PLC0415
+            entity_registry as er,
             floor_registry as fr,
             label_registry as lr,
         )
@@ -540,6 +550,48 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_label_registry_update,
+        )
+
+        @callback
+        def _entity_renamed_filter(
+            event_data: er.EventEntityRegistryUpdatedData,
+        ) -> bool:
+            """Filter entity registry events for renamed entities."""
+            return event_data["action"] == "update" and "old_entity_id" in event_data
+
+        @callback
+        def _handle_entity_registry_update(
+            event: Event[er.EventEntityRegistryUpdatedData],
+        ) -> None:
+            """Update areas referencing an entity that was renamed."""
+            if TYPE_CHECKING:
+                assert event.data["action"] == "update"
+            old_entity_id = event.data["old_entity_id"]
+            new_entity_id = event.data["entity_id"]
+
+            for area in list(self.areas.values()):
+                humidity_match = area.humidity_entity_id == old_entity_id
+                temperature_match = area.temperature_entity_id == old_entity_id
+                if not humidity_match and not temperature_match:
+                    continue
+                # The renamed entity's state may not exist yet under its new id
+                self._async_update(
+                    area.id,
+                    humidity_entity_id=new_entity_id if humidity_match else Undefined,
+                    temperature_entity_id=(
+                        new_entity_id if temperature_match else Undefined
+                    ),
+                    validate=False,
+                )
+                self.hass.bus.async_fire_internal(
+                    EVENT_AREA_REGISTRY_UPDATED,
+                    EventAreaRegistryUpdatedData(action="update", area_id=area.id),
+                )
+
+        self.hass.bus.async_listen(
+            event_type=er.EVENT_ENTITY_REGISTRY_UPDATED,
+            event_filter=_entity_renamed_filter,
+            listener=_handle_entity_registry_update,
         )
 
 

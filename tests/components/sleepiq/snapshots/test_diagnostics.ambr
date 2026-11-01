@@ -1,0 +1,70 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'beds': list([
+      dict({
+        'foundation': dict({
+          'actuators': 3,
+          'core_climates': 2,
+          'features': dict({
+            'boardIsASingle': False,
+            'hasFootControl': False,
+            'hasFootWarming': True,
+            'hasMassageAndLight': False,
+            'hasUnderbedLight': True,
+            'leftUnderbedLightPMW': False,
+            'rightUnderbedLightPMW': False,
+          }),
+          'foot_warmers': 2,
+          'lights': 2,
+          'presets': 2,
+          'type': 'splitKing',
+        }),
+        'model': 'C10',
+        'paused': False,
+        'sleepers': list([
+          dict({
+            'in_bed': True,
+            'pressure': 1000,
+            'side': 'L',
+            'sleep_data': dict({
+              'duration': 28800,
+              'end_date': None,
+              'fall_asleep_period': None,
+              'heart_rate': 60,
+              'hrv': 68,
+              'out_of_bed': None,
+              'respiratory_rate': 14,
+              'restful': None,
+              'restless': None,
+              'session_count': None,
+              'sleep_score': 85,
+              'start_date': None,
+            }),
+            'sleep_number': 40,
+          }),
+          dict({
+            'in_bed': False,
+            'pressure': 1400,
+            'side': 'R',
+            'sleep_data': dict({
+              'duration': 25200,
+              'end_date': None,
+              'fall_asleep_period': None,
+              'heart_rate': 65,
+              'hrv': 72,
+              'out_of_bed': None,
+              'respiratory_rate': 15,
+              'restful': None,
+              'restless': None,
+              'session_count': None,
+              'sleep_score': 78,
+              'start_date': None,
+            }),
+            'sleep_number': 80,
+          }),
+        ]),
+      }),
+    ]),
+  })
+# ---

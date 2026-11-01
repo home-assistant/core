@@ -12,7 +12,7 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('sabnzbd', '01JD2YVVPBC62D620DGYNG2R8H')]>,
     'disabled_by': None,
