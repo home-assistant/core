@@ -6,9 +6,13 @@ import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -48,28 +52,48 @@ CONFIG_SCHEMA = probatio.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomematicIP Cloud integration."""
-    accesspoints = config.get(DOMAIN, [])
+    if accesspoints := config.get(DOMAIN, []):
+        hass.async_create_task(_async_import_yaml(hass, accesspoints))
 
+    async_setup_services(hass)
+
+    return True
+
+
+async def _async_import_yaml(
+    hass: HomeAssistant, accesspoints: list[ConfigType]
+) -> None:
+    """Import YAML access points into config entries."""
     for conf in accesspoints:
         if conf[CONF_ACCESSPOINT] not in {
             entry.data[HMIPC_HAPID]
             for entry in hass.config_entries.async_entries(DOMAIN)
         }:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={
-                        HMIPC_HAPID: conf[CONF_ACCESSPOINT],
-                        HMIPC_AUTHTOKEN: conf[CONF_AUTHTOKEN],
-                        HMIPC_NAME: conf[CONF_NAME],
-                    },
-                )
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={
+                    HMIPC_HAPID: conf[CONF_ACCESSPOINT],
+                    HMIPC_AUTHTOKEN: conf[CONF_AUTHTOKEN],
+                    HMIPC_NAME: conf[CONF_NAME],
+                },
             )
 
-    async_setup_services(hass)
-
-    return True
+    # The import flow can only create an entry or abort as already configured.
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "HomematicIP Cloud",
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) -> None:
