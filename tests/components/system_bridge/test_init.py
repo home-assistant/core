@@ -1,5 +1,6 @@
 """Test the System Bridge integration."""
 
+import asyncio
 from dataclasses import replace
 from datetime import timedelta
 import logging
@@ -602,6 +603,48 @@ async def test_power_state_during_registration(
     assert state
     assert state.state == STATE_UNAVAILABLE
     assert "TestSystem is available again" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_power_state_from_running_listener(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sleep event from the listener closes the socket after it cancels."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def listen_then_sleep(
+        callback: Any = None,
+        _: bool = False,
+        power_state_callback: Any = None,
+    ) -> None:
+        await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
+        await asyncio.Event().wait()
+
+    closed = asyncio.Event()
+
+    async def close() -> None:
+        # Yield so closing from the cancelled listener itself would be interrupted
+        await asyncio.sleep(0)
+        closed.set()
+
+    mock_websocket_client.connected = False
+    mock_websocket_client.listen.side_effect = listen_then_sleep
+    mock_websocket_client.close.side_effect = close
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.listen_task.cancelled()
+    assert closed.is_set()
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
