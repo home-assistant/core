@@ -255,16 +255,21 @@ async def test_camera_night_vision(
     assert state.state == "auto"
     assert state.attributes["options"] == ["off", "on", "auto"]
 
-    set_node_attribute(matter_node, 2, 1361, 22, 0)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "off"
-
     attribute_path = create_attribute_path_from_attribute(
         endpoint_id=2,
         attribute=clusters.CameraAvStreamManagement.Attributes.NightVision,
     )
+    set_node_attribute(matter_node, 2, 1361, 22, 0)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        data=0,
+        node_id=matter_node.node_id,
+        attribute_path=attribute_path,
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
     await hass.services.async_call(
         "select",
         "select_option",
@@ -288,9 +293,40 @@ async def test_camera_night_vision(
 
     # an unrecognized raw value should not be reported as a known state
     set_node_attribute(matter_node, 2, 1361, 22, 253)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        data=253,
+        node_id=matter_node.node_id,
+        attribute_path=attribute_path,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_camera_hub_g350"])
+@pytest.mark.parametrize(
+    ("attributes", "night_vision_entity_expected"),
+    [
+        pytest.param({}, True, id="night-vision-feature-set"),
+        pytest.param(
+            {
+                "2/1361/65532": 1055
+                & ~int(clusters.CameraAvStreamManagement.Bitmaps.Feature.kNightVision)
+            },
+            False,
+            id="night-vision-feature-unset",
+        ),
+    ],
+)
+async def test_camera_night_vision_discovery(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+    night_vision_entity_expected: bool,
+) -> None:
+    """Test the night vision select is only discovered when its feature bit is set."""
+    entity_id = "select.aqara_camera_hub_g350_night_vision"
+    assert (hass.states.get(entity_id) is not None) == night_vision_entity_expected
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_microwave_oven"])
