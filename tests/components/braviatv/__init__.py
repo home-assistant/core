@@ -11,5 +11,5 @@ async def init_integration(
     """Set up the Bravia TV integration in Home Assistant."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
