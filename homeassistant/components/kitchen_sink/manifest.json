@@ -4,6 +4,7 @@
   "after_dependencies": ["recorder"],
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@home-assistant/core"],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/kitchen_sink",
   "iot_class": "calculated",
   "preview_features": {

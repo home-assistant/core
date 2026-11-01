@@ -3,6 +3,7 @@
   "name": "Input text",
   "categories": ["helpers.store_value"],
   "codeowners": ["@home-assistant/core"],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/input_text",
   "integration_type": "helper",
   "quality_scale": "internal"

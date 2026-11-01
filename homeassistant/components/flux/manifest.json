@@ -4,6 +4,7 @@
   "after_dependencies": ["light"],
   "categories": ["lighting"],
   "codeowners": [],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/flux",
   "iot_class": "calculated",
   "quality_scale": "internal"

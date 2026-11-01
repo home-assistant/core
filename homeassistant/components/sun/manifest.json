@@ -4,6 +4,7 @@
   "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/sun",
   "integration_type": "service",
   "iot_class": "calculated",

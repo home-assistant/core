@@ -4,6 +4,7 @@
   "after_dependencies": ["recorder"],
   "categories": ["garden_plants", "helpers.calculate_value"],
   "codeowners": [],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/plant",
   "quality_scale": "internal"
 }

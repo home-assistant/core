@@ -4,6 +4,7 @@
   "categories": ["helpers.calculate_value", "sensors.temperature_humidity"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/mold_indicator",
   "integration_type": "helper",
   "iot_class": "calculated",

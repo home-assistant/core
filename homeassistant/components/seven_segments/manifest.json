@@ -3,6 +3,7 @@
   "name": "Seven Segments OCR",
   "categories": ["ai_voice.image_recognition"],
   "codeowners": ["@fabaff"],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/seven_segments",
   "iot_class": "local_polling",
   "quality_scale": "legacy",

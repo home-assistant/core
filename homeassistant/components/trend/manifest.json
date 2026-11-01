@@ -5,6 +5,7 @@
   "categories": ["helpers.calculate_value"],
   "codeowners": ["@jpbede"],
   "config_flow": true,
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/trend",
   "integration_type": "helper",
   "iot_class": "calculated",

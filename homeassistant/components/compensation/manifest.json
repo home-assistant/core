@@ -3,6 +3,7 @@
   "name": "Compensation",
   "categories": ["helpers.calculate_value"],
   "codeowners": ["@Petro31"],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/compensation",
   "iot_class": "calculated",
   "quality_scale": "legacy",

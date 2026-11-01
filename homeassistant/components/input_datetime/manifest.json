@@ -3,6 +3,7 @@
   "name": "Input Datetime",
   "categories": ["helpers.store_value"],
   "codeowners": ["@home-assistant/core"],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/input_datetime",
   "integration_type": "helper",
   "quality_scale": "internal"

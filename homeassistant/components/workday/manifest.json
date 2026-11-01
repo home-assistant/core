@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@fabaff", "@gjohansson-ST"],
   "config_flow": true,
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/workday",
   "integration_type": "service",
   "iot_class": "local_polling",

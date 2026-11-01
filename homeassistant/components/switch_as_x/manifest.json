@@ -4,6 +4,7 @@
   "categories": ["helpers"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/switch_as_x",
   "integration_type": "helper",
   "iot_class": "calculated",

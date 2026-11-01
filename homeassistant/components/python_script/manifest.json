@@ -3,6 +3,7 @@
   "name": "Python Scripts",
   "categories": ["diy_makers"],
   "codeowners": [],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/python_script",
   "loggers": ["RestrictedPython"],
   "quality_scale": "internal",

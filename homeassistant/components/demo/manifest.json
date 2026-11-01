@@ -3,6 +3,7 @@
   "name": "Demo",
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@home-assistant/core"],
+  "connectivity": ["host"],
   "dependencies": ["conversation", "group", "zone"],
   "documentation": "https://www.home-assistant.io/integrations/demo",
   "iot_class": "calculated",

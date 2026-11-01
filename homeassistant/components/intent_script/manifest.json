@@ -3,6 +3,7 @@
   "name": "Intent Script",
   "categories": ["ai_voice.voice_assistants"],
   "codeowners": ["@arturpragacz"],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/intent_script",
   "quality_scale": "internal"
 }

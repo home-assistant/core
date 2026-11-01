@@ -3,6 +3,7 @@
   "name": "Fail2Ban",
   "categories": ["computers_network.monitoring"],
   "codeowners": [],
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/fail2ban",
   "iot_class": "local_polling",
   "quality_scale": "legacy"

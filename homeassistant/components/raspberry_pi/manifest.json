@@ -5,6 +5,7 @@
   "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
+  "connectivity": ["host"],
   "dependencies": ["hardware", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/raspberry_pi",
   "integration_type": "hardware",

@@ -4,6 +4,7 @@
   "categories": ["helpers.calculate_value"],
   "codeowners": ["@HarvsG"],
   "config_flow": true,
+  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/bayesian",
   "integration_type": "service",
   "iot_class": "calculated",

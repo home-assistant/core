@@ -5,6 +5,7 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
+  "connectivity": ["host"],
   "dependencies": ["hardware", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_green",
   "integration_type": "hardware",
