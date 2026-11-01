@@ -176,7 +176,7 @@ async def test_alert_switches_created_once_device_data_completes(
     ]
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert {state.entity_id for state in hass.states.async_all(SWITCH_DOMAIN)} == {
         "switch.device_1_battery_alert",
@@ -277,7 +277,7 @@ async def test_alert_switch_unknown_when_field_missing_after_refresh(
     mock_paj_gps_api_with_alerts.get_devices.return_value[0].alarmsos = None
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
