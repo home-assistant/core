@@ -244,6 +244,10 @@ pycares>=5.2.1
 # pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
 pypasser<1.0.0
 
+# srptools 2.0.0 made the private key a keyword-only argument, which pyatv passes positionally
+# https://github.com/home-assistant/core/issues/189315
+srptools<2
+
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
 # https://github.com/xolox/python-coloredlogs -> unmaintained

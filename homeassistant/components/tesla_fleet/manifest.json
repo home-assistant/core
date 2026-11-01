@@ -9,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["tesla-fleet-api"],
-  "requirements": ["tesla-fleet-api==1.19.0"]
+  "requirements": ["tesla-fleet-api==1.20.0"]
 }

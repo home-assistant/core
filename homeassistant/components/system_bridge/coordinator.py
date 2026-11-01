@@ -136,10 +136,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
 
         # Merge new data with existing data
-        for module in MODULES:
-            if hasattr(modules_data, module):
-                self.logger.debug("[async_get_data] Set new data for: %s", module)
-                setattr(self.data, module, getattr(modules_data, module))
+        for module in modules:
+            self.logger.debug("[async_get_data] Set new data for: %s", module)
+            setattr(self.data, module, getattr(modules_data, module))
 
         return modules_data
 
@@ -195,7 +194,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
             try:
                 await self.websocket_client.register_data_listener(
-                    RegisterDataListener(modules=MODULES)
+                    RegisterDataListener(modules=[*MODULES, Module.AUDIO])
                 )
             except AuthenticationException as exception:
                 await self.clean_disconnect()

@@ -232,8 +232,8 @@ class Remote:
         if self.source_list is None:
             try:
                 self.source_list = self._control.list_inputs()
-            except SOAPError:
-                # The TV does not implement the optional PAC service
+            except SOAPError, HTTPError:
+                # TVs without the optional PAC service answer with an HTTP error
                 _LOGGER.debug("Input selection is not supported by the TV")
                 self.source_list = []
         if self.source_list:
