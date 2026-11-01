@@ -252,7 +252,9 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             self.register_callbacks()
 
             try:
-                await self.coordinator.client.fw_update(self._firmware, self.idx)
+                await self.coordinator.async_execute_command(
+                    self.coordinator.client.fw_update, self._firmware, self.idx
+                )
 
                 # block until update finished event received
                 await self._finished_event.wait()
