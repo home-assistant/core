@@ -672,6 +672,9 @@
           "iot_class": "local_push",
           "categories": [
             "hubs_protocols"
+          ],
+          "connectivity": [
+            "homekit"
           ]
         },
         "homekit": {
@@ -680,6 +683,9 @@
           "iot_class": "local_push",
           "categories": [
             "other_ecosystems"
+          ],
+          "connectivity": [
+            "homekit"
           ],
           "name": "HomeKit Bridge"
         },
