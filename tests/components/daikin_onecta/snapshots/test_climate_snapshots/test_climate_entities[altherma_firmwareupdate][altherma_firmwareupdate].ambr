@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[altherma_firmwareupdate][altherma_firmwareupdate]
   dict({
-    'climate.test_climate_control_leaving_water_temperature': dict({
+    'climate.test_climate_control_climatecontrol_leaving_water_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -18,11 +18,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000106')]>,
+        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000106climateControlMainZone')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.test_climate_control_leaving_water_temperature',
+        'entity_id': 'climate.test_climate_control_climatecontrol_leaving_water_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -47,7 +47,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.9,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test climate control Leaving water temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Leaving water temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.HEAT: 'heat'>,
           ]),
@@ -58,7 +58,7 @@
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.test_climate_control_leaving_water_temperature',
+        'entity_id': 'climate.test_climate_control_climatecontrol_leaving_water_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

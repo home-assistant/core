@@ -191,7 +191,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             )
         ) is not None and existing_entry.connections != connections:
             registry.async_update_device(existing_entry.id, new_connections=connections)
-        registry.async_get_or_create(
+        entry = registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, device.id)},
             connections=connections,
@@ -202,6 +202,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             serial_number=serial_number,
             sw_version=sw_version,
         )
+        device.ha_device_id = entry.id
 
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
