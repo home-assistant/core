@@ -655,6 +655,41 @@ async def test_hmip_floor_terminal_block_mechanic_channel_1_valve_position(
     assert ha_state.attributes["icon"] == "mdi:heating-coil"
 
 
+async def test_hmip_floor_terminal_block_valve_names_match_their_channel(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test each valve sensor carries the label of its own channel.
+
+    The channels are listed as 0, 1, 10, 11, 12, 2, ..., so a lookup by list
+    position would put the label of channel 10 on the sensor of channel 2.
+    """
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Fußbodenheizungsaktor"]
+    )
+    device = next(
+        device
+        for device in mock_hap.home.devices
+        if device.id == "3014F7110000000000000049"
+    )
+    labels = {channel.index: channel.label for channel in device.functionalChannels}
+
+    entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_hap.config_entry.entry_id
+        )
+        if entry.unique_id.startswith("3014F7110000000000000049_")
+        and entry.unique_id.endswith("_ftb_valve_position")
+    ]
+    assert len(entries) == 12
+    for entry in entries:
+        index = int(entry.unique_id.split("_")[1])
+        name = hass.states.get(entry.entity_id).name
+        assert name == f"Fußbodenheizungsaktor {labels[index]}"
+
+
 async def test_hmip_floor_terminal_block_thermal_valve_position(
     hass: HomeAssistant,
     default_mock_hap_factory: HomeFactory,

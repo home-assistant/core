@@ -870,6 +870,8 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
             device,
             channel=channel,
             is_multi_channel=is_multi_channel,
+            # the channels are listed as 0, 1, 10, 11, 12, 2, ...
+            channel_real_index=channel,
             post="Valve Position",
             feature_id="ftb_valve_position",
         )
