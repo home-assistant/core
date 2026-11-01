@@ -59,7 +59,7 @@ async def test_sensor(
     assert float(state.state) == float(100 * (MOCK_TANK_LEVEL / MOCK_TANK_CAPACITY))
 
     state = hass.states.get("sensor.tanky_mctankface_current_usage")
-    assert state.state == "96.7"
+    assert state.state == "4.0"
 
     state = hass.states.get("sensor.tanky_mctankface_forecast_empty")
     assert state.state == "10"

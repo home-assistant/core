@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -100,11 +101,11 @@ SENSOR_DESCRIPTIONS: tuple[SENSiTSensorEntityDescription, ...] = (
     SENSiTSensorEntityDescription(
         key="current_usage",
         translation_key="current_usage",
-        device_class=SensorDeviceClass.VOLUME,
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda tank, _: Decimal(f"{tank.usage_rate:.1f}"),
+        value_fn=lambda tank, _: Decimal(f"{(tank.usage_rate / 24):.1f}"),
     ),
     SENSiTSensorEntityDescription(
         key="forecast_empty",
