@@ -81,7 +81,8 @@ def pretty_ratio(value: float, period: tuple[dt.datetime, dt.datetime]) -> float
     if len(period) != 2 or period[0] == period[1]:
         return 0.0
 
-    ratio = 100 * value / (period[1] - period[0]).total_seconds()
+    # Subtracting datetimes of the same time zone ignores daylight saving changes
+    ratio = 100 * value / (period[1].timestamp() - period[0].timestamp())
     return round(ratio, 1)
 
 
