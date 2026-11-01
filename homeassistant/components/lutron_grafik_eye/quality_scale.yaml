@@ -15,9 +15,9 @@ rules:
   docs-conditions:
     status: exempt
     comment: The integration does not provide custom conditions.
-  docs-high-level-description: done # TODO: Create a PR in home-assistant/home-assistant.io adding source/_integrations/lutron_grafik_eye.markdown with an integration overview and supported hardware.
-  docs-installation-instructions: done # TODO: In the home-assistant.io PR, document prerequisites, network setup, and the configuration flow.
-  docs-removal-instructions: done # TODO: In the home-assistant.io PR, document how to remove the integration through Settings > Devices & services.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: The integration does not provide custom triggers.
