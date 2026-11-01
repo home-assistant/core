@@ -254,6 +254,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             # A power event during registration stops the listener, and the
             # register call then times out without raising
             if self.listen_task.done() or self.listen_task.cancelling():
+                self._reconnect_delay = min(
+                    self._reconnect_delay * 2, MAX_UPDATE_INTERVAL
+                )
                 raise UpdateFailed(
                     f"Connection lost while registering for {self.title}",
                     retry_after=self._reconnect_delay.total_seconds(),

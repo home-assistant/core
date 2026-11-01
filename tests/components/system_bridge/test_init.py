@@ -604,6 +604,19 @@ async def test_power_state_during_registration(
     assert state.state == STATE_UNAVAILABLE
     assert "TestSystem is available again" not in caplog.text
 
+    # The next attempt backs off to 60 seconds
+    register = mock_websocket_client.register_data_listener
+    calls = register.await_count
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 1
+
 
 @pytest.mark.usefixtures("mock_version")
 async def test_power_state_from_running_listener(
