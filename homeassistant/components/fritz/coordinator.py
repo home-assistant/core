@@ -298,18 +298,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             LOGGER.debug("register entity %s for updates", key)
             self._entity_update_functions[key] = update_fn
             if self.fritz_status:
-                try:
-                    self.data["entity_states"][
-                        key
-                    ] = await self.hass.async_add_executor_job(
-                        update_fn,
-                        self.fritz_status,
-                        self.data["entity_states"].get(key),
-                    )
-                except FRITZ_EXCEPTIONS:
-                    # The entity is not added, so it would never unregister
-                    unregister_entity_updates()
-                    raise
+                self.data["entity_states"][
+                    key
+                ] = await self.hass.async_add_executor_job(
+                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
+                )
         return unregister_entity_updates
 
     async def async_register_wifi_network(self, index: int) -> Callable[[], None]:
