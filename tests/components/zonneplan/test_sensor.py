@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import ATTR_LAST_RESET
@@ -19,6 +23,8 @@ from .conftest import MOCK_ACCOUNT
 BATTERY_STATE_ENTITY_ID = "sensor.thuisbatterij_battery_state"
 INVERTER_STATE_ENTITY_ID = "sensor.thuisbatterij_inverter_state"
 EARNED_TODAY_ENTITY_ID = "sensor.thuisbatterij_earned_today"
+CURRENT_PRICE_ENTITY_ID = "sensor.zonneplan_current_electricity_price"
+CURRENT_TARIFF_GROUP_ENTITY_ID = "sensor.zonneplan_current_electricity_tariff_group"
 
 
 @pytest.fixture(autouse=True)
@@ -53,6 +59,36 @@ async def test_sensor(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_price_sensors_update_on_the_hour(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the price sensors move to the new hour's price without an API call."""
+    freezer.move_to("2026-08-29T14:59:59+00:00")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(CURRENT_PRICE_ENTITY_ID))
+    assert state.state == "0.1591923"
+    assert (state := hass.states.get(CURRENT_TARIFF_GROUP_ENTITY_ID))
+    assert state.state == "low"
+    api_calls = len(mock_zonneplan_client.method_calls)
+
+    freezer.move_to("2026-08-29T15:00:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(CURRENT_PRICE_ENTITY_ID))
+    assert state.state == "0.2542771"
+    assert (state := hass.states.get(CURRENT_TARIFF_GROUP_ENTITY_ID))
+    assert state.state == "normal"
+    # The new price comes from the prices already fetched.
+    assert len(mock_zonneplan_client.method_calls) == api_calls
 
 
 @pytest.mark.parametrize(
