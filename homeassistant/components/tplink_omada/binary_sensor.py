@@ -141,10 +141,14 @@ class OmadaGatewayPortBinarySensor(
         gateway = self.coordinator.data[self.device.mac]
 
         port = next(
-            p for p in gateway.port_status if p.port_number == self._port_number
+            (p for p in gateway.port_status if p.port_number == self._port_number),
+            None,
         )
-        if port:
-            self._attr_is_on = self.entity_description.update_func(port)
+        if port is None:
+            # The gateway no longer reports this port (e.g. after a firmware
+            # update or a port reconfiguration) — leave the state as-is.
+            return
+        self._attr_is_on = self.entity_description.update_func(port)
 
     @callback
     @override

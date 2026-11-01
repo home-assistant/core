@@ -1,6 +1,7 @@
 """Tests for TP-Link Omada sensor entities."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -133,3 +134,33 @@ async def _remove_test_device(
 
     mock_omada_site_client.get_devices.reset_mock()
     mock_omada_site_client.get_devices.return_value = devices
+
+
+async def test_gateway_port_disappears_from_port_status_does_not_crash(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    mock_omada_site_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a port vanishing from port_status does not raise in the listener."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The gateway reboots and reports one fewer port in portStats
+    site_client = mock_omada_site_client.get_site_client.return_value
+    gateway = site_client.get_gateway.return_value
+    gateway.raw_data["portStats"] = [
+        p for p in gateway.raw_data["portStats"] if p.get("port") != 1
+    ]
+
+    with caplog.at_level(logging.ERROR):
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The port 1 sensors still exist and no StopIteration leaked into the logs
+    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
+    assert "StopIteration" not in caplog.text
