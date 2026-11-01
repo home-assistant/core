@@ -405,8 +405,8 @@
           "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]"
         },
         "favorite": {
-          "description": "Filter items so only favorites items are returned.",
-          "name": "Favorites only"
+          "description": "Filter by favorite state. Enable to return only liked items, disable to return only disliked items, or leave the field out to return all items.",
+          "name": "Favorite state"
         },
         "limit": {
           "description": "Maximum number of items to return.",
