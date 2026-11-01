@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, async_noop
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -131,7 +131,7 @@ async def _async_import(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: RememberTheMilkConfigEntry
-) -> bool:
+) -> None:
     """Set up Remember The Milk from a config entry."""
     # pylint: disable-next=home-assistant-use-runtime-data
     component: EntityComponent[RememberTheMilkEntity] = hass.data[DOMAIN][
@@ -183,14 +183,17 @@ async def async_setup_entry(
     )
 
     # The services are registered here for now because they need the account name.
-    # The services will be deprecated when a todo platform is added.
+    # The services are deprecated in favor of the todo platform.
     # pylint: disable=home-assistant-service-registered-in-setup-entry
+    # Deprecated actions, to be removed in 2027.5
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         f"{account_name}_create_task",
         entity.create_task,
         schema=SERVICE_SCHEMA_CREATE_TASK,
     )
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         f"{account_name}_complete_task",
@@ -204,11 +207,9 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
     # Keep the coordinator polling even when there are no todo entities so that
     # lists created later in RTM are discovered and synced to subentries.
-    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
+    entry.async_on_unload(coordinator.async_add_listener(async_noop))
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def _async_update_listener(
@@ -242,10 +243,10 @@ async def _async_update_listener(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: RememberTheMilkConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     component: EntityComponent[RememberTheMilkEntity] = hass.data[DOMAIN][
         DATA_COMPONENT
     ]
     await component.async_remove_entity(entry.runtime_data.entity_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -8,21 +8,24 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from PyViCare.PyViCareService import ViCareDeviceAccessor
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION
+from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -51,20 +54,74 @@ async def test_all_entities(
         Fixture(
             {"type:fhtChannel"}, "vicare/FHTChannel.json", gateway_id="fht_gateway"
         ),
+        Fixture({"type:boiler"}, "vicare/Vitoligno300C.json"),
+        Fixture({"type:virtual;smartRoomControl"}, "vicare/RoomControl.json"),
     ]
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_room_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that each room is a child device of its room control."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:virtual;smartRoomControl"}, "vicare/RoomControl.json"),
+    ]
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    room_control = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gateway0_deviceId0"), mock_config_entry.entry_id
+    )
+    assert room_control is not None
+    assert room_control.name == "model0"
+    rooms = sorted(
+        (room.name, room.parent_device_id)
+        for room in dr.async_entries_for_parent_device(device_registry, room_control.id)
+    )
+    assert rooms == [("Room 0", room_control.id), ("Room 1", room_control.id)]
+
+
+async def test_room_control_without_rooms(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a room control without rooms adds no device."""
+    fixtures: list[Fixture] = [
+        Fixture(
+            {"type:virtual;smartRoomControl"}, "vicare/RoomControlWithoutRooms.json"
+        ),
+    ]
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert not dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -108,10 +165,7 @@ async def test_no_api_read_on_event_loop(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=mock_vicare.as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR, Platform.FAN]),
     ):
         await setup_integration(hass, mock_config_entry)

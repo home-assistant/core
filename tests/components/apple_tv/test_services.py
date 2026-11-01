@@ -5,13 +5,12 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 from pyatv.const import KeyboardFocusState
 from pyatv.exceptions import NotSupportedError, ProtocolError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.apple_tv.const import ATTR_TEXT, DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 

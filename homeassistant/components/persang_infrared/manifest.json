@@ -1,6 +1,7 @@
 {
   "domain": "persang_infrared",
   "name": "Persang Infrared",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@Dr-Blank"],
   "config_flow": true,
   "dependencies": ["infrared"],

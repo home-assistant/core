@@ -1,6 +1,7 @@
 {
   "domain": "imap",
   "name": "IMAP",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": ["@jbouwh"],
   "config_flow": true,
   "dependencies": ["repairs"],
@@ -8,5 +9,5 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["aioimaplib"],
-  "requirements": ["aioimaplib==2.0.1"]
+  "requirements": ["aioimaplib==2.0.3"]
 }

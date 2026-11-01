@@ -1,6 +1,7 @@
 {
   "domain": "elvia",
   "name": "Elvia",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@ludeeus"],
   "config_flow": true,
   "dependencies": ["recorder"],

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from opower import CannotConnect, InvalidAuth, MfaChallenge
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.opower.const import DOMAIN
@@ -13,14 +14,12 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, get_schema_suggested_value
-
 
 @pytest.fixture(autouse=True, name="mock_setup_entry")
 def override_async_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.opower.async_setup_entry", return_value=True
+        "homeassistant.components.opower.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -30,7 +29,7 @@ def mock_unload_entry() -> Generator[AsyncMock]:
     """Mock unloading a config entry."""
     with patch(
         "homeassistant.components.opower.async_unload_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_unload_entry:
         yield mock_unload_entry
 
@@ -383,6 +382,16 @@ async def test_form_exceptions(
     assert get_schema_suggested_value(data_schema, "username") == "test-username"
     assert get_schema_suggested_value(data_schema, "password") == "test-password"
     assert mock_login.call_count == 1
+
+    with patch("homeassistant.components.opower.config_flow.Opower.async_login"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_configured(

@@ -1,6 +1,7 @@
 {
   "domain": "foobot",
   "name": "Foobot",
+  "categories": ["sensors.air_quality"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/foobot",
   "iot_class": "cloud_polling",

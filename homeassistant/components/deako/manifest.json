@@ -1,6 +1,7 @@
 {
   "domain": "deako",
   "name": "Deako",
+  "categories": ["plugs_switches"],
   "codeowners": ["@sebirdman", "@balake", "@deakolights"],
   "config_flow": true,
   "dependencies": ["zeroconf"],

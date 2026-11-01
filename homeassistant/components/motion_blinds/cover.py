@@ -4,7 +4,6 @@ import logging
 from typing import Any, override
 
 from motionblinds import BlindType
-import probatio
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,18 +13,9 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
-from .const import (
-    ATTR_ABSOLUTE_POSITION,
-    ATTR_AVAILABLE,
-    ATTR_WIDTH,
-    KEY_GATEWAY,
-    SERVICE_SET_ABSOLUTE_POSITION,
-    UPDATE_DELAY_STOP,
-)
+from .const import ATTR_ABSOLUTE_POSITION, ATTR_WIDTH, UPDATE_DELAY_STOP
 from .coordinator import MotionBlindsConfigEntry
 from .entity import MotionCoordinatorEntity
 
@@ -68,19 +58,6 @@ TILT_ONLY_DEVICE_MAP = {
 TDBU_DEVICE_MAP = {
     BlindType.TopDownBottomUp: CoverDeviceClass.SHADE,
     BlindType.TriangleBlind: CoverDeviceClass.BLIND,
-}
-
-
-SET_ABSOLUTE_POSITION_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_ABSOLUTE_POSITION): probatio.All(
-        cv.positive_int, probatio.Range(max=100)
-    ),
-    probatio.Optional(ATTR_TILT_POSITION): probatio.All(
-        cv.positive_int, probatio.Range(max=100)
-    ),
-    probatio.Optional(ATTR_WIDTH): probatio.All(
-        cv.positive_int, probatio.Range(max=100)
-    ),
 }
 
 
@@ -163,13 +140,6 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_ABSOLUTE_POSITION,
-        SET_ABSOLUTE_POSITION_SCHEMA,
-        "async_set_absolute_position",
-    )
-
 
 class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
     """Representation of a Motionblinds Device."""
@@ -182,18 +152,6 @@ class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
 
         self._attr_device_class = device_class
         self._attr_unique_id = blind.mac
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        if self.coordinator.data is None:
-            return False
-
-        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
-            return False
-
-        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     @property
     @override

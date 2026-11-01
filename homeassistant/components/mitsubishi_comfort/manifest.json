@@ -1,6 +1,7 @@
 {
   "domain": "mitsubishi_comfort",
   "name": "Mitsubishi Comfort",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@nikolairahimi"],
   "config_flow": true,
   "dependencies": ["dhcp"],

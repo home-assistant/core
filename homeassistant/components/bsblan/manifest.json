@@ -1,6 +1,7 @@
 {
   "domain": "bsblan",
   "name": "BSB-LAN",
+  "categories": ["climate.thermostats_heating", "diy_makers.boards_hardware"],
   "codeowners": ["@liudger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bsblan",
@@ -8,7 +9,7 @@
   "iot_class": "local_polling",
   "loggers": ["bsblan"],
   "quality_scale": "silver",
-  "requirements": ["python-bsblan==6.1.8"],
+  "requirements": ["python-bsblan==6.2.1"],
   "zeroconf": [
     {
       "name": "bsb-lan*",

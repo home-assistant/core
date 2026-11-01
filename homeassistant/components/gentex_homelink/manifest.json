@@ -1,6 +1,7 @@
 {
   "domain": "gentex_homelink",
   "name": "HomeLink",
+  "categories": ["buttons_remotes", "vehicles_transport.cars_evs"],
   "codeowners": ["@Gentex-Corporation/Homelink", "@rjones-gentex"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

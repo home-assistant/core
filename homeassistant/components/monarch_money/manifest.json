@@ -1,6 +1,7 @@
 {
   "domain": "monarch_money",
   "name": "Monarch Money",
+  "categories": ["finance"],
   "codeowners": ["@jeeftor", "@bradleyseanf"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/monarchmoney",

@@ -1,8 +1,14 @@
 {
   "domain": "trmnl",
   "name": "TRMNL",
+  "categories": ["productivity_information"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "trmnl-*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/trmnl",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

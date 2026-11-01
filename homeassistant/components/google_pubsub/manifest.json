@@ -1,6 +1,7 @@
 {
   "domain": "google_pubsub",
   "name": "Google Pub/Sub",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/google_pubsub",
   "iot_class": "cloud_push",

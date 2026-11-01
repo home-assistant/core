@@ -12,7 +12,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "ignore_ip6_link_local": "IPv6 link local address is not supported."
+      "ignore_ip6_link_local": "IPv6 link local address is not supported.",
+      "not_supported": "This device does not support the TR-064 API."
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -166,16 +167,16 @@
         "name": "Internet access"
       },
       "wi_fi_guest": {
-        "name": "Guest"
+        "name": "Wi-Fi Guest"
       },
       "wi_fi_main_2_4ghz": {
-        "name": "Main 2.4 GHz"
+        "name": "Wi-Fi Main 2.4GHz"
       },
       "wi_fi_main_5ghz": {
-        "name": "Main 5 GHz"
+        "name": "Wi-Fi Main 5GHz"
       },
       "wi_fi_main_5ghz_high_6ghz": {
-        "name": "Main 5 GHz High / 6 GHz"
+        "name": "Wi-Fi Main 5GHz High / 6GHz"
       }
     }
   },

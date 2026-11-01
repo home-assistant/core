@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
@@ -33,8 +34,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
-
-from tests.common import async_fire_time_changed
 
 
 async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:
@@ -266,7 +265,7 @@ async def test_updating_to_often(
         "Updating Command Line Cover Test took longer"
         " than the scheduled update interval" not in caplog.text
     )
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     called.clear()
@@ -278,9 +277,9 @@ async def test_updating_to_often(
 
     # Simulate update takes too long
     wait_till_event.clear()
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await asyncio.sleep(0)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     wait_till_event.set()
 
     # Finish processing update
@@ -328,7 +327,7 @@ async def test_updating_manually(
         )
         await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     called.clear()

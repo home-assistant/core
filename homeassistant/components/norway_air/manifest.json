@@ -1,6 +1,7 @@
 {
   "domain": "norway_air",
   "name": "Om Luftkvalitet i Norge (Norway Air)",
+  "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/norway_air",
   "iot_class": "cloud_polling",

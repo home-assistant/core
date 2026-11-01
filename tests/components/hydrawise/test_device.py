@@ -24,6 +24,8 @@ def test_zones_in_device_registry(
     assert device1 is not None
     assert device1.name == "Zone One"
     assert device1.manufacturer == "Hydrawise"
+    assert device1.serial_number is None
+    assert device1.sw_version is None
 
     device2 = device_registry.async_get_device_by_identifier(
         (DOMAIN, "5965395"), mock_added_config_entry.entry_id
@@ -46,6 +48,8 @@ def test_controller_in_device_registry(
     assert device is not None
     assert device.name == "Home Controller"
     assert device.manufacturer == "Hydrawise"
+    assert device.serial_number == "0310b36090"
+    assert device.sw_version == "2.05"
 
 
 @pytest.mark.usefixtures("mock_pydrawise")

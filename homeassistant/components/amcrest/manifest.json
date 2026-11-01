@@ -1,6 +1,10 @@
 {
   "domain": "amcrest",
   "name": "Amcrest",
+  "categories": [
+    "security_safety.cameras",
+    "security_safety.doorbells_intercoms"
+  ],
   "codeowners": ["@flacjacket"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/amcrest",

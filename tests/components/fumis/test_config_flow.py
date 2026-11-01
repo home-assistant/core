@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from fumis import FumisAuthenticationError, FumisConnectionError, FumisStoveOfflineError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fumis.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

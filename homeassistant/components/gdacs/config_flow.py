@@ -8,16 +8,20 @@ import probatio
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
-from .const import CONF_CATEGORIES, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_RADIUS, DOMAIN
 
 DATA_SCHEMA = probatio.Schema(
-    {probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
+    {
+        probatio.Required(CONF_LOCATION): LocationSelector(
+            LocationSelectorConfig(radius=True)
+        ),
+    }
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,12 +30,25 @@ _LOGGER = logging.getLogger(__name__)
 class GdacsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a GDACS config flow."""
 
+    VERSION = 2
+
     async def _show_form(
         self, errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Show the form to the user."""
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {}
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA,
+                {
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                        CONF_RADIUS: DEFAULT_RADIUS,
+                    }
+                },
+            ),
+            errors=errors or {},
         )
 
     @override
@@ -43,20 +60,12 @@ class GdacsFlowHandler(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return await self._show_form()
 
-        latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
-        user_input[CONF_LATITUDE] = latitude
-        longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
-        user_input[CONF_LONGITUDE] = longitude
-
-        identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
-
-        await self.async_set_unique_id(identifier)
+        await self.async_set_unique_id(
+            f"{user_input[CONF_LOCATION][CONF_LATITUDE]}, "
+            f"{user_input[CONF_LOCATION][CONF_LONGITUDE]}"
+        )
         self._abort_if_unique_id_configured()
-
-        scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
-
-        categories = user_input.get(CONF_CATEGORIES, [])
-        user_input[CONF_CATEGORIES] = categories
-
-        return self.async_create_entry(title=identifier, data=user_input)
+        user_input.setdefault(CONF_LOCATION, DEFAULT_RADIUS)
+        return self.async_create_entry(
+            title="Global Disaster Alert and Coordination System", data=user_input
+        )

@@ -1,7 +1,7 @@
 """Sensor for Shelly."""
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Final, cast, override
 
 from aioshelly.block_device import Block
@@ -56,16 +56,17 @@ from .entity import (
     async_setup_entry_block,
     async_setup_entry_rest,
     async_setup_entry_rpc,
+    get_entity_blu_trv_device_info,
     get_entity_rpc_device_info,
 )
 from .utils import (
     async_remove_orphaned_entities,
-    get_blu_trv_device_info,
     get_device_entry_gen,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
     is_view_for_platform,
+    normalize_command_source,
 )
 
 PARALLEL_UPDATES = 0
@@ -193,16 +194,74 @@ class RpcBluTrvSensor(RpcSensor):
         """Initialize."""
 
         super().__init__(coordinator, key, attribute, description)
-        ble_addr: str = coordinator.device.config[key]["addr"]
-        fw_ver = coordinator.device.status[key].get("fw_ver")
-        self._attr_device_info = get_blu_trv_device_info(
-            coordinator.hass,
-            coordinator.config_entry.entry_id,
-            coordinator.device.config[key],
-            ble_addr,
-            coordinator.mac,
-            fw_ver,
-        )
+        self._attr_device_info = get_entity_blu_trv_device_info(coordinator, key)
+
+
+class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
+    """Represent a RPC sleeping sensor."""
+
+    entity_description: RpcSensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, key, attribute, description, entry)
+        self.restored_data: SensorExtraStoredData | None = None
+
+        if coordinator.device.initialized:
+            self.configure_translation_attributes()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.restored_data = await self.async_get_last_sensor_data()
+
+    @property
+    @override
+    def native_value(self) -> StateType | datetime:
+        """Return value of sensor."""
+        if self.coordinator.device.initialized:
+            return self.attribute_value
+
+        if self.restored_data is None:
+            return None
+
+        return cast(StateType, self.restored_data.native_value)
+
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        return self.entity_description.native_unit_of_measurement
+
+
+class RpcLastSeenSensor(RpcSleepingSensor):
+    """Represent a RPC last seen sensor for sleeping devices."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """The last contact time stays valid after the device stops reporting."""
+        return True
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return value of sensor."""
+        if (last_seen := self.coordinator.last_seen) is not None:
+            return last_seen
+
+        if self.restored_data is None:
+            return None
+
+        return cast(datetime | None, self.restored_data.native_value)
 
 
 BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
@@ -611,6 +670,12 @@ RPC_SENSORS: Final = {
         sub_key="total_aprt_power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "switch_pf": RpcSensorDescription(
+        key="switch",
+        sub_key="pf",
+        device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "pf_em1": RpcSensorDescription(
@@ -1257,6 +1322,14 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
+    "last_seen": RpcSensorDescription(
+        key="sys",
+        sub_key="wakeup_period",
+        translation_key="last_seen",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_class=RpcLastSeenSensor,
+    ),
     "humidity_rh": RpcSensorDescription(
         key="humidity",
         sub_key="rh",
@@ -1745,6 +1818,69 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda _, status, key: not status[key]["present"],
     ),
+    "switch_source": RpcSensorDescription(
+        key="switch",
+        sub_key="source",
+        translation_key="last_command_source",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: normalize_command_source(status),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "light_source": RpcSensorDescription(
+        key="light",
+        sub_key="source",
+        translation_key="last_command_source",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: normalize_command_source(status),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "cct_source": RpcSensorDescription(
+        key="cct",
+        sub_key="source",
+        translation_key="last_command_source",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: normalize_command_source(status),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "rgb_source": RpcSensorDescription(
+        key="rgb",
+        sub_key="source",
+        translation_key="last_command_source",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: normalize_command_source(status),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "rgbw_source": RpcSensorDescription(
+        key="rgbw",
+        sub_key="source",
+        translation_key="last_command_source",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: normalize_command_source(status),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "rgbcct_source": RpcSensorDescription(
+        key="rgbcct",
+        sub_key="source",
+        translation_key="last_command_source",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: normalize_command_source(status),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "cb_source": RpcSensorDescription(
+        key="cb",
+        sub_key="source",
+        translation_key="last_command_source",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: normalize_command_source(status),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
@@ -1901,48 +2037,3 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
             return None
 
         return self.restored_data.native_unit_of_measurement
-
-
-class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
-    """Represent a RPC sleeping sensor."""
-
-    entity_description: RpcSensorDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcSensorDescription,
-        entry: RegistryEntry | None = None,
-    ) -> None:
-        """Initialize the sleeping sensor."""
-        super().__init__(coordinator, key, attribute, description, entry)
-        self.restored_data: SensorExtraStoredData | None = None
-
-        if coordinator.device.initialized:
-            self.configure_translation_attributes()
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.restored_data = await self.async_get_last_sensor_data()
-
-    @property
-    @override
-    def native_value(self) -> StateType:
-        """Return value of sensor."""
-        if self.coordinator.device.initialized:
-            return self.attribute_value
-
-        if self.restored_data is None:
-            return None
-
-        return cast(StateType, self.restored_data.native_value)
-
-    @property
-    @override
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor, if any."""
-        return self.entity_description.native_unit_of_measurement

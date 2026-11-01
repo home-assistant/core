@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, cast
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
+from pygbl import parse_firmware_image
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -28,8 +29,8 @@ from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.singleton import singleton
 from homeassistant.util import dt as dt_util
 
-from . import DATA_COMPONENT
 from .const import (
+    DATA_COMPONENT,
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
@@ -346,9 +347,7 @@ async def guess_hardware_owners(
         device_guesses[otbr_path].append(otbr_addon_fw_info)
 
     # Lazy import to avoid circular dependency
-    from .silabs_multiprotocol_addon import (  # noqa: PLC0415
-        get_multiprotocol_addon_manager,
-    )
+    from .silabs_multiprotocol_addon import get_multiprotocol_addon_manager  # noqa: PLC0415
 
     multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
 
@@ -509,10 +508,7 @@ async def async_flash_silabs_firmware(
     This function is meant to be used within a firmware update context.
     """
 
-    firmware_module = await async_import_module(hass, FIRMWARE_MODULE)
-    fw_image = await hass.async_add_executor_job(
-        firmware_module.parse_firmware_image, fw_data
-    )
+    fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
 
     flasher = flasher_cls(device=device)
 

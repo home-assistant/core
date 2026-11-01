@@ -1,6 +1,7 @@
 {
   "domain": "nobo_hub",
   "name": "Nob\u00f8 Ecohub",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@echoromeo", "@oyvindwe"],
   "config_flow": true,
   "dhcp": [

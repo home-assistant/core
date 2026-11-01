@@ -1,4 +1,5 @@
 name: Quality scale reviewer (trigger)
+run-name: "#${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}"
 
 # Stage 1 of the Quality scale reviewer pipeline.
 #
@@ -29,7 +30,7 @@ jobs:
   trigger:
     name: Trigger the quality scale review
     if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Report the pull request

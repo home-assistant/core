@@ -5,6 +5,8 @@ from unittest.mock import PropertyMock, patch
 
 import aiounifi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.components.unifi.services import (
@@ -15,9 +17,6 @@ from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(

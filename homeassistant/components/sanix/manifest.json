@@ -1,6 +1,7 @@
 {
   "domain": "sanix",
   "name": "Sanix",
+  "categories": ["water"],
   "codeowners": ["@tomaszsluszniak"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sanix",

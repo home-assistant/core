@@ -11,13 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_ZONENAME,
-    CONF_ZONES,
-    DATA_EVL,
-    SIGNAL_ZONE_BYPASS_UPDATE,
-    ZONE_SCHEMA,
-)
+from . import ZONE_SCHEMA
+from .const import CONF_ZONENAME, CONF_ZONES, DATA_EVL, SIGNAL_ZONE_BYPASS_UPDATE
 from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +38,8 @@ async def async_setup_platform(
         entity = EnvisalinkSwitch(
             zone_num,
             zone_name,
-            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL],
+            hass.data[DATA_EVL].controller.alarm_state["zone"][zone_num],
+            hass.data[DATA_EVL].controller,
         )
         entities.append(entity)
 

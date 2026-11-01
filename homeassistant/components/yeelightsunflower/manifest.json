@@ -1,6 +1,7 @@
 {
   "domain": "yeelightsunflower",
   "name": "Yeelight Sunflower",
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@lindsaymarkward"],
   "documentation": "https://www.home-assistant.io/integrations/yeelightsunflower",
   "iot_class": "local_polling",

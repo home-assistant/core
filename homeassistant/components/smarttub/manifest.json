@@ -1,6 +1,7 @@
 {
   "domain": "smarttub",
   "name": "SmartTub",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@mdz"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smarttub",

@@ -23,19 +23,21 @@ from homematicip.device import (
     LightSensor,
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
+    MotionDetectorSwitchOutdoor,
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
     RotaryHandleSensor,
     SmokeDetector,
     SoilMoistureSensorInterface,
-    SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
     TemperatureHumiditySensorOutdoor,
     TemperatureHumiditySensorWithoutDisplay,
     TiltVibrationSensor,
+    UltrasonicDistanceSensor,
     WateringActuator,
+    WaterSupplyStop,
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
@@ -53,6 +55,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     UnitOfDensity,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfRatio,
@@ -298,13 +301,24 @@ ILLUMINANCE_DESC = HmipSensorDescription[Device](
     channel=1,
 )
 
+MOTION_SWITCH_ILLUMINANCE_DESC = HmipSensorDescription[Device](
+    key="illuminance",
+    device_class=SensorDeviceClass.ILLUMINANCE,
+    native_unit_of_measurement=LIGHT_LUX,
+    state_class=SensorStateClass.MEASUREMENT,
+    channel_value_fn=lambda channel: channel.illumination,
+    channel=1,
+    channel_type=FunctionalChannelType.MOTION_DETECTION_CHANNEL,
+)
+
 POWER_DESC = HmipSensorDescription[Device](
     key="power",
     device_class=SensorDeviceClass.POWER,
     native_unit_of_measurement=UnitOfPower.WATT,
     state_class=SensorStateClass.MEASUREMENT,
-    value_fn=lambda d: d.currentPowerConsumption,
+    channel_value_fn=lambda channel: channel.currentPowerConsumption,
     channel=1,
+    channel_type=FunctionalChannelType.SWITCH_MEASURING_CHANNEL,
 )
 
 ENERGY_DESC = HmipSensorDescription[Device](
@@ -312,8 +326,9 @@ ENERGY_DESC = HmipSensorDescription[Device](
     device_class=SensorDeviceClass.ENERGY,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     state_class=SensorStateClass.TOTAL_INCREASING,
-    value_fn=lambda d: d.energyCounter,
+    channel_value_fn=lambda channel: channel.energyCounter,
     channel=1,
+    channel_type=FunctionalChannelType.SWITCH_MEASURING_CHANNEL,
 )
 
 WIND_SPEED_DESC = HmipSensorDescription[Device](
@@ -415,6 +430,38 @@ TILT_TEMPERATURE_DESC = HmipSensorDescription[Device](
     channel_type=FunctionalChannelType.TEMPERATURE_SENSOR_CHANNEL,
 )
 
+DISTANCE_DESC = HmipSensorDescription[Device](
+    key="distance",
+    device_class=SensorDeviceClass.DISTANCE,
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.distance,
+    channel=1,
+)
+
+HEIGHT_DESC = HmipSensorDescription[Device](
+    key="height",
+    translation_key="height",
+    device_class=SensorDeviceClass.DISTANCE,
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.calculatedHeight,
+    channel=1,
+)
+
+
+WATER_FLOW_DESC = HmipSensorDescription[Device](
+    key="water_flow",
+    translation_key="water_flow",
+    device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+    native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=1,
+    channel_value_fn=lambda channel: channel.waterFlow,
+    channel=1,
+    channel_type=FunctionalChannelType.WATER_SUPPLY_STOP_CHANNEL,
+)
+
 
 # Keys must not subclass each other so each device matches one key; the setup
 # loop breaks after the first match (enforced by
@@ -445,8 +492,8 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
     LightSensor: (ILLUMINANCE_DESC,),
     MotionDetectorIndoor: (ILLUMINANCE_DESC,),
     MotionDetectorOutdoor: (ILLUMINANCE_DESC,),
+    MotionDetectorSwitchOutdoor: (MOTION_SWITCH_ILLUMINANCE_DESC,),
     PresenceDetectorIndoor: (ILLUMINANCE_DESC,),
-    SwitchMeasuring: (POWER_DESC, ENERGY_DESC),
     PassageDetector: (PASSAGE_COUNTER_DESC,),
     TemperatureDifferenceSensor2: (
         TEMPERATURE_EXTERNAL_CH1_DESC,
@@ -454,6 +501,8 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
         TEMPERATURE_EXTERNAL_DELTA_DESC,
     ),
     TiltVibrationSensor: (TILT_ANGLE_DESC, TILT_TEMPERATURE_DESC),
+    UltrasonicDistanceSensor: (DISTANCE_DESC, HEIGHT_DESC),
+    WaterSupplyStop: (WATER_FLOW_DESC,),
     WeatherSensor: (
         TEMPERATURE_DESC,
         HUMIDITY_DESC,
@@ -477,6 +526,13 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
         TODAY_RAIN_DESC,
         ABSOLUTE_HUMIDITY_DESC,
     ),
+}
+
+# Keyed by channel type, so devices without a class in the library get these too.
+SENSOR_DESCRIPTIONS_BY_CHANNEL: dict[
+    FunctionalChannelType, tuple[HmipSensorDescription[Device], ...]
+] = {
+    FunctionalChannelType.SWITCH_MEASURING_CHANNEL: (POWER_DESC, ENERGY_DESC),
 }
 
 
@@ -580,6 +636,14 @@ async def async_setup_entry(
             # test_simple_sensor_descriptions_no_overlap), so further
             # iteration cannot add entities.
             break
+        for channel_type, descriptions in SENSOR_DESCRIPTIONS_BY_CHANNEL.items():
+            if get_channel_index_by_type(device, channel_type) is None:
+                continue
+            entities.extend(
+                HomematicipSensor(hap, device, description)
+                for description in descriptions
+                if description.exists_fn(device)
+            )
 
     device_handlers = get_device_handlers(hap)
 

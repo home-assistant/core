@@ -1,6 +1,10 @@
 {
   "domain": "fritz",
   "name": "FRITZ!Box Tools",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@AaronDavidSchneider", "@chemelli74", "@mib1185"],
   "config_flow": true,
   "dependencies": ["network"],

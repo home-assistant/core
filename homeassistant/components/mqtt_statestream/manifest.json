@@ -1,6 +1,7 @@
 {
   "domain": "mqtt_statestream",
   "name": "MQTT Statestream",
+  "categories": ["diy_makers"],
   "codeowners": [],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt_statestream",

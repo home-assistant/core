@@ -1,6 +1,7 @@
 {
   "domain": "mystrom",
   "name": "myStrom",
+  "categories": ["plugs_switches", "lighting.bulbs_lamps"],
   "codeowners": ["@fabaff"],
   "config_flow": true,
   "dependencies": ["http"],

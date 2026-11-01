@@ -125,6 +125,9 @@ desktop.ini
 /.mypy_cache/*
 /.dmypy.json
 
+# Local copy of HACS custom integrations, made by script/sync_custom_integrations.py
+/.custom_integration_sources/
+
 # Secrets
 .lokalise_token
 

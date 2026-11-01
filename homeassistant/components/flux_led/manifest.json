@@ -1,6 +1,7 @@
 {
   "domain": "flux_led",
   "name": "Magic Home",
+  "categories": ["lighting.led_strips_controllers", "lighting.bulbs_lamps"],
   "codeowners": ["@icemanch"],
   "config_flow": true,
   "dependencies": ["network"],

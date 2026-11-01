@@ -10,6 +10,11 @@ from aiomelcloudhome.exceptions import (
     MelCloudHomeTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.melcloud_home.const import DOMAIN
@@ -30,12 +35,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 ENTITY_ID = "water_heater.heat_pump_hot_water"
 ATW_UNIT_ID = "atw-unit-uuid-1"

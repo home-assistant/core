@@ -1,6 +1,7 @@
 {
   "domain": "paperless_ngx",
   "name": "Paperless-ngx",
+  "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@fvgarrel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/paperless_ngx",

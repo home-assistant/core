@@ -1,6 +1,7 @@
 {
   "domain": "willow",
   "name": "Willow",
+  "categories": ["garden_plants"],
   "codeowners": ["@paxprz"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

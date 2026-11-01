@@ -4,6 +4,8 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import os
+from socket import gaierror, herror
+import threading
 from typing import NoReturn
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
@@ -11,6 +13,8 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 import pytest
+from pytest_homeassistant.common import async_get_persistent_notifications
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import http
 from homeassistant.components.http import DOMAIN
@@ -27,9 +31,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_persistent_notifications
 from tests.test_util import mock_real_ip
-from tests.typing import ClientSessionGenerator
 
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
@@ -463,6 +465,83 @@ async def test_failed_login_attempts_counter(
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
 
 
+@pytest.mark.parametrize(
+    ("lookup_error", "lookup_delay", "reverse_dns_timeout"),
+    [
+        pytest.param(None, 10, 0, id="slow_lookup"),
+        pytest.param(herror(1, "Unknown host"), 0, 1, id="herror"),
+        pytest.param(
+            gaierror(-3, "Temporary failure in name resolution"),
+            0,
+            1,
+            id="gaierror",
+        ),
+        pytest.param(
+            UnicodeEncodeError("idna", "fe80::1%..", 9, 10, "label empty"),
+            0,
+            1,
+            id="unencodable_scope_id",
+        ),
+    ],
+)
+async def test_failed_login_reverse_dns_failure(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    lookup_error: Exception | None,
+    lookup_delay: float,
+    reverse_dns_timeout: float,
+) -> None:
+    """Test that a slow or failing reverse DNS lookup still records the failed login."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/", unauth_handler)
+    setup_bans(hass, app, 5)
+    mock_real_ip(app)("200.201.202.204")
+    client = await aiohttp_client(app)
+
+    release_lookup = threading.Event()
+    lookup = Mock(side_effect=lookup_error, return_value=("example.com", [], []))
+
+    def fake_gethostbyaddr(ip: str) -> tuple[str, list[str], list[str]]:
+        """Wait out the delay, then defer to the lookup mock."""
+        release_lookup.wait(lookup_delay)
+        return lookup(ip)
+
+    # Patch with a plain function so the test hass runs it in the executor
+    with (
+        patch(
+            "homeassistant.components.http.ban.gethostbyaddr",
+            fake_gethostbyaddr,
+        ),
+        patch(
+            "homeassistant.components.http.ban.REVERSE_DNS_TIMEOUT",
+            reverse_dns_timeout,
+        ),
+    ):
+        resp = await client.get("/")
+    release_lookup.set()
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][ip_address("200.201.202.204")] == 1
+    assert (
+        "Login attempt or request with invalid authentication"
+        " from 200.201.202.204 (200.201.202.204)." in caplog.text
+    )
+    notifications = async_get_persistent_notifications(hass)
+    assert (
+        notifications["http-login"]["message"]
+        == "Login attempt or request with invalid authentication"
+        " from 200.201.202.204 (200.201.202.204)."
+        " See the log for details."
+    )
+
+
 async def test_failed_login_attempts_counter_reverse_dns_unicode_decode_error(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
@@ -488,6 +567,81 @@ async def test_failed_login_attempts_counter_reverse_dns_unicode_decode_error(
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+
+
+async def test_wrong_login_is_counted_before_the_reverse_dns_lookup(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a wrong login is counted and banned before the slow host lookup."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 1)
+    remote_ip = ip_address("200.201.202.204")
+    mock_real_ip(app)("200.201.202.204")
+    manager = app[KEY_BAN_MANAGER]
+    seen_during_lookup: list[tuple[int, bool]] = []
+
+    def gethostbyaddr(ip_addr: str) -> tuple[str, list[str], list[str]]:
+        seen_during_lookup.append(
+            (
+                app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip],
+                remote_ip in manager.ip_bans_lookup,
+            )
+        )
+        return ("example.com", [], [])
+
+    with (
+        patch("homeassistant.components.http.ban.gethostbyaddr", gethostbyaddr),
+        patch("homeassistant.components.http.ban.open", mock_open(), create=True),
+    ):
+        client = await aiohttp_client(app)
+        resp = await client.get("/example")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert seen_during_lookup == [(1, True)]
+
+
+async def test_ban_applies_when_the_ban_file_cannot_be_written(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failing ban file write still bans and reports the attempt."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 1)
+    remote_ip = ip_address("200.201.202.204")
+    mock_real_ip(app)("200.201.202.204")
+
+    with patch(
+        "homeassistant.components.http.ban.open",
+        side_effect=OSError("Read-only file system"),
+        create=True,
+    ):
+        client = await aiohttp_client(app)
+        resp = await client.get("/example")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert remote_ip in app[KEY_BAN_MANAGER].ip_bans_lookup
+    assert (
+        "Unable to save the ban of 200.201.202.204: Read-only file system"
+        in caplog.text
+    )
+    notifications = async_get_persistent_notifications(hass)
+    assert "http-login" in notifications
+    assert "ip-ban" in notifications
 
 
 async def test_single_ban_file_entry(

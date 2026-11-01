@@ -1,6 +1,10 @@
 {
   "domain": "elkm1",
   "name": "Elk-M1 Control",
+  "categories": [
+    "security_safety.alarm_systems",
+    "hubs_protocols.smart_home_hubs"
+  ],
   "codeowners": ["@gwww", "@bdraco"],
   "config_flow": true,
   "dependencies": ["network"],

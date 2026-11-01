@@ -1,14 +1,15 @@
 """Tests for the Onkyo integration."""
 
+import asyncio
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
+from typing import Final
 from unittest.mock import MagicMock, patch
 
-from aioonkyo import ReceiverInfo
+from aioonkyo import ReceiverInfo, Status
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 RECEIVER_INFO = ReceiverInfo(
     host="192.168.0.101",
@@ -69,3 +70,15 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+DISCONNECT: Final = None
+
+
+async def receive_messages(
+    read_queue: asyncio.Queue[Status | None], *messages: Status | None
+) -> None:
+    """Receive messages from the receiver and let the integration process them."""
+    for message in messages:
+        read_queue.put_nowait(message)
+    await asyncio.sleep(0)

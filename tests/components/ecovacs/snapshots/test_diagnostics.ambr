@@ -3,6 +3,7 @@
   dict({
     'config': dict({
       'data': dict({
+        'account_credentials': '**REDACTED**',
         'country': 'IT',
         'device_id': 'AAAAAAAA',
         'password': '**REDACTED**',
@@ -57,6 +58,7 @@
   dict({
     'config': dict({
       'data': dict({
+        'account_credentials': '**REDACTED**',
         'country': 'IT',
         'device_id': 'HA-test_home',
         'override_mqtt_url': '**REDACTED**',

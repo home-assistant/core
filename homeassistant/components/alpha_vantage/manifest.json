@@ -1,6 +1,7 @@
 {
   "domain": "alpha_vantage",
   "name": "Alpha Vantage",
+  "categories": ["finance"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/alpha_vantage",
   "iot_class": "cloud_polling",

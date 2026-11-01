@@ -1,6 +1,7 @@
 {
   "domain": "rest",
   "name": "RESTful",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/rest",
   "integration_type": "service",

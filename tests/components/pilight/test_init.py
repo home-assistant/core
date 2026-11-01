@@ -7,17 +7,16 @@ from unittest.mock import patch
 
 from probatio import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components import pilight
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    assert_setup_component,
-    async_capture_events,
-    async_fire_time_changed,
-)
 
 _LOGGER = logging.getLogger(__name__)
 

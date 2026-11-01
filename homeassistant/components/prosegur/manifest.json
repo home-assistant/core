@@ -1,6 +1,7 @@
 {
   "domain": "prosegur",
   "name": "Prosegur Alarm",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@dgomes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/prosegur",

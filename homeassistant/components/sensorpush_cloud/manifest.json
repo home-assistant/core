@@ -1,6 +1,7 @@
 {
   "domain": "sensorpush_cloud",
   "name": "SensorPush Cloud",
+  "categories": ["sensors.temperature_humidity"],
   "codeowners": ["@sstallion"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sensorpush_cloud",

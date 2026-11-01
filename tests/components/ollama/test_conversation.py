@@ -1,7 +1,7 @@
 """Tests for the Ollama integration."""
 
 from collections.abc import AsyncGenerator
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from ollama import Message, ResponseError
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation, ollama
@@ -24,7 +25,6 @@ from homeassistant.helpers import (
     llm,
 )
 
-from tests.common import MockConfigEntry
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401
@@ -98,6 +98,7 @@ async def test_chat(
     assert [event["event_type"] for event in trace_events] == [
         trace.ConversationTraceEventType.ASYNC_PROCESS,
         trace.ConversationTraceEventType.AGENT_DETAIL,
+        trace.ConversationTraceEventType.TURN_CONTENT,
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
@@ -377,6 +378,7 @@ async def test_function_call(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -461,6 +463,7 @@ async def test_function_exception(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -501,7 +504,7 @@ async def test_history_conversion(
                 data={
                     "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
+                    "speech_slots": {"time": dt.time(16, 24, 17, 813343)},
                     "data": {"success": [], "failed": []},
                 }
             ),

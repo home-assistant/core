@@ -65,7 +65,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
     client = config_entry.runtime_data.client
-    voices = (await client.voices.get_all()).voices
+    voices = config_entry.runtime_data.voices
     default_voice_id = config_entry.options[CONF_VOICE]
     voice_settings = to_voice_settings(config_entry.options)
     async_add_entities(
@@ -158,9 +158,6 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             bytes_combined = b"".join([byte_seg async for byte_seg in audio])
 
         except ApiError as exc:
-            _LOGGER.warning(
-                "Error during processing of TTS request %s", exc, exc_info=True
-            )
             raise HomeAssistantError(exc) from exc
         return "mp3", bytes_combined
 
@@ -302,9 +299,6 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                                 )
                                 previous_request_ids.clear()
                 except ApiError as exc:
-                    _LOGGER.warning(
-                        "Error during processing of TTS request %s", exc, exc_info=True
-                    )
                     _add_sentences_task.cancel()
                     with contextlib.suppress(asyncio.CancelledError):
                         await _add_sentences_task

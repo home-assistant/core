@@ -1,25 +1,38 @@
 """The tests for MQTT device triggers."""
 
+from collections.abc import Awaitable, Callable
+from datetime import timedelta
 import json
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    async_get_device_automations,
+)
+from pytest_homeassistant.components.mqtt.common import help_test_unload_config_entry
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, WebSocketGenerator
 from pytest_unordered import unordered
 
-from homeassistant.components import automation
+from homeassistant.components import automation, mqtt
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt import _LOGGER, DOMAIN, debug_info
+from homeassistant.components.mqtt.models import DATA_MQTT
+from homeassistant.config_entries import (
+    RELOAD_AFTER_UPDATE_DELAY,
+    ConfigEntry,
+    ConfigEntryState,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
-
-from .common import help_test_unload_config_entry
-
-from tests.common import async_fire_mqtt_message, async_get_device_automations
-from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
+from homeassistant.util import dt as dt_util
 
 
 @pytest.mark.parametrize(
@@ -857,6 +870,89 @@ async def test_if_fires_on_mqtt_message_after_update(
     async_fire_mqtt_message(hass, "foobar/triggers/buttonOne", "")
     await hass.async_block_till_done()
     assert len(service_calls) == 1
+
+
+async def test_duplicate_trigger_update_does_not_register_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a rejected duplicate trigger update does not register its new device."""
+    await mqtt_mock_entry()
+    config: dict[str, Any] = {
+        "automation_type": "trigger",
+        "device": {"identifiers": ["0AFFD2"]},
+        "topic": "foobar/triggers/button1",
+        "type": "button_short_press",
+        "subtype": "button_1",
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/device_automation/bla1/config", json.dumps(config)
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_automation/bla2/config",
+        json.dumps({**config, "subtype": "button_2"}),
+    )
+    await hass.async_block_till_done()
+
+    # Update the trigger to the type and subtype of the other trigger
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_automation/bla2/config",
+        json.dumps({**config, "device": {"identifiers": ["NEW"]}}),
+    )
+    await hass.async_block_till_done()
+    assert "Cannot update device trigger ('device_automation', 'bla2')" in caplog.text
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "NEW"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+        )
+        is None
+    )
+
+
+async def test_invalid_trigger_update_keeps_current_payload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an invalid trigger update does not replace the current payload.
+
+    The debug info keeps the current payload, and the invalid update is rejected
+    again when it is received again, instead of being ignored as unchanged.
+    """
+    await mqtt_mock_entry()
+    config: dict[str, Any] = {
+        "automation_type": "trigger",
+        "device": {"identifiers": ["0AFFD2"]},
+        "topic": "foobar/triggers/button1",
+        "type": "button_short_press",
+        "subtype": "button_1",
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/device_automation/bla1/config", json.dumps(config)
+    )
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    )
+    assert device_entry is not None
+    update = json.dumps({**config, "qos": 3})
+    schema_error = "Error 'value must be one of [0, 1, 2] at 'qos'' when processing"
+
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", update)
+    await hass.async_block_till_done()
+    assert schema_error in caplog.text
+    trigger_info = debug_info.info_for_device(hass, device_entry.id)["triggers"][0]
+    assert trigger_info["discovery_data"]["payload"] == config
+
+    caplog.clear()
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", update)
+    await hass.async_block_till_done()
+    assert schema_error in caplog.text
 
 
 async def test_no_resubscribe_same_topic(
@@ -1865,3 +1961,118 @@ async def test_unload_entry(
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the MQTT config entry."""
+    assert await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def _async_enable_disabled_entity(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Enable a disabled entity, which makes the entity registry reload the entry."""
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, "0AFFD2_battery"
+    )
+    assert entity_id is not None
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "reload_entry",
+    [
+        pytest.param(_async_reload_entry, id="reload"),
+        pytest.param(_async_enable_disabled_entity, id="enable_entity"),
+    ],
+)
+@pytest.mark.usefixtures("mqtt_client_mock")
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
+async def test_fires_once_after_entry_reload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    reload_entry: Callable[[HomeAssistant, ConfigEntry], Awaitable[None]],
+) -> None:
+    """Test a device trigger fires once per message after the MQTT entry reloads."""
+    # Uses a real MQTT client, so subscriptions are restored on reload
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_discovery_topic = "homeassistant/device_automation/0AFFD2/scene_1/config"
+    trigger_config = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "scene_1",'
+        '  "topic": "zigbee2mqtt/0AFFD2/action",'
+        '  "type": "action",'
+        '  "subtype": "scene_1" }'
+    )
+    async_fire_mqtt_message(hass, trigger_discovery_topic, trigger_config, retain=True)
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/0AFFD2/battery/config",
+        '{ "name": "Battery",'
+        '  "unique_id": "0AFFD2_battery",'
+        '  "state_topic": "zigbee2mqtt/0AFFD2",'
+        '  "enabled_by_default": false,'
+        '  "device":{"identifiers":["0AFFD2"]} }',
+        retain=True,
+    )
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), entry.entry_id
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "type": "action",
+                        "subtype": "scene_1",
+                    },
+                    "action": {"service": "test.automation"},
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "zigbee2mqtt/0AFFD2/action", "scene_1")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    client_before_reload = hass.data[DATA_MQTT].client
+    await reload_entry(hass, entry)
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.data[DATA_MQTT].client is not client_before_reload
+
+    # The broker replays the retained discovery payload after the reload
+    async_fire_mqtt_message(hass, trigger_discovery_topic, trigger_config, retain=True)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "zigbee2mqtt/0AFFD2/action", "scene_1")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2

@@ -6,6 +6,7 @@ control of RFLink switch devices.
 """
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.rflink.entity import EVENT_BUTTON_PRESSED
@@ -19,8 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant, State, callback
 
 from .test_init import mock_rflink
-
-from tests.common import mock_restore_cache
 
 DOMAIN = "light"
 

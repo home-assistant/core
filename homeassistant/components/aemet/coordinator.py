@@ -40,7 +40,7 @@ class AemetData:
     coordinator: WeatherUpdateCoordinator
 
 
-class WeatherUpdateCoordinator(DataUpdateCoordinator):
+class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Weather data update coordinator."""
 
     def __init__(

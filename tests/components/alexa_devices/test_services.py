@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_device_registry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_ID, TEST_DEVICE_1_SN
-
-from tests.common import MockConfigEntry, mock_device_registry
 
 
 async def test_setup_services(

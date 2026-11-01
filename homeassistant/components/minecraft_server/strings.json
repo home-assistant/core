@@ -7,6 +7,17 @@
       "cannot_connect": "Failed to connect to server. Please re-check the server edition and server address and try again."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "address": "[%key:component::minecraft_server::config::step::user::data::address%]",
+          "type": "[%key:component::minecraft_server::config::step::user::data::type%]"
+        },
+        "data_description": {
+          "address": "[%key:component::minecraft_server::config::step::user::data_description::address%]",
+          "type": "[%key:component::minecraft_server::config::step::user::data_description::type%]"
+        },
+        "description": "Update the configuration for your Minecraft server."
+      },
       "user": {
         "data": {
           "address": "Server address",
@@ -14,7 +25,7 @@
         },
         "data_description": {
           "address": "The hostname, IP address or SRV record of your Minecraft server, optionally including the port.",
-          "type": "For Java Edition beta version 1.8 till release version 1.6.4, select 'Legacy Java Edition'.\n For Java Edition release version 1.7+, select 'Java Edition'.\n For all Bedrock Edition versions, select 'Bedrock Edition'."
+          "type": "For Java Edition beta version 1.8 till release version 1.6.4, select 'Legacy Java Edition'.\nFor Java Edition release version 1.7+, select 'Java Edition'.\nFor all Bedrock Edition versions, select 'Bedrock Edition'."
         },
         "description": "Set up your Minecraft Server instance to allow monitoring.\n\nSelect the server edition and server address.",
         "title": "Link your Minecraft Server"
@@ -55,6 +66,14 @@
       "version": {
         "name": "Version"
       }
+    }
+  },
+  "exceptions": {
+    "address_lookup_failed": {
+      "message": "Unable to look up the address of the Minecraft server {address}."
+    },
+    "data_update_failed": {
+      "message": "A connection error occurred while updating the data for the Minecraft server {address}."
     }
   }
 }

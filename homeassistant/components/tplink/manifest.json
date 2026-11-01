@@ -1,6 +1,11 @@
 {
   "domain": "tplink",
   "name": "TP-Link Smart Home",
+  "categories": [
+    "plugs_switches",
+    "lighting.bulbs_lamps",
+    "security_safety.cameras"
+  ],
   "codeowners": ["@rytilahti", "@bdraco", "@sdb9696"],
   "config_flow": true,
   "dependencies": ["network", "ffmpeg", "stream"],
@@ -302,5 +307,5 @@
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.10.2"]
+  "requirements": ["python-kasa[speedups]==0.12.0"]
 }

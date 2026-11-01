@@ -1,6 +1,7 @@
 {
   "domain": "gpsd",
   "name": "GPSD",
+  "categories": ["presence_location.trackers", "diy_makers.boards_hardware"],
   "codeowners": ["@fabaff", "@jrieger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/gpsd",

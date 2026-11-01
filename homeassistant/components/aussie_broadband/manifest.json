@@ -1,6 +1,7 @@
 {
   "domain": "aussie_broadband",
   "name": "Aussie Broadband",
+  "categories": ["computers_network"],
   "codeowners": ["@nickw444", "@Bre77"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aussie_broadband",

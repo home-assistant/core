@@ -4,6 +4,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.marketplace.base import Repositories
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
@@ -21,12 +26,6 @@ from . import (
 )
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    load_json_object_fixture,
-)
 
 INTEGRATION_FEED = "https://data-v2.hacs.xyz/integration/data.json"
 NEW_ID = "2296269"
