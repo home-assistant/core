@@ -362,7 +362,7 @@ async def test_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
 
     with _patch_success():
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], FIXTURE_AUTH_INPUT
+            result["flow_id"], {CONF_TOKEN: "another-token"}
         )
 
     assert result["type"] is FlowResultType.ABORT
