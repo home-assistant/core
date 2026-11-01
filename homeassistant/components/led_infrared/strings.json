@@ -19,6 +19,21 @@
         },
         "title": "Reconfigure LED Infrared device"
       },
+      "test_device": {
+        "description": "Home Assistant sent the on and off commands using code set {variant} of {variant_count}. Did the light turn on and then off again? If it only turned on or only turned off, this is not the right code set.",
+        "menu_options": {
+          "finish": "Yes, it turned on and off",
+          "next_variant": "No, try the next code set"
+        },
+        "title": "Test the light"
+      },
+      "test_failed": {
+        "description": "Could not send the test command for code set {variant} of {variant_count}. Check that your infrared emitter is online, then press Retry.",
+        "menu_options": {
+          "test_device": "Retry"
+        },
+        "title": "Test failed"
+      },
       "user": {
         "data": {
           "device_type": "[%key:common::generic::device_type%]",

@@ -8,15 +8,16 @@ import pytest
 from pytest_homeassistant.common import MockUser, mock_component, mock_restore_cache
 from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.components.input_button import DOMAIN, SERVICE_PRESS
+from homeassistant.components.input_button import (
+    DOMAIN,
+    InputButtonEntityStateAttribute,
+    InputButtonService,
+)
 from homeassistant.const import (
-    ATTR_EDITABLE,
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_NAME,
-    SERVICE_RELOAD,
+    CONF_NAME,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Context,
@@ -91,12 +92,12 @@ async def test_config_options(hass: HomeAssistant) -> None:
     assert state_2 is not None
 
     assert state_1.state == STATE_UNKNOWN
-    assert ATTR_ICON not in state_1.attributes
-    assert ATTR_FRIENDLY_NAME not in state_1.attributes
+    assert EntityStateAttribute.ICON not in state_1.attributes
+    assert EntityStateAttribute.FRIENDLY_NAME not in state_1.attributes
 
     assert state_2.state == STATE_UNKNOWN
-    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
-    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
+    assert state_2.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(EntityStateAttribute.ICON) == "mdi:work"
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -131,7 +132,7 @@ async def test_input_button_context(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRESS,
+        InputButtonService.PRESS,
         {ATTR_ENTITY_ID: state.entity_id},
         True,
         Context(user_id=hass_admin_user.id),
@@ -193,7 +194,7 @@ async def test_reload(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputButtonService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -231,7 +232,7 @@ async def test_reload_not_changing_state(hass: HomeAssistant, storage_setup) -> 
     # Pressing button changes state
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRESS,
+        InputButtonService.PRESS,
         {ATTR_ENTITY_ID: state.entity_id},
         True,
     )
@@ -244,7 +245,7 @@ async def test_reload_not_changing_state(hass: HomeAssistant, storage_setup) -> 
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputButtonService.RELOAD,
             blocking=True,
         )
 
@@ -260,8 +261,8 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(InputButtonEntityStateAttribute.EDITABLE)
 
 
 async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
@@ -270,12 +271,12 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(InputButtonEntityStateAttribute.EDITABLE)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state.state == STATE_UNKNOWN
-    assert not state.attributes.get(ATTR_EDITABLE)
+    assert not state.attributes.get(InputButtonEntityStateAttribute.EDITABLE)
 
 
 async def test_ws_list(
@@ -297,7 +298,7 @@ async def test_ws_list(
     assert len(result) == 1
     assert storage_ent in result
     assert yaml_ent not in result
-    assert result[storage_ent][ATTR_NAME] == "from storage"
+    assert result[storage_ent][CONF_NAME] == "from storage"
 
 
 async def test_ws_create_update(
@@ -318,7 +319,7 @@ async def test_ws_create_update(
     state = hass.states.get(f"{DOMAIN}.new")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "new"
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "new"
 
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "new") is not None
 
@@ -332,7 +333,7 @@ async def test_ws_create_update(
     state = hass.states.get(f"{DOMAIN}.new")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "newer"
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "newer"
 
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "new") is not None
 
@@ -376,7 +377,7 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputButtonService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )

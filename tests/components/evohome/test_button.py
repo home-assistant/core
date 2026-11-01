@@ -6,7 +6,7 @@ All evohome systems have a controller and at least one zone.
 from collections.abc import Callable
 from unittest.mock import patch
 
-from evohomeasync2 import ControlSystem, HotWater, Zone, exceptions as evo_exc
+from evohomeasync2 import exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,42 +14,48 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .const import TEST_INSTALLS
 
 
 @pytest.fixture
-def system_button_id(
-    tcs: ControlSystem, entity_id: Callable[[Platform, str], str]
-) -> str:
+def reset_button_id(
+    entity_registry: er.EntityRegistry,
+    entity_id: Callable[[Platform, str], str],
+) -> Callable[[str], str]:
+    """Return a helper to lookup the entity_id of an entity's reset button."""
+
+    def get_reset_button_id(parent_id: str) -> str:
+        """Return the entity_id of the reset button of the parent entity."""
+
+        parent = entity_registry.async_get(parent_id)
+        assert parent is not None, f"Entity not found: {parent_id}"
+
+        return entity_id(Platform.BUTTON, f"{parent.unique_id}_reset")
+
+    return get_reset_button_id
+
+
+@pytest.fixture
+def system_button_id(ctl_id: str, reset_button_id: Callable[[str], str]) -> str:
     """Return the entity_id of the system reset button."""
 
-    return entity_id(Platform.BUTTON, f"{tcs.id}_reset")
+    return reset_button_id(ctl_id)
 
 
 @pytest.fixture
-def dhw_button_id(tcs: ControlSystem, entity_id: Callable[[Platform, str], str]) -> str:
+def dhw_button_id(dhw_id: str, reset_button_id: Callable[[str], str]) -> str:
     """Return the entity_id of the DHW reset button."""
 
-    dhw: HotWater | None = tcs.hotwater
-
-    assert dhw is not None, "Fixture has no DHW zone"
-
-    return entity_id(Platform.BUTTON, f"{dhw.id}_reset")
+    return reset_button_id(dhw_id)
 
 
 @pytest.fixture
-def zone_button_id(
-    tcs: ControlSystem, entity_id: Callable[[Platform, str], str]
-) -> str:
+def zone_button_id(zone_id: str, reset_button_id: Callable[[str], str]) -> str:
     """Return the entity_id of the first zone's reset button."""
 
-    zone: Zone = tcs.zones[0]
-
-    return entity_id(
-        Platform.BUTTON,
-        f"{zone.id}z_reset" if zone.id == tcs.id else f"{zone.id}_reset",
-    )
+    return reset_button_id(zone_id)
 
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])

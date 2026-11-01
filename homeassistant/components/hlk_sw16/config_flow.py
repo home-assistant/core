@@ -87,10 +87,11 @@ class SW16FlowHandler(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await validate_input(self.hass, user_input)
-                address = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-                return self.async_create_entry(title=address, data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            else:
+                address = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+                return self.async_create_entry(title=address, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

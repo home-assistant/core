@@ -13,7 +13,11 @@ from pylamarzocco import (
     LaMarzoccoMachine,
 )
 from pylamarzocco.const import FirmwareType
-from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.exceptions import (
+    AuthFail,
+    PolicyAcceptanceRequired,
+    RequestNotSuccessful,
+)
 from pylamarzocco.util import InstallationKey, generate_installation_key
 
 from homeassistant.components.bluetooth import (
@@ -148,6 +152,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         except AuthFail as ex:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from ex
+        except PolicyAcceptanceRequired as ex:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="policy_acceptance_required",
             ) from ex
         except (RequestNotSuccessful, TimeoutError) as ex:
             _LOGGER.debug(ex, exc_info=True)

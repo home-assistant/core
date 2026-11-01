@@ -28,6 +28,7 @@ from .coordinator import (
     SatelIntegraData,
     SatelIntegraOutputsCoordinator,
     SatelIntegraPartitionsCoordinator,
+    SatelIntegraSystemStatusCoordinator,
     SatelIntegraTemperaturesCoordinator,
     SatelIntegraZonesCoordinator,
 )
@@ -52,12 +53,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> Non
     coordinator_zones = SatelIntegraZonesCoordinator(hass, entry, client)
     coordinator_outputs = SatelIntegraOutputsCoordinator(hass, entry, client)
     coordinator_partitions = SatelIntegraPartitionsCoordinator(hass, entry, client)
+    coordinator_system_status = SatelIntegraSystemStatusCoordinator(hass, entry, client)
     coordinator_temperatures = SatelIntegraTemperaturesCoordinator(hass, entry, client)
 
     for coordinator in (
         coordinator_zones,
         coordinator_outputs,
         coordinator_partitions,
+        coordinator_system_status,
         coordinator_temperatures,
     ):
         coordinator.setup()
@@ -77,6 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> Non
         coordinator_zones=coordinator_zones,
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
+        coordinator_system_status=coordinator_system_status,
         coordinator_temperatures=coordinator_temperatures,
     )
 

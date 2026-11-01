@@ -81,6 +81,33 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER, errors=errors
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Point an existing entry at the address the device moved to."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors, serial = await self._async_validate(user_input)
+            if not errors:
+                if TYPE_CHECKING:
+                    assert serial is not None
+                await self.async_set_unique_id(serial)
+                # Another serial is a different power station, not a moved one.
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
+        )
+
     async def _async_validate(
         self, data: dict[str, Any]
     ) -> tuple[dict[str, str], str | None]:

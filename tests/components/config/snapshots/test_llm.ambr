@@ -48,5 +48,28 @@
       ]),
       'type': 'object',
     }),
+    'config__search_integrations': dict({
+      'additionalProperties': False,
+      'properties': dict({
+        'query': dict({
+          'description': 'Search text to match against integration name, domain, or brand (case-insensitive).',
+          'format': 'strip',
+          'type': 'string',
+        }),
+        'type': dict({
+          'description': "Filter results by type: 'integration' or 'helper'.",
+          'enum': list([
+            'integration',
+            'helper',
+          ]),
+          'format': 'lower',
+          'type': 'string',
+        }),
+      }),
+      'required': list([
+        'query',
+      ]),
+      'type': 'object',
+    }),
   })
 # ---
