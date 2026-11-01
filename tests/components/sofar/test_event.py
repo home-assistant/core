@@ -20,9 +20,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.components.sofar.const import (
     DOMAIN,
-    HAS_FAULT_LOG,
+    FAULT_LOG,
     LAST_HANDLED_FAULT,
     SCAN_INTERVAL,
+    SERVED_COMPONENTS,
 )
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
@@ -257,7 +258,7 @@ async def test_entries_found_by_first_good_read_do_not_fire(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
-        data={**MOCK_ENTRY_DATA, HAS_FAULT_LOG: True},
+        data={**MOCK_ENTRY_DATA, SERVED_COMPONENTS: [FAULT_LOG]},
         title=MOCK_MODEL,
     )
     entry.add_to_hass(hass)
