@@ -1,0 +1,70 @@
+# serializer version: 1
+# name: test_migrate_entry_adds_the_connection_type[legacy_tcp]
+  dict({
+    'host': '192.168.1.100',
+    'last_handled_fault': None,
+    'port': 502,
+    'served_components': list([
+      'active_power_control',
+      'energy',
+      'fault_log',
+      'feed_in',
+      'grid',
+      'meter_energy',
+      'pv_1_2',
+      'remote',
+      'rtc_sync',
+      'state',
+    ]),
+    'type': 'tcp',
+    'unit_id': 1,
+  })
+# ---
+# name: test_migrate_entry_adds_the_connection_type[reconfigured_while_disabled]
+  dict({
+    'baudrate': 9600,
+    'device': '/dev/ttyUSB0',
+    'last_handled_fault': None,
+    'served_components': list([
+      'active_power_control',
+      'energy',
+      'fault_log',
+      'feed_in',
+      'grid',
+      'meter_energy',
+      'pv_1_2',
+      'remote',
+      'rtc_sync',
+      'state',
+    ]),
+    'type': 'serial',
+    'unit_id': 1,
+  })
+# ---
+# name: test_setup_while_asleep_fills_in_without_a_reload
+  list([
+    'active_power_control',
+    'energy',
+    'fault_log',
+    'feed_in',
+    'grid',
+    'meter_energy',
+    'pv_1_2',
+    'remote',
+    'rtc_sync',
+    'state',
+  ])
+# ---
+# name: test_setup_while_asleep_reloads_once_for_what_the_inverter_serves
+  list([
+    'active_power_control',
+    'energy',
+    'fault_log',
+    'feed_in',
+    'grid',
+    'pv_1_2',
+    'remote',
+    'rtc_sync',
+    'state',
+  ])
+# ---

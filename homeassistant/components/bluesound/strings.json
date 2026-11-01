@@ -34,5 +34,16 @@
         "name": "Set sleep timer"
       }
     }
+  },
+  "exceptions": {
+    "leader_not_loaded": {
+      "message": "The group leader {leader_id} is not set up in Home Assistant"
+    },
+    "player_unreachable": {
+      "message": "Could not reach the Bluesound player: {error}"
+    },
+    "unexpected_response": {
+      "message": "The Bluesound player returned an unexpected response: {error}"
+    }
   }
 }

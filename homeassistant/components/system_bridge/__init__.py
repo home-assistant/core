@@ -4,12 +4,14 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
+from packaging.version import parse as parse_version
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
     DataMissingException,
 )
+from systembridgeconnector.models.modules import Module
 from systembridgeconnector.version import Version
 
 from homeassistant.const import (
@@ -32,7 +34,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_WAIT_TIMEOUT, DOMAIN, MODULES
+from .const import AUDIO_MIN_VERSION, DATA_WAIT_TIMEOUT, DOMAIN, MODULES
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .services import async_setup_services
 
@@ -42,9 +44,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -133,6 +137,15 @@ async def async_setup_entry(
     try:
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             await coordinator.async_get_data(MODULES)
+            if (
+                (system := coordinator.data.system) is not None
+                and system.version is not None
+                and parse_version(system.version).release >= AUDIO_MIN_VERSION
+            ):
+                try:
+                    await coordinator.async_get_data([Module.AUDIO])
+                except DataMissingException:
+                    _LOGGER.debug("No audio data yet, it will come from the listener")
     except AuthenticationException as exception:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
