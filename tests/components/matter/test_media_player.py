@@ -354,6 +354,33 @@ async def test_position(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_basic_video_player"])
+@pytest.mark.parametrize(
+    ("speed", "has_position"),
+    [
+        pytest.param(1.0, True, id="normal_speed"),
+        pytest.param(0.0, True, id="not_moving"),
+        pytest.param(2.0, False, id="fast_forward"),
+        pytest.param(-2.0, False, id="rewind"),
+    ],
+)
+async def test_position_at_playback_speed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    speed: float,
+    has_position: bool,
+) -> None:
+    """Test the position is hidden while the media moves at another speed."""
+    set_node_attribute(matter_node, 1, 1286, 4, speed)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert (ATTR_MEDIA_POSITION in state.attributes) is has_position
+    assert (ATTR_MEDIA_POSITION_UPDATED_AT in state.attributes) is has_position
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_basic_video_player"])
 async def test_sources(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

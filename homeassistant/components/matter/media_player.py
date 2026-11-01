@@ -251,10 +251,16 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
                 clusters.MediaPlayback.Attributes.SampledPosition
             )
         )
+        speed = self.get_matter_attribute_value(
+            clusters.MediaPlayback.Attributes.PlaybackSpeed
+        )
         if (
             sampled is None
             or sampled.updatedAt == 0
             or sampled.position in (None, NullValue)
+            # Home Assistant moves the position on at normal speed while playing,
+            # which would be wrong during fast forward and rewind
+            or speed not in (None, 0, 1)
         ):
             self._attr_media_position = None
             self._attr_media_position_updated_at = None
@@ -296,6 +302,7 @@ DISCOVERY_SCHEMAS = [
             clusters.MediaPlayback.Attributes.AcceptedCommandList,
             clusters.MediaPlayback.Attributes.Duration,
             clusters.MediaPlayback.Attributes.SampledPosition,
+            clusters.MediaPlayback.Attributes.PlaybackSpeed,
             clusters.MediaInput.Attributes.InputList,
             clusters.MediaInput.Attributes.CurrentInput,
         ),
