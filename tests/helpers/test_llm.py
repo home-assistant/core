@@ -1363,6 +1363,13 @@ async def test_selector_serializer(
         "minItems": 3,
         "format": "RGB",
     }
+    assert selector_serializer(selector.ColorRGBWSelector()) == {
+        "type": "array",
+        "items": {"type": "number"},
+        "maxItems": 4,
+        "minItems": 4,
+        "format": "RGBW",
+    }
     assert selector_serializer(selector.ColorTempSelector()) == {"type": "number"}
     assert selector_serializer(selector.ColorTempSelector({"min": 0, "max": 1000})) == {
         "type": "number",
