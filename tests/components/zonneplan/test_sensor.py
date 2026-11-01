@@ -97,6 +97,13 @@ async def test_sensor(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "time_zone",
+    [
+        pytest.param("Europe/Amsterdam", id="whole_hour_offset"),
+        pytest.param("Asia/Kolkata", id="half_hour_offset"),
+    ],
+)
 async def test_price_sensors_update_on_the_quarter(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -106,8 +113,10 @@ async def test_price_sensors_update_on_the_quarter(
     after: str,
     expected_before: dict[str, str],
     expected_after: dict[str, str],
+    time_zone: str,
 ) -> None:
     """Test the price sensors move to the new period's price without an API call."""
+    await hass.config.async_set_time_zone(time_zone)
     freezer.move_to(before)
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
