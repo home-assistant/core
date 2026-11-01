@@ -1,6 +1,7 @@
 """Tests for the Lutron Caseta integration."""
 
 import ssl
+from typing import Any
 from unittest.mock import patch
 
 from pylutron_caseta.smartbridge import Smartbridge
@@ -16,7 +17,11 @@ from homeassistant.components.lutron_caseta.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    issue_registry as ir,
+    translation,
+)
 from homeassistant.setup import async_setup_component
 
 from . import MockBridge, async_setup_integration, make_mock_entry
@@ -205,3 +210,33 @@ async def test_yaml_import_partial_failure(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
     assert len(issue_registry.issues) == 1
+
+
+async def test_yaml_import_finishes_before_setup_returns(hass: HomeAssistant) -> None:
+    """Test all YAML bridges are imported before the integration setup returns."""
+    await translation.async_load_integrations(hass, {DOMAIN})
+    serials = {"2.2.2.2": 2222, "3.3.3.3": 3333}
+    yaml_bridges = [
+        {CONF_HOST: host, CONF_KEYFILE: "", CONF_CERTFILE: "", CONF_CA_CERTS: ""}
+        for host in serials
+    ]
+
+    def create_bridge(hostname: str, **kwargs: Any) -> MockBridge:
+        bridge = MockBridge(can_connect=True)
+        bridge.devices["1"]["serial"] = serials[hostname]
+        return bridge
+
+    with (
+        patch.object(
+            Smartbridge,
+            "create_tls",
+            side_effect=create_bridge,
+        ),
+        patch(
+            "homeassistant.components.lutron_caseta.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: yaml_bridges})
+
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 2
