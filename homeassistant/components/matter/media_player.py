@@ -293,7 +293,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.MEDIA_PLAYER,
         entity_description=MatterMediaPlayerEntityDescription(
-            key="MatterBasicVideoPlayer",
+            key="MatterVideoPlayer",
             name=None,
         ),
         entity_class=MatterMediaPlayer,
@@ -310,6 +310,6 @@ DISCOVERY_SCHEMAS = [
             clusters.MediaInput.Attributes.InputList,
             clusters.MediaInput.Attributes.CurrentInput,
         ),
-        device_type=(device_types.BasicVideoPlayer,),
+        device_type=(device_types.BasicVideoPlayer, device_types.CastingVideoPlayer),
     ),
 ]

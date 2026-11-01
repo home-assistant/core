@@ -104,26 +104,43 @@ def test_async_discover_entities_filters_by_cluster_revision(
 
 
 @pytest.mark.parametrize(
-    ("removed_clusters", "expected"),
+    ("device_type", "removed_clusters", "expected"),
     [
         pytest.param(
+            0x0028,
             (),
-            {(Platform.MEDIA_PLAYER, "MatterBasicVideoPlayer")},
-            id="media_player",
+            {(Platform.MEDIA_PLAYER, "MatterVideoPlayer")},
+            id="basic_video_player",
         ),
         pytest.param(
+            0x0028,
             (clusters.MediaPlayback.id,),
             {(Platform.SWITCH, "MatterPowerToggle")},
-            id="no_media_playback",
+            id="basic_video_player_without_media_playback",
+        ),
+        pytest.param(
+            0x0023,
+            (),
+            {(Platform.MEDIA_PLAYER, "MatterVideoPlayer")},
+            id="casting_video_player",
+        ),
+        pytest.param(
+            0x0023,
+            (clusters.MediaPlayback.id,),
+            {(Platform.SWITCH, "MatterPowerToggle")},
+            id="casting_video_player_without_media_playback",
         ),
     ],
 )
 def test_async_discover_entities_video_player_power(
+    device_type: int,
     removed_clusters: tuple[int, ...],
     expected: set[tuple[Platform, str]],
 ) -> None:
     """Test video players only get a Power switch when there is no media player."""
-    node = create_node_from_fixture("mock_basic_video_player")
+    node = create_node_from_fixture(
+        "mock_basic_video_player", {"1/29/0": [{"0": device_type, "1": 2}]}
+    )
     for path in [
         path
         for path in node.node_data.attributes
