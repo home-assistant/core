@@ -1,7 +1,10 @@
 """Tests for the Daikin config flow."""
 
+import asyncio
 from collections.abc import Generator
 from ipaddress import ip_address
+import threading
+import time
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientError, web_exceptions
@@ -18,6 +21,19 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 MAC = "AABBCCDDEEFF"
 HOST = "127.0.0.1"
+
+
+def _zeroconf_info(host: str) -> ZeroconfServiceInfo:
+    """Return zeroconf discovery info for a host."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        hostname="mock_hostname",
+        name="mock_name",
+        port=None,
+        properties={},
+        type="mock_type",
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -217,3 +233,68 @@ async def test_discovery_zeroconf(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_discovery_zeroconf_runs_in_executor(hass: HomeAssistant) -> None:
+    """Test the blocking UDP discovery runs off the event loop thread."""
+    threads: list[int] = []
+
+    def mock_discovery() -> MagicMock:
+        threads.append(threading.get_ident())
+        discovery = MagicMock()
+
+        def mock_poll(ip: str) -> list[dict[str, str]]:
+            threads.append(threading.get_ident())
+            return [{"mac": MAC, "id": "test"}]
+
+        discovery.poll.side_effect = mock_poll
+        return discovery
+
+    with patch(
+        "homeassistant.components.daikin.config_flow.Discovery",
+        side_effect=mock_discovery,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info(HOST)
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert len(threads) == 2
+    assert threading.get_ident() not in threads
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_discovery_zeroconf_polls_serialized(hass: HomeAssistant) -> None:
+    """Test concurrent zeroconf flows do not poll at the same time."""
+    lock = threading.Lock()
+    active = 0
+    max_active = 0
+
+    def mock_poll(ip: str) -> list[dict[str, str]]:
+        nonlocal active, max_active
+        with lock:
+            active += 1
+            max_active = max(max_active, active)
+        # Keep the poll busy long enough for an unserialized one to overlap
+        time.sleep(0.1)
+        with lock:
+            active -= 1
+        return [{"mac": ip, "id": "test"}]
+
+    with patch("homeassistant.components.daikin.config_flow.Discovery") as discovery:
+        discovery.return_value.poll.side_effect = mock_poll
+        results = await asyncio.gather(
+            *(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_ZEROCONF},
+                    data=_zeroconf_info(host),
+                )
+                for host in ("127.0.0.1", "127.0.0.2")
+            )
+        )
+
+    assert [result["type"] for result in results] == [FlowResultType.FORM] * 2
+    assert discovery.return_value.poll.call_count == 2
+    assert max_active == 1
