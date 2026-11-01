@@ -17,6 +17,7 @@ from systembridgeconnector.exceptions import (
 )
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgeconnector.models.modules import GetData, Module, ModulesData
+from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN, GET_DATA_WAIT_TIMEOUT
@@ -512,6 +513,77 @@ async def test_reconnect_backoff_and_logging(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert register.await_count == calls + 7
+
+
+@pytest.mark.parametrize(
+    "power_state",
+    [
+        pytest.param(PowerState.SLEEPING, id="sleeping"),
+        pytest.param(PowerState.SHUTTING_DOWN, id="shutting_down"),
+    ],
+)
+@pytest.mark.usefixtures("mock_version")
+async def test_power_state_marks_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    power_state: PowerState,
+) -> None:
+    """Test the host going to sleep or shutting down is unavailable at once."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    power_state_callback = mock_websocket_client.listen.call_args.kwargs[
+        "power_state_callback"
+    ]
+    await power_state_callback(PowerStateEvent(state=power_state))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    mock_websocket_client.close.assert_awaited_once()
+    assert f"TestSystem is unavailable: {power_state}" in caplog.text
+
+    # Reconnects fail quietly while the host is away
+    mock_websocket_client.connect.side_effect = ConnectionErrorException
+    mock_websocket_client.register_data_listener.side_effect = ConnectionErrorException
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert caplog.text.count("TestSystem is unavailable") == 1
+
+    mock_websocket_client.connect.side_effect = None
+    mock_websocket_client.register_data_listener.side_effect = None
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert caplog.text.count("TestSystem is available again") == 1
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_power_state_resumed_ignored(
+    hass: HomeAssistant,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test the host waking while connected changes nothing."""
+    power_state_callback = mock_websocket_client.listen.call_args.kwargs[
+        "power_state_callback"
+    ]
+    await power_state_callback(PowerStateEvent(state=PowerState.RESUMED))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    mock_websocket_client.close.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("init_integration")

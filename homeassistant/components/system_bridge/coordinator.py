@@ -17,6 +17,7 @@ from systembridgeconnector.models.modules import (
     ModulesData,
     RegisterDataListener,
 )
+from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 from systembridgeconnector.websocket_client import WebSocketClient
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -164,10 +165,28 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         setattr(self.data, module_name, module)
         self.async_set_updated_data(self.data)
 
+    async def async_handle_power_state(self, event: PowerStateEvent) -> None:
+        """Go unavailable as soon as the host says it's sleeping or shutting down."""
+        if event.state is PowerState.RESUMED:
+            return
+        self.logger.info("%s is unavailable: %s", self.title, event.state)
+        self._unavailable_logged = True
+        await self.clean_disconnect()
+        # A sleeping host can leave the socket open, which would stop reconnects.
+        # Close it in its own task, as clean_disconnect cancels this listener
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.websocket_client.close(),
+            "System Bridge WebSocket close",
+        )
+
     async def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
         try:
-            await self.websocket_client.listen(callback=self.async_handle_module)
+            await self.websocket_client.listen(
+                callback=self.async_handle_module,
+                power_state_callback=self.async_handle_power_state,
+            )
         except AuthenticationException as exception:
             self.logger.error(
                 "Authentication failed while listening for %s: %s",
