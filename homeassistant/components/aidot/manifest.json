@@ -1,6 +1,7 @@
 {
   "domain": "aidot",
   "name": "AiDot",
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@s1eedz", "@HongBryan"],
   "config_flow": true,
   "dhcp": [

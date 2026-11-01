@@ -1,6 +1,10 @@
 {
   "domain": "compit",
   "name": "Compit",
+  "categories": [
+    "climate.thermostats_heating",
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": ["@Przemko92"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/compit",

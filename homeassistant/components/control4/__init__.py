@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
     Platform,
@@ -24,10 +23,15 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .const import (
     API_RETRY_TIMES,
+    CLIMATE_VARIABLES,
     CONF_CONTROLLER_UNIQUE_ID,
-    DEFAULT_SCAN_INTERVAL,
+    CONTROL4_DIMMER_VARS,
+    CONTROL4_NON_DIMMER_VAR,
+    COVER_VARIABLES,
     DOMAIN,
+    ROOM_VARIABLES,
 )
+from .coordinator import Control4DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +48,12 @@ class Control4RuntimeData:
     director_all_items: list[dict[str, Any]]
     director_model: str
     director_sw_version: str
-    scan_interval: int
     ui_configuration: dict[str, Any] | None
+    climate_coordinator: Control4DataUpdateCoordinator
+    cover_coordinator: Control4DataUpdateCoordinator
+    dimmer_coordinator: Control4DataUpdateCoordinator
+    non_dimmer_coordinator: Control4DataUpdateCoordinator
+    room_coordinator: Control4DataUpdateCoordinator
 
 
 type Control4ConfigEntry = ConfigEntry[Control4RuntimeData]
@@ -72,7 +80,7 @@ async def call_c4_api_retry(func, *func_args):
     ) from exc
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
     """Set up Control4 from a config entry."""
     account_session = aiohttp_client.async_get_clientsession(hass)
 
@@ -139,8 +147,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
                 f" Control4 controller at {config[CONF_HOST]}"
             ) from err
 
-    # Load options from config entry
-    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    climate_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "climate", CLIMATE_VARIABLES
+    )
+    cover_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "cover", COVER_VARIABLES
+    )
+    dimmer_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "dimmer light", {*CONTROL4_DIMMER_VARS}
+    )
+    non_dimmer_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "non-dimmer light", {CONTROL4_NON_DIMMER_VAR}
+    )
+    room_coordinator = Control4DataUpdateCoordinator(
+        hass, entry, "room", ROOM_VARIABLES
+    )
 
     entry.runtime_data = Control4RuntimeData(
         account=account,
@@ -149,18 +170,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         director_all_items=director_all_items,
         director_model=director_model,
         director_sw_version=director_sw_version,
-        scan_interval=scan_interval,
         ui_configuration=ui_configuration,
+        climate_coordinator=climate_coordinator,
+        cover_coordinator=cover_coordinator,
+        dimmer_coordinator=dimmer_coordinator,
+        non_dimmer_coordinator=non_dimmer_coordinator,
+        room_coordinator=room_coordinator,
     )
+
+    for coordinator in (
+        climate_coordinator,
+        cover_coordinator,
+        dimmer_coordinator,
+        non_dimmer_coordinator,
+        room_coordinator,
+    ):
+        await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def get_items_of_category(

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyrisco import OperationError, UnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.risco.const import (
     CONF_COMMUNICATION_DELAY,
@@ -16,8 +17,6 @@ from homeassistant.components.risco.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

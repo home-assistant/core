@@ -5,11 +5,10 @@ from unittest.mock import MagicMock, patch
 
 from open_meteo import Forecast
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.const import CONF_ZONE
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -19,7 +18,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="Home",
         domain=DOMAIN,
         data={CONF_ZONE: "zone.home"},
-        unique_id="zone.home",
+        minor_version=2,
     )
 
 
@@ -27,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.open_meteo.async_setup_entry", return_value=True
+        "homeassistant.components.open_meteo.async_setup_entry", return_value=None
     ):
         yield
 

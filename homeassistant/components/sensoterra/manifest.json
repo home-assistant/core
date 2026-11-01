@@ -1,6 +1,7 @@
 {
   "domain": "sensoterra",
   "name": "Sensoterra",
+  "categories": ["garden_plants"],
   "codeowners": ["@SanderBakkumCuriousInc", "@curious-florian", "@markruys"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sensoterra",

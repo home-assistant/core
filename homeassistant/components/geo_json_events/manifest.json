@@ -1,6 +1,10 @@
 {
   "domain": "geo_json_events",
   "name": "GeoJSON",
+  "categories": [
+    "diy_makers.web_data_connectors",
+    "weather_alerts.public_warnings"
+  ],
   "codeowners": ["@exxamalte"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geo_json_events",

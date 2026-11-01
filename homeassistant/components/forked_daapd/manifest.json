@@ -2,6 +2,7 @@
   "domain": "forked_daapd",
   "name": "OwnTone",
   "after_dependencies": ["spotify"],
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@uvjustin"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/forked_daapd",

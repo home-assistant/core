@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohasupervisor.models import AddonsStats, AddonState, InstalledAddonComplete
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.hassio.handler import HassIO
 from homeassistant.components.http.config import _DEFAULT_CONFIG as HTTP_DEFAULT_CONFIG
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import SUPERVISOR_TOKEN
-
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

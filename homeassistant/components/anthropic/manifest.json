@@ -2,6 +2,7 @@
   "domain": "anthropic",
   "name": "Anthropic",
   "after_dependencies": ["assist_pipeline", "intent"],
+  "categories": ["ai_voice.ai_models"],
   "codeowners": ["@Shulyaka"],
   "config_flow": true,
   "dependencies": ["conversation"],
@@ -9,5 +10,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["anthropic==1.12.0"]
+  "requirements": ["anthropic==2.3.0"]
 }

@@ -3,12 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.scene.trigger import TRIGGERS
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     arm_trigger,
@@ -18,6 +13,10 @@ from tests.components.common import (
     set_or_remove_state,
     target_entities,
 )
+
+from homeassistant.components.scene.trigger import TRIGGERS
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

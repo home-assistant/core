@@ -8,6 +8,7 @@
       "service_uuid": "0000cee0-0000-1000-8000-00805f9b34fb"
     }
   ],
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@elupus"],
   "config_flow": true,
   "dependencies": ["bluetooth"],

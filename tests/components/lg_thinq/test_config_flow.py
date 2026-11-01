@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lg_thinq.const import CONF_CONNECT_CLIENT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from actron_neo_api import ActronAirAuthError
 from actron_neo_api.models.auth import ActronAirUserInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.actron_air.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_actron_api")

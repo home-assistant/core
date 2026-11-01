@@ -1,12 +1,16 @@
 """Common fixtures for the NeoPool tests."""
 
 from collections.abc import Generator
+from contextlib import asynccontextmanager
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.neopool.const import (
+    CONF_BAUDRATE,
+    CONF_UNIT_ID,
     CONF_USE_AUX1,
     CONF_USE_AUX2,
     CONF_USE_AUX3,
@@ -14,18 +18,31 @@ from homeassistant.components.neopool.const import (
     CONF_USE_COVER_SENSOR,
     CONF_USE_LIGHT,
     CURRENT_VERSION,
+    DEFAULT_BAUDRATE,
     DEFAULT_PORT,
     DEFAULT_UNIT_ID,
     DOMAIN,
+    TYPE_SERIAL,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-
-from tests.common import MockConfigEntry
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
 
 MOCK_HOST = "192.0.2.1"
 MOCK_PORT = DEFAULT_PORT
 MOCK_NAME = "Pool"
 MOCK_SERIAL = "1234567890"
+
+
+@pytest.fixture(autouse=True)
+async def mock_usb_component(hass: HomeAssistant) -> None:
+    """Mark the usb component as loaded so neopool's dependency is satisfied."""
+    hass.config.components.add("usb")
+
+
+@asynccontextmanager
+async def _temp_unit_cm(hass: HomeAssistant, params: Any, unit_id: Any) -> Any:
+    """Stub async_get_temporary_unit, yielding a throwaway unit."""
+    yield MagicMock()
 
 
 MOCK_POOL_DATA: dict[str, Any] = {
@@ -150,7 +167,7 @@ def _read_all_timers(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.neopool.async_setup_entry", return_value=True
+        "homeassistant.components.neopool.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -169,6 +186,24 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_NAME: MOCK_NAME,
             "unit_id": DEFAULT_UNIT_ID,
             "modbus_framer": "tcp",
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_serial() -> MockConfigEntry:
+    """Return a config entry reached over a direct serial device."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="/dev/ttyUSB0",
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_TYPE: TYPE_SERIAL,
+            CONF_DEVICE: "/dev/ttyUSB0",
+            CONF_BAUDRATE: DEFAULT_BAUDRATE,
+            CONF_NAME: MOCK_NAME,
+            CONF_UNIT_ID: DEFAULT_UNIT_ID,
         },
     )
 
@@ -322,7 +357,15 @@ def mock_neopool_client() -> Generator[MagicMock]:
             autospec=True,
         ) as mock_client_cls,
         patch(
-            "homeassistant.components.neopool.config_flow.async_probe_serial",
+            "homeassistant.components.neopool.async_get_unit",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_get_temporary_unit",
+            side_effect=_temp_unit_cm,
+        ),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_probe_serial_unit",
             new=AsyncMock(return_value=MOCK_SERIAL),
         ),
     ):
@@ -388,8 +431,14 @@ def minimal_pool_data() -> dict[str, Any]:
 @pytest.fixture
 def mock_socket_connection() -> Generator[AsyncMock]:
     """Patch the lib probe in config_flow so we don't hit the network."""
-    with patch(
-        "homeassistant.components.neopool.config_flow.async_probe_serial",
-        new=AsyncMock(return_value=MOCK_SERIAL),
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.neopool.config_flow.async_get_temporary_unit",
+            side_effect=_temp_unit_cm,
+        ),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_probe_serial_unit",
+            new=AsyncMock(return_value=MOCK_SERIAL),
+        ) as mock,
+    ):
         yield mock

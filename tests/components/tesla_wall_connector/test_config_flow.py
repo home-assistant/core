@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 from tesla_wall_connector.exceptions import WallConnectorConnectionError
 
 from homeassistant import config_entries
@@ -24,8 +25,6 @@ from .conftest import (
     get_wifi_status_mock,
 )
 
-from tests.common import MockConfigEntry, get_schema_suggested_value
-
 
 async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -37,7 +36,7 @@ async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tesla_wall_connector.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -82,7 +81,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tesla_wall_connector.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -112,7 +111,7 @@ async def test_form_other_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tesla_wall_connector.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -191,7 +190,7 @@ async def test_form_with_split_phase(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.tesla_wall_connector.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(

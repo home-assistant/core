@@ -1,6 +1,7 @@
 {
   "domain": "trane",
   "name": "Trane Local",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trane",

@@ -1,6 +1,7 @@
 {
   "domain": "cisco_webex_teams",
   "name": "Cisco Webex Teams",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@fbradyirl"],
   "documentation": "https://www.home-assistant.io/integrations/cisco_webex_teams",
   "iot_class": "cloud_push",

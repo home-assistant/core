@@ -5,12 +5,11 @@ from typing import Any
 
 from aionotion.listener.models import ListenerKind
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.notion.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 # The id of the bridge in the bridge fixture; the sensor must reference it to link.
 BRIDGE_ID = 12345

@@ -1,6 +1,7 @@
 {
   "domain": "worxlandroid",
   "name": "Worx Landroid",
+  "categories": ["garden_plants"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/worxlandroid",
   "iot_class": "local_polling",

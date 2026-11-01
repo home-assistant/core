@@ -123,11 +123,17 @@
     "could_not_import_recipe": {
       "message": "Mealie could not import the recipe from the URL."
     },
+    "could_not_parse_ingredient": {
+      "message": "Mealie could not parse the ingredient."
+    },
     "delete_item_error": {
       "message": "An error occurred deleting an item in {shopping_list_name}."
     },
     "end_date_before_start_date": {
       "message": "End date must be after start date."
+    },
+    "ingredient_requires_food_or_note": {
+      "message": "Provide a food ID or a note to add an ingredient."
     },
     "invalid_mealplan_entry_type": {
       "message": "Entry type {mealplan_type} is not valid for this Mealie version."
@@ -203,6 +209,28 @@
     }
   },
   "services": {
+    "add_ingredient": {
+      "description": "Adds an ingredient to a Mealie shopping list using food and unit IDs.",
+      "fields": {
+        "food_id": {
+          "description": "The Mealie food ID to add. Required if no note is provided.",
+          "name": "Food ID"
+        },
+        "note": {
+          "description": "A note for the ingredient. Required if no food ID is provided.",
+          "name": "Note"
+        },
+        "quantity": {
+          "description": "The quantity of the ingredient. Defaults to 0 if omitted.",
+          "name": "Quantity"
+        },
+        "unit_id": {
+          "description": "The Mealie unit ID to use for the quantity.",
+          "name": "Unit ID"
+        }
+      },
+      "name": "Add ingredient"
+    },
     "delete_mealplan": {
       "description": "Deletes a mealplan",
       "fields": {
@@ -288,6 +316,20 @@
         }
       },
       "name": "Import recipe"
+    },
+    "parse_ingredient": {
+      "description": "Parses an ingredient from Mealie using the recognition method set within options, attempting to find matches in your food items and identify quantities and units.",
+      "fields": {
+        "config_entry_id": {
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]",
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]"
+        },
+        "ingredient": {
+          "description": "The ingredient to find matches for in your food items and identify quantities and units.",
+          "name": "Ingredient"
+        }
+      },
+      "name": "Parse ingredient"
     },
     "set_mealplan": {
       "description": "Sets a mealplan for a specific date",

@@ -1,6 +1,7 @@
 {
   "domain": "verisure",
   "name": "Verisure",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": [],
   "config_flow": true,
   "dhcp": [

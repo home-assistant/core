@@ -1,6 +1,7 @@
 {
   "domain": "nextcloud",
   "name": "Nextcloud",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nextcloud",

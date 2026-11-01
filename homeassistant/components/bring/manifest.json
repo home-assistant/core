@@ -1,6 +1,7 @@
 {
   "domain": "bring",
   "name": "Bring!",
+  "categories": ["productivity_information.shopping_groceries"],
   "codeowners": ["@miaucl", "@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bring",

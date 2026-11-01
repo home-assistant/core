@@ -3,6 +3,28 @@
 To update, run python3 -m script.hassfest
 """
 
+SERIAL_PORT_SELECTOR_INTEGRATIONS = [
+    "aerosmart",
+    "denon_rs232",
+    "dsmr",
+    "edl21",
+    "flexit",
+    "kaco_rs485",
+    "landisgyr_heat_meter",
+    "lg_tv_rs232",
+    "marantz_rs232",
+    "monoprice",
+    "neopool",
+    "russound_rio",
+    "samsung_exlink",
+    "sofar",
+    "solaredge_modbus",
+    "tonewinner",
+    "upb",
+    "velbus",
+    "zha",
+]
+
 USB = [
     {
         "description": "*usb 300*",
@@ -193,39 +215,4 @@ USB = [
         "pid": "EA60",
         "vid": "10C4",
     },
-]
-
-USB_DEPENDENTS = [
-    "aurora_abb_powerone",
-    "bluetooth",
-    "crownstone",
-    "default_config",
-    "denon_rs232",
-    "dsmr",
-    "edl21",
-    "enocean",
-    "esphome",
-    "flexit",
-    "homeassistant_connect_zbt2",
-    "homeassistant_hardware",
-    "homeassistant_sky_connect",
-    "homeassistant_yellow",
-    "insteon",
-    "landisgyr_heat_meter",
-    "lg_tv_rs232",
-    "modem_callerid",
-    "monoprice",
-    "rainforest_raven",
-    "rfxtrx",
-    "route_b_smart_meter",
-    "russound_rio",
-    "samsung_exlink",
-    "sofar",
-    "solaredge_modbus",
-    "teleinfo",
-    "tonewinner",
-    "upb",
-    "velbus",
-    "zha",
-    "zwave_js",
 ]

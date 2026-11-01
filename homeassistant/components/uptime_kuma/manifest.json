@@ -1,6 +1,7 @@
 {
   "domain": "uptime_kuma",
   "name": "Uptime Kuma",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/uptime_kuma",

@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import pi_hole
 from homeassistant.components.pi_hole.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -21,8 +23,6 @@ from . import (
     _patch_init_hole,
     _patch_setup_hole,
 )
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager

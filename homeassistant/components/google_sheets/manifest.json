@@ -1,6 +1,7 @@
 {
   "domain": "google_sheets",
   "name": "Google Sheets",
+  "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

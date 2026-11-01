@@ -24,7 +24,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> None:
     """Set up Rehlko from a config entry."""
     websession = async_get_clientsession(hass)
     rehlko = AioKem(session=websession, home_timezone=dt_util.get_default_time_zone())
@@ -90,10 +90,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
     rehlko.set_retry_policy(retry_count=3, retry_delays=[5, 10, 20])
     # Rehlko service can be slow to respond, increase timeout for polls.
     rehlko.set_timeout(100)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> None:
     """Unload a config entry."""
     await entry.runtime_data.rehlko.close()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

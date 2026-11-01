@@ -1,12 +1,11 @@
 """Test Telegram broadcast."""
 
 from httpx2 import Request as HTTPXRequest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.telegram_bot.bot import TelegramBotConfigEntry
 from homeassistant.components.telegram_bot.const import DEFAULT_TIMEOUT_SECONDS
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(

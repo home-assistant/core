@@ -2,13 +2,7 @@
 
 from typing import Any, override
 
-from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_IDENTIFIERS,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_MODEL,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -41,9 +35,9 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
             model_id=config_entry.data.get(CONF_MODEL),
         )
         if self.unique_id:
-            self._attr_device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self.unique_id)}
+            self._attr_device_info.identifiers = {(DOMAIN, self.unique_id)}
         if self._mac:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
+            self._attr_device_info.connections = {
                 (dr.CONNECTION_NETWORK_MAC, self._mac)
             }
         self._turn_on_action = PluggableAction(self.async_write_ha_state)

@@ -14,7 +14,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> None:
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool
         await hub.setup()
     except ClientResponseError as ex:
         if ex.status == HTTPStatus.UNAUTHORIZED:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_token",
             ) from ex
@@ -105,12 +105,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BondConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback

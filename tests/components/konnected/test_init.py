@@ -1,12 +1,12 @@
 """Tests for the Konnected.io component."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.konnected import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_konnected_repair_issue(

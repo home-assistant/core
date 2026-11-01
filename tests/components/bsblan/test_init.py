@@ -8,12 +8,14 @@ from bsblan import (
     BSBLANAuthError,
     BSBLANConnectionError,
     BSBLANError,
+    BSBLANMalformedResponseError,
     BSBLANUnsupportedFeatureError,
     BSBLANVersionError,
     State,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bsblan.const import (
     CONF_HEATING_CIRCUITS,
@@ -34,8 +36,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CLIMATE_ENTITY_ID = "climate.heating_circuit_1"
 
@@ -77,12 +77,38 @@ async def test_setup_minimal_mode_creates_outdated_firmware_issue(
     # but a repair issue recommends upgrading the firmware.
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"outdated_firmware_{mock_config_entry.entry_id}"
-    )
+    issue_id = f"outdated_firmware_{mock_config_entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_key == "outdated_firmware"
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_reload_keeps_ignored_outdated_firmware_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test reloading keeps the outdated firmware issue and its ignore."""
+    mock_bsblan.json_api_version = "1.0"
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"outdated_firmware_{mock_config_entry.entry_id}"
+    issue_registry.async_ignore(DOMAIN, issue_id, True)
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
 
 
 async def test_setup_minimal_mode_restricts_to_single_circuit(
@@ -237,6 +263,12 @@ async def test_config_entry_auth_failed_triggers_reauth(
             TimeoutError("Connection timeout"),
             ConfigEntryState.LOADED,
             True,
+        ),
+        (
+            "sensor",
+            BSBLANMalformedResponseError("Malformed response"),
+            ConfigEntryState.SETUP_RETRY,
+            False,
         ),
     ],
 )
@@ -619,6 +651,32 @@ async def test_coordinator_fast_dhw_fails_on_refresh_preserves_state(
 
     # Last known DHW state should be preserved
     assert coordinator.data.dhw is initial_dhw
+
+
+async def test_coordinator_fast_sensor_fails_on_refresh_preserves_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fast coordinator preserves last sensor data when sensors fail on refresh."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.bsb_lan_outside_temperature"))
+    assert state.state == "6.1"
+
+    mock_bsblan.sensor.side_effect = BSBLANError(
+        "None of the requested parameters are valid for this section"
+    )
+
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.bsb_lan_outside_temperature"))
+    assert state.state == "6.1"
 
 
 async def test_coordinator_fast_state_error_marks_update_failed(

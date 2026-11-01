@@ -17,7 +17,7 @@
           "lock_id": "Select your lock"
         },
         "data_description": {
-          "lock_id": "Unique id of the lock to use."
+          "lock_id": "Unique ID of the lock to use."
         },
         "description": "Multiple locks found. Please select the lock you want to configure."
       },
@@ -35,7 +35,7 @@
           "api_token": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
-          "api_token": "LOQED personal access token."
+          "api_token": "[%key:component::loqed::config::step::reauth_confirm::data_description::api_token%]"
         },
         "description": "Log in at LOQED's [personal access tokens portal]({config_url}) and: \n* Create an API key by clicking 'Create' \n* Copy the created access token."
       }

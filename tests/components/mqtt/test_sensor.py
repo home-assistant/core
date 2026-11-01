@@ -12,30 +12,13 @@ from unittest.mock import MagicMock, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-
-from homeassistant.components import sensor
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    EVENT_STATE_CHANGED,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    UnitOfElectricPotential,
-    UnitOfReactiveEnergy,
-    UnitOfReactivePower,
-    UnitOfTemperature,
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
-
-from .common import (
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -78,14 +61,29 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import (
-    async_capture_events,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
+from homeassistant.components import sensor
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfElectricPotential,
+    UnitOfReactiveEnergy,
+    UnitOfReactivePower,
+    UnitOfTemperature,
 )
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 DEFAULT_CONFIG = {
     DOMAIN: {sensor.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
@@ -1575,6 +1573,44 @@ async def test_entity_device_info_with_identifier(
     await help_test_entity_device_info_with_identifier(
         hass, mqtt_mock_entry, sensor.DOMAIN, DEFAULT_CONFIG
     )
+
+
+async def test_discovery_with_removed_via_hub_option(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test discovery of a sensor with the removed via_hub device option."""
+    await mqtt_mock_entry()
+    data = json.dumps(
+        {
+            "name": "test",
+            "state_topic": "test-topic",
+            "unique_id": "veryunique",
+            "device": {
+                "identifiers": ["helloworld"],
+                "name": "Hello World",
+                "via_hub": "hub-id",
+            },
+        }
+    )
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(sensor.DOMAIN, DOMAIN, "veryunique")
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "helloworld"), entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, "hub-id"), entry_id)
+        is None
+    )
+    assert "The 'via_hub' option has been removed" in caplog.text
 
 
 async def test_entity_device_info_update(

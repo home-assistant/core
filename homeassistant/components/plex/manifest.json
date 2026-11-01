@@ -1,6 +1,7 @@
 {
   "domain": "plex",
   "name": "Plex Media Server",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@jjlawren"],
   "config_flow": true,
   "dependencies": ["http"],

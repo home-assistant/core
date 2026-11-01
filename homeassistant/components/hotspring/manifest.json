@@ -1,6 +1,7 @@
 {
   "domain": "hotspring",
   "name": "Hot Spring",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@Moustachauve"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hotspring",

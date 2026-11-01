@@ -84,6 +84,9 @@
       "scene_change_detection": {
         "name": "Scene change detection"
       },
+      "temperature_alarm": {
+        "name": "Temperature alarm"
+      },
       "unattended_baggage": {
         "name": "Unattended baggage"
       },
@@ -98,6 +101,7 @@
           "event_type": {
             "state": {
               "human": "Human",
+              "others": "Other",
               "pet": "Pet",
               "triggered": "Triggered",
               "vehicle": "Vehicle"
@@ -111,6 +115,7 @@
           "event_type": {
             "state": {
               "human": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::human%]",
+              "others": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::others%]",
               "pet": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::pet%]",
               "triggered": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::triggered%]",
               "vehicle": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::vehicle%]"
@@ -123,6 +128,7 @@
           "event_type": {
             "state": {
               "human": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::human%]",
+              "others": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::others%]",
               "pet": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::pet%]",
               "triggered": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::triggered%]",
               "vehicle": "[%key:component::hikvision::entity::event::field_detection::state_attributes::event_type::state::vehicle%]"

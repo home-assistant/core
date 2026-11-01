@@ -1,6 +1,7 @@
 {
   "domain": "xmpp",
   "name": "Jabber (XMPP)",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@fabaff", "@flowolf"],
   "documentation": "https://www.home-assistant.io/integrations/xmpp",
   "iot_class": "cloud_push",

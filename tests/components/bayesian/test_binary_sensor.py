@@ -5,6 +5,7 @@ from logging import WARNING
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.bayesian import binary_sensor as bayesian
@@ -29,8 +30,6 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, get_fixture_path
 
 
 async def test_load_values_when_added_to_hass(hass: HomeAssistant) -> None:

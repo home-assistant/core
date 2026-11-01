@@ -1,6 +1,7 @@
 {
   "domain": "totalconnect",
   "name": "Total Connect",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@austinmroczek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/totalconnect",

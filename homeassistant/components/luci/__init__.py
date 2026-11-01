@@ -2,7 +2,6 @@
 
 from collections.abc import Collection
 from datetime import timedelta
-from functools import partial
 
 from openwrt_luci_rpc import OpenWrtRpc
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -42,7 +41,7 @@ def _connect(
     return router
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> None:
     """Set up OpenWrt (luci) from a config entry."""
     try:
         router = await hass.async_add_executor_job(
@@ -73,7 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
             return
         seen_macs.update(coordinator.data)
         # Background, so unload cancels an in-flight check instead of awaiting it
-        # and letting it recreate the issue we just deleted.
         entry.async_create_background_task(
             hass,
             _async_check_legacy_known_devices(hass, entry, set(seen_macs)),
@@ -82,13 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
 
     await _async_check_legacy_known_devices(hass, entry, seen_macs)
     entry.async_on_unload(coordinator.async_add_listener(_async_check_new_devices))
-    entry.async_on_unload(
-        partial(ir.async_delete_issue, hass, DOMAIN, _legacy_issue_id(entry))
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 def _legacy_issue_id(entry: LuciConfigEntry) -> str:
@@ -123,6 +116,7 @@ async def _async_check_legacy_known_devices(
         hass,
         DOMAIN,
         _legacy_issue_id(entry),
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key=ISSUE_LEGACY_KNOWN_DEVICES,
@@ -134,6 +128,6 @@ async def _async_check_legacy_known_devices(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

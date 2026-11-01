@@ -33,7 +33,7 @@ SYNC_TIME_INTERVAL = timedelta(hours=1)
 type BalboaConfigEntry = ConfigEntry[SpaClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> None:
     """Set up Balboa Spa from a config entry."""
     host = entry.data[CONF_HOST]
 
@@ -52,12 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> bo
     entry.async_on_unload(entry.add_update_listener(update_listener))
     entry.async_on_unload(spa.disconnect)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BalboaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: BalboaConfigEntry) -> None:

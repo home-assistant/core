@@ -6,19 +6,23 @@ Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
 
+import asyncio
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+import json
 import operator
 import socket
 from types import MappingProxyType
 from typing import Any, override
 
+import aiounifi
 from aiounifi.interfaces.sites import Sites
 import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -55,14 +59,16 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
+    LOGGER,
 )
-from .errors import AuthenticationRequired, CannotConnect
+from .errors import AuthenticationRequired, CannotConnect, MfaRequired
 from .hub import UnifiHub, get_unifi_api
 
 DEFAULT_HOST = "unifi"
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
+SITE_REQUEST_TIMEOUT = 10
 
 
 class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -182,6 +188,15 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                     (unique_id := config_entry.unique_id) is not None
                 ) and unique_id in sites:
                     config_data[CONF_SITE_ID] = sites[unique_id].name
+                    if config_entry.state is ConfigEntryState.LOADED:
+                        # The update listener reloads a loaded entry on data changes
+                        if config_data.items() <= config_entry.data.items():
+                            self.hass.config_entries.async_schedule_reload(
+                                config_entry.entry_id
+                            )
+                        return self.async_update_and_abort(
+                            config_entry, data_updates=config_data
+                        )
                     return self.async_update_reload_and_abort(
                         config_entry, data_updates=config_data
                     )
@@ -231,6 +246,16 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             if entry.data.get(CONF_HOST) in known_hosts:
                 return self.async_abort(reason="already_configured")
 
+        # Entries are keyed by site and a console may announce no address.
+        # Not the device registry: it also holds clients, which a console can be.
+        loaded_entries: list[UnifiConfigEntry] = (
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
+        )
+        if any(
+            mac_address in entry.runtime_data.api.devices for entry in loaded_entries
+        ):
+            return self.async_abort(reason="already_configured")
+
         self.context["title_placeholders"] = {
             CONF_NAME: (
                 discovery_info.get("name")
@@ -267,7 +292,34 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_update_sites(self, data: Mapping[str, Any]) -> Sites:
         """Get updated sites through UniFi API."""
         hub = await get_unifi_api(self.hass, MappingProxyType(data))
-        await hub.sites.update()
+        try:
+            async with asyncio.timeout(SITE_REQUEST_TIMEOUT):
+                await hub.sites.update()
+        except (
+            aiounifi.Forbidden,
+            aiounifi.LoginRequired,
+            aiounifi.NoPermission,
+            aiounifi.Unauthorized,
+        ) as err:
+            LOGGER.warning(
+                "UniFi Network at %s rejected the site request: %s",
+                data[CONF_HOST],
+                type(err).__name__,
+            )
+            raise AuthenticationRequired from err
+        # aiounifi 97 does not wrap JSON decode errors, newer releases do
+        except (TimeoutError, json.JSONDecodeError, aiounifi.AiounifiException) as err:
+            LOGGER.warning(
+                "Error fetching sites from UniFi Network at %s: %r",
+                data[CONF_HOST],
+                err,
+            )
+            raise CannotConnect from err
+        if not hub.sites.values():
+            # aiounifi 97 returns no sites when the console answers with HTML,
+            # as it does while the Network application is missing or starting
+            LOGGER.warning("No sites found on UniFi Network at %s", data[CONF_HOST])
+            raise CannotConnect
         return hub.sites
 
     @callback
@@ -444,6 +496,8 @@ def _catch_unifi_api_flow_errors(errors: dict[str, str]) -> Iterator[None]:
     """Map UniFi API exceptions to config flow form errors."""
     try:
         yield
+    except MfaRequired:
+        errors["base"] = "mfa_required"
     except AuthenticationRequired:
         errors["base"] = "faulty_credentials"
     except CannotConnect:

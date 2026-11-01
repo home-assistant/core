@@ -1,7 +1,8 @@
 {
   "domain": "hunterdouglas_powerview",
   "name": "Hunter Douglas PowerView",
-  "codeowners": ["@bdraco", "@kingy444", "@trullock"],
+  "categories": ["blinds_curtains"],
+  "codeowners": ["@bdraco", "@kingy444"],
   "config_flow": true,
   "dhcp": [
     {

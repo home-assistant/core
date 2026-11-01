@@ -1,6 +1,7 @@
 {
   "domain": "pvoutput",
   "name": "PVOutput",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pvoutput",

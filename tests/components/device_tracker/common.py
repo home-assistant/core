@@ -4,6 +4,8 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 
+from pytest_homeassistant.common import MockPlatform, mock_platform
+
 from homeassistant.components.device_tracker import (
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
@@ -21,8 +23,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import ATTR_GPS_ACCURACY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType, GPSType
-
-from tests.common import MockPlatform, mock_platform
 
 
 @callback

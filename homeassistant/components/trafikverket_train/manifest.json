@@ -1,6 +1,7 @@
 {
   "domain": "trafikverket_train",
   "name": "Trafikverket Train",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_train",

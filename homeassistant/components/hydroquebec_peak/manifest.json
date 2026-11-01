@@ -1,6 +1,7 @@
 {
   "domain": "hydroquebec_peak",
   "name": "Hydro-Québec Peak Events",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@Beat-YT"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hydroquebec_peak",

@@ -1,6 +1,6 @@
 """Support for Ebusd sensors."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, cast, override
 
@@ -19,7 +19,7 @@ TIME_FRAME2_BEGIN = "time_frame2_begin"
 TIME_FRAME2_END = "time_frame2_end"
 TIME_FRAME3_BEGIN = "time_frame3_begin"
 TIME_FRAME3_END = "time_frame3_end"
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=15)
+MIN_TIME_BETWEEN_UPDATES = dt.timedelta(seconds=15)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class EbusdSensor(SensorEntity):
             time_frame = cast(str, native_value).split(";")
             for index, item in enumerate(sorted(schedule.items())):
                 if index < len(time_frame):
-                    parsed = datetime.datetime.strptime(time_frame[index], "%H:%M")
+                    parsed = dt.datetime.strptime(time_frame[index], "%H:%M")
                     parsed = parsed.replace(
                         dt_util.now().year, dt_util.now().month, dt_util.now().day
                     )

@@ -1,6 +1,7 @@
 {
   "domain": "wallbox",
   "name": "Wallbox",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@hesselonline"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wallbox",

@@ -25,6 +25,9 @@ from pyheos import (
 )
 from pyheos.util import mediauri
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.plugins import async_setup_component
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -83,10 +86,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MockHeos
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.conftest import async_setup_component
-from tests.typing import WebSocketGenerator
 
 
 async def test_state_attributes(

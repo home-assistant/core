@@ -4,6 +4,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from aiohasupervisor.models import InterfaceMethod
+from chip.clusters import Objects as clusters
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
@@ -25,8 +26,12 @@ from homeassistant.components.hassio import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.issue_registry import (
@@ -66,15 +71,17 @@ def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN) or not (
-        node := node_from_ha_device_id(hass, device_id)
+    if (
+        not hass.config_entries.async_loaded_entries(DOMAIN)
+        or not (node := node_from_ha_device_id(hass, device_id))
+        or (device_info := node.device_info) is None
     ):
         return None
 
     return MatterDeviceInfo(
-        unique_id=node.device_info.uniqueID or "",
-        vendor_id=hex(node.device_info.vendorID),
-        product_id=hex(node.device_info.productID),
+        unique_id=device_info.uniqueID or "",
+        vendor_id=hex(device_info.vendorID),
+        product_id=hex(device_info.productID),
     )
 
 
@@ -84,7 +91,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        _async_migrate_eve_temperature_offset(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Set up Matter from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await _async_ensure_addon_running(hass, entry)
@@ -229,7 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
             setup_error = listen_err
 
     if setup_error is None:
-        return True
+        return
 
     await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
     try:
@@ -241,6 +255,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         await matter_client.disconnect()
     finally:
         raise ConfigEntryNotReady(setup_error) from setup_error
+
+
+@callback
+def _async_migrate_eve_temperature_offset(
+    hass: HomeAssistant, entry: MatterConfigEntry
+) -> None:
+    """Merge legacy EveTemperatureOffset entities into the generic TemperatureOffset entity.
+
+    The vendor-specific Eve schema was dropped once the cluster_revision split
+    made its bounds identical to the generic schema, so entities discovered
+    under the old key are renamed instead of orphaned.
+    """
+    attr = clusters.Thermostat.Attributes.LocalTemperatureCalibration
+    old_suffix = f"-EveTemperatureOffset-{attr.cluster_id}-{attr.attribute_id}"
+    new_suffix = f"-TemperatureOffset-{attr.cluster_id}-{attr.attribute_id}"
+    entity_registry = er.async_get(hass)
+    for reg_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if not reg_entry.unique_id.endswith(old_suffix):
+            continue
+        new_unique_id = reg_entry.unique_id.removesuffix(old_suffix) + new_suffix
+        # A stale generic entity can exist if the vendor-gated Eve schema was
+        # skipped during an earlier discovery; the Eve entity is the live one.
+        if conflict_entity_id := entity_registry.async_get_entity_id(
+            reg_entry.domain, DOMAIN, new_unique_id
+        ):
+            entity_registry.async_remove(conflict_entity_id)
+        entity_registry.async_update_entity(
+            reg_entry.entity_id, new_unique_id=new_unique_id
+        )
 
 
 def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
@@ -332,13 +375,13 @@ async def _client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, SUPPORTED_PLATFORMS
-    )
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            entry, SUPPORTED_PLATFORMS
+        )
 
-    if unload_ok:
         # Disconnect the BLE proxy first so it stops accepting new GATT/BTP
         # traffic before the matter client (which originates that traffic) is
         # torn down.
@@ -349,17 +392,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> b
                 LOGGER.exception("Failed to disconnect BLE proxy during unload")
         entry.runtime_data.listen_task.cancel()
         await entry.runtime_data.adapter.matter_client.disconnect()
-
-    if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
-        addon_manager: AddonManager = get_addon_manager(hass)
-        LOGGER.debug("Stopping Matter Server add-on")
-        try:
-            await addon_manager.async_stop_addon()
-        except AddonError as err:
-            LOGGER.error("Failed to stop the Matter Server add-on: %s", err)
-            return False
-
-    return unload_ok
+    finally:
+        if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
+            addon_manager: AddonManager = get_addon_manager(hass)
+            LOGGER.debug("Stopping Matter Server add-on")
+            try:
+                await addon_manager.async_stop_addon()
+            except AddonError as err:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="addon_stop_failed",
+                ) from err
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:

@@ -1,6 +1,7 @@
 {
   "domain": "overkiz",
   "name": "Overkiz",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@imicknl"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
@@ -14,7 +15,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["boto3", "botocore", "pyoverkiz", "s3transfer"],
-  "requirements": ["pyoverkiz[nexity]==2.1.2"],
+  "requirements": ["pyoverkiz[nexity]==2.3.1"],
   "zeroconf": [
     {
       "name": "gateway*",

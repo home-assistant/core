@@ -69,7 +69,7 @@ ATTR_MESSAGE = "message"
 ATTR_TIMESTAMP = "timestamp"
 
 WEBSOCKET_RECONNECT_RETRIES = 3
-WEBSOCKET_RETRY_DELAY = 2
+WEBSOCKET_RETRY_DELAY = 5
 WEBSOCKET_LOOP_TASK_NAME = "simplisafe websocket task"
 
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
@@ -192,7 +192,7 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> None:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
@@ -239,12 +239,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> None:
     """Unload a SimpliSafe config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 class SimpliSafe:
@@ -309,7 +307,10 @@ class SimpliSafe:
         if task and not task.done():
             return
 
-        LOGGER.debug("Starting websocket loop task")
+        if task:
+            LOGGER.debug("Restarting websocket loop task")
+        else:
+            LOGGER.debug("Starting websocket loop task")
 
         self._websocket_task = self.entry.async_create_background_task(
             self._hass, self._async_websocket_loop(), WEBSOCKET_LOOP_TASK_NAME
@@ -323,6 +324,7 @@ class SimpliSafe:
             try:
                 await self._api.websocket.async_connect()
                 await self._api.websocket.async_listen()
+                retries = 0
             except asyncio.CancelledError:
                 await self._api.websocket.async_disconnect()
                 raise

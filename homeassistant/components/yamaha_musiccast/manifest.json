@@ -1,6 +1,7 @@
 {
   "domain": "yamaha_musiccast",
   "name": "MusicCast",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@vigonotion", "@micha91"],
   "config_flow": true,
   "dependencies": ["ssdp"],

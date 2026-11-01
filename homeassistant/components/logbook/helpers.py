@@ -4,6 +4,7 @@ from collections.abc import Callable, Collection, Mapping
 from typing import Any
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     NON_NUMERIC_DEVICE_CLASSES,
     SensorEntityCapabilityAttribute,
 )
@@ -41,7 +42,6 @@ from .const import (
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
-    SENSOR_DOMAIN,
 )
 from .models import LogbookConfig
 

@@ -1,6 +1,7 @@
 {
   "domain": "romy",
   "name": "ROMY Vacuum Cleaner",
+  "categories": ["appliances_cleaning.cleaning"],
   "codeowners": ["@xeniter"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/romy",

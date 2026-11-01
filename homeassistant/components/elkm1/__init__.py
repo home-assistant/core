@@ -226,7 +226,7 @@ def _async_find_matching_config_entry(
     return None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> None:
     """Set up Elk-M1 Control from a config entry."""
     conf = entry.data
 
@@ -323,14 +323,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
 
     # Register the ElkM1 system device before forwarding platforms so entities
     # on any platform can deterministically resolve it as their via_device.
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
-        **create_elk_system_device_info(elk, prefix, entry.unique_id),
+        device_info=create_elk_system_device_info(elk, prefix, entry.unique_id),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -> None:
@@ -340,12 +338,13 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
         values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # disconnect cleanly
-    entry.runtime_data.elk.disconnect()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        # disconnect cleanly
+        entry.runtime_data.elk.disconnect()
 
 
 class LoginFailed(Exception):

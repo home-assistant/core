@@ -10,6 +10,7 @@ from mastodon.Mastodon import (
     MastodonUnauthorizedError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mastodon.config_flow import MastodonConfigFlow
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_device_info(

@@ -16,7 +16,7 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: AwairConfigEntry
-) -> bool:
+) -> None:
     """Set up Awair integration from a config entry."""
     session = async_get_clientsession(hass)
 
@@ -38,8 +38,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def _async_update_listener(hass: HomeAssistant, entry: AwairConfigEntry) -> None:
     """Handle options update."""
@@ -49,6 +47,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: AwairConfigEntry) -
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: AwairConfigEntry
-) -> bool:
+) -> None:
     """Unload Awair configuration."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

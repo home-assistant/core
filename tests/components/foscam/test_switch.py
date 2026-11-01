@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.foscam.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_mock_foscam_camera
 from .const import ENTRY_ID, VALID_CONFIG
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_entities(

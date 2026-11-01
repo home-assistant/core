@@ -89,6 +89,8 @@ class BlinkSyncModuleHA(
         """Send disarm command."""
         try:
             await self.sync.async_arm(False)
+            # BlinkPy may skip the refresh below, so read the new state now.
+            await self.sync.get_network_info()
 
         except TimeoutError as er:
             raise HomeAssistantError("Blink failed to disarm camera") from er
@@ -103,6 +105,8 @@ class BlinkSyncModuleHA(
         """Send arm command."""
         try:
             await self.sync.async_arm(True)
+            # BlinkPy may skip the refresh below, so read the new state now.
+            await self.sync.get_network_info()
 
         except TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera away") from er

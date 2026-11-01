@@ -1,6 +1,7 @@
 {
   "domain": "usgs_earthquakes_feed",
   "name": "U.S. Geological Survey Earthquake Hazards (USGS)",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@exxamalte"],
   "documentation": "https://www.home-assistant.io/integrations/usgs_earthquakes_feed",
   "integration_type": "service",

@@ -4,6 +4,7 @@ import socket
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sense_energy import (
     SenseAPIException,
     SenseAPITimeoutException,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DEVICE_1_ID, MONITOR_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_sense")

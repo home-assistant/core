@@ -1,6 +1,7 @@
 {
   "domain": "steam_online",
   "name": "Steam",
+  "categories": ["media_entertainment.gaming"],
   "codeowners": ["@tr4nt0r", "@tkdrob"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/steam_online",

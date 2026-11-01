@@ -1,16 +1,20 @@
 """Test Utility Meter diagnostics."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.utility_meter.const import DOMAIN
-from homeassistant.components.utility_meter.sensor import ATTR_LAST_RESET
+from homeassistant.components.utility_meter.const import (
+    DOMAIN,
+    UtilityMeterEntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant, State
-
-from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2024-04-06 00:00:00+00:00")
@@ -52,7 +56,7 @@ async def test_diagnostics(
                     "sensor.energy_bill_tariff0",
                     "3",
                     attributes={
-                        ATTR_LAST_RESET: last_reset,
+                        UtilityMeterEntityStateAttribute.LAST_RESET: last_reset,
                     },
                 ),
                 {
@@ -72,7 +76,7 @@ async def test_diagnostics(
                     "sensor.energy_bill_tariff1",
                     "7",
                     attributes={
-                        ATTR_LAST_RESET: last_reset,
+                        UtilityMeterEntityStateAttribute.LAST_RESET: last_reset,
                     },
                 ),
                 {

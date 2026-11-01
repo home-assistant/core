@@ -1,10 +1,11 @@
 {
   "domain": "livisi",
   "name": "LIVISI Smart Home",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@StefanIacobLivisi", "@planbnet"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/livisi",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "requirements": ["livisi==0.0.25"]
+  "requirements": ["livisi==1.0.2"]
 }

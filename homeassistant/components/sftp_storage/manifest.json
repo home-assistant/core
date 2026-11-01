@@ -2,6 +2,7 @@
   "domain": "sftp_storage",
   "name": "SFTP Storage",
   "after_dependencies": ["backup"],
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@maretodoric"],
   "config_flow": true,
   "dependencies": ["file_upload"],

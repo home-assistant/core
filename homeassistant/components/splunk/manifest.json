@@ -1,6 +1,7 @@
 {
   "domain": "splunk",
   "name": "Splunk",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@Bre77"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/splunk",

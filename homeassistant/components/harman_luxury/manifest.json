@@ -1,6 +1,7 @@
 {
   "domain": "harman_luxury",
   "name": "Harman Luxury Audio",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@sbesh91"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/harman_luxury",

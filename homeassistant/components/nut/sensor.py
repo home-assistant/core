@@ -39,6 +39,7 @@ AMBIENT_SENSORS = {
     "ambient.temperature.status",
 }
 BATTERY_CHARGER_STATUS_OPTIONS = [
+    "charged",
     "charging",
     "discharging",
     "floating",

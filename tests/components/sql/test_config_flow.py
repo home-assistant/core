@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
@@ -52,8 +53,6 @@ from . import (
     ENTRY_CONFIG_WITH_QUERY_TEMPLATE,
     ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "recorder_mock")
 
@@ -121,7 +120,7 @@ async def test_form_with_query_template(
 
     with patch(
         "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -173,7 +172,7 @@ async def test_form_with_broken_query_template(
 
     with patch(
         "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

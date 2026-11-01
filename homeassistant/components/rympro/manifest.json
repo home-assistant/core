@@ -1,6 +1,7 @@
 {
   "domain": "rympro",
   "name": "Read Your Meter Pro",
+  "categories": ["water.meters_leak_detection"],
   "codeowners": ["@OnFreund", "@elad-bar", "@maorcc"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rympro",

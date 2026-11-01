@@ -24,13 +24,13 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from . import DOMAIN
 from .const import (
     CONF_FLOOR_TEMP,
     CONF_READ_PRECISION,
     CONF_SET_PRECISION,
     CONF_TEMPORARY_OVRD_MODE,
     CONNECTION_TIMEOUT,
+    DOMAIN,
     OpenThermDataSource,
 )
 

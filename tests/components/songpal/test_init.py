@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import songpal
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -12,8 +14,6 @@ from . import (
     _patch_config_flow_device,
     _patch_media_player_device,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _patch_media_setup():

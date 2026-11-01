@@ -1,6 +1,7 @@
 {
   "domain": "iqvia",
   "name": "IQVIA",
+  "categories": ["weather_alerts.air_quality_pollen", "health_wellbeing"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iqvia",

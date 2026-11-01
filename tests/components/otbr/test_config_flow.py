@@ -1,4 +1,4 @@
-"""Test the Open Thread Border Router config flow."""
+"""Test the OpenThread Border Router config flow."""
 
 import asyncio
 from http import HTTPStatus
@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 import python_otbr_api
 from python_otbr_api import KeyFormat
 
@@ -30,9 +32,6 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
 
 from . import DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID, TEST_BORDER_AGENT_ID_2
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 HASSIO_DATA = HassioServiceInfo(
     config={"host": "core-silabs-multiprotocol", "port": 8081},
@@ -133,7 +132,7 @@ async def test_user_flow_additional_entry(
         data={"url": url2},
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_ID_2.hex(),
     )
     config_entry.add_to_hass(hass)
@@ -169,7 +168,7 @@ async def test_user_flow_additional_entry_fail_get_address(
         data={"url": url2},
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_ID_2.hex(),
     )
     config_entry.add_to_hass(hass)
@@ -200,7 +199,7 @@ async def _finish_user_flow(
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -209,7 +208,7 @@ async def _finish_user_flow(
             },
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Open Thread Border Router"
+    assert result["title"] == "OpenThread Border Router"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -217,7 +216,7 @@ async def _finish_user_flow(
     config_entry = result["result"]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Open Thread Border Router"
+    assert config_entry.title == "OpenThread Border Router"
     assert config_entry.unique_id == TEST_BORDER_AGENT_ID.hex()
 
 
@@ -239,7 +238,7 @@ async def test_user_flow_additional_entry_same_address(
         data={"url": "http://custom_url:1234"},
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=TEST_BORDER_AGENT_ID.hex(),
     )
     config_entry.add_to_hass(hass)
@@ -267,7 +266,7 @@ async def test_user_flow_additional_entry_same_address(
     get_border_agent_id.side_effect = [TEST_BORDER_AGENT_ID_2, TEST_BORDER_AGENT_ID]
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -308,7 +307,7 @@ async def test_user_flow_router_not_setup(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -334,7 +333,7 @@ async def test_user_flow_router_not_setup(
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Open Thread Border Router"
+    assert result["title"] == "OpenThread Border Router"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -342,7 +341,7 @@ async def test_user_flow_router_not_setup(
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert config_entry.title == "Open Thread Border Router"
+    assert config_entry.title == "OpenThread Border Router"
     assert config_entry.unique_id == TEST_BORDER_AGENT_ID.hex()
 
 
@@ -375,7 +374,7 @@ async def test_user_flow_get_dataset_404(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -442,7 +441,7 @@ async def _test_user_flow_connect_error(
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -463,7 +462,7 @@ async def test_hassio_discovery_flow(
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -500,7 +499,7 @@ async def test_hassio_discovery_flow_yellow(
     with (
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch("homeassistant.components.otbr.config_flow.yellow_hardware.async_info"),
     ):
@@ -559,7 +558,7 @@ async def test_hassio_discovery_flow_sky_connect(
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -768,7 +767,7 @@ async def test_hassio_discovery_flow_router_not_setup(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -826,7 +825,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -887,7 +886,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
         ),
         patch(
             "homeassistant.components.otbr.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -988,7 +987,7 @@ async def test_hassio_discovery_flow_updates_entry(
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=entry_unique_id,
     )
     config_entry.add_to_hass(hass)
@@ -1031,7 +1030,7 @@ async def test_hassio_discovery_flow_entry_without_unique_id_kept(
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=None,
     )
     legacy_entry.add_to_hass(hass)
@@ -1040,7 +1039,7 @@ async def test_hassio_discovery_flow_entry_without_unique_id_kept(
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=HASSIO_DATA.uuid,
     )
     config_entry.add_to_hass(hass)
@@ -1076,7 +1075,7 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
     )
     config_entry.add_to_hass(hass)
 
@@ -1128,7 +1127,7 @@ async def test_hassio_discovery_flow_addon_restarted_entry_not_loaded(
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
         unique_id=HASSIO_DATA.uuid,
     )
     config_entry.add_to_hass(hass)
@@ -1174,13 +1173,13 @@ async def test_config_flow_additional_entry(
         data={},
         domain=otbr.DOMAIN,
         options={},
-        title="Open Thread Border Router",
+        title="OpenThread Border Router",
     )
     config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": source}, data=data
@@ -1239,3 +1238,206 @@ async def test_hassio_discovery_reload(
 
         assert len(callback.mock_calls) == 2
         assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
+
+
+async def _setup_user_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up a config entry created by the user flow."""
+    mock_integration(hass, MockModule("hassio"))
+    config_entry = MockConfigEntry(
+        data={"url": "http://custom_url:1234"},
+        domain=otbr.DOMAIN,
+        options={},
+        source="user",
+        title="OpenThread Border Router",
+        unique_id=TEST_BORDER_AGENT_ID.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    return config_entry
+
+
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+    "get_coprocessor_version",
+    "fast_border_agent_discovery",
+)
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test the reconfigure flow."""
+    config_entry = await _setup_user_entry(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "http://new_url:1234/"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {"url": "http://new_url:1234"}
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_extended_address",
+    "get_coprocessor_version",
+    "fast_border_agent_discovery",
+)
+async def test_reconfigure_flow_setup_retry(
+    hass: HomeAssistant, get_border_agent_id: AsyncMock
+) -> None:
+    """Test the reconfigure flow reloads an entry that failed to set up."""
+    mock_integration(hass, MockModule("hassio"))
+    config_entry = MockConfigEntry(
+        data={"url": "http://custom_url:1234"},
+        domain=otbr.DOMAIN,
+        options={},
+        source="user",
+        title="OpenThread Border Router",
+        unique_id=TEST_BORDER_AGENT_ID.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    get_border_agent_id.side_effect = TimeoutError
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    get_border_agent_id.side_effect = None
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "http://new_url:1234"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {"url": "http://new_url:1234"}
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(python_otbr_api.OTBRError, id="otbr_error"),
+        pytest.param(aiohttp.ClientError, id="client_error"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_extended_address",
+    "get_coprocessor_version",
+    "fast_border_agent_discovery",
+)
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant, get_border_agent_id: AsyncMock, error: type[Exception]
+) -> None:
+    """Test the reconfigure flow recovers from a connection error."""
+    config_entry = await _setup_user_entry(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    get_border_agent_id.side_effect = error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "http://new_url:1234"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    get_border_agent_id.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "http://new_url:1234"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {"url": "http://new_url:1234"}
+
+
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+    "get_coprocessor_version",
+    "fast_border_agent_discovery",
+)
+async def test_reconfigure_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test the reconfigure flow when another entry uses the same router."""
+    config_entry = await _setup_user_entry(hass)
+    # The mocked router reports the same border agent id for every URL
+    other_entry = MockConfigEntry(
+        data={"url": "http://other_url:1234"},
+        domain=otbr.DOMAIN,
+        options={},
+        source="user",
+        title="OpenThread Border Router",
+        unique_id=TEST_BORDER_AGENT_ID_2.hex(),
+    )
+    other_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(other_entry.entry_id)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "http://new_url:1234"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "already_configured"}
+
+    assert await hass.config_entries.async_remove(other_entry.entry_id)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "http://new_url:1234"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {"url": "http://new_url:1234"}
+
+
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_extended_address",
+    "get_coprocessor_version",
+    "fast_border_agent_discovery",
+)
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant, get_border_agent_id: AsyncMock
+) -> None:
+    """Test the reconfigure flow aborts when pointed at another router."""
+    config_entry = await _setup_user_entry(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    get_border_agent_id.return_value = TEST_BORDER_AGENT_ID_2
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "http://new_url:1234"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert config_entry.data == {"url": "http://custom_url:1234"}
+
+
+async def test_reconfigure_flow_addon_managed(hass: HomeAssistant) -> None:
+    """Test the reconfigure flow aborts for entries managed by an app."""
+    config_entry = MockConfigEntry(
+        data={"url": "http://core-silabs-multiprotocol:8081"},
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Silicon Labs Multiprotocol",
+        unique_id=HASSIO_DATA.uuid,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_managed"

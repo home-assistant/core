@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from brother import SnmpError, UnsupportedModelError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.brother.const import (
     CONF_COMMUNITY,
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_HOST: "127.0.0.1",

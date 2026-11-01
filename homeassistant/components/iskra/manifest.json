@@ -1,6 +1,7 @@
 {
   "domain": "iskra",
   "name": "iskra",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@iskramis"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iskra",

@@ -6,6 +6,8 @@ from unittest.mock import PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.atag.climate import PRESET_MAP
@@ -31,9 +33,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import UID, init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIMATE_ID = "climate.atag_thermostat_atag"
 

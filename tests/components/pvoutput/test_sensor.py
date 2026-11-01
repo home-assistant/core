@@ -5,14 +5,17 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.pvoutput.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 OPTIONAL_SENSOR_KEYS = (
     "energy_consumption",
@@ -65,6 +68,23 @@ async def test_sensors_disabled_by_default(
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
+async def test_last_reported_uses_home_assistant_time_zone(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pvoutput: MagicMock,
+) -> None:
+    """Test the last reported time is read in the Home Assistant time zone."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The fixture reports 2021-01-01 22:37 local time, which is UTC+1
+    assert (state := hass.states.get("sensor.frenck_s_solar_farm_last_reported"))
+    assert state.state == "2021-01-01T21:37:00+00:00"
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_device(
     device_registry: dr.DeviceRegistry,
@@ -110,6 +130,7 @@ async def test_optional_sensor_added_once_reported(
 
     core_unique_ids = {
         "12345_energy_generation",
+        "12345_last_reported",
         "12345_normalized_output",
         "12345_power_generation",
     }

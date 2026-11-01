@@ -1,6 +1,10 @@
 {
   "domain": "xiaomi",
   "name": "Xiaomi",
+  "categories": [
+    "security_safety.cameras",
+    "presence_location.network_presence"
+  ],
   "codeowners": [],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/xiaomi",

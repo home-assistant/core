@@ -1,6 +1,7 @@
 {
   "domain": "moehlenhoff_alpha2",
   "name": "M\u00f6hlenhoff Alpha 2",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@j-a-n"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/moehlenhoff_alpha2",

@@ -1,6 +1,7 @@
 {
   "domain": "qbus",
   "name": "Qbus",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@Qbus-iot", "@thomasddn"],
   "config_flow": true,
   "dependencies": ["mqtt"],

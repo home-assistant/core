@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyloadapi.types import StatusServerResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import (
@@ -18,8 +19,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_URL: "https://pyload.local:8000/prefix",
@@ -78,7 +77,7 @@ ADDON_SERVICE_INFO = HassioServiceInfo(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.pyload.async_setup_entry", return_value=True
+        "homeassistant.components.pyload.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

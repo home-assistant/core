@@ -24,7 +24,7 @@ from .const import (
 from .helpers import adguard_exception_handler
 
 if TYPE_CHECKING:
-    from . import AdGuardConfigEntry
+    from .coordinator import AdGuardConfigEntry
 
 SERVICE_URL_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path)}

@@ -1,6 +1,6 @@
 """Support for Xiaomi Philips Lights."""
 
-import datetime
+import datetime as dt
 from datetime import timedelta
 from functools import partial
 import logging
@@ -294,7 +294,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     @staticmethod
     def delayed_turn_off_timestamp(
-        countdown: int, current: datetime.datetime, previous: datetime.datetime
+        countdown: int, current: dt.datetime, previous: dt.datetime
     ):
         """Update the turn off timestamp only if necessary."""
         if countdown is not None and countdown > 0:
@@ -656,7 +656,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
     @staticmethod
     @override
     def delayed_turn_off_timestamp(
-        countdown: int, current: datetime.datetime, previous: datetime.datetime
+        countdown: int, current: dt.datetime, previous: dt.datetime
     ):
         """Update the turn off timestamp only if necessary."""
         if countdown is not None and countdown > 0:

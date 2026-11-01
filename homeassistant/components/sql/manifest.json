@@ -2,6 +2,7 @@
   "domain": "sql",
   "name": "SQL",
   "after_dependencies": ["recorder"],
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@gjohansson-ST", "@dougiteixeira"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sql",

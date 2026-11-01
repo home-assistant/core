@@ -8,14 +8,13 @@ from demetriek import (
     LaMetricConnectionTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -85,6 +84,7 @@ async def test_config_entry_authentication_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lametric: MagicMock,
+    mock_lametric_local_auth: MagicMock,
 ) -> None:
     """Test trigger reauthentication flow."""
     mock_config_entry.add_to_hass(hass)
@@ -100,7 +100,8 @@ async def test_config_entry_authentication_failed(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow["step_id"] == "choice_enter_manual_or_fetch_cloud"
+    # The device supports the button press, so the flow starts right there.
+    assert flow["step_id"] == "press_button"
     assert flow.get("handler") == DOMAIN
 
     assert "context" in flow

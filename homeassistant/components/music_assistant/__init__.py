@@ -38,9 +38,10 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
+from .app import async_check_app_running
 from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DASHBOARD_ID_PREFIX, DOMAIN, LOGGER
 from .helpers import get_music_assistant_client
-from .services import register_actions
+from .services import async_setup_services
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
@@ -77,14 +78,14 @@ class MusicAssistantEntryData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Music Assistant component."""
-    register_actions(hass)
+    async_setup_services(hass)
 
     return True
 
 
 async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: MusicAssistantConfigEntry
-) -> bool:
+) -> None:
     """Set up Music Assistant from a config entry."""
     http_session = async_get_clientsession(hass, verify_ssl=False)
     mass_url = entry.data[CONF_URL]
@@ -96,6 +97,7 @@ async def async_setup_entry(  # noqa: C901
         async with asyncio.timeout(CONNECT_TIMEOUT):
             await mass.connect()
     except (TimeoutError, CannotConnect) as err:
+        async_check_app_running(hass, mass_url)
         raise ConfigEntryNotReady(
             f"Failed to connect to music assistant server {mass_url}"
         ) from err
@@ -266,8 +268,6 @@ async def async_setup_entry(  # noqa: C901
         finally:
             raise ConfigEntryNotReady(listen_error) from listen_error
 
-    return True
-
 
 async def _client_listen(
     hass: HomeAssistant,
@@ -295,16 +295,13 @@ async def _client_listen(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: MusicAssistantConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        mass_entry_data = entry.runtime_data
-        mass_entry_data.listen_task.cancel()
-        await mass_entry_data.mass.disconnect()
-
-    return unload_ok
+    mass_entry_data = entry.runtime_data
+    mass_entry_data.listen_task.cancel()
+    await mass_entry_data.mass.disconnect()
 
 
 async def async_remove_config_entry_device(

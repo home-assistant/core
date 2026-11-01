@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
@@ -10,8 +11,6 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_MAC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")

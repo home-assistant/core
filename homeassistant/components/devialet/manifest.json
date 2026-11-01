@@ -2,6 +2,7 @@
   "domain": "devialet",
   "name": "Devialet",
   "after_dependencies": ["zeroconf"],
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@fwestenberg"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/devialet",

@@ -1,6 +1,7 @@
 {
   "domain": "cloudflare",
   "name": "Cloudflare",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@ludeeus", "@ctalkington"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cloudflare",

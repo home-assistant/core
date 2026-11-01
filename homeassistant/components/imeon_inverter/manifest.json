@@ -1,6 +1,7 @@
 {
   "domain": "imeon_inverter",
   "name": "Imeon Inverter",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@Imeon-Energy"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/imeon_inverter",
