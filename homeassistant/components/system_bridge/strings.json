@@ -37,6 +37,9 @@
       "camera_in_use": {
         "name": "Camera in use"
       },
+      "locked": {
+        "name": "Locked"
+      },
       "pending_reboot": {
         "name": "Pending reboot"
       }
@@ -59,13 +62,27 @@
       }
     },
     "media_player": {
+      "audio": {
+        "name": "Audio"
+      },
+      "audio_output": {
+        "name": "{name} output"
+      },
       "media": {
         "name": "Media"
       }
     },
     "number": {
+      "audio_input_volume": {
+        "name": "{name} input volume"
+      },
       "display_brightness": {
         "name": "Display {display_id} brightness"
+      }
+    },
+    "select": {
+      "audio_input": {
+        "name": "Audio input"
       }
     },
     "sensor": {
@@ -191,6 +208,9 @@
       "gpu_usage_percentage": {
         "name": "{gpu_name} usage %"
       },
+      "idle_time": {
+        "name": "Idle time"
+      },
       "kernel": {
         "name": "Kernel"
       },
@@ -251,6 +271,12 @@
       "space_used": {
         "name": "{partition} space used"
       },
+      "swap_used": {
+        "name": "Swap used"
+      },
+      "swap_used_percentage": {
+        "name": "Swap usage"
+      },
       "version": {
         "name": "Version"
       },
@@ -259,12 +285,21 @@
       }
     },
     "switch": {
+      "audio_input_mute": {
+        "name": "{name} input mute"
+      },
       "display_power": {
         "name": "Display {display_id} power"
       }
     }
   },
   "exceptions": {
+    "audio_control_failed": {
+      "message": "Failed to control audio device {name}: {error}"
+    },
+    "audio_device_not_found": {
+      "message": "No audio device named {name}"
+    },
     "authentication_failed": {
       "message": "Authentication failed for {title} ({host})"
     },
@@ -273,6 +308,12 @@
     },
     "display_control_failed": {
       "message": "Failed to control display {display_id}: {error}"
+    },
+    "media_control_failed": {
+      "message": "Failed to control the media player: {error}"
+    },
+    "media_player_not_found": {
+      "message": "No media player named {name}"
     },
     "no_data_received": {
       "message": "No data received from {host}"

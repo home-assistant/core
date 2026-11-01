@@ -82,6 +82,9 @@
       "average_respiratory_rate": {
         "name": "Average respiratory rate"
       },
+      "basal_metabolic_rate": {
+        "name": "Basal metabolic rate"
+      },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]",
         "state": {
@@ -176,6 +179,9 @@
       },
       "maximum_respiratory_rate": {
         "name": "Maximum respiratory rate"
+      },
+      "metabolic_age": {
+        "name": "Metabolic age"
       },
       "minimum_heart_rate": {
         "name": "Minimum heart rate"
