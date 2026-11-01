@@ -487,6 +487,7 @@ FLOWS = {
         "lupusec",
         "lutron",
         "lutron_caseta",
+        "lutron_grafik_eye",
         "lyngdorf",
         "lyric",
         "madvr",
