@@ -28,6 +28,7 @@ class PiKVMSensorEntityDescription(SensorEntityDescription):
     """Describes a PiKVM sensor entity."""
 
     value_fn: Callable[[PiKVMDeviceInfo], StateType]
+    exists_fn: Callable[[PiKVMDeviceInfo], bool] = lambda _: True
 
 
 SENSOR_TYPES: tuple[PiKVMSensorEntityDescription, ...] = (
@@ -66,6 +67,7 @@ SENSOR_TYPES: tuple[PiKVMSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda info: info.fan_speed,
+        exists_fn=lambda info: info.fan_speed is not None,
     ),
     PiKVMSensorEntityDescription(
         key="msd_storage",
@@ -75,6 +77,7 @@ SENSOR_TYPES: tuple[PiKVMSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda info: info.msd.storage.percent_used,
+        exists_fn=lambda info: info.msd.storage.percent_used is not None,
     ),
 )
 
@@ -90,7 +93,7 @@ async def async_setup_entry(
     async_add_entities(
         PiKVMSensor(coordinator, description)
         for description in SENSOR_TYPES
-        if description.value_fn(coordinator.data) is not None
+        if description.exists_fn(coordinator.data)
     )
 
 
