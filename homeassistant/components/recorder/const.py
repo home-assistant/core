@@ -14,11 +14,6 @@ if TYPE_CHECKING:
     from .core import Recorder  # noqa: F401
 
 
-SQLITE_URL_PREFIX = "sqlite://"
-MARIADB_URL_PREFIX = "mariadb://"
-MARIADB_PYMYSQL_URL_PREFIX = "mariadb+pymysql://"
-MYSQLDB_URL_PREFIX = "mysql://"
-MYSQLDB_PYMYSQL_URL_PREFIX = "mysql+pymysql://"
 DOMAIN = "recorder"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
