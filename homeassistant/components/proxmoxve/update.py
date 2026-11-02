@@ -25,7 +25,7 @@ class ProxmoxNodeUpdateEntityDescription(UpdateEntityDescription):
     """Describes Proxmox node update entity."""
 
     installed_version: Callable[[ProxmoxNodeData], str | None]
-    update_info: Callable[[ProxmoxNodeData], ProxmoxUpdateInfo | bool]
+    update_info: Callable[[ProxmoxNodeData], ProxmoxUpdateInfo | None]
 
 
 NODE_UPDATES: tuple[ProxmoxNodeUpdateEntityDescription, ...] = (
@@ -36,12 +36,9 @@ NODE_UPDATES: tuple[ProxmoxNodeUpdateEntityDescription, ...] = (
         installed_version=lambda data: data.version.version if data.version else None,
         # An offline node reports no version
         update_info=lambda data: (
-            update_version(
-                data.version.version,
-                data.update if isinstance(data.update, list) else [],
-            )
+            update_version(data.version.version, data.update or [])
             if data.version
-            else False
+            else None
         ),
     ),
 )
@@ -61,8 +58,8 @@ async def async_setup_entry(
             ProxmoxNodeUpdateEntity(coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_UPDATES
-            if node.update
-            is not False  # Only create entities for nodes where update information is available
+            # Only create entities for nodes where update information is available
+            if node.update is not None
         )
 
     coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
@@ -126,7 +123,6 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
 
     def _update_info(self) -> ProxmoxUpdateInfo | None:
         """Return update info or None if unavailable."""
-        info = self.entity_description.update_info(
+        return self.entity_description.update_info(
             self.coordinator.data[self.device_name]
         )
-        return info if isinstance(info, ProxmoxUpdateInfo) else None

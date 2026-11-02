@@ -2,8 +2,14 @@
 
 from unittest.mock import MagicMock, patch
 
-import aiohttp
-from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
+from aioproxmox.exceptions import (
+    ProxmoxAPIError,
+    ProxmoxAuthError,
+    ProxmoxConnectionError,
+    ProxmoxResponseError,
+    ProxmoxSSLError,
+    ProxmoxTimeoutError,
+)
 from aioproxmox.model import PVEPermissions
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -50,16 +56,24 @@ async def test_all_entities(
     ("exception"),
     [
         (ProxmoxAuthError("Invalid credentials")),
-        (aiohttp.ClientSSLError(MagicMock(), OSError("SSL handshake failed"))),
-        (TimeoutError("Connection timed out")),
+        (ProxmoxSSLError("SSL handshake failed")),
+        (ProxmoxTimeoutError("Connection timed out")),
         (ProxmoxAPIError(404, "status_message", "cluster/resources")),
-        (aiohttp.ClientConnectionError("Connection error")),
+        (
+            ProxmoxResponseError(
+                200,
+                "Attempt to decode JSON with unexpected mimetype: text/html",
+                "cluster/resources",
+            )
+        ),
+        (ProxmoxConnectionError("Connection error")),
     ],
     ids=[
         "auth_error",
         "ssl_error",
         "connect_timeout",
         "resource_exception",
+        "response_error",
         "connection_error",
     ],
 )

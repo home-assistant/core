@@ -3,8 +3,14 @@
 import re
 from unittest.mock import MagicMock, patch
 
-import aiohttp
-from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
+from aioproxmox.exceptions import (
+    ProxmoxAPIError,
+    ProxmoxAuthError,
+    ProxmoxConnectionError,
+    ProxmoxResponseError,
+    ProxmoxSSLError,
+    ProxmoxTimeoutError,
+)
 from aioproxmox.model import PVEPermissions
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -223,9 +229,9 @@ async def test_container_buttons(
         (
             "button.pve1_restart",
             "reboot",
-            aiohttp.ClientSSLError(MagicMock(), OSError("ssl error")),
+            ProxmoxSSLError("ssl error"),
         ),
-        ("button.pve1_restart", "reboot", TimeoutError("timeout")),
+        ("button.pve1_restart", "reboot", ProxmoxTimeoutError("timeout")),
         (
             "button.pve1_shut_down",
             "shutdown",
@@ -234,7 +240,12 @@ async def test_container_buttons(
         (
             "button.pve1_shut_down",
             "shutdown",
-            aiohttp.ClientConnectionError("connection refused"),
+            ProxmoxResponseError(200, "unexpected mimetype", "nodes/pve1/status"),
+        ),
+        (
+            "button.pve1_shut_down",
+            "shutdown",
+            ProxmoxConnectionError("connection refused"),
         ),
     ],
 )
@@ -273,13 +284,13 @@ async def test_node_buttons_exceptions(
             "button.vm_web_start",
             100,
             "start",
-            aiohttp.ClientSSLError(MagicMock(), OSError("ssl error")),
+            ProxmoxSSLError("ssl error"),
         ),
         (
             "button.vm_web_suspend",
             100,
             "suspend",
-            TimeoutError("timeout"),
+            ProxmoxTimeoutError("timeout"),
         ),
         (
             "button.vm_web_reset",
@@ -328,13 +339,13 @@ async def test_vm_buttons_exceptions(
             "button.ct_nginx_start",
             200,
             "start",
-            aiohttp.ClientSSLError(MagicMock(), OSError("ssl error")),
+            ProxmoxSSLError("ssl error"),
         ),
         (
             "button.ct_nginx_restart",
             200,
             "reboot",
-            TimeoutError("timeout"),
+            ProxmoxTimeoutError("timeout"),
         ),
         (
             "button.ct_nginx_stop",

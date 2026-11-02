@@ -6,9 +6,14 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-import aiohttp
 from aioproxmox import ProxmoxVE
-from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
+from aioproxmox.exceptions import (
+    ProxmoxAPIError,
+    ProxmoxAuthError,
+    ProxmoxConnectionError,
+    ProxmoxSSLError,
+    ProxmoxTimeoutError,
+)
 from aioproxmox.model import PVEPermissions
 from aioproxmox.model.pve import (
     ClusterNodeResource,
@@ -63,7 +68,7 @@ class NodeResources:
     storages: list[NodeStorageResource]
     backups: list[NodeTask]
     version: NodeVersion | None
-    update: list[NodeAptUpdateProperty] | bool
+    update: list[NodeAptUpdateProperty] | None
 
 
 @dataclass(slots=True, kw_only=True)
@@ -76,7 +81,7 @@ class ProxmoxNodeData:
     storages: dict[str, NodeStorageResource] = field(default_factory=dict)
     backups: list[NodeTask] = field(default_factory=list)
     version: NodeVersion | None = None
-    update: list[NodeAptUpdateProperty] | bool = False
+    update: list[NodeAptUpdateProperty] | None = None
 
 
 class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
@@ -126,21 +131,17 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
-        except aiohttp.ClientSSLError as err:
+        except ProxmoxSSLError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="ssl_error",
             ) from err
-        except TimeoutError as err:
+        except ProxmoxTimeoutError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
         except ProxmoxAPIError as err:
-            if err.status == 401:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN, translation_key="invalid_auth"
-                ) from err
             if 400 <= err.status < 500:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN, translation_key="permissions_error"
@@ -149,7 +150,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_domain=DOMAIN,
                 translation_key="api_error_details",
             ) from err
-        except aiohttp.ClientConnectionError as err:
+        except ProxmoxConnectionError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -165,12 +166,12 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
-        except aiohttp.ClientSSLError as err:
+        except ProxmoxSSLError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="ssl_error",
             ) from err
-        except TimeoutError as err:
+        except ProxmoxTimeoutError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
@@ -180,7 +181,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_domain=DOMAIN,
                 translation_key="api_error_details",
             ) from err
-        except aiohttp.ClientConnectionError as err:
+        except ProxmoxConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -220,7 +221,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             data[CONF_HOST],
             auth_kwargs.keys(),
         )
-
         verify_ssl = data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.proxmox = ProxmoxVE(
             async_get_clientsession(self.hass, verify_ssl=verify_ssl),
@@ -239,9 +239,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         """Fetch all nodes with their VMs, containers, storages, etc."""
         cluster_resources = await self.proxmox.cluster.resources()
         return [
-            (node, await self._get_node_data(node))
-            for node in cluster_resources
-            if isinstance(node, ClusterNodeResource)
+            (node, await self._get_node_data(node)) for node in cluster_resources.nodes
         ]
 
     async def _get_node_data(
@@ -259,7 +257,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 storages=[],
                 backups=[],
                 version=None,
-                update=False,
+                update=None,
             )
 
         node_endpoint = self.proxmox.nodes(node.node)
@@ -271,7 +269,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         backups = node_tasks.tasks
         version = await node_endpoint.version()
 
-        update: list[NodeAptUpdateProperty] | bool = False
+        update: list[NodeAptUpdateProperty] | None = None
         if self.permissions.has_node_permission(node.node, ProxmoxPermission.SYSMOD):
             apt_update = await node_endpoint.apt().update()
             update = apt_update.items

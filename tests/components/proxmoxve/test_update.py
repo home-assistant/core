@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-import aiohttp
+from aioproxmox.exceptions import ProxmoxConnectionError
 from aioproxmox.model import PVEPermissions
 from aioproxmox.model.pve import AptArchType, NodeAptUpdate, NodeAptUpdateProperty
 from freezegun.api import FrozenDateTimeFactory
@@ -170,7 +170,7 @@ async def test_update_unavailable_on_failed_update(
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    mock_proxmox_client.cluster.resources.side_effect = aiohttp.ClientConnectionError
+    mock_proxmox_client.cluster.resources.side_effect = ProxmoxConnectionError
     freezer.tick(DEFAULT_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

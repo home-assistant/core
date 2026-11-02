@@ -2,9 +2,15 @@
 
 from unittest.mock import MagicMock, create_autospec
 
-import aiohttp
 from aioproxmox.endpoints import NodeEndpoint
-from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
+from aioproxmox.exceptions import (
+    ProxmoxAPIError,
+    ProxmoxAuthError,
+    ProxmoxConnectionError,
+    ProxmoxResponseError,
+    ProxmoxSSLError,
+    ProxmoxTimeoutError,
+)
 from aioproxmox.model import PVEPermissions
 from aioproxmox.model.pve import (
     ContainerResource,
@@ -54,12 +60,12 @@ from . import setup_integration
             "access.permissions",
         ),
         (
-            aiohttp.ClientSSLError(MagicMock(), OSError("SSL handshake failed")),
+            ProxmoxSSLError("SSL handshake failed"),
             ConfigEntryState.SETUP_ERROR,
             "access.permissions",
         ),
         (
-            TimeoutError("Connection timed out"),
+            ProxmoxTimeoutError("Connection timed out"),
             ConfigEntryState.SETUP_RETRY,
             "access.permissions",
         ),
@@ -74,11 +80,6 @@ from . import setup_integration
             "access.permissions",
         ),
         (
-            ProxmoxAPIError(401, "Unauthorized", "cluster/resources"),
-            ConfigEntryState.SETUP_ERROR,
-            "connect",
-        ),
-        (
             ProxmoxAPIError(403, "Forbidden", "cluster/resources"),
             ConfigEntryState.SETUP_ERROR,
             "connect",
@@ -89,7 +90,16 @@ from . import setup_integration
             "connect",
         ),
         (
-            aiohttp.ClientConnectionError("Connection refused"),
+            ProxmoxResponseError(
+                200,
+                "Attempt to decode JSON with unexpected mimetype: text/html",
+                "cluster/resources",
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            "connect",
+        ),
+        (
+            ProxmoxConnectionError("Connection refused"),
             ConfigEntryState.SETUP_ERROR,
             "access.permissions",
         ),
@@ -100,9 +110,9 @@ from . import setup_integration
         "connect_timeout",
         "resource_exception_permissions_403",
         "resource_exception_permissions_500",
-        "resource_exception_nodes_401",
         "resource_exception_nodes_403",
         "resource_exception_nodes_500",
+        "response_error_nodes",
         "connection_error",
     ],
 )

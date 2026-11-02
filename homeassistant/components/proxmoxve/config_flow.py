@@ -4,10 +4,15 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import aiohttp
 from aioproxmox import ProxmoxVE
-from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
-from aioproxmox.model.pve import ClusterNodeResource, OperationalStatus
+from aioproxmox.exceptions import (
+    ProxmoxAPIError,
+    ProxmoxAuthError,
+    ProxmoxConnectionError as PVEConnectionError,
+    ProxmoxSSLError as PVESSLError,
+    ProxmoxTimeoutError,
+)
+from aioproxmox.model.pve import OperationalStatus
 import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -116,23 +121,17 @@ async def _get_nodes_data(
         cluster_resources = await client.connect()
     except ProxmoxAuthError as err:
         raise ProxmoxAuthenticationError from err
-    except aiohttp.ClientSSLError as err:
+    except PVESSLError as err:
         raise ProxmoxSSLError from err
-    except TimeoutError as err:
+    except ProxmoxTimeoutError as err:
         raise ProxmoxConnectTimeout from err
     except ProxmoxAPIError as err:
-        if err.status == 401:
-            raise ProxmoxAuthenticationError from err
         _LOGGER.debug("Error during Proxmox client initialisation", exc_info=True)
         raise ProxmoxInitFailed from err
-    except aiohttp.ClientConnectionError as err:
+    except PVEConnectionError as err:
         raise ProxmoxConnectionError from err
 
-    nodes = [
-        resource
-        for resource in cluster_resources
-        if isinstance(resource, ClusterNodeResource)
-    ]
+    nodes = cluster_resources.nodes
 
     if not nodes:
         raise ProxmoxNoNodesFound(
@@ -156,9 +155,9 @@ async def _get_nodes_data(
                 "Error fetching VMs/LXC for node %s", node.node, exc_info=True
             )
             raise ProxmoxNoVMLXCFound from err
-        except TimeoutError as err:
+        except ProxmoxTimeoutError as err:
             raise ProxmoxConnectTimeout from err
-        except aiohttp.ClientConnectionError as err:
+        except PVEConnectionError as err:
             raise ProxmoxConnectionError from err
 
         nodes_data.append(

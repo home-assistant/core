@@ -3,8 +3,14 @@
 from typing import Any
 from unittest.mock import MagicMock
 
-import aiohttp
-from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
+from aioproxmox.exceptions import (
+    ProxmoxAPIError,
+    ProxmoxAuthError,
+    ProxmoxConnectionError,
+    ProxmoxResponseError,
+    ProxmoxSSLError,
+    ProxmoxTimeoutError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -151,23 +157,27 @@ async def test_form(
             "invalid_auth",
         ),
         (
-            aiohttp.ClientSSLError(MagicMock(), OSError("SSL handshake failed")),
+            ProxmoxSSLError("SSL handshake failed"),
             "ssl_error",
         ),
         (
-            TimeoutError("Connection timed out"),
+            ProxmoxTimeoutError("Connection timed out"),
             "connect_timeout",
-        ),
-        (
-            ProxmoxAPIError(401, "status_message", "cluster/resources"),
-            "invalid_auth",
         ),
         (
             ProxmoxAPIError(500, "status_message", "cluster/resources"),
             "api_error_no_details",
         ),
         (
-            aiohttp.ClientConnectionError("Connection error"),
+            ProxmoxResponseError(
+                200,
+                "Attempt to decode JSON with unexpected mimetype: text/html",
+                "cluster/resources",
+            ),
+            "api_error_no_details",
+        ),
+        (
+            ProxmoxConnectionError("Connection error"),
             "cannot_connect",
         ),
     ],
@@ -220,11 +230,11 @@ async def test_form_exceptions(
             "no_vmlxc_found",
         ),
         (
-            aiohttp.ClientConnectionError("Connection error"),
+            ProxmoxConnectionError("Connection error"),
             "cannot_connect",
         ),
         (
-            TimeoutError("Connection timed out"),
+            ProxmoxTimeoutError("Connection timed out"),
             "connect_timeout",
         ),
     ],
@@ -446,11 +456,11 @@ async def test_full_flow_reconfigure_match_entries(
             "invalid_auth",
         ),
         (
-            aiohttp.ClientSSLError(MagicMock(), OSError("SSL handshake failed")),
+            ProxmoxSSLError("SSL handshake failed"),
             "ssl_error",
         ),
         (
-            TimeoutError("Connection timed out"),
+            ProxmoxTimeoutError("Connection timed out"),
             "connect_timeout",
         ),
         (
@@ -458,7 +468,7 @@ async def test_full_flow_reconfigure_match_entries(
             "api_error_no_details",
         ),
         (
-            aiohttp.ClientConnectionError("Connection error"),
+            ProxmoxConnectionError("Connection error"),
             "cannot_connect",
         ),
     ],
@@ -582,11 +592,11 @@ async def test_full_flow_reauth_token_other(
             "invalid_auth",
         ),
         (
-            aiohttp.ClientSSLError(MagicMock(), OSError("SSL handshake failed")),
+            ProxmoxSSLError("SSL handshake failed"),
             "ssl_error",
         ),
         (
-            TimeoutError("Connection timed out"),
+            ProxmoxTimeoutError("Connection timed out"),
             "connect_timeout",
         ),
         (
@@ -594,7 +604,7 @@ async def test_full_flow_reauth_token_other(
             "api_error_no_details",
         ),
         (
-            aiohttp.ClientConnectionError("Connection error"),
+            ProxmoxConnectionError("Connection error"),
             "cannot_connect",
         ),
     ],
