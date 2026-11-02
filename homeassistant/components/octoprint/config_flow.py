@@ -211,7 +211,22 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(import_data)
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: import_data[CONF_HOST],
+                CONF_PORT: import_data[CONF_PORT],
+                CONF_PATH: import_data[CONF_PATH],
+            }
+        )
+        try:
+            return await self._finish_config(import_data)
+        except AbortFlow:
+            raise
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
 
     @override
     async def async_step_zeroconf(
