@@ -1,8 +1,7 @@
 """Tests for Fritz!Tools sensor platform."""
 
 from datetime import UTC, datetime
-from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzConnectionException
@@ -192,30 +191,29 @@ async def test_sensor_cpu_temp_unknown_on_request_error(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("fh_class_mock", "fs_class_mock")
+@pytest.mark.parametrize(
+    "fc_data",
+    [
+        {
+            **MOCK_FB_SERVICES,
+            "WANCommonIFC1": {
+                **MOCK_FB_SERVICES["WANCommonIFC1"],
+                "GetAddonInfos": FritzConnectionException("Not available Action"),
+            },
+        }
+    ],
+)
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
 async def test_sensor_addon_infos_not_supported(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
-    fc_class_mock: MagicMock,
 ) -> None:
     """Test transmission rate and traffic sensors are not created when not supported."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    fc_mock = fc_class_mock()
-    call_action = fc_mock.call_action
-
-    # Some models, e.g. the FRITZ!Box 4040, reject only GetAddonInfos
-    def _call_action(service: str, action: str, **kwargs: Any) -> Any:
-        if action == "GetAddonInfos":
-            raise FritzConnectionException("Not available Action")
-        return call_action(service, action, **kwargs)
-
-    with (
-        patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]),
-        patch.object(fc_mock, "call_action", side_effect=_call_action),
-    ):
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
