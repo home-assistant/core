@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for Kingspan Watchman SENSiT."""
 
 from datetime import timedelta
-import inspect
 import logging
 from typing import override
 
@@ -31,7 +30,6 @@ from .const import (
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
-_LOGGER.debug("AsyncSensorClient loaded from %s", inspect.getfile(AsyncSensorClient))
 
 type SENSiTConfigEntry = ConfigEntry[SENSiTDataUpdateCoordinator]  # pylint: disable=invalid-name
 

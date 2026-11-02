@@ -6,11 +6,9 @@ from homeassistant.const import Platform
 MANUFACTURER = "Kingspan"
 MODEL = "Watchman SENSiT"
 DOMAIN = "watchman"
-DOMAIN_DATA = f"{DOMAIN}_data"
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 ATTRIBUTION = "Data provided by https://www.connectsensor.com/"
-ISSUE_URL = "https://github.com/masaccio/ha-kingspan-watchman-sensit/issues"
 
 # Configuration and options
 CONF_USAGE_WINDOW = "usage_window"

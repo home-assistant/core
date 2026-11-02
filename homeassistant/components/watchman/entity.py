@@ -46,11 +46,6 @@ class SENSiTEntity(CoordinatorEntity[SENSiTDataUpdateCoordinator]):
             name=tank_name,
             manufacturer=MANUFACTURER,
         )
-        self._attr_extra_state_attributes = {
-            "attribution": ATTRIBUTION,
-            "id": self.serial_number,
-            "integration": DOMAIN,
-        }
 
     @property
     def tank_data(self) -> TankData:
@@ -61,11 +56,6 @@ class SENSiTEntity(CoordinatorEntity[SENSiTDataUpdateCoordinator]):
             if tank.serial_number == self.serial_number:
                 return tank
         return TankData(serial_number=self.serial_number)  # pragma: no cover
-
-    @property
-    def last_reset(self) -> None:
-        """Time sensor was initialized (returns None)."""
-        return None
 
     @property
     @override

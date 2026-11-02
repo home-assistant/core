@@ -22,37 +22,32 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "name": "",
-          "password": "",
-          "username": ""
+          "password": "The password for your Kingspan account",
+          "username": "The email address used to log in to the Kingspan service"
         },
         "description": "Re-enter credentials for Kingspan service",
         "title": "Watchman SENSiT"
       },
       "reconfigure": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "name": "",
-          "password": "",
-          "username": ""
+          "password": "The password for your Kingspan account",
+          "username": "The email address used to log in to the Kingspan service"
         },
         "description": "Update credentials for Kingspan service",
         "title": "Watchman SENSiT"
       },
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "name": "",
-          "password": "",
-          "username": ""
+          "password": "The password for your Kingspan account",
+          "username": "The email address used to log in to the Kingspan service"
         },
         "description": "Enter credentials for Kingspan service (found in the app)",
         "title": "Watchman SENSiT"
