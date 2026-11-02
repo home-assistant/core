@@ -179,6 +179,70 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device connection."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self.onvif_config = reconfigure_entry.data | user_input
+            # An earlier attempt in this flow may have reached a different device
+            self.device_id = None
+            errors, description_placeholders = await self.async_setup_profiles(
+                configure_unique_id=False
+            )
+            if not errors:
+                if not self._is_same_device(reconfigure_entry):
+                    return self.async_abort(reason="unique_id_mismatch")
+                result = self.async_update_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+                # The update listener only handles options, so reload explicitly
+                self.hass.config_entries.async_schedule_reload(
+                    reconfigure_entry.entry_id
+                )
+                return result
+
+        suggested_values = {
+            key: value
+            for key, value in (user_input or reconfigure_entry.data).items()
+            if key != CONF_PASSWORD
+        }
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                        probatio.Optional(CONF_USERNAME, default=""): str,
+                        probatio.Optional(
+                            probatio.Secret(CONF_PASSWORD), default=""
+                        ): str,
+                    }
+                ),
+                suggested_values,
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    @callback
+    def _is_same_device(self, entry: ConfigEntry) -> bool:
+        """Return whether the reached device belongs to the config entry."""
+        if self.device_id == entry.unique_id:
+            return True
+        # Entries created from WS-Discovery are keyed on the scope MAC, while
+        # their devices are registered with the MAC or serial the camera reports.
+        return any(
+            (DOMAIN, self.device_id) in device.identifiers
+            for device in dr.async_entries_for_config_entry(
+                dr.async_get(self.hass), entry.entry_id
+            )
+        )
+
     @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo

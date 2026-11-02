@@ -3982,7 +3982,8 @@
           "pumpFollowUpTime": 2,
           "pumpLeadTime": 2,
           "pumpProtectionDuration": 1,
-          "pumpProtectionSwitchingInterval": 14
+          "pumpProtectionSwitchingInterval": 14,
+          "valvePosition": 0.0
         },
         "2": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -3990,7 +3991,8 @@
           "groupIndex": 2,
           "groups": ["00000000-0000-0000-0000-000000000008"],
           "index": 2,
-          "label": ""
+          "label": "",
+          "valvePosition": 1.0
         },
         "3": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -3998,7 +4000,8 @@
           "groupIndex": 3,
           "groups": ["00000000-0000-0000-0000-000000000009"],
           "index": 3,
-          "label": ""
+          "label": "",
+          "valvePosition": 0.0
         },
         "4": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -4006,7 +4009,8 @@
           "groupIndex": 4,
           "groups": ["00000000-0000-0000-0000-000000000010"],
           "index": 4,
-          "label": ""
+          "label": "",
+          "valvePosition": 0.0
         },
         "5": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -4014,7 +4018,8 @@
           "groupIndex": 5,
           "groups": ["00000000-0000-0000-0000-000000000011"],
           "index": 5,
-          "label": ""
+          "label": "",
+          "valvePosition": 0.0
         },
         "6": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -4022,7 +4027,8 @@
           "groupIndex": 6,
           "groups": [],
           "index": 6,
-          "label": ""
+          "label": "",
+          "valvePosition": 0.0
         },
         "7": {
           "deviceId": "3014F7110000000000BBBBB1",
