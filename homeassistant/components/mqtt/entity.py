@@ -112,7 +112,6 @@ from .discovery import (
 from .models import (
     DATA_MQTT,
     DiscoveredDisabledEntity,
-    KeptDevices,
     MessageCallbackType,
     MqttSubentryData,
     MqttValueTemplate,
@@ -1079,7 +1078,16 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             stop_discovery_updates(
                 self.hass, self._discovery_data, self._remove_discovery_updated
             )
-            await self._async_tear_down(discovery_payload.kept_devices)
+            await self.async_tear_down()
+            if not self._skip_device_removal:
+                # Prevent a second cleanup round after the device is removed
+                self._skip_device_removal = True
+                await async_cleanup_removed_component_device(
+                    self.hass,
+                    self._device_id,
+                    self._config_entry_id,
+                    discovery_payload.kept_devices,
+                )
             send_discovery_done(self.hass, self._discovery_data)
             _LOGGER.debug(
                 "%s %s has been removed",
@@ -1110,20 +1118,8 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         stop_discovery_updates(
             self.hass, self._discovery_data, self._remove_discovery_updated
         )
-        await self._async_tear_down()
-        await async_remove_discovery_payload(self.hass, self._discovery_data)
-
-    async def _async_tear_down(self, kept_devices: KeptDevices | None = None) -> None:
-        """Handle the cleanup of the discovery service."""
-        # Cleanup platform resources
         await self.async_tear_down()
-        # remove the service for auto discovery updates and clean up the device registry
-        if not self._skip_device_removal:
-            # Prevent a second cleanup round after the device is removed
-            self._skip_device_removal = True
-            await async_cleanup_removed_component_device(
-                self.hass, self._device_id, self._config_entry_id, kept_devices
-            )
+        await async_remove_discovery_payload(self.hass, self._discovery_data)
 
     @abstractmethod
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
