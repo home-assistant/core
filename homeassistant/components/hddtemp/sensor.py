@@ -1,6 +1,7 @@
 """Support for getting the disk temperature of a host."""
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 import socket
 from typing import Any, override
@@ -25,8 +26,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import HddtempEntityStateAttribute
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
@@ -35,6 +34,14 @@ DEFAULT_NAME = "HD Temperature"
 DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=1)
+
+
+class HddtempEntityStateAttribute(StrEnum):
+    """State attributes for hddtemp entities."""
+
+    DEVICE = "device"
+    MODEL = "model"
+
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
