@@ -12,7 +12,7 @@ from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_EXCLUDE, SERVICE_RELOAD
+from homeassistant.const import CONF_EXCLUDE, SERVICE_RELOAD, CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -42,7 +42,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCHEMA_UPDATE_ENTITY = probatio.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+SCHEMA_UPDATE_ENTITY = probatio.Schema({CommonServiceArgument.ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = probatio.All(
     probatio.Schema(
         {
@@ -107,7 +107,7 @@ async def _async_handle_turn_service(service: ServiceCall) -> None:
         data = dict(service.data)
 
         # ent_ids is a generator, convert it to a list.
-        data[ATTR_ENTITY_ID] = list(ent_ids)
+        data[CommonServiceArgument.ENTITY_ID] = list(ent_ids)
 
         tasks.append(
             hass.services.async_call(
@@ -185,7 +185,7 @@ async def _async_handle_update_service(call: ServiceCall) -> None:
                 user_id=call.context.user_id,
             )
 
-        for entity in call.data[ATTR_ENTITY_ID]:
+        for entity in call.data[CommonServiceArgument.ENTITY_ID]:
             if not user.permissions.check_entity(entity, POLICY_CONTROL):
                 raise Unauthorized(
                     context=call.context,
@@ -194,7 +194,10 @@ async def _async_handle_update_service(call: ServiceCall) -> None:
                     perm_category=CAT_ENTITIES,
                 )
 
-    tasks = [async_update_entity(hass, entity) for entity in call.data[ATTR_ENTITY_ID]]
+    tasks = [
+        async_update_entity(hass, entity)
+        for entity in call.data[CommonServiceArgument.ENTITY_ID]
+    ]
 
     if tasks:
         await asyncio.gather(*tasks)
@@ -311,7 +314,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     service_schema = probatio.Schema(
         {
-            ATTR_ENTITY_ID: cv.entity_ids,
+            CommonServiceArgument.ENTITY_ID: cv.entity_ids,
             probatio.Optional(CONF_EXCLUDE): cv.TARGET_EXCLUDE_SCHEMA,
         },
         extra=probatio.ALLOW_EXTRA,

@@ -4,6 +4,7 @@
   "categories": ["productivity_information"],
   "codeowners": ["@joostlek", "@andrew-codechimp"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/mealie",
   "integration_type": "service",
   "iot_class": "local_polling",

@@ -20,6 +20,7 @@ async def async_setup_entry(
     """Set up device tracker for OPNsense component."""
     client = entry.runtime_data.client
     interfaces = entry.runtime_data.tracker_interfaces
+    tracked_devices = entry.runtime_data.tracked_devices
 
     coordinator = OPNsenseDeviceTrackerCoordinator(hass, entry, client, interfaces)
 
@@ -30,10 +31,10 @@ async def async_setup_entry(
 
         entities = []
         for mac_address in coordinator.data:
-            if mac_address in coordinator.tracked_devices:
+            if mac_address in tracked_devices:
                 continue
             entity = OPNsenseDeviceTrackerEntity(coordinator, mac_address)
-            coordinator.tracked_devices.add(mac_address)
+            tracked_devices.add(mac_address)
             entities.append(entity)
 
         if entities:
@@ -59,10 +60,15 @@ class OPNsenseDeviceTrackerEntity(
         """Initialize the device tracker entity."""
         super().__init__(coordinator)
         self._attr_mac_address = mac_address
-        self._attr_device_info = dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
-            name=self.hostname or mac_address,
-        )
+        connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
+        self._attr_device_info = dr.DeviceInfo(connections={connection})
+        if hostname := self.hostname:
+            self._attr_device_info["name"] = hostname
+        elif not dr.async_get(coordinator.hass).async_get_device_by_connection(
+            connection, coordinator.config_entry.entry_id
+        ):
+            # Only name a new device by MAC, an existing device keeps its name
+            self._attr_device_info["name"] = mac_address
 
     @property
     def device_data(self) -> DeviceDetails | None:
