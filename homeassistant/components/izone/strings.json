@@ -59,6 +59,9 @@
       "return_temperature": {
         "name": "Return temperature"
       },
+      "rf_signal": {
+        "name": "RF signal"
+      },
       "supply_temperature": {
         "name": "Supply temperature"
       }
