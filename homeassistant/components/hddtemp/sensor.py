@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    ATTR_MODEL,
     CONF_DISKS,
     CONF_HOST,
     CONF_NAME,
@@ -26,9 +25,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import HddtempEntityStateAttribute
 
-ATTR_DEVICE = "device"
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 7634
@@ -87,7 +86,10 @@ class HddTempSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._details is not None:
-            return {ATTR_DEVICE: self._details[0], ATTR_MODEL: self._details[1]}
+            return {
+                HddtempEntityStateAttribute.DEVICE: self._details[0],
+                HddtempEntityStateAttribute.MODEL: self._details[1],
+            }
         return None
 
     def update(self) -> None:
