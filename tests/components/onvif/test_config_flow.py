@@ -1196,6 +1196,7 @@ async def test_reconfigure_flow_reloads_loaded_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.state is ConfigEntryState.LOADED
+    assert mock_onvif_camera_cls.call_count == 3
     assert entry.data[CONF_HOST] == RECONFIGURE_INPUT[CONF_HOST]
     assert "has an update listener" not in caplog.text
 
