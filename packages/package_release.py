@@ -3,7 +3,7 @@
 from pathlib import Path
 import tomllib
 
-PACKAGE_PATH = Path("packages/pytest-home-assistant/pyproject.toml")
+PACKAGE_PATH = Path("packages/pytest-homeassistant/pyproject.toml")
 
 
 def main() -> None:
