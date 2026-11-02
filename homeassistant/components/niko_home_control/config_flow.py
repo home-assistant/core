@@ -1,6 +1,5 @@
 """Config flow for the Niko home control integration."""
 
-import logging
 from typing import Any, override
 
 from nhc.controller import NHCController
@@ -9,9 +8,7 @@ import probatio
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER
 
 DATA_SCHEMA = probatio.Schema(
     {
@@ -30,8 +27,8 @@ async def test_connection(host: str) -> str | None:
         return "timeout_connect"
     except OSError:
         return "cannot_connect"
-    except Exception:
-        _LOGGER.exception("Unexpected exception during connection")
+    except Exception:  # noqa: BLE001
+        LOGGER.exception("Unexpected exception during connection")
         return "unknown"
     return None
 

@@ -1,6 +1,5 @@
 """Config flow for Goal Zero Yeti integration."""
 
-import logging
 from typing import Any, override
 
 from goalzero import Yeti, exceptions
@@ -12,9 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DEFAULT_NAME, DOMAIN, MANUFACTURER
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_NAME, DOMAIN, LOGGER, MANUFACTURER
 
 
 class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -110,7 +107,7 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
             return None, "cannot_connect"
         except exceptions.InvalidHost:
             return None, "invalid_host"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
             return None, "unknown"
         return str(api.sysdata["macAddress"]), None
