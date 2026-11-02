@@ -35,7 +35,7 @@ class SkodaSwitchEntityDescription(SwitchEntityDescription):
     is_on_fn: Callable[[SkodaEntity], bool | None]
     turn_on_fn: Callable[[OpenAPIClient, str], Awaitable[Any]]
     turn_off_fn: Callable[[OpenAPIClient, str], Awaitable[Any]]
-    required_capability: VehicleCapability
+    required_capabilities: frozenset[VehicleCapability]
     required_operations: frozenset[VehicleOperationName]
 
     def is_supported(
@@ -46,9 +46,9 @@ class SkodaSwitchEntityDescription(SwitchEntityDescription):
         """Return whether the vehicle supports this switch.
 
         The operations list can be temporarily unavailable, in which case only
-        the capability is checked so a transient error does not hide the switch.
+        the capabilities are checked so a transient error does not hide the switch.
         """
-        if self.required_capability not in capabilities:
+        if not self.required_capabilities <= capabilities:
             return False
         return operations is None or self.required_operations <= operations
 
@@ -73,7 +73,7 @@ SWITCH_TYPES: tuple[SkodaSwitchEntityDescription, ...] = (
     SkodaSwitchEntityDescription(
         key="charging",
         translation_key="charging",
-        required_capability=VehicleCapability.CHARGING,
+        required_capabilities=frozenset({VehicleCapability.CHARGING}),
         required_operations=frozenset(
             {VehicleOperationName.START_CHARGING, VehicleOperationName.STOP_CHARGING}
         ),
@@ -84,7 +84,7 @@ SWITCH_TYPES: tuple[SkodaSwitchEntityDescription, ...] = (
     SkodaSwitchEntityDescription(
         key="active_ventilation",
         translation_key="active_ventilation",
-        required_capability=VehicleCapability.ACTIVE_VENTILATION,
+        required_capabilities=frozenset({VehicleCapability.ACTIVE_VENTILATION}),
         required_operations=frozenset(
             {
                 VehicleOperationName.START_ACTIVE_VENTILATION,
