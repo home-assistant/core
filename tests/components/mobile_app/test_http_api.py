@@ -15,10 +15,13 @@ from homeassistant.components.mobile_app.const import (
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
+    DATA_DELETED_IDS,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT, RENDER_TEMPLATE
@@ -66,6 +69,72 @@ async def test_registration(
         entries[0].data["supports_encryption"]
         == REGISTER_CLEARTEXT["supports_encryption"]
     )
+
+
+async def test_registration_again_updates_entry(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an app registering again updates its existing entry."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    old_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    sensor = {"name": "Battery State", "state": 100, "type": "sensor"}
+    resp = await api_client.post(
+        f"/api/webhook/{old_webhook_id}",
+        json={"type": "register_sensor", "data": {**sensor, "unique_id": "abcd"}},
+    )
+    assert resp.status == HTTPStatus.CREATED
+    entity_registry.async_update_entity(
+        "sensor.test_1_battery_state", name="Phone battery"
+    )
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations",
+        json={**REGISTER_CLEARTEXT, "device_name": "Test 2"},
+    )
+    assert resp.status == HTTPStatus.CREATED
+    new_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.title == "Test 2"
+    assert entry.data[CONF_WEBHOOK_ID] == new_webhook_id
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.data[DOMAIN][DATA_DELETED_IDS] == [old_webhook_id]
+    assert entity_registry.async_get("device_tracker.test_1")
+    assert "same unique ID exists" not in caplog.text
+
+    # The sensor is moved to the new webhook ID and keeps its customization
+    sensor_entry = entity_registry.async_get("sensor.test_1_battery_state")
+    assert sensor_entry.unique_id == f"{new_webhook_id}_abcd"
+    assert sensor_entry.name == "Phone battery"
+    assert hass.states.get("sensor.test_1_battery_state")
+
+    # Registering the sensor again with the new webhook updates the entity
+    resp = await api_client.post(
+        f"/api/webhook/{new_webhook_id}",
+        json={
+            "type": "register_sensor",
+            "data": {**sensor, "state": 50, "unique_id": "abcd"},
+        },
+    )
+    assert resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+    assert {
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    } == {"device_tracker.test_1", "sensor.test_1_battery_state"}
+    assert hass.states.get("sensor.test_1_battery_state").state == "50"
 
 
 async def test_registration_encryption(

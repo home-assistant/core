@@ -53,11 +53,11 @@ from .const import (
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
 )
-from .helpers import async_is_local_only_user, savable_state
+from .helpers import async_is_local_only_user
 from .http_api import RegistrationsView
 from .live_activity.store import async_cleanup_expired_live_activity_tokens
 from .timers import async_handle_timer_event
-from .util import async_create_cloud_hook, supports_push
+from .util import async_create_cloud_hook, async_retire_webhook, supports_push
 from .webhook import handle_webhook
 
 PLATFORMS = [
@@ -241,15 +241,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
-    webhook_id = entry.data[CONF_WEBHOOK_ID]
-    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
-    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
-    store = hass.data[DOMAIN][DATA_STORE]
-    await store.async_save(savable_state(hass))
-
-    if CONF_CLOUDHOOK_URL in entry.data:
-        with suppress(cloud.CloudNotAvailable, ValueError):
-            await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
+    await async_retire_webhook(hass, entry)
 
 
 class _MobileAppStore(Store[dict[str, Any]]):

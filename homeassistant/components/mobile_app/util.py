@@ -2,10 +2,12 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
@@ -15,10 +17,14 @@ from .const import (
     ATTR_PUSH_WEBSOCKET_CHANNEL,
     CONF_CLOUDHOOK_URL,
     DATA_CONFIG_ENTRIES,
+    DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
+    DATA_STORE,
     DOMAIN,
 )
+from .helpers import savable_state
 
 if TYPE_CHECKING:
     from .notify import MobileAppNotificationService
@@ -73,3 +79,16 @@ async def async_create_cloud_hook(
                 entry, data={**entry.data, CONF_CLOUDHOOK_URL: hook}
             )
         return hook
+
+
+async def async_retire_webhook(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Retire the webhook of an entry and delete its cloudhook."""
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
+    store = hass.data[DOMAIN][DATA_STORE]
+    await store.async_save(savable_state(hass))
+
+    if CONF_CLOUDHOOK_URL in entry.data:
+        with suppress(cloud.CloudNotAvailable, ValueError):
+            await cloud.async_delete_cloudhook(hass, webhook_id)

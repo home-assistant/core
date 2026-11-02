@@ -4,11 +4,17 @@ from typing import Any, override
 import uuid
 
 from homeassistant.components import person
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import entity_registry as er
 
 from .const import ATTR_APP_ID, ATTR_DEVICE_NAME, CONF_USER_ID, DOMAIN
+from .util import async_retire_webhook
 
 
 class MobileAppFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -53,6 +59,43 @@ class MobileAppFlowHandler(ConfigFlow, domain=DOMAIN):
             self.hass, user_input[CONF_USER_ID], devt_entry.entity_id
         )
 
+        if self.unique_id is not None and (
+            existing_entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, self.unique_id
+            )
+        ):
+            return await self._async_update_registration(existing_entry, user_input)
+
         return self.async_create_entry(
             title=user_input[ATTR_DEVICE_NAME], data=user_input
         )
+
+    async def _async_update_registration(
+        self, entry: ConfigEntry, registration: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Update the entry of an app which registers again."""
+        # Every registration gets a new webhook ID, so the entry is unloaded
+        # while its data still has the old one
+        await self.hass.config_entries.async_unload(entry.entry_id)
+        await async_retire_webhook(self.hass, entry)
+
+        # Sensor unique IDs are prefixed with the webhook ID
+        old_prefix = f"{entry.data[CONF_WEBHOOK_ID]}_"
+        new_prefix = f"{registration[CONF_WEBHOOK_ID]}_"
+        entity_registry = er.async_get(self.hass)
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if entity.unique_id.startswith(old_prefix):
+                entity_registry.async_update_entity(
+                    entity.entity_id,
+                    new_unique_id=new_prefix
+                    + entity.unique_id.removeprefix(old_prefix),
+                )
+
+        self.hass.config_entries.async_update_entry(
+            entry, title=registration[ATTR_DEVICE_NAME], data=registration
+        )
+        if entry.state is ConfigEntryState.NOT_LOADED and not entry.disabled_by:
+            await self.hass.config_entries.async_setup(entry.entry_id)
+        return self.async_abort(reason="registration_updated")
