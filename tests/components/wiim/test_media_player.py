@@ -1254,6 +1254,18 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
     follower_device.async_get_equalizer_mode.assert_awaited_once_with()
     mock_wiim_device.async_get_equalizer_mode.assert_not_awaited()
 
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {
+            ATTR_ENTITY_ID: "media_player.follower_wiim_device",
+            ATTR_SOUND_MODE: "Deep",
+        },
+        blocking=True,
+    )
+    follower_device.async_set_equalizer_mode.assert_awaited_once_with("Deep")
+    mock_wiim_device.async_set_equalizer_mode.assert_not_awaited()
+
 
 async def test_follower_routes_repeat_shuffle_but_keeps_source_local(
     hass: HomeAssistant,
