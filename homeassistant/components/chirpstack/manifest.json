@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@balloob"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["lorawan"],
   "documentation": "https://www.home-assistant.io/integrations/chirpstack",
   "integration_type": "hub",

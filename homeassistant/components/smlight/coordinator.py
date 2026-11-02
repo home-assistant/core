@@ -216,8 +216,14 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
     async def _internal_update_data(self) -> SmFwData:
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()
-        assert info.radios is not None
-        esp_firmware = None
+        if self.in_progress and self.data:
+            return SmFwData(
+                info=info,
+                esp_firmware=self.data.esp_firmware,
+                zb_firmware=self.data.zb_firmware,
+            )
+
+        esp_firmware: FirmwareList = []
         zb_firmware: list[FirmwareList] = []
 
         try:

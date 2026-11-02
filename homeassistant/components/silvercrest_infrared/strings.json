@@ -8,6 +8,15 @@
       "missing_infrared_entity": "Select an infrared emitter."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "title": "Reconfigure SilverCrest Infrared device"
+      },
       "user": {
         "data": {
           "device_type": "[%key:common::generic::device_type%]",
