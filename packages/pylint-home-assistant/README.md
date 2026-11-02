@@ -106,6 +106,7 @@ Every check has a code following the
 | `C7417` | [`home-assistant-init-not-first`](#c7417-home-assistant-init-not-first) | `__init__` should be defined before other instance methods and properties |
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
+| `C7458` | [`home-assistant-logger-const-name`](#c7458-home-assistant-logger-const-name) | Logger in an integration's `const.py` should use `__package__` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
 | `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
@@ -175,7 +176,7 @@ Every check has a code following the
 
 ## `home_assistant_logger` checker
 
-Enforces consistent formatting of logger messages across the codebase.
+Enforces consistent formatting and naming of loggers across the codebase.
 
 
 ### `C7401`: `home-assistant-logger-period`
@@ -189,6 +190,13 @@ Home Assistant follow a convention of not using trailing punctuation.
 Logger messages must start with a capital letter. Debug-level messages
 are exempt from this rule. If a message does not warrant capitalization,
 consider downgrading it to debug level.
+
+
+### `C7458`: `home-assistant-logger-const-name`
+
+The logger defined in an integration's `const.py` must use
+`logging.getLogger(__package__)`. With `__name__`, log records are attributed
+to `homeassistant.components.<domain>.const` instead of the integration.
 
 
 ## `home_assistant_imports` checker
