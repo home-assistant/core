@@ -78,7 +78,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         account_id: str | None = None
         try:
             await aqualink.login()
-            account_id = aqualink.user_id or None
+            account_id = str(aqualink.user_id) if aqualink.user_id else None
         except (
             AqualinkServiceException,
             AqualinkServiceUnauthorizedException,
@@ -133,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             f"Error while attempting login: {error_detail(aio_exception)}"
         ) from aio_exception
 
-    account_id = aqualink.user_id
+    account_id = str(aqualink.user_id)
     if entry.unique_id != account_id:
         conflicting_entry = hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, account_id

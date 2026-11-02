@@ -273,6 +273,28 @@ async def test_with_existing_config(
     assert flow.unique_id == MOCK_USER_ID
 
 
+async def test_user_flow_coerces_int_account_id_to_str(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test the user flow stores an int account ID from the library as a string."""
+    flow = config_flow.AqualinkFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+
+    async def _async_mock_login_int_user_id(self: Any) -> None:
+        """Mock a successful login with an int account ID."""
+        self.user_id = 142551
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        _async_mock_login_int_user_id,
+    ):
+        result = await flow.async_step_user(config_data)
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert flow.unique_id == "142551"
+
+
 async def test_dhcp_discovery_aborts_if_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

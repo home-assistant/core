@@ -53,7 +53,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2
                 ),
             ) as client:
-                return {}, client.user_id
+                return {}, str(client.user_id) if client.user_id else None
         except AqualinkServiceUnauthorizedException:
             return {"base": "invalid_auth"}, None
         except AqualinkServiceException, TimeoutError, httpx2.HTTPError:
