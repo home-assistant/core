@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from . import OmadaConfigEntry
 from .const import DOMAIN
@@ -415,7 +415,7 @@ class OmadaVpnSwitch(
 
     @property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the current name of the VPN policy."""
         if policy := self.coordinator.data.get(self._policy_key):
             return policy.name
