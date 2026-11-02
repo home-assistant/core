@@ -24,6 +24,9 @@ class TypeHintMatch:
     """`function_name` and `async_function_name` share arguments and return type"""
     mandatory: bool = False
     """bypass ignore_missing_annotations"""
+    coroutine: bool | None = None
+    """`True` for `async def`, `False` for `def`, `None` to skip the check;
+    the async counterpart of a `has_async_counterpart` match is always `async def`"""
 
     def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
         """Confirm if function should be checked."""
