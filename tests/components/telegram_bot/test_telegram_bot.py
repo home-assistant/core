@@ -773,7 +773,7 @@ async def test_deprecated_inline_keyboard_creates_issue(
     )
     assert issue is not None
     assert issue.translation_key == "deprecated_inline_keyboard"
-    assert issue.breaks_in_ha_version == "2026.12.0"
+    assert issue.breaks_in_ha_version == "2027.6.0"
     assert issue.translation_placeholders == {
         "action": f"{DOMAIN}.{SERVICE_SEND_MESSAGE}",
         "action_origin": "call_service",
