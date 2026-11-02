@@ -117,10 +117,10 @@ async def test_media_player_availability_follows_ir_entity(
         (SERVICE_VOLUME_UP, {}, LGHomeTheaterCode.VOLUME_UP),
         (SERVICE_VOLUME_DOWN, {}, LGHomeTheaterCode.VOLUME_DOWN),
         (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, LGHomeTheaterCode.MUTE),
-        (SERVICE_MEDIA_NEXT_TRACK, {}, LGHomeTheaterCode.SKIP_NEXT),
-        (SERVICE_MEDIA_PREVIOUS_TRACK, {}, LGHomeTheaterCode.SKIP_PREVIOUS),
+        (SERVICE_MEDIA_NEXT_TRACK, {}, LGHomeTheaterCode.SKIP_FORWARD),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, {}, LGHomeTheaterCode.SKIP_BACKWARD),
         (SERVICE_MEDIA_PLAY, {}, LGHomeTheaterCode.PLAY),
-        (SERVICE_MEDIA_PAUSE, {}, LGHomeTheaterCode.PAUSE_STEP),
+        (SERVICE_MEDIA_PAUSE, {}, LGHomeTheaterCode.PAUSE),
         (SERVICE_MEDIA_STOP, {}, LGHomeTheaterCode.STOP),
     ],
 )

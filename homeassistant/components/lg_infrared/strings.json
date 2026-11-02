@@ -76,6 +76,9 @@
       "ai_convertible": {
         "name": "AI mode"
       },
+      "asterisk": {
+        "name": "Asterisk"
+      },
       "audio": {
         "name": "Toggle beep"
       },
@@ -225,9 +228,6 @@
       },
       "speaker_level": {
         "name": "Speaker level"
-      },
-      "star": {
-        "name": "Star"
       },
       "subtitle": {
         "name": "Subtitle"

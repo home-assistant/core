@@ -4,6 +4,9 @@
       "ai_convertible": {
         "default": "mdi:brain"
       },
+      "asterisk": {
+        "default": "mdi:asterisk"
+      },
       "audio": {
         "default": "mdi:volume-high"
       },
@@ -153,9 +156,6 @@
       },
       "speaker_level": {
         "default": "mdi:speaker"
-      },
-      "star": {
-        "default": "mdi:star"
       },
       "subtitle": {
         "default": "mdi:subtitles"

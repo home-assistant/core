@@ -251,7 +251,9 @@ HOME_THEATER_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
         key="num_9", translation_key="num_9", command_code=LGHomeTheaterCode.NUM_9
     ),
     LgIrButtonEntityDescription(
-        key="star", translation_key="star", command_code=LGHomeTheaterCode.STAR
+        key="asterisk",
+        translation_key="asterisk",
+        command_code=LGHomeTheaterCode.ASTERISK,
     ),
     LgIrButtonEntityDescription(
         key="open_close",

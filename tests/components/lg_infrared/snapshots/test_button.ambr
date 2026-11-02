@@ -449,6 +449,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_entities[home_theater][button.lg_home_theater_asterisk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lg_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_home_theater_asterisk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Asterisk',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Asterisk',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'asterisk',
+    'unique_id': '01JTEST0000000000000000000_asterisk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[home_theater][button.lg_home_theater_asterisk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Asterisk',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_home_theater_asterisk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entities[home_theater][button.lg_home_theater_audio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2143,56 +2193,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_home_theater_speaker_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[home_theater][button.lg_home_theater_star-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('lg_infrared', '01JTEST0000000000000000000')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_home_theater_star',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Star',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Star',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'star',
-    'unique_id': '01JTEST0000000000000000000_star',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[home_theater][button.lg_home_theater_star-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Star',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_home_theater_star',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

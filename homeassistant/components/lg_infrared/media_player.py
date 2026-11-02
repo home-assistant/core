@@ -169,12 +169,12 @@ class LgIrHomeTheaterMediaPlayer(
     @override
     async def async_media_next_track(self) -> None:
         """Send skip next command."""
-        await self._send_command(LGHomeTheaterCode.SKIP_NEXT.to_command())
+        await self._send_command(LGHomeTheaterCode.SKIP_FORWARD.to_command())
 
     @override
     async def async_media_previous_track(self) -> None:
         """Send skip previous command."""
-        await self._send_command(LGHomeTheaterCode.SKIP_PREVIOUS.to_command())
+        await self._send_command(LGHomeTheaterCode.SKIP_BACKWARD.to_command())
 
     @override
     async def async_media_play(self) -> None:
@@ -184,7 +184,7 @@ class LgIrHomeTheaterMediaPlayer(
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._send_command(LGHomeTheaterCode.PAUSE_STEP.to_command())
+        await self._send_command(LGHomeTheaterCode.PAUSE.to_command())
 
     @override
     async def async_media_stop(self) -> None:

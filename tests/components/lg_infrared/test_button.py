@@ -193,7 +193,7 @@ async def test_ac_buttons_disabled_by_default(
         ("button.lg_home_theater_number_7", LGHomeTheaterCode.NUM_7),
         ("button.lg_home_theater_number_8", LGHomeTheaterCode.NUM_8),
         ("button.lg_home_theater_number_9", LGHomeTheaterCode.NUM_9),
-        ("button.lg_home_theater_star", LGHomeTheaterCode.STAR),
+        ("button.lg_home_theater_asterisk", LGHomeTheaterCode.ASTERISK),
         ("button.lg_home_theater_open_close", LGHomeTheaterCode.OPEN_CLOSE),
         (
             "button.lg_home_theater_optical_tv_sound",
