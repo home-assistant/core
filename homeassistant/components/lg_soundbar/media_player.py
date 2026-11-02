@@ -106,21 +106,12 @@ class LGDevice(MediaPlayerEntity):
         self._attr_unique_id = unique_id
 
         self._volume = 0
-        self._volume_min = 0
         self._volume_max = 0
         self._function = -1
         self._functions: list[int] = []
         self._equaliser = -1
         self._equalisers: list[int] = []
         self._mute = False
-        self._rear_volume = 0
-        self._rear_volume_min = 0
-        self._rear_volume_max = 0
-        self._woofer_volume = 0
-        self._woofer_volume_min = 0
-        self._woofer_volume_max = 0
-        self._bass = 0
-        self._treble = 0
         self._support_play_control = False
         # Starts out matching the ON default of _attr_state, for the same reason
         self._device_on = True
@@ -190,8 +181,6 @@ class LGDevice(MediaPlayerEntity):
         elif response["msg"] == "SPK_LIST_VIEW_INFO":
             if "i_vol" in data:
                 self._volume = data["i_vol"]
-            if "i_vol_min" in data:
-                self._volume_min = data["i_vol_min"]
             if "i_vol_max" in data:
                 self._volume_max = data["i_vol_max"]
             if "b_mute" in data:
@@ -210,18 +199,6 @@ class LGDevice(MediaPlayerEntity):
             if "ai_func_list" in data:
                 self._functions = data["ai_func_list"]
         elif response["msg"] == "SETTING_VIEW_INFO":
-            if "i_rear_min" in data:
-                self._rear_volume_min = data["i_rear_min"]
-            if "i_rear_max" in data:
-                self._rear_volume_max = data["i_rear_max"]
-            if "i_rear_level" in data:
-                self._rear_volume = data["i_rear_level"]
-            if "i_woofer_min" in data:
-                self._woofer_volume_min = data["i_woofer_min"]
-            if "i_woofer_max" in data:
-                self._woofer_volume_max = data["i_woofer_max"]
-            if "i_woofer_level" in data:
-                self._woofer_volume = data["i_woofer_level"]
             if "i_curr_eq" in data:
                 self._equaliser = data["i_curr_eq"]
             if "s_user_name" in data:
@@ -233,10 +210,6 @@ class LGDevice(MediaPlayerEntity):
 
     def _update_equalisers(self, data: dict[str, Any]) -> None:
         """Update the equalisers."""
-        if "i_bass" in data:
-            self._bass = data["i_bass"]
-        if "i_treble" in data:
-            self._treble = data["i_treble"]
         if "ai_eq_list" in data:
             self._equalisers = data["ai_eq_list"]
         if "i_curr_eq" in data:
