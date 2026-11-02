@@ -6,9 +6,9 @@ from aurorapy.client import AuroraError, AuroraTimeoutError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.aurora_abb_powerone.const import (
-    ATTR_FIRMWARE,
-    ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
+    CONF_FIRMWARE,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
     DOMAIN,
 )
 from homeassistant.components.usb import SerialDevice
@@ -78,9 +78,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_PORT: "/dev/ttyUSB7",
         CONF_ADDRESS: 7,
-        ATTR_FIRMWARE: "1.234",
-        ATTR_MODEL: "9.8.7.6 (A.B.C)",
-        ATTR_SERIAL_NUMBER: "9876543",
+        CONF_FIRMWARE: "1.234",
+        CONF_MODEL: "9.8.7.6 (A.B.C)",
+        CONF_SERIAL_NUMBER: "9876543",
         "title": "PhotoVoltaic Inverters",
     }
     assert result2["result"].unique_id == "9876543"

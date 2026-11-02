@@ -5,9 +5,9 @@ from unittest.mock import patch
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aurora_abb_powerone.const import (
-    ATTR_FIRMWARE,
-    ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
+    CONF_FIRMWARE,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -54,9 +54,9 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             data={
                 CONF_PORT: "/dev/ttyUSB7",
                 CONF_ADDRESS: 7,
-                ATTR_MODEL: "model123",
-                ATTR_SERIAL_NUMBER: "876",
-                ATTR_FIRMWARE: "1.2.3.4",
+                CONF_MODEL: "model123",
+                CONF_SERIAL_NUMBER: "876",
+                CONF_FIRMWARE: "1.2.3.4",
             },
         )
         mock_entry.add_to_hass(hass)

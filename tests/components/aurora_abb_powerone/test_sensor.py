@@ -8,10 +8,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.aurora_abb_powerone.const import (
-    ATTR_DEVICE_NAME,
-    ATTR_FIRMWARE,
-    ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
+    CONF_DEVICE_NAME,
+    CONF_FIRMWARE,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
     SCAN_INTERVAL,
@@ -59,10 +59,10 @@ def _mock_config_entry():
         data={
             CONF_PORT: "/dev/usb999",
             CONF_ADDRESS: 3,
-            ATTR_DEVICE_NAME: "mydevicename",
-            ATTR_MODEL: "mymodel",
-            ATTR_SERIAL_NUMBER: "123456",
-            ATTR_FIRMWARE: "1.2.3.4",
+            CONF_DEVICE_NAME: "mydevicename",
+            CONF_MODEL: "mymodel",
+            CONF_SERIAL_NUMBER: "123456",
+            CONF_FIRMWARE: "1.2.3.4",
         },
         source="dummysource",
         entry_id="13579",
