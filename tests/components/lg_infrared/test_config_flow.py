@@ -155,8 +155,10 @@ async def test_user_flow_no_emitters_receivers(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_infrared_receiver_entity")
-async def test_user_flow_menu_hides_ac_without_emitter(hass: HomeAssistant) -> None:
-    """Test the AC option is hidden when only a receiver is available."""
+async def test_user_flow_menu_hides_ac_and_home_theater_without_emitter(
+    hass: HomeAssistant,
+) -> None:
+    """Test the AC and Home Theater options are hidden when only a receiver is available."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -278,6 +280,78 @@ async def test_user_flow_ac_already_configured(
             CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
             CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
         },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_user_flow_home_theater_success(hass: HomeAssistant) -> None:
+    """Test successful Home Theater config flow."""
+    result = await _async_start_flow(hass, LGDeviceType.HOME_THEATER)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "home_theater"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "LG Home Theater via Test IR emitter"
+    assert result["data"] == {
+        CONF_DEVICE_TYPE: LGDeviceType.HOME_THEATER,
+        CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
+    }
+    assert result["result"].unique_id is None
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+@pytest.mark.parametrize(
+    ("entity_name", "expected_title"),
+    [
+        pytest.param(None, "LG Home Theater via Test IR emitter", id="original_name"),
+        pytest.param(
+            "HT IR emitter",
+            "LG Home Theater via HT IR emitter",
+            id="custom_name",
+        ),
+    ],
+)
+async def test_user_flow_home_theater_title_from_entity_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_name: str | None,
+    expected_title: str,
+) -> None:
+    """Test Home Theater config entry title uses the entity name."""
+    entity_registry.async_update_entity(
+        mock_infrared_emitter_entity_id, name=entity_name
+    )
+
+    result = await _async_start_flow(hass, LGDeviceType.HOME_THEATER)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == expected_title
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+@pytest.mark.parametrize("device_type", [LGDeviceType.HOME_THEATER])
+async def test_user_flow_home_theater_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test Home Theater flow aborts when emitter is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await _async_start_flow(hass, LGDeviceType.HOME_THEATER)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id},
     )
 
     assert result["type"] is FlowResultType.ABORT
