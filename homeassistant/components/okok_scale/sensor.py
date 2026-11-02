@@ -2,7 +2,7 @@
 
 from typing import override
 
-from okokscale.parser import (
+from okokscale import (
     SensorDeviceClass as OKOKScaleSensorDeviceClass,
     SensorUpdate,
     Units,
