@@ -1486,7 +1486,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "modern_forms",
     "moehlenhoff_alpha2",
     "mold_indicator",
-    "monarch_money",
     "monoprice",
     "moon",
     "mopeka",

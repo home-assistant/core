@@ -4,6 +4,7 @@
   "categories": ["plugs_switches", "climate.water_heaters", "blinds_curtains"],
   "codeowners": ["@thecode", "@YogevBokobza"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/switcher_kis",
   "integration_type": "hub",
   "iot_class": "local_push",
