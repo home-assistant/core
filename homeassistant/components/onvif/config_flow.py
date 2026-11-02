@@ -347,7 +347,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                 raise AbortFlow(reason="no_mac")
 
             if configure_unique_id:
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 await self.async_set_unique_id(self.device_id, raise_on_progress=False)
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 self._abort_if_unique_id_configured(
                     updates={
                         CONF_HOST: self.onvif_config[CONF_HOST],
