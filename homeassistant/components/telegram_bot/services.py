@@ -605,7 +605,7 @@ def _service_call_origin(service: ServiceCall) -> str:
     return service_call_origin
 
 
-# Deprecated: remove in 2026.12.0
+# Deprecated: remove in 2027.6.0
 def _deprecate_inline_keyboard(service: ServiceCall) -> None:
     """Warn when a legacy inline_keyboard format is used."""
     rows = service.data.get(ATTR_KEYBOARD_INLINE)
@@ -624,7 +624,7 @@ def _deprecate_inline_keyboard(service: ServiceCall) -> None:
         service.hass,
         DOMAIN,
         f"deprecated_inline_keyboard_{service_call_origin}",
-        breaks_in_ha_version="2026.12.0",
+        breaks_in_ha_version="2027.6.0",
         is_fixable=False,
         is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
@@ -783,17 +783,7 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
         else service.data[ATTR_TARGET]
     )
 
-    # default: service was called using frontend such as
-    # developer tools or automation editor
-    service_call_origin = "call_service"
-
-    origin = service.context.origin_event
-    if origin and ATTR_ENTITY_ID in origin.data:
-        # automation
-        service_call_origin = origin.data[ATTR_ENTITY_ID]
-    elif origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
-        # script
-        service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
+    service_call_origin = _service_call_origin(service)
 
     ir.async_create_issue(
         service.hass,
