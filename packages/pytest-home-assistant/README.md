@@ -1,4 +1,4 @@
-# pytest-home-assistant
+# pytest-homeassistant
 
 Pytest fixtures and helpers for testing Home Assistant integrations. Create a
 Home Assistant instance, mock configuration entries and external services,
@@ -9,7 +9,7 @@ simulate events, and check integration behavior.
 Install the package into your custom integration's virtual environment:
 
 ```shell
-uv pip install home-assistant-pytest
+uv pip install pytest-homeassistant
 ```
 
 Use the package release that matches your Home Assistant version. Upgrade them
@@ -96,7 +96,7 @@ shared configuration if it exists, or provides an empty temporary directory.
 
 ## Migrating from pytest-homeassistant-custom-component
 
-Replace the old package dependency with `pytest-home-assistant` and change imports
+Replace the old package dependency with `pytest-homeassistant` and change imports
 of `pytest_homeassistant_custom_component` to `pytest_homeassistant`. Existing
 `hass`, `enable_custom_integrations`, registry, HTTP, recorder, and snapshot
 fixtures keep their names.

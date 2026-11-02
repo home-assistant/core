@@ -3,7 +3,7 @@ requires = ["setuptools>=78.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "home-assistant-pytest"
+name = "pytest-homeassistant"
 version = "0.0.0"
 license = "Apache-2.0"
 license-files = ["LICENSE.md"]
