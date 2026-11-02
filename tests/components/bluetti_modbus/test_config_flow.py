@@ -431,21 +431,43 @@ async def test_zeroconf_both_services_probe_once(
     assert len(mock_modbus_unit.read_events) == reads
 
 
+async def test_zeroconf_moved_device_must_answer(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """An announced serial alone does not move an entry to a silent address."""
+    mock_config_entry.add_to_hass(hass)
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("timed out"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_bluetti_info(NEW_HOST)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert mock_config_entry.data == bluetti_data()
+
+
 @pytest.mark.parametrize(
-    "entry_data",
+    ("source", "entry_data"),
     [
-        pytest.param({}, id="default_settings"),
-        pytest.param({CONF_PORT: 1502, CONF_UNIT_ID: 2}, id="other_settings"),
+        pytest.param(SOURCE_IGNORE, {}, id="ignored"),
+        pytest.param(SOURCE_USER, {**bluetti_data(), CONF_PORT: 1502}, id="other_port"),
+        pytest.param(
+            SOURCE_USER, {**bluetti_data(), CONF_UNIT_ID: 2}, id="other_device_id"
+        ),
     ],
 )
-async def test_zeroconf_announced_serial_updates_without_a_read(
+async def test_zeroconf_announced_serial_skips_the_probe(
     hass: HomeAssistant,
     mock_modbus_unit: MockModbusUnit,
+    source: str,
     entry_data: dict[str, Any],
 ) -> None:
-    """An announced serial moves its entry to the new address without a read."""
+    """An announced serial whose entry cannot follow the address is not probed."""
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=SERIAL, data={**bluetti_data(), **entry_data}
+        domain=DOMAIN, source=source, unique_id=SERIAL, data=entry_data
     )
     entry.add_to_hass(hass)
 
@@ -455,25 +477,8 @@ async def test_zeroconf_announced_serial_updates_without_a_read(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data == {**bluetti_data(), **entry_data, CONF_HOST: NEW_HOST}
     assert not mock_modbus_unit.read_events
-
-
-async def test_zeroconf_announced_serial_ignored_without_a_read(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
-) -> None:
-    """An ignored power station announcing its serial is not probed."""
-    MockConfigEntry(domain=DOMAIN, source=SOURCE_IGNORE, unique_id=SERIAL).add_to_hass(
-        hass
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_bluetti_info()
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert not mock_modbus_unit.read_events
+    assert entry.data == entry_data
 
 
 async def test_user_flow_replaces_a_pending_discovery(
@@ -498,16 +503,24 @@ async def test_user_flow_replaces_a_pending_discovery(
     assert not hass.config_entries.flow.async_progress()
 
 
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        pytest.param(_zeroconf_info(NEW_HOST), id="http"),
+        pytest.param(_bluetti_info(NEW_HOST), id="bluetti"),
+    ],
+)
 async def test_zeroconf_updates_a_moved_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """The same power station announced at a new address updates its entry."""
     await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info(NEW_HOST)
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
     await hass.async_block_till_done()
 
@@ -517,6 +530,13 @@ async def test_zeroconf_updates_a_moved_device(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        pytest.param(_zeroconf_info(), id="http"),
+        pytest.param(_bluetti_info(), id="bluetti"),
+    ],
+)
 @pytest.mark.parametrize(
     "entry_data",
     [
@@ -528,6 +548,7 @@ async def test_zeroconf_leaves_an_entry_on_other_settings(
     hass: HomeAssistant,
     mock_modbus_unit: MockModbusUnit,
     entry_data: dict[str, Any],
+    discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """An entry on another port or device ID keeps its host."""
     entry = MockConfigEntry(
@@ -538,7 +559,7 @@ async def test_zeroconf_leaves_an_entry_on_other_settings(
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
     assert result["type"] is FlowResultType.ABORT

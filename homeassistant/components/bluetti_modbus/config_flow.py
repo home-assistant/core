@@ -7,7 +7,12 @@ from modbus_connection import ModbusError, ModbusTcpParams
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -44,6 +49,17 @@ STEP_USER = probatio.Schema(
         ),
     }
 )
+
+
+def _reaches_device_directly(entry: ConfigEntry) -> bool:
+    """Return True if a discovered host can replace the entry's host."""
+    # Only the host is updated, so only an entry on the default port and
+    # device ID reaches the power station directly and can follow it.
+    return (
+        entry.source != SOURCE_IGNORE
+        and entry.data[CONF_PORT] == DEFAULT_PORT
+        and entry.data[CONF_UNIT_ID] == DEFAULT_UNIT_ID
+    )
 
 
 class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -99,11 +115,14 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = host
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
-        if announced_serial := discovery_info.properties.get("sn"):
-            # An announced serial lets a known power station follow its new
-            # address without a Modbus connection.
-            await self.async_set_unique_id(announced_serial)
-            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        # An announced serial skips the probe when the entry cannot follow this
+        # address anyway; a moved power station must still answer here first.
+        if (
+            (announced_serial := discovery_info.properties.get("sn"))
+            and (entry := await self.async_set_unique_id(announced_serial))
+            and not _reaches_device_directly(entry)
+        ):
+            return self.async_abort(reason="already_configured")
 
         data = {
             CONF_HOST: host,
@@ -116,15 +135,8 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert serial is not None
 
-        await self.async_set_unique_id(serial)
-        if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
-            DOMAIN, serial
-        ):
-            # Only the host is updated, so only an entry on the port and device
-            # ID the probe just used can follow its power station.
-            if entry.source == SOURCE_IGNORE or any(
-                entry.data[key] != data[key] for key in (CONF_PORT, CONF_UNIT_ID)
-            ):
+        if entry := await self.async_set_unique_id(serial):
+            if not _reaches_device_directly(entry):
                 return self.async_abort(reason="already_configured")
             # Same power station at a new address.
             return self.async_update_reload_and_abort(
