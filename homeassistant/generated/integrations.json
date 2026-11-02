@@ -1435,9 +1435,6 @@
       "categories": [
         "computers_network"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -1909,9 +1906,6 @@
       "categories": [
         "diy_makers"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -2010,9 +2004,6 @@
       "integration_type": "device",
       "categories": [
         "computers_network.monitoring"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "local_push",
@@ -3247,9 +3238,6 @@
       "categories": [
         "computers_network.monitoring"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -3321,9 +3309,6 @@
       "categories": [
         "diy_makers.web_data_connectors"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3331,9 +3316,6 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3580,9 +3562,6 @@
       "categories": [
         "computers_network.monitoring"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3591,9 +3570,6 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4457,9 +4433,6 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -4566,9 +4539,6 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.nas_servers"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": false,
       "iot_class": "local_polling",
@@ -5823,9 +5793,6 @@
       "categories": [
         "buttons_remotes"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6370,9 +6337,6 @@
       "categories": [
         "computers_network.monitoring"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -6464,9 +6428,6 @@
         "diy_makers.web_data_connectors",
         "security_safety.cameras"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6474,9 +6435,6 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.routers_network"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "local_polling",
@@ -8780,9 +8738,6 @@
       "categories": [
         "ai_voice.speech"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -9464,9 +9419,6 @@
           "categories": [
             "diy_makers.boards_hardware",
             "computers_network.monitoring"
-          ],
-          "connectivity": [
-            "host"
           ]
         },
         "remote_rpi_gpio": {
@@ -10311,9 +10263,6 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -11339,9 +11288,6 @@
       "categories": [
         "computers_network.monitoring"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -11359,9 +11305,6 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "local_push",
@@ -12314,9 +12257,6 @@
       "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "local_push",

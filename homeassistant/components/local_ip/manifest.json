@@ -4,7 +4,6 @@
   "categories": ["computers_network.routers_network"],
   "codeowners": ["@issacg"],
   "config_flow": true,
-  "connectivity": ["host"],
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/local_ip",
   "iot_class": "local_polling",

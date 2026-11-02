@@ -3,7 +3,6 @@
   "name": "Linux Battery",
   "categories": ["computers_network.monitoring"],
   "codeowners": ["@fabaff"],
-  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/linux_battery",
   "iot_class": "local_polling",
   "loggers": ["batinfo"],

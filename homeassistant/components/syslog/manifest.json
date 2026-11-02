@@ -3,7 +3,6 @@
   "name": "Syslog",
   "categories": ["computers_network.monitoring"],
   "codeowners": [],
-  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/syslog",
   "iot_class": "local_push",
   "quality_scale": "legacy"
