@@ -22,7 +22,7 @@ from sonos_websocket.exception import SonosWebsocketError
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -661,9 +661,23 @@ class SonosSpeaker:
             [("InstanceID", 0), ("Channel", "Master")], timeout=1
         )
 
+    @property
+    def device_disabled(self) -> bool:
+        """Return if the speaker's device is disabled in the device registry."""
+        device = dr.async_get(self.hass).async_get_device_by_identifier(
+            (DOMAIN, self.uid), self.config_entry.entry_id
+        )
+        return device is not None and device.disabled
+
     @callback
     def speaker_activity(self, source: str) -> None:
         """Track the last activity on this speaker, set availability and resubscribe."""
+        if not self.available and self.device_disabled:
+            _LOGGER.debug(
+                "Activity on disabled %s from %s, ignoring", self.zone_name, source
+            )
+            return
+
         if self._resub_cooldown_expires_at:
             if time.monotonic() < self._resub_cooldown_expires_at:
                 _LOGGER.debug(
@@ -708,23 +722,19 @@ class SonosSpeaker:
             )
             await self.async_offline()
 
-    async def async_offline(self, start_resub_cooldown: bool = True) -> None:
+    async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
         if not self._subscription_lock:
             self._subscription_lock = asyncio.Lock()
         async with self._subscription_lock:
-            await self._async_offline(start_resub_cooldown)
+            await self._async_offline()
 
-    async def _async_offline(self, start_resub_cooldown: bool = True) -> None:
+    async def _async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
         if not self.available:
             return
 
-        if (
-            start_resub_cooldown
-            and self._resub_cooldown_expires_at is None
-            and not self.hass.is_stopping
-        ):
+        if self._resub_cooldown_expires_at is None and not self.hass.is_stopping:
             self._resub_cooldown_expires_at = time.monotonic() + RESUB_COOLDOWN_SECONDS
             _LOGGER.debug("Starting resubscription cooldown for %s", self.zone_name)
 

@@ -168,6 +168,14 @@ async def async_unload_entry(
         _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
 
 
+@callback
+def _async_disabled_by_changed_filter(
+    event_data: dr.EventDeviceRegistryUpdatedData,
+) -> bool:
+    """Filter device registry events for disabled_by changes."""
+    return event_data["action"] == "update" and "disabled_by" in event_data["changes"]
+
+
 class SonosDiscoveryManager:
     """Manage sonos discovery."""
 
@@ -194,59 +202,31 @@ class SonosDiscoveryManager:
     def _async_device_registry_updated(
         self, event: Event[dr.EventDeviceRegistryUpdatedData]
     ) -> None:
-        """Handle device disable updates for Sonos devices."""
-        if event.data["action"] != "update":
+        """Take a speaker offline when its device is disabled."""
+        device = dr.async_get(self.hass).async_get(event.data["device_id"])
+        if (
+            device is None
+            or not device.disabled
+            or device.config_entry_id != self.entry.entry_id
+        ):
             return
 
-        if "disabled_by" not in event.data["changes"]:
-            return
-
-        if not (device := dr.async_get(self.hass).async_get(event.data["device_id"])):
-            return
-
-        if self.entry.entry_id not in device.config_entries:
-            return
-
-        uid = next(
+        speaker = next(
             (
-                identifier
+                self.data.discovered[identifier]
                 for domain, identifier in device.identifiers
-                if domain == DOMAIN
+                if domain == DOMAIN and identifier in self.data.discovered
             ),
             None,
         )
-        if uid is None:
+        if speaker is None:
             return
 
-        if not device.disabled:
-            _LOGGER.debug(
-                "Sonos device re-enabled in registry: uid=%s device_id=%s changes=%s",
-                uid,
-                device.id,
-                event.data["changes"],
-            )
-            return
-
-        _LOGGER.debug(
-            "Sonos device disabled in registry: uid=%s device_id=%s changes=%s",
-            uid,
-            device.id,
-            event.data["changes"],
-        )
-
-        if not (speaker := self.data.discovered.get(uid)):
-            _LOGGER.debug(
-                "Disabled Sonos device not currently discovered: uid=%s device_id=%s",
-                uid,
-                device.id,
-            )
-            return
-
-        _LOGGER.debug("Scheduling offline handling for disabled Sonos device: %s", uid)
+        _LOGGER.debug("%s disabled, taking speaker offline", speaker.zone_name)
         self.entry.async_create_background_task(
             self.hass,
-            speaker.async_offline(start_resub_cooldown=False),
-            f"sonos-device-disabled-{uid}",
+            speaker.async_offline(),
+            f"sonos {speaker.uid} device disabled",
         )
 
     async def async_shutdown(self) -> None:
@@ -770,6 +750,7 @@ class SonosDiscoveryManager:
             self.hass.bus.async_listen(
                 dr.EVENT_DEVICE_REGISTRY_UPDATED,
                 self._async_device_registry_updated,
+                event_filter=_async_disabled_by_changed_filter,
             )
         )
         self.entry.async_on_unload(
