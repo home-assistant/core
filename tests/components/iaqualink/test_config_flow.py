@@ -93,6 +93,7 @@ async def test_second_account_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "other@example.com"
     assert result["data"] == other_data
+    assert result["result"].unique_id == MOCK_USER_ID_2
 
 
 async def test_without_config(hass: HomeAssistant) -> None:
@@ -142,6 +143,7 @@ async def test_dhcp_discovery_starts_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == config_data[CONF_USERNAME]
     assert result["data"] == config_data
+    assert result["result"].unique_id == MOCK_USER_ID
 
 
 async def test_with_invalid_credentials(
@@ -225,6 +227,7 @@ async def test_with_existing_config(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == config_data["username"]
     assert result["data"] == config_data
+    assert flow.unique_id == MOCK_USER_ID
 
 
 async def test_dhcp_discovery_aborts_if_already_configured(
