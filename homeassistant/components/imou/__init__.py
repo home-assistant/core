@@ -9,6 +9,7 @@ from pyimouapi.openapi import ImouOpenApiClient
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     API_URLS,
@@ -41,7 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> None
         entry.data[CONF_APP_ID],
         entry.data[CONF_APP_SECRET],
         API_URLS[entry.data[CONF_API_URL]],
+        session=async_get_clientsession(hass),
     )
+    # Registered before anything can fail so a retried setup never leaks a client.
+    entry.async_on_unload(imou_client.async_close)
+
     device_manager = ImouDeviceManager(imou_client)
     imou_device_manager = ImouHaDeviceManager(device_manager)
     imou_coordinator = ImouDataUpdateCoordinator(hass, imou_device_manager, entry)

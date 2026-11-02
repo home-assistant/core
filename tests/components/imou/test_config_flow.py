@@ -26,6 +26,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONFIG_ENTRY_DATA, TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
@@ -478,6 +479,7 @@ async def test_reconfigure_migrates_legacy_region_before_saving(
         CONFIG_ENTRY_DATA[CONF_APP_ID],
         NEW_APP_SECRET,
         API_URLS["eu"],
+        session=async_get_clientsession(hass),
     )
 
 
