@@ -1,8 +1,10 @@
 {
   "domain": "agent_dvr",
   "name": "Agent DVR",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@ispysoftware"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/agent_dvr",
   "integration_type": "hub",
   "iot_class": "local_polling",

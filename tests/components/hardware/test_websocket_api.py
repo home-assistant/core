@@ -6,13 +6,12 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import psutil_home_assistant as ha_psutil
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.hardware.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_board_info(

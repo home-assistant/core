@@ -13,6 +13,7 @@ from iaqualink.exception import (
 from iaqualink.systems.iaqua.device import IaquaLightSwitch
 from iaqualink.systems.iaqua.system import IaquaSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -35,8 +36,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def _advance_coordinator_time(

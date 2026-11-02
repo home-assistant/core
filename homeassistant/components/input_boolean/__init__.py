@@ -6,8 +6,7 @@ from typing import override
 
 import probatio
 
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
+from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -23,7 +22,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import CONF_INITIAL, DATA_INPUT_BOOLEAN, DOMAIN
+from .const import CONF_INITIAL, DATA_INPUT_BOOLEAN, DOMAIN, InputBooleanService
 from .entity import InputBoolean
 from .services import async_setup_services
 
@@ -53,6 +52,16 @@ CONFIG_SCHEMA = probatio.Schema(
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+
+__all__ = [
+    "DOMAIN",
+    "SERVICE_RELOAD",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "STORAGE_FIELDS",
+    "InputBooleanService",
+]
 
 
 class InputBooleanStorageCollection(collection.DictStorageCollection):

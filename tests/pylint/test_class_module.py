@@ -208,7 +208,6 @@ def test_enforce_class_module_bad_nested(
 @pytest.mark.parametrize(
     "path",
     [
-        "homeassistant.components.sensor",
         "homeassistant.components.sensor.entity",
         "homeassistant.components.pylint_test.entity",
     ],
@@ -235,6 +234,7 @@ def test_enforce_entity_good(
 @pytest.mark.parametrize(
     "path",
     [
+        "homeassistant.components.sensor",
         "homeassistant.components.pylint_test",
         "homeassistant.components.pylint_test.select",
         "homeassistant.components.pylint_test.select.entity",

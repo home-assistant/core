@@ -1,5 +1,7 @@
 """Test Met weather entity."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.met.const import DOMAIN
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_new_config_entry(
@@ -135,10 +135,11 @@ async def test_remove_hourly_entity(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
+        title="Met.no (10, 20)",
+        data={"latitude": 10, "longitude": 20, "elevation": 0},
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.async_entity_ids("weather") == ["weather.forecast_somewhere"]
-    assert list(entity_registry.entities.keys()) == ["weather.forecast_somewhere"]
+    assert hass.states.async_entity_ids("weather") == ["weather.met_no_10_20"]
+    assert list(entity_registry.entities.keys()) == ["weather.met_no_10_20"]

@@ -6,6 +6,8 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 from aiothreema import derive_public_key
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 import segno
 
 from homeassistant.const import EntityCategory
@@ -13,9 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_GATEWAY_ID, MOCK_PRIVATE_KEY
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 ENTITY_ID = "image.threema_testgwy_gateway_qr_code"
 

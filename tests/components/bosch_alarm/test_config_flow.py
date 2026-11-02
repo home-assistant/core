@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from bosch_alarm_mode2.const import PANEL_FAMILY, PanelModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_alarm.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -15,8 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_user(

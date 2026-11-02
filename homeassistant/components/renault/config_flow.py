@@ -46,6 +46,12 @@ REAUTH_SCHEMA = probatio.Schema(
 TWO_FACTOR_CODE_SCHEMA = probatio.Schema({probatio.Required(CONF_CODE): str})
 
 
+def _mask_email(email: str) -> str:
+    """Mask the local part of an email address, keeping its first character."""
+    local, _, domain = email.partition("@")
+    return f"{local[:1]}***@{domain}" if domain else f"{local[:1]}***"
+
+
 class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Renault config flow."""
 
@@ -126,7 +132,9 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
 
             self.renault_config.update(user_input)
             return self.async_create_entry(
-                title=user_input[RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID],
+                title=_mask_email(
+                    self.renault_config[RenaultConfigurationKeys.USERNAME]
+                ),
                 data=self.renault_config,
             )
 

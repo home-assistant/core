@@ -13,6 +13,7 @@ from lifx import (
     Light,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.lifx import DOMAIN
@@ -27,12 +28,10 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from . import DHCP_FORMATTED_MAC, IP_ADDRESS, LABEL, SERIAL
 from .helpers import LEGACY_SERIAL, create_mock_light
 
-from tests.common import MockConfigEntry
-
 OLD_IP_ADDRESS = "127.0.0.2"
 
-DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
-DeviceMutator = Callable[[Light], None]
+type DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
+type DeviceMutator = Callable[[Light], None]
 
 
 def _remove_light_state(mock_light: Light) -> None:
@@ -49,7 +48,7 @@ def _fail_light_refresh(mock_light: Light) -> None:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override config entry setup."""
     with patch(
-        "homeassistant.components.lifx.async_setup_entry", return_value=True
+        "homeassistant.components.lifx.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

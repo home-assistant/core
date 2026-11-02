@@ -2,12 +2,11 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from pytouchlinesl.client import RothAPIError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_auth_error_starts_reauth(

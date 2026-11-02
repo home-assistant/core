@@ -4,14 +4,13 @@ from unittest.mock import MagicMock
 
 from aidot.exceptions import AidotAuthFailed, AidotUserOrPassIncorrect
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.aidot.coordinator import UPDATE_DEVICE_LIST_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_async_unload_entry(

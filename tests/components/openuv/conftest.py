@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.openuv.const import (
     CONF_FROM_WINDOW,
@@ -15,11 +16,10 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_API_KEY = "abcde12345"
 TEST_ELEVATION = 0
@@ -39,7 +39,7 @@ async def set_time_zone(hass: HomeAssistant) -> None:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.openuv.async_setup_entry", return_value=True
+        "homeassistant.components.openuv.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -62,9 +62,10 @@ def config_entry_fixture(
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=f"{config[CONF_LATITUDE]}, {config[CONF_LONGITUDE]}",
+        unique_id=f"{TEST_LATITUDE}, {TEST_LONGITUDE}",
         data=config,
         options={CONF_FROM_WINDOW: 3.5, CONF_TO_WINDOW: 3.5},
+        version=3,
     )
     entry.add_to_hass(hass)
     return entry
@@ -75,9 +76,8 @@ def config_fixture() -> dict[str, Any]:
     """Define a config entry data fixture."""
     return {
         CONF_API_KEY: TEST_API_KEY,
+        CONF_LOCATION: {CONF_LONGITUDE: TEST_LONGITUDE, CONF_LATITUDE: TEST_LATITUDE},
         CONF_ELEVATION: TEST_ELEVATION,
-        CONF_LATITUDE: TEST_LATITUDE,
-        CONF_LONGITUDE: TEST_LONGITUDE,
     }
 
 

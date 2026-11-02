@@ -8,7 +8,7 @@ from enum import Enum, auto
 import logging
 from pathlib import Path
 import time
-from typing import IO, Any, NamedTuple, assert_never, cast, override
+from typing import IO, Any, NamedTuple, assert_never, override
 
 from gazetteer_matcher import FrameCandidate, GazetteerMatcher
 from hassil.expression import Expression, Group, ListReference
@@ -35,6 +35,7 @@ from home_assistant_intents import (
     get_languages,
 )
 import probatio
+from typing_extensions import Sentinel as sentinel
 import yaml
 
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -107,7 +108,7 @@ _DEVICE_REGISTRY_UPDATE_FIELDS = [
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
 
-ERROR_SENTINEL = object()
+ERROR_SENTINEL = sentinel("ERROR_SENTINEL")
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -250,7 +251,7 @@ class DefaultAgent(ConversationEntity):
         """Initialize the default agent."""
         self.hass = hass
 
-        self._lang_intents: dict[str, LanguageIntents | object] = {}
+        self._lang_intents: dict[str, LanguageIntents | ERROR_SENTINEL] = {}
         self._load_intents_lock = asyncio.Lock()
 
         # Intents from common conversation config
@@ -1183,10 +1184,18 @@ class DefaultAgent(ConversationEntity):
         self._intent_cache.clear()
 
     @override
-    async def async_prepare(self, language: str | None = None) -> None:
-        """Load intents for a language."""
+    async def async_prepare(
+        self, language: str | None = None, *, strict_intents_only: bool = False
+    ) -> None:
+        """Build what recognizing a sentence in a language needs."""
         if language is None:
             language = self.hass.config.language
+
+        # Sentence triggers do not depend on the language intents
+        if self._trigger_intents is None and self._trigger_intents_config.get(
+            "intents"
+        ):
+            self._rebuild_trigger_intents()
 
         lang_intents = await self.async_get_or_load_intents(language)
 
@@ -1196,23 +1205,25 @@ class DefaultAgent(ConversationEntity):
 
         await self._make_slot_lists()
 
+        # Strict recognition uses neither the unexposed names nor the gazetteer
+        if strict_intents_only:
+            return
+
+        # Recognition builds this in the executor, but it reads loop-only state
+        self._get_unexposed_entity_names()
+
+        if self._gazetteer.supports(language):
+            await self._gazetteer.async_get_matcher()
+
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
         if lang_intents := self._lang_intents.get(language):
-            return (
-                None
-                if lang_intents is ERROR_SENTINEL
-                else cast(LanguageIntents, lang_intents)
-            )
+            return lang_intents if lang_intents is not ERROR_SENTINEL else None
 
         async with self._load_intents_lock:
             # In case it was loaded now
             if lang_intents := self._lang_intents.get(language):
-                return (
-                    None
-                    if lang_intents is ERROR_SENTINEL
-                    else cast(LanguageIntents, lang_intents)
-                )
+                return lang_intents if lang_intents is not ERROR_SENTINEL else None
 
             start = time.monotonic()
 

@@ -21,6 +21,7 @@ from flux_led.protocol import (
     RemoteConfig,
 )
 from flux_led.scanner import FluxLEDDiscovery
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -28,8 +29,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"

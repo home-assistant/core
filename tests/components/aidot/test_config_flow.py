@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from aidot.exceptions import AidotUserOrPassIncorrect
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -14,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import TEST_COUNTRY, TEST_EMAIL, TEST_LOGIN_RESP, TEST_PASSWORD
-
-from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="aidot",

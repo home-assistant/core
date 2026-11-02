@@ -20,6 +20,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -48,13 +49,13 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "co": ZWaveMeSensorEntityDescription(
         key="co",
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": ZWaveMeSensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement="ppm",
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": ZWaveMeSensorEntityDescription(

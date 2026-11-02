@@ -3,6 +3,12 @@
 from unittest.mock import AsyncMock
 
 from aiowaqi import WAQIUnknownStationError
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.components.waqi.const import DOMAIN
@@ -12,10 +18,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 
 async def test_station_not_found_fix_flow(

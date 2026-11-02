@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from ultraheat_api.response import HeatMeterResponse
 
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 API_HEAT_METER_SERVICE = (
     "homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService"

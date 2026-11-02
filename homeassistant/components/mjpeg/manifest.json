@@ -1,8 +1,10 @@
 {
   "domain": "mjpeg",
   "name": "MJPEG IP Camera",
+  "categories": ["security_safety.cameras"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/mjpeg",
   "iot_class": "local_push"
 }

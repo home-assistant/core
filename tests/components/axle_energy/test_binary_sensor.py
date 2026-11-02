@@ -14,6 +14,11 @@ from aioaxlevpp import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.axle_energy.const import UPDATE_INTERVAL
@@ -28,8 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "binary_sensor.axle_energy_event_in_progress"
 PARTICIPATION_ENTITY_ID = "binary_sensor.axle_energy_participation"

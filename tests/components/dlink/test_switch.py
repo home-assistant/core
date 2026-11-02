@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+
 from homeassistant.components.dlink.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -14,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import CONF_DATA
-
-from tests.common import AsyncMock, MockConfigEntry
 
 
 async def test_switch_state(hass: HomeAssistant, mocked_plug: AsyncMock) -> None:

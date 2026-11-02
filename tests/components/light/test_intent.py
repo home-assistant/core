@@ -1,6 +1,7 @@
 """Tests for the light intents."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import light
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.intent import MatchFailedError, async_handle
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 ASSISTANT = "conversation"
 

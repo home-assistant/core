@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from boschshcpy import BatteryLevelService
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_shc.const import DOMAIN
 from homeassistant.const import STATE_ON, Platform
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import battery_only_device, setup_integration
-
-from tests.common import MockConfigEntry
 
 HUB_IDENTIFIER = (DOMAIN, "test-mac")
 

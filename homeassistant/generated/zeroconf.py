@@ -565,6 +565,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_haven._tcp.local.": [
+        {
+            "domain": "haven_iaq",
+        },
+    ],
     "_heos-audio._tcp.local.": [
         {
             "domain": "heos",
@@ -736,6 +741,11 @@ ZEROCONF = {
             "domain": "homewizard",
         },
     ],
+    "_indi-allsky._tcp.local.": [
+        {
+            "domain": "indi_allsky",
+        },
+    ],
     "_iometer._tcp.local.": [
         {
             "domain": "iometer",
@@ -809,6 +819,12 @@ ZEROCONF = {
             "domain": "lutron_caseta",
             "properties": {
                 "SYSTYPE": "ra2select*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "athena*",
             },
         },
     ],
@@ -922,6 +938,11 @@ ZEROCONF = {
     "_powerhub._udp.local.": [
         {
             "domain": "bitvis",
+        },
+    ],
+    "_powersensor._udp.local.": [
+        {
+            "domain": "powersensor_au",
         },
     ],
     "_powerview._tcp.local.": [

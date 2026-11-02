@@ -25,7 +25,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
-from ..const import DOMAIN, KNX_MODULE_KEY
+from ..const import DOMAIN, KNX_MODULE_KEY, KnxEntityIdentifier
 from ..repairs import (
     async_create_entity_validation_issue,
     async_create_expose_validation_issue,
@@ -283,7 +283,9 @@ class KNXConfigStore:
                 )
             validated[unique_id] = data
         if invalid:
-            async_create_entity_validation_issue(self.hass, platform, invalid)
+            async_create_entity_validation_issue(
+                self.hass, self.config_entry.entry_id, platform, invalid
+            )
         return validated
 
     async def create_entity(
@@ -349,6 +351,14 @@ class KNXConfigStore:
                 f"Entity not found in {entry.domain}: {entry.unique_id}"
             ) from err
         entity_registry.async_remove(entity_id)
+        # A disabled entity has no entity object to unregister itself. Not guarded
+        # by `entry.disabled`: an entity enabled again stays tracked as disabled
+        # until the config entry is reloaded.
+        self.hass.data[KNX_MODULE_KEY].remove_disabled_entity(
+            KnxEntityIdentifier(
+                platform=entry.domain, unique_id=entry.unique_id, ui=True
+            )
+        )
         await self._store.async_save(self.data)
 
     def get_entity_uids(self) -> set[str]:
@@ -382,7 +392,9 @@ class KNXConfigStore:
             except EntityStoreValidationException:
                 invalid.append(entity_id)
         if invalid:
-            async_create_expose_validation_issue(self.hass, invalid)
+            async_create_expose_validation_issue(
+                self.hass, self.config_entry.entry_id, invalid
+            )
         return validated
 
     def get_expose_groups(self) -> dict[str, list[str]]:
@@ -442,7 +454,9 @@ class KNXConfigStore:
         try:
             return validate_time_server_data(dict(self.data["time_server"]))
         except EntityStoreValidationException:
-            async_create_time_server_validation_issue(self.hass)
+            async_create_time_server_validation_issue(
+                self.hass, self.config_entry.entry_id
+            )
             return None
 
     async def update_time_server_config(self, config: TimeServerConfig) -> None:

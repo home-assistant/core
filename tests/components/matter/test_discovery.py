@@ -100,4 +100,4 @@ def test_async_discover_entities_filters_by_cluster_revision(
     )
     endpoint = node.endpoints[1]
 
-    assert bool(list(async_discover_entities(endpoint))) is expected_discovered
+    assert bool(list(async_discover_entities(endpoint, 1))) is expected_discovered

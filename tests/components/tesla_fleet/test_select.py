@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
 from tesla_fleet_api.exceptions import VehicleOffline
@@ -20,8 +21,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -8,11 +8,18 @@ from modbus_connection import ModbusSerialParams, ModbusTcpParams
 from neopool_modbus.decoders import encode_device_time
 from neopool_modbus.registers import framer_to_socket_name
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_MODBUS_FRAMER, DEFAULT_PORT
+from .const import (
+    CONF_BAUDRATE,
+    CONF_MODBUS_FRAMER,
+    DEFAULT_BAUDRATE,
+    DEFAULT_PORT,
+    TYPE_SERIAL,
+    TYPE_TCP,
+)
 
 
 def prepare_device_time(hass: HomeAssistant) -> int:
@@ -38,15 +45,18 @@ def build_modbus_params(
 ) -> ModbusTcpParams | ModbusSerialParams:
     """Build the shared-connection link parameters from config entry data.
 
-    A Modbus TCP link is always MBAP-framed, so it uses ModbusTcpParams with
-    the framer omitted (passing it is deprecated). RTU/ASCII framing over a
-    socket is a serial link reached through a socket:// device, so it uses
-    ModbusSerialParams directly; that is what the modbus integration would
-    canonicalise an RTU ModbusTcpParams to anyway, built here to avoid the
-    deprecation warning. The baud rate only sets the inter-frame timing for the
-    socket-carried serial framing; 115200 matches the value the modbus
-    integration canonicalises to, so consumers sharing a gateway compare equal.
+    RTU/ASCII over a socket (an ESPHome stream-server gateway) is built as
+    ModbusSerialParams, not ModbusTcpParams with a framer (deprecated); its baud
+    rate is the modbus integration's canonical 115200 so a shared gateway
+    compares equal. A missing CONF_TYPE predates the connection-type choice and
+    reads as a network (TCP) entry.
     """
+    if data.get(CONF_TYPE, TYPE_TCP) == TYPE_SERIAL:
+        return ModbusSerialParams(
+            device=data[CONF_DEVICE],
+            baudrate=data.get(CONF_BAUDRATE, DEFAULT_BAUDRATE),
+            framer="rtu",
+        )
     host = _normalize_host(data[CONF_HOST])
     port = data.get(CONF_PORT, DEFAULT_PORT)
     framer = framer_to_socket_name(data.get(CONF_MODBUS_FRAMER, "tcp"))

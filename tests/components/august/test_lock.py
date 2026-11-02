@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from yalexs.manager.activity import INITIAL_LOCK_RESYNC_TIME
 from yalexs.pubnub_async import AugustPubNub
@@ -33,8 +34,6 @@ from .mocks import (
     _mock_lock_with_unlatch,
     _mock_operative_august_lock_detail,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_lock_device_registry(

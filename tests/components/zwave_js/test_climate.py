@@ -4,6 +4,7 @@ import copy
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_OPERATING_STATE_PROPERTY,
@@ -56,8 +57,6 @@ from .common import (
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
     replace_value_of_zwave_value,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

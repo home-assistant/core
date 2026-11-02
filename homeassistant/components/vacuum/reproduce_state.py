@@ -5,29 +5,14 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import (
-    DOMAIN,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
-    VacuumActivity,
-)
-from .const import VacuumEntityStateAttribute
+from . import DOMAIN, VacuumActivity
+from .const import VacuumEntityStateAttribute, VacuumService
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_STATES_TOGGLE = {STATE_ON, STATE_OFF}
 VALID_STATES_STATE = {
     VacuumActivity.CLEANING,
     VacuumActivity.DOCKED,
@@ -49,7 +34,7 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    if not (state.state in VALID_STATES_TOGGLE or state.state in VALID_STATES_STATE):
+    if state.state not in VALID_STATES_STATE:
         _LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
@@ -65,18 +50,14 @@ async def _async_reproduce_state(
 
     if cur_state.state != state.state:
         # Wrong state
-        if state.state == STATE_ON:
-            service = SERVICE_TURN_ON
-        elif state.state == STATE_OFF:
-            service = SERVICE_TURN_OFF
-        elif state.state == VacuumActivity.CLEANING:
-            service = SERVICE_START
+        if state.state == VacuumActivity.CLEANING:
+            service = VacuumService.START
         elif state.state in [VacuumActivity.DOCKED, VacuumActivity.RETURNING]:
-            service = SERVICE_RETURN_TO_BASE
+            service = VacuumService.RETURN_TO_BASE
         elif state.state == VacuumActivity.IDLE:
-            service = SERVICE_STOP
+            service = VacuumService.STOP
         elif state.state == VacuumActivity.PAUSED:
-            service = SERVICE_PAUSE
+            service = VacuumService.PAUSE
 
         await hass.services.async_call(
             DOMAIN, service, service_data, context=context, blocking=True
@@ -90,7 +71,11 @@ async def _async_reproduce_state(
             VacuumEntityStateAttribute.FAN_SPEED
         ]
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_FAN_SPEED, service_data, context=context, blocking=True
+            DOMAIN,
+            VacuumService.SET_FAN_SPEED,
+            service_data,
+            context=context,
+            blocking=True,
         )
 
 

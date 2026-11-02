@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from irm_kmi_api import IrmKmiApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import WEATHER_ENTITY_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_irm_kmi_api")

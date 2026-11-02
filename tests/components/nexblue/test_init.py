@@ -5,12 +5,11 @@ from unittest.mock import MagicMock
 from nexblue_api import NexBlueAuthError, NexBlueConnectionError
 from nexblue_api.models import TokenBundle
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nexblue.const import CONF_REFRESH_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

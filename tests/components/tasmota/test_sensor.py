@@ -13,6 +13,8 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -37,9 +39,6 @@ from .test_common import (
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
 )
-
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 BAD_LIST_SENSOR_CONFIG_3 = {
     "sn": {

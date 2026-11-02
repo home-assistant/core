@@ -36,6 +36,7 @@ from .const import (
     CHAR_FILTER_LIFE_LEVEL,
     CHAR_NAME,
     CHAR_PM25_DENSITY,
+    CHAR_ROTATION_SPEED,
     CHAR_TARGET_AIR_PURIFIER_STATE,
     CONF_LINKED_FILTER_CHANGE_INDICATION,
     CONF_LINKED_FILTER_LIFE_LEVEL,
@@ -49,7 +50,7 @@ from .const import (
     SERV_TEMPERATURE_SENSOR,
     THRESHOLD_FILTER_CHANGE_NEEDED,
 )
-from .type_fans import CHAR_ROTATION_SPEED, Fan
+from .type_fans import Fan
 from .util import (
     cleanup_name_for_homekit,
     convert_to_float,

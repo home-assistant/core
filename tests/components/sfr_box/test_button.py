@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,8 +14,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import snapshot_platform
 
 pytestmark = pytest.mark.usefixtures(
     "system_get_info", "dsl_get_info", "voip_get_info", "wan_get_info"

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.energyid.config_flow import EnergyIDConfigFlow
@@ -20,8 +21,6 @@ from homeassistant.components.energyid.energyid_sensor_mapping_flow import (
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 # Test constants
 TEST_PROVISIONING_KEY = "test_prov_key"
@@ -53,7 +52,7 @@ def mock_polling_interval_fixture() -> Generator[int]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.energyid.async_setup_entry", return_value=True
+        "homeassistant.components.energyid.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

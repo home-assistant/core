@@ -93,6 +93,13 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
 
     @property
     @override
+    def has_update(self) -> bool:
+        """Return True if package updates are pending."""
+        update_info = self._update_info()
+        return update_info is not None and update_info.total_updates > 0
+
+    @property
+    @override
     def release_summary(self) -> str | None:
         """Return the release summary for the update."""
         url = proxmox_node_url(self.coordinator, self.device_name)

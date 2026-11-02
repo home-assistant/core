@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectionError, ClientError, ClientResponseError, RequestInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yarl import URL
 
 from homeassistant import config_entries
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import REGIONS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -48,7 +47,7 @@ async def test_state_district(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ukraine_alarm.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -98,7 +97,7 @@ async def test_state_district_community(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ukraine_alarm.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result5 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
