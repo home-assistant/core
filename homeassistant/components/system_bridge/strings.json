@@ -294,6 +294,9 @@
     }
   },
   "exceptions": {
+    "action_failed": {
+      "message": "Failed to run {action}: {error}"
+    },
     "audio_control_failed": {
       "message": "Failed to control audio device {name}: {error}"
     },
