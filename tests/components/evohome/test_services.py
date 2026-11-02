@@ -1,8 +1,8 @@
 """The tests for the native services of Evohome."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from evohomeasync2 import Zone, exceptions as evo_exc
 from evohomeasync2.const import SZ_DURATION, SZ_MODE, SZ_PERIOD, SZ_SETPOINT, SZ_STATE
@@ -124,7 +124,7 @@ async def test_set_system_mode(
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with("auto", until=None)
+        mock_fcn.assert_awaited_once_with("auto")
 
     freezer.move_to("2024-07-10T12:00:00+00:00")
 
@@ -141,9 +141,7 @@ async def test_set_system_mode(
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with(
-            "auto_with_eco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
-        )
+        mock_fcn.assert_awaited_once_with("auto_with_eco", duration=timedelta(hours=12))
 
     # EvoService.SET_SYSTEM_MODE: Away, days=7
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
@@ -158,9 +156,7 @@ async def test_set_system_mode(
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with(
-            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
-        )
+        mock_fcn.assert_awaited_once_with("away", period=timedelta(days=7))
 
     # entity_id in the service data, rather than as a target
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
@@ -175,9 +171,7 @@ async def test_set_system_mode(
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with(
-            "away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
-        )
+        mock_fcn.assert_awaited_once_with("away", period=timedelta(days=7))
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -457,6 +451,82 @@ async def test_set_system_mode_validator(
 
     assert exc_info.value.translation_key == expected_translation_key
     assert exc_info.value.translation_placeholders == {SZ_MODE: service_data[SZ_MODE]}
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("service_data", "time_until"),
+    [
+        pytest.param(
+            {SZ_MODE: "AutoWithEco", SZ_DURATION: {"hours": 12}},
+            datetime(2024, 7, 11, 0, 0, tzinfo=UTC),
+            id="duration",
+        ),
+        pytest.param(
+            {SZ_MODE: "Away", SZ_PERIOD: {"days": 7}},
+            datetime(2024, 7, 16, 23, 0, tzinfo=UTC),  # midnight, local time
+            id="period",
+        ),
+    ],
+)
+async def test_set_system_mode_until(
+    hass: HomeAssistant,
+    ctl_id: str,
+    freezer: FrozenDateTimeFactory,
+    service_data: dict[str, Any],
+    time_until: datetime,
+) -> None:
+    """Test the client converts a duration/period into the until sent to the vendor."""
+
+    freezer.move_to("2024-07-10T12:00:00+00:00")
+
+    with patch("evohomeasync2.control_system.ControlSystem._put_mode") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            service_data,
+            target={ATTR_ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+
+    mock_fcn.assert_awaited_once_with(ANY, permanent=False, time_until=time_until)
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        pytest.param(
+            {SZ_MODE: "AutoWithEco", SZ_DURATION: {"hours": 1, "minutes": 30}},
+            id="duration_not_a_multiple",
+        ),
+        pytest.param(
+            {SZ_MODE: "AutoWithEco", SZ_DURATION: {"hours": 0}},
+            id="duration_not_positive",
+        ),
+        pytest.param(
+            {SZ_MODE: "Away", SZ_PERIOD: {"days": 1, "hours": 12}},
+            id="period_not_a_multiple",
+        ),
+    ],
+)
+async def test_set_system_mode_rejected_by_client(
+    hass: HomeAssistant,
+    ctl_id: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test a duration/period that the client rejects (it is not sent to the vendor)."""
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            service_data,
+            target={ATTR_ENTITY_ID: ctl_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "invalid_system_mode"
 
 
 @pytest.mark.parametrize("install", ["default"])

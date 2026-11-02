@@ -1,6 +1,6 @@
 """Support for Climate entities of the Evohome integration."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -375,16 +375,10 @@ class EvoController(EvoClimateEntity):
                 translation_placeholders={SZ_MODE: mode},
             )
 
-        timing_mode: str | None = None
-        until: datetime | None = None
-
         # service schema makes duration & period mutually exclusive (can be neither)
-        if period is not None:
-            timing_mode, until = SZ_PERIOD, dt_util.start_of_local_day() + period
-        elif duration is not None:
-            timing_mode, until = SZ_DURATION, dt_util.now() + duration
+        if duration is not None or period is not None:
+            timing_mode = SZ_PERIOD if period is not None else SZ_DURATION
 
-        if timing_mode is not None:
             if not mode_info[SZ_CAN_BE_TEMPORARY]:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
@@ -398,17 +392,27 @@ class EvoController(EvoClimateEntity):
                     translation_placeholders={SZ_MODE: mode},
                 )
 
-        await self._set_tcs_mode(mode_info[SZ_SYSTEM_MODE], until=until)
+        await self._set_tcs_mode(
+            mode_info[SZ_SYSTEM_MODE], duration=duration, period=period
+        )
 
     async def _set_tcs_mode(
-        self, mode: EvoSystemMode, until: datetime | None = None
+        self,
+        mode: EvoSystemMode,
+        *,
+        duration: timedelta | None = None,
+        period: timedelta | None = None,
     ) -> None:
         """Set a Controller to any of its native operating modes."""
-        until = dt_util.as_utc(until) if until else None
+        if period is not None:
+            client_api = self._evo_device.set_mode(mode, period=period)
+        elif duration is not None:
+            client_api = self._evo_device.set_mode(mode, duration=duration)
+        else:
+            client_api = self._evo_device.set_mode(mode)
+
         try:
-            await self.coordinator.call_client_api(
-                self._evo_device.set_mode(mode, until=until)
-            )
+            await self.coordinator.call_client_api(client_api)
         except evo.InvalidModeRequestError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
