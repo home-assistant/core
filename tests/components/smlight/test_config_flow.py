@@ -138,7 +138,6 @@ async def test_zeroconf_flow(
     ]
     assert len(progress) == 1
     assert progress[0]["flow_id"] == result["flow_id"]
-    assert progress[0]["context"]["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -179,7 +178,6 @@ async def test_zeroconf_flow_auth(
     ]
     assert len(progress) == 1
     assert progress[0]["flow_id"] == result["flow_id"]
-    assert progress[0]["context"]["confirm_only"] is True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}

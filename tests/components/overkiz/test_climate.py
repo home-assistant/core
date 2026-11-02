@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -321,6 +322,98 @@ async def test_electrical_heater_adjustable_target_temperature(
     state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
     assert state is not None
     assert state.attributes[ATTR_TEMPERATURE] == 21.0
+
+
+@pytest.mark.parametrize(
+    ("device_states", "expected_hvac_action"),
+    [
+        pytest.param(
+            [
+                {
+                    "name": OverkizState.IO_CURRENT_WORKING_RATE,
+                    "type": 2,
+                    "value": 51.0,
+                },
+                {
+                    "name": OverkizState.CORE_REGULATION_MODE,
+                    "type": 3,
+                    "value": "standby",
+                },
+            ],
+            HVACAction.HEATING,
+            id="working_rate_heating",
+        ),
+        pytest.param(
+            [
+                {
+                    "name": OverkizState.IO_CURRENT_WORKING_RATE,
+                    "type": 2,
+                    "value": 0.0,
+                },
+            ],
+            HVACAction.IDLE,
+            id="working_rate_idle",
+        ),
+        pytest.param(
+            [
+                {
+                    "name": OverkizState.IO_CURRENT_WORKING_RATE,
+                    "type": 2,
+                    "value": 51.0,
+                },
+                {
+                    "name": OverkizState.CORE_OPERATING_MODE,
+                    "type": 3,
+                    "value": "standby",
+                },
+            ],
+            HVACAction.OFF,
+            id="working_rate_hvac_mode_off",
+        ),
+        pytest.param(
+            [
+                {
+                    "name": OverkizState.IO_CURRENT_WORKING_RATE,
+                    "type": 0,
+                    "value": None,
+                },
+                {
+                    "name": OverkizState.CORE_REGULATION_MODE,
+                    "type": 3,
+                    "value": "increase",
+                },
+            ],
+            HVACAction.HEATING,
+            id="regulation_mode_fallback",
+        ),
+    ],
+)
+async def test_electrical_heater_adjustable_hvac_action(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    device_states: list[dict[str, Any]],
+    expected_hvac_action: HVACAction,
+) -> None:
+    """Test hvac_action prefers the working rate over the regulation mode."""
+    await setup_overkiz_integration(fixture=ELECTRICAL_HEATER_ADJUSTABLE.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ELECTRICAL_HEATER_ADJUSTABLE.device_url,
+                device_states=device_states,
+            )
+        ],
+    )
+
+    state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_HVAC_ACTION] == expected_hvac_action
 
 
 async def test_hitachi_air_to_water_heating_zone_2(

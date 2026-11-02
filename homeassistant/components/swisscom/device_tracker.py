@@ -12,6 +12,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -117,6 +118,9 @@ class SwisscomScannerEntity(
 
     @property
     @override
-    def name(self) -> str | None:
-        """Return the friendly name of the device."""
-        return self.hostname
+    def device_info(self) -> DeviceInfo:
+        """Return the device info of the tracked device."""
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.mac_address)},
+            name=self.hostname or self.mac_address,
+        )

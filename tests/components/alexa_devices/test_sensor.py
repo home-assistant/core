@@ -9,7 +9,11 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor
+from aioamazondevices.structures import (
+    AmazonDevice,
+    AmazonDeviceFeature,
+    AmazonDeviceSensor,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -167,6 +171,26 @@ async def test_device_removed_and_readded(
     )
 
 
+def _sensor_feature(key: str) -> dict[str, dict[str, AmazonDeviceFeature]]:
+    """Return the features of a device supporting a single sensor."""
+    return {
+        "sensor": {
+            "1": AmazonDeviceFeature(
+                properties=["sensor"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"sensor": key},
+            )
+        }
+    }
+
+
 @pytest.mark.parametrize(
     ("sensor", "api_value", "scale", "state_value", "unit"),
     [
@@ -196,6 +220,9 @@ async def test_unit_of_measurement(
 
     entity_id = f"sensor.echo_test_{sensor}"
 
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_DEVICE_1_SN
+    ].features = _sensor_feature(sensor)
     mock_amazon_devices_client.sensors[TEST_DEVICE_1_SN] = {
         sensor: AmazonDeviceSensor(
             name=sensor,
@@ -217,29 +244,43 @@ async def test_unit_of_measurement(
     assert state.attributes["unit_of_measurement"] == unit
 
 
+@pytest.mark.parametrize(
+    "sensors",
+    [
+        pytest.param(
+            {
+                "illuminance": AmazonDeviceSensor(
+                    name="illuminance",
+                    value="800",
+                    error=True,
+                    error_msg=None,
+                    error_type=None,
+                    scale=None,
+                    feature_name="sensor",
+                    property_name="sensor",
+                    instance="1",
+                )
+            },
+            id="error",
+        ),
+        pytest.param({}, id="no_value_yet"),
+    ],
+)
 async def test_sensor_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    sensors: dict[str, AmazonDeviceSensor],
 ) -> None:
-    """Test sensor is unavailable."""
+    """Test a supported sensor is created but unavailable without a valid value."""
 
     entity_id = "sensor.echo_test_illuminance"
 
-    mock_amazon_devices_client.sensors[TEST_DEVICE_1_SN] = {
-        "illuminance": AmazonDeviceSensor(
-            name="illuminance",
-            value="800",
-            error=True,
-            error_msg=None,
-            error_type=None,
-            scale=None,
-            feature_name="lightSensor",
-            property_name="illuminance",
-            instance="1",
-        )
-    }
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_DEVICE_1_SN
+    ].features = _sensor_feature("illuminance")
+    mock_amazon_devices_client.sensors[TEST_DEVICE_1_SN] = sensors
 
     await setup_integration(hass, mock_config_entry)
 

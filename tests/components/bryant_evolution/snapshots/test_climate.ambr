@@ -22,7 +22,7 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('bryant_evolution', '01J3XJZSTEF6G5V0QJX6HBC94T-S1-Z1')]>,
     'disabled_by': None,

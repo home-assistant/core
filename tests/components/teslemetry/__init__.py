@@ -3,20 +3,37 @@
 import time
 from unittest.mock import patch
 
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.teslemetry.const import (
+    CONF_SITE_ID,
     CONF_VIN,
     DOMAIN,
+    SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
 )
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_ADDRESS, Platform
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import ADDRESS, VIN
+
+SITE_ID = 123456
+
+# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# that build one need a real (if undersized, for speed) RSA key rather than
+# arbitrary bytes.
+_TEST_RSA_KEY_PEM = rsa.generate_private_key(
+    public_exponent=65537, key_size=1024
+).private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.TraditionalOpenSSL,
+    encryption_algorithm=serialization.NoEncryption(),
+)
 
 
 def mock_config_entry() -> MockConfigEntry:
@@ -94,6 +111,43 @@ async def setup_platform(
     await hass.async_block_till_done()
 
     return mock_entry
+
+
+async def setup_paired_platform(
+    hass: HomeAssistant, platforms: list[Platform]
+) -> MockConfigEntry:
+    """Set up the Teslemetry platform with the energy site paired locally."""
+    entry = mock_config_entry()
+    entry = MockConfigEntry(
+        domain=entry.domain,
+        version=entry.version,
+        minor_version=entry.minor_version,
+        unique_id=entry.unique_id,
+        data=dict(entry.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
+                unique_id=str(SITE_ID),
+                title="Energy Site",
+                data={
+                    CONF_SITE_ID: SITE_ID,
+                    CONF_HOST: "192.168.91.1",
+                    CONF_PASSWORD: "abcde",
+                },
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", platforms),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
 
 
 async def reload_platform(

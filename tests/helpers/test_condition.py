@@ -96,7 +96,7 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -3391,7 +3391,7 @@ async def _setup_numerical_condition(
     condition_options: dict[str, Any],
     target_config: dict[str, Any],
     domain_specs: Mapping[str, DomainSpec] | None = None,
-    valid_unit: str | UndefinedType | None = UNDEFINED,
+    valid_unit: str | Undefined | None = Undefined,
     primary_entities_only: bool = True,
 ) -> condition.ConditionChecker:
     """Set up a numerical condition via a mock platform and return the test."""
@@ -3646,15 +3646,15 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
         # valid_unit=None — only entities without unit pass
         (None, None, True),
         (None, "%", False),
-        # valid_unit=UNDEFINED (default) — any unit passes
-        (UNDEFINED, None, True),
-        (UNDEFINED, "%", True),
-        (UNDEFINED, "°C", True),
+        # valid_unit=Undefined (default) — any unit passes
+        (Undefined, None, True),
+        (Undefined, "%", True),
+        (Undefined, "°C", True),
     ],
 )
 async def test_numerical_condition_valid_unit(
     hass: HomeAssistant,
-    valid_unit: str | UndefinedType | None,
+    valid_unit: str | Undefined | None,
     entity_unit: str | None,
     expected: bool,
 ) -> None:
@@ -6740,6 +6740,43 @@ async def test_state_condition_primary_entities_only_with_duration(
     # has also been matching for >= 5s → True regardless of flag.
     freezer.tick(timedelta(seconds=3))
     assert test.async_check() is True
+
+
+async def test_condition_target_exclude_only_invalid(hass: HomeAssistant) -> None:
+    """Test a condition target consisting of only an exclude block is rejected."""
+
+    class MockCondition(Condition):
+        """Mock condition."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+        def _async_check(self, **kwargs) -> bool:
+            """Check the condition."""
+            return True
+
+    async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
+        return {"_": MockCondition}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        await async_validate_condition_config(
+            hass,
+            {
+                CONF_CONDITION: "test",
+                CONF_TARGET: {CONF_EXCLUDE: {CONF_ENTITY_ID: "test.excluded"}},
+            },
+        )
 
 
 _INCLUDED_ENTITY_ID = "test.included"

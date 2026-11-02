@@ -57,6 +57,21 @@ from . import make_bthome_v2_adv
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
+                b"\x40\x3a\x81",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.test_device_18b2_button",
+                    ATTR_FRIENDLY_NAME: "Test Device 18B2 Button",
+                    ATTR_EVENT_TYPE: "hold_release",
+                }
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
                 b"\x40\x3b\x00\x01\x3b\x00\x02",
             ),
             None,

@@ -6,6 +6,7 @@ from typing import Any, override
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -16,6 +17,7 @@ from . import (
     DeviceTuple,
     RfxtrxConfigEntry,
     async_setup_platform_entry,
+    get_device_tuple_from_device,
 )
 from .const import CONF_OFF_DELAY
 from .entity import RfxtrxCommandEntity
@@ -56,17 +58,19 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
-        device_id: DeviceTuple,
-        entity_info: dict[str, Any],
+        subentry: ConfigSubentry,
     ) -> list[Entity]:
         """Construct a entity from an event."""
         device = event.device
+        entity_info = subentry.data
+        device_id = get_device_tuple_from_device(event.device)
 
         if isinstance(device, rfxtrxmod.ChimeDevice):
             return [
                 RfxtrxChime(
                     event.device,
                     device_id,
+                    subentry.subentry_id,
                     entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                     auto,
                 )
@@ -80,6 +84,7 @@ async def async_setup_entry(
                     RfxtrxSecurityPanic(
                         event.device,
                         device_id,
+                        subentry.subentry_id,
                         entity_info.get(CONF_OFF_DELAY, DEFAULT_OFF_DELAY),
                         auto,
                     )
@@ -135,11 +140,12 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         off_delay: float | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(device, device_id, event)
+        super().__init__(device, device_id, subentry_id, event)
         self._attr_available_tones = list(self._device.COMMANDS.values())
         self._default_tone = next(iter(self._device.COMMANDS))
         self._off_delay = off_delay
@@ -198,11 +204,12 @@ class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin)
         self,
         device: rfxtrxmod.RFXtrxDevice,
         device_id: DeviceTuple,
+        subentry_id: str,
         off_delay: float | None = None,
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(device, device_id, event)
+        super().__init__(device, device_id, subentry_id, event)
         self._on_value = get_first_key(self._device.STATUS, SECURITY_PANIC_ON)
         self._off_value = get_first_key(self._device.STATUS, SECURITY_PANIC_OFF)
         self._off_delay = off_delay

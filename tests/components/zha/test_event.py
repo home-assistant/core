@@ -6,15 +6,16 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import mock_restore_cache_with_extra_data
+from zha.application.platforms import ZclPlatformEntity
 from zha.application.platforms.event import BaseEvent, EntityEventTriggeredEvent
 from zha.application.platforms.event.const import (
-    ATTR_MULTI_PRESS_COUNT,
+    ATTR_PRESS_COUNT,
     ButtonEventType,
     EventDeviceClass as ZHAEventDeviceClass,
 )
 from zha.zigbee.device import DeviceEntityAddedEvent
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
@@ -37,7 +38,7 @@ from homeassistant.helpers import entity_registry as er
 ENTITY_ID = "event.fakemanufacturer_fakemodel_button"
 
 
-class FakeEvent(BaseEvent):
+class FakeEvent(BaseEvent, ZclPlatformEntity):
     """Event entity that can be triggered from tests."""
 
     _attr_fallback_name = "Fake"
@@ -54,7 +55,7 @@ class FakeButtonEvent(FakeEvent):
 
     _unique_id_suffix = "fake_button"
     _attr_device_class = ZHAEventDeviceClass.BUTTON
-    _attr_event_types = [ButtonEventType.PRESS_END, ButtonEventType.MULTI_PRESS_END]
+    _attr_event_types = [ButtonEventType.SINGLE_PRESS, ButtonEventType.MULTI_PRESS]
 
 
 class FakeMotionEvent(FakeEvent):
@@ -101,7 +102,7 @@ def speed_up_radio_mgr() -> Generator[None]:
 async def _setup_device(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> ZHADeviceProxy:
     """Join a device that event entities can be added to."""
     await setup_zha()
@@ -166,7 +167,7 @@ async def _add_event(
         pytest.param(
             FakeButtonEvent,
             EventDeviceClass.BUTTON,
-            ["press_end", "multi_press_end"],
+            ["single_press", "multi_press"],
             id="button",
         ),
         pytest.param(FakeMotionEvent, EventDeviceClass.MOTION, ["motion"], id="motion"),
@@ -176,7 +177,7 @@ async def _add_event(
 async def test_event_entity(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     event_class: type[FakeEvent],
     device_class: EventDeviceClass | None,
     event_types: list[str],
@@ -197,35 +198,35 @@ async def test_event_entity(
 async def test_event_triggered(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test events triggered by the zha entity are fired in Home Assistant."""
     zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
     entity_id, zha_entity = await _add_event(hass, zha_device_proxy, FakeButtonEvent)
 
-    zha_entity.trigger(ButtonEventType.MULTI_PRESS_END, {ATTR_MULTI_PRESS_COUNT: 2})
+    zha_entity.trigger(ButtonEventType.MULTI_PRESS, {ATTR_PRESS_COUNT: 2})
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "2026-09-25T12:00:00.000+00:00"
-    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_end"
-    assert state.attributes[ATTR_MULTI_PRESS_COUNT] == 2
+    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press"
+    assert state.attributes[ATTR_PRESS_COUNT] == 2
 
-    zha_entity.trigger(ButtonEventType.PRESS_END)
+    zha_entity.trigger(ButtonEventType.SINGLE_PRESS)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes[ATTR_EVENT_TYPE] == "press_end"
-    assert ATTR_MULTI_PRESS_COUNT not in state.attributes
+    assert state.attributes[ATTR_EVENT_TYPE] == "single_press"
+    assert ATTR_PRESS_COUNT not in state.attributes
 
 
 @pytest.mark.freeze_time("2026-09-25 12:00:00+00:00")
 async def test_multiple_events(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test event entities on the same device are triggered independently."""
     zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
@@ -233,7 +234,7 @@ async def test_multiple_events(
     motion_id, motion = await _add_event(hass, zha_device_proxy, FakeMotionEvent)
     assert button_id != motion_id
 
-    button.trigger(ButtonEventType.PRESS_END)
+    button.trigger(ButtonEventType.SINGLE_PRESS)
     await hass.async_block_till_done()
 
     state = hass.states.get(button_id)
@@ -248,7 +249,7 @@ async def test_multiple_events(
 
     state = hass.states.get(button_id)
     assert state
-    assert state.attributes[ATTR_EVENT_TYPE] == "press_end"
+    assert state.attributes[ATTR_EVENT_TYPE] == "single_press"
     state = hass.states.get(motion_id)
     assert state
     assert state.attributes[ATTR_EVENT_TYPE] == "motion"
@@ -257,7 +258,7 @@ async def test_multiple_events(
 async def test_event_restored(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test the last event is restored when the entity is set up again."""
     mock_restore_cache_with_extra_data(
@@ -266,8 +267,8 @@ async def test_event_restored(
             (
                 State(ENTITY_ID, "2026-09-25T12:00:00.000+00:00"),
                 {
-                    "last_event_type": "multi_press_end",
-                    "last_event_attributes": {ATTR_MULTI_PRESS_COUNT: 2},
+                    "last_event_type": "multi_press",
+                    "last_event_attributes": {ATTR_PRESS_COUNT: 2},
                 },
             )
         ],
@@ -280,15 +281,15 @@ async def test_event_restored(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "2026-09-25T12:00:00.000+00:00"
-    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_end"
-    assert state.attributes[ATTR_MULTI_PRESS_COUNT] == 2
+    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press"
+    assert state.attributes[ATTR_PRESS_COUNT] == 2
 
 
 async def test_event_removed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test removing the entity stops listening to the zha entity."""
     zha_device_proxy = await _setup_device(hass, setup_zha, zigpy_device_mock)
@@ -301,6 +302,6 @@ async def test_event_removed(
     assert not zha_entity._listeners[EntityEventTriggeredEvent.event]
 
     # Must not write state for the removed entity
-    zha_entity.trigger(ButtonEventType.PRESS_END)
+    zha_entity.trigger(ButtonEventType.SINGLE_PRESS)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id) is None

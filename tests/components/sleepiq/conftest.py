@@ -97,6 +97,16 @@ def mock_bed() -> MagicMock:
     )
 
     bed.foundation = create_autospec(SleepIQFoundation)
+    bed.foundation.type = "splitKing"
+    bed.foundation.features = {
+        "boardIsASingle": False,
+        "hasMassageAndLight": False,
+        "hasFootControl": False,
+        "hasFootWarming": True,
+        "hasUnderbedLight": True,
+        "leftUnderbedLightPMW": False,
+        "rightUnderbedLightPMW": False,
+    }
     light_1 = create_autospec(SleepIQLight)
     light_1.outlet_id = 1
     light_1.is_on = False
