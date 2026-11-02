@@ -1,9 +1,8 @@
 """Image platform for Threema Gateway integration."""
 
-import io
 from typing import override
 
-import segno
+from aiothreema import generate_qr_code
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import EntityCategory
@@ -13,18 +12,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import ThreemaConfigEntry
-from .client import derive_public_key
 from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
-
-
-def _generate_qr_code(gateway_id: str, public_key: str) -> bytes:
-    """Return the Threema ID QR code of the gateway as SVG."""
-    buffer = io.BytesIO()
-    qr_code = segno.make(f"3mid:{gateway_id},{public_key}", micro=False)
-    qr_code.save(buffer, kind="svg", scale=5, light="#fff")
-    return buffer.getvalue()
 
 
 async def async_setup_entry(
@@ -34,13 +24,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the gateway QR code for end-to-end encrypted gateways."""
     client = entry.runtime_data
-    if client.private_key is None:
+    if (public_key := client.public_key) is None:
         return
 
     qr_code = await hass.async_add_executor_job(
-        _generate_qr_code,
-        client.gateway_id,
-        derive_public_key(client.private_key),
+        generate_qr_code, client.gateway_id, public_key
     )
     async_add_entities([ThreemaQRCodeImage(hass, entry, qr_code)])
 

@@ -5,10 +5,9 @@ from __future__ import annotations
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
-from aiothreema import derive_public_key
+from aiothreema import derive_public_key, generate_qr_code
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import ClientSessionGenerator
-import segno
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -31,14 +30,14 @@ async def test_qr_code_image(
     mock_config_entry_with_keys.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.threema.image.segno.make",
-        wraps=segno.make,
-    ) as mock_make:
+        "homeassistant.components.threema.image.generate_qr_code",
+        wraps=generate_qr_code,
+    ) as mock_generate:
         await hass.config_entries.async_setup(mock_config_entry_with_keys.entry_id)
         await hass.async_block_till_done()
 
-    mock_make.assert_called_once_with(
-        f"3mid:{MOCK_GATEWAY_ID},{derive_public_key(MOCK_PRIVATE_KEY)}", micro=False
+    mock_generate.assert_called_once_with(
+        MOCK_GATEWAY_ID, derive_public_key(MOCK_PRIVATE_KEY)
     )
 
     entity_entry = entity_registry.async_get(ENTITY_ID)
