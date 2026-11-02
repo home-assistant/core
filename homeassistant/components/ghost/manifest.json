@@ -4,7 +4,6 @@
   "categories": ["news_social_media"],
   "codeowners": ["@johnonolan"],
   "config_flow": true,
-  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ghost",
   "integration_type": "service",
   "iot_class": "cloud_polling",

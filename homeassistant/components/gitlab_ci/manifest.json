@@ -3,7 +3,6 @@
   "name": "GitLab-CI",
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": [],
-  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/gitlab_ci",
   "iot_class": "cloud_polling",
   "loggers": ["gitlab"],

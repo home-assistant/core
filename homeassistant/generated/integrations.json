@@ -1705,9 +1705,6 @@
         "security_safety.cameras",
         "weather_alerts"
       ],
-      "connectivity": [
-        "cloud"
-      ],
       "supported_by": "netatmo"
     },
     "bubendorff": {
@@ -1717,9 +1714,6 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
-      ],
-      "connectivity": [
-        "cloud"
       ],
       "supported_by": "netatmo"
     },
@@ -3408,6 +3402,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -3597,9 +3594,6 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.cameras"
-      ],
-      "connectivity": [
-        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4448,9 +4442,6 @@
       "categories": [
         "presence_location.phones_companion_apps"
       ],
-      "connectivity": [
-        "cloud"
-      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -4518,9 +4509,6 @@
       "categories": [
         "news_social_media"
       ],
-      "connectivity": [
-        "cloud"
-      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4553,9 +4541,6 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.cloud_developer_tools"
-      ],
-      "connectivity": [
-        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -4923,9 +4908,6 @@
       "categories": [
         "presence_location.phones_companion_apps"
       ],
-      "connectivity": [
-        "cloud"
-      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -5055,9 +5037,6 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos"
-      ],
-      "connectivity": [
-        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5406,9 +5385,6 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
-      ],
-      "connectivity": [
-        "cloud"
       ],
       "supported_by": "netatmo"
     },
@@ -6827,9 +6803,6 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
-      ],
-      "connectivity": [
-        "cloud"
       ],
       "supported_by": "netatmo"
     },
@@ -8500,9 +8473,6 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
-      ],
-      "connectivity": [
-        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -10696,9 +10666,6 @@
       "categories": [
         "productivity_information.calendars_todos"
       ],
-      "connectivity": [
-        "cloud"
-      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11878,9 +11845,6 @@
         "security_safety.cameras",
         "weather_alerts"
       ],
-      "connectivity": [
-        "cloud"
-      ],
       "supported_by": "netatmo"
     },
     "smartthings": {
@@ -12474,9 +12438,6 @@
         "hubs_protocols.smart_home_hubs",
         "diy_makers"
       ],
-      "connectivity": [
-        "cloud"
-      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -12824,9 +12785,6 @@
       "integration_type": "service",
       "categories": [
         "messaging_notifications.chat_apps"
-      ],
-      "connectivity": [
-        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"

@@ -9,7 +9,6 @@
   ],
   "codeowners": ["@cgtobi"],
   "config_flow": true,
-  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "homekit": {
