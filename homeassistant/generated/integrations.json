@@ -200,6 +200,9 @@
         "climate.fans_ventilation",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -461,6 +464,9 @@
       "integration_type": "device",
       "categories": [
         "health_wellbeing"
+      ],
+      "connectivity": [
+        "infrared"
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
@@ -1717,6 +1723,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2777,6 +2786,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "zigbee"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3302,6 +3314,9 @@
       "categories": [
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -3484,6 +3499,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "infrared"
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
@@ -3867,6 +3885,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "enocean"
       ],
       "config_flow": true,
       "iot_class": "local_push",
@@ -4450,6 +4471,9 @@
           "iot_class": "local_polling",
           "categories": [
             "climate.fans_ventilation"
+          ],
+          "connectivity": [
+            "modbus"
           ],
           "name": "Flexit"
         },
@@ -5285,6 +5309,9 @@
           "categories": [
             "buttons_remotes"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "Global Cach\u00e9 iTach TCP/IP to IR"
         }
       }
@@ -5688,6 +5715,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "Gree Infrared"
         }
@@ -6444,6 +6474,9 @@
         "climate.thermostats_heating",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6752,6 +6785,9 @@
           "categories": [
             "hubs_protocols.smart_home_hubs",
             "lighting.bulbs_lamps"
+          ],
+          "connectivity": [
+            "zigbee"
           ],
           "name": "IKEA TR\u00c5DFRI"
         },
@@ -7360,6 +7396,9 @@
           "categories": [
             "energy.solar_batteries"
           ],
+          "connectivity": [
+            "modbus"
+          ],
           "name": "KACO Modbus"
         },
         "kaco_rs485": {
@@ -7533,6 +7572,9 @@
       "integration_type": "hub",
       "categories": [
         "buttons_remotes"
+      ],
+      "connectivity": [
+        "infrared"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -7844,6 +7886,9 @@
       "categories": [
         "lighting"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -7941,6 +7986,9 @@
           "categories": [
             "media_entertainment.tv_streaming",
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "LG Infrared"
         },
@@ -8419,6 +8467,9 @@
       "categories": [
         "buttons_remotes"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -8461,6 +8512,9 @@
       "categories": [
         "lighting.lighting_systems",
         "hubs_protocols.building_automation"
+      ],
+      "connectivity": [
+        "dali"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -8613,6 +8667,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "Marantz Infrared"
         },
@@ -9244,6 +9301,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "x10"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -9252,6 +9312,9 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers"
+      ],
+      "connectivity": [
+        "modbus"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -9773,6 +9836,9 @@
       "integration_type": "hub",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10553,6 +10619,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "supported_by": "gree_infrared"
     },
     "onkyo": {
@@ -10907,6 +10976,9 @@
       "categories": [
         "lighting.bulbs_lamps"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -10915,6 +10987,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.lighting_systems"
+      ],
+      "connectivity": [
+        "zigbee"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -11186,6 +11261,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -11237,6 +11315,9 @@
           "categories": [
             "lighting.lighting_systems"
           ],
+          "connectivity": [
+            "zigbee"
+          ],
           "name": "Philips Hue"
         },
         "hue_ble": {
@@ -11257,6 +11338,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "Philips Infrared"
         },
@@ -12109,6 +12193,9 @@
           "categories": [
             "energy.meters_monitoring"
           ],
+          "connectivity": [
+            "zigbee"
+          ],
           "name": "Rainforest Eagle"
         },
         "rainforest_raven": {
@@ -12117,6 +12204,9 @@
           "iot_class": "local_polling",
           "categories": [
             "energy.meters_monitoring"
+          ],
+          "connectivity": [
+            "zigbee"
           ],
           "name": "Rainforest RAVEn"
         }
@@ -12834,6 +12924,9 @@
             "media_entertainment.tv_streaming",
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "Samsung Infrared"
         },
         "samsungtv": {
@@ -12892,6 +12985,9 @@
       "categories": [
         "water.pools_spas",
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "modbus"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -13029,6 +13125,9 @@
       "integration_type": "hub",
       "categories": [
         "sensors"
+      ],
+      "connectivity": [
+        "lorawan"
       ],
       "config_flow": true,
       "iot_class": "local_push",
@@ -13366,6 +13465,9 @@
       "integration_type": "device",
       "categories": [
         "climate.fans_ventilation"
+      ],
+      "connectivity": [
+        "infrared"
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
@@ -13728,6 +13830,9 @@
       "categories": [
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -13846,6 +13951,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -13870,6 +13978,9 @@
           "iot_class": "local_polling",
           "categories": [
             "energy.solar_batteries"
+          ],
+          "connectivity": [
+            "modbus"
           ],
           "name": "SolarEdge Modbus"
         }
@@ -14277,6 +14388,9 @@
         "climate.heat_pumps_air_conditioning",
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14342,6 +14456,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.lighting_systems"
+      ],
+      "connectivity": [
+        "dali"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -16736,6 +16853,9 @@
         "hubs_protocols",
         "lighting"
       ],
+      "connectivity": [
+        "x10"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -16760,6 +16880,9 @@
           "iot_class": "local_push",
           "categories": [
             "hubs_protocols.smart_home_hubs"
+          ],
+          "connectivity": [
+            "zigbee"
           ],
           "name": "Xiaomi Gateway (Aqara)"
         },
@@ -17142,6 +17265,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "zigbee"
       ],
       "config_flow": true,
       "iot_class": "local_polling"

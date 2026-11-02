@@ -1,5 +1,6 @@
 """Support for the Abode Security System."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from jaraco.abode.exceptions import Exception as AbodeException
@@ -16,14 +17,26 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from . import AbodeConfigEntry, AbodeSystem
 
-ATTR_SETTING = "setting"
-ATTR_VALUE = "value"
+
+class AbodeService(StrEnum):
+    """Store keys for Abode services."""
+
+    CAPTURE_IMAGE = "capture_image"
+    CHANGE_SETTING = "change_setting"
+    TRIGGER_AUTOMATION = "trigger_automation"
+
+
+class AbodeServiceArgument(StrEnum):
+    """Store keys for Abode service arguments."""
+
+    SETTING = "setting"
+    VALUE = "value"
 
 
 CHANGE_SETTING_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_SETTING): cv.string,
-        probatio.Required(ATTR_VALUE): cv.string,
+        probatio.Required(AbodeServiceArgument.SETTING): cv.string,
+        probatio.Required(AbodeServiceArgument.VALUE): cv.string,
     }
 )
 
@@ -40,8 +53,8 @@ def _get_abode_system(hass: HomeAssistant) -> AbodeSystem:
 
 def _change_setting(call: ServiceCall) -> None:
     """Change an Abode system setting."""
-    setting = call.data[ATTR_SETTING]
-    value = call.data[ATTR_VALUE]
+    setting = call.data[AbodeServiceArgument.SETTING]
+    value = call.data[AbodeServiceArgument.VALUE]
 
     try:
         _get_abode_system(call.hass).abode.set_setting(setting, value)
@@ -88,13 +101,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Home Assistant services."""
 
     hass.services.async_register(
-        DOMAIN, "change_setting", _change_setting, schema=CHANGE_SETTING_SCHEMA
+        DOMAIN,
+        AbodeService.CHANGE_SETTING,
+        _change_setting,
+        schema=CHANGE_SETTING_SCHEMA,
     )
 
     hass.services.async_register(
-        DOMAIN, "capture_image", _capture_image, schema=CAPTURE_IMAGE_SCHEMA
+        DOMAIN, AbodeService.CAPTURE_IMAGE, _capture_image, schema=CAPTURE_IMAGE_SCHEMA
     )
 
     hass.services.async_register(
-        DOMAIN, "trigger_automation", _trigger_automation, schema=AUTOMATION_SCHEMA
+        DOMAIN,
+        AbodeService.TRIGGER_AUTOMATION,
+        _trigger_automation,
+        schema=AUTOMATION_SCHEMA,
     )
