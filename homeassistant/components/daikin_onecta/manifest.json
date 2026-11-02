@@ -5,6 +5,7 @@
   "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@jwillemsen"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/daikin_onecta",
   "integration_type": "hub",
