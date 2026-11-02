@@ -9,6 +9,9 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.auth.models import User
@@ -46,10 +49,6 @@ from . import (
 )
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
-
-from tests.common import MockConfigEntry, MockUser
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -210,6 +209,49 @@ async def test_update_entity_follows_its_repository_on_github(
         f"{repository.string} can not be reached on GitHub: no route to host",
         f"{repository.string} can be reached on GitHub again",
     ]
+
+
+async def test_update_entity_follows_the_repository_page(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    integration_update_entity: str,
+) -> None:
+    """Test the update entity learns what the repository page fetched from GitHub."""
+    assert hass.states.get(integration_update_entity).state == "off"
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url,
+            json_content=[
+                {
+                    "tag_name": version,
+                    "name": version,
+                    "body": "",
+                    "prerelease": False,
+                    "draft": False,
+                    "assets": [],
+                }
+                for version in ("2.0.0", "1.0.0")
+            ],
+        ),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/info",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["available_version"] == "2.0.0"
+    state = hass.states.get(integration_update_entity)
+    assert state.state == "on"
+    assert state.attributes["latest_version"] == "2.0.0"
 
 
 @pytest.mark.usefixtures("stored_repositories")
@@ -642,6 +684,38 @@ async def test_install_version_requiring_a_newer_core(
         )
 
     assert exc_info.value.translation_key == "requires_newer_home_assistant"
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_catalog_update_requiring_a_newer_core(
+    hass: HomeAssistant,
+    integration_update_entity: str,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the update the catalog announces is refused when it needs a newer core."""
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.last_version = "2.0.0"
+    # The catalog leaves the minimum version out of the manifest it carries
+    assert repository.repository_manifest.homeassistant is None
+    url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/2.0.0/hacs.json"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url, content=json.dumps({"homeassistant": "9999.99.99"}).encode()
+        ),
+        keep=True,
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: integration_update_entity},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "requires_newer_home_assistant"
+    assert repository.data.installed_version == "1.0.0"
 
 
 async def test_install_download_failure(

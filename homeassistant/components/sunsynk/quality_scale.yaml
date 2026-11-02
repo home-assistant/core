@@ -46,7 +46,7 @@ rules:
   parallel-updates:
     status: exempt
     comment: The integration only reads data through a coordinator.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold

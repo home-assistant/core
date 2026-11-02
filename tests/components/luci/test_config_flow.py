@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.components.luci.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 REAUTH_INPUT = {
     CONF_USERNAME: "root",

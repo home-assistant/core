@@ -1,9 +1,11 @@
 {
   "domain": "sense",
   "name": "Sense",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@kbickar"],
   "config_flow": true,
   "dependencies": ["recorder"],
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "sense-*",

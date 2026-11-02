@@ -3,7 +3,8 @@
 from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,6 +20,7 @@ async def async_setup_entry(
     """Set up device tracker for OPNsense component."""
     client = entry.runtime_data.client
     interfaces = entry.runtime_data.tracker_interfaces
+    tracked_devices = entry.runtime_data.tracked_devices
 
     coordinator = OPNsenseDeviceTrackerCoordinator(hass, entry, client, interfaces)
 
@@ -29,10 +31,10 @@ async def async_setup_entry(
 
         entities = []
         for mac_address in coordinator.data:
-            if mac_address in coordinator.tracked_devices:
+            if mac_address in tracked_devices:
                 continue
             entity = OPNsenseDeviceTrackerEntity(coordinator, mac_address)
-            coordinator.tracked_devices.add(mac_address)
+            tracked_devices.add(mac_address)
             entities.append(entity)
 
         if entities:
@@ -58,6 +60,15 @@ class OPNsenseDeviceTrackerEntity(
         """Initialize the device tracker entity."""
         super().__init__(coordinator)
         self._attr_mac_address = mac_address
+        connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
+        self._attr_device_info = dr.DeviceInfo(connections={connection})
+        if hostname := self.hostname:
+            self._attr_device_info["name"] = hostname
+        elif not dr.async_get(coordinator.hass).async_get_device_by_connection(
+            connection, coordinator.config_entry.entry_id
+        ):
+            # Only name a new device by MAC, an existing device keeps its name
+            self._attr_device_info["name"] = mac_address
 
     @property
     def device_data(self) -> DeviceDetails | None:
@@ -77,15 +88,6 @@ class OPNsenseDeviceTrackerEntity(
 
     @property
     @override
-    def name(self) -> str:
-        """Return device name."""
-        device_data = self.device_data
-        if device_data and device_data.get("hostname"):
-            return str(device_data["hostname"])
-        return f"OPNsense {self.mac_address}"
-
-    @property
-    @override
     def ip_address(self) -> str | None:
         """Return the primary IP address of the device."""
         device_data = self.device_data
@@ -102,3 +104,15 @@ class OPNsenseDeviceTrackerEntity(
             hostname = device_data.get("hostname")
             return hostname or None
         return None
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Rename the device when the hostname of the client changes."""
+        if (
+            (hostname := self.hostname)
+            and (device_entry := self.device_entry)
+            and device_entry.name != hostname
+        ):
+            dr.async_get(self.hass).async_update_device(device_entry.id, name=hostname)
+        super()._handle_coordinator_update()

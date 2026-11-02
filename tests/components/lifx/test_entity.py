@@ -1,13 +1,13 @@
 """Tests for LIFX device registry repair."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.lifx.const import DOMAIN
 from homeassistant.components.lifx.entity import async_repair_device_registry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .helpers import MAC_ADDRESS, SERIAL, create_mock_light_state
-
-from tests.common import MockConfigEntry
 
 INCORRECT_OFFSET_MAC = "d0:73:d5:dd:ee:cd"
 OTHER_SERIAL = "d0:73:d5:dd:ee:cd"

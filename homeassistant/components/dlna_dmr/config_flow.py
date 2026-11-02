@@ -217,7 +217,6 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._create_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
 
     async def _async_connect(self) -> None:

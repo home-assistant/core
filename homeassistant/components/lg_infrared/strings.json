@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This LG device has already been configured with this infrared entity.",
+      "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]",
       "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
     },
     "error": {
@@ -22,6 +23,20 @@
         },
         "description": "Select an infrared emitter and the modes your LG AC supports.",
         "title": "Set up LG AC"
+      },
+      "reconfigure": {
+        "data": {
+          "hvac_modes": "[%key:component::lg_infrared::config::step::ac::data::hvac_modes%]",
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+        },
+        "data_description": {
+          "hvac_modes": "[%key:component::lg_infrared::config::step::ac::data_description::hvac_modes%]",
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:component::lg_infrared::config::step::tv::data_description::infrared_receiver_entity_id%]"
+        },
+        "description": "Change the infrared entities used by your LG device. For an air conditioner, you can also change its supported modes.",
+        "title": "Reconfigure LG device"
       },
       "tv": {
         "data": {

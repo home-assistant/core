@@ -97,7 +97,7 @@ class EphEmberThermostat(ClimateEntity):
     """Representation of a EphEmber thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, ember, zone) -> None:
         """Initialize the thermostat."""
@@ -123,13 +123,13 @@ class EphEmberThermostat(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return zone_current_temperature(self._zone)
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return zone_target_temperature(self._zone)
 
@@ -167,7 +167,7 @@ class EphEmberThermostat(ClimateEntity):
         if self._hot_water:
             return
 
-        if temperature == self.target_temperature:
+        if temperature == self.native_target_temperature:
             return
 
         if temperature > self.max_temp or temperature < self.min_temp:

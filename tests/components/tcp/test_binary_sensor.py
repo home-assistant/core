@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -11,8 +12,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import test_sensor as test_tcp
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 BINARY_SENSOR_CONFIG = test_tcp.TEST_CONFIG["sensor"]
 TEST_CONFIG = {"binary_sensor": BINARY_SENSOR_CONFIG}

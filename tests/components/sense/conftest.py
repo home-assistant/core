@@ -6,6 +6,7 @@ import datetime
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sense_energy import Scale
 
 from homeassistant.components.recorder import Recorder
@@ -58,7 +59,7 @@ async def mock_recorder_before_hass(
 def mock_setup_entry(recorder_mock: Recorder) -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sense.async_setup_entry", return_value=True
+        "homeassistant.components.sense.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -113,6 +114,10 @@ def mock_sense(
         gateway.get_trend_data.side_effect = get_trend_data
         gateway.trend_start.side_effect = trend_start
         gateway.get_stat.side_effect = get_stat
+        gateway.get_stat.return_value = 15
+        gateway.trend_start.return_value = dt.datetime.fromisoformat(
+            "2024-01-01 01:01:00+00:00"
+        )
 
         device_1 = SenseDevice(DEVICE_1_ID)
         device_1.name = DEVICE_1_NAME

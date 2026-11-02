@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import entity_unique_ids, fire_hub_update
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 TEMPERATURE_ENTITY = "sensor.living_room_floor_sensor_temperature"
 

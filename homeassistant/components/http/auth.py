@@ -23,14 +23,13 @@ from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.http import current_request
+from homeassistant.helpers.http import KEY_AUTHENTICATED, current_request
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.storage import Store
 
 from .auth_util import async_user_not_allowed_do_auth
 from .const import (
     DATA_SUPERVISOR_USER,
-    KEY_AUTHENTICATED,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     is_supervisor_unix_socket_request,

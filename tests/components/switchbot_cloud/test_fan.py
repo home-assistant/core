@@ -3,6 +3,10 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 import switchbot_api
 from switchbot_api import Device, SwitchBotAPI
 from syrupy.assertion import SnapshotAssertion
@@ -36,8 +40,6 @@ from . import (
     STANDING_FAN_INFO,
     configure_integration,
 )
-
-from tests.common import async_load_json_object_fixture, snapshot_platform
 
 
 @pytest.mark.parametrize(

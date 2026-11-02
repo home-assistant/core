@@ -7,6 +7,7 @@ from qingping_ble import (
     SensorUpdate,
     Units,
 )
+from qingping_ble.const import ExtendedSensorDeviceClass
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
@@ -26,6 +27,7 @@ from homeassistant.const import (
     UnitOfDensity,
     UnitOfPressure,
     UnitOfRatio,
+    UnitOfSoundPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -34,6 +36,8 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from . import QingpingConfigEntry
 from .device import device_key_to_bluetooth_entity_key
+
+PARALLEL_UPDATES = 0
 
 SENSOR_DESCRIPTIONS = {
     (QingpingSensorDeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
@@ -100,12 +104,26 @@ SENSOR_DESCRIPTIONS = {
         entity_registry_enabled_default=False,
     ),
     (
+        ExtendedSensorDeviceClass.SOUND_PRESSURE,
+        Units.SOUND_PRESSURE_DB,
+    ): SensorEntityDescription(
+        key=f"{ExtendedSensorDeviceClass.SOUND_PRESSURE}_{Units.SOUND_PRESSURE_DB}",
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
         QingpingSensorDeviceClass.TEMPERATURE,
         Units.TEMP_CELSIUS,
     ): SensorEntityDescription(
         key=f"{QingpingSensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Unitless Sensirion-style VOC index; no HA device class matches
+    (ExtendedSensorDeviceClass.VOC_INDEX, None): SensorEntityDescription(
+        key=f"{ExtendedSensorDeviceClass.VOC_INDEX}",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -125,7 +143,12 @@ def sensor_update_to_bluetooth_data_update(
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
-            if description.device_class and description.native_unit_of_measurement
+            if description.device_class
+            and (
+                description.device_class,
+                description.native_unit_of_measurement,
+            )
+            in SENSOR_DESCRIPTIONS
         },
         entity_data={
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value

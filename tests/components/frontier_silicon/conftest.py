@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from afsapi import Equaliser, PlayCaps, PlayerMode, PlayState, Preset
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.frontier_silicon.const import CONF_WEBFSAPI_URL, DOMAIN
 from homeassistant.const import CONF_PIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -17,7 +16,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.frontier_silicon.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -44,6 +43,8 @@ def mock_afsapi() -> Generator[AsyncMock]:
         client.get_webfsapi_endpoint = mock_client.get_webfsapi_endpoint
         client.get_friendly_name.return_value = "Name of the device"
         client.get_radio_id.return_value = "mock_radio_id"
+        client.get_version.return_value = "ir-mmi-FS2026-0500-0052.V2.11.7.EX65933-4RC1"
+        client.get_rssi.return_value = -50
 
         client.get_power.return_value = False
         client.get_play_status.return_value = PlayState.IDLE

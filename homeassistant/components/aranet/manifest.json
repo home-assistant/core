@@ -13,8 +13,10 @@
       "service_uuid": "0000fce0-0000-1000-8000-00805f9b34fb"
     }
   ],
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@aschmitz", "@thecode", "@anrijs"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/aranet",
   "integration_type": "device",

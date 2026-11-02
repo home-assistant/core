@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from sense_energy import SenseAuthenticationException, SenseMFARequiredException
 
 from homeassistant.components.sense.const import DOMAIN

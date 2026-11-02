@@ -12,6 +12,7 @@ from pypck.inputs import (
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import KeyLockStateModifier, RelayStateModifier, Var, VarValue
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lcn.helpers import get_device_connection
@@ -30,8 +31,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 SWITCH_OUTPUT1 = "switch.testmodule_switch_output1"
 SWITCH_OUTPUT2 = "switch.testmodule_switch_output2"

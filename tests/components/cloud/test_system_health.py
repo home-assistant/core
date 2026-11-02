@@ -9,14 +9,13 @@ from unittest.mock import MagicMock
 from aiohttp import ClientError
 from hass_nabucasa.iot_base import DisconnectReason
 from hass_nabucasa.remote import Certificate, CertificateStatus
+from pytest_homeassistant.common import get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC
-
-from tests.common import get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_cloud_system_health(

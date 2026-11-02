@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pypaperless.models import RemoteVersion, Statistic, Status
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.paperless_ngx.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .const import USER_INPUT_ONE
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

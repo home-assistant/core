@@ -4,7 +4,7 @@ import logging
 
 DOMAIN = "opensensemap"
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 
 CONF_STATION_ID = "station_id"
 

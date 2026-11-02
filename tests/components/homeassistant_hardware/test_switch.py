@@ -4,6 +4,15 @@ from collections.abc import AsyncGenerator
 from unittest.mock import Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
 
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.homeassistant_hardware import DOMAIN
@@ -32,16 +41,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_DOMAIN, TEST_FIRMWARE_RELEASES_URL, TEST_MANIFEST
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
 
 TEST_DEVICE = "/dev/serial/by-id/test-device-12345"
 TEST_SWITCH_ENTITY_ID = "switch.mock_device_beta_firmware_updates"
@@ -87,12 +86,11 @@ def _mock_async_create_switch_entity(
 
 async def mock_async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Set up test config entry."""
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.SWITCH]
     )
-    return True
 
 
 async def mock_async_setup_switch_entities(

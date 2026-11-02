@@ -78,8 +78,8 @@ class AtwWaterHeater(MelCloudEntity, WaterHeaterEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
+    def native_temperature_unit(self) -> str:
+        """Return the native unit of measurement used by the device."""
         return UnitOfTemperature.CELSIUS
 
     @property
@@ -96,13 +96,13 @@ class AtwWaterHeater(MelCloudEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.tank_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._device.target_tank_temperature
 
@@ -112,7 +112,7 @@ class AtwWaterHeater(MelCloudEntity, WaterHeaterEntity):
         await self.coordinator.async_set(
             {
                 PROPERTY_TARGET_TANK_TEMPERATURE: kwargs.get(
-                    "temperature", self.target_temperature
+                    "temperature", self.native_target_temperature
                 )
             }
         )

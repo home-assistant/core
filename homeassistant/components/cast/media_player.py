@@ -378,6 +378,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         await super()._async_disconnect()
 
         self._attr_available = False
+
+    @override
+    async def _async_stop(self, event: Event) -> None:
+        """Disconnect socket and mark the entity unavailable on stop."""
+        await super()._async_stop(event)
+
+        # Not in _async_disconnect, which also runs while the entity is removed
         self.async_write_ha_state()
 
     @override
@@ -457,6 +464,9 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self._cast_info.friendly_name,
             connection_status.status,
         )
+        mz_mgr = self.mz_mgr
+        if self._chromecast is None or mz_mgr is None:
+            return
         if connection_status.status == CONNECTION_STATUS_DISCONNECTED:
             self._attr_available = False
             self._invalidate()
@@ -474,13 +484,14 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 self._cast_info.friendly_name,
                 connection_status.status,
             )
+
             self._attr_available = new_available
             if new_available and not self._cast_info.is_audio_group:
                 # Poll current group status
-                for group_uuid in self.mz_mgr.get_multizone_memberships(
+                for group_uuid in mz_mgr.get_multizone_memberships(
                     self._cast_info.uuid
                 ):
-                    group_media_controller = self.mz_mgr.get_multizone_mediacontroller(
+                    group_media_controller = mz_mgr.get_multizone_mediacontroller(
                         group_uuid
                     )
                     if not group_media_controller:
@@ -906,7 +917,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         # The lovelace app loops media to prevent timing out, don't show that
-        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+        chromecast = self._chromecast
+        if chromecast is None or self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
             return None
         if (media_status := self._media_status()[0]) is None:
             return None
@@ -917,7 +929,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         if media_status.media_is_musictrack:
             return MediaType.MUSIC
 
-        chromecast = self._get_chromecast()
         if chromecast.cast_type in (
             pychromecast.const.CAST_TYPE_AUDIO,
             pychromecast.const.CAST_TYPE_GROUP,

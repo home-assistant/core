@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from whoisdomain.exceptions import (
     FailedParsingWhoisOutputError,
@@ -18,8 +19,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_whois")

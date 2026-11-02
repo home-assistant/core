@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from nice_go import ApiError, AuthFailedError, Barrier, BarrierState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nice_go.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_unload_entry(
@@ -109,6 +108,13 @@ async def test_firmware_update_required(
         "firmware_update_required_test-device-id",
     )
     assert issue
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "firmware_update_required_test-device-id"
+    )
 
 
 async def test_update_refresh_token(

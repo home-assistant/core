@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 SAMPLE_CONFIG = {
     "websocket_port": 3688,
@@ -78,7 +77,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         ) as mock_get_request,
         patch(
             "homeassistant.components.forked_daapd.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_get_request.return_value = SAMPLE_CONFIG
@@ -100,6 +99,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "My Music on myhost"
         assert result["data"] == {
@@ -177,7 +177,7 @@ async def test_config_flow_no_websocket(hass: HomeAssistant) -> None:
         ) as mock_test_connection,
         patch(
             "homeassistant.components.forked_daapd.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         # test invalid config data
@@ -309,7 +309,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         ) as mock_get_request,
         patch(
             "homeassistant.components.forked_daapd.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_get_request.return_value = SAMPLE_CONFIG

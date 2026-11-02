@@ -20,6 +20,8 @@ from .const import SourceType
 from .coordinator import BraviaTVConfigEntry
 from .entity import BraviaTVEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
