@@ -12,13 +12,7 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    CONF_WEBHOOK_ID,
-    Platform,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
@@ -40,6 +34,8 @@ from . import (  # noqa: F401
 )
 from .const import (
     ATTR_DEVICE_NAME,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,

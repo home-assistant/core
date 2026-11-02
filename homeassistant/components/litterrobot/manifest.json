@@ -4,6 +4,7 @@
   "categories": ["pets"],
   "codeowners": ["@natekspencer", "@tkdrob"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "litter-robot4"
