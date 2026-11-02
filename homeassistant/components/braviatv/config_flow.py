@@ -1,7 +1,7 @@
 """Config flow to configure the Bravia TV integration."""
 
 from collections.abc import Mapping
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
@@ -28,6 +28,7 @@ from .const import (
     CONF_USE_PSK,
     CONF_USE_SSL,
     DOMAIN,
+    LEGACY_CLIENT_ID,
     NICKNAME_PREFIX,
 )
 
@@ -59,7 +60,13 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return uuid, f"{NICKNAME_PREFIX} {uuid[:6]}"
 
     async def async_connect_device(self) -> None:
-        """Connect to Bravia TV device from config."""
+        """Connect to Bravia TV device from config and enable Wake-on-LAN."""
+        assert self.client
+        await self._async_authenticate()
+        await self.client.set_wol_mode(True)
+
+    async def _async_authenticate(self) -> None:
+        """Authenticate with the Bravia TV without changing its settings."""
         assert self.client
 
         pin = self.device_config[CONF_PIN]
@@ -71,7 +78,6 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             client_id = self.device_config[CONF_CLIENT_ID]
             nickname = self.device_config[CONF_NICKNAME]
             await self.client.connect(pin=pin, clientid=client_id, nickname=nickname)
-        await self.client.set_wol_mode(True)
 
     async def async_create_device(self) -> ConfigFlowResult:
         """Create Bravia TV device from config."""
@@ -269,3 +275,69 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle configuration by re-auth."""
         self.device_config = {**entry_data}
         return await self.async_step_authorize()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host of a Bravia TV."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            if not is_host_valid(host):
+                errors[CONF_HOST] = "invalid_host"
+            else:
+                # Defaults match the coordinator for entries created before these keys
+                self.device_config = {
+                    CONF_USE_PSK: False,
+                    CONF_USE_SSL: False,
+                    CONF_CLIENT_ID: LEGACY_CLIENT_ID,
+                    CONF_NICKNAME: NICKNAME_PREFIX,
+                    **reconfigure_entry.data,
+                    CONF_HOST: host,
+                }
+                self.create_client()
+                if TYPE_CHECKING:
+                    assert self.client
+                try:
+                    # Wake-on-LAN was enabled when the entry was created
+                    await self._async_authenticate()
+                    system_info = await self.client.get_system_info()
+                except BraviaAuthError:
+                    errors["base"] = "invalid_auth"
+                except BraviaNotSupported:
+                    errors["base"] = "unsupported_model"
+                except BraviaError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    formatted_mac = format_mac(system_info[ATTR_MAC])
+                    if reconfigure_entry.unique_id:
+                        await self.async_set_unique_id(
+                            system_info[ATTR_CID].lower() or formatted_mac
+                        )
+                        self._abort_if_unique_id_mismatch()
+                    # Entries without a CID keep an empty unique ID until the
+                    # migration sets the MAC, and without a MAC can't be verified
+                    elif (
+                        not formatted_mac
+                        or format_mac(reconfigure_entry.data[CONF_MAC]) != formatted_mac
+                    ):
+                        return self.async_abort(reason="unique_id_mismatch")
+                    # A loaded entry is reloaded by its update listener
+                    if reconfigure_entry.update_listeners:
+                        return self.async_update_and_abort(
+                            reconfigure_entry, data_updates={CONF_HOST: host}
+                        )
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry, data_updates={CONF_HOST: host}
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
