@@ -112,6 +112,7 @@ Every check has a code following the
 | `E7404` | [`home-assistant-missing-super-call`](#e7404-home-assistant-missing-super-call) | Method must call its parent via `super()` |
 | `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
 | `E7406` | [`home-assistant-exception-translation-key-missing`](#e7406-home-assistant-exception-translation-key-missing) | Translation key not found in `strings.json` exceptions section |
+| `E7407` | [`home-assistant-function-async-mismatch`](#e7407-home-assistant-function-async-mismatch) | Function should be a coroutine, or should not be one |
 | `E7408` | [`home-assistant-exception-translation-key-domain-mismatch`](#e7408-home-assistant-exception-translation-key-domain-mismatch) | Only one of `translation_key` / `translation_domain` is set |
 | `E7409` | [`home-assistant-mdi-icon-not-found`](#e7409-home-assistant-mdi-icon-not-found) | MDI icon string does not exist in the Material Design Icons set |
 | `E7410` | [`home-assistant-mdi-icon-json-not-found`](#e7410-home-assistant-mdi-icon-json-not-found) | MDI icon in `icons.json` does not exist in the Material Design Icons set |
@@ -290,6 +291,12 @@ like `async_setup_entry` have well-defined signatures that must be followed.
 ### `E7403`: `home-assistant-return-type`
 
 Function should have the specified return type hint.
+
+### `E7407`: `home-assistant-function-async-mismatch`
+
+Function should be defined with `async def`, or with `def`. Home Assistant
+awaits functions like `async_setup_platform`, and runs functions like
+`setup_platform` in the executor, so the wrong kind fails at runtime.
 
 ### `R7401`: `home-assistant-consider-usefixtures-decorator`
 
