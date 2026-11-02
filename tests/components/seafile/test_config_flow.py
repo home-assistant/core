@@ -468,18 +468,48 @@ async def test_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], REAUTH_INPUT
-    )
+    with patch.object(
+        hass.config_entries,
+        "async_schedule_reload",
+        wraps=hass.config_entries.async_schedule_reload,
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], REAUTH_INPUT
+        )
+        await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    await hass.async_block_till_done()
     assert mock_config_entry.data == {
         CONF_URL: URL,
         CONF_TOKEN: NEW_TOKEN,
         CONF_VERIFY_SSL: True,
     }
     mock_seafile_client.logout_device.assert_not_awaited()
+    # The update listener reloads the entry, so the flow doesn't reload it again.
+    mock_schedule_reload.assert_not_called()
+
+
+async def test_reauth_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the flow reloads an entry that failed to set up."""
+    mock_seafile_client.get_libraries.side_effect = SeafileAuthenticationError
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_seafile_client.get_libraries.side_effect = None
+    mock_seafile_client.get_auth_token.return_value = NEW_TOKEN
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_TOKEN] == NEW_TOKEN
 
 
 async def test_reauth_two_factor_authentication(
