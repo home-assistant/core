@@ -443,12 +443,25 @@ def test_icon() -> None:
     """Test icon validation."""
     schema = probatio.Schema(cv.icon)
 
-    for value in (False, "work"):
+    for value in (False, "work", "mdi:wo rk", "mdi:\twork", "mdi: work"):
         with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     schema("mdi:work")
     schema("custom:prefix")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("mdi:work\n", id="trailing_newline"),
+        pytest.param(" mdi:work", id="leading_space"),
+        pytest.param("\tmdi:work  ", id="tab_and_trailing_spaces"),
+    ],
+)
+def test_icon_strips_surrounding_whitespace(value: str) -> None:
+    """Test icon validation strips surrounding whitespace."""
+    assert cv.icon(value) == "mdi:work"
 
 
 def test_time_period() -> None:
@@ -905,6 +918,8 @@ def test_x10_address() -> None:
         schema("q55")
     with pytest.raises(probatio.Invalid):
         schema("garbage_addr")
+    with pytest.raises(probatio.Invalid):
+        schema("a1\n")
 
     schema("a1")
     schema("C11")

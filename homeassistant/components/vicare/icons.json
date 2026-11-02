@@ -28,6 +28,12 @@
       "frost_protection": {
         "default": "mdi:snowflake"
       },
+      "holiday": {
+        "default": "mdi:beach"
+      },
+      "holiday_at_home": {
+        "default": "mdi:home-clock"
+      },
       "mounting_mode": {
         "default": "mdi:wrench"
       },

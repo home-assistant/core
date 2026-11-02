@@ -1,7 +1,6 @@
 """Test helpers for the lifx integration."""
 
 import inspect
-from typing import TypeVar
 from unittest.mock import AsyncMock
 
 from lifx import (
@@ -106,8 +105,6 @@ type MockState = (
     | InfraredLightState
 )
 
-_DeviceT = TypeVar("_DeviceT", bound=MockDevice)
-
 
 def assert_color_written(
     device: MockDevice,
@@ -149,7 +146,7 @@ def _mac_address(serial: str, firmware: FirmwareInfo) -> str:
     return direct_mac
 
 
-def _create_device(
+def _create_device[_DeviceT: MockDevice](
     device_type: type[_DeviceT],
     product: int,
     firmware: tuple[int, int],
@@ -202,7 +199,7 @@ def _mock_requests(device: Device) -> None:
             setattr(device, name, AsyncMock())
 
 
-def _attach_state(device: _DeviceT, state: MockState) -> _DeviceT:
+def _attach_state[_DeviceT: MockDevice](device: _DeviceT, state: MockState) -> _DeviceT:
     """Give the device the state it would have fetched."""
     state.last_updated = 0.0
     device._state = state

@@ -3,6 +3,7 @@
   "name": "Queensland Bushfire Alert",
   "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@exxamalte"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/qld_bushfire",
   "integration_type": "service",
   "iot_class": "cloud_polling",

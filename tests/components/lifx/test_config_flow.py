@@ -31,7 +31,7 @@ from .helpers import LEGACY_SERIAL, create_mock_device_without_state, create_moc
 
 OLD_IP_ADDRESS = "127.0.0.2"
 
-DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
+type DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
 
 
 def _create_light_failing_refresh() -> Light:

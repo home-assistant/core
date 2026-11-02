@@ -366,6 +366,13 @@ async def test_control_zone_source_unmatched_owner(
     assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
 
 
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param(None, id="enabled_zone"),
+        pytest.param(er.RegistryEntryDisabler.USER, id="disabled_zone"),
+    ],
+)
 async def test_control_zone_source_follows_entity_id_rename(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -374,8 +381,16 @@ async def test_control_zone_source_follows_entity_id_rename(
     mock_zones: list[Mock],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
     """Source tracks the zone climate entity_id after a rename."""
+    entity_registry.async_get_or_create(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        "000000001_z1",
+        suggested_object_id="living_room",
+        disabled_by=disabled_by,
+    )
     mock_controller.control_setpoint_owner = mock_zones[0]
     mock_controller.control_setpoint = mock_zones[0].temp_setpoint
     await setup_integration(hass, mock_config_entry)
