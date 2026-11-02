@@ -389,21 +389,18 @@ async def test_update_reboot_timeout(
         "update.mock_title_core_firmware",
         "update.mock_title_zigbee_firmware",
         "update.mock_title_zigbee_firmware_2",
+        "update.mock_title_z_wave_firmware",
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_ultima_client")
 async def test_update_release_notes(
     hass: HomeAssistant,
     entity_id: str,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test firmware release notes."""
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = Info.from_dict(
-        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
-    )
     await setup_integration(hass, mock_config_entry)
     ws_client = await hass_ws_client(hass)
     await hass.async_block_till_done()
