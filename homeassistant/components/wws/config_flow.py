@@ -14,8 +14,12 @@ from .const import DOMAIN, REGISTER_URL
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
+        probatio.Required(CONF_USERNAME): probatio.All(
+            cv.string, probatio.Length(min=1)
+        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): probatio.All(
+            cv.string, probatio.Length(min=1)
+        ),
     }
 )
 

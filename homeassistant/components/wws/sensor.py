@@ -211,7 +211,7 @@ class WwsSensor(CoordinatorEntity[WwsCoordinator], SensorEntity):
             second=0,
             microsecond=0,
         )
-        previous_day_target = current_slot_start - timedelta(days=1)
+        previous_day_target = dt_util.as_utc(current_slot_start - timedelta(days=1))
         previous_day_target_end = previous_day_target + timedelta(minutes=15)
 
         measurements = [
@@ -219,11 +219,7 @@ class WwsSensor(CoordinatorEntity[WwsCoordinator], SensorEntity):
             for measurement in self._measurements
             if (
                 previous_day_target
-                <= (
-                    _measurement_start := _parse_datetime(
-                        measurement["start"]
-                    ).astimezone(dt_util.DEFAULT_TIME_ZONE)
-                )
+                <= _parse_datetime(measurement["start"])
                 < previous_day_target_end
             )
         ]

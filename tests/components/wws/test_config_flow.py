@@ -1,7 +1,9 @@
 """Test the WWS config flow."""
 
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyenergiedock import EdAPIError, EdAuthError
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -120,9 +122,7 @@ async def test_config_flow_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_config_flow_already_configured(
-    hass: HomeAssistant,
-) -> None:
+async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
     """Test integration is already configured."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -191,37 +191,94 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
 
 async def test_setup_entry_fetches_data_on_startup(
-    hass: HomeAssistant,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test the initial coordinator refresh populates sensor data."""
+    """Test the initial coordinator refresh creates sensors with API data."""
+    freezer.move_to(datetime(2024, 1, 1, 12, 7, tzinfo=UTC))
     mock_entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         title="WestfalenWIND Ökostrom smart",
-        data={
-            "username": "test@example.com",
-            "password": "test-password",
-        },
+        data={"username": "test@example.com", "password": "test-password"},
         unique_id="test@example.com",
     )
-
     mock_entry.add_to_hass(hass)
-
+    prices = [
+        {
+            "start": (start := datetime(2024, 1, 1, 12, minute, tzinfo=UTC)),
+            "end": start + timedelta(minutes=15),
+            "price_ct_kwh": value,
+        }
+        for minute, value in ((0, 35), (15, 35), (30, 34), (45, 34))
+    ]
+    measurements = [
+        {
+            "start": datetime(2023, 12, 31, 12, 0, tzinfo=UTC),
+            "end": datetime(2023, 12, 31, 12, 15, tzinfo=UTC),
+            "consumption_kwh": 0.03,
+        }
+    ]
     with (
         patch(
-            "homeassistant.components.wws.async_get_clientsession",
-            return_value=AsyncMock(),
+            "homeassistant.components.wws.DynamiT.async_get_latest_prices",
+            new_callable=AsyncMock,
+            return_value=prices,
         ),
         patch(
-            "homeassistant.components.wws.coordinator.WwsCoordinator.async_config_entry_first_refresh",
+            "homeassistant.components.wws.DynamiT.async_get_latest_measurements",
             new_callable=AsyncMock,
-            return_value=None,
-        ) as mock_refresh,
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            new_callable=AsyncMock,
-            return_value=None,
+            return_value=measurements,
         ),
     ):
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
 
-    mock_refresh.assert_awaited_once()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wws_price_ct_kwh").state == "0.35"
+    assert hass.states.get("sensor.wws_next_price_ct_kwh").state == "0.35"
+    assert hass.states.get("sensor.wws_consumption_kwh").state == "0.03"
+
+
+async def test_price_rolls_over_at_quarter_hour(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the current and next prices roll over at a quarter-hour boundary."""
+    freezer.move_to(datetime(2024, 1, 1, 12, 29, 59, tzinfo=UTC))
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="WestfalenWIND Ökostrom smart",
+        data={"username": "test@example.com", "password": "test-password"},
+        unique_id="test@example.com",
+    )
+    mock_entry.add_to_hass(hass)
+    prices = [
+        {
+            "start": (start := datetime(2024, 1, 1, 12, minute, tzinfo=UTC)),
+            "end": start + timedelta(minutes=15),
+            "price_ct_kwh": value,
+        }
+        for minute, value in ((0, 35), (15, 35), (30, 34), (45, 34))
+    ]
+    with (
+        patch(
+            "homeassistant.components.wws.DynamiT.async_get_latest_prices",
+            new_callable=AsyncMock,
+            return_value=prices,
+        ),
+        patch(
+            "homeassistant.components.wws.DynamiT.async_get_latest_measurements",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.wws_price_ct_kwh").state == "0.35"
+        assert hass.states.get("sensor.wws_next_price_ct_kwh").state == "0.34"
+
+        freezer.move_to(datetime(2024, 1, 1, 12, 30, tzinfo=UTC))
+        await hass.config_entries.async_reload(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wws_price_ct_kwh").state == "0.34"
+    assert hass.states.get("sensor.wws_next_price_ct_kwh").state == "0.34"
