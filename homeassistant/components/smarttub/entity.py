@@ -14,7 +14,7 @@ from .const import ATTR_SENSORS, DOMAIN
 from .helpers import get_spa_name
 
 
-class SmartTubEntity(CoordinatorEntity):
+class SmartTubEntity(CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]]):
     """Base class for SmartTub entities."""
 
     _attr_has_entity_name = True

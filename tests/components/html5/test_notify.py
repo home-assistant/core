@@ -582,7 +582,7 @@ async def test_send_message(
     ],
 )
 @pytest.mark.parametrize("domain", [NOTIFY_DOMAIN, DOMAIN])
-@pytest.mark.usefixtures("mock_jwt", "mock_uuid")
+@pytest.mark.usefixtures("mock_jwt", "mock_uuid", "mock_save")
 @pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 async def test_send_message_exceptions(
     hass: HomeAssistant,
@@ -657,7 +657,7 @@ async def test_send_message_save_fails(
     assert "Error saving registration" in caplog.text
 
 
-@pytest.mark.usefixtures("mock_jwt", "mock_uuid")
+@pytest.mark.usefixtures("mock_jwt", "mock_uuid", "mock_save")
 @pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 async def test_send_message_unavailable(
     hass: HomeAssistant,

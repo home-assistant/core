@@ -38,7 +38,9 @@ CONDITION_BASE_SCHEMA = probatio.Schema(
 _CONDITION_SCHEMA = CONDITION_BASE_SCHEMA.extend(
     {
         probatio.Optional(CONF_OPTIONS): object,
-        probatio.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Optional(CONF_TARGET): probatio.All(
+            cv.TARGET_FIELDS, cv.exclude_requires_target
+        ),
     }
 )
 

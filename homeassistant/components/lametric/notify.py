@@ -14,13 +14,14 @@ from demetriek import (
     Sound,
     SoundURL,
 )
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     BaseNotificationService,
     NotifyEntity,
 )
-from homeassistant.const import CONF_ICON
+from homeassistant.const import CONF_ICON, CONF_REPEAT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,6 +46,20 @@ from .helpers import (
 )
 
 PARALLEL_UPDATES = 1
+
+REPEAT_SCHEMA = probatio.All(probatio.Coerce(int), probatio.Range(min=0))
+
+
+def _coerce_repeat(repeat: Any) -> int:
+    """Coerce the sound repeat count, refusing invalid or negative values."""
+    try:
+        return REPEAT_SCHEMA(repeat)
+    except probatio.Invalid as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_repeat",
+            translation_placeholders={"repeat": str(repeat)},
+        ) from err
 
 
 async def async_setup_entry(
@@ -108,6 +123,10 @@ class LaMetricNotificationService(BaseNotificationService):
         if not (data := kwargs.get(ATTR_DATA)):
             data = {}
 
+        # Validated up front, so an invalid count is refused even when it can
+        # only apply to a fallback sound, or to none at all.
+        repeat = _coerce_repeat(data.get(CONF_REPEAT, 1))
+
         builtin_sound: Sound | None = None
         if CONF_SOUND in data:
             snd: AlarmSound | NotificationSound | None
@@ -119,7 +138,11 @@ class LaMetricNotificationService(BaseNotificationService):
                     translation_key="unknown_sound",
                     translation_placeholders={"sound": str(data[CONF_SOUND])},
                 )
-            builtin_sound = Sound(sound=snd, category=None)
+            builtin_sound = Sound(
+                sound=snd,
+                category=None,
+                repeat=repeat,
+            )
 
         # A built-in sound given as well plays when the URL cannot be fetched.
         sound: Sound | SoundURL | None = builtin_sound

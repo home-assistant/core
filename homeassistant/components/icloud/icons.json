@@ -1,5 +1,72 @@
 {
   "entity": {
+    "binary_sensor": {
+      "activation_lock": {
+        "default": "mdi:lock-open-variant",
+        "state": {
+          "on": "mdi:lock"
+        }
+      },
+      "locating": {
+        "default": "mdi:crosshairs",
+        "state": {
+          "on": "mdi:crosshairs-gps"
+        }
+      },
+      "location_accurate": {
+        "default": "mdi:image-filter-center-focus",
+        "state": {
+          "on": "mdi:alert-outline"
+        }
+      },
+      "location_current": {
+        "default": "mdi:crosshairs",
+        "state": {
+          "on": "mdi:clock-alert-outline"
+        }
+      },
+      "location_services": {
+        "default": "mdi:map-marker-off",
+        "state": {
+          "on": "mdi:map-marker-check"
+        }
+      },
+      "lost_mode": {
+        "default": "mdi:lock-open-variant",
+        "state": {
+          "on": "mdi:lock-alert"
+        }
+      },
+      "low_power_mode": {
+        "default": "mdi:battery-medium",
+        "state": {
+          "on": "mdi:battery-alert"
+        }
+      },
+      "online": {
+        "default": "mdi:cloud-off-outline",
+        "state": {
+          "on": "mdi:cloud-check-variant"
+        }
+      },
+      "remote_lock": {
+        "default": "mdi:lock-outline",
+        "state": {
+          "on": "mdi:lock-alert"
+        }
+      },
+      "wipe_in_progress": {
+        "default": "mdi:eraser",
+        "state": {
+          "on": "mdi:progress-wrench"
+        }
+      }
+    },
+    "button": {
+      "play_sound": {
+        "default": "mdi:speaker-wireless"
+      }
+    },
     "sensor": {
       "altitude": {
         "default": "mdi:altimeter"
