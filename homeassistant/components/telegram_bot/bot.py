@@ -378,7 +378,7 @@ class TelegramNotificationService:
               - also supports urls instead of callback commands
             """
             buttons = []
-            # Deprecated: remove in 2026.12.0
+            # Deprecated: remove in 2027.6.0
             if isinstance(row_keyboard, str):
                 for key in row_keyboard.split(","):
                     if ":/" in key:
@@ -453,7 +453,7 @@ class TelegramNotificationService:
                                 translation_key="invalid_inline_keyboard_button",
                             )
                         continue
-                    # Deprecated: remove in 2026.12.0
+                    # Deprecated: remove in 2027.6.0
                     text_btn, data_btn = entry
                     if data_btn.startswith(("https://", "http://")):
                         buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
