@@ -7,7 +7,9 @@ Classic API (username/password):
 - Auth failure is signalled by success=False and msg="502" (LOGIN_INVALID_AUTH_CODE).
 - A failed login does NOT raise an exception — the return value must be checked.
 - Setup logs in once and all coordinators share that session. A coordinator
-  logs in again only when a request comes back unauthenticated.
+  logs in again only when a request comes back unauthenticated, and at most
+  once per RELOGIN_INTERVAL. If the retry after a login still gets a web page,
+  the update fails and a repair issue is raised.
 
 Open API V1 (API token):
 - Stateless — no login call, token is sent as a Bearer header on every request.
@@ -77,10 +79,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-# Temporary handoff of authenticated Classic API sessions from async_migrate_entry
+# Temporary handoff of logged-in Classic API sessions from async_migrate_entry
 # to async_setup_entry. Avoids a second login() during the same startup, which
 # would hit Growatt's 5-minute per-endpoint rate limit. Popped after first use.
-_CACHED_APIS: dict[str, growattServer.GrowattApi] = {}
+_CACHED_SESSIONS: dict[str, GrowattClassicSession] = {}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -205,8 +207,8 @@ async def async_migrate_entry(
                     config_entry, data=new_data, minor_version=1
                 )
 
-                # Cache the logged-in API instance for reuse in async_setup_entry()
-                _CACHED_APIS[config_entry.entry_id] = session.api
+                # Cache the logged-in session for reuse in async_setup_entry()
+                _CACHED_SESSIONS[config_entry.entry_id] = session
 
                 _LOGGER.info(
                     "Migrated config entry to use specific plant_id '%s'",
@@ -356,19 +358,14 @@ async def async_setup_entry(
         username = config[CONF_USERNAME]
         password = config[CONF_PASSWORD]
 
-        # Check if migration cached an authenticated API instance for us to reuse.
+        # Check if migration cached a logged-in session for us to reuse.
         # This avoids calling login() twice (once in migration, once here) which
         # would trigger rate limiting.
-        cached_api = _CACHED_APIS.pop(config_entry.entry_id, None)
-
-        if cached_api:
-            # Reuse the logged-in API instance from migration (rate limit optimization)
-            classic_session = GrowattClassicSession(
-                hass, cached_api, username, password
-            )
+        if cached_session := _CACHED_SESSIONS.pop(config_entry.entry_id, None):
+            classic_session = cached_session
             _LOGGER.debug("Reusing logged-in session from migration")
         else:
-            # No cached API (normal setup or migration didn't run)
+            # No cached session (normal setup or migration didn't run)
             # Create new API instance and login
             classic_session, _ = await _create_api_and_login(
                 hass, username, password, url

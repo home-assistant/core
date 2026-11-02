@@ -44,8 +44,8 @@ PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 LOGIN_INVALID_AUTH_CODE = "502"
 LOGIN_RATE_LIMITED_CODE = "507"
 
-# Classic API login cooldown deadlines, keyed by username
-DATA_LOGIN_BLOCKED_UNTIL: HassKey[dict[str, datetime]] = HassKey(
+# Classic API login cooldown deadlines, keyed by (server URL, username)
+DATA_LOGIN_BLOCKED_UNTIL: HassKey[dict[tuple[str, str], datetime]] = HassKey(
     "growatt_server_login_blocked_until"
 )
 
