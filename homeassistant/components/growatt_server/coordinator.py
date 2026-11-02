@@ -91,7 +91,10 @@ class GrowattClassicSession:
         self.password = password
         # Incremented on every successful login.
         self.generation = 0
-        self.last_login: dt.datetime | None = None
+        # Every login that reaches Growatt counts toward the 507 limit.
+        self.last_login_attempt: dt.datetime | None = None
+        # False until a data request succeeds on the current login.
+        self.fetched_since_login = False
         self._lock = threading.RLock()
         # Shared across reloads, since the lockout belongs to the account.
         self._blocked_until = hass.data.setdefault(DATA_LOGIN_BLOCKED_UNTIL, {})
@@ -107,6 +110,7 @@ class GrowattClassicSession:
             account = (self.api.server_url, self.username)
             if (until := self._blocked_until.get(account)) and now < until:
                 raise GrowattLoginRateLimited((until - now).total_seconds())
+            self.last_login_attempt = now
             login_response = self.api.login(self.username, self.password)
             # growattServer releases after 2.2.0 raise GrowattRateLimitError
             # from any call instead.
@@ -115,21 +119,21 @@ class GrowattClassicSession:
                 raise GrowattLoginRateLimited(LOGIN_COOLDOWN.total_seconds())
             if login_response.get("success"):
                 self.generation += 1
-                self.last_login = now
+                self.fetched_since_login = False
             return login_response
 
     def renew(self, seen_generation: int) -> dict[str, Any] | None:
         """Log in again, unless the session was renewed since seen_generation.
 
         Returns None when another coordinator already logged in. Raises
-        GrowattReloginThrottled when the last login is younger than
+        GrowattReloginThrottled when the last login attempt is younger than
         RELOGIN_INTERVAL.
         """
         with self._lock:
             if self.generation != seen_generation:
                 return None
-            if self.last_login is not None:
-                wait = self.last_login + RELOGIN_INTERVAL - dt_util.utcnow()
+            if self.last_login_attempt is not None:
+                wait = self.last_login_attempt + RELOGIN_INTERVAL - dt_util.utcnow()
                 if wait > dt.timedelta(0):
                     raise GrowattReloginThrottled(wait.total_seconds())
             return self.login()
@@ -279,6 +283,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="relogin_throttled",
+                translation_placeholders={
+                    "minutes": str(int(RELOGIN_INTERVAL.total_seconds() // 60))
+                },
                 retry_after=err.retry_after,
             ) from err
         if login_response is None or login_response.get("success"):
@@ -310,15 +317,25 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # expired session with a redirect to an HTML login page, which the
         # library surfaces as a JSONDecodeError.
         seen_generation = session.generation
+        fetched_since_login = session.fetched_since_login
         try:
-            return self._sync_fetch_data(fetch_device_list)
-        except RequestsJSONDecodeError:
+            data = self._sync_fetch_data(fetch_device_list)
+        except RequestsJSONDecodeError as err:
+            # A login that no request has succeeded on yet won't be helped by
+            # another one.
+            if not fetched_since_login and session.generation == seen_generation:
+                raise GrowattUnexpectedWebPage from err
             _LOGGER.debug("Growatt session expired, logging in again")
+        else:
+            session.fetched_since_login = True
+            return data
         self._sync_renew_session(session, seen_generation)
         try:
-            return self._sync_fetch_data(fetch_device_list)
+            data = self._sync_fetch_data(fetch_device_list)
         except RequestsJSONDecodeError as err:
             raise GrowattUnexpectedWebPage from err
+        session.fetched_since_login = True
+        return data
 
     def _sync_fetch_data(self, fetch_device_list: bool) -> dict[str, Any]:
         """Fetch data for this coordinator's device."""
@@ -517,6 +534,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.hass,
                 DOMAIN,
                 issue_id,
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key=ISSUE_UNEXPECTED_WEB_PAGE,

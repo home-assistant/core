@@ -530,8 +530,9 @@ async def test_classic_api_web_page_with_working_login_bounds_logins(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # At most one login per RELOGIN_INTERVAL, shared by both coordinators.
-    assert mock_growatt_classic_api.login.call_count == 8
+    # One login once RELOGIN_INTERVAL has passed. After that login fails to
+    # help, polls stop logging in until a request succeeds again.
+    mock_growatt_classic_api.login.assert_called_once()
     issue_id = WEB_PAGE_ISSUE_ID.format(entry_id=mock_config_entry_classic.entry_id)
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
@@ -547,6 +548,67 @@ async def test_classic_api_web_page_with_working_login_bounds_logins(
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert hass.states.get(TLX_OUTPUT_POWER).state == "1800"
+
+
+async def test_classic_api_web_page_at_setup_raises_issue(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a web page right after the setup login raises the repair issue."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    mock_growatt_classic_api.plant_info.side_effect = SESSION_EXPIRED
+    mock_growatt_classic_api.tlx_detail.side_effect = SESSION_EXPIRED
+
+    await setup_integration(hass, mock_config_entry_classic)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
+    mock_growatt_classic_api.login.assert_called_once()
+    issue = issue_registry.async_get_issue(
+        DOMAIN, WEB_PAGE_ISSUE_ID.format(entry_id=mock_config_entry_classic.entry_id)
+    )
+    assert issue
+    assert issue.config_entry_id == mock_config_entry_classic.entry_id
+
+
+async def test_classic_api_early_expiry_waits_for_relogin_interval(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a session that dies soon after a login waits before logging in."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+    mock_growatt_classic_api.login.reset_mock()
+
+    mock_growatt_classic_api.tlx_detail.side_effect = SESSION_EXPIRED
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_growatt_classic_api.login.assert_not_called()
+    coordinator = mock_config_entry_classic.runtime_data.devices["TLX123456"]
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_key == "relogin_throttled"
+
+    mock_growatt_classic_api.tlx_detail.side_effect = [
+        SESSION_EXPIRED,
+        tlx_detail(1900),
+    ]
+    freezer.tick(RELOGIN_INTERVAL - timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_growatt_classic_api.login.assert_called_once()
+    assert hass.states.get(TLX_OUTPUT_POWER).state == "1900"
 
 
 async def test_classic_session_cooldown_is_per_server(

@@ -672,7 +672,7 @@
       "message": "Growatt API rate limited, will retry: {error}"
     },
     "relogin_throttled": {
-      "message": "Growatt did not return data, and Home Assistant logged in again less than 30 minutes ago. It will try again later."
+      "message": "Growatt did not return data, and Home Assistant logged in less than {minutes} minutes ago. It will try again later."
     },
     "token_auth_required": {
       "message": "This action requires token authentication (V1 API)."
