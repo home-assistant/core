@@ -1,5 +1,15 @@
 {
   "entity": {
+    "button": {
+      "empty_trash": {
+        "default": "mdi:delete-empty"
+      }
+    },
+    "select": {
+      "history": {
+        "default": "mdi:history"
+      }
+    },
     "sensor": {
       "file_count": {
         "default": "mdi:file-multiple"

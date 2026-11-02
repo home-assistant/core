@@ -61,7 +61,7 @@ from .json import (
     json_fragment,
 )
 from .registry import BaseRegistry, BaseRegistryItems, NextNamePart, RegistryIndexType
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with attrs
@@ -150,7 +150,7 @@ type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 class _DeviceInfoMapping:
     """Dict-style access for the device info dataclasses, which were TypedDicts.
 
-    A field left at UNDEFINED is not part of the mapping. Each method covers a usage
+    A field left at Undefined is not part of the mapping. Each method covers a usage
     found in integrations, as this compatibility layer is meant to be deprecated.
     """
 
@@ -173,7 +173,7 @@ class _DeviceInfoMapping:
         # Also backs `.get()`, `dict()` and `**device_info` unpacking
         if key in self._field_set:
             value = getattr(self, key)
-            if value is not UNDEFINED:
+            if value is not Undefined:
                 return value
         raise KeyError(key)
 
@@ -193,7 +193,7 @@ class _DeviceInfoMapping:
         return (
             isinstance(key, str)
             and key in self._field_set
-            and getattr(self, key) is not UNDEFINED
+            and getattr(self, key) is not Undefined
         )
 
     @override
@@ -215,7 +215,7 @@ class _DeviceInfoMapping:
     @override
     def __repr__(self) -> str:
         """Return the representation, listing the set fields only."""
-        # The generated repr would spell out UNDEFINED for every unset field
+        # The generated repr would spell out Undefined for every unset field
         set_fields = ", ".join(f"{key}={value!r}" for key, value in self.items())
         return f"{type(self).__name__}({set_fields})"
 
@@ -223,7 +223,7 @@ class _DeviceInfoMapping:
         """Return the names of the set fields."""
         # Required, together with __getitem__, for `**device_info` unpacking
         return tuple(
-            key for key in self._field_names if getattr(self, key) is not UNDEFINED
+            key for key in self._field_names if getattr(self, key) is not Undefined
         )
 
     def items(self) -> tuple[tuple[str, Any], ...]:
@@ -238,12 +238,12 @@ class _DeviceInfoMapping:
         return {
             name: value
             for name in self._field_names
-            if (value := getattr(self, name)) is not UNDEFINED
+            if (value := getattr(self, name)) is not Undefined
         }
 
     def get(self, key: str, default: Any = None) -> Any:
         """Return the value of a field, or default if the field is not set."""
-        if key in self._field_set and (value := getattr(self, key)) is not UNDEFINED:
+        if key in self._field_set and (value := getattr(self, key)) is not Undefined:
             return value
         return default
 
@@ -283,33 +283,33 @@ class DeviceInfo(_DeviceInfoMapping):
     """Entity device information for device registry."""
 
     _: KW_ONLY
-    configuration_url: str | URL | UndefinedType | None = UNDEFINED
-    connections: set[tuple[str, str]] | UndefinedType = UNDEFINED
-    entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED
-    identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED
-    manufacturer: str | UndefinedType | None = UNDEFINED
-    model: str | UndefinedType | None = UNDEFINED
-    model_id: str | UndefinedType | None = UNDEFINED
-    name: str | UndefinedType | None = UNDEFINED
-    serial_number: str | UndefinedType | None = UNDEFINED
-    suggested_area: str | UndefinedType | None = UNDEFINED
-    sw_version: str | UndefinedType | None = UNDEFINED
-    hw_version: str | UndefinedType | None = UNDEFINED
-    translation_key: str | UndefinedType | None = UNDEFINED
-    translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED
-    via_device_id: str | UndefinedType | None = UNDEFINED
+    configuration_url: str | URL | Undefined | None = Undefined
+    connections: set[tuple[str, str]] | Undefined = Undefined
+    entry_type: DeviceEntryType | Undefined | None = Undefined
+    identifiers: set[tuple[str, str]] | Undefined = Undefined
+    manufacturer: str | Undefined | None = Undefined
+    model: str | Undefined | None = Undefined
+    model_id: str | Undefined | None = Undefined
+    name: str | Undefined | None = Undefined
+    serial_number: str | Undefined | None = Undefined
+    suggested_area: str | Undefined | None = Undefined
+    sw_version: str | Undefined | None = Undefined
+    hw_version: str | Undefined | None = Undefined
+    translation_key: str | Undefined | None = Undefined
+    translation_placeholders: Mapping[str, str] | Undefined | None = Undefined
+    via_device_id: str | Undefined | None = Undefined
 
     if not TYPE_CHECKING:
         # Deprecated fields, accepted until the versions listed in
         # _DEPRECATED_DEVICE_INFO_PARAMETERS. They are hidden from type checkers, as
         # they were dropped from the typed device info when they were deprecated,
         # but integrations still set them and async_get_or_create still reports them.
-        created_at: str | UndefinedType = UNDEFINED
-        default_manufacturer: str | UndefinedType = UNDEFINED
-        default_model: str | UndefinedType = UNDEFINED
-        default_name: str | UndefinedType = UNDEFINED
-        modified_at: str | UndefinedType = UNDEFINED
-        via_device: tuple[str, str] | UndefinedType = UNDEFINED
+        created_at: str | Undefined = Undefined
+        default_manufacturer: str | Undefined = Undefined
+        default_model: str | Undefined = Undefined
+        default_name: str | Undefined = Undefined
+        modified_at: str | Undefined = Undefined
+        via_device: tuple[str, str] | Undefined = Undefined
 
 
 @_device_info_fields
@@ -324,11 +324,11 @@ class ChildDeviceInfo(_DeviceInfoMapping):
 
     _: KW_ONLY
     identifiers: set[tuple[str, str]]
-    name: str | UndefinedType | None = UNDEFINED
+    name: str | Undefined | None = Undefined
     parent_device_id: str
-    suggested_area: str | UndefinedType | None = UNDEFINED
-    translation_key: str | UndefinedType | None = UNDEFINED
-    translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED
+    suggested_area: str | Undefined | None = Undefined
+    translation_key: str | Undefined | None = Undefined
+    translation_placeholders: Mapping[str, str] | Undefined | None = Undefined
 
 
 class _EventDeviceRegistryUpdatedData_Create(TypedDict):
@@ -415,8 +415,8 @@ class DeviceConnectionCollisionError(DeviceCollisionError):
 
 def _validate_device_info(config_entry: ConfigEntry, device_info: DeviceInfo) -> None:
     """Validate that a device info has enough information to match up a device."""
-    if (device_info.connections is UNDEFINED or not device_info.connections) and (
-        device_info.identifiers is UNDEFINED or not device_info.identifiers
+    if (device_info.connections is Undefined or not device_info.connections) and (
+        device_info.identifiers is Undefined or not device_info.identifiers
     ):
         raise DeviceInfoError(
             config_entry.domain,
@@ -425,10 +425,10 @@ def _validate_device_info(config_entry: ConfigEntry, device_info: DeviceInfo) ->
         )
     for field in ("manufacturer", "model", "name"):
         # The deprecated default_ fields are hidden from type checkers
-        if getattr(device_info, f"default_{field}") is UNDEFINED:
+        if getattr(device_info, f"default_{field}") is Undefined:
             continue
         # A translation key supplies the name
-        if getattr(device_info, field) is not UNDEFINED or (
+        if getattr(device_info, field) is not Undefined or (
             field == "name"
             and isinstance(device_info.translation_key, str)
             and device_info.translation_key
@@ -443,23 +443,23 @@ def _validate_device_info(config_entry: ConfigEntry, device_info: DeviceInfo) ->
 class _ValidatedDeviceInfoFields(TypedDict):
     """Device info fields validated on create and update."""
 
-    configuration_url: str | URL | UndefinedType | None
-    hw_version: str | UndefinedType | None
-    manufacturer: str | UndefinedType | None
-    model: str | UndefinedType | None
-    model_id: str | UndefinedType | None
-    serial_number: str | UndefinedType | None
-    sw_version: str | UndefinedType | None
+    configuration_url: str | URL | Undefined | None
+    hw_version: str | Undefined | None
+    manufacturer: str | Undefined | None
+    model: str | Undefined | None
+    model_id: str | Undefined | None
+    serial_number: str | Undefined | None
+    sw_version: str | Undefined | None
 
 
 _cached_parse_url = lru_cache(maxsize=512)(URL)
 """Parse a URL and cache the result."""
 
 
-def _validate_str(name: str, value: Any) -> str | UndefinedType | None:
+def _validate_str(name: str, value: Any) -> str | Undefined | None:
     """Validate that a device registry string field has correct type."""
     if (
-        value is UNDEFINED
+        value is Undefined
         or value is None
         or type(value) is str  # fast path for exact str
         or isinstance(value, str)
@@ -963,7 +963,7 @@ class DeletedDeviceEntry:
         validator=_normalize_connections_validator
     )
     created_at: datetime = attr.ib()
-    disabled_by: DeviceEntryDisabler | UndefinedType | None = attr.ib()
+    disabled_by: DeviceEntryDisabler | Undefined | None = attr.ib()
     id: str = attr.ib()
     identifiers: set[tuple[str, str]] = attr.ib()
     labels: set[str] = attr.ib()
@@ -1005,11 +1005,11 @@ class DeletedDeviceEntry:
     def _calculate_disable_by(
         self,
         config_entry: ConfigEntry,
-        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        disabled_by: DeviceEntryDisabler | Undefined | None,
     ) -> DeviceEntryDisabler | None:
         """Calculate disabled_by when restoring a deleted device."""
-        if self.disabled_by is UNDEFINED:
-            return disabled_by if disabled_by is not UNDEFINED else None
+        if self.disabled_by is Undefined:
+            return disabled_by if disabled_by is not Undefined else None
         disabled_by = self.disabled_by
         if disabled_by == DeviceEntryDisabler.DEVICE:
             # self.disabled_by is DEVICE only for a former child device, clear it
@@ -1028,7 +1028,7 @@ class DeletedDeviceEntry:
         config_subentry_id: str | None,
         connections: set[tuple[str, str]],
         identifiers: set[tuple[str, str]],
-        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        disabled_by: DeviceEntryDisabler | Undefined | None,
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         disabled_by = self._calculate_disable_by(config_entry, disabled_by)
@@ -1051,7 +1051,7 @@ class DeletedDeviceEntry:
         config_entry: ConfigEntry,
         config_subentry_id: str | None,
         identifiers: set[tuple[str, str]],
-        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        disabled_by: DeviceEntryDisabler | Undefined | None,
         parent_device: DeviceEntry,
     ) -> ChildDeviceEntry:
         """Create ChildDeviceEntry from DeletedDeviceEntry."""
@@ -1059,7 +1059,7 @@ class DeletedDeviceEntry:
         # Re-derive parent-device disable from the (possibly different)
         # parent device.
         if (
-            self.disabled_by is not UNDEFINED
+            self.disabled_by is not Undefined
             and disabled_by is None
             and parent_device.disabled
         ):
@@ -1089,9 +1089,9 @@ class DeletedDeviceEntry:
                 "connections": list(self.connections),
                 "created_at": self.created_at,
                 "disabled_by": self.disabled_by
-                if self.disabled_by is not UNDEFINED
+                if self.disabled_by is not Undefined
                 else None,
-                "disabled_by_undefined": self.disabled_by is UNDEFINED,
+                "disabled_by_undefined": self.disabled_by is Undefined,
                 "identifiers": list(self.identifiers),
                 "id": self.id,
                 "labels": list(self.labels),
@@ -1546,7 +1546,7 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         identifiers: set[tuple[str, str]] | None = None,
         connections: set[tuple[str, str]] | None = None,
         *,
-        config_entry_id: str | UndefinedType | None = UNDEFINED,
+        config_entry_id: str | Undefined | None = Undefined,
     ) -> _EntryTypeT | None:
         """Get the first entry matching identifiers or connections.
 
@@ -1556,7 +1556,7 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         if identifiers:
             for identifier in identifiers:
                 if (by_config_entry := self._identifiers.get(identifier)) is not None:
-                    if config_entry_id is UNDEFINED:
+                    if config_entry_id is Undefined:
                         return next(iter(by_config_entry.values()))
                     if config_entry_id in by_config_entry:
                         return by_config_entry[config_entry_id]
@@ -1564,7 +1564,7 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
             return None
         for connection in _normalize_connections(connections):
             if (by_config_entry := self._connections.get(connection)) is not None:
-                if config_entry_id is UNDEFINED:
+                if config_entry_id is Undefined:
                     return next(iter(by_config_entry.values()))
                 if config_entry_id in by_config_entry:
                     return by_config_entry[config_entry_id]
@@ -2448,24 +2448,24 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         *,
         config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        configuration_url: str | URL | UndefinedType | None = UNDEFINED,
-        connections: set[tuple[str, str]] | UndefinedType | None = UNDEFINED,
+        config_subentry_id: str | Undefined | None = Undefined,
+        configuration_url: str | URL | Undefined | None = Undefined,
+        connections: set[tuple[str, str]] | Undefined | None = Undefined,
         # To disable a device if it gets created, does not affect existing devices
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
-        entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
-        hw_version: str | UndefinedType | None = UNDEFINED,
-        identifiers: set[tuple[str, str]] | UndefinedType | None = UNDEFINED,
-        manufacturer: str | UndefinedType | None = UNDEFINED,
-        model: str | UndefinedType | None = UNDEFINED,
-        model_id: str | UndefinedType | None = UNDEFINED,
-        name: str | UndefinedType | None = UNDEFINED,
-        serial_number: str | UndefinedType | None = UNDEFINED,
-        suggested_area: str | UndefinedType | None = UNDEFINED,
-        sw_version: str | UndefinedType | None = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | Undefined | None = Undefined,
+        entry_type: DeviceEntryType | Undefined | None = Undefined,
+        hw_version: str | Undefined | None = Undefined,
+        identifiers: set[tuple[str, str]] | Undefined | None = Undefined,
+        manufacturer: str | Undefined | None = Undefined,
+        model: str | Undefined | None = Undefined,
+        model_id: str | Undefined | None = Undefined,
+        name: str | Undefined | None = Undefined,
+        serial_number: str | Undefined | None = Undefined,
+        suggested_area: str | Undefined | None = Undefined,
+        sw_version: str | Undefined | None = Undefined,
         translation_key: str | None = None,
         translation_placeholders: Mapping[str, str] | None = None,
-        via_device_id: str | UndefinedType | None = UNDEFINED,
+        via_device_id: str | Undefined | None = Undefined,
         **kwargs: Any,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist.
@@ -2492,11 +2492,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             disabled_by=disabled_by,
             device_info=DeviceInfo(
                 configuration_url=configuration_url,
-                # None and UNDEFINED both mean no connections or identifiers
-                connections=UNDEFINED if connections is None else connections,
+                # None and Undefined both mean no connections or identifiers
+                connections=Undefined if connections is None else connections,
                 entry_type=entry_type,
                 hw_version=hw_version,
-                identifiers=UNDEFINED if identifiers is None else identifiers,
+                identifiers=Undefined if identifiers is None else identifiers,
                 manufacturer=manufacturer,
                 model=model,
                 model_id=model_id,
@@ -2516,7 +2516,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         *,
         config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        config_subentry_id: str | Undefined | None = Undefined,
         device_info: DeviceInfo,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist.
@@ -2528,7 +2528,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return self._async_get_or_create_from_info(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
-            disabled_by=UNDEFINED,
+            disabled_by=Undefined,
             device_info=device_info,
         )
 
@@ -2537,9 +2537,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         *,
         config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None,
+        config_subentry_id: str | Undefined | None,
         # To disable a device if it gets created, does not affect existing devices
-        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        disabled_by: DeviceEntryDisabler | Undefined | None,
         device_info: DeviceInfo,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
@@ -2581,14 +2581,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # Validate before mutating the registry below. `via_device=None` (an explicit
         # "no via device") alongside a via_device_id is contradictory, so reject it too.
         via_device_id = device_info.via_device_id
-        if via_device is not UNDEFINED and via_device_id is not UNDEFINED:
+        if via_device is not Undefined and via_device_id is not Undefined:
             raise HomeAssistantError(
                 "Passing both `via_device` and `via_device_id` is not allowed; "
                 "`via_device` is deprecated, pass `via_device_id` only"
             )
         # Report the deprecated parameters here, before any registry mutation.
         for parameter, deprecation in _DEPRECATED_DEVICE_INFO_PARAMETERS.items():
-            if deprecated_values[parameter] is UNDEFINED:
+            if deprecated_values[parameter] is Undefined:
                 continue
             version, replacement = deprecation
             if replacement is None:
@@ -2603,7 +2603,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 breaks_in_ha_version=version,
             )
         if (
-            config_subentry_id is not UNDEFINED
+            config_subentry_id is not Undefined
             and config_subentry_id is not None
             and config_subentry_id not in config_entry.subentries
         ):
@@ -2618,11 +2618,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         _validate_device_info(config_entry, device_info)
 
         identifiers = device_info.identifiers
-        if identifiers is UNDEFINED:
+        if identifiers is Undefined:
             identifiers = set()
 
         connections = device_info.connections
-        if connections is UNDEFINED:
+        if connections is Undefined:
             connections = set()
         else:
             connections = _normalize_connections(connections)
@@ -2662,7 +2662,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         # Resolved after collision reconciliation so a removed stale duplicate can't be
         # linked
-        if via_device_id is not UNDEFINED and via_device_id is not None:
+        if via_device_id is not Undefined and via_device_id is not None:
             resolved_via_device_id = self._resolve_via_device_id(
                 via_device_id, config_entry_id
             )
@@ -2704,7 +2704,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 area_id: str | None = None
                 if (
                     suggested_area is not None
-                    and suggested_area is not UNDEFINED
+                    and suggested_area is not Undefined
                     and suggested_area != ""
                 ):
                     # Circular dep
@@ -2718,7 +2718,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     # Interpret not specifying a subentry as None
                     config_subentry_id=(
                         config_subentry_id
-                        if config_subentry_id is not UNDEFINED
+                        if config_subentry_id is not Undefined
                         else None
                     ),
                 )
@@ -2728,20 +2728,20 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 device = deleted_device.to_device_entry(
                     config_entry,
                     # Interpret not specifying a subentry as None
-                    config_subentry_id if config_subentry_id is not UNDEFINED else None,
+                    config_subentry_id if config_subentry_id is not Undefined else None,
                     connections,
                     identifiers,
                     disabled_by,
                 )
-                disabled_by = UNDEFINED
+                disabled_by = Undefined
 
             self._devices[device.id] = device
             # If creating a new device, default to the config entry name
-            if not name or name is UNDEFINED:
+            if not name or name is Undefined:
                 name = config_entry.title
 
         elif (
-            config_subentry_id is not UNDEFINED
+            config_subentry_id is not Undefined
             and device.config_subentry_id != config_subentry_id
         ):
             # A device belongs to a single config subentry. Re-registering an existing
@@ -2764,16 +2764,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         self._async_purge_colliding_deleted_devices(device, identifiers, connections)
 
-        if default_manufacturer is not UNDEFINED and device.manufacturer is None:
+        if default_manufacturer is not Undefined and device.manufacturer is None:
             validated_fields["manufacturer"] = default_manufacturer
 
-        if default_model is not UNDEFINED and device.model is None:
+        if default_model is not Undefined and device.model is None:
             validated_fields["model"] = default_model
 
-        if default_name is not UNDEFINED and device.name is None:
+        if default_name is not Undefined and device.name is None:
             name = default_name
 
-        if via_device is not None and via_device is not UNDEFINED:
+        if via_device is not None and via_device is not Undefined:
             # Resolve the deprecated via_device to a device id. The identifier is not
             # unique across config entries, so prefer a via device in the same config
             # entry, then one from the same integration (domain), falling back to any
@@ -2797,7 +2797,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2025.12.0",
                 )
-                via_device_id = UNDEFINED
+                via_device_id = Undefined
             elif via.id == device.id:
                 # A device can not be its own via device. Ignore the self-reference;
                 # this will raise in HA Core 2027.8.
@@ -2807,7 +2807,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2027.8.0",
                 )
-                via_device_id = UNDEFINED
+                via_device_id = Undefined
             else:
                 via_device_id = via.id
         elif via_device is None:
@@ -2821,7 +2821,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # instead of merging. This block and the has_composite_identifiers flag
         # can be removed in HA Core 2027.8.
         identifiers_connections: dict[str, Any]
-        has_composite_identifiers: bool | UndefinedType = UNDEFINED
+        has_composite_identifiers: bool | Undefined = Undefined
         if device.has_composite_identifiers:
             identifiers_connections = {
                 "new_connections": connections,
@@ -2830,13 +2830,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             has_composite_identifiers = False
         else:
             identifiers_connections = {
-                "merge_connections": connections or UNDEFINED,
-                "merge_identifiers": identifiers or UNDEFINED,
+                "merge_connections": connections or Undefined,
+                "merge_identifiers": identifiers or Undefined,
             }
 
         device = self._async_update_device(
             device.id,
-            disabled_by=disabled_by if is_new else UNDEFINED,
+            disabled_by=disabled_by if is_new else Undefined,
             entry_type=entry_type,
             is_new=is_new,
             name=name,
@@ -2856,7 +2856,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     @callback
     def _resolve_device_info_name(
         self, config_entry: ConfigEntry, device_info: DeviceInfo | ChildDeviceInfo
-    ) -> str | UndefinedType | None:
+    ) -> str | Undefined | None:
         """Return the name of a device info, translated if it has a translation key."""
         if isinstance(translation_key := device_info.translation_key, str) and (
             translation_key
@@ -2866,7 +2866,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entry,
                 translation_key,
                 None
-                if translation_placeholders is UNDEFINED
+                if translation_placeholders is Undefined
                 else translation_placeholders,
             )
         return device_info.name
@@ -2895,13 +2895,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         *,
         config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        config_subentry_id: str | Undefined | None = Undefined,
         # To disable a device if it gets created, does not affect existing devices
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | Undefined | None = Undefined,
         identifiers: set[tuple[str, str]],
-        name: str | UndefinedType | None = UNDEFINED,
+        name: str | Undefined | None = Undefined,
         parent_device_id: str,
-        suggested_area: str | UndefinedType | None = UNDEFINED,
+        suggested_area: str | Undefined | None = Undefined,
         translation_key: str | None = None,
         translation_placeholders: Mapping[str, str] | None = None,
     ) -> ChildDeviceEntry:
@@ -2929,7 +2929,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         *,
         config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        config_subentry_id: str | Undefined | None = Undefined,
         device_info: ChildDeviceInfo,
     ) -> ChildDeviceEntry:
         """Get child device. Create if it doesn't exist.
@@ -2940,7 +2940,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return self._async_get_or_create_child_from_info(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
-            disabled_by=UNDEFINED,
+            disabled_by=Undefined,
             device_info=device_info,
         )
 
@@ -2949,9 +2949,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         *,
         config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None,
+        config_subentry_id: str | Undefined | None,
         # To disable a device if it gets created, does not affect existing devices
-        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        disabled_by: DeviceEntryDisabler | Undefined | None,
         device_info: ChildDeviceInfo,
     ) -> ChildDeviceEntry:
         """Get child device. Create if it doesn't exist."""
@@ -2962,7 +2962,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         if (
-            config_subentry_id is not UNDEFINED
+            config_subentry_id is not Undefined
             and config_subentry_id is not None
             and config_subentry_id not in config_entry.subentries
         ):
@@ -3008,7 +3008,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         # Interpret not specifying a subentry as None
         effective_config_subentry_id = (
-            config_subentry_id if config_subentry_id is not UNDEFINED else None
+            config_subentry_id if config_subentry_id is not Undefined else None
         )
         if effective_config_subentry_id != parent.config_subentry_id:
             raise DeviceInfoError(
@@ -3097,7 +3097,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 area_id: str | None = None
                 if (
                     suggested_area is not None
-                    and suggested_area is not UNDEFINED
+                    and suggested_area is not Undefined
                     and suggested_area != ""
                 ):
                     # Circular dep
@@ -3120,7 +3120,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     disabled_by,
                     parent,
                 )
-                disabled_by = UNDEFINED
+                disabled_by = Undefined
 
             self._child_devices[child_device.id] = child_device
 
@@ -3128,7 +3128,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         updated_child_device = self._async_update_child_device(
             child_device.id,
-            disabled_by=disabled_by if is_new else UNDEFINED,
+            disabled_by=disabled_by if is_new else Undefined,
             is_new=is_new,
             merge_identifiers=identifiers,
             name=name,
@@ -3275,36 +3275,36 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        add_config_entry_id: str | UndefinedType = UNDEFINED,
-        add_config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        add_config_entry_id: str | Undefined = Undefined,
+        add_config_subentry_id: str | Undefined | None = Undefined,
         # Only set when stripping colliding keys from a stale device: its retained
         # keys can still be duplicated in other stale devices and must not validate.
         allow_collisions: bool = False,
-        area_id: str | UndefinedType | None = UNDEFINED,
-        configuration_url: str | URL | UndefinedType | None = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
-        entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
-        hw_version: str | UndefinedType | None = UNDEFINED,
+        area_id: str | Undefined | None = Undefined,
+        configuration_url: str | URL | Undefined | None = Undefined,
+        disabled_by: DeviceEntryDisabler | Undefined | None = Undefined,
+        entry_type: DeviceEntryType | Undefined | None = Undefined,
+        hw_version: str | Undefined | None = Undefined,
         is_new: bool = False,
-        labels: set[str] | UndefinedType = UNDEFINED,
-        manufacturer: str | UndefinedType | None = UNDEFINED,
-        merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        model: str | UndefinedType | None = UNDEFINED,
-        model_id: str | UndefinedType | None = UNDEFINED,
-        name_by_user: str | UndefinedType | None = UNDEFINED,
-        name: str | UndefinedType | None = UNDEFINED,
+        labels: set[str] | Undefined = Undefined,
+        manufacturer: str | Undefined | None = Undefined,
+        merge_connections: set[tuple[str, str]] | Undefined = Undefined,
+        merge_identifiers: set[tuple[str, str]] | Undefined = Undefined,
+        model: str | Undefined | None = Undefined,
+        model_id: str | Undefined | None = Undefined,
+        name_by_user: str | Undefined | None = Undefined,
+        name: str | Undefined | None = Undefined,
         # has_composite_identifiers can be removed in HA Core 2027.8
-        has_composite_identifiers: bool | UndefinedType = UNDEFINED,
-        new_config_entry_id: str | UndefinedType = UNDEFINED,
-        new_config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        serial_number: str | UndefinedType | None = UNDEFINED,
-        sw_version: str | UndefinedType | None = UNDEFINED,
-        via_device_id: str | UndefinedType | None = UNDEFINED,
+        has_composite_identifiers: bool | Undefined = Undefined,
+        new_config_entry_id: str | Undefined = Undefined,
+        new_config_subentry_id: str | Undefined | None = Undefined,
+        new_connections: set[tuple[str, str]] | Undefined = Undefined,
+        new_identifiers: set[tuple[str, str]] | Undefined = Undefined,
+        remove_config_entry_id: str | Undefined = Undefined,
+        remove_config_subentry_id: str | Undefined | None = Undefined,
+        serial_number: str | Undefined | None = Undefined,
+        sw_version: str | Undefined | None = Undefined,
+        via_device_id: str | Undefined | None = Undefined,
     ) -> DeviceEntry | None:
         """Private update device attributes.
 
@@ -3318,7 +3318,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
-        if add_config_entry_id is not UNDEFINED:
+        if add_config_entry_id is not Undefined:
             if (
                 add_config_entry := self.hass.config_entries.async_get_entry(
                     add_config_entry_id
@@ -3328,8 +3328,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     f"Can't link device to unknown config entry {add_config_entry_id}"
                 )
 
-        if add_config_subentry_id is not UNDEFINED:
-            if add_config_entry_id is UNDEFINED:
+        if add_config_subentry_id is not Undefined:
+            if add_config_entry_id is Undefined:
                 raise HomeAssistantError(
                     "Can't add config subentry without specifying config entry"
                 )
@@ -3345,15 +3345,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
 
         if (
-            remove_config_subentry_id is not UNDEFINED
-            and remove_config_entry_id is UNDEFINED
+            remove_config_subentry_id is not Undefined
+            and remove_config_entry_id is Undefined
         ):
             raise HomeAssistantError(
                 "Can't remove config subentry without specifying config entry"
             )
 
         if (
-            new_config_entry_id is not UNDEFINED
+            new_config_entry_id is not Undefined
             and self.hass.config_entries.async_get_entry(new_config_entry_id) is None
         ):
             raise HomeAssistantError(
@@ -3361,38 +3361,38 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         if (
-            new_config_entry_id is not UNDEFINED
-            or new_config_subentry_id is not UNDEFINED
+            new_config_entry_id is not Undefined
+            or new_config_subentry_id is not Undefined
         ) and (
-            add_config_entry_id is not UNDEFINED
-            or remove_config_entry_id is not UNDEFINED
+            add_config_entry_id is not Undefined
+            or remove_config_entry_id is not Undefined
         ):
             raise HomeAssistantError(
                 "Can't combine new_config_entry_id or new_config_subentry_id with "
                 "add_config_entry_id or remove_config_entry_id"
             )
 
-        if merge_connections is not UNDEFINED and new_connections is not UNDEFINED:
+        if merge_connections is not Undefined and new_connections is not Undefined:
             raise HomeAssistantError(
                 "Cannot define both merge_connections and new_connections"
             )
 
-        if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
+        if merge_identifiers is not Undefined and new_identifiers is not Undefined:
             raise HomeAssistantError(
                 "Cannot define both merge_identifiers and new_identifiers"
             )
 
         # Intentional lazy set operations to determine if the device will have
         # identifiers, actual merge happens later.
-        if new_identifiers is not UNDEFINED:
+        if new_identifiers is not Undefined:
             has_identifiers = new_identifiers
-        elif merge_identifiers is not UNDEFINED:
+        elif merge_identifiers is not Undefined:
             has_identifiers = old.identifiers or merge_identifiers
         else:
             has_identifiers = old.identifiers
-        if new_connections is not UNDEFINED:
+        if new_connections is not Undefined:
             has_connections = new_connections
-        elif merge_connections is not UNDEFINED:
+        elif merge_connections is not Undefined:
             has_connections = old.connections or merge_connections
         else:
             has_connections = old.connections
@@ -3402,7 +3402,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         if (
-            via_device_id is not UNDEFINED
+            via_device_id is not Undefined
             and via_device_id is not None
             and self.async_get(via_device_id, include_child_devices=False) is None
         ):
@@ -3427,46 +3427,46 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # - remove_config_entry_id on the owning entry performs a pending move if there
         #   is one, otherwise it removes the device, since it has no other config entry.
         # - new_config_entry_id / new_config_subentry_id move the device immediately.
-        target_config_entry_id: str | UndefinedType = UNDEFINED
-        target_config_subentry_id: str | UndefinedType | None = UNDEFINED
-        pending_move: _PendingMove | UndefinedType | None = UNDEFINED
-        if new_config_entry_id is not UNDEFINED:
+        target_config_entry_id: str | Undefined = Undefined
+        target_config_subentry_id: str | Undefined | None = Undefined
+        pending_move: _PendingMove | Undefined | None = Undefined
+        if new_config_entry_id is not Undefined:
             target_config_entry_id = new_config_entry_id
             target_config_subentry_id = (
                 new_config_subentry_id
-                if new_config_subentry_id is not UNDEFINED
+                if new_config_subentry_id is not Undefined
                 else None
             )
             # An immediate move to a new config entry supersedes a deferred move from an
             # earlier add_config_entry_id; clear it so a later removal of the new owner
             # deletes the device instead of performing the stale move.
             pending_move = None
-        elif new_config_subentry_id is not UNDEFINED:
+        elif new_config_subentry_id is not Undefined:
             target_config_subentry_id = new_config_subentry_id
         else:
-            if add_config_entry_id is not UNDEFINED:
+            if add_config_entry_id is not Undefined:
                 # Adding the config entry (and subentry) the device already belongs to is a
                 # no-op; recording it as a pending move would make a later removal of that
                 # sole owner move the device to itself instead of deleting it.
                 already_owner = add_config_entry_id == old.config_entry_id and (
-                    add_config_subentry_id is UNDEFINED
+                    add_config_subentry_id is Undefined
                     or add_config_subentry_id == old.config_subentry_id
                 )
                 if not already_owner:
                     pending_move = _PendingMove(
                         add_config_entry_id,
                         add_config_subentry_id
-                        if add_config_subentry_id is not UNDEFINED
+                        if add_config_subentry_id is not Undefined
                         else None,
                         _current_integration_domain(),
                     )
             if remove_config_entry_id == old.config_entry_id and (
-                remove_config_subentry_id is UNDEFINED
+                remove_config_subentry_id is Undefined
                 or remove_config_subentry_id == old.config_subentry_id
             ):
-                move_from_prior_call = pending_move is UNDEFINED
+                move_from_prior_call = pending_move is Undefined
                 move_target = (
-                    pending_move if pending_move is not UNDEFINED else old._pending_move  # noqa: SLF001
+                    pending_move if pending_move is not Undefined else old._pending_move  # noqa: SLF001
                 )
                 # A deferred move armed by an earlier add_config_entry_id only completes
                 # if the integration now removing the owning entry is the one that armed
@@ -3488,7 +3488,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     # reject it before deleting, atomically like the direct-id check
                     # before the ownership changes above.
                     if (
-                        via_device_id is not UNDEFINED
+                        via_device_id is not Undefined
                         and via_device_id is not None
                         and via_device_id == old.composite_device_id
                     ):
@@ -3522,10 +3522,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                                 sibling, pending_move=None
                             )
 
-        if target_config_subentry_id not in (UNDEFINED, None):
+        if target_config_subentry_id not in (Undefined, None):
             resolved_config_entry_id = (
                 target_config_entry_id
-                if target_config_entry_id is not UNDEFINED
+                if target_config_entry_id is not Undefined
                 else old.config_entry_id
             )
             resolved_config_entry = self.hass.config_entries.async_get_entry(
@@ -3541,20 +3541,20 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
 
         if (
-            target_config_entry_id is not UNDEFINED
+            target_config_entry_id is not Undefined
             and target_config_entry_id != old.config_entry_id
         ):
             new_values["config_entry_id"] = target_config_entry_id
             old_values["config_entry_id"] = old.config_entry_id
         if (
-            target_config_subentry_id is not UNDEFINED
+            target_config_subentry_id is not Undefined
             and target_config_subentry_id != old.config_subentry_id
         ):
             new_values["config_subentry_id"] = target_config_subentry_id
             old_values["config_subentry_id"] = old.config_subentry_id
         # pending_move is a transient runtime-only attribute; it is not reported in the
         # update event (not added to old_values) and never stored
-        if pending_move is not UNDEFINED and pending_move != old._pending_move:  # noqa: SLF001
+        if pending_move is not Undefined and pending_move != old._pending_move:  # noqa: SLF001
             new_values["pending_move"] = pending_move
 
         # The config entry owning the device after the update. Identifiers and
@@ -3562,7 +3562,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # owning entry, as is the disabled state.
         effective_config_entry_id = (
             target_config_entry_id
-            if target_config_entry_id is not UNDEFINED
+            if target_config_entry_id is not Undefined
             else old.config_entry_id
         )
         is_move = effective_config_entry_id != old.config_entry_id
@@ -3577,7 +3577,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Can't move device {device_id}: it has child devices"
             )
 
-        if via_device_id is not UNDEFINED and via_device_id is not None:
+        if via_device_id is not Undefined and via_device_id is not None:
             # Existence was already validated, so this cannot be None
             via_device_id = self._resolve_via_device_id(
                 via_device_id, effective_config_entry_id
@@ -3590,7 +3590,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
 
-        if merge_connections is not UNDEFINED:
+        if merge_connections is not Undefined:
             normalized_connections = self._validate_connections(
                 device_id,
                 effective_config_entry_id,
@@ -3603,7 +3603,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values["connections"] = old_connections | normalized_connections
                 old_values["connections"] = old_connections
 
-        if merge_identifiers is not UNDEFINED:
+        if merge_identifiers is not Undefined:
             merge_identifiers = self._validate_identifiers(
                 device_id,
                 effective_config_entry_id,
@@ -3616,13 +3616,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values["identifiers"] = old_identifiers | merge_identifiers
                 old_values["identifiers"] = old_identifiers
 
-        if new_connections is not UNDEFINED:
+        if new_connections is not Undefined:
             added_connections = new_values["connections"] = self._validate_connections(
                 device_id, effective_config_entry_id, new_connections, allow_collisions
             )
             old_values["connections"] = old.connections
 
-        if new_identifiers is not UNDEFINED:
+        if new_identifiers is not Undefined:
             added_identifiers = new_values["identifiers"] = self._validate_identifiers(
                 device_id, effective_config_entry_id, new_identifiers, allow_collisions
             )
@@ -3634,11 +3634,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # A full new_identifiers / new_connections replacement is validated above;
         # merge_* only adds, so the retained old values still need checking here.
         if is_move:
-            if new_identifiers is UNDEFINED:
+            if new_identifiers is Undefined:
                 self._validate_identifiers(
                     device_id, effective_config_entry_id, old.identifiers, False
                 )
-            if new_connections is UNDEFINED:
+            if new_connections is Undefined:
                 self._validate_connections(
                     device_id, effective_config_entry_id, old.connections, False
                 )
@@ -3654,7 +3654,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # CONFIG_ENTRY disable when moved onto an enabled entry. A USER disable is
         # preserved. Disable_by of a new device is handled the same way, so a create
         # can't leave the device's disabled state contradicting the owning entry's.
-        if (disabled_by is not UNDEFINED or is_move or is_new) and (
+        if (disabled_by is not Undefined or is_move or is_new) and (
             owning_entry := self.hass.config_entries.async_get_entry(
                 effective_config_entry_id
             )
@@ -3672,7 +3672,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2027.8",
                 )
-                disabled_by = UNDEFINED
+                disabled_by = Undefined
             elif (
                 disabled_by is DeviceEntryDisabler.CONFIG_ENTRY
                 and not owning_entry.disabled_by
@@ -3683,8 +3683,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2027.8",
                 )
-                disabled_by = UNDEFINED
-            if (is_move or is_new) and disabled_by is UNDEFINED:
+                disabled_by = Undefined
+            if (is_move or is_new) and disabled_by is Undefined:
                 if owning_entry.disabled_by:
                     if old.disabled_by is None:
                         disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
@@ -3708,7 +3708,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
         ):
-            if value is not UNDEFINED and value != getattr(old, attr_name):
+            if value is not Undefined and value != getattr(old, attr_name):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
 
@@ -3787,14 +3787,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         child_device_id: str,
         *,
-        area_id: str | UndefinedType | None = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
+        area_id: str | Undefined | None = Undefined,
+        disabled_by: DeviceEntryDisabler | Undefined | None = Undefined,
         is_new: bool = False,
-        labels: set[str] | UndefinedType = UNDEFINED,
-        merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        name_by_user: str | UndefinedType | None = UNDEFINED,
-        name: str | UndefinedType | None = UNDEFINED,
-        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        labels: set[str] | Undefined = Undefined,
+        merge_identifiers: set[tuple[str, str]] | Undefined = Undefined,
+        name_by_user: str | Undefined | None = Undefined,
+        name: str | Undefined | None = Undefined,
+        new_identifiers: set[tuple[str, str]] | Undefined = Undefined,
     ) -> ChildDeviceEntry | None:
         """Private update child device attributes."""
         old = self._child_devices[child_device_id]
@@ -3802,17 +3802,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
-        if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
+        if merge_identifiers is not Undefined and new_identifiers is not Undefined:
             raise HomeAssistantError(
                 "Cannot define both merge_identifiers and new_identifiers"
             )
 
-        if new_identifiers is not UNDEFINED and not new_identifiers:
+        if new_identifiers is not Undefined and not new_identifiers:
             raise HomeAssistantError("A child device must have at least one identifier")
 
         added_identifiers: set[tuple[str, str]] | None = None
 
-        if merge_identifiers is not UNDEFINED:
+        if merge_identifiers is not Undefined:
             merge_identifiers = self._validate_child_identifiers(
                 child_device_id,
                 old.config_entry_id,
@@ -3824,7 +3824,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values["identifiers"] = old_identifiers | merge_identifiers
                 old_values["identifiers"] = old_identifiers
 
-        elif new_identifiers is not UNDEFINED:
+        elif new_identifiers is not Undefined:
             added_identifiers = new_values["identifiers"] = (
                 self._validate_child_identifiers(
                     child_device_id,
@@ -3838,7 +3838,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # owning config entry (as for a full device) and of the parent device: a child
         # of a disabled parent can't be enabled, and can't be disabled by DEVICE when
         # the parent is enabled.
-        if disabled_by is not UNDEFINED or is_new:
+        if disabled_by is not Undefined or is_new:
             parent_device = self._device_data[old.parent_device_id]
             owning_entry = self.hass.config_entries.async_get_entry(old.config_entry_id)
             context = (
@@ -3859,7 +3859,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         core_behavior=ReportBehavior.LOG,
                         breaks_in_ha_version="2027.8",
                     )
-                    disabled_by = UNDEFINED
+                    disabled_by = Undefined
                 elif (
                     disabled_by is DeviceEntryDisabler.CONFIG_ENTRY
                     and not owning_entry.disabled_by
@@ -3870,8 +3870,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         core_behavior=ReportBehavior.LOG,
                         breaks_in_ha_version="2027.8",
                     )
-                    disabled_by = UNDEFINED
-                if is_new and disabled_by is UNDEFINED:
+                    disabled_by = Undefined
+                if is_new and disabled_by is Undefined:
                     if owning_entry.disabled_by:
                         if old.disabled_by is None:
                             disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
@@ -3884,7 +3884,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     core_behavior=ReportBehavior.LOG,
                     breaks_in_ha_version="2027.8",
                 )
-                disabled_by = UNDEFINED
+                disabled_by = Undefined
             # Report an external attempt to enable a child whose parent stays disabled.
             if (
                 disabled_by is None
@@ -3900,7 +3900,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # consistent with its disabled parent.
             if parent_device.disabled and (
                 disabled_by is None
-                or (is_new and disabled_by is UNDEFINED and old.disabled_by is None)
+                or (is_new and disabled_by is Undefined and old.disabled_by is None)
             ):
                 disabled_by = DeviceEntryDisabler.DEVICE
 
@@ -3911,7 +3911,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ("name", name),
             ("name_by_user", name_by_user),
         ):
-            if value is not UNDEFINED and value != getattr(old, attr_name):
+            if value is not Undefined and value != getattr(old, attr_name):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
 
@@ -3950,30 +3950,30 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        add_config_entry_id: str | UndefinedType = UNDEFINED,
-        add_config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        area_id: str | UndefinedType | None = UNDEFINED,
-        configuration_url: str | URL | UndefinedType | None = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
-        entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
-        hw_version: str | UndefinedType | None = UNDEFINED,
-        labels: set[str] | UndefinedType = UNDEFINED,
-        manufacturer: str | UndefinedType | None = UNDEFINED,
-        merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        model: str | UndefinedType | None = UNDEFINED,
-        model_id: str | UndefinedType | None = UNDEFINED,
-        name_by_user: str | UndefinedType | None = UNDEFINED,
-        name: str | UndefinedType | None = UNDEFINED,
-        new_config_entry_id: str | UndefinedType = UNDEFINED,
-        new_config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        remove_config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        serial_number: str | UndefinedType | None = UNDEFINED,
-        sw_version: str | UndefinedType | None = UNDEFINED,
-        via_device_id: str | UndefinedType | None = UNDEFINED,
+        add_config_entry_id: str | Undefined = Undefined,
+        add_config_subentry_id: str | Undefined | None = Undefined,
+        area_id: str | Undefined | None = Undefined,
+        configuration_url: str | URL | Undefined | None = Undefined,
+        disabled_by: DeviceEntryDisabler | Undefined | None = Undefined,
+        entry_type: DeviceEntryType | Undefined | None = Undefined,
+        hw_version: str | Undefined | None = Undefined,
+        labels: set[str] | Undefined = Undefined,
+        manufacturer: str | Undefined | None = Undefined,
+        merge_connections: set[tuple[str, str]] | Undefined = Undefined,
+        merge_identifiers: set[tuple[str, str]] | Undefined = Undefined,
+        model: str | Undefined | None = Undefined,
+        model_id: str | Undefined | None = Undefined,
+        name_by_user: str | Undefined | None = Undefined,
+        name: str | Undefined | None = Undefined,
+        new_config_entry_id: str | Undefined = Undefined,
+        new_config_subentry_id: str | Undefined | None = Undefined,
+        new_connections: set[tuple[str, str]] | Undefined = Undefined,
+        new_identifiers: set[tuple[str, str]] | Undefined = Undefined,
+        remove_config_entry_id: str | Undefined = Undefined,
+        remove_config_subentry_id: str | Undefined | None = Undefined,
+        serial_number: str | Undefined | None = Undefined,
+        sw_version: str | Undefined | None = Undefined,
+        via_device_id: str | Undefined | None = Undefined,
     ) -> DeviceEntry | None:
         """Update device attributes.
 
@@ -4058,10 +4058,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 device_id, underlying_ids, update_args
             )
         if (
-            add_config_entry_id is not UNDEFINED
-            or add_config_subentry_id is not UNDEFINED
-            or remove_config_entry_id is not UNDEFINED
-            or remove_config_subentry_id is not UNDEFINED
+            add_config_entry_id is not Undefined
+            or add_config_subentry_id is not Undefined
+            or remove_config_entry_id is not Undefined
+            or remove_config_subentry_id is not Undefined
         ):
             report_usage(
                 "calls `device_registry.async_update_device` with one of "
@@ -4074,7 +4074,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 core_integration_behavior=ReportBehavior.ERROR,
                 breaks_in_ha_version="2027.8.0",
             )
-        if merge_connections is not UNDEFINED or merge_identifiers is not UNDEFINED:
+        if merge_connections is not Undefined or merge_identifiers is not Undefined:
             report_usage(
                 "calls `device_registry.async_update_device` with `merge_connections` "
                 "or `merge_identifiers`; these only add to the device's existing "
@@ -4122,12 +4122,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        area_id: str | UndefinedType | None = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
-        labels: set[str] | UndefinedType = UNDEFINED,
-        name_by_user: str | UndefinedType | None = UNDEFINED,
-        name: str | UndefinedType | None = UNDEFINED,
-        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        area_id: str | Undefined | None = Undefined,
+        disabled_by: DeviceEntryDisabler | Undefined | None = Undefined,
+        labels: set[str] | Undefined = Undefined,
+        name_by_user: str | Undefined | None = Undefined,
+        name: str | Undefined | None = Undefined,
+        new_identifiers: set[tuple[str, str]] | Undefined = Undefined,
     ) -> ChildDeviceEntry:
         """Update child device attributes.
 
@@ -4352,7 +4352,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> DeviceEntry | None:
         """Fan an async_update_device call on a composite out to its real devices."""
         forward = {
-            name: value for name, value in update_args.items() if value is not UNDEFINED
+            name: value for name, value in update_args.items() if value is not Undefined
         }
         if ignored := [
             name for name in _COMPOSITE_IGNORED_UPDATE_ARGS if name in forward
@@ -4566,10 +4566,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # Introduced in 0.111
             def get_optional_enum[_EnumT: StrEnum](
                 cls: type[_EnumT], value: str | None, undefined: bool
-            ) -> _EnumT | UndefinedType | None:
-                """Convert string to the passed enum, UNDEFINED or None."""
+            ) -> _EnumT | Undefined | None:
+                """Convert string to the passed enum, Undefined or None."""
                 if undefined:
-                    return UNDEFINED
+                    return Undefined
                 if value is None:
                     return None
                 try:

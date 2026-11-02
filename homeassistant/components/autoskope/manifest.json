@@ -4,6 +4,7 @@
   "categories": ["presence_location.trackers", "vehicles_transport.cars_evs"],
   "codeowners": ["@mcisk"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/autoskope",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

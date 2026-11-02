@@ -3,6 +3,7 @@
   "name": "Reddit",
   "categories": ["news_social_media"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/reddit",
   "iot_class": "cloud_polling",
   "loggers": ["praw", "prawcore"],

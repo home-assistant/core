@@ -5,6 +5,7 @@
   "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
   "config_flow": true,
+  "connectivity": ["knx"],
   "dependencies": ["file_upload", "http", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/knx",
   "integration_type": "hub",
