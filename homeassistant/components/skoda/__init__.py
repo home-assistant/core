@@ -9,7 +9,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_VIN
 from .coordinator import SkodaConfigEntry, SkodaData, SkodaUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER, Platform.SENSOR]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SkodaConfigEntry) -> None:

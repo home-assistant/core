@@ -1227,11 +1227,11 @@ async def test_device_registry_calls(
 
     # Test that when addon is removed, next update will remove the
     # add-on and subsequent updates won't
-    async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(device_registry.devices) == 5
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(device_registry.devices) == 5
 
@@ -1259,7 +1259,7 @@ async def test_device_registry_calls(
 
     # Test that when addon is added, next update will reload the entry so we register
     # a new device
-    async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=3))
     await hass.async_block_till_done()
     assert len(device_registry.devices) == 5
 
@@ -1279,7 +1279,7 @@ async def test_coordinator_updates(
         # Initial refresh, no update refresh call
         supervisor_client.reload_updates.assert_not_called()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Scheduled refresh, no update refresh call
@@ -1300,7 +1300,7 @@ async def test_coordinator_updates(
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     supervisor_client.reload_updates.assert_not_called()
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done(wait_background_tasks=True)
     supervisor_client.reload_updates.assert_called_once()
@@ -1320,7 +1320,7 @@ async def test_coordinator_updates(
     )
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
     supervisor_client.reload_updates.assert_called_once()
@@ -1346,13 +1346,13 @@ async def test_coordinator_updates_stats_entities_enabled(
         # Stats entities trigger refresh on the stats coordinator,
         # which does not call reload_updates
         async_fire_time_changed(
-            hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+            hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
         )
         await hass.async_block_till_done()
 
         supervisor_client.reload_updates.assert_not_called()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
     await hass.async_block_till_done()
     supervisor_client.reload_updates.assert_not_called()
 
@@ -1371,7 +1371,7 @@ async def test_coordinator_updates_stats_entities_enabled(
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
 
@@ -1390,7 +1390,7 @@ async def test_coordinator_updates_stats_entities_enabled(
     )
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
     supervisor_client.reload_updates.assert_called_once()
@@ -2062,7 +2062,7 @@ async def test_get_core_stats(hass: HomeAssistant) -> None:
 
     # Stats entities subscribe during setup and trigger a debounced refresh
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
 
@@ -2083,7 +2083,7 @@ async def test_get_supervisor_stats(hass: HomeAssistant) -> None:
 
     # Stats entities subscribe during setup and trigger a debounced refresh
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
 

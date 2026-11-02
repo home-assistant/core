@@ -105,9 +105,10 @@ rules:
   test-coverage:
     status: todo
     comment: >-
-      (1) coordinator.py is at 90%: the UpdateFailed path is not tested, and no
-      test expects SETUP_RETRY when the unit is offline.
-      (2) No test explicitly unloads the entry.
+      Missing for 100%:
+      (1) sensor.py lines 60 and 67 cannot be reached with data from a real
+      unit and need an integration cleanup.
+      (2) services.py line 55 goes away with action-setup.
 
   # Gold
   devices:

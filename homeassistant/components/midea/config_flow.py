@@ -54,6 +54,17 @@ from .device_catalog import MIDEA_DEVICE_NAMES
 
 DEFAULT_CLOUD: str = get_default_cloud()
 
+
+def _subtype_int(value: object, default: int = 0) -> int:
+    """Coerce a cloud model number into the integer subtype midealocal expects."""
+    if isinstance(value, (int, str)):
+        try:
+            return int(value)
+        except ValueError:
+            return default
+    return default
+
+
 LOGIN_MODE_PRESET = "preset"
 LOGIN_MODE_ACCOUNT = "account"
 
@@ -478,7 +489,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 key=value["key"],
                 device_protocol=ProtocolVersion.V3,
                 model=device.get(CONF_MODEL),
-                subtype=device.get(CONF_SUBTYPE, 0),
+                subtype=_subtype_int(
+                    device.get(CONF_SUBTYPE) or self.found_device.get(CONF_SUBTYPE)
+                ),
             )
             if connected is None:
                 LOGGER.debug(
@@ -521,6 +534,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS),
                 CONF_PORT: device.get(CONF_PORT),
                 CONF_MODEL: device.get(CONF_MODEL),
+                CONF_SUBTYPE: device.get(CONF_SUBTYPE, 0),
                 CONF_MAC: device.get(CONF_MAC),
                 CONF_SN: device.get(CONF_SN),
             }
@@ -536,7 +550,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     # set subtype with model_number
                     if cloud_name := device_info.get("name"):
                         self.found_device[CONF_NAME] = cloud_name
-                    self.found_device[CONF_SUBTYPE] = device_info.get("model_number")
+                    # LAN discovery reports the subtype for most devices;
+                    # the cloud model number is only a fallback.
+                    if not self.found_device.get(CONF_SUBTYPE):
+                        self.found_device[CONF_SUBTYPE] = _subtype_int(
+                            device_info.get("model_number")
+                        )
 
                 # phase 1, try with user input login data
                 keys = await self._check_key_from_cloud(device_id)
