@@ -92,13 +92,13 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
-                return self.async_create_entry(title=user_input[CONF_PORT], data=info)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=user_input[CONF_PORT], data=info)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

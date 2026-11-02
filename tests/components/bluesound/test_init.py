@@ -1,12 +1,17 @@
 """Test bluesound integration."""
 
 from freezegun.api import FrozenDateTimeFactory
+from pyblu import Preset
 from pyblu.errors import PlayerUnreachableError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bluesound import DOMAIN
-from homeassistant.components.bluesound.coordinator import NODE_OFFLINE_CHECK_TIMEOUT
+from homeassistant.components.bluesound.coordinator import (
+    NODE_OFFLINE_CHECK_TIMEOUT,
+    PRESET_AND_INPUTS_INTERVAL,
+)
+from homeassistant.components.media_player import ATTR_INPUT_SOURCE_LIST
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_PLAYING, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -29,6 +34,20 @@ async def test_setup_entry(
 
     assert hass.states.get("media_player.player_name1111").state == "unavailable"
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_player_unreachable(
+    hass: HomeAssistant, config_entry: MockConfigEntry, player_mocks: PlayerMocks
+) -> None:
+    """Test setup is retried when the player is unreachable."""
+    player_mocks.player_data.player.sync_status.side_effect = PlayerUnreachableError(
+        "Player not reachable"
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry_while_player_is_offline(
@@ -137,3 +156,67 @@ async def test_log_when_unavailable(
 
     assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
     assert caplog.text.count("Fetching player-name1111 data recovered") == 1
+
+
+async def test_presets_and_inputs_updated(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+) -> None:
+    """Test presets and inputs are polled periodically."""
+    player_mocks.player_data.player.presets.return_value = [
+        Preset("new_preset", 3, "url3", "image3", None)
+    ]
+    player_mocks.player_data.player.inputs.return_value = []
+
+    freezer.tick(PRESET_AND_INPUTS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST] == [
+        "new_preset"
+    ]
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(PlayerUnreachableError("Player not reachable"), id="unreachable"),
+        pytest.param(ValueError("Unexpected error"), id="unexpected"),
+    ],
+)
+async def test_presets_and_inputs_poll_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+    error: Exception,
+) -> None:
+    """Test the player goes unavailable when polling presets fails."""
+    player_mocks.player_data.player.presets.side_effect = error
+
+    freezer.tick(PRESET_AND_INPUTS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "long_polling_mock",
+    ["status_long_polling_mock", "sync_status_long_polling_mock"],
+)
+async def test_unexpected_error_while_polling(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+    long_polling_mock: str,
+) -> None:
+    """Test the player goes unavailable on an unexpected polling error."""
+    getattr(player_mocks.player_data, long_polling_mock).set_error(
+        ValueError("Unexpected error")
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE

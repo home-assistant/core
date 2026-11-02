@@ -158,6 +158,7 @@ class _DefaultPipelineProcessor:
     _intent_agent_only: bool = field(init=False, default=False)
     _streamed_response_text: bool = field(init=False, default=False)
     _invalidated: bool = field(init=False, default=False)
+    _stt_last_timestamp_ms: int | None = field(init=False, default=None)
     intent_agent: conversation.AgentInfo | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -417,13 +418,19 @@ class _DefaultPipelineProcessor:
         else:
             engine = self.stt_provider.entity_id
 
+        audio_processing = self.stt_provider.async_get_audio_processing(metadata)
+        provider_vad = (
+            self.host.audio_settings.is_vad_enabled
+            and not audio_processing.requires_external_vad
+        )
+
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_START,
                 {
                     "engine": engine,
                     "metadata": asdict(metadata),
-                    "audio_processing": asdict(self.stt_provider.audio_processing),
+                    "audio_processing": asdict(audio_processing),
                 },
             )
         )
@@ -435,7 +442,7 @@ class _DefaultPipelineProcessor:
             stt_vad: VoiceCommandSegmenter | None = None
             if (
                 self.host.audio_settings.is_vad_enabled
-                and self.stt_provider.audio_processing.requires_external_vad
+                and audio_processing.requires_external_vad
             ):
                 stt_vad = VoiceCommandSegmenter(
                     silence_seconds=self.host.audio_settings.silence_seconds
@@ -465,6 +472,15 @@ class _DefaultPipelineProcessor:
             ) from src_error
 
         _LOGGER.debug("speech-to-text result %s", result)
+
+        # The provider detected the end of speech by returning the transcribed text
+        if provider_vad:
+            self.host.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_END,
+                    {"timestamp": self._stt_last_timestamp_ms or 0},
+                )
+            )
 
         if result.result != stt.SpeechResultState.SUCCESS:
             raise SpeechToTextError(
@@ -524,6 +540,7 @@ class _DefaultPipelineProcessor:
                     )
                     sent_vad_start = True
 
+            self._stt_last_timestamp_ms = chunk.timestamp_ms
             yield chunk.audio
 
     async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
