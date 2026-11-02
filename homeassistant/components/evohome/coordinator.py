@@ -65,7 +65,8 @@ class _EvoCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 class EvoAccountCoordinator(_EvoCoordinator[dict[str, float | None]]):
     """Coordinator for an evohome account (the user's config, high-precision temps).
 
-    Its data is the latest high-precision temperatures, by DHW/zone id.
+    Its data is the latest high-precision temperatures, by DHW/zone id. They are
+    polled at a fixed interval, and are not refreshed on demand (unlike a location).
     """
 
     def __init__(

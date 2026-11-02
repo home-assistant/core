@@ -101,9 +101,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             "deprecated_refresh_system_service",
             REFRESH_BREAKS_IN_HA_VERSION,
         )
-        evo_data = hass.data[EVOHOME_DATA]
-        await evo_data.account.async_refresh()
-        await evo_data.coordinator.async_refresh()
+        await hass.data[EVOHOME_DATA].coordinator.async_refresh()
 
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
 

@@ -91,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER,
         ec2.EvohomeClient(token_manager),
         name=f"{DOMAIN}_account_coordinator",
-        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
+        update_interval=SCAN_INTERVAL_DEFAULT,
         client_v1=ec1.EvohomeClient(token_manager),
     )
     coordinator = EvoLocationCoordinator(

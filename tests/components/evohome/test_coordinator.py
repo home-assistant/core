@@ -16,18 +16,21 @@ from homeassistant.components.evohome import EvoData
 from homeassistant.components.evohome.const import (
     DOMAIN,
     EVOHOME_DATA,
+    SCAN_INTERVAL_DEFAULT,
     SCHEDULE_MAX_AGE,
 )
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    CONF_SCAN_INTERVAL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import setup_evohome
@@ -113,6 +116,21 @@ async def test_high_precision_temps(
     state = hass.states.get(zone_id)
     assert state is not None
     assert state.attributes["current_temperature"] == expected
+
+
+async def test_update_intervals(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> None:
+    """Test scan_interval applies to the location, but not to high-precision temps."""
+
+    config[CONF_SCAN_INTERVAL] = 600
+
+    async for _ in setup_evohome(hass, config, install="default"):
+        evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
+
+        assert evo_data.coordinator.update_interval == timedelta(seconds=600)
+        assert evo_data.account.update_interval == SCAN_INTERVAL_DEFAULT
 
 
 @pytest.mark.parametrize("install", ["default"])
