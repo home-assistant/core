@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN
 
-ATTR_URL_DEFAULT = "https://www.google.com"
+DEFAULT_URL = "https://www.google.com"
 
 
 class BrowserService(StrEnum):
@@ -27,7 +27,7 @@ class BrowserServiceArgument(StrEnum):
 SERVICE_BROWSE_URL_SCHEMA = probatio.Schema(
     {
         probatio.Required(
-            BrowserServiceArgument.URL, default=ATTR_URL_DEFAULT
+            BrowserServiceArgument.URL, default=DEFAULT_URL
         ): probatio.Url(),
     }
 )
