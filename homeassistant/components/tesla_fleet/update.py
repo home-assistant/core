@@ -115,5 +115,5 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
         if scheduled_time_ms is None:
             return False
         # Convert milliseconds to seconds and compare to current time
-        scheduled_time_sec = scheduled_time_ms / 1000
+        scheduled_time_sec: float = scheduled_time_ms / 1000
         return scheduled_time_sec - time.time() < SCHEDULED_THRESHOLD_SECONDS

@@ -12,7 +12,7 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('hotspring', 'AA:BB:CC:DD:EE:FF')]>,
     'disabled_by': None,

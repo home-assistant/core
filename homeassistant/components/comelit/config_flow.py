@@ -14,17 +14,36 @@ from aiocomelit.api import ComelitCommonApi
 from aiocomelit.const import BRIDGE
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_HOST,
+    CONF_PIN,
+    CONF_PORT,
+    CONF_TYPE,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import CONF_VEDO_PIN, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN, LOGGER
+from .const import (
+    CONF_TRAVEL_TIME,
+    CONF_VEDO_PIN,
+    DEFAULT_COVER_TRAVEL_TIME,
+    DEFAULT_PORT,
+    DEVICE_TYPE_LIST,
+    DOMAIN,
+    LOGGER,
+    MAX_COVER_TRAVEL_TIME,
+    MIN_COVER_TRAVEL_TIME,
+)
+from .coordinator import ComelitConfigEntry
 from .utils import async_client_session
 
 DEFAULT_HOST = "192.168.1.252"
@@ -257,7 +276,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
                 ): TextSelector(),
                 probatio.Required(
-                    CONF_PORT, default=reconfigure_entry.data[CONF_PORT]
+                    CONF_PORT,
+                    default=reconfigure_entry.data.get(CONF_PORT, DEFAULT_PORT),
                 ): probatio.Port(),
                 probatio.Optional(probatio.Secret(CONF_PIN)): TextSelector(
                     TextSelectorConfig(
@@ -276,6 +296,100 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=schema,
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ComelitConfigEntry,
+    ) -> ComelitOptionsFlowHandler:
+        """Return the options flow."""
+        return ComelitOptionsFlowHandler()
+
+    @classmethod
+    @callback
+    @override
+    def async_supports_options_flow(cls, config_entry: ComelitConfigEntry) -> bool:
+        """Return options flow support for this handler."""
+        entry_type: str = config_entry.data.get(CONF_TYPE, BRIDGE)
+        return entry_type == BRIDGE
+
+
+class ComelitOptionsFlowHandler(OptionsFlow):
+    """Handle a Comelit options flow."""
+
+    _selected_entity_id: str
+    _selected_unique_id: str
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select which cover to configure."""
+        entity_registry = er.async_get(self.hass)
+        if user_input is not None:
+            self._selected_entity_id = user_input[CONF_ENTITY_ID]
+            entity_entry = entity_registry.async_get(self._selected_entity_id)
+            if TYPE_CHECKING:
+                assert entity_entry is not None
+            self._selected_unique_id = entity_entry.unique_id
+            return await self.async_step_cover_settings()
+
+        covers = [
+            entry.entity_id
+            for entry in er.async_entries_for_config_entry(
+                entity_registry, self.config_entry.entry_id
+            )
+            if entry.domain == Platform.COVER
+        ]
+        if not covers:
+            return self.async_abort(reason="no_covers")
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_ENTITY_ID): selector.EntitySelector(
+                        selector.EntitySelectorConfig(include_entities=covers)
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_cover_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure the travel time for the selected cover."""
+        if user_input is not None:
+            travel_times = {
+                **self.config_entry.options.get(CONF_TRAVEL_TIME, {}),
+                self._selected_unique_id: user_input[CONF_TRAVEL_TIME],
+            }
+            return self.async_create_entry(
+                data={**self.config_entry.options, CONF_TRAVEL_TIME: travel_times}
+            )
+
+        current_travel_time = self.config_entry.options.get(CONF_TRAVEL_TIME, {}).get(
+            self._selected_unique_id, DEFAULT_COVER_TRAVEL_TIME
+        )
+
+        return self.async_show_form(
+            step_id="cover_settings",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_TRAVEL_TIME, default=current_travel_time
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=MIN_COVER_TRAVEL_TIME,
+                            max=MAX_COVER_TRAVEL_TIME,
+                            unit_of_measurement="s",
+                            mode=selector.NumberSelectorMode.BOX,
+                        )
+                    ),
+                }
+            ),
+            description_placeholders={"entity_id": self._selected_entity_id},
         )
 
 

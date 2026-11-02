@@ -76,6 +76,12 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "display_on_time": {
+        "name": "Display on-time"
+      },
       "energy_saving_enter_duration": {
         "name": "Energy-saving enter duration"
       },
@@ -84,6 +90,9 @@
       },
       "impulse_length": {
         "name": "Pulse length"
+      },
+      "led_brightness": {
+        "name": "LED brightness"
       },
       "offset": {
         "name": "Temperature offset"
@@ -96,6 +105,13 @@
           "normally_closed": "Normally closed",
           "normally_open": "Normally open",
           "unsupported": "Unsupported"
+        }
+      },
+      "dimmer_phase_control": {
+        "name": "Dimmer phase control",
+        "state": {
+          "leading": "Leading edge phase cut",
+          "trailing": "Trailing edge phase cut"
         }
       },
       "display_direction": {
@@ -147,6 +163,22 @@
           "high": "Loud",
           "low": "Reduced",
           "medium": "[%key:common::state::medium%]"
+        }
+      },
+      "smart_sensitivity_comfort_level": {
+        "name": "Sensitivity for other cases",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "smart_sensitivity_security_level": {
+        "name": "Sensitivity for alarm system",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
         }
       },
       "smoke_sensitivity": {
@@ -211,6 +243,9 @@
       },
       "communication_quality": {
         "name": "Communication quality"
+      },
+      "floor_temperature": {
+        "name": "Floor temperature"
       },
       "humidity_rating": {
         "name": "Humidity rating"

@@ -32,6 +32,7 @@ from zha.application.platforms.siren import (
     StrobeLevel,
     WarningMode,
 )
+from zha.zigbee.device import ZigbeeDevice
 from zigpy.types.named import EUI64, KeyData
 from zigpy.typing import (
     UNDEFINED as ZIGPY_UNDEFINED,
@@ -196,6 +197,22 @@ def _get_gateway(service: ServiceCall) -> Gateway:
     return gateway_proxy.gateway
 
 
+def _get_zigbee_device(zha_gateway: Gateway, ieee: EUI64) -> ZigbeeDevice:
+    """Return the Zigbee device, raising if it is missing or not a Zigbee device."""
+    zha_device = zha_gateway.get_device(ieee)
+    if zha_device is None:
+        raise ValueError(f"Device with IEEE {ieee!s} not found")
+
+    if not isinstance(zha_device, ZigbeeDevice):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_zigbee_device",
+            translation_placeholders={"ieee": str(ieee)},
+        )
+
+    return zha_device
+
+
 async def _permit(service: ServiceCall) -> None:
     """Allow devices to join this network."""
     application_controller = _get_gateway(service).application_controller
@@ -247,19 +264,15 @@ async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
     manufacturer: int | ZigpyUndefinedType = service.data.get(
         ATTR_MANUFACTURER, ZIGPY_UNDEFINED
     )
-    zha_device = zha_gateway.get_device(ieee)
-    response = None
-    if zha_device is not None:
-        response = await zha_device.write_zigbee_attribute(
-            endpoint_id,
-            cluster_id,
-            attribute,
-            value,
-            cluster_type=cluster_type,
-            manufacturer=manufacturer,
-        )
-    else:
-        raise ValueError(f"Device with IEEE {ieee!s} not found")
+    zha_device = _get_zigbee_device(zha_gateway, ieee)
+    response = await zha_device.write_zigbee_attribute(
+        endpoint_id,
+        cluster_id,
+        attribute,
+        value,
+        cluster_type=cluster_type,
+        manufacturer=manufacturer,
+    )
 
     _LOGGER.debug(
         (
@@ -297,45 +310,42 @@ async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
     manufacturer: int | ZigpyUndefinedType = service.data.get(
         ATTR_MANUFACTURER, ZIGPY_UNDEFINED
     )
-    zha_device = zha_gateway.get_device(ieee)
-    if zha_device is not None:
-        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
-            manufacturer = zha_device.manufacturer_code
+    zha_device = _get_zigbee_device(zha_gateway, ieee)
+    if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+        manufacturer = zha_device.manufacturer_code
 
-        await zha_device.issue_cluster_command(
-            endpoint_id,
-            cluster_id,
-            command,
-            command_type,
-            args,
-            params,
-            cluster_type=cluster_type,
-            manufacturer=manufacturer,
-        )
-        _LOGGER.debug(
-            (
-                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
-                " %s: [%s] %s: [%s] %s: [%s]"
-            ),
-            ATTR_CLUSTER_ID,
-            cluster_id,
-            ATTR_CLUSTER_TYPE,
-            cluster_type,
-            ATTR_ENDPOINT_ID,
-            endpoint_id,
-            ATTR_COMMAND,
-            command,
-            ATTR_COMMAND_TYPE,
-            command_type,
-            ATTR_ARGS,
-            args,
-            ATTR_PARAMS,
-            params,
-            ATTR_MANUFACTURER,
-            manufacturer,
-        )
-    else:
-        raise ValueError(f"Device with IEEE {ieee!s} not found")
+    await zha_device.issue_cluster_command(
+        endpoint_id,
+        cluster_id,
+        command,
+        command_type,
+        args,
+        params,
+        cluster_type=cluster_type,
+        manufacturer=manufacturer,
+    )
+    _LOGGER.debug(
+        (
+            "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
+            " %s: [%s] %s: [%s] %s: [%s]"
+        ),
+        ATTR_CLUSTER_ID,
+        cluster_id,
+        ATTR_CLUSTER_TYPE,
+        cluster_type,
+        ATTR_ENDPOINT_ID,
+        endpoint_id,
+        ATTR_COMMAND,
+        command,
+        ATTR_COMMAND_TYPE,
+        command_type,
+        ATTR_ARGS,
+        args,
+        ATTR_PARAMS,
+        params,
+        ATTR_MANUFACTURER,
+        manufacturer,
+    )
 
 
 async def _issue_zigbee_group_command(service: ServiceCall) -> None:

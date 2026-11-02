@@ -443,12 +443,25 @@ def test_icon() -> None:
     """Test icon validation."""
     schema = probatio.Schema(cv.icon)
 
-    for value in (False, "work"):
+    for value in (False, "work", "mdi:wo rk", "mdi:\twork", "mdi: work"):
         with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     schema("mdi:work")
     schema("custom:prefix")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("mdi:work\n", id="trailing_newline"),
+        pytest.param(" mdi:work", id="leading_space"),
+        pytest.param("\tmdi:work  ", id="tab_and_trailing_spaces"),
+    ],
+)
+def test_icon_strips_surrounding_whitespace(value: str) -> None:
+    """Test icon validation strips surrounding whitespace."""
+    assert cv.icon(value) == "mdi:work"
 
 
 def test_time_period() -> None:
@@ -570,6 +583,21 @@ def test_service() -> None:
             "alias": "turn on kitchen lights",
         },
         {"action": "scene.turn_on", "metadata": {}},
+        {
+            "action": "light.turn_on",
+            "target": {
+                "area_id": "kitchen",
+                "exclude": {"entity_id": "light.pantry"},
+            },
+        },
+        {
+            "action": "light.turn_on",
+            "target": {
+                "area_id": "{{ 'kitchen' }}",
+                "exclude": {"entity_id": "light.pantry"},
+            },
+        },
+        {"action": "light.turn_on", "target": "{{ {'area_id': 'kitchen'} }}"},
     ],
 )
 def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
@@ -612,6 +640,10 @@ def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
         {
             "action": "homeassistant.turn_on",
             "data_template": {"brightness": "{{ no_end"},
+        },
+        {
+            "action": "light.turn_on",
+            "target": {"exclude": {"entity_id": "light.pantry"}},
         },
     ],
 )
@@ -679,6 +711,13 @@ def test_entity_service_schema_exclude() -> None:
         {"area_id": "kitchen", "exclude": {"entity_id": "none"}},
         {"area_id": "kitchen", "exclude": {"unknown": "pantry"}},
         {"area_id": "kitchen", "exclude": "light.kitchen"},
+        # Unlike the target, the exclude block only accepts strict entity IDs
+        {"area_id": "kitchen", "exclude": {"entity_id": "light.kitchen, light.pantry"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "Light.Kitchen"}},
+        {
+            "area_id": "kitchen",
+            "exclude": {"entity_id": "0123456789abcdef0123456789abcdef"},
+        },
     )
     for value in invalid:
         with pytest.raises(probatio.MultipleInvalid):
@@ -688,7 +727,7 @@ def test_entity_service_schema_exclude() -> None:
         {
             "entity_id": "all",
             "exclude": {
-                "entity_id": "light.kitchen, light.pantry",
+                "entity_id": ["light.kitchen", "light.pantry"],
                 "device_id": "a_device",
                 "area_id": "kitchen",
                 "floor_id": "ground_floor",
@@ -725,9 +764,49 @@ def test_target_fields_exclude(schema: probatio.Schema) -> None:
     for value in (
         {"area_id": "kitchen", "exclude": {"exclude": {"area_id": "pantry"}}},
         {"area_id": "kitchen", "exclude": {"entity_id": "all"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "light.kitchen, light.pantry"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "Light.Kitchen"}},
+        {
+            "area_id": "kitchen",
+            "exclude": {"entity_id": "0123456789abcdef0123456789abcdef"},
+        },
     ):
         with pytest.raises(probatio.MultipleInvalid):
             schema(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param({"area_id": ["kitchen"]}, id="no_exclude"),
+        pytest.param(
+            {"area_id": ["kitchen"], "exclude": {"label_id": ["christmas"]}},
+            id="target_and_exclude",
+        ),
+    ],
+)
+def test_exclude_requires_target_valid(value: dict[str, Any]) -> None:
+    """Test targets which are accepted by exclude_requires_target."""
+    assert cv.exclude_requires_target(value) == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param({"exclude": {"label_id": ["christmas"]}}, id="exclude_only"),
+        pytest.param(
+            {"entity_id": [], "exclude": {"label_id": ["christmas"]}},
+            id="empty_target_and_exclude",
+        ),
+    ],
+)
+def test_exclude_requires_target_invalid(value: dict[str, Any]) -> None:
+    """Test a target consisting of only an exclude block is rejected."""
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        cv.exclude_requires_target(value)
 
 
 def test_entity_service_schema_with_metadata() -> None:
@@ -839,6 +918,8 @@ def test_x10_address() -> None:
         schema("q55")
     with pytest.raises(probatio.Invalid):
         schema("garbage_addr")
+    with pytest.raises(probatio.Invalid):
+        schema("a1\n")
 
     schema("a1")
     schema("C11")

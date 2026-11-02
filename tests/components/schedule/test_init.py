@@ -15,7 +15,6 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.schedule.const import (
-    ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
     CONF_DATA,
     CONF_FRIDAY,
@@ -28,20 +27,18 @@ from homeassistant.components.schedule.const import (
     CONF_TUESDAY,
     CONF_WEDNESDAY,
     DOMAIN,
+    ScheduleEntityCapabilityAttribute,
+    ScheduleEntityStateAttribute,
 )
 from homeassistant.components.schedule.services import ScheduleService
 from homeassistant.const import (
-    ATTR_EDITABLE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_NAME,
     CONF_ENTITY_ID,
     CONF_ICON,
     CONF_NAME,
     EVENT_STATE_CHANGED,
-    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -141,23 +138,32 @@ async def test_events_one_day(
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T07:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T07:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T11:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T11:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T07:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-11T07:00:00-07:00"
+    )
 
 
 async def test_adjacent_cross_midnight(
@@ -186,33 +192,45 @@ async def test_adjacent_cross_midnight(
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T23:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T23:00:00-07:00"
+    )
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-05T00:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-05T00:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-05T01:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-05T01:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T23:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-11T23:00:00-07:00"
+    )
 
     await hass.async_block_till_done()
     assert len(state_changes) == 3
@@ -249,33 +267,45 @@ async def test_adjacent_within_day(
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T22:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T22:00:00-07:00"
+    )
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T22:30:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T22:30:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T23:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T23:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T22:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-11T22:00:00-07:00"
+    )
 
     await hass.async_block_till_done()
     assert len(state_changes) == 3
@@ -312,41 +342,56 @@ async def test_non_adjacent_within_day(
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T22:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T22:00:00-07:00"
+    )
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T22:15:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T22:15:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T22:30:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T22:30:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T23:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T23:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T22:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-11T22:00:00-07:00"
+    )
 
     await hass.async_block_till_done()
     assert len(state_changes) == 4
@@ -389,23 +434,32 @@ async def test_to_midnight(
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T00:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-04T00:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-05T00:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-05T00:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T00:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-09-11T00:00:00-07:00"
+    )
 
 
 @pytest.mark.parametrize(
@@ -457,7 +511,10 @@ async def test_dst_fall_back_next_event(
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == expected_state
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == expected_next_event
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == expected_next_event
+    )
 
 
 async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
@@ -470,7 +527,7 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            ScheduleService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -490,18 +547,24 @@ async def test_load(
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
-    assert state.attributes[ATTR_EDITABLE] is True
-    assert state.attributes[ATTR_ICON] == "mdi:party-popper"
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
+    assert state.attributes[EntityStateAttribute.FRIENDLY_NAME] == "from storage"
+    assert state.attributes[ScheduleEntityCapabilityAttribute.EDITABLE] is True
+    assert state.attributes[EntityStateAttribute.ICON] == "mdi:party-popper"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-08-12T17:00:00-07:00"
+    )
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "from yaml"
-    assert state.attributes[ATTR_EDITABLE] is False
-    assert state.attributes[ATTR_ICON] == "mdi:party-pooper"
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-10T23:59:59-07:00"
+    assert state.attributes[EntityStateAttribute.FRIENDLY_NAME] == "from yaml"
+    assert state.attributes[ScheduleEntityCapabilityAttribute.EDITABLE] is False
+    assert state.attributes[EntityStateAttribute.ICON] == "mdi:party-pooper"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-08-10T23:59:59-07:00"
+    )
 
 
 async def test_schedule_updates(
@@ -516,15 +579,21 @@ async def test_schedule_updates(
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-08-12T17:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T23:59:59-07:00"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-08-12T23:59:59-07:00"
+    )
 
 
 async def test_ws_list(
@@ -544,7 +613,7 @@ async def test_ws_list(
     result = {item["id"]: item for item in resp["result"]}
 
     assert len(result) == 1
-    assert result["from_storage"][ATTR_NAME] == "from storage"
+    assert result["from_storage"][CONF_NAME] == "from storage"
     assert result["from_storage"][CONF_FRIDAY] == [
         {CONF_FROM: "17:00:00", CONF_TO: "23:59:59", CONF_DATA: {"party_level": "epic"}}
     ]
@@ -624,9 +693,12 @@ async def test_update(
     state = hass.states.get("schedule.from_storage")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
-    assert state.attributes[ATTR_ICON] == "mdi:party-popper"
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
+    assert state.attributes[EntityStateAttribute.FRIENDLY_NAME] == "from storage"
+    assert state.attributes[EntityStateAttribute.ICON] == "mdi:party-popper"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-08-12T17:00:00-07:00"
+    )
     assert (
         entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
     )
@@ -655,9 +727,12 @@ async def test_update(
     state = hass.states.get("schedule.from_storage")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Party pooper"
-    assert state.attributes.get(ATTR_ICON) == icon_dict.get(CONF_ICON)
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == next_event
+    assert state.attributes[EntityStateAttribute.FRIENDLY_NAME] == "Party pooper"
+    assert state.attributes.get(EntityStateAttribute.ICON) == icon_dict.get(CONF_ICON)
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == next_event
+    )
 
     await client.send_json({"id": 2, "type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
@@ -715,18 +790,24 @@ async def test_ws_create(
     state = hass.states.get("schedule.party_mode")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Party mode"
-    assert state.attributes[ATTR_EDITABLE] is True
-    assert state.attributes[ATTR_ICON] == "mdi:party-popper"
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-15T12:00:00-07:00"
+    assert state.attributes[EntityStateAttribute.FRIENDLY_NAME] == "Party mode"
+    assert state.attributes[ScheduleEntityCapabilityAttribute.EDITABLE] is True
+    assert state.attributes[EntityStateAttribute.ICON] == "mdi:party-popper"
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == "2022-08-15T12:00:00-07:00"
+    )
 
-    freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
+    freezer.move_to(state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT])
     async_fire_time_changed(hass)
 
     state = hass.states.get("schedule.party_mode")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == next_event
+    assert (
+        state.attributes[ScheduleEntityStateAttribute.NEXT_EVENT].isoformat()
+        == next_event
+    )
 
     await client.send_json({"id": 2, "type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
