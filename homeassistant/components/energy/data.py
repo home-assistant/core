@@ -265,6 +265,10 @@ class DeviceConsumption(TypedDict):
     # that includes this device's consumption in its total
     included_in_stat: NotRequired[str]
 
+    # An optional custom name for display in energy graphs for the part
+    # of this device's consumption not covered by its included devices
+    untracked_name: NotRequired[str]
+
 
 class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
@@ -665,6 +669,7 @@ DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
         probatio.Optional("stat_rate"): str,
         probatio.Optional("name"): str,
         probatio.Optional("included_in_stat"): str,
+        probatio.Optional("untracked_name"): str,
     }
 )
 

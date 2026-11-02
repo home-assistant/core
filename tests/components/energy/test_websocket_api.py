@@ -154,11 +154,15 @@ async def test_save_preferences(
         ],
         "device_consumption": [
             {
+                "stat_consumption": "sensor.some_other_device",
+                "untracked_name": "Overhead",
+            },
+            {
                 "stat_consumption": "some_device_usage",
                 "name": "My Device",
                 "included_in_stat": "sensor.some_other_device",
                 "stat_rate": "sensor.some_device_power",
-            }
+            },
         ],
         "device_consumption_water": [
             {
