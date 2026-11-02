@@ -3,8 +3,8 @@
 from aiotemescal import TemescalClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -16,6 +16,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LGSoundbarConfigEntry) -
     client = TemescalClient(entry.data[CONF_HOST], entry.data[CONF_PORT])
     entry.runtime_data = client
     entry.async_on_unload(client.stop)
+
+    # Entries are not unloaded when Home Assistant stops
+    async def _async_stop(event: Event) -> None:
+        await client.stop()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

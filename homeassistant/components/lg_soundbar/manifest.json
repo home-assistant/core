@@ -9,7 +9,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aiotemescal"],
-  "requirements": ["aiotemescal==0.2.1"],
+  "requirements": ["aiotemescal==0.3.0"],
   "zeroconf": [
     {
       "name": "lg_smart_audio-*",
