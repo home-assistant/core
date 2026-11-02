@@ -74,14 +74,6 @@ class EvoEntity(CoordinatorEntity[EvoLocationCoordinator]):
 
         self._device_state_attrs: dict[str, Any] = {}
 
-    @override
-    async def async_update(self) -> None:
-        """Update the entity, including the high-precision temperatures."""
-        if not self.enabled:
-            return
-        await self.coordinator.account.async_request_refresh()
-        await super().async_update()
-
     @property
     @override
     def extra_state_attributes(self) -> Mapping[str, Any]:

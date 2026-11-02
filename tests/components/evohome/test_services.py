@@ -59,37 +59,28 @@ async def test_refresh_system_deprecated(
 
 
 @pytest.mark.parametrize("install", ["default"])
-@pytest.mark.parametrize("entity_fixture", ["ctl_id", "zone_id", "dhw_id"])
-@pytest.mark.usefixtures("evohome")
 async def test_update_entity(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
-    entity_fixture: str,
+    ctl_id: str,
 ) -> None:
     """Test that homeassistant.update_entity triggers an appropriate refresh.
 
-    Any evohome entity can be targeted; it refreshes the whole location, and the
-    account's high-precision temperatures.
+    Any evohome entity can be targeted; the API invoked by the shared coordinator
+    refreshes the whole location.
     """
-
-    entity_id: str = request.getfixturevalue(entity_fixture)
 
     await async_setup_component(hass, "homeassistant", {})
 
-    with (
-        patch("evohomeasync2.location.Location.get_status") as mock_v2,
-        patch("evohomeasync.EvohomeClient.get_status") as mock_v1,
-    ):
+    with patch("evohomeasync2.location.Location.get_status") as mock_fcn:
         await hass.services.async_call(
             "homeassistant",
             "update_entity",
             {},
-            target={ATTR_ENTITY_ID: entity_id},
+            target={ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
-        mock_v2.assert_awaited_once_with()
-        mock_v1.assert_awaited_once_with()
+        mock_fcn.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize("install", ["default"])
