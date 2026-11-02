@@ -225,7 +225,8 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         """Register for data, unless a disconnect cancels it first."""
         # The response arrives through the listener, so once it stops this
         # would otherwise wait for the connector's timeout
-        self._register_task = self.hass.async_create_task(
+        self._register_task = self.config_entry.async_create_task(
+            self.hass,
             self.websocket_client.register_data_listener(
                 RegisterDataListener(modules=[*MODULES, Module.AUDIO])
             ),
