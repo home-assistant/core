@@ -1,0 +1,12 @@
+{
+  "domain": "nad_infrared",
+  "name": "NAD Infrared",
+  "categories": ["media_entertainment.speakers_audio"],
+  "codeowners": ["@rrooggiieerr"],
+  "config_flow": true,
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/nad_infrared",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "silver"
+}
