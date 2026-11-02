@@ -14,7 +14,7 @@ failure modes or corner cases like how out of order packets are handled.
 """
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 import fractions
 import io
 import logging
@@ -303,6 +303,7 @@ def run_worker(
     stream: Stream,
     stream_source: str,
     stream_settings: StreamSettings | None = None,
+    quit_event: threading.Event | None = None,
 ) -> None:
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs, stream._diagnostics)
@@ -312,7 +313,7 @@ def run_worker(
         stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
         stream_state,
         KeyFrameConverter(hass, stream_settings, dynamic_stream_settings()),
-        threading.Event(),
+        quit_event or threading.Event(),
     )
 
 
@@ -506,6 +507,36 @@ async def test_discard_old_packets(hass: HomeAssistant) -> None:
     assert all(s.duration == SEGMENT_DURATION for s in complete_segments)
     assert len(decoded_stream.video_packets) == OUT_OF_ORDER_PACKET_INDEX
     assert len(decoded_stream.audio_packets) == 0
+
+
+async def test_stop_while_discarding_old_packets(hass: HomeAssistant) -> None:
+    """Test the worker stops while it is discarding out of order packets."""
+    packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    # Packets after this one are considered out of order
+    packets[OUT_OF_ORDER_PACKET_INDEX - 1].dts = round(
+        TEST_SEQUENCE_LENGTH / VIDEO_FRAME_RATE / VIDEO_TIME_BASE
+    )
+    quit_event = threading.Event()
+
+    def stop_before_old_packets() -> Iterator:
+        yield from packets[:OUT_OF_ORDER_PACKET_INDEX]
+        quit_event.set()
+        yield from packets[OUT_OF_ORDER_PACKET_INDEX:]
+
+    source = stop_before_old_packets()
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    py_av = MockPyAv()
+    py_av.container.packets = source
+    with patch("av.open", new=py_av.open):
+        run_worker(hass, stream, STREAM_SOURCE, quit_event=quit_event)
+    # Only the first out of order packet was read after the stop request
+    assert next(source) is packets[OUT_OF_ORDER_PACKET_INDEX + 1]
 
 
 async def test_packet_overflow(hass: HomeAssistant) -> None:

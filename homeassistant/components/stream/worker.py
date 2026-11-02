@@ -673,9 +673,17 @@ def stream_worker(
         int(1 / audio_stream.time_base) if audio_stream else 1,
     )
     unvalidated_packets = PeekIterator(container.demux((video_stream, audio_stream)))
-    container_packets = PeekIterator(
-        filter(dts_validator.is_valid, unvalidated_packets)
-    )
+
+    def valid_packets() -> Generator[av.Packet]:
+        """Yield packets with a valid timestamp until a stop is requested."""
+        for packet in unvalidated_packets:
+            if dts_validator.is_valid(packet):
+                yield packet
+            # A source may keep sending packets whose timestamps never become valid
+            elif quit_event.is_set():
+                return
+
+    container_packets = PeekIterator(valid_packets())
 
     def is_video(packet: av.Packet) -> Any:
         """Return true if the packet is for the video stream."""
@@ -746,6 +754,8 @@ def stream_worker(
             except StreamWorkerError:
                 raise
             except StopIteration as ex:
+                if quit_event.is_set():
+                    break
                 raise StreamEndedError("Stream ended; no additional packets") from ex
             except av.FFmpegError as ex:
                 raise StreamWorkerError(
