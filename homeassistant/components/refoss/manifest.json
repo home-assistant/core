@@ -4,6 +4,7 @@
   "categories": ["plugs_switches", "energy.meters_monitoring"],
   "codeowners": ["@ashionky"],
   "config_flow": true,
+  "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/refoss",
   "integration_type": "hub",
   "iot_class": "local_polling",
