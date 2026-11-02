@@ -45,7 +45,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
@@ -611,21 +611,21 @@ PLATFORM_SCHEMA = probatio.All(
 class StatisticsSensorExtraStoredData(SensorExtraStoredData):
     """Object to hold extra stored data."""
 
+    source: str
     states: list[float | bool]
     ages: list[float]
     source_value_valid: bool | None
-    device_class: SensorDeviceClass | None
-    state_class: SensorStateClass | None
+    source_attributes: dict[str, Any] | None
 
     @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the statistics sensor data."""
         data = super().as_dict()
+        data["source"] = self.source
         data["states"] = self.states
         data["ages"] = self.ages
         data["source_value_valid"] = self.source_value_valid
-        data["device_class"] = self.device_class
-        data["state_class"] = self.state_class
+        data["source_attributes"] = self.source_attributes
         return data
 
     @classmethod
@@ -635,24 +635,27 @@ class StatisticsSensorExtraStoredData(SensorExtraStoredData):
         if (extra := SensorExtraStoredData.from_dict(restored)) is None:
             return None
         try:
+            source = restored["source"]
             states = restored["states"]
             ages = restored["ages"]
             source_value_valid = restored["source_value_valid"]
-            device_class = restored["device_class"]
-            state_class = restored["state_class"]
+            source_attributes = restored["source_attributes"]
         except KeyError:
             return None
-        if len(states) != len(ages):
+        # Non-finite samples are stored as null
+        if len(states) != len(ages) or not all(
+            isinstance(value, (int, float)) for value in (*states, *ages)
+        ):
             return None
 
         return cls(
             extra.native_value,
             extra.native_unit_of_measurement,
+            source,
             states,
             ages,
             source_value_valid,
-            try_parse_enum(SensorDeviceClass, device_class),
-            try_parse_enum(SensorStateClass, state_class),
+            source_attributes,
         )
 
 
@@ -764,6 +767,7 @@ class StatisticsSensor(RestoreSensor):
             float | int | datetime | None,
         ] = _callable_characteristic_fn(state_characteristic, self.is_binary)
 
+        self._source_attributes: dict[str, Any] | None = None
         self._update_listener: CALLBACK_TYPE | None = None
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
 
@@ -906,27 +910,36 @@ class StatisticsSensor(RestoreSensor):
             )
             return
 
-        self._calculate_state_attributes(new_state)
+        self._calculate_state_attributes(new_state.attributes)
 
-    def _calculate_state_attributes(self, new_state: State) -> None:
+    def _calculate_state_attributes(self, source_attributes: Mapping[str, Any]) -> None:
         """Set the entity state attributes."""
-
+        self._source_attributes = {
+            key: source_attributes[key]
+            for key in (
+                EntityStateAttribute.UNIT_OF_MEASUREMENT,
+                EntityStateAttribute.DEVICE_CLASS,
+            )
+            if key in source_attributes
+        }
         self._attr_native_unit_of_measurement = self._calculate_unit_of_measurement(
-            new_state
+            source_attributes
         )
         self._attr_device_class = self._calculate_device_class(
-            new_state, self._attr_native_unit_of_measurement
+            source_attributes, self._attr_native_unit_of_measurement
         )
-        self._attr_state_class = self._calculate_state_class(new_state)
+        self._attr_state_class = self._calculate_state_class()
 
-    def _calculate_unit_of_measurement(self, new_state: State) -> str | None:
+    def _calculate_unit_of_measurement(
+        self, source_attributes: Mapping[str, Any]
+    ) -> str | None:
         """Return the calculated unit of measurement.
 
         The unit of measurement is that of the source sensor, adjusted based on the
         state characteristics.
         """
 
-        base_unit: str | None = new_state.attributes.get(
+        base_unit: str | None = source_attributes.get(
             EntityStateAttribute.UNIT_OF_MEASUREMENT
         )
         unit: str | None = None
@@ -953,7 +966,7 @@ class StatisticsSensor(RestoreSensor):
         return unit
 
     def _calculate_device_class(
-        self, new_state: State, unit: str | None
+        self, source_attributes: Mapping[str, Any], unit: str | None
     ) -> SensorDeviceClass | None:
         """Return the calculated device class.
 
@@ -967,7 +980,7 @@ class StatisticsSensor(RestoreSensor):
         if stat_type in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
         if stat_type in STATS_NUMERIC_RETAIN_UNIT:
-            device_class = new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+            device_class = source_attributes.get(EntityStateAttribute.DEVICE_CLASS)
             if device_class is None:
                 return None
             if (
@@ -995,7 +1008,7 @@ class StatisticsSensor(RestoreSensor):
 
         return device_class
 
-    def _calculate_state_class(self, new_state: State) -> SensorStateClass | None:
+    def _calculate_state_class(self) -> SensorStateClass | None:
         """Return the calculated state class.
 
         Will be None if the characteristics is not numerical, otherwise
@@ -1172,13 +1185,34 @@ class StatisticsSensor(RestoreSensor):
             self._fetch_states_from_database
         ):
             self._add_state_to_queue(state, state.last_reported_timestamp)
-            self._calculate_state_attributes(state)
+            self._calculate_state_attributes(state.attributes)
         _LOGGER.debug("%s: initializing from database completed", self.entity_id)
 
+    @callback
+    def _async_source_identity(self) -> str:
+        """Return the source entity registry id, or the entity id if not registered."""
+        if entry := er.async_get(self.hass).async_get(self._source_entity_id):
+            return entry.id
+        return self._source_entity_id
+
     async def _async_initialize_from_restore_state(self) -> bool:
-        """Initialize the buffer from the stored data."""
+        """Initialize the buffer from the stored data.
+
+        Return False if there is no stored data.
+        """
         if (last_sensor_data := await self.async_get_last_sensor_data()) is None:
             return False
+        # The registry id is kept when the source entity is renamed
+        if last_sensor_data.source not in (
+            self._source_entity_id,
+            self._async_source_identity(),
+        ):
+            _LOGGER.debug(
+                "%s: source changed from %s, starting empty",
+                self.entity_id,
+                last_sensor_data.source,
+            )
+            return True
         # The deques keep only the newest samples if the buffer size was reduced
         self.states.extend(last_sensor_data.states)
         self.ages.extend(last_sensor_data.ages)
@@ -1187,11 +1221,9 @@ class StatisticsSensor(RestoreSensor):
                 StatisticsEntityStateAttribute.SOURCE_VALUE_VALID
             ] = last_sensor_data.source_value_valid
         self._attr_available = last_sensor_data.source_value_valid is not None
-        self._attr_native_unit_of_measurement = (
-            last_sensor_data.native_unit_of_measurement
-        )
-        self._attr_device_class = last_sensor_data.device_class
-        self._attr_state_class = last_sensor_data.state_class
+        # Calculated again, since the characteristic may have changed
+        if last_sensor_data.source_attributes is not None:
+            self._calculate_state_attributes(last_sensor_data.source_attributes)
         _LOGGER.debug(
             "%s: restored %d samples from stored data",
             self.entity_id,
@@ -1244,13 +1276,13 @@ class StatisticsSensor(RestoreSensor):
         return StatisticsSensorExtraStoredData(
             self.native_value,
             self.native_unit_of_measurement,
+            self._async_source_identity(),
             list(self.states),
             list(self.ages),
             self._attr_extra_state_attributes.get(
                 StatisticsEntityStateAttribute.SOURCE_VALUE_VALID
             ),
-            self.device_class,
-            self.state_class,
+            self._source_attributes,
         )
 
     @override

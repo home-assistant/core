@@ -2590,11 +2590,14 @@ def _stored_data(**overrides: Any) -> dict[str, Any]:
     return {
         "native_value": 15.0,
         "native_unit_of_measurement": UnitOfTemperature.CELSIUS,
+        "source": "sensor.test_monitored",
         "states": [10.0, 20.0],
         "ages": [now - 20, now - 10],
         "source_value_valid": True,
-        "device_class": SensorDeviceClass.TEMPERATURE,
-        "state_class": SensorStateClass.MEASUREMENT,
+        "source_attributes": {
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+        },
     } | overrides
 
 
@@ -2638,8 +2641,34 @@ async def test_new_sensor_not_primed_from_database(
     assert state.attributes[StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO] == 0.05
 
 
+@pytest.mark.parametrize(
+    ("state_characteristic", "expected_state", "expected_attributes"),
+    [
+        pytest.param(
+            "mean",
+            "15.0",
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+                ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            },
+            id="mean",
+        ),
+        # The attributes are calculated for the current characteristic
+        pytest.param(
+            "count",
+            "2",
+            {ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT},
+            id="characteristic_changed",
+        ),
+    ],
+)
 async def test_restore_from_stored_data(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    state_characteristic: str,
+    expected_state: str,
+    expected_attributes: dict[str, Any],
 ) -> None:
     """Test the buffer is restored from stored data instead of the recorder."""
     await _async_record_source_history(hass)
@@ -2648,21 +2677,90 @@ async def test_restore_from_stored_data(
         hass, [(State("sensor.test", "15.0"), _stored_data())]
     )
 
-    assert await async_setup_component(hass, "sensor", STATISTICS_YAML_CONFIG)
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": state_characteristic,
+                    "sampling_size": 20,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == expected_state
+    assert (
+        state.attributes
+        == {
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO: 0.1,
+            StatisticsEntityStateAttribute.SOURCE_VALUE_VALID: True,
+            "friendly_name": "test",
+            "icon": "mdi:calculator",
+        }
+        | expected_attributes
+    )
+
+
+async def test_restore_source_renamed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the buffer is restored after the source entity was renamed."""
+    source = entity_registry.async_get_or_create(
+        "sensor", "test", "unique", suggested_object_id="test_monitored"
+    )
+    mock_restore_cache_with_extra_data(
+        hass, [(State("sensor.test", "15.0"), _stored_data(source=source.id))]
+    )
+    entity_registry.async_update_entity(
+        source.entity_id, new_entity_id="sensor.test_renamed"
+    )
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_renamed",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                },
+            ]
+        },
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test")
     assert state is not None
     assert state.state == "15.0"
-    assert state.attributes == {
-        StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO: 0.1,
-        StatisticsEntityStateAttribute.SOURCE_VALUE_VALID: True,
-        ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-        ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
-        ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
-        "friendly_name": "test",
-        "icon": "mdi:calculator",
-    }
+
+
+async def test_restore_source_changed(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test stored data of another source is not used and the sensor starts empty."""
+    await _async_record_source_history(hass)
+    await _async_record_statistics_sensor_history(hass)
+    mock_restore_cache_with_extra_data(
+        hass, [(State("sensor.test", "15.0"), _stored_data(source="sensor.other"))]
+    )
+
+    assert await async_setup_component(hass, "sensor", STATISTICS_YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -2673,6 +2771,8 @@ async def test_restore_from_stored_data(
             id="missing_states",
         ),
         pytest.param(_stored_data(states=[10.0]), id="length_mismatch"),
+        # NaN and infinity are stored as null
+        pytest.param(_stored_data(states=[10.0, None]), id="non_finite_sample"),
     ],
 )
 async def test_restore_invalid_stored_data(
