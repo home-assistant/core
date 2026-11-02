@@ -373,6 +373,12 @@ class AsusWrtRouter:
         self._on_close.clear()
 
     @callback
+    def async_forget_device(self, mac: str) -> None:
+        """Stop tracking a client until it connects again."""
+        if self._devices.pop(mac, None) is not None:
+            async_dispatcher_send(self.hass, self.signal_device_removed, mac)
+
+    @callback
     def async_on_close(self, func: CALLBACK_TYPE) -> None:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
@@ -418,6 +424,11 @@ class AsusWrtRouter:
     def signal_device_update(self) -> str:
         """Event specific per AsusWrt entry to signal updates in devices."""
         return f"{DOMAIN}-device-update"
+
+    @property
+    def signal_device_removed(self) -> str:
+        """Event specific per AsusWrt entry to signal a removed device."""
+        return f"{DOMAIN}-device-removed-{self._entry.entry_id}"
 
     @property
     def host(self) -> str:
