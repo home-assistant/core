@@ -448,6 +448,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_is_volume_muted = self._device.is_muted
         self._update_equalizer_from_sdk_cache()
         self._attr_source_list = list(self._device.supported_input_modes) or None
+        source = self._device.local_input_mode
+        source_changed = self._attr_source != source
+        self._attr_source = source
 
         # Determine current group role (leader/follower/standalone)
         group_snapshot = self._get_group_snapshot()
@@ -464,11 +467,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_state = SDK_TO_HA_STATE.get(
                 metadata_device.playing_status, MediaPlayerState.IDLE
             )
-
-        source_changed = False
-        if metadata_device.play_mode is not None:
-            source_changed = self._attr_source != metadata_device.play_mode
-            self._attr_source = metadata_device.play_mode
 
         loop_state = metadata_device.loop_state
         self._attr_repeat = RepeatMode(loop_state.repeat)
@@ -985,9 +983,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input mode."""
-        await self._get_command_target_device("select_source").async_set_play_mode(
-            source
-        )
+        await self._device.async_set_play_mode(source)
 
     @browse_media_exception_wrap
     @override

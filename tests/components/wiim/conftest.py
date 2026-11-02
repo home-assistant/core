@@ -93,6 +93,7 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         mock.current_media = None
         mock.current_track_duration = 0
         mock.play_mode = "Network"
+        mock.local_input_mode = "Network"
         mock.equalizer_mode = None
         mock.supported_equalizer_modes = ()
         mock.async_refresh_equalizer = AsyncMock()

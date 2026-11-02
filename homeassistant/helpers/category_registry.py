@@ -15,7 +15,7 @@ from homeassistant.util.ulid import ulid_now
 from .registry import BaseRegistry
 from .singleton import singleton
 from .storage import Store
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 DATA_REGISTRY: HassKey[CategoryRegistry] = HassKey("category_registry")
 EVENT_CATEGORY_REGISTRY_UPDATED: EventType[EventCategoryRegistryUpdatedData] = (
@@ -172,17 +172,17 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         *,
         scope: str,
         category_id: str,
-        icon: str | UndefinedType | None = UNDEFINED,
-        name: str | UndefinedType = UNDEFINED,
+        icon: str | Undefined | None = Undefined,
+        name: str | Undefined = Undefined,
     ) -> CategoryEntry:
         """Update name or icon of the category."""
         old = self.categories[scope][category_id]
         changes: dict[str, Any] = {}
 
-        if icon is not UNDEFINED and icon != old.icon:
+        if icon is not Undefined and icon != old.icon:
             changes["icon"] = icon
 
-        if name is not UNDEFINED and name != old.name:
+        if name is not Undefined and name != old.name:
             changes["name"] = name
             self._async_ensure_name_is_available(scope, name, category_id)
 

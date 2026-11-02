@@ -1,4 +1,126 @@
 # serializer version: 1
+# name: test_meter_channel_child_devices[cz_dhto3y4uachr1wll][number.meter_channel_1_power_warning_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 200.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 100.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'llw1rhcau4y3othdzc_channel_1')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.meter_channel_1_power_warning_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power warning threshold',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power warning threshold',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_warning_threshold',
+    'unique_id': 'tuya.llw1rhcau4y3othdzcwarn_power1',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_meter_channel_child_devices[cz_dhto3y4uachr1wll][number.meter_channel_1_power_warning_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Power warning threshold',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 200.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 100.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.meter_channel_1_power_warning_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_meter_channel_child_devices[cz_dhto3y4uachr1wll][number.meter_channel_2_power_warning_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 200.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 100.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'llw1rhcau4y3othdzc_channel_2')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.meter_channel_2_power_warning_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power warning threshold',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power warning threshold',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_warning_threshold',
+    'unique_id': 'tuya.llw1rhcau4y3othdzcwarn_power2',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_meter_channel_child_devices[cz_dhto3y4uachr1wll][number.meter_channel_2_power_warning_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Power warning threshold',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 200.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 100.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.meter_channel_2_power_warning_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.aqi_alarm_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

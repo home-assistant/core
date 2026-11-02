@@ -2062,6 +2062,103 @@ async def test_config_schedule_logic(
 
 @pytest.mark.parametrize(
     (
+        "last_completed_automatic_backup",
+        "now",
+        "before_scheduled_time",
+        "scheduled_backup_time",
+    ),
+    [
+        pytest.param(
+            "2024-10-26T03:45:00+02:00",
+            "2024-10-26T12:00:00+02:00",
+            "2024-10-27T03:44:00+01:00",
+            "2024-10-27T03:45:00+01:00",
+            id="summer_to_winter_time",
+        ),
+        pytest.param(
+            "2024-03-30T03:45:00+01:00",
+            "2024-03-30T12:00:00+01:00",
+            "2024-03-31T03:44:00+02:00",
+            "2024-03-31T03:45:00+02:00",
+            id="winter_to_summer_time",
+        ),
+    ],
+)
+async def test_config_schedule_logic_dst_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    create_backup: AsyncMock,
+    last_completed_automatic_backup: str,
+    now: str,
+    before_scheduled_time: str,
+    scheduled_backup_time: str,
+) -> None:
+    """Test the schedule keeps its local time when DST changes.
+
+    The last completed backup is stored with the UTC offset in effect when it
+    was made, and must not pin later backups to that offset.
+    """
+    created_backup: MagicMock = create_backup.return_value[1].result().backup
+    created_backup.protected = True
+
+    client = await hass_ws_client(hass)
+    storage_data = {
+        "backups": [],
+        "config": {
+            "agents": {},
+            "automatic_backups_configured": True,
+            "create_backup": {
+                "agent_ids": ["test.test-agent"],
+                "include_addons": [],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": [],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "retention": {"copies": None, "days": None},
+            "last_attempted_automatic_backup": last_completed_automatic_backup,
+            "last_completed_automatic_backup": last_completed_automatic_backup,
+            "last_completed_automatic_backup_size": None,
+            "schedule": {
+                "days": [],
+                "recurrence": "daily",
+                "time": "03:45:00",
+            },
+        },
+    }
+    hass_storage[DOMAIN] = {
+        "data": storage_data,
+        "key": DOMAIN,
+        "version": store.STORAGE_VERSION,
+        "minor_version": store.STORAGE_VERSION_MINOR,
+    }
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to(now)
+
+    await setup_backup_integration(hass, remote_agents=["test.test-agent"])
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/info"})
+    result = await client.receive_json()
+    assert result["result"]["next_automatic_backup"] == scheduled_backup_time
+
+    freezer.move_to(before_scheduled_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert create_backup.call_count == 0
+
+    freezer.move_to(scheduled_backup_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == BACKUP_CALL
+
+
+@pytest.mark.parametrize(
+    (
         "command",
         "backups",
         "get_backups_agent_errors",

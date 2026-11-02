@@ -33,8 +33,10 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
     CONF_MIN_TEMP,
+    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_TEMP_STEP,
     DEFAULT_TOLERANCE,
     DOMAIN,
 )
@@ -85,6 +87,18 @@ OPTIONS_SCHEMA = {
     probatio.Optional(CONF_MAX_TEMP): selector.NumberSelector(
         selector.NumberSelectorConfig(
             mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
+        )
+    ),
+    probatio.Optional(CONF_PRECISION): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=["0.1", "0.5", "1"],
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    ),
+    probatio.Optional(CONF_TEMP_STEP): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=["0.1", "0.5", "1"],
+            mode=selector.SelectSelectorMode.DROPDOWN,
         )
     ),
 }

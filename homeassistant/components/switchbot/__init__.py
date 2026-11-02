@@ -227,7 +227,10 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.WEATHER_STATION.value: [Platform.SENSOR],
-    SupportedModels.UNIVERSAL_REMOTE.value: [Platform.SENSOR],
+    SupportedModels.UNIVERSAL_REMOTE.value: [
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
     SupportedModels.CANDLE_WARMER_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBIC_NEON_ROPE_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBIC_NEON_WIRE_ROPE_LIGHT.value: [
