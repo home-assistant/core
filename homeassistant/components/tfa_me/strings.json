@@ -40,9 +40,6 @@
       "rssi": {
         "name": "RSSI"
       },
-      "temperature": {
-        "name": "Temperature"
-      },
       "temperature_probe": {
         "name": "Temperature probe"
       },
