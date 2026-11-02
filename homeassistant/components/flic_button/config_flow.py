@@ -277,33 +277,28 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovery_info.address,
                 self._device_type.value,
             )
-            # Create client with detected device type
-            if not self._client:
-                _LOGGER.debug(
-                    "Creating FlicClient for device %s (type=%s)",
-                    self._discovery_info.device,
-                    self._device_type.value,
-                )
-                self._client = FlicClient(
-                    address=self._discovery_info.device.address,
-                    ble_device=self._discovery_info.device,
-                    device_type=self._device_type,
-                )
+            _LOGGER.debug(
+                "Creating FlicClient for device %s (type=%s)",
+                self._discovery_info.device,
+                self._device_type.value,
+            )
+            # async_remove clears self._client, so this step uses its own reference
+            client = self._client = FlicClient(
+                address=self._discovery_info.device.address,
+                ble_device=self._discovery_info.device,
+                device_type=self._device_type,
+            )
 
+            pairing = None
             try:
-                await self._client.connect()
-                (
-                    pairing_id,
-                    pairing_key,
-                    serial_number,
-                    _,
-                    sig_bits,
-                    _,
-                    _,
-                ) = await asyncio.wait_for(
-                    self._client.full_verify_pairing(),
-                    timeout=PAIRING_TIMEOUT,
-                )
+                await client.connect()
+                # Don't pair the button if the flow was aborted while connecting,
+                # as the result of an aborted flow is discarded
+                if self._client is client:
+                    pairing = await asyncio.wait_for(
+                        client.full_verify_pairing(),
+                        timeout=PAIRING_TIMEOUT,
+                    )
             except TimeoutError, BleakError, FlicProtocolError:
                 errors["base"] = "cannot_connect"
             except FlicPairingError:
@@ -314,11 +309,12 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during pairing")
                 errors["base"] = "unknown"
             finally:
-                if self._client:
-                    await self._async_disconnect_client(self._client)
-                    self._client = None
+                self._client = None
+                await self._async_disconnect_client(client)
+                self._pairing_started = False
 
-            if not errors:
+            if pairing is not None:
+                pairing_id, pairing_key, serial_number, _, sig_bits, _, _ = pairing
                 final_device_type = (
                     DeviceType.TWIST
                     if self._device_type == DeviceType.TWIST
@@ -337,9 +333,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_SIG_BITS: sig_bits,
                     },
                 )
-
-        # Allow the user to retry after an error
-        self._pairing_started = False
 
         # Show pairing form
         return self.async_show_form(
