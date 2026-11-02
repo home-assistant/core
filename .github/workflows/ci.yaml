@@ -116,7 +116,7 @@ jobs:
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         env:
-          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt', 'packages/pytest-home-assistant/pyproject.toml') }}
+          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt', 'packages/pytest-homeassistant/pyproject.toml') }}
           HASH_REQUIREMENTS: ${{ hashFiles('requirements.txt') }}
           HASH_REQUIREMENTS_ALL: ${{ hashFiles('requirements_all.txt') }}
           HASH_PACKAGE_CONSTRAINTS: ${{ hashFiles('homeassistant/package_constraints.txt') }}
@@ -681,7 +681,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --jobs 0 tests packages/pytest-home-assistant/pytest_homeassistant
+          pylint --jobs 0 tests packages/pytest-homeassistant/pytest_homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -831,7 +831,7 @@ jobs:
             "${GITHUB_WORKSPACE}/packages/hassfest/tests/check_package.py"
 
   build-pytest-package:
-    name: Build pytest-home-assistant package
+    name: Build pytest-homeassistant package
     runs-on: ubuntu-26.04
     permissions:
       contents: read
@@ -853,12 +853,12 @@ jobs:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
       - name: Build source distribution and wheel
-        run: uv build packages/pytest-home-assistant --out-dir dist
+        run: uv build packages/pytest-homeassistant --out-dir dist
       - name: Install wheel and matching Home Assistant in a clean environment
         run: |
           uv venv "${RUNNER_TEMP}/pytest-package-venv"
           uv pip install --python "${RUNNER_TEMP}/pytest-package-venv/bin/python" . dist/*.whl
-          cp -R packages/pytest-home-assistant/tests/standalone "${RUNNER_TEMP}/pytest-package-tests"
+          cp -R packages/pytest-homeassistant/tests/standalone "${RUNNER_TEMP}/pytest-package-tests"
       - name: Test installed package outside the checkout
         working-directory: ${{ runner.temp }}
         run: |

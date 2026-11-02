@@ -3,6 +3,7 @@
   "name": "NAD",
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": [],
+  "connectivity": ["network", "serial"],
   "documentation": "https://www.home-assistant.io/integrations/nad",
   "iot_class": "local_polling",
   "loggers": ["nad_receiver"],
