@@ -1,6 +1,7 @@
 """Services for the Media extractor integration."""
 
 from collections.abc import Callable
+from enum import StrEnum
 import logging
 from pathlib import Path
 from typing import Any, cast
@@ -10,10 +11,10 @@ from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError, ExtractorError
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import (
@@ -26,15 +27,25 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    ATTR_FORMAT_QUERY,
-    ATTR_URL,
-    DEFAULT_STREAM_QUERY,
-    DOMAIN,
-    SERVICE_EXTRACT_MEDIA_URL,
-)
+from .const import DEFAULT_STREAM_QUERY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class MediaExtractorService(StrEnum):
+    """Store keys for media extractor services."""
+
+    EXTRACT_MEDIA_URL = "extract_media_url"
+    PLAY_MEDIA = "play_media"
+
+
+class MediaExtractorServiceArgument(StrEnum):
+    """Store keys for media extractor service arguments."""
+
+    FORMAT_QUERY = "format_query"
+    MEDIA_CONTENT_ID = "media_content_id"
+    MEDIA_CONTENT_TYPE = "media_content_type"
+    URL = "url"
 
 
 class MEDownloadException(Exception):
@@ -59,7 +70,7 @@ class MediaExtractor:
 
     def get_media_url(self) -> str:
         """Return media content url."""
-        return cast(str, self.call_data[ATTR_MEDIA_CONTENT_ID])
+        return cast(str, self.call_data[MediaExtractorServiceArgument.MEDIA_CONTENT_ID])
 
     def get_entities(self) -> list[str]:
         """Return list of entities."""
@@ -144,13 +155,15 @@ class MediaExtractor:
             return
         _LOGGER.debug("Selected the following stream: %s", stream_url)
         data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
-        data[ATTR_MEDIA_CONTENT_ID] = stream_url
+        data[MediaPlayerServiceArgument.MEDIA_CONTENT_ID] = stream_url
 
         if entity_id:
             data[ATTR_ENTITY_ID] = entity_id
 
         self.hass.create_task(
-            self.hass.services.async_call(MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data)
+            self.hass.services.async_call(
+                MEDIA_PLAYER_DOMAIN, MediaPlayerService.PLAY_MEDIA, data
+            )
         )
 
 
@@ -189,12 +202,16 @@ async def _extract_media_url(call: ServiceCall) -> ServiceResponse:
             {
                 "quiet": True,
                 "logger": _LOGGER,
-                "format": call.data[ATTR_FORMAT_QUERY],
+                "format": call.data[MediaExtractorServiceArgument.FORMAT_QUERY],
             }
         )
         return cast(
             dict[str, Any],
-            youtube_dl.extract_info(call.data[ATTR_URL], download=False, process=False),
+            youtube_dl.extract_info(
+                call.data[MediaExtractorServiceArgument.URL],
+                download=False,
+                process=False,
+            ),
         )
 
     result = await hass.async_add_executor_job(extract_info)
@@ -232,13 +249,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_EXTRACT_MEDIA_URL,
+        MediaExtractorService.EXTRACT_MEDIA_URL,
         _extract_media_url,
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_URL): cv.string,
+                probatio.Required(MediaExtractorServiceArgument.URL): cv.string,
                 probatio.Optional(
-                    ATTR_FORMAT_QUERY, default=DEFAULT_STREAM_QUERY
+                    MediaExtractorServiceArgument.FORMAT_QUERY,
+                    default=DEFAULT_STREAM_QUERY,
                 ): cv.string,
             }
         ),
@@ -247,7 +265,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaExtractorService.PLAY_MEDIA,
         _play_media,
         schema=cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
     )

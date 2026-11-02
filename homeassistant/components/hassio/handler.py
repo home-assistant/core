@@ -55,6 +55,7 @@ class HassIO:
         return_text: bool = False,
         *,
         params: dict[str, Any] | None = None,
+        range_header: str | None = None,
         source: str = "core.handler",
     ) -> Any:
         """Send API command to Hass.io.
@@ -71,18 +72,22 @@ class HassIO:
             _LOGGER.error("Invalid request %s", command)
             raise HassioAPIError
 
+        headers = {
+            aiohttp.hdrs.AUTHORIZATION: (
+                f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+            ),
+            X_HASS_SOURCE: source,
+        }
+        if range_header is not None:
+            headers[aiohttp.hdrs.RANGE] = range_header
+
         try:
             response = await self.websession.request(
                 method,
                 joined_url,
                 params=params,
                 json=payload,
-                headers={
-                    aiohttp.hdrs.AUTHORIZATION: (
-                        f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
-                    ),
-                    X_HASS_SOURCE: source,
-                },
+                headers=headers,
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 
@@ -127,6 +132,7 @@ def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
         str(hassio.base_url),
         os.environ.get("SUPERVISOR_TOKEN", ""),
         session=hassio.websession,
+        source="core/aiohasupervisor",
     )
 
 

@@ -138,6 +138,9 @@ async def mock_init_component(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
+        # A subentry flow reloads the entry in the background; let the reload
+        # finish while the model list is still mocked.
+        await hass.async_block_till_done()
 
 
 @pytest.fixture(autouse=True)

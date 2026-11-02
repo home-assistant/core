@@ -48,7 +48,6 @@ from .const import (
     DOMAIN,
     LEGACY_HACS_INTEGRATION_REPOSITORY,
     RESTART_ISSUE_PREFIX,
-    TV,
     WARNING_VERSION,
 )
 from .coordinator import MarketplaceUpdateCoordinator
@@ -80,6 +79,7 @@ from .repositories.base import (
     REPOSITORY_MANIFEST_KEYS_TO_EXPORT,
     RepositoryData,
     RepositoryManifest,
+    valid_integration_categories,
 )
 from .utils.data import MarketplaceData
 from .utils.file_system import async_exists, async_run_to_completion
@@ -601,30 +601,30 @@ class MarketplaceManager:
         return 0
 
     @overload
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: Literal[True] = True,
         **kwargs: Any,
-    ) -> TV: ...
+    ) -> T: ...
 
     @overload
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: bool,
         **kwargs: Any,
-    ) -> TV | None: ...
+    ) -> T | None: ...
 
-    async def async_github_api_method(
+    async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[TV]],
+        method: Callable[..., Awaitable[T]],
         *args: Any,
         raise_exception: bool = True,
         **kwargs: Any,
-    ) -> Any:
+    ) -> T | None:
         """Call a GitHub API method.
 
         Without a connected account the call is anonymous, a refusal then only
@@ -1150,6 +1150,13 @@ class MarketplaceManager:
 
         self.async_set_repository_id(repository, repo_id)
         self.repositories.mark_default(repository)
+
+        # The catalog calls them categories, here that word means the kind of
+        # repository. Taken on every pass: storage from before they existed
+        # has none, and the catalog entry need not be newer than that.
+        repository.data.integration_categories = valid_integration_categories(
+            repo_data.get("categories")
+        )
 
         if repository.data.last_fetched is None or (
             repository.data.last_fetched.timestamp() < repo_data["last_fetched"]

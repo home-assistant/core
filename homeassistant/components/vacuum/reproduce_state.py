@@ -5,13 +5,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import DOMAIN, VacuumActivity
@@ -19,7 +13,6 @@ from .const import VacuumEntityStateAttribute, VacuumService
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_STATES_TOGGLE = {STATE_ON, STATE_OFF}
 VALID_STATES_STATE = {
     VacuumActivity.CLEANING,
     VacuumActivity.DOCKED,
@@ -41,7 +34,7 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    if not (state.state in VALID_STATES_TOGGLE or state.state in VALID_STATES_STATE):
+    if state.state not in VALID_STATES_STATE:
         _LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
@@ -57,11 +50,7 @@ async def _async_reproduce_state(
 
     if cur_state.state != state.state:
         # Wrong state
-        if state.state == STATE_ON:
-            service = SERVICE_TURN_ON
-        elif state.state == STATE_OFF:
-            service = SERVICE_TURN_OFF
-        elif state.state == VacuumActivity.CLEANING:
+        if state.state == VacuumActivity.CLEANING:
             service = VacuumService.START
         elif state.state in [VacuumActivity.DOCKED, VacuumActivity.RETURNING]:
             service = VacuumService.RETURN_TO_BASE

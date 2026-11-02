@@ -9,13 +9,7 @@ from librouteros.exceptions import ConnectionClosed
 from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODEL,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -195,7 +189,7 @@ class MikrotikData:
         """Get Hub info."""
         self._get_system_details(during_setup=True)
         self.hostname = str(self.system[IDENTITY].get(NAME))
-        self.model = str(self.system[ROUTERBOARD].get(ATTR_MODEL))
+        self.model = str(self.system[ROUTERBOARD].get("model"))
         self.firmware = str(self.system[ROUTERBOARD].get(ATTR_ROUTERBOARD_FIRMWARE))
         self.serial_number = str(self.system[ROUTERBOARD].get(ATTR_SERIAL_NUMBER))
         self.support_capsman = bool(

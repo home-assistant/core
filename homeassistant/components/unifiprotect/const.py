@@ -22,19 +22,12 @@ ATTR_BITRATE = "bitrate"
 ATTR_CHANNEL_ID = "channel_id"
 ATTR_MESSAGE = "message"
 ATTR_DURATION = "duration"
-ATTR_ANONYMIZE = "anonymize"
 
 CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_ALL_UPDATES = "all_updates"
 CONF_OVERRIDE_CHOST = "override_connection_host"
 CONF_MAX_MEDIA = "max_media"
 CONF_ALLOW_EA = "allow_ea_channel"
-
-CONFIG_OPTIONS = [
-    CONF_ALL_UPDATES,
-    CONF_DISABLE_RTSP,
-    CONF_OVERRIDE_CHOST,
-]
 
 DEFAULT_PORT = 443
 DEFAULT_ATTRIBUTION = "Powered by UniFi Protect Server"
@@ -89,6 +82,7 @@ PUBLIC_ONLY_PLATFORMS = [
     Platform.CAMERA,
     Platform.EVENT,
     Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -104,6 +98,7 @@ CONNECTION_MODE_API_KEY_ONLY = "api_key_only"
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
+DISPATCH_CHIMES = "new_chime_ring_settings"
 DISPATCH_RELAYS = "new_relay_channels"
 DISPATCH_PUBLIC_ADD = "public_add_device"
 
