@@ -128,7 +128,7 @@ async def test_energy_preferences_migration_from_version_1_1(
 async def test_energy_preferences_migration_from_version_1_3(
     hass: HomeAssistant,
 ) -> None:
-    """Test that device_consumption_water is added when migrating from v1.3 to v1.4."""
+    """Test that device_consumption_gas is added when migrating from v1.3 to v1.4."""
     # Create version 1.3 data without device_consumption_gas (old version)
     old_data = {
         "energy_sources": [],
