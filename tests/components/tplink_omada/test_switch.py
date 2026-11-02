@@ -23,7 +23,7 @@ from tplink_omada_client.exceptions import InvalidDevice, OmadaClientException
 from homeassistant.components import switch
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_GATEWAY
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -478,12 +478,19 @@ async def test_vpn_switches(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "service", "policy_id", "enabled"),
+    ("entity_id", "service", "policy_id", "enabled", "expected_state"),
     [
         pytest.param(
-            VPN_SERVER_ENTITY_ID, "turn_off", "vpn-server-1", False, id="turn_off"
+            VPN_SERVER_ENTITY_ID,
+            "turn_off",
+            "vpn-server-1",
+            False,
+            STATE_OFF,
+            id="turn_off",
         ),
-        pytest.param(VPN_S2S_ENTITY_ID, "turn_on", "vpn-s2s-1", True, id="turn_on"),
+        pytest.param(
+            VPN_S2S_ENTITY_ID, "turn_on", "vpn-s2s-1", True, STATE_ON, id="turn_on"
+        ),
     ],
 )
 async def test_vpn_switch_toggle(
@@ -494,6 +501,7 @@ async def test_vpn_switch_toggle(
     service: str,
     policy_id: str,
     enabled: bool,
+    expected_state: str,
 ) -> None:
     """Test enabling and disabling a VPN policy."""
     mock_omada_site_client.get_vpn_policies.return_value = _build_vpn_policies(
@@ -507,7 +515,7 @@ async def test_vpn_switch_toggle(
 
     await hass.async_block_till_done()
     entity = hass.states.get(entity_id)
-    assert entity and entity.state == service.removeprefix("turn_")
+    assert entity and entity.state == expected_state
 
 
 async def test_vpn_switch_optimistic_state(
