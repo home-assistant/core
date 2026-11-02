@@ -5,6 +5,7 @@
   "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@jesserockz", "@kbx81", "@bdraco", "@arturpragacz"],
   "config_flow": true,
+  "connectivity": ["esphome"],
   "dependencies": ["assist_pipeline", "bluetooth", "intent", "ffmpeg", "http"],
   "dhcp": [
     {

@@ -4,6 +4,7 @@
   "categories": ["computers_network.nas_servers", "security_safety.cameras"],
   "codeowners": ["@Quentame", "@mib1185"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/synology_dsm",
   "integration_type": "device",

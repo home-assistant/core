@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 import re
 from typing import Any, Literal
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 import probatio
 import pytest
@@ -39,6 +39,7 @@ from homeassistant.components.recorder.statistics import (
     _SECONDARY_UNIT_CONVERTERS,
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     PlatformCompiledStatistics,
+    _adjust_sum_statistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
     _generate_statistics_at_time_stmt_dependent_sub_query,
     _generate_statistics_at_time_stmt_group_by,
@@ -4825,3 +4826,24 @@ def test_STATISTIC_UNIT_TO_UNIT_CONVERTER(uom: str) -> None:
         pytest.fail(
             f"{uom} is present in both {other.__name__} and {unit_converter.__name__}"
         )
+
+
+def test_adjust_sum_statistics_propagates_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failed adjustment propagates so the job retries instead of committing half."""
+    session = MagicMock()
+    session.query.return_value.filter_by.return_value.filter.return_value.update.side_effect = OperationalError(
+        "stmt", {}, Exception("lock wait timeout")
+    )
+
+    with pytest.raises(OperationalError):
+        _adjust_sum_statistics(
+            session,
+            StatisticsShortTerm,
+            42,
+            dt_util.utcnow(),
+            1.5,
+        )
+
+    assert "Unexpected exception when updating statistics 42" in caplog.text
