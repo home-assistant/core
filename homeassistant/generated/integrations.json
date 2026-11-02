@@ -1352,6 +1352,7 @@
       ],
       "connectivity": [
         "infrared",
+        "network",
         "rf"
       ],
       "config_flow": true,
@@ -1437,6 +1438,7 @@
       ],
       "connectivity": [
         "infrared",
+        "network",
         "rf"
       ],
       "config_flow": true,
@@ -1545,6 +1547,10 @@
         "security_safety.cameras",
         "weather_alerts"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "supported_by": "netatmo"
     },
     "bubendorff": {
@@ -1554,6 +1560,10 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "netatmo"
     },
@@ -1837,6 +1847,10 @@
       "categories": [
         "media_entertainment.music_radio_services"
       ],
+      "connectivity": [
+        "host",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -1890,6 +1904,11 @@
       "integration_type": "hub",
       "categories": [
         "lighting"
+      ],
+      "connectivity": [
+        "cloud",
+        "host",
+        "network"
       ],
       "config_flow": true,
       "single_config_entry": true
@@ -3295,6 +3314,10 @@
       "categories": [
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3359,10 +3382,6 @@
             "security_safety.cameras",
             "sensors.motion_presence"
           ],
-          "connectivity": [
-            "host",
-            "network"
-          ],
           "name": "FFmpeg Motion"
         },
         "ffmpeg_noise": {
@@ -3372,10 +3391,6 @@
           "categories": [
             "security_safety.cameras",
             "sensors"
-          ],
-          "connectivity": [
-            "host",
-            "network"
           ],
           "name": "FFmpeg Noise"
         }
@@ -4072,6 +4087,10 @@
       "categories": [
         "presence_location.phones_companion_apps"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -4127,6 +4146,10 @@
       "categories": [
         "news_social_media"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4153,6 +4176,10 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.cloud_developer_tools"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -4467,6 +4494,10 @@
       "categories": [
         "presence_location.phones_companion_apps"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -4587,6 +4618,10 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4923,6 +4958,10 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "netatmo"
     },
@@ -5753,6 +5792,7 @@
       ],
       "connectivity": [
         "insteon",
+        "x10",
         "zwave"
       ],
       "config_flow": true,
@@ -6134,8 +6174,7 @@
       ],
       "connectivity": [
         "bluetooth",
-        "cloud",
-        "network"
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -6244,6 +6283,10 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "netatmo"
     },
@@ -6974,10 +7017,6 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment"
-      ],
-      "connectivity": [
-        "cloud",
-        "network"
       ],
       "config_flow": true,
       "iot_class": "calculated",
@@ -7793,6 +7832,10 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -9342,6 +9385,10 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "host",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -9785,6 +9832,10 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -10841,6 +10892,7 @@
       ],
       "connectivity": [
         "cloud",
+        "mqtt",
         "network"
       ],
       "config_flow": true,
@@ -10895,6 +10947,10 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "netatmo"
     },
@@ -11438,6 +11494,10 @@
         "hubs_protocols.smart_home_hubs",
         "diy_makers"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -11756,6 +11816,10 @@
       "integration_type": "service",
       "categories": [
         "messaging_notifications.chat_apps"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"

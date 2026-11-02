@@ -3,7 +3,6 @@
   "name": "FFmpeg Motion",
   "categories": ["security_safety.cameras", "sensors.motion_presence"],
   "codeowners": [],
-  "connectivity": ["host", "network"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/ffmpeg_motion",
   "iot_class": "calculated",
