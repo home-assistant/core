@@ -2,13 +2,17 @@
 
 import shutil
 
-from aemet_opendata.exceptions import AemetError, TownNotFound
+from aemet_opendata.exceptions import AemetError, AuthError, TownNotFound
 from aemet_opendata.interface import AEMET, ConnectionOptions, UpdateFeature
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -42,6 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> Non
                 "latitude": str(latitude),
                 "longitude": str(longitude),
             },
+        ) from err
+    except AuthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_api_key",
         ) from err
     except AemetError as err:
         raise ConfigEntryNotReady(err) from err

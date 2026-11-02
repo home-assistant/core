@@ -188,3 +188,48 @@ async def test_form_auth_error(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test the reauth flow, including recovery from an invalid API key."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="40.30403754--3.72935236",
+        data={
+            CONF_API_KEY: "expired",
+            CONF_LATITUDE: 40.30403754,
+            CONF_LONGITUDE: -3.72935236,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates.side_effect = AuthError
+
+    with patch(
+        "homeassistant.components.aemet.config_flow.AEMET",
+        return_value=mocked_aemet,
+    ):
+        result = await entry.start_reauth_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "still-invalid"},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_api_key"}
+
+        mocked_aemet.select_coordinates = AsyncMock()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_API_KEY] == "new"
+    mocked_aemet.select_coordinates.assert_awaited_once_with(40.30403754, -3.72935236)
