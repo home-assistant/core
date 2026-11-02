@@ -4,6 +4,7 @@
   "categories": ["climate.fans_ventilation"],
   "codeowners": ["@lellky", "@piotrbulinski"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/flexit_bacnet",
   "integration_type": "device",
   "iot_class": "local_polling",

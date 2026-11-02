@@ -100,7 +100,6 @@ Every check has a code following the
 | `C7410` | [`home-assistant-enforce-greek-micro-char`](#c7410-home-assistant-enforce-greek-micro-char) | Use Greek mu (U+03BC), not ANSI micro sign (U+00B5) |
 | `C7411` | [`home-assistant-enforce-class-module`](#c7411-home-assistant-enforce-class-module) | Entity class should be in the correct platform module |
 | `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
-| `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 | `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
 | `C7416` | [`home-assistant-noqa-f401-with-all`](#c7416-home-assistant-noqa-f401-with-all) | List re-exported names in `__all__` instead of using `# noqa: F401` |
@@ -171,6 +170,7 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form or handles the unique ID inside a `try` block |
 
 ## `home_assistant_logger` checker
 
@@ -547,6 +547,32 @@ class are skipped to avoid false positives.
 
 A `menu_options` entry does not match any `async_step_*` method defined on
 the flow class or its ancestors.
+
+
+## `home_assistant_flow_call_in_try` checker
+
+Checks for flow calls inside a `try` block.
+
+### `W7457`: `home-assistant-flow-call-in-try`
+
+A `try` block in a flow step should only contain the code that can raise the
+errors it catches, such as the calls to the device or service. Creating the
+entry, showing a form, aborting and handling the unique ID belong after it:
+
+```python
+try:
+    info = await client.get_info()
+except CannotConnect:
+    errors["base"] = "cannot_connect"
+else:
+    await self.async_set_unique_id(info.serial_number)
+    self._abort_if_unique_id_configured()
+    return self.async_create_entry(title=info.name, data=user_input)
+```
+
+The unique ID helpers raise `AbortFlow`, which a broad `except Exception`
+swallows and reports as an unknown error. `try` statements that catch
+`AbortFlow` themselves are not checked.
 
 
 ## `home_assistant_unused_test_fixture_args` checker
@@ -969,16 +995,6 @@ another translation references with `[%key:...%]`.
 
 Other platforms, such as `switch`, don't fall back to the device class name,
 so they are not checked.
-
-
-## `home_assistant_duplicate_const` checker
-
-Detects constants in integration modules that duplicate one already exported
-from `homeassistant.const` with the same value.
-
-### `C7413`: `home-assistant-duplicate-const`
-
-Import the constant from `homeassistant.const` instead of redefining it.
 
 
 ## `home_assistant_actions_swallowed_exceptions` checker

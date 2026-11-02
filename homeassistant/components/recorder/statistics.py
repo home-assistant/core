@@ -878,8 +878,9 @@ def _adjust_sum_statistics(
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when updating statistics %s",
-            id,
+            metadata_id,
         )
+        raise
 
 
 def _insert_statistics(
