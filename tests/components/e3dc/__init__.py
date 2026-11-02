@@ -37,61 +37,32 @@ def seed_identity(
     seed(
         unit,
         {
-            40001: 0xE3DC,
-            40002: 0x0203,
-            40003: 210,
-            40004: _ascii_words("HagerEnergy GmbH", 16),
-            40020: _ascii_words(model, 16),
-            40036: _ascii_words(serial, 16),
-            40052: _ascii_words(MOCK_FIRMWARE, 16),
+            40001: 0xE3DC,  # Marker for the E3/DC protocol
+            40002: 0x0203,  # Modbus protocol version 2.3
+            40003: 210,  # Number of registers the power station serves
+            40004: _ascii_words("HagerEnergy GmbH", 16),  # Manufacturer
+            40020: _ascii_words(model, 16),  # Model
+            40036: _ascii_words(serial, 16),  # Serial number
+            40052: _ascii_words(MOCK_FIRMWARE, 16),  # Firmware release
         },
     )
 
 
 def seed_power_station(unit: MockModbusUnit) -> None:
-    """Seed an S10 X with one wallbox, a root meter and every firmware block."""
+    """Seed an S10 X with its identity and power flows."""
     seed_identity(unit)
     seed(
         unit,
         {
-            40068: int32_words(5321),
-            40070: int32_words(-1200),
-            40072: int32_words(870),
-            40074: int32_words(-600),
-            40078: int32_words(11000),
-            40080: int32_words(4200),
-            40082: 6738,  # self-sufficiency 26 %, self-consumption 82 %
-            40083: 87,
-            40084: 2,  # emergency power not active
-            40085: 0b0010100,  # emergency power ready, feed-in limited
-            40088: 0b0000000111011,  # wallbox 0: solar, charging, plugged, locked
-            40096: 612,
-            40099: 450,
-            40102: 2754,
-            40105: 1,  # meter 0: root
-            40106: 0xFF38,
-            40107: 150,
-            40108: 100,
-            40109: 6,  # meter 1: not used
-            40137: 1,
-            40138: int32_words(-200),
-            40140: int32_words(150),
-            40142: int32_words(100),
-            40186: int32_words(5000),
-            40188: 1,
-            40194: 30,
-            40196: 30,
-            40201: 0,
-            40202: int32_words(9000),
-            40204: int32_words(-9000),
-            40206: int32_words(7800),
-            40208: int32_words(10500),
-            41006: int32_words(1750),
-            41018: 2301,
-            41019: 2299,
-            41020: 2310,
-            41024: 5001,
-            41025: 2754,
-            41027: 1210,
+            40068: int32_words(5321),  # PV power
+            40070: int32_words(-1200),  # Battery power, discharging
+            40072: int32_words(870),  # House power
+            40074: int32_words(-600),  # Grid power, feeding in
+            40078: int32_words(11000),  # Wallbox power
+            40080: int32_words(4200),  # Wallbox solar power
+            40082: 6738,  # Self-sufficiency 26 % (high byte), self-consumption 82 %
+            40083: 87,  # Battery state of charge, in %
+            40084: 2,  # Emergency power not active
+            40085: 0b0010100,  # EMS status: emergency power ready, feed-in limited
         },
     )
