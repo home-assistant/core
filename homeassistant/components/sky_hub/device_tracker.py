@@ -86,13 +86,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sky Hub device tracker entities."""
     coordinator = entry.runtime_data
-    tracked: set[str] = set()
 
     @callback
     def async_add_new_devices() -> None:
         """Add entities for newly discovered devices."""
-        if new_macs := coordinator.data.keys() - tracked:
-            tracked.update(new_macs)
+        if new_macs := coordinator.data.keys() - coordinator.tracked_macs:
+            coordinator.tracked_macs.update(new_macs)
             async_add_entities(
                 SkyHubScannerEntity(coordinator, mac, coordinator.data[mac])
                 for mac in new_macs
@@ -119,9 +118,15 @@ class SkyHubScannerEntity(CoordinatorEntity[SkyHubCoordinator], ScannerEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{mac}"
         self._attr_mac_address = mac
         self._attr_hostname = name or None
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)}, name=name or mac
-        )
+        connection = (dr.CONNECTION_NETWORK_MAC, mac)
+        self._attr_device_info = DeviceInfo(connections={connection})
+        if name:
+            self._attr_device_info["name"] = name
+        elif not dr.async_get(coordinator.hass).async_get_device_by_connection(
+            connection, coordinator.config_entry.entry_id
+        ):
+            # Only name a new device by MAC, an existing device keeps its name
+            self._attr_device_info["name"] = mac
 
     @property
     @override

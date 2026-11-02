@@ -316,3 +316,26 @@ async def test_device_name_updated(
     device = device_registry.async_get(registry_entry.device_id)
     assert device is not None
     assert device.name == expected_device_name
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_reload_without_name_keeps_device_name(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_router: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a client without name on reload keeps its device name."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_router.async_get_skyhub_data.return_value = [MockDevice(LAPTOP.mac, "")]
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, LAPTOP.mac), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == LAPTOP.name

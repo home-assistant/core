@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES, Device
 from homeassistant.components.sky_hub.const import (
@@ -17,7 +18,8 @@ from homeassistant.components.sky_hub.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from .conftest import LAPTOP, PHONE
 
@@ -255,3 +257,73 @@ async def test_legacy_known_devices_issue_per_entry(
     assert (
         issue_registry.async_get_issue(DOMAIN, _issue_id(other_entry.entry_id)) is None
     )
+
+
+@pytest.mark.parametrize(
+    ("mac", "removable"),
+    [
+        pytest.param(LAPTOP.mac, False, id="tracked"),
+        pytest.param(PHONE.mac, True, id="stale"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_router")
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    mac: str,
+    removable: bool,
+) -> None:
+    """Test only client devices which are not tracked can be removed."""
+    mock_config_entry.add_to_hass(hass)
+    # A client device left over from before the router stopped reporting it
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, PHONE.mac)},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "config", {})
+
+    connection = (dr.CONNECTION_NETWORK_MAC, mac)
+    device = device_registry.async_get_device_by_connection(
+        connection, mock_config_entry.entry_id
+    )
+    assert device is not None
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"] is removable
+    assert (
+        device_registry.async_get_device_by_connection(
+            connection, mock_config_entry.entry_id
+        )
+        is None
+    ) is removable
+
+
+async def test_remove_config_entry_device_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_router: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test client devices can be removed while the entry is not loaded."""
+    mock_router.success_init = False
+    mock_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, LAPTOP.mac)},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert await async_setup_component(hass, "config", {})
+
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"]
+    assert device_registry.async_get(device.id) is None
