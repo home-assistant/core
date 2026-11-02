@@ -250,9 +250,7 @@ def test_validate_or_move_away_sqlite_database_directory(
     test_dir.joinpath("configuration.yaml").touch()
 
     assert (
-        util.validate_or_move_away_sqlite_database(
-            f"{SQLITE_URL_PREFIX}/{test_dir}{suffix}"
-        )
+        util.validate_or_move_away_sqlite_database(f"sqlite:///{test_dir}{suffix}")
         is True
     )
     assert list(tmp_path.iterdir()) == [test_dir]
