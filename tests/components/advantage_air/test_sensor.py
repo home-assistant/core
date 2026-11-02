@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, patch
 
 from pytest_homeassistant.common import async_fire_time_changed
 
-from homeassistant.components.advantage_air.const import DOMAIN
-from homeassistant.components.advantage_air.sensor import (
-    ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
+from homeassistant.components.advantage_air.const import (
+    DOMAIN,
+    AdvantageAirServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -42,7 +42,7 @@ async def test_sensor_platform(
     await hass.services.async_call(
         DOMAIN,
         "set_time_to",
-        {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
+        {ATTR_ENTITY_ID: [entity_id], AdvantageAirServiceArgument.MINUTES: value},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -62,7 +62,7 @@ async def test_sensor_platform(
     await hass.services.async_call(
         DOMAIN,
         "set_time_to",
-        {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
+        {ATTR_ENTITY_ID: [entity_id], AdvantageAirServiceArgument.MINUTES: value},
         blocking=True,
     )
     mock_update.assert_called_once()

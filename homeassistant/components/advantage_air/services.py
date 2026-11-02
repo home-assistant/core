@@ -1,12 +1,20 @@
 """Services for Advantage Air integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import DOMAIN
+from .const import DOMAIN, AdvantageAirServiceArgument
+
+
+class AdvantageAirService(StrEnum):
+    """Store keys for Advantage Air services."""
+
+    SET_TIME_TO = "set_time_to"
 
 
 @callback
@@ -16,8 +24,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "set_time_to",
+        AdvantageAirService.SET_TIME_TO,
         entity_domain=SENSOR_DOMAIN,
-        schema={probatio.Required("minutes"): cv.positive_int},
+        schema={
+            probatio.Required(AdvantageAirServiceArgument.MINUTES): cv.positive_int
+        },
         func="set_time_to",
     )
