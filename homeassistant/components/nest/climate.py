@@ -68,10 +68,14 @@ FAN_MODE_MAP = {
 FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 FAN_INV_MODES = list(FAN_INV_MODE_MAP)
 
-MAX_FAN_DURATION = 43200  # 12 hours is the max in the SDM API
+# Max duration for fan timer in seconds (12 hours), per the SDM API.
+MAX_FAN_DURATION = 43200
+
+# Minimum gap between low and high target temps, per the SDM API.
+MIN_TEMP_RANGE = 1.66667
+
 MIN_TEMP = 10
 MAX_TEMP = 32
-MIN_TEMP_RANGE = 1.66667
 
 
 async def async_setup_entry(
@@ -314,30 +318,48 @@ class ThermostatEntity(ClimateEntity):
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
+
+        if temp:
+            temperature_description = f"temperature to {temp}"
+        else:
+            temperature_description = f"temperature range {low_temp} to {high_temp}"
+
+        # SDM API does not allow setting temperature while in ECO preset mode.
+        if self.preset_mode == PRESET_ECO:
+            raise HomeAssistantError(
+                f"Error setting {self.entity_id} {temperature_description}: "
+                "Cannot set temperature while in ECO preset mode."
+            )
+
+        if low_temp and high_temp:
+            # Ensure there is a minimum gap between new high and low temps.
+            if high_temp - low_temp < MIN_TEMP_RANGE:
+                # Move the temp that did not change to maintain the minimum gap.
+                if (
+                    self.native_target_temperature_high
+                    and abs(high_temp - self.native_target_temperature_high) < 0.01
+                ):
+                    high_temp = low_temp + MIN_TEMP_RANGE
+                else:
+                    low_temp = high_temp - MIN_TEMP_RANGE
+
         if ThermostatTemperatureSetpointTrait.NAME not in self._device.traits:
             raise HomeAssistantError(
-                f"Error setting {self.entity_id} temperature to {kwargs}: "
-                "Unable to find setpoint trait."
+                f"Error setting {self.entity_id} {temperature_description}: "
+                "Unable to find ThermostatTemperatureSetpoint trait."
             )
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
+
         try:
-            if self.preset_mode == PRESET_ECO or hvac_mode == HVACMode.HEAT_COOL:
-                if low_temp and high_temp:
-                    if high_temp - low_temp < MIN_TEMP_RANGE:
-                        # Ensure there is a minimum gap from the new temp. Pick
-                        # the temp that is not changing as the one to move.
-                        if abs(high_temp - self.native_target_temperature_high) < 0.01:
-                            high_temp = low_temp + MIN_TEMP_RANGE
-                        else:
-                            low_temp = high_temp - MIN_TEMP_RANGE
-                    await trait.set_range(low_temp, high_temp)
+            if hvac_mode == HVACMode.HEAT and temp:
+                await trait.set_heat(temp)
             elif hvac_mode == HVACMode.COOL and temp:
                 await trait.set_cool(temp)
-            elif hvac_mode == HVACMode.HEAT and temp:
-                await trait.set_heat(temp)
+            if hvac_mode == HVACMode.HEAT_COOL and low_temp and high_temp:
+                await trait.set_range(low_temp, high_temp)
         except ApiException as err:
             raise HomeAssistantError(
-                f"Error setting {self.entity_id} temperature to {kwargs}: {err}"
+                f"Error setting {self.entity_id} {temperature_description}: {err}"
             ) from err
 
     @override
