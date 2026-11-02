@@ -104,13 +104,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for OpenWrt (luci) component."""
     coordinator = entry.runtime_data
-    tracked: set[str] = set()
 
     @callback
     def _async_add_new_devices() -> None:
         """Add entities for devices seen for the first time."""
-        if new_macs := coordinator.data.keys() - tracked:
-            tracked.update(new_macs)
+        if new_macs := coordinator.data.keys() - coordinator.tracked_macs:
+            coordinator.tracked_macs.update(new_macs)
             async_add_entities(
                 LuciScannerEntity(coordinator, mac, coordinator.data[mac])
                 for mac in new_macs
@@ -138,10 +137,15 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
         self._attr_mac_address = mac
         self._attr_hostname = device.hostname
         self._attr_ip_address = device.ip
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-            name=device.hostname or mac,
-        )
+        connection = (dr.CONNECTION_NETWORK_MAC, mac)
+        self._attr_device_info = DeviceInfo(connections={connection})
+        if device.hostname:
+            self._attr_device_info["name"] = device.hostname
+        elif not dr.async_get(coordinator.hass).async_get_device_by_connection(
+            connection, coordinator.config_entry.entry_id
+        ):
+            # Only name a new device by MAC, an existing device keeps its name
+            self._attr_device_info["name"] = mac
 
     @property
     @override
