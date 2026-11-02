@@ -3,7 +3,6 @@
   "name": "RSS feed template",
   "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@home-assistant/core"],
-  "connectivity": ["network"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/rss_feed_template",
   "iot_class": "local_push",
