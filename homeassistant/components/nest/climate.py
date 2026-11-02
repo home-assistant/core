@@ -312,9 +312,6 @@ class ThermostatEntity(ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         hvac_mode = self.hvac_mode
-        if kwargs.get(ATTR_HVAC_MODE) is not None:
-            hvac_mode = kwargs[ATTR_HVAC_MODE]
-            await self.async_set_hvac_mode(hvac_mode)
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -330,6 +327,10 @@ class ThermostatEntity(ClimateEntity):
                 f"Error setting {self.entity_id} {temperature_description}: "
                 "Cannot set temperature while in ECO preset mode."
             )
+
+        if kwargs.get(ATTR_HVAC_MODE) is not None:
+            hvac_mode = kwargs[ATTR_HVAC_MODE]
+            await self.async_set_hvac_mode(hvac_mode)
 
         if low_temp and high_temp:
             # Ensure there is a minimum gap between new high and low temps.
