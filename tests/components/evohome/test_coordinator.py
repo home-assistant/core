@@ -134,26 +134,16 @@ async def test_update_intervals(
 
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.usefixtures("evohome")
-async def test_high_precision_temps_refresh_entities(
+async def test_high_precision_temps_update_entities(
     hass: HomeAssistant,
-    tcs: ControlSystem,
     zone_id: str,
 ) -> None:
-    """Test a refresh of (only) the account coordinator updates a zone's state."""
+    """Test an update of (only) the account coordinator updates a zone's state."""
 
     evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
-    v1_tcs = MagicMock(get_temperatures=AsyncMock(return_value={"3432521": 19.8}))
 
-    with (
-        patch("evohomeasync.EvohomeClient.get_status"),
-        patch(
-            "evohomeasync.EvohomeClient.location_by_id",
-            new_callable=PropertyMock,
-            return_value={tcs.location.id: MagicMock(tcs=v1_tcs)},
-        ),
-    ):
-        await evo_data.account.async_refresh()
-        await hass.async_block_till_done()
+    evo_data.account.async_set_updated_data({"3432521": 19.8})
+    await hass.async_block_till_done()
 
     state = hass.states.get(zone_id)
     assert state is not None
