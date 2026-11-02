@@ -9,7 +9,7 @@ simulate events, and check integration behavior.
 Install the package into your custom integration's virtual environment:
 
 ```shell
-uv pip install pytest-home-assistant
+uv pip install home-assistant-pytest
 ```
 
 Use the package release that matches your Home Assistant version. Upgrade them
