@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 from datetime import UTC, datetime
+import glob
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -68,6 +69,17 @@ EXPORTED_INSTALLED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("selected_tag", None),
     ("show_beta", False),
 )
+
+
+def _corrupt_copy_of_missing_file(path: str) -> str | None:
+    """Return the copy the storage helper moved a corrupt file to.
+
+    The helper moves it aside and loads nothing, which looks like a first setup
+    on this start and every start after it.
+    """
+    if os.path.exists(path):
+        return None
+    return max(glob.glob(f"{glob.escape(path)}.corrupt.*"), default=None)
 
 
 class MarketplaceData:
@@ -151,6 +163,9 @@ class MarketplaceData:
             data["version_installed"] = repository.data.installed_version
         if repository.data.last_fetched:
             data["last_fetched"] = repository.data.last_fetched.timestamp()
+        # Kept for a start without the catalog, the next catalog fetch decides
+        if self.marketplace.repositories.is_default(repository.data.id):
+            data["default"] = True
 
         self.content[repository.data.id] = data
 
@@ -170,6 +185,16 @@ class MarketplaceData:
 
         if data is None:
             return {}
+        if not data and (
+            corrupt_copy := await self.marketplace.hass.async_add_executor_job(
+                _corrupt_copy_of_missing_file, path
+            )
+        ):
+            self._log_unreadable(
+                f"{path} could not be parsed and was moved to {corrupt_copy};"
+                " remove that copy to start without the stored data"
+            )
+            return None
         if not isinstance(data, dict):
             self._log_unreadable(f"{path} does not hold an object")
             return None
@@ -447,3 +472,6 @@ class MarketplaceData:
         # Every removal checks it is safe again, resolving here would block
         if repository.localpath is not None:
             repository.content.path.local = repository.localpath
+
+        if repository_data.get("default") is True:
+            self.marketplace.repositories.mark_default(repository)

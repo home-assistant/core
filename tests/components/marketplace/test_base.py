@@ -235,6 +235,46 @@ async def test_catalog_integration_categories(
     assert repository.data.integration_categories == expected
 
 
+@pytest.mark.parametrize(
+    ("feed", "default"),
+    [
+        pytest.param(
+            {
+                "99": {
+                    "full_name": "owner/other-integration",
+                    "last_fetched": 0,
+                    "manifest": {},
+                }
+            },
+            False,
+            id="no_longer_listed",
+        ),
+        pytest.param({}, True, id="empty_answer"),
+    ],
+)
+async def test_catalog_unmarks_what_it_no_longer_lists(
+    marketplace: MarketplaceManager,
+    feed: dict[str, Any],
+    default: bool,
+) -> None:
+    """Test a repository the catalog drops stops being default, in its category only.
+
+    Restored from storage, a default would otherwise stay default for good.
+    """
+    integration = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    plugin = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+    assert marketplace.repositories.is_default(integration.data.id)
+    assert marketplace.repositories.is_default(plugin.data.id)
+
+    with patch.object(marketplace.data_client, "async_get_category", return_value=feed):
+        await marketplace.async_get_category_repositories_from_catalog(
+            RepositoryCategory.INTEGRATION
+        )
+
+    assert marketplace.repositories.is_default(integration.data.id) is default
+    assert marketplace.repositories.is_default(plugin.data.id)
+
+
 async def test_custom_repository_listed_by_the_catalog_is_default(
     marketplace: MarketplaceManager,
 ) -> None:
