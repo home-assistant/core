@@ -1155,12 +1155,16 @@ class _DefaultPipelineProcessor:
             assert request.stt_metadata is not None
             assert stt_processed_stream is not None
 
-            if request.wake_word_detection is not None:
-                if not self._accept_wake_word_detection(request.wake_word_detection):
-                    self.cleanup()
-                    return
-            elif request.wake_word_phrase is not None:
-                self.host.accept_wake_word(request.wake_word_phrase)
+            # Wake word detection accepts the wake word it detects
+            if self.host.start_stage == PipelineStage.STT:
+                if request.wake_word_detection is not None:
+                    if not self._accept_wake_word_detection(
+                        request.wake_word_detection
+                    ):
+                        self.cleanup()
+                        return
+                elif request.wake_word_phrase is not None:
+                    self.host.accept_wake_word(request.wake_word_phrase)
 
             stt_input_stream = stt_processed_stream
 

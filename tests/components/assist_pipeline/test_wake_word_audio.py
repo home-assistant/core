@@ -26,6 +26,8 @@ async def _async_run_pipeline(
     audio_stream: AsyncIterable[bytes],
     timestamp: int,
     end_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
+    start_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
+    wake_word_phrase: str = "okay nabu",
 ) -> list[PipelineEvent]:
     events: list[PipelineEvent] = []
     await assist_pipeline.async_pipeline_from_audio_stream(
@@ -41,13 +43,14 @@ async def _async_run_pipeline(
             channel=stt.AudioChannels.CHANNEL_MONO,
         ),
         stt_stream=audio_stream,
-        wake_word_phrase="okay nabu",
+        wake_word_phrase=wake_word_phrase,
         wake_word_detection=wake_word.DetectionResult(
             wake_word_id="okay_nabu",
-            wake_word_phrase="okay nabu",
+            wake_word_phrase=wake_word_phrase,
             timestamp=timestamp,
         ),
         audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        start_stage=start_stage,
         end_stage=end_stage,
     )
     return events
@@ -118,3 +121,27 @@ async def test_wake_word_audio_duplicate(
     }
     # The text-to-speech stream prepared for the rejected run is removed
     assert not hass.data[tts.DATA_TTS_MANAGER].token_to_stream
+
+
+@pytest.mark.usefixtures(
+    "init_components", "mock_stt_provider_entity", "mock_wake_word_provider_entity"
+)
+async def test_wake_word_audio_detected_by_pipeline(hass: HomeAssistant) -> None:
+    """Test a run starting at wake word detection accepts the wake word once."""
+    events = await _async_run_pipeline(
+        hass,
+        _audio_stream(make_10ms_chunk(b"wake word"), COMMAND),
+        MS_PER_CHUNK,
+        start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+        # The phrase the mock wake word entity detects
+        wake_word_phrase="Test Wake Word",
+    )
+
+    assert [event.type for event in events] == [
+        PipelineEventType.RUN_START,
+        PipelineEventType.WAKE_WORD_START,
+        PipelineEventType.WAKE_WORD_END,
+        PipelineEventType.STT_START,
+        PipelineEventType.STT_END,
+        PipelineEventType.RUN_END,
+    ]
