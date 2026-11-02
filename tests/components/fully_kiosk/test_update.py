@@ -537,3 +537,62 @@ async def test_update_install_no_release(
         await update_entity.async_install(version=None, backup=False)
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "no_release_available"
+
+
+async def test_update_reinstall_polling_progress(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fully_kiosk: MagicMock,
+) -> None:
+    """Test progress tracking during same-version reinstall."""
+    device_info = await async_load_json_object_fixture(hass, "deviceinfo.json", DOMAIN)
+    device_info["appVersionName"] = "1.61.4"
+    mock_fully_kiosk.getDeviceInfo.return_value = device_info
+
+    apk_url = (
+        "https://www.fully-kiosk.com/files/2026/10/Fully-Kiosk-Browser-v1.61.4.apk"
+    )
+    states = [
+        {"url": apk_url, "status": "downloading"},
+        {"url": apk_url, "status": "installing"},
+        {"url": apk_url, "status": "success"},
+    ]
+    mock_fully_kiosk.getInstallApkState.side_effect = states
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch("homeassistant.components.fully_kiosk.update.POLL_INTERVAL", 0.01):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: ENTITY_ID, "version": "1.61.4"},
+            blocking=True,
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_fully_kiosk.getInstallApkState.call_count == 3
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get(ATTR_IN_PROGRESS) is not True
+
+
+async def test_update_foreground_app_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fully_kiosk: MagicMock,
+) -> None:
+    """Test that foregroundApp does not determine app identity."""
+    device_info = await async_load_json_object_fixture(hass, "deviceinfo.json", DOMAIN)
+    device_info.pop("appPackageName", None)
+    device_info.pop("packageName", None)
+    device_info["foregroundApp"] = "com.fullykiosk.singleapp"
+    mock_fully_kiosk.getDeviceInfo.return_value = device_info
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_TITLE] == "Fully Kiosk Browser"

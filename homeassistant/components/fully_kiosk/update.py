@@ -28,12 +28,7 @@ INSTALL_TIMEOUT = 300.0
 
 def _get_device_app(device_info: dict[str, Any]) -> str:
     """Return the app name corresponding to the device."""
-    pkg = (
-        device_info.get("appPackageName")
-        or device_info.get("packageName")
-        or device_info.get("foregroundApp")
-        or ""
-    )
+    pkg = device_info.get("appPackageName") or device_info.get("packageName") or ""
     if pkg == "com.fullykiosk.singleapp":
         return "Fully-Single-App-Kiosk"
     if pkg == "com.fullykiosk.videokiosk":
@@ -85,6 +80,7 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         self._attr_unique_id = coordinator.data["deviceID"]
         self._target_version: str | None = None
         self._installing: bool = False
+        self._is_reinstall: bool = False
         self._poll_task: asyncio.Task[None] | None = None
 
     @override
@@ -104,30 +100,41 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         self._poll_task = None
 
     @callback
-    def _start_poll_task(self, target_version: str, url: str) -> None:
+    def _start_poll_task(
+        self, target_version: str, url: str, *, is_reinstall: bool
+    ) -> None:
         """Start background polling task for install progress."""
         self._stop_poll_task()
         self._poll_task = self.hass.async_create_background_task(
-            self._async_poll_installation(target_version, url),
+            self._async_poll_installation(
+                target_version, url, is_reinstall=is_reinstall
+            ),
             name=f"fully_kiosk_install_{self.entity_id}",
         )
 
-    async def _async_poll_installation(self, target_version: str, url: str) -> None:
+    async def _async_poll_installation(
+        self, target_version: str, url: str, *, is_reinstall: bool
+    ) -> None:
         """Poll the device for installation progress and completion."""
         loop = asyncio.get_running_loop()
         start_time = loop.time()
         has_started = False
 
         try:
-            while loop.time() - start_time < INSTALL_TIMEOUT:
-                await asyncio.sleep(POLL_INTERVAL)
+            while (remaining := INSTALL_TIMEOUT - (loop.time() - start_time)) > 0:
+                await asyncio.sleep(min(POLL_INTERVAL, remaining))
 
                 # Check if device updated and restarted with target version
-                if self.installed_version == target_version:
+                if not is_reinstall and self.installed_version == target_version:
                     break
 
+                remaining = INSTALL_TIMEOUT - (loop.time() - start_time)
+                if remaining <= 0:
+                    continue
+
                 try:
-                    state = await self.coordinator.fully.getInstallApkState()
+                    async with asyncio.timeout(min(10.0, remaining)):
+                        state = await self.coordinator.fully.getInstallApkState()
                 except ClientError, TimeoutError, FullyKioskError:
                     continue
 
@@ -180,6 +187,7 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         finally:
             self._installing = False
             self._target_version = None
+            self._is_reinstall = False
             self.async_write_ha_state()
 
     @callback
@@ -188,6 +196,7 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
         """Handle updated data from the coordinator."""
         if (
             self._installing
+            and not self._is_reinstall
             and self._target_version
             and self.installed_version == self._target_version
         ):
@@ -311,7 +320,8 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
                 )
 
         target_version = f"{release.version}-emm" if is_emm else release.version
-        force_install = version is not None and target_version == self.installed_version
+        is_reinstall = target_version == self.installed_version
+        force_install = version is not None and is_reinstall
 
         try:
             await self.coordinator.fully.loadApkFile(
@@ -326,6 +336,7 @@ class FullyKioskUpdateEntity(FullyKioskEntity, UpdateEntity):
 
         self._installing = True
         self._target_version = target_version
+        self._is_reinstall = is_reinstall
         self.async_write_ha_state()
 
-        self._start_poll_task(target_version, release.url)
+        self._start_poll_task(target_version, release.url, is_reinstall=is_reinstall)
