@@ -84,6 +84,67 @@ def async_setup_services(hass: HomeAssistant) -> None:
         },
         func="async_reset_meter",
     )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_GET_LOCK_USERCODE,
+        admin_only=True,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            probatio.Optional(ATTR_CODE_SLOT): probatio.Coerce(int),
+        },
+        func="async_get_lock_usercode",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_SET_LOCK_USERCODE,
+        admin_only=True,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
+            probatio.Required(ATTR_USERCODE): cv.string,
+        },
+        func="async_set_lock_usercode",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_CLEAR_LOCK_USERCODE,
+        admin_only=True,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
+        },
+        func="async_clear_lock_usercode",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_SET_LOCK_CONFIGURATION,
+        admin_only=True,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            probatio.Required(const.ATTR_OPERATION_TYPE): probatio.All(
+                cv.string,
+                probatio.Upper,
+                probatio.In(["TIMED", "CONSTANT"]),
+                lambda x: OperationType[x],
+            ),
+            probatio.Optional(const.ATTR_LOCK_TIMEOUT): UNIT16_SCHEMA,
+            probatio.Optional(const.ATTR_AUTO_RELOCK_TIME): UNIT16_SCHEMA,
+            probatio.Optional(const.ATTR_HOLD_AND_RELEASE_TIME): UNIT16_SCHEMA,
+            probatio.Optional(const.ATTR_TWIST_ASSIST): probatio.Coerce(bool),
+            probatio.Optional(const.ATTR_BLOCK_TO_BLOCK): probatio.Coerce(bool),
+        },
+        func="async_set_lock_configuration",
+    )
+
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
     services.async_register()
 
@@ -651,70 +712,6 @@ class ZWaveServices:
                     has_at_least_one_node,
                 ),
             ),
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        async_register_platform_entity_service(
-            self._hass,
-            const.DOMAIN,
-            const.SERVICE_GET_LOCK_USERCODE,
-            admin_only=True,
-            entity_domain=LOCK_DOMAIN,
-            schema={
-                probatio.Optional(ATTR_CODE_SLOT): probatio.Coerce(int),
-            },
-            func="async_get_lock_usercode",
-            supports_response=SupportsResponse.ONLY,
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        async_register_platform_entity_service(
-            self._hass,
-            const.DOMAIN,
-            const.SERVICE_SET_LOCK_USERCODE,
-            admin_only=True,
-            entity_domain=LOCK_DOMAIN,
-            schema={
-                probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
-                probatio.Required(ATTR_USERCODE): cv.string,
-            },
-            func="async_set_lock_usercode",
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        async_register_platform_entity_service(
-            self._hass,
-            const.DOMAIN,
-            const.SERVICE_CLEAR_LOCK_USERCODE,
-            admin_only=True,
-            entity_domain=LOCK_DOMAIN,
-            schema={
-                probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
-            },
-            func="async_clear_lock_usercode",
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        async_register_platform_entity_service(
-            self._hass,
-            const.DOMAIN,
-            const.SERVICE_SET_LOCK_CONFIGURATION,
-            admin_only=True,
-            entity_domain=LOCK_DOMAIN,
-            schema={
-                probatio.Required(const.ATTR_OPERATION_TYPE): probatio.All(
-                    cv.string,
-                    probatio.Upper,
-                    probatio.In(["TIMED", "CONSTANT"]),
-                    lambda x: OperationType[x],
-                ),
-                probatio.Optional(const.ATTR_LOCK_TIMEOUT): UNIT16_SCHEMA,
-                probatio.Optional(const.ATTR_AUTO_RELOCK_TIME): UNIT16_SCHEMA,
-                probatio.Optional(const.ATTR_HOLD_AND_RELEASE_TIME): UNIT16_SCHEMA,
-                probatio.Optional(const.ATTR_TWIST_ASSIST): probatio.Coerce(bool),
-                probatio.Optional(const.ATTR_BLOCK_TO_BLOCK): probatio.Coerce(bool),
-            },
-            func="async_set_lock_configuration",
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:

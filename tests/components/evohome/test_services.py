@@ -233,16 +233,7 @@ async def test_set_zone_override_advance_schedule_fetch_failed(
     let the temporary override become a permanent one.
     """
 
-    entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
-        (CLIMATE_DOMAIN, DOMAIN), {}
-    )
-
-    zone_entity = entities[zone_id]
-    assert isinstance(zone_entity, EvoZone)
-
-    zone_entity._schedule = None  # so the schedule must be fetched
-    zone_entity._setpoints = {}
-
+    # the schedule has not been fetched since setup, so the action must fetch it
     with (
         patch.object(
             Zone,
@@ -281,14 +272,13 @@ async def test_set_zone_override_advance(
     freezer.move_to("2024-05-10T12:15:00+00:00")
     expected_until = datetime(2024, 5, 10, 21, 10, tzinfo=UTC)
 
-    # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
+    # the schedule has not been fetched since setup, so the action must fetch it
     entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
         (CLIMATE_DOMAIN, DOMAIN), {}
     )
 
-    zone_entity: EvoZone = entities[zone_id]  # type: ignore[assignment]
-    zone_entity._schedule = None
-    zone_entity._setpoints = {}
+    zone_entity = entities[zone_id]
+    assert isinstance(zone_entity, EvoZone)
 
     # EvoZoneMode.TEMPORARY_OVERRIDE with duration 0 (i.e. until next schedule change)
     with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
@@ -525,14 +515,13 @@ async def test_set_dhw_override_advance(
     freezer.move_to("2024-05-10T12:15:00+00:00")
     expected_until = datetime(2024, 5, 10, 15, 30, tzinfo=UTC)
 
-    # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
+    # the schedule has not been fetched since setup, so the action must fetch it
     entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
         (WATER_HEATER_DOMAIN, DOMAIN), {}
     )
 
-    dhw_entity: EvoDHW = entities[dhw_id]  # type: ignore[assignment]
-    dhw_entity._schedule = None
-    dhw_entity._setpoints = {}
+    dhw_entity = entities[dhw_id]
+    assert isinstance(dhw_entity, EvoDHW)
 
     # EvoZoneMode.TEMPORARY_OVERRIDE with duration 0 (i.e. until next schedule change)
     with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:

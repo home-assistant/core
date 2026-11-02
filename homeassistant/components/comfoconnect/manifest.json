@@ -3,6 +3,7 @@
   "name": "Zehnder ComfoAir Q",
   "categories": ["climate.fans_ventilation"],
   "codeowners": ["@michaelarnauts"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/comfoconnect",
   "iot_class": "local_push",
   "loggers": ["pycomfoconnect"],

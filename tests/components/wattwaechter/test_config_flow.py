@@ -1,4 +1,4 @@
-"""Tests for the WattWächter Plus config flow."""
+"""Tests for the WattWächter config flow."""
 
 from __future__ import annotations
 

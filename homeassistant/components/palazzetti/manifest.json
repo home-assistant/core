@@ -4,6 +4,7 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@dotvav"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "connbox*",

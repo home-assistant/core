@@ -62,8 +62,7 @@ async def test_button_press_syncs_time(
     assert mock_bsblan.time.called
 
     # Verify set_time() was called with current HA time
-    current_time_str = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
-    mock_bsblan.set_time.assert_called_once_with(current_time_str)
+    mock_bsblan.set_time.assert_called_once_with(dt_util.now())
 
 
 async def test_button_press_no_update_when_same(

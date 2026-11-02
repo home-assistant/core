@@ -2,10 +2,13 @@
 
 from collections.abc import Callable
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from yarl import URL
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .coordinator import (
     get_addons_list,
@@ -18,7 +21,7 @@ from .coordinator import (
 from .exceptions import HassioNotReadyError
 
 SUPERVISOR_PING = "http://{ip_address}/supervisor/ping"
-OBSERVER_URL = "http://{ip_address}:4357"
+OBSERVER_PORT = 4357
 
 
 @callback
@@ -37,6 +40,22 @@ def _get_supervisor_data_if_available(
         return get_info_dict(hass)
     except HassioNotReadyError:
         return {}
+
+
+def _get_observer_url(hass: HomeAssistant) -> str | None:
+    """Return the observer URL on the host the user reached Home Assistant at."""
+    # The observer is published on the host, only reachable on the local network.
+    # Same check as is_internal_request, but returns the internal URL it matched.
+    try:
+        internal_url = get_url(
+            hass, allow_external=False, allow_cloud=False, require_current_request=True
+        )
+    except NoURLAvailableError:
+        return None
+    host = URL(internal_url).host
+    if TYPE_CHECKING:
+        assert host is not None
+    return str(URL.build(scheme="http", host=host, port=OBSERVER_PORT))
 
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
@@ -107,7 +126,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     information["supervisor_api"] = system_health.async_check_can_reach_url(
         hass,
         SUPERVISOR_PING.format(ip_address=ip_address),
-        OBSERVER_URL.format(ip_address=ip_address),
+        _get_observer_url(hass),
     )
     information["version_api"] = system_health.async_check_can_reach_url(
         hass,

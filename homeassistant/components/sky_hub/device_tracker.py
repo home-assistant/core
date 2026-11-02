@@ -13,7 +13,12 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -49,6 +54,7 @@ async def async_setup_scanner(
             hass,
             DOMAIN,
             issue_id,
+            breaks_in_ha_version="2027.5.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.ERROR,
@@ -62,6 +68,7 @@ async def async_setup_scanner(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.5.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -114,7 +121,9 @@ class SkyHubScannerEntity(CoordinatorEntity[SkyHubCoordinator], ScannerEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{mac}"
         self._attr_mac_address = mac
         self._attr_hostname = name or None
-        self._attr_name = name or mac
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)}, name=name or mac
+        )
 
     @property
     @override
@@ -135,5 +144,10 @@ class SkyHubScannerEntity(CoordinatorEntity[SkyHubCoordinator], ScannerEntity):
         if self._mac in self.coordinator.data:
             name = self.coordinator.data[self._mac]
             self._attr_hostname = name or None
-            self._attr_name = name or self._mac
+            if (
+                name
+                and (device_entry := self.device_entry)
+                and device_entry.name != name
+            ):
+                dr.async_get(self.hass).async_update_device(device_entry.id, name=name)
         super()._handle_coordinator_update()

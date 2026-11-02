@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 from datetime import timedelta
+import logging
 import os
 from pathlib import PurePath
 from typing import Any
@@ -28,10 +29,13 @@ from aiohasupervisor.models import (
     PartialRestoreOptions,
     SupervisorOptions,
 )
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from probatio import Invalid
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -71,7 +75,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.const import HASSIO_USER_NAME, KEY_DATA_LOGGING
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -178,6 +182,62 @@ async def test_setup_api_ping(
     assert len(supervisor_client.mock_calls) == 17
     assert get_core_info(hass)["version_latest"] == "1.0.0"
     assert is_hassio(hass)
+
+
+@pytest.mark.usefixtures("supervisor_client")
+@pytest.mark.parametrize(
+    ("response", "expected", "logged"),
+    [
+        pytest.param(
+            {
+                "text": (
+                    "2026-10-29 10:00:00.000 INFO (MainThread) [homeassistant.setup]"
+                    " Setup\n"
+                    "2026-10-29 10:00:01.000 ERROR (MainThread)"
+                    " [homeassistant.components.demo] Failed\n"
+                    "ValueError: boom\n"
+                )
+            },
+            [
+                "2026-10-29 10:00:01.000 ERROR (MainThread)"
+                " [homeassistant.components.demo] Failed",
+                "ValueError: boom",
+            ],
+            False,
+            id="read",
+        ),
+        pytest.param({"exc": aiohttp.ClientError()}, [], True, id="error"),
+    ],
+)
+async def test_core_log_reader(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    response: dict[str, Any],
+    expected: list[str],
+    logged: bool,
+) -> None:
+    """Test the raw log starts with the Supervisor journal without a log file."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.hassio")
+    hass.data[KEY_DATA_LOGGING] = None
+    aioclient_mock.get(
+        "http://127.0.0.1/core/logs/latest", params={"lines": 5000}, **response
+    )
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, "system_log", {})
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "system_log/subscribe_raw", "integration": "demo"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    msg = await client.receive_json()
+    assert msg["event"] == expected
+    assert ("Could not read the Home Assistant log" in caplog.text) is logged
 
 
 async def test_setup_api_ping_fails(
@@ -1167,11 +1227,11 @@ async def test_device_registry_calls(
 
     # Test that when addon is removed, next update will remove the
     # add-on and subsequent updates won't
-    async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(device_registry.devices) == 5
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(device_registry.devices) == 5
 
@@ -1199,7 +1259,7 @@ async def test_device_registry_calls(
 
     # Test that when addon is added, next update will reload the entry so we register
     # a new device
-    async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=3))
     await hass.async_block_till_done()
     assert len(device_registry.devices) == 5
 
@@ -1219,7 +1279,7 @@ async def test_coordinator_updates(
         # Initial refresh, no update refresh call
         supervisor_client.reload_updates.assert_not_called()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Scheduled refresh, no update refresh call
@@ -1240,7 +1300,7 @@ async def test_coordinator_updates(
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     supervisor_client.reload_updates.assert_not_called()
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done(wait_background_tasks=True)
     supervisor_client.reload_updates.assert_called_once()
@@ -1260,7 +1320,7 @@ async def test_coordinator_updates(
     )
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
     supervisor_client.reload_updates.assert_called_once()
@@ -1286,13 +1346,13 @@ async def test_coordinator_updates_stats_entities_enabled(
         # Stats entities trigger refresh on the stats coordinator,
         # which does not call reload_updates
         async_fire_time_changed(
-            hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+            hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
         )
         await hass.async_block_till_done()
 
         supervisor_client.reload_updates.assert_not_called()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
     await hass.async_block_till_done()
     supervisor_client.reload_updates.assert_not_called()
 
@@ -1311,7 +1371,7 @@ async def test_coordinator_updates_stats_entities_enabled(
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
 
@@ -1330,7 +1390,7 @@ async def test_coordinator_updates_stats_entities_enabled(
     )
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
     supervisor_client.reload_updates.assert_called_once()
@@ -2002,7 +2062,7 @@ async def test_get_core_stats(hass: HomeAssistant) -> None:
 
     # Stats entities subscribe during setup and trigger a debounced refresh
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
 
@@ -2023,7 +2083,7 @@ async def test_get_supervisor_stats(hass: HomeAssistant) -> None:
 
     # Stats entities subscribe during setup and trigger a debounced refresh
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
 
@@ -2117,3 +2177,58 @@ async def test_supervisor_issues_not_set_on_coordinator_failure(
     assert DATA_KEY_SUPERVISOR_ISSUES not in hass.data
     assert not user.refresh_tokens
     assert hass.auth.async_validate_access_token(access_token) is None
+
+
+@pytest.mark.parametrize(
+    ("event_data", "expected_reload_count"),
+    [
+        pytest.param(
+            {
+                "event": "supervisor_update",
+                "update_key": "network",
+                "data": {"host_internet": True},
+            },
+            1,
+            id="network-update",
+        ),
+        pytest.param(
+            {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {"startup": "complete"},
+            },
+            0,
+            id="other-update-key",
+        ),
+        pytest.param(
+            {"event": "health_changed", "data": {"healthy": True}},
+            0,
+            id="other-event-type",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("supervisor_client")
+async def test_supervisor_network_update_event(
+    hass: HomeAssistant,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    event_data: dict[str, Any],
+    expected_reload_count: int,
+) -> None:
+    """Test supervisor network update events reload adapters."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.network.async_reload_adapters"
+        ) as mock_reload_adapters,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json_auto_id({"type": "supervisor/event", "data": event_data})
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert mock_reload_adapters.call_count == expected_reload_count

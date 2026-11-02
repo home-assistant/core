@@ -37,7 +37,7 @@ STATE_INCLUDE = [
     "hvac_mode",
     "hvac_action",
 ]
-SENSOR_INCLUDE = ["current_temperature", "outside_temperature", "total_energy"]
+SENSOR_INCLUDE = ["outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
@@ -141,7 +141,19 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                             "circuit": str(circuit),
                         },
                     ) from err
-            sensor = await self.client.sensor(include=SENSOR_INCLUDE)
+            try:
+                sensor = await self.client.sensor(include=SENSOR_INCLUDE)
+            except BSBLANAuthError, BSBLANConnectionError:
+                raise
+            except BSBLANMalformedResponseError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="coordinator_sensor_error",
+                    translation_placeholders={"host": host},
+                ) from err
+            except BSBLANError:
+                sensor = self.data.sensor if self.data else Sensor()
+                LOGGER.debug("Sensor data not available on device at %s", host)
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(

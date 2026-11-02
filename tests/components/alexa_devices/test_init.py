@@ -241,6 +241,31 @@ async def test_http2_stop_processing_called_on_shutdown(
     mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
 
 
+async def test_http2_client_per_entry(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test each config entry gets its own HTTP/2 client."""
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="second@example.com",
+        data=mock_config_entry.data,
+        unique_id="second_user_id",
+        version=mock_config_entry.version,
+        minor_version=mock_config_entry.minor_version,
+    )
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, second_entry)
+
+    first_client, second_client = (
+        call.args[0]
+        for call in mock_amazon_devices_client.start_http2_processing.call_args_list
+    )
+    # A shared connection would let each account's directives stream close the other
+    assert first_client is not second_client
+
+
 @pytest.mark.parametrize(
     ("configure_failure", "invoked_method"),
     [
