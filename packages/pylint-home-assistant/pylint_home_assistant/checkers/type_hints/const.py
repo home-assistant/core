@@ -404,7 +404,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
     ],
     Module.DEVICE_TRIGGER: [
         TypeHintMatch(
-            function_name="async_validate_condition_config",
+            function_name="async_validate_trigger_config",
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigType",

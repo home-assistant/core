@@ -1293,6 +1293,19 @@ def test_notify_get_service(
             37,
             id="callback_coroutine",
         ),
+        pytest.param(
+            """
+    def async_validate_trigger_config( #@
+        hass: HomeAssistant,
+        config: ConfigType,
+    ) -> ConfigType:
+        pass
+    """,
+            "homeassistant.components.pylint_test.device_trigger",
+            ("async_validate_trigger_config", "async def"),
+            33,
+            id="device_trigger_validation_not_coroutine",
+        ),
     ],
 )
 def test_invalid_function_async_mismatch(
@@ -1372,6 +1385,21 @@ def test_invalid_function_async_mismatch(
             "homeassistant.components.pylint_test.config_flow",
             id="sync_or_coroutine",
         ),
+        pytest.param(
+            """
+    async def async_setup(
+        hass: HomeAssistant,
+        config: ConfigType,
+    ) -> bool:
+        def async_setup_entry( #@
+            hass: HomeAssistant,
+            entry: ConfigEntry,
+        ) -> None:
+            pass
+    """,
+            "homeassistant.components.pylint_test",
+            id="nested_function",
+        ),
     ],
 )
 def test_valid_function_async_mismatch(
@@ -1382,7 +1410,7 @@ def test_valid_function_async_mismatch(
 ) -> None:
     """Ensure a function of the right kind is accepted."""
     func_node = astroid.extract_node(code, module_name)
-    type_hint_checker.visit_module(func_node.parent)
+    type_hint_checker.visit_module(func_node.root())
 
     with assert_no_messages(linter):
         type_hint_checker.visit_functiondef(func_node)

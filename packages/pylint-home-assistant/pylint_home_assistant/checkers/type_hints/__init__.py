@@ -209,7 +209,8 @@ class HassTypeHintChecker(BaseChecker):
     ) -> None:
         if self._ignore_function_match(node, annotations, match):
             return
-        if match.coroutine is not None:
+        # Nested functions are not loaded by Home Assistant
+        if match.coroutine is not None and node.parent is self._module_node:
             expected_coroutine = (
                 # explicit
                 match.coroutine
