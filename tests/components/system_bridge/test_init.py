@@ -24,6 +24,7 @@ from homeassistant.components.system_bridge.config_flow import SystemBridgeConfi
 from homeassistant.components.system_bridge.const import DOMAIN, GET_DATA_WAIT_TIMEOUT
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
@@ -553,6 +554,18 @@ async def test_power_state_marks_unavailable(
     await hass.async_block_till_done()
     assert f"TestSystem is unavailable: {power_state}" in caplog.text
 
+    # Asking for an update before the host has gone doesn't reconnect
+    assert await async_setup_component(hass, "homeassistant", {})
+    register = mock_websocket_client.register_data_listener
+    calls = register.await_count
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: "update.hostname"},
+        blocking=True,
+    )
+    assert register.await_count == calls
+
     # Reconnects fail quietly while the host is away
     mock_websocket_client.connect.side_effect = ConnectionErrorException
     mock_websocket_client.register_data_listener.side_effect = ConnectionErrorException
@@ -616,6 +629,51 @@ async def test_power_state_during_registration(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert register.await_count == calls + 1
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_power_state_while_waiting_for_registration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sleep event stops a registration still waiting for its response."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registering = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def register_without_response(*args: Any) -> None:
+        registering.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    async def listen_then_sleep(
+        callback: Any = None,
+        _: bool = False,
+        power_state_callback: Any = None,
+    ) -> None:
+        await registering.wait()
+        await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
+        await asyncio.Event().wait()
+
+    mock_websocket_client.connected = False
+    mock_websocket_client.listen.side_effect = listen_then_sleep
+    mock_websocket_client.register_data_listener.side_effect = register_without_response
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert cancelled.is_set()
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_version")
