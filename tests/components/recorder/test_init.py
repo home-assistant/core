@@ -2555,6 +2555,7 @@ async def test_engine_options_for_backend_and_driver(
     [
         pytest.param("sqlite:////config/home-assistant_v2.db", id="sqlite"),
         pytest.param("sqlite+pysqlite:////config/db.db", id="pysqlite"),
+        pytest.param("sqlite+pysqlcipher://:key@/config/db.db", id="pysqlcipher"),
         pytest.param("mysql://user:pass@host/db?charset=utf8mb4", id="mysql"),
         pytest.param("postgresql://user:pass@host/db", id="postgresql"),
     ],
@@ -2571,6 +2572,17 @@ def test_validate_db_url(db_url: str) -> None:
         pytest.param("sqlite:///:memory:", "In-memory SQLite", id="memory_database"),
         pytest.param(
             "sqlite+pysqlite:///:memory:", "In-memory SQLite", id="pysqlite_memory"
+        ),
+        pytest.param(
+            "sqlite://host//config/db.db", "Invalid database URL", id="sqlite_host"
+        ),
+        pytest.param(
+            "sqlite+pysqlite://user:pass@/config/db.db",
+            "Invalid database URL",
+            id="pysqlite_credentials",
+        ),
+        pytest.param(
+            "sqlite://:1234//config/db.db", "Invalid database URL", id="sqlite_port"
         ),
         pytest.param("garbage", "Invalid database URL", id="garbage"),
         pytest.param(

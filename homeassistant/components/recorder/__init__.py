@@ -98,6 +98,14 @@ def validate_db_url(db_url: str) -> Any:
         url = make_url(db_url)
     except (ArgumentError, ValueError) as err:
         raise probatio.Invalid("Invalid database URL") from err
+    # SQLAlchemy only rejects these when creating the engine, after the
+    # recorder may already have moved away the file named in the URL
+    if (
+        url.get_backend_name() == "sqlite"
+        and url.get_driver_name() == "pysqlite"
+        and (url.username or url.password or url.host or url.port)
+    ):
+        raise probatio.Invalid("Invalid database URL")
     # Don't allow on-memory sqlite databases
     if (
         url.get_backend_name() == "sqlite"
