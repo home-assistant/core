@@ -678,7 +678,7 @@
       "message": "This action requires token authentication (V1 API)."
     },
     "unexpected_web_page": {
-      "message": "Growatt returned a web page instead of data, even after logging in again."
+      "message": "Growatt returned a web page instead of data, even right after logging in."
     },
     "unknown_auth_type": {
       "message": "Unknown authentication type in config entry"

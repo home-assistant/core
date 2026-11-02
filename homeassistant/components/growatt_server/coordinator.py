@@ -74,6 +74,11 @@ class GrowattReloginThrottled(Exception):
 class GrowattUnexpectedWebPage(Exception):
     """Growatt answered a data request with a web page on a fresh session."""
 
+    def __init__(self, retry_after: float) -> None:
+        """Initialize with the seconds until a login may be attempted again."""
+        super().__init__("Growatt returned a web page instead of data")
+        self.retry_after = retry_after
+
 
 class GrowattClassicSession:
     """Classic API client and login state shared by a config entry."""
@@ -268,7 +273,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.device_list = None
 
     def _sync_renew_session(
-        self, session: GrowattClassicSession, seen_generation: int
+        self,
+        session: GrowattClassicSession,
+        seen_generation: int,
+        fetched_since_login: bool,
     ) -> None:
         """Log in to the Classic API again after the session expired."""
         try:
@@ -280,6 +288,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 retry_after=err.retry_after,
             ) from err
         except GrowattReloginThrottled as err:
+            # No request has worked on the current login, so the session is
+            # not what is wrong.
+            if not fetched_since_login:
+                raise GrowattUnexpectedWebPage(err.retry_after) from err
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="relogin_throttled",
@@ -316,24 +328,22 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # in async_setup_entry is reused until it expires. Growatt answers an
         # expired session with a redirect to an HTML login page, which the
         # library surfaces as a JSONDecodeError.
+        # Read generation first, so a login between the two reads looks like
+        # a renewal by another coordinator.
         seen_generation = session.generation
         fetched_since_login = session.fetched_since_login
         try:
             data = self._sync_fetch_data(fetch_device_list)
-        except RequestsJSONDecodeError as err:
-            # A login that no request has succeeded on yet won't be helped by
-            # another one.
-            if not fetched_since_login and session.generation == seen_generation:
-                raise GrowattUnexpectedWebPage from err
+        except RequestsJSONDecodeError:
             _LOGGER.debug("Growatt session expired, logging in again")
         else:
             session.fetched_since_login = True
             return data
-        self._sync_renew_session(session, seen_generation)
+        self._sync_renew_session(session, seen_generation, fetched_since_login)
         try:
             data = self._sync_fetch_data(fetch_device_list)
         except RequestsJSONDecodeError as err:
-            raise GrowattUnexpectedWebPage from err
+            raise GrowattUnexpectedWebPage(RELOGIN_INTERVAL.total_seconds()) from err
         session.fetched_since_login = True
         return data
 
@@ -543,6 +553,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key=ISSUE_UNEXPECTED_WEB_PAGE,
+                retry_after=err.retry_after,
             ) from err
         except (json.decoder.JSONDecodeError, RequestsJSONDecodeError) as err:
             raise UpdateFailed(

@@ -530,9 +530,11 @@ async def test_classic_api_web_page_with_working_login_bounds_logins(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # One login once RELOGIN_INTERVAL has passed. After that login fails to
-    # help, polls stop logging in until a request succeeds again.
-    mock_growatt_classic_api.login.assert_called_once()
+    # At most one login per RELOGIN_INTERVAL, shared by both coordinators.
+    assert mock_growatt_classic_api.login.call_count == 8
+    coordinator = mock_config_entry_classic.runtime_data.devices["TLX123456"]
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_key == "unexpected_web_page"
     issue_id = WEB_PAGE_ISSUE_ID.format(entry_id=mock_config_entry_classic.entry_id)
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
@@ -554,6 +556,7 @@ async def test_classic_api_web_page_at_setup_raises_issue(
     hass: HomeAssistant,
     mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a web page right after the setup login raises the repair issue."""
@@ -567,6 +570,15 @@ async def test_classic_api_web_page_at_setup_raises_issue(
 
     assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
     mock_growatt_classic_api.login.assert_called_once()
+
+    # Setup retries wait out RELOGIN_INTERVAL, so 4 hours cost 8 more logins.
+    for _ in range(240):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_growatt_classic_api.login.call_count == 9
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
     issue = issue_registry.async_get_issue(
         DOMAIN, WEB_PAGE_ISSUE_ID.format(entry_id=mock_config_entry_classic.entry_id)
     )
