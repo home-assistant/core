@@ -21,13 +21,25 @@ class Route53Data:
     ttl: int
 
 
+def update_route53(data: Route53Data) -> None:
+    """Update the Route53 records with the current public IP address."""
+    _update_route53(
+        data.aws_access_key_id,
+        data.aws_secret_access_key,
+        data.zone,
+        data.domain,
+        data.records,
+        data.ttl,
+    )
+
+
 def _get_fqdn(record, domain):
     if record == ".":
         return domain
     return f"{record}.{domain}"
 
 
-def update_route53(
+def _update_route53(
     aws_access_key_id: str,
     aws_secret_access_key: str,
     zone: str,

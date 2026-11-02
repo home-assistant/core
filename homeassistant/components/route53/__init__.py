@@ -53,14 +53,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def update_records_interval(now):
         """Set up recurring update."""
-        update_route53(
-            data.aws_access_key_id,
-            data.aws_secret_access_key,
-            data.zone,
-            data.domain,
-            data.records,
-            data.ttl,
-        )
+        update_route53(data)
 
     track_time_interval(hass, update_records_interval, INTERVAL)
 

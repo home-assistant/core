@@ -8,15 +8,7 @@ from .helpers import update_route53
 
 def _update_records(call: ServiceCall) -> None:
     """Update the Route53 records."""
-    data = call.hass.data[DATA_ROUTE53]
-    update_route53(
-        data.aws_access_key_id,
-        data.aws_secret_access_key,
-        data.zone,
-        data.domain,
-        data.records,
-        data.ttl,
-    )
+    update_route53(call.hass.data[DATA_ROUTE53])
 
 
 def setup_services(hass: HomeAssistant) -> None:
