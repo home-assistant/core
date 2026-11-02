@@ -1014,7 +1014,7 @@ class Repository:
 
         filename = readmes[languages[0]]
         # The file comes from the version whose files named it
-        version = None if self.data.installed else self.tree_ref
+        version = installed if self.data.installed else self.tree_ref
         try:
             return (
                 await self.get_documentation(filename=filename, version=version) or ""
