@@ -103,6 +103,10 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -390,6 +394,10 @@
       "integration_type": "device",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "network",
+        "serial"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -835,6 +843,10 @@
       "categories": [
         "messaging_notifications"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -1197,6 +1209,10 @@
       "categories": [
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1403,6 +1419,10 @@
       "categories": [
         "media_entertainment"
       ],
+      "connectivity": [
+        "network",
+        "serial"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -1531,6 +1551,11 @@
         "buttons_remotes",
         "blinds_curtains"
       ],
+      "connectivity": [
+        "infrared",
+        "network",
+        "rf"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1588,6 +1613,10 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "supported_by": "overkiz"
     },
     "brel_home": {
@@ -1616,6 +1645,11 @@
       "categories": [
         "buttons_remotes",
         "plugs_switches"
+      ],
+      "connectivity": [
+        "infrared",
+        "network",
+        "rf"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -1744,6 +1778,10 @@
         "security_safety.cameras",
         "weather_alerts"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "supported_by": "netatmo"
     },
     "bubendorff": {
@@ -1753,6 +1791,10 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "netatmo"
     },
@@ -1802,6 +1844,10 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1868,6 +1914,10 @@
       "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2057,6 +2107,10 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.music_radio_services"
+      ],
+      "connectivity": [
+        "host",
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -2280,6 +2334,10 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "supported_by": "overkiz"
     },
     "cpuspeed": {
@@ -2307,6 +2365,10 @@
       "integration_type": "hub",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "cloud",
+        "serial"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -2570,6 +2632,10 @@
           "categories": [
             "hubs_protocols.smart_home_hubs"
           ],
+          "connectivity": [
+            "cloud",
+            "zwave"
+          ],
           "name": "devolo Home Control"
         },
         "devolo_home_network": {
@@ -2717,6 +2783,10 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2828,6 +2898,10 @@
       "categories": [
         "energy.meters_monitoring",
         "water.meters_leak_detection"
+      ],
+      "connectivity": [
+        "network",
+        "serial"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -3219,6 +3293,10 @@
         "security_safety.alarm_systems",
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "network",
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3227,6 +3305,10 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3280,6 +3362,10 @@
           "categories": [
             "energy.meters_monitoring"
           ],
+          "connectivity": [
+            "cloud",
+            "network"
+          ],
           "name": "Emoncms"
         },
         "emoncms_history": {
@@ -3289,6 +3375,10 @@
           "categories": [
             "energy.meters_monitoring",
             "diy_makers.web_data_connectors"
+          ],
+          "connectivity": [
+            "cloud",
+            "network"
           ],
           "name": "Emoncms History"
         }
@@ -3691,6 +3781,10 @@
       "categories": [
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3736,6 +3830,10 @@
       "integration_type": "service",
       "categories": [
         "news_social_media"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3957,6 +4055,10 @@
       "integration_type": "virtual",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "overkiz"
     },
@@ -4286,6 +4388,10 @@
         "energy.solar_batteries",
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "modbus",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4341,6 +4447,10 @@
       "integration_type": "device",
       "categories": [
         "computers_network"
+      ],
+      "connectivity": [
+        "mqtt",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4486,6 +4596,10 @@
         "diy_makers.web_data_connectors",
         "weather_alerts.public_warnings"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4495,6 +4609,10 @@
       "categories": [
         "diy_makers.web_data_connectors",
         "weather_alerts.public_warnings"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -4513,6 +4631,10 @@
       "integration_type": "hub",
       "categories": [
         "presence_location.phones_companion_apps"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -4569,6 +4691,10 @@
       "categories": [
         "news_social_media"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4596,6 +4722,10 @@
       "categories": [
         "computers_network.cloud_developer_tools"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -4604,6 +4734,10 @@
       "integration_type": "virtual",
       "categories": [
         "messaging_notifications.chat_apps"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "matrix"
     },
@@ -4935,6 +5069,10 @@
       "categories": [
         "presence_location.phones_companion_apps"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -5076,6 +5214,10 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5227,6 +5369,10 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "host",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -5344,6 +5490,10 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "supported_by": "overkiz"
     },
     "hi_kumo": {
@@ -5351,6 +5501,10 @@
       "integration_type": "virtual",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "overkiz"
     },
@@ -5455,6 +5609,10 @@
         "security_safety.cameras",
         "weather_alerts"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "supported_by": "netatmo"
     },
     "homeassistant_connect_zbt2": {
@@ -5497,6 +5655,12 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "enocean",
+        "network",
+        "zigbee",
+        "zwave"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -5957,6 +6121,10 @@
       "categories": [
         "messaging_notifications.email_sms_calls"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -6146,6 +6314,10 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6324,6 +6496,10 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "modbus",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6380,6 +6556,11 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "insteon",
+        "x10",
+        "zwave"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -6783,6 +6964,10 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "network",
+        "serial"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -6791,6 +6976,10 @@
       "integration_type": "hub",
       "categories": [
         "sensors.temperature_humidity"
+      ],
+      "connectivity": [
+        "rf",
+        "serial"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -6809,6 +6998,10 @@
       "integration_type": "device",
       "categories": [
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "bluetooth",
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -6935,6 +7128,10 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "netatmo"
     },
@@ -7276,6 +7473,10 @@
       "categories": [
         "ai_voice.ai_models"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7390,6 +7591,10 @@
           "iot_class": "local_push",
           "categories": [
             "buttons_remotes"
+          ],
+          "connectivity": [
+            "bluetooth",
+            "infrared"
           ],
           "name": "Logitech Harmony Hub"
         },
@@ -7677,6 +7882,10 @@
       "categories": [
         "news_social_media"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7685,6 +7894,10 @@
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.chat_apps"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -8071,6 +8284,10 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8091,6 +8308,10 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.cloud_developer_tools"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -8230,6 +8451,10 @@
       "integration_type": "virtual",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "intellifire"
     },
@@ -8501,6 +8726,11 @@
       "categories": [
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "mqtt",
+        "network",
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -8540,6 +8770,10 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network",
+        "serial"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -8669,6 +8903,10 @@
         "security_safety.cameras",
         "weather_alerts"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -8773,6 +9011,10 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "supported_by": "overkiz"
     },
     "nextbus": {
@@ -8788,6 +9030,10 @@
       "integration_type": "service",
       "categories": [
         "computers_network.nas_servers"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8819,6 +9065,10 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "modbus",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8836,6 +9086,10 @@
       "integration_type": "service",
       "categories": [
         "health_wellbeing"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9022,6 +9276,10 @@
       "integration_type": "service",
       "categories": [
         "messaging_notifications.push_notifications"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -9491,6 +9749,10 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "network",
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -9676,6 +9938,10 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -9714,6 +9980,10 @@
       "integration_type": "service",
       "categories": [
         "presence_location.phones_companion_apps"
+      ],
+      "connectivity": [
+        "mqtt",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push",
@@ -9800,6 +10070,10 @@
       "categories": [
         "lighting.lighting_systems",
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network",
+        "serial"
       ],
       "supported_by": "upb"
     },
@@ -10394,6 +10668,10 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "host",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -10585,6 +10863,10 @@
       "integration_type": "virtual",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "intellifire"
     },
@@ -10900,6 +11182,10 @@
       "categories": [
         "productivity_information.calendars_todos"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -10955,6 +11241,10 @@
       "categories": [
         "diy_makers.web_data_connectors"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -10964,6 +11254,10 @@
       "categories": [
         "diy_makers.web_data_connectors"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -10972,6 +11266,10 @@
       "integration_type": "virtual",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "overkiz"
     },
@@ -11072,6 +11370,10 @@
         "appliances_cleaning.cleaning",
         "appliances_cleaning.laundry"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -11080,6 +11382,10 @@
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.chat_apps"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -11177,6 +11483,10 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "rf",
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -11232,6 +11542,10 @@
           "iot_class": "local_push",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "network",
+            "serial"
           ],
           "name": "Russound RIO"
         },
@@ -11456,6 +11770,10 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers.web_data_connectors"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11806,6 +12124,10 @@
       "categories": [
         "messaging_notifications.chat_apps"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -11864,6 +12186,10 @@
         "lighting.lighting_systems",
         "plugs_switches"
       ],
+      "connectivity": [
+        "network",
+        "serial"
+      ],
       "supported_by": "upb"
     },
     "simu": {
@@ -11871,6 +12197,10 @@
       "integration_type": "virtual",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "overkiz"
     },
@@ -12044,6 +12374,11 @@
         "plugs_switches",
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "cloud",
+        "mqtt",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12105,6 +12440,10 @@
         "climate.thermostats_heating",
         "security_safety.cameras",
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "netatmo"
     },
@@ -12170,6 +12509,10 @@
       "integration_type": "service",
       "categories": [
         "messaging_notifications.email_sms_calls"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -12325,6 +12668,10 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "supported_by": "overkiz"
     },
     "somfy_mylink": {
@@ -12332,6 +12679,10 @@
       "integration_type": "hub",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network",
+        "rf"
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
@@ -12503,6 +12854,10 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers.web_data_connectors"
+      ],
+      "connectivity": [
+        "host",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -12708,6 +13063,10 @@
         "hubs_protocols.smart_home_hubs",
         "diy_makers"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -12853,6 +13212,10 @@
           "iot_class": "cloud_push",
           "categories": [
             "messaging_notifications.chat_apps"
+          ],
+          "connectivity": [
+            "cloud",
+            "network"
           ],
           "name": "Synology Chat"
         },
@@ -13074,6 +13437,10 @@
       "categories": [
         "messaging_notifications.chat_apps"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -13098,6 +13465,12 @@
           "iot_class": "cloud_polling",
           "categories": [
             "hubs_protocols.smart_home_hubs"
+          ],
+          "connectivity": [
+            "cloud",
+            "network",
+            "rf",
+            "zwave"
           ],
           "name": "Telldus Live"
         },
@@ -13194,6 +13567,11 @@
         "vehicles_transport.cars_evs",
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "bluetooth",
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -13273,6 +13651,10 @@
           "iot_class": "cloud_push",
           "categories": [
             "hubs_protocols.wireless_protocols"
+          ],
+          "connectivity": [
+            "cloud",
+            "network"
           ],
           "name": "The Things Network"
         },
@@ -13586,6 +13968,10 @@
           "categories": [
             "presence_location.phones_companion_apps"
           ],
+          "connectivity": [
+            "cloud",
+            "network"
+          ],
           "name": "Traccar Client"
         },
         "traccar_server": {
@@ -13889,6 +14275,10 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "supported_by": "overkiz"
     },
     "ublockout": {
@@ -13944,6 +14334,10 @@
       "categories": [
         "lighting.lighting_systems",
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network",
+        "serial"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -14007,6 +14401,10 @@
       "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14115,6 +14513,10 @@
       "categories": [
         "hubs_protocols.building_automation"
       ],
+      "connectivity": [
+        "network",
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -14168,6 +14570,10 @@
       "integration_type": "virtual",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "supported_by": "intellifire"
     },
@@ -14533,6 +14939,10 @@
       "categories": [
         "computers_network.cloud_developer_tools"
       ],
+      "connectivity": [
+        "cloud",
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14846,6 +15256,10 @@
             "climate.air_purifiers_humidifiers",
             "appliances_cleaning.cleaning"
           ],
+          "connectivity": [
+            "cloud",
+            "network"
+          ],
           "name": "Xiaomi Home"
         },
         "xiaomi_tv": {
@@ -14889,6 +15303,10 @@
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.chat_apps"
+      ],
+      "connectivity": [
+        "cloud",
+        "network"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
