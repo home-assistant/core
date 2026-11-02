@@ -1484,6 +1484,7 @@ async def test_multizone_color_keeps_the_brightness_of_a_dark_strip(
     """Test a color-only change on a dark strip reads its zones where they are."""
     device = create_mock_multizone_light()
     device.state.power = 0
+    device.state.zones = [HSBK(300.0, 1.0, 1.0, 3500), HSBK(255.0, 1.0, 0.25, 3500)]
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -1495,11 +1496,10 @@ async def test_multizone_color_keeps_the_brightness_of_a_dark_strip(
 
     # Powered on once for the caller, since a dark strip still reports its zones
     assert device.set_power.await_args_list == [call(True, duration=0.0)]
-    zones = device.state.zones
     device.set_all_color_zones.assert_awaited_once_with(
-        [HSBK(120.0, 0.5, zone.brightness, zone.kelvin) for zone in zones],
+        [HSBK(120.0, 0.5, 1.0, 3500), HSBK(120.0, 0.5, 0.25, 3500)],
         start=0,
-        end=len(zones) - 1,
+        end=1,
         duration=0.0,
     )
 
