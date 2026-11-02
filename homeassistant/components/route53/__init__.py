@@ -11,7 +11,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .helpers import _update_route53
+from .helpers import update_route53
 
 CONF_ACCESS_KEY_ID = "aws_access_key_id"
 CONF_SECRET_ACCESS_KEY = "aws_secret_access_key"
@@ -50,13 +50,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def update_records_interval(now):
         """Set up recurring update."""
-        _update_route53(
+        update_route53(
             aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
         )
 
     def update_records_service(call: ServiceCall) -> None:
         """Set up service for manual trigger."""
-        _update_route53(
+        update_route53(
             aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
         )
 

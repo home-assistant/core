@@ -14,7 +14,7 @@ def _get_fqdn(record, domain):
     return f"{record}.{domain}"
 
 
-def _update_route53(
+def update_route53(
     aws_access_key_id: str,
     aws_secret_access_key: str,
     zone: str,
@@ -22,6 +22,7 @@ def _update_route53(
     records: list[str],
     ttl: int,
 ):
+    """Update the Route53 records with the current public IP address."""
     LOGGER.debug("Starting update for zone %s", zone)
 
     client = boto3.client(
