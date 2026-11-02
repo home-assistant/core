@@ -4,12 +4,11 @@ from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tis_smartbus import DiscoveredDevice, Telegram, lookup
 
 from homeassistant.components.tis_control.const import DOMAIN
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 HOST = "192.168.1.50"
 

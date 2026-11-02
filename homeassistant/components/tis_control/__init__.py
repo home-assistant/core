@@ -15,7 +15,7 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 type TISConfigEntry = ConfigEntry[TISHub]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> None:
     """Set up TIS Control from a config entry."""
     gateway = TISGateway(entry.data[CONF_HOST], entry.data[CONF_PORT])
     try:
@@ -38,11 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
         ) from err
     entry.runtime_data = hub
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TISConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.async_stop()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.async_stop()

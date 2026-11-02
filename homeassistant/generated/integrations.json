@@ -15268,6 +15268,13 @@
     "tis_control": {
       "name": "TIS Control",
       "integration_type": "hub",
+      "categories": [
+        "lighting.lighting_systems",
+        "hubs_protocols.building_automation"
+      ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },

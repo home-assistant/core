@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from tis_smartbus import OpCode
 
@@ -19,8 +24,6 @@ from homeassistant.components.tis_control.const import POLL_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 CHANNEL_1 = "light.living_dimmer_channel_1"
 CHANNEL_2 = "light.living_dimmer_channel_2"
