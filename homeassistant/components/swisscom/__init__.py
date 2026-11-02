@@ -27,7 +27,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: SwisscomConfigEntry) ->
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: SwisscomConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
-    """Allow removing a client device which the Internet-Box no longer knows."""
+    """Allow removing a client device which is not currently connected.
+
+    The device of the Internet-Box itself can't be removed.
+    """
     if not isinstance(device_entry, dr.DeviceEntry):
         # This integration does not create child devices.
         return False
@@ -38,10 +41,11 @@ async def async_remove_config_entry_device(
     }
     if entry.unique_id in macs:
         return False
-    # Without data from the Internet-Box, any client device may be stale
+    # Without data from the Internet-Box, no client is known to be connected
     if entry.state is not ConfigEntryState.LOADED:
         return True
     return macs.isdisjoint(
         dr.format_mac(device.phys_address)
         for device in entry.runtime_data.data.values()
+        if device.active
     )

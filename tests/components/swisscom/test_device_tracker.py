@@ -10,6 +10,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from homeassistant.components.swisscom.const import DOMAIN
 from homeassistant.components.swisscom.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -18,11 +19,15 @@ from .const import TEST_FORMATTED_MAC
 
 CLIENT_MAC = "11:22:33:44:55:66"
 OTHER_MAC = "66:55:44:33:22:11"
+INACTIVE_MAC = "22:33:44:55:66:77"
+ENTITY_ID = "device_tracker.phone"
 
 
-def _client(mac: str, name: str | None) -> MagicMock:
+def _client(mac: str, name: str | None, *, active: bool = True) -> MagicMock:
     """Return a mocked LAN client of the Internet-Box."""
-    client = MagicMock(key=mac, phys_address=mac, ip_address="192.168.1.2", active=True)
+    client = MagicMock(
+        key=mac, phys_address=mac, ip_address="192.168.1.2", active=active
+    )
     client.name = name
     return client
 
@@ -174,7 +179,8 @@ async def test_reload_without_name_keeps_device_name(
 @pytest.mark.parametrize(
     ("mac", "removable"),
     [
-        pytest.param(CLIENT_MAC, False, id="known_client"),
+        pytest.param(CLIENT_MAC, False, id="connected_client"),
+        pytest.param(INACTIVE_MAC, True, id="inactive_client"),
         pytest.param(OTHER_MAC, True, id="forgotten_client"),
         pytest.param(TEST_FORMATTED_MAC, False, id="internet_box"),
     ],
@@ -189,10 +195,11 @@ async def test_remove_config_entry_device(
     mac: str,
     removable: bool,
 ) -> None:
-    """Test only devices the Internet-Box no longer knows can be removed."""
+    """Test only devices of clients which are not connected can be removed."""
     assert await async_setup_component(hass, "config", {})
     mock_swisscom_client.get_devices.return_value = [
         _client(CLIENT_MAC, "phone"),
+        _client(INACTIVE_MAC, "tablet"),
         _client(OTHER_MAC, "laptop"),
     ]
     mock_config_entry.add_to_hass(hass)
@@ -203,8 +210,12 @@ async def test_remove_config_entry_device(
         connections={(dr.CONNECTION_NETWORK_MAC, TEST_FORMATTED_MAC)},
     )
 
-    # The Internet-Box forgets the second client
-    mock_swisscom_client.get_devices.return_value = [_client(CLIENT_MAC, "phone")]
+    # The Internet-Box still knows the disconnected second client, but forgets
+    # the third one
+    mock_swisscom_client.get_devices.return_value = [
+        _client(CLIENT_MAC, "phone"),
+        _client(INACTIVE_MAC, "tablet", active=False),
+    ]
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -310,6 +321,118 @@ async def test_removed_client_rediscovered(
     )
     assert device is not None
     assert entity_entry.device_id == device.id
+
+
+async def test_removed_inactive_client_stays_removed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    mock_swisscom_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a removed client the Internet-Box remembers stays removed on reload."""
+    assert await async_setup_component(hass, "config", {})
+    client = _client(CLIENT_MAC, "phone")
+    mock_swisscom_client.get_devices.return_value = [client]
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client.active = False
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, CLIENT_MAC), mock_config_entry.entry_id
+    )
+    assert device is not None
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+    assert response["success"]
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(ENTITY_ID) is None
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, CLIENT_MAC), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+    client.active = True
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry is not None
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, CLIENT_MAC), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert entity_entry.device_id == device.id
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_inactive_client_tracker_set_up_after_reload(
+    hass: HomeAssistant,
+    mock_swisscom_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the existing tracker of an inactive client is set up on reload."""
+    client = _client(CLIENT_MAC, "phone")
+    mock_swisscom_client.get_devices.return_value = [client]
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_HOME
+
+    client.active = False
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_NOT_HOME
+
+
+async def test_new_inactive_client_not_tracked_until_active(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_swisscom_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a new client the Internet-Box remembers is tracked once active."""
+    client = _client(CLIENT_MAC, "phone", active=False)
+    mock_swisscom_client.get_devices.return_value = [client]
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(ENTITY_ID) is None
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, CLIENT_MAC), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+    client.active = True
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get(ENTITY_ID) is not None
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, CLIENT_MAC), mock_config_entry.entry_id
+        )
+        is not None
+    )
 
 
 @pytest.mark.usefixtures("mock_swisscom_client")

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, override
 import probatio
 
 from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     ScannerEntity,
@@ -14,6 +15,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -63,6 +65,7 @@ async def async_setup_entry(
     """Set up device tracker entities for the Swisscom Internet-Box."""
     coordinator = entry.runtime_data
     device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     # Formatted MAC address of each tracked client, by client key
     tracked: dict[str, str] = {}
 
@@ -81,7 +84,19 @@ async def async_setup_entry(
                 and device_entry.name != client.name
             ):
                 device_registry.async_update_device(device_entry.id, name=client.name)
-        new_keys = [key for key in coordinator.data if key not in tracked]
+        # An inactive client is only set up if its tracker already exists, so a
+        # removed client stays removed until it is active again
+        new_keys = [
+            key
+            for key, client in coordinator.data.items()
+            if key not in tracked
+            and (
+                client.active
+                or entity_registry.async_get_entity_id(
+                    DEVICE_TRACKER_DOMAIN, DOMAIN, key
+                )
+            )
+        ]
         if new_keys:
             tracked.update(
                 (key, dr.format_mac(coordinator.data[key].phys_address))
