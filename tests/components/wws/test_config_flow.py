@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyenergiedock import EdAPIError, EdAuthError
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.wws.const import DOMAIN
@@ -263,12 +263,12 @@ async def test_price_rolls_over_at_quarter_hour(
             "homeassistant.components.wws.DynamiT.async_get_latest_prices",
             new_callable=AsyncMock,
             return_value=prices,
-        ),
+        ) as mock_get_latest_prices,
         patch(
             "homeassistant.components.wws.DynamiT.async_get_latest_measurements",
             new_callable=AsyncMock,
             return_value=[],
-        ),
+        ) as mock_get_latest_measurements,
     ):
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
@@ -277,8 +277,10 @@ async def test_price_rolls_over_at_quarter_hour(
         assert hass.states.get("sensor.wws_next_price_ct_kwh").state == "0.34"
 
         freezer.move_to(datetime(2024, 1, 1, 12, 30, tzinfo=UTC))
-        await hass.config_entries.async_reload(mock_entry.entry_id)
+        async_fire_time_changed(hass, datetime(2024, 1, 1, 12, 30, tzinfo=UTC))
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wws_price_ct_kwh").state == "0.34"
     assert hass.states.get("sensor.wws_next_price_ct_kwh").state == "0.34"
+    assert mock_get_latest_prices.await_count == 1
+    assert mock_get_latest_measurements.await_count == 1
