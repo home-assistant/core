@@ -107,7 +107,13 @@ async def test_update_setup(
     "catalog_responses",
     [
         pytest.param([SmlightConnectionError("Catalog unavailable")], id="core"),
-        pytest.param([[], SmlightConnectionError("Catalog unavailable")], id="radio"),
+        pytest.param(
+            [
+                [Firmware(ver="v2.7.5", mode="ESP")],
+                SmlightConnectionError("Catalog unavailable"),
+            ],
+            id="radio",
+        ),
     ],
 )
 async def test_catalog_connection_error_recovery(
@@ -123,7 +129,6 @@ async def test_catalog_connection_error_recovery(
     assert hass.states.get("update.mock_title_core_firmware").state == STATE_ON
     assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_ON
 
-    get_firmware = mock_smlight_client.get_firmware_version.side_effect
     mock_smlight_client.get_firmware_version.side_effect = catalog_responses
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
@@ -136,7 +141,10 @@ async def test_catalog_connection_error_recovery(
         hass.states.get("update.mock_title_zigbee_firmware").state != STATE_UNAVAILABLE
     )
 
-    mock_smlight_client.get_firmware_version.side_effect = get_firmware
+    mock_smlight_client.get_firmware_version.side_effect = [
+        [Firmware(ver="v2.7.5", mode="ESP")],
+        [Firmware(ver="20250201", mode="ZB")],
+    ]
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         MAC="AA:BB:CC:DD:EE:FF",
