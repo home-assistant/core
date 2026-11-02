@@ -6,7 +6,7 @@ from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, TypedDict, override
 
 from pyzonneplan import (
     Account,
@@ -61,6 +61,14 @@ class ZonneplanRuntimeData:
     battery_control_coordinator: ZonneplanBatteryControlCoordinator
     charge_point_coordinator: ZonneplanChargePointCoordinator
     battery_settings_coordinator: ZonneplanBatterySettingsCoordinator
+
+
+class ZonneplanElectricity(TypedDict):
+    """Electricity prices and usage fetched from the Zonneplan API."""
+
+    prices: ConsumerPrices | None
+    quarter_prices: ConsumerPrices | None
+    usage: ElectricityChart | None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -214,25 +222,25 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(hass, entry, zonneplan, UPDATE_INTERVAL)
-        # Update the price entities at the start of every hour, when prices change.
+        # Update the price entities at every quarter hour, when prices change.
         entry.async_on_unload(
             async_track_utc_time_change(
-                hass, self._async_hour_started, minute=0, second=0
+                hass, self._async_quarter_started, minute=[0, 15, 30, 45], second=0
             )
         )
 
     @callback
-    def _async_hour_started(self, now: datetime) -> None:
-        """Update the entities with the prices of the new hour."""
+    def _async_quarter_started(self, now: datetime) -> None:
+        """Update the entities with the prices of the new quarter hour."""
         self.async_update_listeners()
 
     async def _async_fetch_electricity(
         self, account: Account, today: date
-    ) -> tuple[ConsumerPrices | None, ConsumerPrices | None, ElectricityChart | None]:
+    ) -> ZonneplanElectricity:
         """Fetch electricity prices and usage, if the account has electricity."""
         if (connection := _connection(account, "electricity")) is None:
-            return None, None, None
-        return await asyncio.gather(
+            return {"prices": None, "quarter_prices": None, "usage": None}
+        prices, quarter_prices, usage = await asyncio.gather(
             self.zonneplan.async_get_consumer_prices(PriceChart.ELECTRICITY_HOURLY),
             self.zonneplan.async_get_consumer_prices(
                 PriceChart.ELECTRICITY_QUARTER_HOURLY
@@ -241,6 +249,7 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
                 connection.uuid, today, ConsumptionChart.DAYS
             ),
         )
+        return {"prices": prices, "quarter_prices": quarter_prices, "usage": usage}
 
     async def _async_fetch_gas(
         self, account: Account, today: date
@@ -262,7 +271,7 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
         # The consumption charts cover the month of the given local day.
         today = dt_util.now().date()
         (
-            (electricity_prices, electricity_quarter_prices, electricity_usage),
+            electricity,
             (gas_prices, gas_usage),
         ) = await asyncio.gather(
             self._async_fetch_electricity(account, today),
@@ -270,10 +279,10 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
         )
         return ZonneplanData(
             account=account,
-            electricity_prices=electricity_prices,
-            electricity_quarter_prices=electricity_quarter_prices,
+            electricity_prices=electricity["prices"],
+            electricity_quarter_prices=electricity["quarter_prices"],
             gas_prices=gas_prices,
-            electricity_usage=electricity_usage,
+            electricity_usage=electricity["usage"],
             gas_usage=gas_usage,
         )
 
