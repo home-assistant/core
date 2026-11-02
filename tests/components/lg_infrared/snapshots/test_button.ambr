@@ -532,7 +532,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'audio_track',
-    'unique_id': '01JTEST0000000000000000000_audio',
+    'unique_id': '01JTEST0000000000000000000_audio_track',
     'unit_of_measurement': None,
   })
 # ---
@@ -1671,12 +1671,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Optical / TV sound',
+    'object_id_base': 'Optical/TV sound',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Optical / TV sound',
+    'original_name': 'Optical/TV sound',
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1689,7 +1689,7 @@
 # name: test_entities[home_theater][button.lg_home_theater_optical_tv_sound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Optical / TV sound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Optical/TV sound',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_home_theater_optical_tv_sound',

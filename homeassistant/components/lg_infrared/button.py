@@ -276,7 +276,7 @@ HOME_THEATER_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
         command_code=LGHomeTheaterCode.SPEAKER_LEVEL,
     ),
     LgIrButtonEntityDescription(
-        key="audio",
+        key="audio_track",
         translation_key="audio_track",
         command_code=LGHomeTheaterCode.AUDIO,
     ),

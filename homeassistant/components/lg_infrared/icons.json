@@ -38,7 +38,7 @@
         "default": "mdi:exit-to-app"
       },
       "function": {
-        "default": "mdi:view-grid-plus"
+        "default": "mdi:import"
       },
       "green": {
         "default": "mdi:circle"
@@ -164,7 +164,7 @@
         "default": "mdi:arrow-up-down"
       },
       "title_popup": {
-        "default": "mdi:format-title"
+        "default": "mdi:menu-open"
       },
       "up": {
         "default": "mdi:arrow-up"
