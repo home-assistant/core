@@ -1,6 +1,7 @@
 """Test cases for the Shelly component."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from ipaddress import IPv4Address
 from typing import Any
@@ -45,8 +46,9 @@ from homeassistant.components.shelly.const import (
     RPC_RECONNECT_INTERVAL,
     BLEScannerMode,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -60,6 +62,8 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     EVENT_DEVICE_REGISTRY_UPDATED,
+    AnyDeviceEntry,
+    ChildDeviceEntry,
     DeviceRegistry,
     format_mac,
 )
@@ -71,7 +75,9 @@ from . import (
     init_integration,
     mock_rest_update,
     mutate_rpc_device_status,
-    register_sub_device,
+    register_child_device,
+    register_entity,
+    register_legacy_sub_device,
 )
 
 FIRMWARE_UNSUPPORTED_ID = FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
@@ -951,17 +957,24 @@ async def test_blu_trv_stale_device_removal(
     assert device_registry.async_get(trv_201_entry.device_id) is None
 
 
+@pytest.mark.parametrize(
+    "register_func",
+    [
+        pytest.param(register_child_device, id="child_device"),
+        pytest.param(register_legacy_sub_device, id="legacy_via_device"),
+    ],
+)
+@pytest.mark.usefixtures("mock_rpc_device")
 async def test_empty_device_removal(
     hass: HomeAssistant,
-    entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
-    mock_rpc_device: Mock,
+    register_func: Callable[[DeviceRegistry, ConfigEntry, str], AnyDeviceEntry],
 ) -> None:
     """Test removal of empty devices due to device configuration changes."""
     config_entry = await init_integration(hass, 3)
 
     # create empty sub-device
-    sub_device_entry = register_sub_device(
+    sub_device_entry = register_func(
         device_registry,
         config_entry,
         "boolean:201-boolean",
@@ -997,8 +1010,7 @@ async def test_sub_device_kept_on_reload(
         entry = entity_registry.async_get(entity_id)
         assert entry
         device_entry = device_registry.async_get(entry.device_id)
-        assert device_entry
-        assert device_entry.via_device_id
+        assert isinstance(device_entry, ChildDeviceEntry)
         sub_device_ids.add(device_entry.id)
 
     events = async_capture_events(hass, EVENT_DEVICE_REGISTRY_UPDATED)
@@ -1009,6 +1021,49 @@ async def test_sub_device_kept_on_reload(
     assert not [event for event in events if event.data["action"] == "remove"]
     for device_id in sub_device_ids:
         assert device_registry.async_get(device_id)
+
+
+async def test_legacy_sub_device_converted_to_child_device(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a legacy sub-device with entities is converted to a child device."""
+    device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+    config_entry = await init_integration(
+        hass, gen=3, model=MODEL_2PM_G3, skip_setup=True
+    )
+
+    legacy_device_entry = register_legacy_sub_device(
+        device_registry, config_entry, "switch:0"
+    )
+    entity_id = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "test_name_output_0",
+        "switch:0",
+        config_entry,
+        device_id=legacy_device_entry.id,
+    )
+    # Simulate devices loaded from storage, devices created in this session can't
+    # be converted
+    device_registry.async_config_entry_unloaded(config_entry.entry_id)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The device keeps its id, so entities and automations referencing it still work
+    device_entry = device_registry.async_get(legacy_device_entry.id)
+    assert isinstance(device_entry, ChildDeviceEntry)
+    assert device_entry.parent_device_id == legacy_device_entry.via_device_id
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.device_id == legacy_device_entry.id
 
 
 async def test_rpc_waits_for_ble_scanner_at_startup(

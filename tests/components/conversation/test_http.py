@@ -882,7 +882,7 @@ async def test_ws_chat_log_index_subscription(
             conversation_id = session.conversation_id
 
         # We should receive 2 events for this newly created chat:
-        # 1. The CREATED event (fired before content is added)
+        # 1. The CREATED event, with the message of the first turn
         msg = await client.receive_json()
         assert msg == {
             "type": "event",
@@ -895,7 +895,10 @@ async def test_ws_chat_log_index_subscription(
                         "conversation_id": conversation_id,
                         "continue_conversation": False,
                         "created": now,
-                        "content": [{"role": "system", "content": "", "created": now}],
+                        "content": [
+                            {"role": "system", "content": "", "created": now},
+                            {"role": "user", "content": "Hello", "created": now},
+                        ],
                     }
                 },
             },

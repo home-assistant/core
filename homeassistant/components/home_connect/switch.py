@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .common import setup_home_connect_entry, should_add_option_entity
 from .const import BSH_POWER_OFF, BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
@@ -269,7 +269,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
-    power_off_state: str | UndefinedType | None = UNDEFINED
+    power_off_state: str | Undefined | None = Undefined
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -294,9 +294,9 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
-        if self.power_off_state is UNDEFINED:
+        if self.power_off_state is Undefined:
             await self.async_fetch_power_off_state()
-            if self.power_off_state is UNDEFINED:
+            if self.power_off_state is Undefined:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="unable_to_retrieve_turn_off",
@@ -342,7 +342,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             and value == self.power_off_state
         ):
             self._attr_is_on = False
-        elif self.power_off_state is UNDEFINED and value in [
+        elif self.power_off_state is Undefined and value in [
             BSH_POWER_OFF,
             BSH_POWER_STANDBY,
         ]:

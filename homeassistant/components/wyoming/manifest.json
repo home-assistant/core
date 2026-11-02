@@ -4,6 +4,7 @@
   "categories": ["ai_voice.speech", "ai_voice.voice_assistants"],
   "codeowners": ["@synesthesiam"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": [
     "assist_satellite",
     "assist_pipeline",

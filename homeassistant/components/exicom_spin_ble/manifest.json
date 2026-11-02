@@ -10,6 +10,7 @@
   "categories": ["energy.ev_charging"],
   "codeowners": ["@Dr-Blank"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/exicom_spin_ble",
   "integration_type": "device",

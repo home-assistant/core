@@ -331,7 +331,7 @@ class NetatmoDataHandler:
             pyatmo.NoDeviceError,
             pyatmo.ApiError,
             TimeoutError,
-            aiohttp.ClientConnectorError,
+            aiohttp.ClientConnectionError,
         ) as err:
             has_error = True
             publisher.last_error = err
