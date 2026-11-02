@@ -658,6 +658,27 @@ async def test_classic_api_setup_retry_reuses_session(
     assert hass.states.get(TLX_OUTPUT_POWER).state == "2100"
 
 
+async def test_classic_api_reload_logs_in_again(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+) -> None:
+    """Test a reload starts from a fresh login instead of the cached session."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+    mock_growatt_classic_api.login.assert_called_once()
+
+    await hass.config_entries.async_reload(mock_config_entry_classic.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+    assert mock_growatt_classic_api.login.call_count == 2
+
+
 @pytest.mark.usefixtures("freezer")
 async def test_classic_session_cooldown_wins_over_relogin_interval(
     hass: HomeAssistant,

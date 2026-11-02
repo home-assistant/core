@@ -356,8 +356,8 @@ async def async_setup_entry(
         username = config[CONF_USERNAME]
         password = config[CONF_PASSWORD]
 
-        # Reuse the session from migration, an earlier setup attempt or before
-        # a reload, so none of them costs another login.
+        # Reuse the session from migration or an earlier setup attempt, so
+        # neither costs another login.
         cached_session = hass.data.get(DATA_CLASSIC_SESSIONS, {}).get((url, username))
         if cached_session is not None and cached_session.password == password:
             classic_session = cached_session
@@ -517,3 +517,8 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    # A reload or reauth starts from a fresh login.
+    if config_entry.data.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
+        hass.data.get(DATA_CLASSIC_SESSIONS, {}).pop(
+            (_server_url(config_entry.data), config_entry.data[CONF_USERNAME]), None
+        )

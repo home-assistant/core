@@ -155,8 +155,8 @@ class GrowattClassicSession:
             return self.login()
 
 
-# Logged-in sessions by (server URL, username), so setup retries and reloads
-# reuse them instead of logging in again.
+# Logged-in sessions by (server URL, username), so setup retries and the setup
+# after migration reuse them instead of logging in again.
 DATA_CLASSIC_SESSIONS: HassKey[dict[tuple[str, str], GrowattClassicSession]] = HassKey(
     "growatt_server_classic_sessions"
 )
