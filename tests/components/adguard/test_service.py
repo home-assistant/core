@@ -13,7 +13,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.adguard.const import DOMAIN
-from homeassistant.components.adguard.services import AdGuardHomeService
+from homeassistant.components.adguard.services import (
+    AdGuardHomeService,
+    AdGuardHomeServiceArgument,
+)
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -47,27 +50,30 @@ async def test_service_registration(
     [
         (
             AdGuardHomeService.ADD_URL,
-            {"name": "Example", "url": "https://example.com/1.txt"},
+            {
+                AdGuardHomeServiceArgument.NAME: "Example",
+                AdGuardHomeServiceArgument.URL: "https://example.com/1.txt",
+            },
             lambda mock: mock.filtering.blocklists.add.assert_called_once(),
         ),
         (
             AdGuardHomeService.DISABLE_URL,
-            {"url": "https://example.com/1.txt"},
+            {AdGuardHomeServiceArgument.URL: "https://example.com/1.txt"},
             lambda mock: mock.filtering.blocklists.disable.assert_called_once(),
         ),
         (
             AdGuardHomeService.ENABLE_URL,
-            {"url": "https://example.com/1.txt"},
+            {AdGuardHomeServiceArgument.URL: "https://example.com/1.txt"},
             lambda mock: mock.filtering.blocklists.enable.assert_called_once(),
         ),
         (
             AdGuardHomeService.REFRESH,
-            {"force": False},
+            {AdGuardHomeServiceArgument.FORCE: False},
             lambda mock: mock.filtering.blocklists.refresh.assert_called_once(),
         ),
         (
             AdGuardHomeService.REMOVE_URL,
-            {"url": "https://example.com/1.txt"},
+            {AdGuardHomeServiceArgument.URL: "https://example.com/1.txt"},
             lambda mock: mock.filtering.blocklists.remove.assert_called_once(),
         ),
     ],
@@ -122,7 +128,7 @@ async def test_service_error(
         await hass.services.async_call(
             DOMAIN,
             AdGuardHomeService.ENABLE_URL,
-            {"url": "https://x"},
+            {AdGuardHomeServiceArgument.URL: "https://x"},
             blocking=True,
         )
 
@@ -143,7 +149,7 @@ async def test_service_authentication_failed(
         await hass.services.async_call(
             DOMAIN,
             AdGuardHomeService.ENABLE_URL,
-            {"url": "https://x"},
+            {AdGuardHomeServiceArgument.URL: "https://x"},
             blocking=True,
         )
 
