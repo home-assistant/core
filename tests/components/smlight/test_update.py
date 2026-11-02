@@ -104,7 +104,11 @@ async def test_update_setup(
 
 
 @pytest.mark.parametrize(
-    "failed_catalog", [pytest.param(0, id="core"), pytest.param(1, id="radio")]
+    "catalog_responses",
+    [
+        pytest.param([SmlightConnectionError("Catalog unavailable")], id="core"),
+        pytest.param([[], SmlightConnectionError("Catalog unavailable")], id="radio"),
+    ],
 )
 async def test_catalog_connection_error_recovery(
     hass: HomeAssistant,
@@ -112,7 +116,7 @@ async def test_catalog_connection_error_recovery(
     mock_smlight_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
-    failed_catalog: int,
+    catalog_responses: list[list[Firmware] | SmlightConnectionError],
 ) -> None:
     """Test catalog connection errors preserve availability and recover."""
     await setup_integration(hass, mock_config_entry)
@@ -120,10 +124,7 @@ async def test_catalog_connection_error_recovery(
     assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_ON
 
     get_firmware = mock_smlight_client.get_firmware_version.side_effect
-    mock_smlight_client.get_firmware_version.side_effect = [
-        *([[]] * failed_catalog),
-        SmlightConnectionError("Catalog unavailable"),
-    ]
+    mock_smlight_client.get_firmware_version.side_effect = catalog_responses
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
@@ -136,11 +137,14 @@ async def test_catalog_connection_error_recovery(
     )
 
     mock_smlight_client.get_firmware_version.side_effect = get_firmware
-    info = mock_smlight_client.get_info.side_effect()
-    info.sw_version = "v2.7.5"
-    info.radios[0].zb_version = "20250201"
     mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = info
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        model="SLZB-06p7",
+        fw_channel="dev",
+        sw_version="v2.7.5",
+        radios=[Radio(chip_index=0, zb_type=0, zb_version="20250201")],
+    )
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
