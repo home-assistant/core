@@ -709,6 +709,12 @@ async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
             id="ipv6_first_ipv4_updates_ipv4_host",
         ),
         pytest.param(
+            TEST_HOST,
+            [ip_address("169.254.10.20"), ip_address(TEST_OTHER_HOST)],
+            TEST_OTHER_HOST,
+            id="link_local_ipv4_is_skipped",
+        ),
+        pytest.param(
             TEST_IPV6_HOST,
             [ip_address(TEST_OTHER_IPV6_HOST)],
             TEST_OTHER_IPV6_HOST,

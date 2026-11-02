@@ -153,9 +153,13 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Nanoleaf Homekit and Zeroconf discovery."""
-        # A discovery message can contain several addresses. Prefer an IPv4 address.
+        # A discovery message can contain several addresses. Prefer a usable IPv4.
         host = next(
-            (str(ip) for ip in discovery_info.ip_addresses if ip.version == 4),
+            (
+                str(ip)
+                for ip in discovery_info.ip_addresses
+                if ip.version == 4 and not ip.is_link_local and not ip.is_unspecified
+            ),
             discovery_info.host,
         )
         return await self._async_discovery_handler(
