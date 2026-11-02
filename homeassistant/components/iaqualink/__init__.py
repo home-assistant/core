@@ -89,7 +89,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         finally:
             await aqualink.close()
 
-        if account_id:
+        conflicting_entry = (
+            hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, account_id)
+            if account_id
+            else None
+        )
+        if account_id and (
+            conflicting_entry is None or conflicting_entry.entry_id == entry.entry_id
+        ):
             hass.config_entries.async_update_entry(
                 entry, unique_id=account_id, minor_version=2
             )

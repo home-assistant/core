@@ -287,6 +287,50 @@ async def test_migrate_legacy_unique_id(
     assert config_entry.unique_id == MOCK_USER_ID
 
 
+async def test_migrate_legacy_unique_id_conflict(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    client: AqualinkClient,
+) -> None:
+    """Test migration preserves the legacy ID when the account ID is taken."""
+    MockConfigEntry(
+        domain="iaqualink",
+        unique_id=MOCK_USER_ID,
+    ).add_to_hass(hass)
+
+    legacy_unique_id = config_data["username"].casefold()
+    config_entry = MockConfigEntry(
+        domain="iaqualink",
+        title=config_data["username"],
+        data=config_data,
+        unique_id=legacy_unique_id,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    system.get_devices = AsyncMock(return_value={})
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            _async_mock_login,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={system.serial: system},
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.minor_version == 2
+    assert config_entry.unique_id == legacy_unique_id
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_setup_login_unauthorized(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
