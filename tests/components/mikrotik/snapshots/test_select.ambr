@@ -15,7 +15,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('mikrotik', '00_0c_29_00_00_01_ether1')]>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123_ether1')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -38,7 +38,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'poe_out',
-    'unique_id': '00_0c_29_00_00_01_ether1',
+    'unique_id': 'ABC123_ether1',
     'unit_of_measurement': None,
   })
 # ---

@@ -9,7 +9,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('mikrotik', '00_0c_29_00_00_01_ether1')]>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123_ether1')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ether',
-    'unique_id': '00_0c_29_00_00_01_ether1',
+    'unique_id': 'ABC123_ether1',
     'unit_of_measurement': None,
   })
 # ---
@@ -60,7 +60,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('mikrotik', '02_00_00_00_00_04_wifi1')]>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123_wifi1')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -83,7 +83,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wlan',
-    'unique_id': '02_00_00_00_00_04_wifi1',
+    'unique_id': 'ABC123_wifi1',
     'unit_of_measurement': None,
   })
 # ---
@@ -111,7 +111,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('mikrotik', '02_00_00_00_00_05_wifi2')]>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123_wifi2')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -134,7 +134,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wlan',
-    'unique_id': '02_00_00_00_00_05_wifi2',
+    'unique_id': 'ABC123_wifi2',
     'unit_of_measurement': None,
   })
 # ---
@@ -162,7 +162,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('mikrotik', '00_0c_29_00_00_02_wlan1')]>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123_wlan1')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -185,7 +185,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wlan',
-    'unique_id': '00_0c_29_00_00_02_wlan1',
+    'unique_id': 'ABC123_wlan1',
     'unit_of_measurement': None,
   })
 # ---
