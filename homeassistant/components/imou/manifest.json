@@ -4,6 +4,7 @@
   "categories": ["security_safety.cameras"],
   "codeowners": ["@Imou-OpenPlatform"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     { "macaddress": "1C4D89*" },
     { "macaddress": "302450*" },

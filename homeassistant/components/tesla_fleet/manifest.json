@@ -4,6 +4,7 @@
   "categories": ["vehicles_transport.cars_evs", "energy.solar_batteries"],
   "codeowners": ["@Bre77"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "http"],
   "documentation": "https://www.home-assistant.io/integrations/tesla_fleet",
   "integration_type": "hub",

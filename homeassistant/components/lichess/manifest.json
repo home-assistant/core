@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.gaming"],
   "codeowners": ["@aryanhasgithub"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/lichess",
   "integration_type": "service",
   "iot_class": "cloud_polling",
