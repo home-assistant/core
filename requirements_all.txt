@@ -1503,7 +1503,7 @@ jsonpath-python==1.1.6
 justnimbus==0.7.4
 
 # homeassistant.components.kaco_modbus
-kaco-modbus==1.1.0
+kaco-modbus==2.0.0
 
 # homeassistant.components.kaco_rs485
 kaco-serial==1.0.3
