@@ -8,6 +8,8 @@ import inspect
 import os
 from pathlib import Path
 import tarfile
+import threading
+from typing import Any
 from unittest.mock import Mock, patch
 
 import nacl.bindings.crypto_secretstream as nss
@@ -468,6 +470,65 @@ async def test_decrypted_backup_streamer_interrupt_stuck_writer(
     await decryptor.open_stream()
     await decryptor.wait()
     assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
+
+
+@pytest.mark.parametrize(
+    "streamer_class",
+    [
+        pytest.param(DecryptedBackupStreamer, id="decrypt"),
+        pytest.param(EncryptedBackupStreamer, id="encrypt"),
+    ],
+)
+async def test_backup_streamer_wait_joins_worker(
+    hass: HomeAssistant,
+    streamer_class: type[DecryptedBackupStreamer | EncryptedBackupStreamer],
+) -> None:
+    """Test wait does not return before a worker which reported done has exited."""
+    backup = AgentBackup(
+        addons=[],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="test",
+        protected=False,
+        size=0,
+    )
+    done_reported = threading.Event()
+    release_worker = threading.Event()
+    worker_threads: list[threading.Thread] = []
+
+    def cipher_func(*args: Any) -> None:
+        worker_threads.append(threading.current_thread())
+        on_done = args[4]
+        on_done(None)
+        done_reported.set()
+        # The thread is still running after it has reported done
+        release_worker.wait()
+
+    async def send_backup() -> AsyncIterator[bytes]:
+        yield b""
+
+    async def open_backup() -> AsyncIterator[bytes]:
+        return send_backup()
+
+    with patch.object(streamer_class, "_cipher_func", staticmethod(cipher_func)):
+        streamer = streamer_class(hass, backup, open_backup, "hunter2")
+        await streamer.open_stream()
+
+    try:
+        await hass.async_add_executor_job(done_reported.wait)
+        wait_task = asyncio.create_task(streamer.wait())
+        _, pending = await asyncio.wait({wait_task}, timeout=0.1)
+        assert pending == {wait_task}
+    finally:
+        release_worker.set()
+
+    await wait_task
+    assert not worker_threads[0].is_alive()
 
 
 async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> None:
