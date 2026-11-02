@@ -13,7 +13,7 @@ import probatio
 
 from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -75,7 +75,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="entity_not_found",
                 translation_placeholders={
-                    ATTR_ENTITY_ID: call.data[CommonServiceArgument.ENTITY_ID],
+                    "entity_id": call.data[CommonServiceArgument.ENTITY_ID],
                 },
             )
         config_entry: BringConfigEntry = service.async_get_config_entry(
