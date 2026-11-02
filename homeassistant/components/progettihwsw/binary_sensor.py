@@ -57,6 +57,7 @@ async def async_setup_entry(
     )
 
 
+# pylint: disable-next=home-assistant-coordinator-missing-type-parameter
 class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represent a binary sensor."""
 
