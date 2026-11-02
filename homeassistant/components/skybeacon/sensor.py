@@ -1,5 +1,6 @@
 """Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
 
+from enum import StrEnum
 import logging
 import threading
 from typing import override
@@ -16,7 +17,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    ATTR_MODEL,
     CONF_MAC,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
@@ -31,7 +31,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICE = "device"
+
+class SkybeaconEntityStateAttribute(StrEnum):
+    """State attributes for skybeacon entities."""
+
+    DEVICE = "device"
+    MODEL = "model"
+
 
 BLE_TEMP_HANDLE = 0x24
 BLE_TEMP_UUID = "0000ff92-0000-1000-8000-00805f9b34fb"
@@ -77,7 +83,10 @@ def setup_platform(
 class SkybeaconHumid(SensorEntity):
     """Representation of a Skybeacon humidity sensor."""
 
-    _attr_extra_state_attributes = {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
+    _attr_extra_state_attributes = {
+        SkybeaconEntityStateAttribute.DEVICE: "SKYBEACON",
+        SkybeaconEntityStateAttribute.MODEL: 1,
+    }
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, name: str, mon: Monitor) -> None:
@@ -96,7 +105,10 @@ class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_extra_state_attributes = {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
+    _attr_extra_state_attributes = {
+        SkybeaconEntityStateAttribute.DEVICE: "SKYBEACON",
+        SkybeaconEntityStateAttribute.MODEL: 1,
+    }
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(self, name: str, mon: Monitor) -> None:
