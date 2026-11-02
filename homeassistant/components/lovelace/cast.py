@@ -181,7 +181,7 @@ async def _get_dashboard_info(
         title = config.get("title", url_path) if config else url_path
 
     views: list[dict[str, Any]] = []
-    data: dict[str, Any] = {
+    data = {
         "title": title,
         "url_path": url_path,
         "views": views,
