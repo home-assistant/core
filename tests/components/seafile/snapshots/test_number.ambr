@@ -29,7 +29,7 @@
     'object_id_base': 'History days',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'History days',
     'platform': 'seafile',
@@ -44,6 +44,7 @@
 # name: test_all_entities[number.documents_history_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Documents History days',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 3650,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,

@@ -3,6 +3,7 @@
 from typing import override
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -20,6 +21,7 @@ PARALLEL_UPDATES = 0
 HISTORY_DAYS_DESCRIPTION = NumberEntityDescription(
     key="history_days",
     translation_key="history_days",
+    device_class=NumberDeviceClass.DURATION,
     entity_category=EntityCategory.CONFIG,
     native_min_value=1,
     native_max_value=3650,
