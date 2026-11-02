@@ -340,6 +340,32 @@ async def test_voice_speaker(
         assert mock_client.written == snapshot
 
 
+async def test_speaker_without_voice(hass: HomeAssistant, init_wyoming_tts) -> None:
+    """Test that a speaker is not sent without a voice name."""
+    audio = bytes(100)
+    audio_events = [
+        AudioStart(rate=16000, width=2, channels=1).event(),
+        AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
+        AudioStop().event(),
+    ]
+
+    with patch(
+        "homeassistant.components.wyoming.tts.AsyncTcpClient",
+        MockAsyncTcpClient(audio_events),
+    ) as mock_client:
+        stream = tts.async_create_stream(
+            hass,
+            "tts.test_tts",
+            "en-US",
+            options={WyomingTextToSpeechOption.SPEAKER: "speaker1"},
+        )
+        stream.async_set_message("Hello world")
+        async for _chunk in stream.async_stream_result():
+            pass
+
+        assert mock_client.written[0].data["voice"] == {"language": "en-US"}
+
+
 async def test_get_tts_audio_streaming(
     hass: HomeAssistant, init_wyoming_streaming_tts, snapshot: SnapshotAssertion
 ) -> None:

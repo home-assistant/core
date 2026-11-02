@@ -4,7 +4,7 @@ from collections import defaultdict
 from collections.abc import AsyncGenerator
 import io
 import logging
-from typing import override
+from typing import Any, override
 import wave
 
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
@@ -140,15 +140,10 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
     @override
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from TCP socket."""
-        voice_name: str | None = options.get(TextToSpeechCommonOption.VOICE)
-        voice_speaker: str | None = options.get(WyomingTextToSpeechOption.SPEAKER)
+        voice = _get_voice(language, options)
 
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
-                voice: SynthesizeVoice | None = None
-                if voice_name is not None:
-                    voice = SynthesizeVoice(name=voice_name, speaker=voice_speaker)
-
                 synthesize = Synthesize(text=message, voice=voice)
                 await client.write_event(synthesize.event())
 
@@ -204,13 +199,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self, request: tts.TTSAudioRequest
     ) -> tts.TTSAudioResponse:
         """Generate speech from an incoming message."""
-        voice_name: str | None = request.options.get(TextToSpeechCommonOption.VOICE)
-        voice_speaker: str | None = request.options.get(
-            WyomingTextToSpeechOption.SPEAKER
-        )
-        voice: SynthesizeVoice | None = None
-        if voice_name is not None:
-            voice = SynthesizeVoice(name=voice_name, speaker=voice_speaker)
+        voice = _get_voice(request.language, request.options)
 
         client = AsyncTcpClient(self.service.host, self.service.port)
         await client.connect()
@@ -301,3 +290,19 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         except OSError, WyomingError:
             # Disconnected
             _LOGGER.warning("Unexpected disconnection from TTS client")
+
+
+def _get_voice(language: str, options: dict[str, Any]) -> SynthesizeVoice:
+    """Get the voice for a synthesis request.
+
+    The language is always sent so that multilingual voices know which
+    language to speak.
+    """
+    voice_name: str | None = options.get(TextToSpeechCommonOption.VOICE)
+    voice_speaker: str | None = options.get(WyomingTextToSpeechOption.SPEAKER)
+
+    return SynthesizeVoice(
+        name=voice_name,
+        language=language,
+        speaker=voice_speaker if voice_name is not None else None,
+    )
