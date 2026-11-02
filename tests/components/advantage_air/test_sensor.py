@@ -7,9 +7,9 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.advantage_air.const import (
     DOMAIN,
+    AdvantageAirService,
     AdvantageAirServiceArgument,
 )
-from homeassistant.components.advantage_air.services import AdvantageAirService
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

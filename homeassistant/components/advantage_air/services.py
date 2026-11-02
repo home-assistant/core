@@ -1,20 +1,12 @@
 """Services for Advantage Air integration."""
 
-from enum import StrEnum
-
 import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import DOMAIN, AdvantageAirServiceArgument
-
-
-class AdvantageAirService(StrEnum):
-    """Store keys for Advantage Air services."""
-
-    SET_TIME_TO = "set_time_to"
+from .const import DOMAIN, AdvantageAirService, AdvantageAirServiceArgument
 
 
 @callback

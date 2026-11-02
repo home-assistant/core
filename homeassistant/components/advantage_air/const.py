@@ -12,6 +12,12 @@ ADVANTAGE_AIR_AUTOFAN_ENABLED = "aaAutoFanModeEnabled"
 ADVANTAGE_AIR_NIGHT_MODE_ENABLED = "quietNightModeEnabled"
 
 
+class AdvantageAirService(StrEnum):
+    """Store keys for Advantage Air services."""
+
+    SET_TIME_TO = "set_time_to"
+
+
 class AdvantageAirServiceArgument(StrEnum):
     """Store keys for Advantage Air service arguments."""
 
