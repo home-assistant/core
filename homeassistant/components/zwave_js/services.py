@@ -147,6 +147,36 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         const.DOMAIN,
+        const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        _async_bulk_set_partial_config_parameters,
+        schema=probatio.Schema(
+            probatio.All(
+                {
+                    **TARGET_VALIDATORS,
+                    probatio.Optional(const.ATTR_ENDPOINT, default=0): probatio.Coerce(
+                        int
+                    ),
+                    probatio.Required(const.ATTR_CONFIG_PARAMETER): probatio.Coerce(
+                        int
+                    ),
+                    probatio.Required(const.ATTR_CONFIG_VALUE): probatio.Any(
+                        probatio.Coerce(int),
+                        {
+                            probatio.Any(
+                                probatio.Coerce(int), BITMASK_SCHEMA, cv.string
+                            ): probatio.Any(
+                                probatio.Coerce(int), BITMASK_SCHEMA, cv.string
+                            )
+                        },
+                    ),
+                },
+                probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+            ),
+        ),
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
         const.SERVICE_PING,
         _async_ping,
         schema=probatio.Schema(
@@ -423,6 +453,41 @@ def _async_get_nodes(call: ServiceCall) -> set[ZwaveNode]:
     return nodes
 
 
+async def _async_bulk_set_partial_config_parameters(call: ServiceCall) -> None:
+    """Bulk set multiple partial config values on a node."""
+    nodes = _async_get_nodes(call)
+    endpoint = call.data[const.ATTR_ENDPOINT]
+    property_ = call.data[const.ATTR_CONFIG_PARAMETER]
+    new_value = call.data[const.ATTR_CONFIG_VALUE]
+
+    results = await asyncio.gather(
+        *(
+            async_bulk_set_partial_config_parameters(
+                node,
+                property_,
+                new_value,
+                endpoint=endpoint,
+            )
+            for node in nodes
+        ),
+        return_exceptions=True,
+    )
+
+    nodes_list = list(nodes)
+    for node, cmd_status in get_valid_responses_from_results(nodes_list, results):
+        if cmd_status == CommandStatus.ACCEPTED:
+            msg = "Bulk set partials for configuration parameter %s on Node %s"
+        else:
+            msg = (
+                "Queued command to bulk set partials for configuration parameter "
+                "%s on Node %s"
+            )
+
+        _LOGGER.info(msg, property_, node)
+
+    raise_exceptions_from_results(nodes_list, results)
+
+
 async def _async_ping(call: ServiceCall) -> None:
     """Ping node(s)."""
     _LOGGER.warning(
@@ -600,39 +665,6 @@ class ZWaveServices:
                         const.ATTR_CONFIG_PARAMETER_BITMASK, const.ATTR_VALUE_SIZE
                     ),
                     parameter_name_does_not_need_bitmask,
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
-            self.async_bulk_set_partial_config_parameters,
-            schema=probatio.Schema(
-                probatio.All(
-                    {
-                        **TARGET_VALIDATORS,
-                        probatio.Optional(
-                            const.ATTR_ENDPOINT, default=0
-                        ): probatio.Coerce(int),
-                        probatio.Required(const.ATTR_CONFIG_PARAMETER): probatio.Coerce(
-                            int
-                        ),
-                        probatio.Required(const.ATTR_CONFIG_VALUE): probatio.Any(
-                            probatio.Coerce(int),
-                            {
-                                probatio.Any(
-                                    probatio.Coerce(int), BITMASK_SCHEMA, cv.string
-                                ): probatio.Any(
-                                    probatio.Coerce(int), BITMASK_SCHEMA, cv.string
-                                )
-                            },
-                        ),
-                    },
-                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
                     get_nodes_from_service_data,
                     has_at_least_one_node,
                 ),
@@ -840,42 +872,6 @@ class ZWaveServices:
             process_results(list(nodes), results)
         else:
             process_results([node.endpoints[endpoint] for node in nodes], results)
-
-    async def async_bulk_set_partial_config_parameters(
-        self, service: ServiceCall
-    ) -> None:
-        """Bulk set multiple partial config values on a node."""
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        endpoint = service.data[const.ATTR_ENDPOINT]
-        property_ = service.data[const.ATTR_CONFIG_PARAMETER]
-        new_value = service.data[const.ATTR_CONFIG_VALUE]
-
-        results = await asyncio.gather(
-            *(
-                async_bulk_set_partial_config_parameters(
-                    node,
-                    property_,
-                    new_value,
-                    endpoint=endpoint,
-                )
-                for node in nodes
-            ),
-            return_exceptions=True,
-        )
-
-        nodes_list = list(nodes)
-        for node, cmd_status in get_valid_responses_from_results(nodes_list, results):
-            if cmd_status == CommandStatus.ACCEPTED:
-                msg = "Bulk set partials for configuration parameter %s on Node %s"
-            else:
-                msg = (
-                    "Queued command to bulk set partials for configuration parameter "
-                    "%s on Node %s"
-                )
-
-            _LOGGER.info(msg, property_, node)
-
-        raise_exceptions_from_results(nodes_list, results)
 
     async def async_poll_value(self, service: ServiceCall) -> None:
         """Poll value on a node."""

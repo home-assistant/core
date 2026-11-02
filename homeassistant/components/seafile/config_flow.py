@@ -179,10 +179,13 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(account.email)
             if self.source == SOURCE_REAUTH:
                 self._abort_if_unique_id_mismatch()
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={CONF_TOKEN: self._take_token()},
-                )
+                entry = self._get_reauth_entry()
+                return (
+                    # The update listener reloads the entry when it is loaded.
+                    self.async_update_and_abort
+                    if entry.update_listeners
+                    else self.async_update_reload_and_abort
+                )(entry, data_updates={CONF_TOKEN: self._take_token()})
             if self.source == SOURCE_RECONFIGURE:
                 self._abort_if_unique_id_mismatch()
                 return self._async_finish_reconfigure()
