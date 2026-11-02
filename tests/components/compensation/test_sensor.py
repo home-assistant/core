@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import (
+    MockConfigEntry,
     assert_platform_setup_creates_issue,
     assert_setup_component,
     get_fixture_path,
@@ -147,6 +148,20 @@ async def test_initial_state_from_existing_source(hass: HomeAssistant) -> None:
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state == "5.0"
+
+
+async def test_config_entry_initial_state_from_existing_source(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the config entry sensor uses the source state that exists before setup."""
+    hass.states.async_set(TEST_SOURCE, "5")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_compensation")
+    assert state is not None
+    assert state.state == "6.0"
 
 
 @pytest.mark.parametrize("config", [{"name": TEST_OBJECT_ID, **TEST_BASE_CONFIG}])

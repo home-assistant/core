@@ -60,7 +60,7 @@ FOUND = DiscoveredDevice(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.libresync.async_setup_entry", return_value=True
+        "homeassistant.components.libresync.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

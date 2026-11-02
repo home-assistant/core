@@ -4,6 +4,7 @@
   "categories": ["computers_network.printers"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/dremel_3d_printer",
   "integration_type": "device",
   "iot_class": "local_polling",

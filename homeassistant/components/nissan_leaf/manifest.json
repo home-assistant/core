@@ -3,6 +3,7 @@
   "name": "Nissan Leaf",
   "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@filcole"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/nissan_leaf",
   "iot_class": "cloud_polling",
   "loggers": ["pycarwings2"],

@@ -11,15 +11,12 @@ import sys
 import tomllib
 from typing import Any
 
+from hassfest.model import Config, Integration
+from hassfest.requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from homeassistant.util.yaml.loader import load_yaml
-from script.hassfest.model import Config, Integration
-from script.hassfest.requirements_util import (
-    EXCLUDED_REQUIREMENTS_ALL,
-    normalize_package_name,
-)
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
@@ -77,8 +74,8 @@ grpcio-reflection==1.83.1
 # runtime requirement install cannot pull in a botocore version that is
 # incompatible with aiobotocore.
 # see https://github.com/home-assistant/core/issues/167399
-boto3==1.42.97
-botocore==1.42.97
+boto3==1.43.117
+botocore==1.43.117
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -235,24 +232,21 @@ auth0-python<5.0
 backoff==2.2.1
 python-backoff<2.4.0
 
-# bitstring 5.0.0 removed ConstBitStream, which pysml (used by edl21) still imports
-# https://github.com/home-assistant/core/issues/185883
-# https://codeberg.org/obi/pysml/issues/33
-# Remove once pysml supports bitstring>=5
-bitstring<5
-
 # graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
 # (used by aioaseko) still imports
 # https://github.com/home-assistant/core/issues/184918
 graphql-core<3.3
 
-# pycares 5.1.0 uses c-ares 1.34.8 which includes a regression.
+# pycares 5.1.0/5.2.0 bundle c-ares 1.34.8, which can break DNS
 # https://github.com/home-assistant/core/issues/185645
-# https://github.com/c-ares/c-ares/pull/1256
-pycares==5.0.1
+pycares>=5.2.1
 
 # pypasser 1.0.0 removed reCaptchaV3, which Tami4EdgeAPI imports
 pypasser<1.0.0
+
+# srptools 2.0.0 made the private key a keyword-only argument, which pyatv passes positionally
+# https://github.com/home-assistant/core/issues/189315
+srptools<2
 
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5

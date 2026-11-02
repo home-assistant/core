@@ -127,6 +127,9 @@ class KNXModule:
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
+        # A setup that fails after the store started initializing in the
+        # background is not unloaded, so the entry tears the store down itself.
+        self.entry.async_on_unload(self.telegrams.stop)
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
