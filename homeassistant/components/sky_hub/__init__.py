@@ -98,14 +98,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: SkyHubConfigEntry) -> N
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: SkyHubConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
-    """Allow removing a client device which is not currently tracked."""
+    """Allow removing a client device while the client is not connected."""
     if not isinstance(device_entry, dr.DeviceEntry):
         # This integration does not create child devices.
         return False
     if entry.state is not ConfigEntryState.LOADED:
         return True
-    tracked = {dr.format_mac(mac) for mac in entry.runtime_data.tracked_macs}
-    return not any(
-        connection_type == dr.CONNECTION_NETWORK_MAC and mac in tracked
+    coordinator = entry.runtime_data
+    device_macs = {
+        mac
         for connection_type, mac in device_entry.connections
-    )
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    if any(dr.format_mac(mac) in device_macs for mac in coordinator.data):
+        return False
+    # Forget the client, so it is added again when it reconnects
+    coordinator.tracked_macs -= {
+        mac for mac in coordinator.tracked_macs if dr.format_mac(mac) in device_macs
+    }
+    return True

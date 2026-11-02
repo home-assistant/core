@@ -89,7 +89,20 @@ async def async_setup_entry(
 
     @callback
     def async_add_new_devices() -> None:
-        """Add entities for newly discovered devices."""
+        """Rename the devices of renamed clients and add new clients."""
+        # Done here because disabled trackers do not listen to the coordinator
+        device_registry = dr.async_get(hass)
+        for mac, name in coordinator.data.items():
+            if (
+                name
+                and (
+                    device := device_registry.async_get_device_by_connection(
+                        (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
+                    )
+                )
+                and device.name != name
+            ):
+                device_registry.async_update_device(device.id, name=name)
         if new_macs := coordinator.data.keys() - coordinator.tracked_macs:
             coordinator.tracked_macs.update(new_macs)
             async_add_entities(
@@ -145,12 +158,5 @@ class SkyHubScannerEntity(CoordinatorEntity[SkyHubCoordinator], ScannerEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._mac in self.coordinator.data:
-            name = self.coordinator.data[self._mac]
-            self._attr_hostname = name or None
-            if (
-                name
-                and (device_entry := self.device_entry)
-                and device_entry.name != name
-            ):
-                dr.async_get(self.hass).async_update_device(device_entry.id, name=name)
+            self._attr_hostname = self.coordinator.data[self._mac] or None
         super()._handle_coordinator_update()
