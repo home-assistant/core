@@ -927,12 +927,39 @@ async def test_translated_readme_without_the_installed_tree(
     url = (
         f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
     )
-    response_mocker.add(url, mocked_response(url, content=b"1.0.0"))
+    response_mocker.add(url, mocked_response(url, content=b"1.0.0"), keep=True)
 
     with patch.object(
         repository, "get_tree", side_effect=GitHubAnonymousRateLimitError
-    ):
+    ) as get_tree:
         assert await repository.async_get_translated_readme("de") == "1.0.0"
+        assert await repository.async_get_translated_readme("de") == "1.0.0"
+
+    get_tree.assert_called_once_with("1.0.0")
+
+
+async def test_translated_readme_installed_without_translations(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the installed version without translations costs one request."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.tree_ref = "2.0.0"
+    repository.treefiles = ["README.md"]
+    repository.data.installed = True
+    repository.data.installed_version = "1.0.0"
+
+    with (
+        patch.object(
+            repository, "get_tree", return_value=_tree(("README.md", False))
+        ) as get_tree,
+        patch.object(repository, "get_documentation") as get_documentation,
+    ):
+        assert await repository.async_get_translated_readme("de") == ""
+        assert await repository.async_get_translated_readme("de") == ""
+
+    get_tree.assert_called_once_with("1.0.0")
+    assert not get_documentation.called
 
 
 @pytest.mark.parametrize(

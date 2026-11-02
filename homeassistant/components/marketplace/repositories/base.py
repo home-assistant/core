@@ -485,7 +485,7 @@ class Repository:
         self.tree_ref: str | None = None
         self.treefiles: list[str] = []
         # The files of the installed version, when it is not the one of the tree
-        self._installed_treefiles: tuple[str, list[str]] | None = None
+        self._installed_treefiles: tuple[str, list[str] | None] | None = None
         self.ref: str | None = None
         self.logger = LOGGER
         # Two installs of one repository would write over each other's files
@@ -986,9 +986,11 @@ class Repository:
         """Get the README in the language, empty when the repository has none.
 
         Only READMEs in the tree are used, so a repository without translations
-        costs no request. The best match of the language wins, as for the
-        languages of conversation agents. It is fetched for every page, like the
-        README after a restart, so it always matches the version to install.
+        costs no request. An installed version that is not the one of the tree
+        costs one request for its files, once per version. The best match of the
+        language wins, as for the languages of conversation agents. It is fetched
+        for every page, like the README after a restart, so it always matches the
+        version to install.
         """
         treefiles = self.treefiles
         installed = self.data.installed_version or self.data.installed_commit
@@ -1025,24 +1027,27 @@ class Repository:
     async def _async_get_installed_treefiles(self, installed: str) -> list[str]:
         """Return the files of the installed version, the tree's when unknown.
 
-        They are fetched once per version, a failure is tried again next time.
+        They are fetched once per version, also when that fails, so a rate limit
+        is not asked again on every page.
         """
         if (
             self._installed_treefiles is None
             or self._installed_treefiles[0] != installed
         ):
+            files: list[str] | None
             try:
                 tree = await self.get_tree(installed)
             except MarketplaceError as exception:
                 self.logger.debug(
                     "%s No tree for %s: %s", self.string, installed, exception
                 )
-                return self.treefiles
-            self._installed_treefiles = (
-                installed,
-                [entry.path for entry in tree or []],
-            )
-        return self._installed_treefiles[1]
+                files = None
+            else:
+                files = [entry.path for entry in tree or []]
+            self._installed_treefiles = (installed, files)
+        if (files := self._installed_treefiles[1]) is None:
+            return self.treefiles
+        return files
 
     def remove(self) -> None:
         """Forget the repository, its files stay where they are."""
