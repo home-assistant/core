@@ -13,7 +13,7 @@
   "loggers": ["xknx", "xknxproject"],
   "quality_scale": "platinum",
   "requirements": [
-    "xknx==4.0.0",
+    "xknx==4.1.0",
     "xknxproject==3.10.0",
     "knx-frontend==2026.10.29.192948",
     "knx-telegram-store[sqlite,postgres]==0.15.2"
