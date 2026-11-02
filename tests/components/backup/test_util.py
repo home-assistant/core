@@ -499,6 +499,7 @@ async def test_backup_streamer_wait_joins_worker(
     )
     done_reported = threading.Event()
     release_worker = threading.Event()
+    join_called = threading.Event()
     worker_threads: list[threading.Thread] = []
 
     def cipher_func(*args: Any) -> None:
@@ -506,8 +507,9 @@ async def test_backup_streamer_wait_joins_worker(
         on_done = args[4]
         on_done(None)
         done_reported.set()
-        # The thread is still running after it has reported done
-        release_worker.wait()
+        # The thread is still running after it has reported done; bounded so a
+        # join blocking the event loop fails the test instead of hanging it
+        release_worker.wait(5)
 
     async def send_backup() -> AsyncIterator[bytes]:
         yield b""
@@ -520,15 +522,24 @@ async def test_backup_streamer_wait_joins_worker(
         await streamer.open_stream()
 
     try:
-        await hass.async_add_executor_job(done_reported.wait)
-        wait_task = asyncio.create_task(streamer.wait())
-        _, pending = await asyncio.wait({wait_task}, timeout=0.1)
-        assert pending == {wait_task}
+        assert await hass.async_add_executor_job(done_reported.wait, 5)
+        worker = worker_threads[0]
+        thread_join = worker.join
+
+        def join(timeout: float | None = None) -> None:
+            join_called.set()
+            thread_join(timeout)
+
+        with patch.object(worker, "join", join):
+            wait_task = asyncio.create_task(streamer.wait())
+            assert await hass.async_add_executor_job(join_called.wait, 5)
+            assert not wait_task.done()
+            release_worker.set()
+            await wait_task
     finally:
         release_worker.set()
 
-    await wait_task
-    assert not worker_threads[0].is_alive()
+    assert not worker.is_alive()
 
 
 async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> None:
