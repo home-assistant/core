@@ -7,7 +7,8 @@ from pyatv.exceptions import NotSupportedError, ProtocolError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.apple_tv.const import ATTR_TEXT, DOMAIN
+from homeassistant.components.apple_tv.const import DOMAIN
+from homeassistant.components.apple_tv.services import AppleTVServiceArgument
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -24,7 +25,10 @@ async def test_set_keyboard_text(
     await hass.services.async_call(
         DOMAIN,
         "set_keyboard_text",
-        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "Star Wars"},
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            AppleTVServiceArgument.TEXT: "Star Wars",
+        },
         blocking=True,
     )
     mock_atv.keyboard.text_set.assert_called_once_with("Star Wars")
@@ -41,7 +45,7 @@ async def test_append_keyboard_text(
         "append_keyboard_text",
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_TEXT: " Episode IV",
+            AppleTVServiceArgument.TEXT: " Episode IV",
         },
         blocking=True,
     )
@@ -74,7 +78,10 @@ async def test_set_keyboard_text_not_connected(
         await hass.services.async_call(
             DOMAIN,
             "set_keyboard_text",
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "test"},
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                AppleTVServiceArgument.TEXT: "test",
+            },
             blocking=True,
         )
 
@@ -90,7 +97,10 @@ async def test_set_keyboard_text_not_focused(
         await hass.services.async_call(
             DOMAIN,
             "set_keyboard_text",
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "test"},
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                AppleTVServiceArgument.TEXT: "test",
+            },
             blocking=True,
         )
 
@@ -114,7 +124,10 @@ async def test_set_keyboard_text_not_supported(
         await hass.services.async_call(
             DOMAIN,
             "set_keyboard_text",
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "test"},
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                AppleTVServiceArgument.TEXT: "test",
+            },
             blocking=True,
         )
 
@@ -130,6 +143,9 @@ async def test_set_keyboard_text_protocol_error(
         await hass.services.async_call(
             DOMAIN,
             "set_keyboard_text",
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "test"},
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                AppleTVServiceArgument.TEXT: "test",
+            },
             blocking=True,
         )
