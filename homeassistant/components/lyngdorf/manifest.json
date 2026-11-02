@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@fishloa"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/lyngdorf",
   "integration_type": "device",
