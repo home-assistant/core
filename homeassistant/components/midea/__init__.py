@@ -44,6 +44,16 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
+def _subtype_int(value: object, default: int = 0) -> int:
+    """Coerce a cloud model number into the integer subtype midealocal expects."""
+    if isinstance(value, (int, str)):
+        try:
+            return int(value)
+        except ValueError:
+            return default
+    return default
+
+
 def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | None:
     """Create the device object for the given entry data and IP address."""
     return device_selector(
@@ -56,8 +66,7 @@ def _create_device(data: Mapping[str, Any], ip_address: str) -> MideaDevice | No
         data[CONF_KEY],
         ProtocolVersion(data[CONF_PROTOCOL]),
         data[CONF_MODEL],
-        data[CONF_SUBTYPE],
-        "",
+        _subtype_int(data[CONF_SUBTYPE]),
         data.get(CONF_MAC, None),
         data.get(CONF_SN, None),
     )

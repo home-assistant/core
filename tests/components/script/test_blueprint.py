@@ -15,6 +15,7 @@ from homeassistant.components.blueprint import (
     Blueprint,
     DomainBlueprints,
 )
+from homeassistant.components.script.const import ScriptEntityStateAttribute
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     Context,
@@ -106,7 +107,12 @@ async def test_confirmable_notification(
     @callback
     def _async_script_changed(event: Event[EventStateChangedData]) -> None:
         # The script writes this action as soon as its wait triggers are attached
-        if event.data["new_state"].attributes.get("last_action") == "Awaiting response":
+        if (
+            event.data["new_state"].attributes.get(
+                ScriptEntityStateAttribute.LAST_ACTION
+            )
+            == "Awaiting response"
+        ):
             triggers_attached.set()
 
     async_track_state_change_event(hass, "script.confirm", _async_script_changed)

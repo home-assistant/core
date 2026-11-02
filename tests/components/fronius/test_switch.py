@@ -118,7 +118,7 @@ async def test_turning_a_limit_on_asserts_its_setpoint(
     impose one of its own. Holding it at 100% is how that gets overridden.
     """
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    controls = config_entry.runtime_data.modbus_settings_coordinators[
+    controls = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.controls
     assert controls.power_limit == 100.0
@@ -139,7 +139,7 @@ async def test_enabling_a_limit_into_an_empty_window_is_refused(
 ) -> None:
     """Test turning on a limit the device would refuse with the other one."""
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    coordinator = config_entry.runtime_data.modbus.settings_coordinators[0]
     storage = coordinator.modbus_inverter.storage
     for field, value in (
         ("charge_limit", -50),
@@ -170,7 +170,7 @@ async def test_other_settings_stay_writable_with_refused_limits(
     charging has to stay switchable regardless.
     """
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    storage = config_entry.runtime_data.modbus_settings_coordinators[
+    storage = config_entry.runtime_data.modbus.settings_coordinators[
         0
     ].modbus_inverter.storage
     # written past the guard, as another controller would

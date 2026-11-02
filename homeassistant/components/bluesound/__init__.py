@@ -36,7 +36,11 @@ async def async_setup_entry(
     try:
         sync_status = await player.sync_status(timeout=1)
     except PlayerUnreachableError as ex:
-        raise ConfigEntryNotReady(f"Error connecting to {host}:{port}") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_cannot_connect",
+            translation_placeholders={"host": host, "port": str(port)},
+        ) from ex
 
     coordinator = BluesoundCoordinator(hass, config_entry, player, sync_status)
     await coordinator.async_config_entry_first_refresh()

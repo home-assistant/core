@@ -23,15 +23,17 @@ from pytest_homeassistant.common import (
     mock_restore_cache_with_extra_data,
 )
 from pytest_homeassistant.typing import WebSocketGenerator
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import (
     CONF_BAUDRATE,
     DOMAIN,
-    HAS_FAULT_LOG,
-    LAST_HANDLED_FAULT,
+    FAULT_LOG,
     SCAN_INTERVAL,
+    SERVED_COMPONENTS,
     SETTINGS_SCAN_INTERVAL,
 )
 from homeassistant.components.sofar.coordinator import SofarRuntimeData
@@ -400,7 +402,7 @@ async def test_setup_fails_when_the_masks_decline(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
-async def test_setup_while_asleep_reloads_once_the_inverter_answers(
+async def test_setup_while_asleep_fills_in_without_a_reload(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
@@ -408,8 +410,9 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a silent inverter loads unavailable, then sets up in full."""
+    """Test a silent inverter loads unavailable and fills in without a reload."""
     mock_config_entry.add_to_hass(hass)
     mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -422,10 +425,13 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     assert "inverter is not answering" in caplog.text
 
     mock_connection.for_unit(1).fail_requests(None)
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
+    mock_reload.assert_not_called()
+    assert mock_config_entry.data[SERVED_COMPONENTS] == snapshot
     assert mock_config_entry.state is ConfigEntryState.LOADED
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_1"
@@ -437,6 +443,84 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     )
     assert device is not None
     assert device.sw_version == MOCK_SW_VERSION
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_reloads_once_for_what_the_inverter_serves(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a dawn that times out the reload's setup reloads only once."""
+    mock_config_entry.add_to_hass(hass)
+    unit = mock_connection.for_unit(1)
+    deny_meter_energy(unit)
+    unit.fail_requests(ModbusTimeoutError("asleep"))
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    schedule_reload = hass.config_entries.async_schedule_reload
+
+    def _fall_silent_and_reload(entry_id: str) -> None:
+        unit.fail_requests(ModbusTimeoutError("waking"))
+        schedule_reload(entry_id)
+
+    unit.fail_requests(None)
+    with patch.object(
+        hass.config_entries,
+        "async_schedule_reload",
+        side_effect=_fall_silent_and_reload,
+    ) as mock_reload:
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        unit.fail_requests(None)
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_reload.call_count == 1
+    assert mock_config_entry.data[SERVED_COMPONENTS] == snapshot
+    assert not any(
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{key}"
+        )
+        for key in METER_ENERGY_KEYS
+    )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_builds_from_the_stored_components(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a silent restart creates no sensors an earlier setup ruled out."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data={**MOCK_ENTRY_DATA, SERVED_COMPONENTS: ["energy"]},
+        title=MOCK_MODEL,
+    )
+    entry.add_to_hass(hass)
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(hass.states.async_all()) == 2
+    assert not any(
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{key}"
+        )
+        for key in METER_ENERGY_KEYS
+    )
 
 
 @pytest.mark.usefixtures("mock_get_unit")
@@ -465,6 +549,56 @@ async def test_setup_takes_the_type_once_the_masks_answer(
 
     assert entry.state is ConfigEntryState.LOADED
     assert len(hass.states.async_all()) == 38
+
+
+@pytest.mark.parametrize(
+    ("platform", "key", "interval", "state"),
+    [
+        pytest.param(
+            SENSOR_DOMAIN, "grid_frequency", SCAN_INTERVAL, "50.0", id="reading"
+        ),
+        pytest.param(
+            BUTTON_DOMAIN,
+            "rtc_sync",
+            SETTINGS_SCAN_INTERVAL,
+            STATE_UNKNOWN,
+            id="button",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_fills_in_a_mask_typed_inverter(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+    platform: str,
+    key: str,
+    interval: int,
+    state: str,
+) -> None:
+    """Test a silent restart fills in what only the masks' type allows."""
+    entry = _unrecognized_entry(mock_connection)
+    unit = mock_connection.for_unit(1)
+    declare_pv_in_masks(unit)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    unit.fail_requests(ModbusTimeoutError("asleep"))
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    unit.fail_requests(None)
+    freezer.tick(timedelta(seconds=interval))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        platform, DOMAIN, f"{MOCK_UNRECOGNIZED_SERIAL}_{key}"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == state
 
 
 @pytest.mark.usefixtures("mock_get_unit")
@@ -1075,23 +1209,15 @@ async def test_a_removed_pack_comes_back_without_a_restart(
 
 
 @pytest.mark.parametrize(
-    ("data", "expected"),
+    "data",
     [
-        pytest.param(
-            MOCK_TCP_INPUT,
-            {**MOCK_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: None},
-            id="legacy_tcp",
-        ),
-        pytest.param(
-            MOCK_SERIAL_ENTRY_DATA,
-            {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: None},
-            id="reconfigured_while_disabled",
-        ),
+        pytest.param(MOCK_TCP_INPUT, id="legacy_tcp"),
+        pytest.param(MOCK_SERIAL_ENTRY_DATA, id="reconfigured_while_disabled"),
     ],
 )
 @pytest.mark.usefixtures("mock_get_unit")
 async def test_migrate_entry_adds_the_connection_type(
-    hass: HomeAssistant, data: dict[str, Any], expected: dict[str, Any]
+    hass: HomeAssistant, snapshot: SnapshotAssertion, data: dict[str, Any]
 ) -> None:
     """Test migration marks legacy entries as TCP and keeps a set type."""
     entry = MockConfigEntry(
@@ -1107,15 +1233,15 @@ async def test_migrate_entry_adds_the_connection_type(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.minor_version == 2
-    assert entry.data == expected
+    assert entry.data == snapshot
 
 
 @pytest.mark.parametrize(
-    ("stored", "log_error", "expected_stored", "has_event"),
+    ("stored", "log_error", "log_stored", "has_event"),
     [
         pytest.param({}, None, True, True, id="first_good_setup_stores_it"),
         pytest.param(
-            {HAS_FAULT_LOG: True},
+            {SERVED_COMPONENTS: [FAULT_LOG]},
             ModbusTimeoutError("stuck"),
             True,
             True,
@@ -1124,9 +1250,16 @@ async def test_migrate_entry_adds_the_connection_type(
         pytest.param(
             {},
             ModbusTimeoutError("stuck"),
-            None,
+            False,
             False,
             id="unknown_log_timing_out_is_not_stored",
+        ),
+        pytest.param(
+            {"has_fault_log": True},
+            ModbusTimeoutError("stuck"),
+            False,
+            False,
+            id="beta_flag_alone_probes_again",
         ),
     ],
 )
@@ -1137,7 +1270,7 @@ async def test_setup_remembers_the_fault_log(
     mock_connection: MockModbusConnection,
     stored: dict[str, Any],
     log_error: ModbusError | None,
-    expected_stored: bool | None,
+    log_stored: bool,
     has_event: bool,
 ) -> None:
     """Test a fault log once seen keeps its event through a failed read."""
@@ -1153,7 +1286,7 @@ async def test_setup_remembers_the_fault_log(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.data.get(HAS_FAULT_LOG) is expected_stored
+    assert (FAULT_LOG in entry.data[SERVED_COMPONENTS]) is log_stored
     assert (
         entity_registry.async_get_entity_id(
             EVENT_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault"

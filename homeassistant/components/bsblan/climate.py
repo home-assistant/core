@@ -2,7 +2,7 @@
 
 from typing import Any, Final, override
 
-from bsblan import BSBLANError, EntityInfo, State, get_hvac_action_category
+from bsblan import BSBLANError, EntityInfo, get_hvac_action_category
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -96,7 +96,6 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
     ) -> None:
         """Initialize BSBLAN climate device."""
         super().__init__(data.fast_coordinator, data, circuit)
-        self._circuit = circuit
         mac = format_mac(data.device.MAC)
 
         # Backward compatible unique ID: circuit 1 keeps old format
@@ -127,11 +126,6 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         self._attr_native_temperature_unit = (
             data.fast_coordinator.client.get_temperature_unit
         )
-
-    @property
-    def _circuit_state(self) -> State:
-        """Return the state for this circuit."""
-        return self.coordinator.data.states[self._circuit]
 
     @property
     @override
