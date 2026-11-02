@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Firmware, Info, Radio
 from pysmlight.const import Events as SmEvents
+from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 from pysmlight.sse import MessageEvent
 import pytest
 from pytest_homeassistant.common import (
@@ -27,9 +28,10 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_mock_event_function
@@ -273,6 +275,61 @@ async def test_update_firmware_failed(
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_exception", "expected_match", "expected_reauth"),
+    [
+        pytest.param(
+            SmlightConnectionError,
+            HomeAssistantError,
+            "An error occurred while connecting to the SMLIGHT device",
+            False,
+            id="connection_error",
+        ),
+        pytest.param(
+            SmlightAuthError,
+            ConfigEntryAuthFailed,
+            "Invalid authentication",
+            True,
+            id="auth_error",
+        ),
+    ],
+)
+async def test_update_install_command_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    side_effect: type[Exception],
+    expected_exception: type[Exception],
+    expected_match: str,
+    expected_reauth: bool,
+) -> None:
+    """Test install service handles connection and auth errors from fw_update."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+    mock_smlight_client.fw_update.side_effect = side_effect
+
+    with pytest.raises(expected_exception, match=expected_match):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert mock_config_entry.runtime_data.firmware.in_progress is False
+    # All 3 SSE callbacks (progress, finished, failed) are unregistered on cleanup
+    assert mock_smlight_client.sse.register_callback.return_value.call_count == 3
+
+    reauth_flows = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+    assert bool(reauth_flows) is expected_reauth
 
 
 async def test_update_reboot_timeout(
