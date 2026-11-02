@@ -1451,12 +1451,12 @@ async def test_legacy_fetching_in_async(
         @property
         def supported_options(self) -> list[str]:
             """Return list of supported options like voice, emotions."""
-            return [tts.ATTR_AUDIO_OUTPUT]
+            return [tts.TextToSpeechCommonOption.AUDIO_OUTPUT]
 
         @property
         def default_options(self) -> dict[str, str]:
             """Return a dict including the default options."""
-            return {tts.ATTR_AUDIO_OUTPUT: "mp3"}
+            return {tts.TextToSpeechCommonOption.AUDIO_OUTPUT: "mp3"}
 
         async def async_get_tts_audio(
             self, message: str, language: str, options: dict[str, Any]
@@ -2462,10 +2462,10 @@ async def test_result_stream_message_set_idempotent(
 
 
 _PCM_WAV_OPTIONS = {
-    tts.ATTR_PREFERRED_FORMAT: "wav",
-    tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
-    tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
-    tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+    tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+    tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 16000,
+    tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 1,
+    tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
 }
 
 
@@ -2597,7 +2597,11 @@ async def test_audio_stream_unsupported_options(hass: HomeAssistant) -> None:
 
     with pytest.raises(ServiceValidationError, match="voice"):
         tts.async_create_audio_stream(
-            hass, options={tts.ATTR_PREFERRED_FORMAT: "wav", tts.ATTR_VOICE: "alice"}
+            hass,
+            options={
+                tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+                tts.TextToSpeechCommonOption.VOICE: "alice",
+            },
         )
 
 
@@ -2657,7 +2661,9 @@ async def test_set_audio_stream_on_engine_stream(
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     stream = tts.async_create_stream(
-        hass, mock_tts_entity.entity_id, options={tts.ATTR_PREFERRED_FORMAT: "wav"}
+        hass,
+        mock_tts_entity.entity_id,
+        options={tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "wav"},
     )
     pcm_format = tts.PcmFormat(sample_rate=22050, sample_width=2, channels=1)
     stream.async_set_audio_stream(pcm_format, _async_chunks(b"\x01\x02"))
@@ -2789,11 +2795,11 @@ async def test_stream_preferred_options_handled_by_engine(
 ) -> None:
     """Test that options the engine handles itself do not trigger ffmpeg."""
     preferred_options = {
-        tts.ATTR_PREFERRED_FORMAT: "mp3",
-        tts.ATTR_PREFERRED_SAMPLE_RATE: 24000,
-        tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
-        tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
-        tts.ATTR_PREFERRED_BITRATE: 48,
+        tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "mp3",
+        tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 24000,
+        tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 1,
+        tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
+        tts.TextToSpeechCommonOption.PREFERRED_BITRATE: 48,
     }
     mock_tts_entity._supported_options = list(preferred_options)
     mock_tts_entity.get_tts_audio = Mock(return_value=("mp3", MOCK_DATA))
@@ -2819,8 +2825,8 @@ async def test_stream_conversion_keeps_options_handled_by_engine(
 ) -> None:
     """Test that a conversion for one option keeps the ones the engine handled."""
     mock_tts_entity._supported_options = [
-        tts.ATTR_PREFERRED_FORMAT,
-        tts.ATTR_PREFERRED_BITRATE,
+        tts.TextToSpeechCommonOption.PREFERRED_FORMAT,
+        tts.TextToSpeechCommonOption.PREFERRED_BITRATE,
     ]
     mock_tts_entity.get_tts_audio = Mock(return_value=("mp3", MOCK_DATA))
     await mock_config_entry_setup(hass, mock_tts_entity)
@@ -2829,9 +2835,9 @@ async def test_stream_conversion_keeps_options_handled_by_engine(
         hass,
         mock_tts_entity.entity_id,
         options={
-            tts.ATTR_PREFERRED_FORMAT: "mp3",
-            tts.ATTR_PREFERRED_BITRATE: 48,
-            tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
+            tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "mp3",
+            tts.TextToSpeechCommonOption.PREFERRED_BITRATE: 48,
+            tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 16000,
         },
     )
 
@@ -2895,10 +2901,10 @@ async def test_stream_override_with_conversion(
         hass,
         mock_tts_entity.entity_id,
         options={
-            tts.ATTR_PREFERRED_FORMAT: "wav",
-            tts.ATTR_PREFERRED_SAMPLE_RATE: 22050,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
+            tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+            tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 22050,
+            tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
+            tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 2,
         },
     )
 
@@ -2940,8 +2946,8 @@ async def test_stream_override_conversion_is_cached(
             hass,
             mock_tts_entity.entity_id,
             options={
-                tts.ATTR_PREFERRED_FORMAT: "wav",
-                tts.ATTR_PREFERRED_SAMPLE_RATE: sample_rate,
+                tts.TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+                tts.TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: sample_rate,
             },
         )
 
