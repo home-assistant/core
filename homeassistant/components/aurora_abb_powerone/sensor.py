@@ -13,8 +13,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -32,6 +30,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
+    ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
     MANUFACTURER,

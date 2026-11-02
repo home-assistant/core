@@ -20,3 +20,5 @@ MANUFACTURER = "ABB"
 
 ATTR_DEVICE_NAME = "device_name"
 ATTR_FIRMWARE = "firmware"
+ATTR_MODEL = "model"
+ATTR_SERIAL_NUMBER = "serial_number"
