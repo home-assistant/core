@@ -8,7 +8,8 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from librouteros.exceptions import ConnectionClosed, LibRouterosError, TrapError
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import (
@@ -28,6 +29,7 @@ from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
 from . import build_mock_command, setup_integration, setup_mikrotik_entry
@@ -35,6 +37,7 @@ from .conftest import MockConfigEntryFactory
 from .const import (
     ARP_DATA,
     BRIDGE1_INTERFACE,
+    DEVICE_1_WIRELESS,
     DHCP_DATA,
     ETHER1_INTERFACE,
     INTERFACE_DATA,
@@ -480,3 +483,71 @@ async def test_stale_interface_device_removed_on_coordinator_update(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, TEST_SERIAL_NUMBER), config_entry_id=config_entry.entry_id
     )
+
+
+# Upper-case hex digits, as reported by the hub, check the MAC normalization
+TRACKED_CLIENT_MAC = "0A:BB:CC:DD:EE:01"
+
+
+async def _setup_entry_with_tracked_client(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an entry with interfaces and one tracked wireless client."""
+    config_entry = await setup_mikrotik_entry(
+        hass,
+        interface_data=INTERFACE_DATA,
+        wireless_data=[{**DEVICE_1_WIRELESS, "mac-address": TRACKED_CLIENT_MAC}],
+    )
+    assert await async_setup_component(hass, "config", {})
+    return config_entry
+
+
+@pytest.mark.parametrize(
+    "lookup",
+    [
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, TRACKED_CLIENT_MAC)}},
+            id="tracked_client",
+        ),
+        pytest.param({"identifiers": {(DOMAIN, TEST_SERIAL_NUMBER)}}, id="hub"),
+        pytest.param(
+            {"identifiers": {_interface_identifier(ETHER1_INTERFACE)}},
+            id="interface",
+        ),
+    ],
+)
+async def test_remove_config_entry_device_refused(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    lookup: dict[str, set[tuple[str, str]]],
+) -> None:
+    """Test hub, interface and tracked client devices cannot be removed."""
+    config_entry = await _setup_entry_with_tracked_client(hass)
+    # The tracked client device comes from the (disabled) tracker's device info
+    [device_entry] = device_registry.async_get_devices(
+        config_entry_id=config_entry.entry_id, **lookup
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id)
+
+    assert not response["success"]
+    assert device_registry.async_get(device_entry.id) is not None
+
+
+async def test_remove_config_entry_device_stale_client(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a client device which is no longer tracked can be removed."""
+    config_entry = await _setup_entry_with_tracked_client(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:09")},
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id)
+
+    assert response["success"]
+    assert device_registry.async_get(device_entry.id) is None

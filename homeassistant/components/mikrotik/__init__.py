@@ -7,6 +7,7 @@ from librouteros import Api
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import AnyDeviceEntry, format_mac
 from homeassistant.util import slugify
 
 from .const import ATTR_MANUFACTURER, DOMAIN
@@ -105,3 +106,19 @@ async def async_unload_entry(
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
     await hass.async_add_executor_job(config_entry.runtime_data.api.api.close)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: MikrotikConfigEntry, device_entry: AnyDeviceEntry
+) -> bool:
+    """Allow removing client devices which are not currently tracked."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        return False
+    # Hub and interface devices are removed automatically when they go away
+    if any(identifier[0] == DOMAIN for identifier in device_entry.identifiers):
+        return False
+    tracked_macs = {format_mac(mac) for mac in config_entry.runtime_data.api.devices}
+    return not any(
+        connection_type == dr.CONNECTION_NETWORK_MAC and mac in tracked_macs
+        for connection_type, mac in device_entry.connections
+    )
