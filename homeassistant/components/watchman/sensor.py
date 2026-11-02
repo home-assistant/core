@@ -110,6 +110,7 @@ SENSOR_DESCRIPTIONS: tuple[SENSiTSensorEntityDescription, ...] = (
     SENSiTSensorEntityDescription(
         key="forecast_empty",
         translation_key="forecast_empty",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda tank, _: tank.forecast_empty,
@@ -136,14 +137,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform and listen for new dynamically added tanks."""
     coordinator = config_entry.runtime_data
-    added_tanks: set[str] = set()
 
     @callback
     def async_add_new_tanks() -> None:
         new_entities: list[SENSiTEntity] = []
         for tank in coordinator.data:
-            if tank.serial_number not in added_tanks:
-                added_tanks.add(tank.serial_number)
+            if tank.serial_number not in coordinator.added_tanks:
+                coordinator.added_tanks.add(tank.serial_number)
                 new_entities.extend(
                     SENSiTSensor(
                         coordinator, config_entry, tank.serial_number, description

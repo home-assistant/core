@@ -50,6 +50,7 @@ class SENSiTDataUpdateCoordinator(DataUpdateCoordinator[list[TankData]]):
         """Initialize."""
         self._httpx_client = httpx_client
         self._unavailable_logged = False
+        self.added_tanks: set[str] = set()
         super().__init__(
             hass,
             _LOGGER,

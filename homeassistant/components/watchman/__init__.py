@@ -102,8 +102,15 @@ async def async_remove_config_entry_device(
     coordinator = config_entry.runtime_data
     active_serials = {tank.serial_number for tank in coordinator.data}
 
-    for identifier in device_entry.identifiers:
-        if identifier[0] == DOMAIN and identifier[1] in active_serials:
-            return False
+    domain_serials = {
+        identifier[1]
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+    }
+    if not domain_serials.isdisjoint(active_serials):
+        return False
+
+    # Clear discovery tracking so the tanks can be recreated if they come back
+    coordinator.added_tanks.difference_update(domain_serials)
 
     return True
