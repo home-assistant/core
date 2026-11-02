@@ -42,13 +42,14 @@ CONFIG_SCHEMA = probatio.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Route53 component."""
+    domain_config = config[DOMAIN]
     data = hass.data[DATA_ROUTE53] = Route53Data(
-        aws_access_key_id=config[DOMAIN][CONF_ACCESS_KEY_ID],
-        aws_secret_access_key=config[DOMAIN][CONF_SECRET_ACCESS_KEY],
-        zone=config[DOMAIN][CONF_ZONE],
-        domain=config[DOMAIN][CONF_DOMAIN],
-        records=config[DOMAIN][CONF_RECORDS],
-        ttl=config[DOMAIN][CONF_TTL],
+        aws_access_key_id=domain_config[CONF_ACCESS_KEY_ID],
+        aws_secret_access_key=domain_config[CONF_SECRET_ACCESS_KEY],
+        zone=domain_config[CONF_ZONE],
+        domain=domain_config[CONF_DOMAIN],
+        records=domain_config[CONF_RECORDS],
+        ttl=domain_config[CONF_TTL],
     )
 
     def update_records_interval(now):
