@@ -4,9 +4,14 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_object_fixture,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.fully_kiosk.const import DOMAIN
+from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_FEED_URL
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -73,7 +78,18 @@ def mock_fully_kiosk() -> Generator[MagicMock]:
         client.getSettings.return_value = load_json_object_fixture(
             "listsettings.json", DOMAIN
         )
+        client.getInstallApkState.return_value = {
+            "status": "downloading",
+            "statustext": "Starting APK download",
+        }
         yield client
+
+
+@pytest.fixture(autouse=True)
+def mock_update_feed(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock the Fully Kiosk APK updates RSS feed."""
+    feed_content = load_fixture("feed_media.xml", DOMAIN)
+    aioclient_mock.get(UPDATE_FEED_URL, text=feed_content)
 
 
 @pytest.fixture

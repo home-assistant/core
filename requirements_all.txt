@@ -2804,7 +2804,7 @@ python-ecobee-api==0.4.2
 python-family-hub-local==0.0.2
 
 # homeassistant.components.fully_kiosk
-python-fullykiosk==0.0.15
+python-fullykiosk==0.0.17
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a0
