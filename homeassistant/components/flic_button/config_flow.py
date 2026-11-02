@@ -123,7 +123,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user-initiated setup."""
-        # If a discovery task is running or finished, handle it first
         if self._discovery_task:
             if not self._discovery_task.done():
                 return self.async_show_progress(
@@ -139,7 +138,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_show_progress_done(next_step_id="discovery_done")
 
-        # No device yet — start waiting for one to appear
         self._discovery_task = self.hass.async_create_task(
             self._async_wait_for_flic_device(), eager_start=False
         )
@@ -236,8 +234,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": name},
             )
 
-        # Check if the device is still advertising
-
         device_still_visible = any(
             info.address == self._discovery_info.address and info.connectable
             for info in async_discovered_service_info(self.hass)
@@ -246,7 +242,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
             # Device no longer advertising — fall back to scanner flow
             self._discovery_info = None
             return await self.async_step_user()
-        # Device still visible — pair immediately
         return await self.async_step_pair()
 
     async def async_step_pair(
@@ -337,7 +332,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        # Show pairing form
         return self.async_show_form(
             step_id="pair",
             errors=errors,
