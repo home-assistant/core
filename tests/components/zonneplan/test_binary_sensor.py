@@ -62,6 +62,35 @@ async def test_binary_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_low_price_binary_sensor_updates_on_the_hour(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the low price binary sensor turns on at the block start without an API call."""
+    freezer.move_to("2026-08-29T07:59:59+00:00")
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.zonneplan.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get(LOW_PRICE_ENTITY_ID))
+    assert state.state == STATE_OFF
+    api_calls = len(mock_zonneplan_client.method_calls)
+
+    freezer.move_to("2026-08-29T08:00:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(LOW_PRICE_ENTITY_ID))
+    assert state.state == STATE_ON
+    assert len(mock_zonneplan_client.method_calls) == api_calls
+
+
 async def test_battery_binary_sensor_unavailable_on_update_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
