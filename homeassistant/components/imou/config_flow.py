@@ -14,6 +14,7 @@ from pyimouapi.exceptions import (
 from pyimouapi.openapi import ImouOpenApiClient
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -71,6 +72,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_APP_ID],
             user_input[CONF_APP_SECRET],
             API_URLS[user_input[CONF_API_URL]],
+            session=async_get_clientsession(self.hass),
         )
         try:
             await api_client.async_get_token()

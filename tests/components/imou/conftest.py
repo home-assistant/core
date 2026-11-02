@@ -49,16 +49,6 @@ def mock_imou_openapi_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_imou_openapi_client_cls() -> Generator[MagicMock]:
-    """Mock ImouOpenApiClient class for constructor-arg assertions."""
-    with (
-        patch(PATCH_IMOU_OPENAPI_CLIENT, autospec=True) as mock_client_cls,
-        patch(PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT, new=mock_client_cls),
-    ):
-        yield mock_client_cls
-
-
-@pytest.fixture
 def imou_mock_devices(request: pytest.FixtureRequest) -> list[ImouHaDevice]:
     """Devices returned by ImouHaDeviceManager.async_get_devices (override via indirect)."""
     factory = getattr(request, "param", default_mock_devices)

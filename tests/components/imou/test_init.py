@@ -17,7 +17,6 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import create_offline_device, create_online_device, default_mock_devices
 
@@ -29,27 +28,11 @@ EXPECTED_TRANSLATION_KEYS = {
 }
 
 
-async def test_setup_passes_hass_clientsession(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_openapi_client_cls: MagicMock,
-    mock_imou_ha_device_manager: MagicMock,
-) -> None:
-    """Runtime setup injects Home Assistant's shared aiohttp session."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_imou_openapi_client_cls.call_args is not None
-    assert mock_imou_openapi_client_cls.call_args.kwargs.get(
-        "session"
-    ) is async_get_clientsession(hass)
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_imou_openapi_client: AsyncMock,
 ) -> None:
     """Test loading and unloading the config entry."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -58,6 +41,7 @@ async def test_setup_and_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_imou_openapi_client.async_close.assert_awaited()
 
 
 @pytest.mark.parametrize(
@@ -81,10 +65,11 @@ async def test_setup_and_unload_entry(
         (TimeoutError("timeout"), ConfigEntryState.SETUP_RETRY, "update_timeout"),
     ],
 )
-@pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
+@pytest.mark.usefixtures("mock_imou_ha_device_manager")
 async def test_setup_entry_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_imou_openapi_client: AsyncMock,
     mock_imou_ha_device_manager: AsyncMock,
     exception: Exception,
     expected_state: ConfigEntryState,
@@ -100,6 +85,7 @@ async def test_setup_entry_exceptions(
     assert mock_config_entry.state is expected_state
     assert mock_config_entry.error_reason_translation_domain == DOMAIN
     assert mock_config_entry.error_reason_translation_key == translation_key
+    mock_imou_openapi_client.async_close.assert_awaited()
 
 
 @pytest.mark.usefixtures("init_integration")

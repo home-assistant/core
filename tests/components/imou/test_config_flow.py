@@ -208,6 +208,7 @@ async def test_user_flow_uses_region_host(
         user_input[CONF_APP_ID],
         user_input[CONF_APP_SECRET],
         host,
+        session=async_get_clientsession(hass),
     )
 
 
