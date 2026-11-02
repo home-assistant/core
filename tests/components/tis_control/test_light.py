@@ -126,6 +126,31 @@ async def test_unavailable_and_back(
     assert hass.states.get(CHANNEL_1).state == STATE_ON
 
 
+async def test_back_online_from_the_bus_is_logged(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_gateway: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A module that announces itself before the next poll logs its recovery once."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    levels = mock_gateway.levels.pop((1, 5))
+    freezer.tick(POLL_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "TIS module 1.5 is not answering" in caplog.text
+
+    mock_gateway.push((1, 5), OpCode.SINGLE_CHANNEL_REPLY, bytes.fromhex("01f864"))
+    mock_gateway.push((1, 5), OpCode.SINGLE_CHANNEL_REPLY, bytes.fromhex("01f800"))
+    await hass.async_block_till_done()
+    assert caplog.text.count("TIS module 1.5 is answering again") == 1
+    mock_gateway.levels[(1, 5)] = levels
+
+
 @pytest.mark.usefixtures("setup_entry")
 async def test_turn_on_restores_level_set_elsewhere(
     hass: HomeAssistant, mock_gateway: MagicMock

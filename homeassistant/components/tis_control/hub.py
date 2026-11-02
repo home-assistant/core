@@ -110,6 +110,8 @@ class TISHub:
             return
         for item in levels:
             self.set_level((*address, item.channel), item.level)
+        if self.online.get(address) is False:
+            _LOGGER.info("TIS module %s.%s is answering again", *address)
         self.online[address] = True
         self._notify(address)
 
