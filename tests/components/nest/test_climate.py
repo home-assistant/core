@@ -1971,6 +1971,69 @@ async def test_thermostat_set_temperature_eco(
     assert not auth.captured_requests
 
 
+async def test_thermostat_set_temperature_after_eco_off(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+    create_event: CreateEvent,
+) -> None:
+    """Test setting a temperature after turning off eco mode."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatEco": {
+                "availableModes": ["MANUAL_ECO", "OFF"],
+                "mode": "MANUAL_ECO",
+                "heatCelsius": 15.0,
+                "coolCelsius": 28.0,
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        },
+    )
+    await setup_platform()
+
+    await common.async_set_preset_mode(hass, PRESET_NONE)
+    await common.async_set_temperature(hass, temperature=24.0)
+
+    assert len(auth.captured_requests) == 2
+    assert auth.json == {
+        "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat",
+        "params": {"heatCelsius": 24.0},
+    }
+
+    await create_event(
+        {
+            "sdm.devices.traits.ThermostatEco": {
+                "availableModes": ["MANUAL_ECO", "OFF"],
+                "mode": "OFF",
+            },
+        }
+    )
+    await create_event(
+        {
+            "sdm.devices.traits.ThermostatEco": {
+                "availableModes": ["MANUAL_ECO", "OFF"],
+                "mode": "MANUAL_ECO",
+                "heatCelsius": 15.0,
+                "coolCelsius": 28.0,
+            },
+        }
+    )
+
+    request_count = len(auth.captured_requests)
+    with pytest.raises(HomeAssistantError):
+        await common.async_set_temperature(hass, temperature=24.0)
+
+    assert len(auth.captured_requests) == request_count
+
+
 async def test_thermostat_set_range_api_error(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
