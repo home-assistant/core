@@ -18,7 +18,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     signal_discovered_config_entry_removed,
 )
-from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
+from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -36,7 +36,7 @@ from homeassistant.util.json import json_loads_object
 from homeassistant.util.signal_type import SignalTypeFormat
 
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS, ORIGIN_ABBREVIATIONS
-from .client import async_subscribe_internal
+from .client import async_publish, async_subscribe_internal
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -70,6 +70,7 @@ from .schemas import (
     validate_device_discovery_components,
 )
 from .util import (
+    async_cleanup_device_registry,
     async_cleanup_removed_component_device,
     async_forward_entry_setup_and_setup_discovery,
 )
@@ -759,6 +760,76 @@ def _async_cleanup_disabled_entity(
             ),
             name=f"Check for cleanup device registry for {entity_id}",
         )
+
+
+@callback
+def _async_get_device_discovery_data(
+    hass: HomeAssistant, config_entry_id: str, device_id: str
+) -> DiscoveryInfoType | None:
+    """Return the discovery data of a known component of a discovered device."""
+    mqtt_data = hass.data[DATA_MQTT]
+    return next(
+        (
+            discovery_data
+            for discovery_data in chain(
+                (
+                    disabled_entity.discovery_data
+                    for disabled_entity in (
+                        mqtt_data.discovery_discovered_and_disabled.values()
+                    )
+                ),
+                mqtt_data.discovery_already_discovered.values(),
+            )
+            if (payload := discovery_data[ATTR_DISCOVERY_PAYLOAD]).device_discovery
+            and _async_get_main_device_id(hass, config_entry_id, payload[CONF_DEVICE])
+            == device_id
+        ),
+        None,
+    )
+
+
+async def async_clear_removed_device_discovery_topic(
+    hass: HomeAssistant, config_entry_id: str, device_entry: dr.AnyDeviceEntry
+) -> None:
+    """Clear the device discovery topic of a device the user removes.
+
+    Clearing the retained payload prevents the device from being discovered again.
+    A removed child device keeps the topic, unless its parent device has no
+    components left.
+    """
+    main_device_id = (
+        device_entry.parent_device_id
+        if isinstance(device_entry, dr.ChildDeviceEntry)
+        else device_entry.id
+    )
+    if (
+        discovery_data := _async_get_device_discovery_data(
+            hass, config_entry_id, main_device_id
+        )
+    ) is None:
+        return
+    topic: str = discovery_data[ATTR_DISCOVERY_TOPIC]
+    if isinstance(device_entry, dr.ChildDeviceEntry):
+        device_registry = dr.async_get(hass)
+        # Remove the child device first, so its parent device can be cleaned up
+        device_registry.async_remove_device(device_entry.id)
+        await async_cleanup_device_registry(hass, main_device_id, config_entry_id)
+        if device_registry.async_get(main_device_id) is not None:
+            application: str = discovery_data[ATTR_DISCOVERY_PAYLOAD][CONF_ORIGIN][
+                CONF_NAME
+            ]
+            _LOGGER.warning(
+                "Although child device %s was removed from Home Assistant, it will "
+                "be added again when a new MQTT discovery config is received from "
+                "%s on topic %s. To prevent this, configure %s to no longer send "
+                "this child device",
+                device_entry.name or device_entry.id,
+                application,
+                topic,
+                application,
+            )
+            return
+    await async_publish(hass, topic, None, retain=True)
 
 
 async def async_start(  # noqa: C901

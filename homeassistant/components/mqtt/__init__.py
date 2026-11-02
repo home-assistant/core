@@ -514,6 +514,9 @@ async def async_remove_config_entry_device(
     from . import device_automation  # noqa: PLC0415
 
     await device_automation.async_removed_from_device(hass, device_entry.id)
+    await discovery.async_clear_removed_device_discovery_topic(
+        hass, config_entry.entry_id, device_entry
+    )
     return True
 
 

@@ -3557,12 +3557,15 @@ async def test_remove_device_component_from_registry(
 
 async def test_remove_device_discovered_device(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test removing a device discovered device clears the discovery topic."""
     mqtt_mock = await mqtt_mock_entry()
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
     async_fire_mqtt_message(
         hass,
         "homeassistant/device/bla/config",
@@ -3575,11 +3578,12 @@ async def test_remove_device_discovered_device(
     assert device_entry is not None
     mqtt_mock.async_publish.reset_mock()
 
-    device_registry.async_remove_device(device_entry.id)
+    response = await ws_client.remove_device(device_entry.id)
+    assert response["success"]
     await hass.async_block_till_done()
     assert not entity_registry.async_is_registered("sensor.bla_enabled")
     assert not entity_registry.async_is_registered("sensor.bla_disabled")
-    mqtt_mock.async_publish.assert_any_call(
+    mqtt_mock.async_publish.assert_called_once_with(
         "homeassistant/device/bla/config",
         None,
         0,
@@ -3817,7 +3821,10 @@ async def test_remove_last_device_component_from_registry(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test removing the last device component from the registry removes the device."""
+    """Test removing the last device component from the registry removes the device.
+
+    The topic is cleared, as the device has no components left.
+    """
     mqtt_mock = await mqtt_mock_entry()
     device_config = copy.deepcopy(DISABLED_COMPONENT_DEVICE_CONFIG)
     del device_config["cmps"]["sens2"]
@@ -3835,7 +3842,9 @@ async def test_remove_last_device_component_from_registry(
     assert not device_registry.async_get_device_by_identifier(
         ("mqtt", "bla"), config_entry_id
     )
-    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.assert_called_once_with(
+        "homeassistant/device/bla/config", None, 0, True, message_expiry_interval=None
+    )
 
     # The component and device are added again with the next discovery payload
     async_fire_mqtt_message(hass, "homeassistant/device/bla/config", payload)
