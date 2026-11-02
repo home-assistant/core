@@ -82,13 +82,15 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         PermissionError is left to propagate so the caller can re-authenticate.
         """
         clients = self._fetch_hostapd_clients()
-        if self._mac2name is None:
-            self._mac2name = self._generate_mac2name()
-        return {
-            mac: self._name_for(mac)
-            for mac, client in clients.items()
-            if client["authorized"]
-        }
+        authorized = [mac for mac, client in clients.items() if client["authorized"]]
+        # Reread the leases only when a client has no hostname yet, and keep
+        # the previous names if the leases can't be read.
+        if self._mac2name is None or any(
+            mac.upper() not in self._mac2name for mac in authorized
+        ):
+            if (mac2name := self._generate_mac2name()) is not None:
+                self._mac2name = mac2name
+        return {mac: self._name_for(mac) for mac in authorized}
 
     def _fetch_hostapd_clients(self) -> dict[str, dict]:
         """Return the raw hostapd client table merged across all interfaces."""
@@ -138,7 +140,9 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         mac2name = {}
         for line in result["data"].splitlines():
             hosts = line.split(" ")
-            mac2name[hosts[1].upper()] = hosts[3]
+            # dnsmasq writes "*" when the client did not send a hostname.
+            if hosts[3] != "*":
+                mac2name[hosts[1].upper()] = hosts[3]
         return mac2name
 
     def _odhcpd_mac2name(self) -> dict[str, str] | None:
@@ -159,5 +163,6 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 mac = ":".join(
                     lease["mac"][i : i + 2] for i in range(0, len(lease["mac"]), 2)
                 )
-                mac2name[mac.upper()] = lease["hostname"]
+                if hostname := lease["hostname"]:
+                    mac2name[mac.upper()] = hostname
         return mac2name
