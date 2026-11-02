@@ -11,9 +11,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityCapabilityAttribute,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_MAXIMUM,
     CONF_MINIMUM,
     CONF_NAME,
@@ -32,6 +34,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
     async_create_platform_config_not_supported_issue,
 )
@@ -84,6 +87,24 @@ async def async_setup_platform(
 
     async_add_entities(
         [CompensationSensor(conf.get(CONF_UNIQUE_ID), name, source, attribute, conf)]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Compensation sensor entry."""
+    compensation = entry.entry_id
+    conf: dict[str, Any] = hass.data[DATA_COMPENSATION][compensation]
+
+    source: str = conf[CONF_ENTITY_ID]
+    attribute: str | None = conf.get(CONF_ATTRIBUTE)
+    name = entry.title
+
+    async_add_entities(
+        [CompensationSensor(entry.entry_id, name, source, attribute, conf)]
     )
 
 

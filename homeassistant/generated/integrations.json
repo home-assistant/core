@@ -2488,15 +2488,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "compensation": {
-      "name": "Compensation",
-      "integration_type": "hub",
-      "categories": [
-        "helpers.calculate_value"
-      ],
-      "config_flow": false,
-      "iot_class": "calculated"
-    },
     "compit": {
       "name": "Compit",
       "integration_type": "hub",
@@ -4820,6 +4811,9 @@
           "iot_class": "local_polling",
           "categories": [
             "hubs_protocols.smart_home_hubs"
+          ],
+          "connectivity": [
+            "dect"
           ],
           "name": "FRITZ!SmartHome"
         },
@@ -17271,6 +17265,15 @@
     }
   },
   "helper": {
+    "compensation": {
+      "name": "Compensation",
+      "integration_type": "helper",
+      "categories": [
+        "helpers.calculate_value"
+      ],
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "counter": {
       "integration_type": "helper",
       "categories": [
