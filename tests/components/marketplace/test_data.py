@@ -399,6 +399,28 @@ async def test_restore_file_moved_aside_as_corrupt(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_restore_ignores_a_stale_corrupt_copy(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+) -> None:
+    """Test a corrupt copy only counts while the file it was moved from is missing."""
+    storage = config_dir / ".storage"
+    storage.mkdir(exist_ok=True)
+    for key in ("common", "repositories"):
+        (storage / f"{DOMAIN}.{key}").write_text("{}")
+        (storage / f"{DOMAIN}.{key}.corrupt.2026-11-02T10:00:00+00:00").write_text("{")
+    data = MarketplaceData(marketplace)
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        return_value={},
+    ):
+        assert await data.restore()
+
+    assert marketplace.status.new is True
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_restore_without_stored_data_is_a_first_setup(
     marketplace: MarketplaceManager,
     config_dir: Path,

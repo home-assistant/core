@@ -1131,12 +1131,11 @@ class MarketplaceManager:
             self._async_take_over_catalog_entry(repo_id, repo_data)
 
         # An answer without one usable entry says nothing about what is stale
-        if category_data:
+        if self.stage == MarketplaceStage.STARTUP and category_data:
             # Restored from storage, a repository stays default until the
             # catalog no longer lists it
             self.repositories.unmark_unlisted_defaults(category, set(category_data))
-            if self.stage == MarketplaceStage.STARTUP:
-                self._async_unregister_stale_custom_repositories(category)
+            self._async_unregister_stale_custom_repositories(category)
 
         self.async_dispatch(MarketplaceSignal.REPOSITORY, {})
         self.coordinators[category].async_update_listeners()
