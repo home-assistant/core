@@ -2843,6 +2843,49 @@ async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:
     assert await service.async_extract_config_entry_ids(call) == {"abc"}
 
 
+@pytest.mark.parametrize(
+    "cancelled_caller",
+    [pytest.param(0, id="active"), pytest.param(1, id="waiting")],
+)
+async def test_reload_service_helper_cancellation(
+    hass: HomeAssistant, cancelled_caller: int
+) -> None:
+    """Cancelling active or waiting callers preserves serialized reloads."""
+    finish = asyncio.Event()
+    reloaded: list[str] = []
+
+    async def reload_service_handler(service_call: ServiceCall) -> None:
+        await finish.wait()
+        reloaded.append(service_call.data["target"])
+
+    handler = AsyncMock(side_effect=reload_service_handler)
+    reloader = service.ReloadServiceHelper(handler, lambda call: {call.data["target"]})
+    callers = [
+        hass.async_create_task(
+            reloader.execute_service(
+                ServiceCall(hass, "test", "reload", {"target": target})
+            ),
+            eager_start=True,
+        )
+        for target in ("first", "second")
+    ]
+    callers[cancelled_caller].cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await callers[cancelled_caller]
+
+    assert handler.await_count == 1
+    assert not reloaded
+    finish.set()
+    await asyncio.gather(*callers, return_exceptions=True)
+    await hass.async_block_till_done()
+    assert reloaded == ["first", "second"]
+
+    await reloader.execute_service(
+        ServiceCall(hass, "test", "reload", {"target": "third"})
+    )
+    assert reloaded == ["first", "second", "third"]
+
+
 async def test_reload_service_helper(hass: HomeAssistant) -> None:
     """Test the reload service helper."""
 

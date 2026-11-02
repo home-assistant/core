@@ -1107,6 +1107,7 @@ class ReloadServiceHelper[_T]:
     The helper has the following purposes:
     - Make sure reloads do not happen in parallel
     - Avoid redundant reloads of the same target
+    - Keep reloads running if the caller is cancelled
     """
 
     def __init__(
@@ -1122,6 +1123,17 @@ class ReloadServiceHelper[_T]:
         self._reload_targets_func = reload_targets_func
 
     async def execute_service(self, service_call: ServiceCall) -> None:
+        """Execute the reload independently of caller cancellation."""
+        # Reloading may remove and stop the automation that called the service.
+        await asyncio.shield(
+            service_call.hass.async_create_task(
+                self._execute_service(service_call),
+                f"reload {service_call.domain}.{service_call.service}",
+                eager_start=True,
+            )
+        )
+
+    async def _execute_service(self, service_call: ServiceCall) -> None:
         """Execute the service.
 
         If a previous reload task is currently in progress, wait for it to finish first.
