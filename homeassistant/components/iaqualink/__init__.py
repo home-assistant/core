@@ -83,7 +83,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             AqualinkServiceException,
             AqualinkServiceUnauthorizedException,
             TimeoutError,
-            httpx.HTTPError,
+            httpx2.HTTPError,
         ):
             pass
         finally:

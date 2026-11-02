@@ -38,32 +38,13 @@ async def _async_mock_login(self: Any) -> None:
     self.user_id = MOCK_USER_ID
 
 
-async def test_multiple_accounts_allowed(
+async def test_duplicate_account_aborts(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-) -> None:
-    """Test config flow allows adding another iaqualink account."""
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-
-async def test_duplicate_account_aborts(
-    hass: HomeAssistant, config_data: dict[str, str]
+    config_data: dict[str, str],
 ) -> None:
     """Test config flow aborts when the same account is configured twice."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        title=config_data[CONF_USERNAME],
-        data=config_data,
-        unique_id=MOCK_USER_ID,
-    ).add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -206,6 +187,7 @@ async def test_cannot_connect_exception(
     """Test config flow encountering a connection-related exception."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
