@@ -4821,9 +4821,6 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
-      "connectivity": [
-        "serial"
-      ],
       "config_flow": true
     },
     "homeassistant_green": {
@@ -4840,9 +4837,6 @@
       "integration_type": "hardware",
       "categories": [
         "hubs_protocols.wireless_protocols"
-      ],
-      "connectivity": [
-        "serial"
       ],
       "config_flow": true
     },
