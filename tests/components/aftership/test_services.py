@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.aftership.const import (
-    DOMAIN,
+from homeassistant.components.aftership.const import DOMAIN
+from homeassistant.components.aftership.services import (
     AfterShipService,
     AfterShipServiceArgument,
 )

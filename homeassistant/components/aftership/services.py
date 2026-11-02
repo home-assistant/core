@@ -1,22 +1,49 @@
 """Services for aftership."""
 
-from typing import TYPE_CHECKING
+from enum import StrEnum
+from typing import TYPE_CHECKING, Final
+
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import service
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    ADD_TRACKING_SERVICE_SCHEMA,
-    DOMAIN,
-    REMOVE_TRACKING_SERVICE_SCHEMA,
-    UPDATE_TOPIC,
-    AfterShipService,
-    AfterShipServiceArgument,
-)
+from .const import DOMAIN, UPDATE_TOPIC
 
 if TYPE_CHECKING:
     from . import AfterShipConfigEntry
+
+
+class AfterShipService(StrEnum):
+    """Store keys for AfterShip services."""
+
+    ADD_TRACKING = "add_tracking"
+    REMOVE_TRACKING = "remove_tracking"
+
+
+class AfterShipServiceArgument(StrEnum):
+    """Store keys for AfterShip service arguments."""
+
+    TRACKING_NUMBER = "tracking_number"
+    TITLE = "title"
+    SLUG = "slug"
+
+
+ADD_TRACKING_SERVICE_SCHEMA: Final = probatio.Schema(
+    {
+        probatio.Required(AfterShipServiceArgument.TRACKING_NUMBER): cv.string,
+        probatio.Optional(AfterShipServiceArgument.TITLE): cv.string,
+        probatio.Optional(AfterShipServiceArgument.SLUG): cv.string,
+    }
+)
+
+REMOVE_TRACKING_SERVICE_SCHEMA: Final = probatio.Schema(
+    {
+        probatio.Required(AfterShipServiceArgument.SLUG): cv.string,
+        probatio.Required(AfterShipServiceArgument.TRACKING_NUMBER): cv.string,
+    }
+)
 
 
 async def handle_add_tracking(call: ServiceCall) -> None:
