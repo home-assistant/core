@@ -14,19 +14,19 @@ from .const import BEOLINK_JOIN_SOURCES, DOMAIN
 class BeoService(StrEnum):
     """Store keys for Bang & Olufsen services."""
 
-    BEOLINK_ALLSTANDBY = "beolink_allstandby"
-    BEOLINK_EXPAND = "beolink_expand"
-    BEOLINK_JOIN = "beolink_join"
-    BEOLINK_LEAVE = "beolink_leave"
-    BEOLINK_UNEXPAND = "beolink_unexpand"
+    ALLSTANDBY = "beolink_allstandby"
+    EXPAND = "beolink_expand"
+    JOIN = "beolink_join"
+    LEAVE = "beolink_leave"
+    UNEXPAND = "beolink_unexpand"
 
 
 class BeoServiceArgument(StrEnum):
     """Store keys for Bang & Olufsen service arguments."""
 
     ALL_DISCOVERED = "all_discovered"
-    BEOLINK_JIDS = "beolink_jids"
-    BEOLINK_JID = "beolink_jid"
+    JIDS = "beolink_jids"
+    JID = "beolink_jid"
     SOURCE_ID = "source_id"
 
 
@@ -41,10 +41,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        BeoService.BEOLINK_JOIN,
+        BeoService.JOIN,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            probatio.Optional(BeoServiceArgument.BEOLINK_JID): jid_regex,
+            probatio.Optional(BeoServiceArgument.JID): jid_regex,
             probatio.Optional(BeoServiceArgument.SOURCE_ID): probatio.In(
                 BEOLINK_JOIN_SOURCES
             ),
@@ -55,14 +55,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        BeoService.BEOLINK_EXPAND,
+        BeoService.EXPAND,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
             probatio.Exclusive(
                 BeoServiceArgument.ALL_DISCOVERED, "devices", ""
             ): cv.boolean,
             probatio.Exclusive(
-                BeoServiceArgument.BEOLINK_JIDS,
+                BeoServiceArgument.JIDS,
                 "devices",
                 "Define either specific Beolink JIDs or all discovered",
             ): probatio.All(
@@ -76,10 +76,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        BeoService.BEOLINK_UNEXPAND,
+        BeoService.UNEXPAND,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            probatio.Required(BeoServiceArgument.BEOLINK_JIDS): probatio.All(
+            probatio.Required(BeoServiceArgument.JIDS): probatio.All(
                 probatio.EnsureList(),
                 [jid_regex],
             ),
@@ -90,7 +90,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        BeoService.BEOLINK_LEAVE,
+        BeoService.LEAVE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
         func="async_beolink_leave",
@@ -99,7 +99,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        BeoService.BEOLINK_ALLSTANDBY,
+        BeoService.ALLSTANDBY,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
         func="async_beolink_allstandby",
