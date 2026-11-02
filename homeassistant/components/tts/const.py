@@ -48,6 +48,7 @@ class TextToSpeechServiceArgument(StrEnum):
     """Store keys for text-to-speech service arguments."""
 
     CACHE = "cache"
+    DAYS = "days"
     LANGUAGE = "language"
     MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
     MESSAGE = "message"
