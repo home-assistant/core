@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock
 from aioseafile import (
     SeafileAuthenticationError,
     SeafileConnectionError,
+    SeafileTimeoutError,
     SeafileTwoFactorRequiredError,
 )
 import pytest
@@ -46,6 +47,9 @@ NEW_LIBRARY_ID = "0c8bd7d5-6ba2-4e7d-9a8b-1f2f4c6ad2b1"
 
 NEW_TOKEN = "fedcba9876543210fedcba9876543210fedcba98"
 REAUTH_INPUT = {CONF_USERNAME: "user@example.com", CONF_PASSWORD: "hunter3"}
+
+NEW_URL = "https://files.example.org"
+RECONFIGURE_INPUT = {CONF_URL: NEW_URL, CONF_VERIFY_SSL: False}
 
 USER_INPUT = {
     CONF_URL: URL,
@@ -555,3 +559,89 @@ async def test_reauth_wrong_account(
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_TOKEN] == TOKEN
     mock_seafile_client.logout_device.assert_awaited_once()
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test changing the server address keeps the token."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.data == {
+        CONF_URL: NEW_URL,
+        CONF_TOKEN: TOKEN,
+        CONF_VERIFY_SSL: False,
+    }
+    mock_seafile_client.get_auth_token.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(SeafileAuthenticationError, "invalid_auth", id="invalid_auth"),
+        pytest.param(SeafileConnectionError, "cannot_connect", id="cannot_connect"),
+        pytest.param(SeafileTimeoutError, "cannot_connect", id="timeout"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test errors are shown on the reconfigure form and the flow can recover."""
+    await setup_integration(hass, mock_config_entry)
+    account = mock_seafile_client.get_account_info.return_value
+    mock_seafile_client.get_account_info.side_effect = exception
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_seafile_client.get_account_info.side_effect = None
+    mock_seafile_client.get_account_info.return_value = account
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.data[CONF_URL] == NEW_URL
+
+
+async def test_reconfigure_different_account(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a server where the token belongs to another account aborts."""
+    await setup_integration(hass, mock_config_entry)
+    mock_seafile_client.get_account_info.return_value = replace(
+        mock_seafile_client.get_account_info.return_value,
+        email="other@auth.local",
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "different_account"
+    assert mock_config_entry.data[CONF_URL] == URL

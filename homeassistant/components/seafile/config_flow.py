@@ -84,6 +84,15 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     }
 )
 
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_URL): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+        probatio.Required(CONF_VERIFY_SSL): bool,
+    }
+)
+
 STEP_OTP_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_OTP): TextSelector(
@@ -246,6 +255,44 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_REAUTH_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the address of the server, keeping the token."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            client = Seafile(
+                user_input[CONF_URL],
+                entry.data[CONF_TOKEN],
+                session=async_get_clientsession(
+                    self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
+                ),
+            )
+            try:
+                account = await client.get_account_info()
+            except SeafileAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except SeafileError:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(account.email)
+                self._abort_if_unique_id_mismatch(reason="different_account")
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={
+                        CONF_URL: user_input[CONF_URL],
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                    },
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_RECONFIGURE_DATA_SCHEMA, user_input or entry.data
             ),
             errors=errors,
         )
