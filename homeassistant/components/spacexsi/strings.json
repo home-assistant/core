@@ -17,7 +17,7 @@
           "prompt": "[%key:common::config_flow::data::prompt%]"
         },
         "data_description": {
-          "llm_hass_api": "Select which tools the model can use to interact with Home Assistant.",
+          "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
           "model": "The Grok model used by this conversation agent.",
           "prompt": "Instructions for how the agent should respond. This can be a template."
         }
@@ -33,6 +33,9 @@
       },
       "device_validation_error": {
         "description": "The signed-in account could not be validated. Select Submit to try again."
+      },
+      "no_models_available": {
+        "description": "No Grok models are available for the signed-in account. Select Submit to try again."
       },
       "reauth_confirm": {
         "description": "Sign in to your SpaceXSI account again to continue using the integration. Your existing agent and settings will be kept."

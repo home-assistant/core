@@ -148,6 +148,9 @@ class SpaceXSIConfigFlow(ConfigFlow, domain=DOMAIN):
         except SpaceXAISubscriptionError:
             return await self.async_step_device_validation_error()
 
+        if self.source != SOURCE_REAUTH and not self._models:
+            return await self.async_step_no_models_available()
+
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data_updates={"token": self._token}
@@ -253,6 +256,14 @@ class SpaceXSIConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="device_validation_error")
         return await self.async_step_device_finish()
 
+    async def async_step_no_models_available(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Retry the model catalog without repeating device authorization."""
+        if user_input is None:
+            return self.async_show_form(step_id="no_models_available")
+        return await self.async_step_device_finish()
+
     async def _async_validate_account(self) -> None:
         """Validate account identity and load available models."""
         if TYPE_CHECKING:
@@ -267,5 +278,3 @@ class SpaceXSIConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         self._account_name = account.name or account.email or "SpaceXSI"
         self._models = list(await self._client.async_list_models(access_token))
-        if not self._models:
-            raise SpaceXAISubscriptionError

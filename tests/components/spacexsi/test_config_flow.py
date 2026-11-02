@@ -545,7 +545,7 @@ async def test_account_has_no_models(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "device_validation_error"
+    assert result["step_id"] == "no_models_available"
 
     mock_flow_client.async_list_models.return_value = ("grok-4.5",)
     result = await hass.config_entries.flow.async_configure(
