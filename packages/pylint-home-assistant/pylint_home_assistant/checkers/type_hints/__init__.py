@@ -210,7 +210,12 @@ class HassTypeHintChecker(BaseChecker):
         if self._ignore_function_match(node, annotations, match):
             return
         if match.coroutine is not None:
-            expected_coroutine = match.coroutine or node.name != match.function_name
+            expected_coroutine = (
+                # explicit
+                match.coroutine
+                # implicit from has_async_counterpart
+                or node.name != match.function_name
+            )
             if isinstance(node, nodes.AsyncFunctionDef) != expected_coroutine:
                 self.add_message(
                     "home-assistant-function-async-mismatch",
