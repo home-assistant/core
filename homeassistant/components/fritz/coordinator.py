@@ -951,14 +951,13 @@ class AvmWrapper(FritzBoxTools):
     async def async_addon_infos_supported(self) -> bool:
         """Check if the WAN interface provides transmission rate and traffic data."""
 
-        def wrap_transmission_rate() -> tuple[int, int]:
-            return self.fritz_status.transmission_rate  # type: ignore[no-any-return]
-
         if not self.device_is_router:
             return False
 
         try:
-            await self.hass.async_add_executor_job(wrap_transmission_rate)
+            await self.hass.async_add_executor_job(
+                partial(self.connection.call_action, "WANCommonIFC1", "GetAddonInfos")
+            )
         except FritzConnectionException:
             LOGGER.debug(
                 "Transmission rate and traffic data not supported by the device"
