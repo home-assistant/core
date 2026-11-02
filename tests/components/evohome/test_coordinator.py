@@ -50,7 +50,7 @@ async def test_setup_platform(
     assert state is not None and state.state != STATE_UNAVAILABLE
 
     with patch(
-        "homeassistant.components.evohome.coordinator.EvoDataUpdateCoordinator._async_update_data",
+        "homeassistant.components.evohome.coordinator.EvoLocationCoordinator._async_update_data",
         side_effect=UpdateFailed,
     ):
         freezer.tick(update_interval)
@@ -96,7 +96,7 @@ async def test_high_precision_temps(
     evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
     update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
 
-    evo_data.coordinator.temps = {"3432521": 99.9}  # stale, so must be replaced
+    evo_data.account.data = {"3432521": 99.9}  # stale, so must be replaced
 
     with (
         patch("evohomeasync.EvohomeClient.get_status"),
@@ -113,6 +113,34 @@ async def test_high_precision_temps(
     state = hass.states.get(zone_id)
     assert state is not None
     assert state.attributes["current_temperature"] == expected
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_high_precision_temps_refresh_entities(
+    hass: HomeAssistant,
+    tcs: ControlSystem,
+    zone_id: str,
+) -> None:
+    """Test a refresh of (only) the account coordinator updates a zone's state."""
+
+    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
+    v1_tcs = MagicMock(get_temperatures=AsyncMock(return_value={"3432521": 19.8}))
+
+    with (
+        patch("evohomeasync.EvohomeClient.get_status"),
+        patch(
+            "evohomeasync.EvohomeClient.location_by_id",
+            new_callable=PropertyMock,
+            return_value={tcs.location.id: MagicMock(tcs=v1_tcs)},
+        ),
+    ):
+        await evo_data.account.async_refresh()
+        await hass.async_block_till_done()
+
+    state = hass.states.get(zone_id)
+    assert state is not None
+    assert state.attributes["current_temperature"] == 19.8
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
