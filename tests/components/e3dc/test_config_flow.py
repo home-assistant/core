@@ -54,7 +54,7 @@ def identified() -> MockModbusConnection:
 async def test_user_step_success(
     hass: HomeAssistant, identified: MockModbusConnection, model: str, title: str
 ) -> None:
-    """Test the flow probes the power station and creates an entry named after it."""
+    """Test the flow creates an entry named after the model, with the serial number as unique ID."""
     seed_identity(identified.for_unit(1), model=model)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -91,7 +91,7 @@ async def test_user_step_cannot_connect(
     error: Exception,
     expected: str,
 ) -> None:
-    """Test a failed probe shows an error and the flow recovers."""
+    """Test the form shows an error when the connection fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -115,6 +115,7 @@ async def test_user_step_cannot_connect(
 @pytest.mark.parametrize(
     ("holding", "expected"),
     [
+        # SunSpec mode replaces the E3/DC marker in register 40001 with "Su"
         pytest.param({40001: 0x5375}, "not_e3dc", id="sunspec_mode"),
         pytest.param({40001: 0xE3DC}, "no_serial_number", id="no_serial"),
     ],
@@ -123,7 +124,7 @@ async def test_user_step_cannot_connect(
 async def test_user_step_wrong_device(
     hass: HomeAssistant, holding: dict[int, int | list[int]], expected: str
 ) -> None:
-    """Test a device that is not a usable E3/DC power station is refused."""
+    """Test the form shows an error for a device in SunSpec mode or without a serial number."""
     connection = MockModbusConnection()
     seed(connection.for_unit(1), holding)
     result = await hass.config_entries.flow.async_init(
