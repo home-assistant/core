@@ -220,6 +220,7 @@ async def test_service_connection_closed(
     ("service", "service_data"),
     [
         ("open_path", {CONF_PATH: "/home/user/documents"}),
+        ("open_url", {CONF_URL: "https://example.com"}),
         ("power_command", {CONF_COMMAND: "shutdown"}),
         ("send_keypress", {CONF_KEY: "backspace"}),
         ("send_text", {CONF_TEXT: "Hello world"}),

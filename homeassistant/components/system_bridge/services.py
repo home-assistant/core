@@ -110,7 +110,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "open_url",
         handle_open_url,
