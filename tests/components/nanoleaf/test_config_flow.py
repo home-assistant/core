@@ -32,6 +32,8 @@ from homeassistant.helpers.service_info.zeroconf import (
 TEST_NAME = "Canvas ADF9"
 TEST_HOST = "192.168.0.100"
 TEST_OTHER_HOST = "192.168.0.200"
+TEST_IPV6_HOST = "fddd:82b:eb2f:0:828a:f7ff:fe06:97ff"
+TEST_OTHER_IPV6_HOST = "fddd:82b:eb2f:0:828a:f7ff:fe06:97aa"
 TEST_TOKEN = "R34F1c92FNv3pcZs4di17RxGqiLSwHM"
 TEST_OTHER_TOKEN = "Qs4dxGcHR34l29RF1c92FgiLQBt3pcM"
 TEST_DEVICE_ID = "5E:2E:EA:XX:XX:XX"
@@ -686,33 +688,45 @@ async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("addresses", "expected_host"),
+    ("stored_host", "addresses", "expected_host"),
     [
         pytest.param(
-            [ip_address("fddd:82b:eb2f:0:828a:f7ff:fe06:97ff")],
             TEST_HOST,
-            id="ipv6_only_keeps_host",
+            [ip_address(TEST_IPV6_HOST)],
+            TEST_HOST,
+            id="ipv6_keeps_ipv4_host",
         ),
         pytest.param(
-            [
-                ip_address(TEST_OTHER_HOST),
-                ip_address("fddd:82b:eb2f:0:828a:f7ff:fe06:97ff"),
-            ],
+            TEST_HOST,
+            [ip_address(TEST_OTHER_HOST), ip_address(TEST_IPV6_HOST)],
             TEST_OTHER_HOST,
-            id="ipv4_updates_host",
+            id="ipv4_updates_ipv4_host",
+        ),
+        pytest.param(
+            TEST_IPV6_HOST,
+            [ip_address(TEST_OTHER_IPV6_HOST)],
+            TEST_OTHER_IPV6_HOST,
+            id="ipv6_updates_ipv6_host",
+        ),
+        pytest.param(
+            TEST_IPV6_HOST,
+            [ip_address(TEST_HOST), ip_address(TEST_IPV6_HOST)],
+            TEST_HOST,
+            id="ipv4_replaces_ipv6_host",
         ),
     ],
 )
 async def test_homekit_discovery_host_update(
     hass: HomeAssistant,
+    stored_host: str,
     addresses: list[IPv4Address | IPv6Address],
     expected_host: str,
 ) -> None:
-    """Test a discovery without IPv4 address does not replace the entry host."""
+    """Test a discovery without IPv4 address does not replace an IPv4 host."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_NAME,
-        data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        data={CONF_HOST: stored_host, CONF_TOKEN: TEST_TOKEN},
     )
     entry.add_to_hass(hass)
 

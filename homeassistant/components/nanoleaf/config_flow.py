@@ -176,13 +176,18 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle Nanoleaf discovery."""
         # The name is unique and printed on the device and cannot be changed.
-        await self.async_set_unique_id(name)
-        # A discovery message can announce a device with IPv6 addresses only. It must
-        # not replace the IPv4 host of an existing entry, otherwise the entry is
-        # reloaded every time the host flips between IPv6 and IPv4.
-        self._abort_if_unique_id_configured(
-            {CONF_HOST: host} if is_ipv4_address(host) else None
-        )
+        existing_entry = await self.async_set_unique_id(name)
+        updates: dict[str, str] | None = {CONF_HOST: host}
+        if (
+            existing_entry is not None
+            and is_ipv4_address(existing_entry.data.get(CONF_HOST, ""))
+            and not is_ipv4_address(host)
+        ):
+            # A discovery message can announce a device with IPv6 addresses only.
+            # It must not replace the IPv4 host of an existing entry, otherwise the
+            # entry is reloaded every time the host flips between IPv6 and IPv4.
+            updates = None
+        self._abort_if_unique_id_configured(updates)
 
         # Import from discovery integration
         self.device_id = device_id
