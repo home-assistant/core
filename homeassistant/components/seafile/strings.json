@@ -140,5 +140,18 @@
     "timeout_connect": {
       "message": "Timed out while connecting to the Seafile server."
     }
+  },
+  "issues": {
+    "library_deleted": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The library \"{name}\" no longer exists on the Seafile server, or this account no longer has access to it. Its entities are unavailable and it can no longer be used as a backup location.\n\nSelect **Submit** to remove the library and its device from Home Assistant. If the library comes back, for example because it was shared again, this issue is resolved automatically.",
+            "title": "[%key:component::seafile::issues::library_deleted::title%]"
+          }
+        }
+      },
+      "title": "Seafile library \"{name}\" not found"
+    }
   }
 }

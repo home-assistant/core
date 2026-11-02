@@ -16,12 +16,19 @@ from aioseafile import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_LIBRARY_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_LIBRARY
+from .const import (
+    CONF_LIBRARY_ID,
+    DOMAIN,
+    ISSUE_LIBRARY_DELETED,
+    LOGGER,
+    SUBENTRY_TYPE_LIBRARY,
+)
 
 type SeafileConfigEntry = ConfigEntry[SeafileDataUpdateCoordinator]
 
@@ -110,6 +117,7 @@ class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         else:
+            self._async_update_library_issues(libraries)
             return SeafileData(
                 libraries=libraries,
                 file_counts={detail.id: detail.file_count for detail in details},
@@ -121,6 +129,39 @@ class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
                     if keep_days is not None
                 },
             )
+
+    @callback
+    def _async_update_library_issues(self, libraries: dict[str, Library]) -> None:
+        """Create an issue for each library that was deleted on the server.
+
+        Issues of libraries that are back, or whose subentry was removed, are
+        deleted when the refresh ends.
+        """
+        entry = self.config_entry
+        with ir.async_refresh_issues(
+            self.hass,
+            DOMAIN,
+            issue_id_pattern=f"{ISSUE_LIBRARY_DELETED}_",
+            config_entry_id=entry.entry_id,
+        ):
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIBRARY):
+                if subentry.data[CONF_LIBRARY_ID] in libraries:
+                    continue
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{ISSUE_LIBRARY_DELETED}_{subentry.subentry_id}",
+                    config_entry_id=entry.entry_id,
+                    data={
+                        "entry_id": entry.entry_id,
+                        "subentry_id": subentry.subentry_id,
+                        "name": subentry.title,
+                    },
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key=ISSUE_LIBRARY_DELETED,
+                    translation_placeholders={"name": subentry.title},
+                )
 
     async def _async_get_history_limit(self, library_id: str) -> int | None:
         """Return the days of history a library keeps, if the server allows it."""

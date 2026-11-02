@@ -71,8 +71,10 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
+  repair-issues: done
+  stale-devices:
+    status: done
+    comment: Each library device belongs to a library subentry; when the library is gone from the server, a fixable repair issue removes the subentry with its device.
 
   # Platinum
   async-dependency: done
