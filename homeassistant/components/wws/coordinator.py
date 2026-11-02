@@ -68,7 +68,7 @@ class WwsCoordinator(
         except EdAuthError as err:
             raise ConfigEntryAuthFailed from err
         except EdError as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(str(err)) from err
 
         try:
             measurements = await self._api.async_get_latest_measurements()
