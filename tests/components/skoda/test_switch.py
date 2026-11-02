@@ -12,7 +12,7 @@ from pytest_homeassistant.common import (
     snapshot_platform,
 )
 from skoda_public_api.api_layer.exceptions import OpenApiError
-from skoda_public_api.models.enums import ChargingState
+from skoda_public_api.models.enums import ChargingState, VentilationState
 from skoda_public_api.models.vehicle import VehicleResponse
 from syrupy.assertion import SnapshotAssertion
 
@@ -199,6 +199,38 @@ async def test_switch_updates_from_vehicle(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("switch.superb_charging"))
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("ventilation_state", "expected_state"),
+    [
+        (VentilationState.PREHEATING, STATE_ON),
+        (VentilationState.VENTILATION, STATE_ON),
+        (VentilationState.UNKNOWN, STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.parametrize("vehicle_fixture", ["vehicle_combustion.json"])
+async def test_active_ventilation_updates_from_vehicle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_skoda_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    ventilation_state: VentilationState,
+    expected_state: str,
+) -> None:
+    """Test the switch follows the ventilation state reported by the vehicle."""
+    await setup_integration(hass, mock_config_entry)
+    assert (state := hass.states.get("switch.octavia_active_ventilation"))
+    assert state.state == STATE_OFF
+
+    vehicle = mock_skoda_client.get_vehicle.return_value.vehicle
+    vehicle.active_ventilation.state = ventilation_state
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.octavia_active_ventilation"))
     assert state.state == expected_state
 
 
