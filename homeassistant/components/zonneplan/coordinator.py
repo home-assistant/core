@@ -36,6 +36,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
+from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -212,6 +213,17 @@ class ZonneplanCoordinator(ZonneplanBaseCoordinator[ZonneplanData]):
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(hass, entry, zonneplan, UPDATE_INTERVAL)
+        # Update the price entities at the start of every hour, when prices change.
+        entry.async_on_unload(
+            async_track_utc_time_change(
+                hass, self._async_hour_started, minute=0, second=0
+            )
+        )
+
+    @callback
+    def _async_hour_started(self, now: datetime) -> None:
+        """Update the entities with the prices of the new hour."""
+        self.async_update_listeners()
 
     async def _async_fetch_electricity(
         self, account: Account, today: date

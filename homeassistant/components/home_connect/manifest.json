@@ -4,6 +4,7 @@
   "categories": ["appliances_cleaning", "climate.heat_pumps_air_conditioning"],
   "codeowners": ["@DavidMStraub", "@Diegorro98", "@MartinHjelmare"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "repairs"],
   "dhcp": [
     {

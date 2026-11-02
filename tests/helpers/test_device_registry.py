@@ -4492,6 +4492,31 @@ async def test_devices_membership_by_entry_supported_by_id_deprecated(
 
 
 @pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_get_or_create_reports_each_deprecation_once(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a call with several deprecated arguments reports each of them once."""
+    invalid_type = "passes a non-string value of type int as default_manufacturer"
+    deprecated = "with a deprecated `default_manufacturer` parameter"
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        for _ in range(2):
+            device_registry.async_get_or_create(
+                config_entry_id=mock_config_entry.entry_id,
+                identifiers={("bridgeid", "0123")},
+                default_manufacturer=123,
+            )
+
+    assert caplog.text.count(invalid_type) == 1
+    assert caplog.text.count(deprecated) == 1
+
+
+@pytest.mark.parametrize(
     ("integration_frame_path", "expectation", "expected_log"),
     [
         pytest.param(

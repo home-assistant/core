@@ -4,6 +4,7 @@
   "categories": ["water.pools_spas"],
   "codeowners": ["@MatthiasLohr"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "usr-tcp232-ed2"
