@@ -3,9 +3,10 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassDict
 
 from . import issue_handler, websocket_api
-from .const import DOMAIN, FlowType
+from .const import DOMAIN, REPAIRS, FlowType
 from .issue_handler import (
     ConfirmRepairFlow,
     RepairsFlowManager,
@@ -30,7 +31,8 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Repairs."""
-    hass.data[DOMAIN] = {}
+
+    hass.data[REPAIRS] = HassDict()
 
     issue_handler.async_setup(hass)
     websocket_api.async_setup(hass)
