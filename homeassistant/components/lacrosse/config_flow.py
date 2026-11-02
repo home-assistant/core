@@ -201,7 +201,7 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                "deprecated_yaml_import_issue_cannot_connect",
+                f"deprecated_yaml_import_issue_cannot_connect_{resolved_device}",
                 breaks_in_ha_version="2027.4.0",
                 is_fixable=False,
                 issue_domain=DOMAIN,

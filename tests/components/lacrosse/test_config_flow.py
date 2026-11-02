@@ -340,7 +340,8 @@ async def test_import_flow_receiver_error(
     assert not hass.config_entries.async_entries(DOMAIN)
     mock_setup_entry.assert_not_called()
     issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        DOMAIN,
+        f"deprecated_yaml_import_issue_cannot_connect_{RECEIVER_DATA['device']}",
     )
     assert issue is not None
     assert issue.translation_key == "deprecated_yaml_import_issue_cannot_connect"
