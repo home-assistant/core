@@ -988,7 +988,15 @@ def handle_explain_target_exclude(
     )
 
     def _item(item: target_helpers.TargetItemEntities) -> dict[str, Any]:
-        return {"type": item.type, "id": item.id, "entities": sorted(item.entities)}
+        return {
+            "type": item.type,
+            "id": item.id,
+            "entities": sorted(
+                entity_id
+                for entity_id in item.entities
+                if connection.user.permissions.check_entity(entity_id, POLICY_READ)
+            ),
+        }
 
     connection.send_result(
         msg["id"],
@@ -998,7 +1006,11 @@ def handle_explain_target_exclude(
                 {
                     "type": exclude.type,
                     "id": exclude.id,
-                    "removed": [_item(removed) for removed in exclude.removed],
+                    "removed": [
+                        item
+                        for removed in exclude.removed
+                        if (item := _item(removed))["entities"]
+                    ],
                 }
                 for exclude in explanation.excludes
             ],
