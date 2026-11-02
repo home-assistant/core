@@ -24,7 +24,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -76,6 +75,7 @@ from .const import (
     TIME_SMA_LAST,
     WINDOW_SIZE_UNIT_NUMBER_EVENTS,
     WINDOW_SIZE_UNIT_TIME,
+    FilterEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -250,7 +250,9 @@ class SensorFilter(SensorEntity):
         self._attr_icon = None
         self._attr_device_class = None
         self._attr_state_class = None
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_id}
+        self._attr_extra_state_attributes = {
+            FilterEntityStateAttribute.ENTITY_ID: entity_id
+        }
 
     @callback
     def _update_filter_sensor_state_event(

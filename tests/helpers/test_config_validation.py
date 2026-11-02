@@ -443,12 +443,25 @@ def test_icon() -> None:
     """Test icon validation."""
     schema = probatio.Schema(cv.icon)
 
-    for value in (False, "work"):
+    for value in (False, "work", "mdi:wo rk", "mdi:\twork", "mdi: work"):
         with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     schema("mdi:work")
     schema("custom:prefix")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("mdi:work\n", id="trailing_newline"),
+        pytest.param(" mdi:work", id="leading_space"),
+        pytest.param("\tmdi:work  ", id="tab_and_trailing_spaces"),
+    ],
+)
+def test_icon_strips_surrounding_whitespace(value: str) -> None:
+    """Test icon validation strips surrounding whitespace."""
+    assert cv.icon(value) == "mdi:work"
 
 
 def test_time_period() -> None:
@@ -698,6 +711,13 @@ def test_entity_service_schema_exclude() -> None:
         {"area_id": "kitchen", "exclude": {"entity_id": "none"}},
         {"area_id": "kitchen", "exclude": {"unknown": "pantry"}},
         {"area_id": "kitchen", "exclude": "light.kitchen"},
+        # Unlike the target, the exclude block only accepts strict entity IDs
+        {"area_id": "kitchen", "exclude": {"entity_id": "light.kitchen, light.pantry"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "Light.Kitchen"}},
+        {
+            "area_id": "kitchen",
+            "exclude": {"entity_id": "0123456789abcdef0123456789abcdef"},
+        },
     )
     for value in invalid:
         with pytest.raises(probatio.MultipleInvalid):
@@ -707,7 +727,7 @@ def test_entity_service_schema_exclude() -> None:
         {
             "entity_id": "all",
             "exclude": {
-                "entity_id": "light.kitchen, light.pantry",
+                "entity_id": ["light.kitchen", "light.pantry"],
                 "device_id": "a_device",
                 "area_id": "kitchen",
                 "floor_id": "ground_floor",
@@ -744,6 +764,12 @@ def test_target_fields_exclude(schema: probatio.Schema) -> None:
     for value in (
         {"area_id": "kitchen", "exclude": {"exclude": {"area_id": "pantry"}}},
         {"area_id": "kitchen", "exclude": {"entity_id": "all"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "light.kitchen, light.pantry"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "Light.Kitchen"}},
+        {
+            "area_id": "kitchen",
+            "exclude": {"entity_id": "0123456789abcdef0123456789abcdef"},
+        },
     ):
         with pytest.raises(probatio.MultipleInvalid):
             schema(value)
@@ -892,6 +918,8 @@ def test_x10_address() -> None:
         schema("q55")
     with pytest.raises(probatio.Invalid):
         schema("garbage_addr")
+    with pytest.raises(probatio.Invalid):
+        schema("a1\n")
 
     schema("a1")
     schema("C11")

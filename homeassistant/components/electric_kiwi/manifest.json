@@ -4,6 +4,7 @@
   "categories": ["energy.energy_prices"],
   "codeowners": ["@mikey0000"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/electric_kiwi",
   "integration_type": "hub",

@@ -42,6 +42,11 @@
       }
     }
   },
+  "device": {
+    "mppt": {
+      "name": "MPPT {mppt_no}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "backup_mode": {
@@ -92,9 +97,6 @@
       },
       "current_dc": {
         "name": "DC current"
-      },
-      "current_dc_mppt_no": {
-        "name": "DC current {mppt_no}"
       },
       "delivery_factor": {
         "name": "Grid import tariff"
@@ -265,16 +267,13 @@
         "name": "Meter mode"
       },
       "modbus_mppt_current_dc": {
-        "name": "MPPT {mppt_no} DC current"
-      },
-      "modbus_mppt_energy": {
-        "name": "MPPT {mppt_no} energy"
+        "name": "DC current (Modbus)"
       },
       "modbus_mppt_power_dc": {
-        "name": "MPPT {mppt_no} DC power"
+        "name": "DC power"
       },
       "modbus_mppt_voltage_dc": {
-        "name": "MPPT {mppt_no} DC voltage"
+        "name": "DC voltage (Modbus)"
       },
       "power_ac": {
         "name": "AC power"
@@ -428,9 +427,6 @@
       },
       "voltage_dc_minimum_cell": {
         "name": "Minimum cell voltage"
-      },
-      "voltage_dc_mppt_no": {
-        "name": "DC voltage {mppt_no}"
       }
     },
     "switch": {
