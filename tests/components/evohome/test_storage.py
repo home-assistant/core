@@ -48,6 +48,8 @@ TEST_STORAGE_DATA: Final[dict[str, _TokenStoreT]] = {
         SZ_SESSION_ID: SESSION_ID,
         SZ_SESSION_ID_EXPIRES: SESSION_ID_EXP_STR,
     },  # pyright: ignore[reportAssignmentType]
+    "with_session_id_sans_expires": _TEST_STORAGE_BASE  # as cached by older versions
+    | {SZ_SESSION_ID: SESSION_ID},  # pyright: ignore[reportAssignmentType]
 }
 
 TEST_STORAGE_NULL: Final[dict[str, _EmptyStoreT | None]] = {
