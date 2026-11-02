@@ -5,8 +5,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "authorization_required": "The BleBox device requires authentication.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device identifier does not match the previously configured device.",
       "unsupported_device_response": "The BleBox device returned an unrecognized response.",
       "unsupported_device_version": "[%key:component::blebox::config::error::unsupported_version%]"
@@ -78,13 +76,13 @@
       "down": { "name": "Down" },
       "fav": { "name": "Favorite" },
       "open": { "name": "Open" },
+      "second_output": { "name": "Second output" },
       "up": { "name": "Up" }
     },
     "light": { "channel": { "name": "Channel {index}" } },
     "sensor": {
       "active_power": { "name": "Active power" },
       "active_power_n": { "name": "Active power {index}" },
-      "apparent_power": { "name": "Apparent power" },
       "apparent_power_n": { "name": "Apparent power {index}" },
       "co2_level": {
         "name": "Carbon dioxide level",
@@ -98,16 +96,17 @@
           "unhealthy": "Unhealthy"
         }
       },
-      "current": { "name": "Current" },
       "current_n": { "name": "Current {index}" },
+      "fill_level": { "name": "Fill level" },
       "forward_active_energy": { "name": "Forward active energy" },
       "forward_active_energy_n": { "name": "Forward active energy {index}" },
       "forward_reactive_energy": { "name": "Forward reactive energy" },
       "forward_reactive_energy_n": {
         "name": "Forward reactive energy {index}"
       },
-      "frequency": { "name": "Frequency" },
       "frequency_n": { "name": "Frequency {index}" },
+      "gauge_pressure": { "name": "Gauge pressure" },
+      "liquid_height": { "name": "Liquid height" },
       "open_status": {
         "name": "Open status",
         "state": {
@@ -119,7 +118,6 @@
         }
       },
       "power_consumption": { "name": "Energy last hour" },
-      "reactive_power": { "name": "Reactive power" },
       "reactive_power_n": { "name": "Reactive power {index}" },
       "reverse_active_energy": { "name": "Reverse active energy" },
       "reverse_active_energy_n": { "name": "Reverse active energy {index}" },
@@ -127,10 +125,9 @@
       "reverse_reactive_energy_n": {
         "name": "Reverse reactive energy {index}"
       },
-      "temperature": { "name": "Temperature" },
       "temperature_n": { "name": "Temperature {index}" },
-      "voltage": { "name": "Voltage" },
-      "voltage_n": { "name": "Voltage {index}" }
+      "voltage_n": { "name": "Voltage {index}" },
+      "volume": { "name": "Volume" }
     }
   },
   "exceptions": {
@@ -151,6 +148,12 @@
     },
     "update_failed": {
       "message": "Failed to fetch firmware update information from the BleBox device: {error}"
+    }
+  },
+  "issues": {
+    "probe_not_configured": {
+      "description": "The {sensor_name} sensor of {device_name} reports that its probe is not configured, so it provides no readings.\n\nGo to the device settings in the wBox app and configure the probe or sensor. Once configured, the sensor will resume providing readings and this issue will clear automatically.",
+      "title": "{device_name}: {sensor_name} probe not configured"
     }
   }
 }

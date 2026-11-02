@@ -9,14 +9,12 @@ from pyprosegur.installation import Camera as InstallationCamera, Installation
 
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ProsegurConfigEntry
-from .const import DOMAIN, SERVICE_REQUEST_IMAGE
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,13 +25,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Prosegur camera platform."""
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_REQUEST_IMAGE,
-        None,
-        "async_request_image",
-    )
 
     _installation = await Installation.retrieve(
         entry.runtime_data, entry.data["contract"]
@@ -82,12 +73,12 @@ class ProsegurCamera(Camera):
         _LOGGER.debug("Get image for %s", self._camera.description)
         try:
             return await self._installation.get_image(self._auth, self._camera.id)
-
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ProsegurException as err:
-            _LOGGER.error("Image %s doesn't exist: %s", self._camera.description, err)
-
-        return None
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="image_not_available",
+                translation_placeholders={"camera": self._camera.description},
+            ) from err
 
     async def async_request_image(self):
         """Request new image from the camera."""
@@ -95,11 +86,9 @@ class ProsegurCamera(Camera):
         _LOGGER.debug("Request image for %s", self._camera.description)
         try:
             await self._installation.request_image(self._auth, self._camera.id)
-
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ProsegurException as err:
-            _LOGGER.error(
-                "Could not request image from camera %s: %s",
-                self._camera.description,
-                err,
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_image_failed",
+                translation_placeholders={"camera": self._camera.description},
+            ) from err

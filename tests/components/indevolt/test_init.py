@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.indevolt.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import setup_integration
 from .conftest import DEVICE_MAPPING, TEST_DEVICE_SN_GEN2
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -46,8 +45,8 @@ async def test_device_info(
     await setup_integration(hass, mock_config_entry)
 
     device_info = DEVICE_MAPPING[generation]
-    device_entry = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, device_info["mac"])}
+    device_entry = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, device_info["mac"]), mock_config_entry.entry_id
     )
 
     assert device_entry is not None

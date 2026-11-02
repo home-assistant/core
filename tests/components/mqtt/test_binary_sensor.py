@@ -10,21 +10,12 @@ from unittest.mock import patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-
-from homeassistant.components import binary_sensor
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import (
-    EVENT_STATE_CHANGED,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
+from pytest_homeassistant.common import (
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_restore_cache,
 )
-from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
-
-from .common import (
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -55,13 +46,21 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import (
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_restore_cache,
+from homeassistant.components import binary_sensor
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 DEFAULT_CONFIG = {
     DOMAIN: {
@@ -1269,3 +1268,80 @@ async def test_value_template_fails(
         "TypeError: unsupported operand type(s) for *:"
         " 'NoneType' and 'int' rendering template" in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                binary_sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "entity_category": "config",
+                }
+            }
+        }
+    ],
+)
+async def test_unsupported_entity_category(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test `config` entity category is rejected for this read-only platform."""
+    assert await mqtt_mock_entry()
+    assert "Entity category 'config' is not supported by this platform" in caplog.text
+    assert hass.states.get("binary_sensor.test") is None
+
+
+async def test_unsupported_entity_category_discovery(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a discovered `config` entity category is rejected."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic",'
+        ' "unique_id": "veryunique", "entity_category": "config"}',
+    )
+    await hass.async_block_till_done()
+    assert "Entity category 'config' is not supported by this platform" in caplog.text
+    assert (
+        entity_registry.async_get_entity_id(binary_sensor.DOMAIN, DOMAIN, "veryunique")
+        is None
+    )
+
+
+async def test_unsupported_entity_category_discovery_update(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an unsupported entity category is rejected on a discovery update."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic", "unique_id": "veryunique"}',
+    )
+    await hass.async_block_till_done()
+    entity_id = entity_registry.async_get_entity_id(
+        binary_sensor.DOMAIN, DOMAIN, "veryunique"
+    )
+    assert entity_id is not None
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{"name": "test", "state_topic": "test-topic",'
+        ' "unique_id": "veryunique", "entity_category": "config"}',
+    )
+    await hass.async_block_till_done()
+    assert "Entity category 'config' is not supported by this platform" in caplog.text
+    assert entity_registry.async_get(entity_id).entity_category is None

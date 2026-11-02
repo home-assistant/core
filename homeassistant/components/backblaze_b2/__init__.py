@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 type BackblazeConfigEntry = ConfigEntry[Bucket]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> None:
     """Set up Backblaze B2 from a config entry."""
 
     info = InMemoryAccountInfo()
@@ -89,7 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             translation_key="cannot_connect",
         ) from err
     except exception.MissingAccountData as err:
-        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
@@ -115,14 +114,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
 
     hass.async_create_task(async_check_for_repair_issues(hass, entry))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> None:
     """Unload a Backblaze B2 config entry.
 
     Any resources directly managed by this entry that need explicit shutdown
     would be handled here. In this case, the `async_on_state_change` listener
     handles the notification logic on unload.
     """
-    return True

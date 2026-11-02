@@ -1,9 +1,10 @@
 """Test the Frontier Silicon config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from afsapi import FSConnectionError, FSNotImplementedError, InvalidPinError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.frontier_silicon.const import (
@@ -16,9 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from tests.common import MockConfigEntry
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+pytestmark = pytest.mark.usefixtures("mock_afsapi", "mock_setup_entry")
 
 
 MOCK_DISCOVERY = SsdpServiceInfo(
@@ -46,6 +45,7 @@ INVALID_MOCK_DISCOVERY = SsdpServiceInfo(
 )
 async def test_form_default_pin(
     hass: HomeAssistant,
+    mock_afsapi: AsyncMock,
     mock_setup_entry: AsyncMock,
     radio_id_return_value: str | None,
     radio_id_side_effect: Exception | None,
@@ -58,15 +58,12 @@ async def test_form_default_pin(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
-        return_value=radio_id_return_value,
-        side_effect=radio_id_side_effect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
-        )
+    mock_afsapi.get_radio_id.return_value = radio_id_return_value
+    mock_afsapi.get_radio_id.side_effect = radio_id_side_effect
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
@@ -84,6 +81,7 @@ async def test_form_default_pin(
 )
 async def test_form_nondefault_pin(
     hass: HomeAssistant,
+    mock_afsapi: AsyncMock,
     mock_setup_entry: AsyncMock,
     radio_id_return_value: str | None,
     radio_id_side_effect: Exception | None,
@@ -96,29 +94,24 @@ async def test_form_nondefault_pin(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
-        side_effect=InvalidPinError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
-        )
-        await hass.async_block_till_done()
+    mock_afsapi.get_friendly_name.side_effect = InvalidPinError
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "device_config"
     assert result2["errors"] is None
 
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
-        return_value=radio_id_return_value,
-        side_effect=radio_id_side_effect,
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {CONF_PIN: "4321"},
-        )
+    mock_afsapi.get_friendly_name.side_effect = None
+    mock_afsapi.get_radio_id.return_value = radio_id_return_value
+    mock_afsapi.get_radio_id.side_effect = radio_id_side_effect
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_PIN: "4321"},
+    )
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
@@ -140,6 +133,7 @@ async def test_form_nondefault_pin(
 )
 async def test_form_nondefault_pin_invalid(
     hass: HomeAssistant,
+    mock_afsapi: AsyncMock,
     friendly_name_error: Exception,
     result_error: str,
     mock_setup_entry: AsyncMock,
@@ -152,34 +146,29 @@ async def test_form_nondefault_pin_invalid(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
-        side_effect=InvalidPinError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
-        )
-        await hass.async_block_till_done()
+    mock_afsapi.get_friendly_name.side_effect = InvalidPinError
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "device_config"
     assert result2["errors"] is None
 
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
-        side_effect=friendly_name_error,
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {CONF_PIN: "4321"},
-        )
-        await hass.async_block_till_done()
+    mock_afsapi.get_friendly_name.side_effect = friendly_name_error
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_PIN: "4321"},
+    )
+    await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.FORM
     assert result2["step_id"] == "device_config"
     assert result3["errors"] == {"base": result_error}
 
+    mock_afsapi.get_friendly_name.side_effect = None
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
         {CONF_PIN: "4321"},
@@ -204,6 +193,7 @@ async def test_form_nondefault_pin_invalid(
 )
 async def test_invalid_device_url(
     hass: HomeAssistant,
+    mock_afsapi: AsyncMock,
     webfsapi_endpoint_error: Exception,
     result_error: str,
     mock_setup_entry: AsyncMock,
@@ -216,20 +206,18 @@ async def test_invalid_device_url(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_webfsapi_endpoint",
-        side_effect=webfsapi_endpoint_error,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
-        )
-        await hass.async_block_till_done()
+    mock_afsapi.get_webfsapi_endpoint.side_effect = webfsapi_endpoint_error
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": result_error}
 
+    mock_afsapi.get_webfsapi_endpoint.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
@@ -247,6 +235,7 @@ async def test_invalid_device_url(
 
 async def test_user_already_configured_without_unique_id(
     hass: HomeAssistant,
+    mock_afsapi: AsyncMock,
 ) -> None:
     """Test manual setup aborts when an entry with the same endpoint already exists."""
     entry = MockConfigEntry(
@@ -256,17 +245,14 @@ async def test_user_already_configured_without_unique_id(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
-        side_effect=FSNotImplementedError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
-        )
+    mock_afsapi.get_radio_id.side_effect = FSNotImplementedError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
@@ -278,21 +264,19 @@ async def test_user_already_configured_without_unique_id(
 )
 async def test_ssdp(
     hass: HomeAssistant,
-    mock_setup_entry: MockConfigEntry,
+    mock_afsapi: AsyncMock,
+    mock_setup_entry: AsyncMock,
     radio_id_return_value: str | None,
     radio_id_side_effect: Exception | None,
 ) -> None:
     """Test a device being discovered."""
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
-        return_value=radio_id_return_value,
-        side_effect=radio_id_side_effect,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_DISCOVERY,
-        )
+    mock_afsapi.get_radio_id.return_value = radio_id_return_value
+    mock_afsapi.get_radio_id.side_effect = radio_id_side_effect
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_DISCOVERY,
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -351,35 +335,32 @@ async def test_ssdp_already_configured(
     [(ValueError, "unknown"), (FSConnectionError, "cannot_connect")],
 )
 async def test_ssdp_fail(
-    hass: HomeAssistant, webfsapi_endpoint_error: Exception, result_error: str
+    hass: HomeAssistant,
+    mock_afsapi: AsyncMock,
+    webfsapi_endpoint_error: Exception,
+    result_error: str,
 ) -> None:
     """Test a device being discovered but failing to reply."""
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_webfsapi_endpoint",
-        side_effect=webfsapi_endpoint_error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_DISCOVERY,
-        )
+    mock_afsapi.get_webfsapi_endpoint.side_effect = webfsapi_endpoint_error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_DISCOVERY,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == result_error
 
 
-async def test_ssdp_nondefault_pin(hass: HomeAssistant) -> None:
+async def test_ssdp_nondefault_pin(hass: HomeAssistant, mock_afsapi: AsyncMock) -> None:
     """Test a device being discovered."""
 
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
-        side_effect=InvalidPinError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_DISCOVERY,
-        )
+    mock_afsapi.get_friendly_name.side_effect = InvalidPinError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_DISCOVERY,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
@@ -413,6 +394,7 @@ async def test_reauth_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
 )
 async def test_reauth_flow_friendly_name_error(
     hass: HomeAssistant,
+    mock_afsapi: AsyncMock,
     exception: Exception,
     reason: str,
     config_entry: MockConfigEntry,
@@ -425,20 +407,18 @@ async def test_reauth_flow_friendly_name_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_config"
 
-    with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
-        side_effect=exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PIN: "4321"},
-        )
-        await hass.async_block_till_done()
+    mock_afsapi.get_friendly_name.side_effect = exception
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PIN: "4321"},
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "device_config"
     assert result2["errors"] == {"base": reason}
 
+    mock_afsapi.get_friendly_name.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_PIN: "4242"},
@@ -446,3 +426,179 @@ async def test_reauth_flow_friendly_name_error(
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert config_entry.data[CONF_PIN] == "4242"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_afsapi: AsyncMock, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the device address."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_WEBFSAPI_URL: "http://2.2.2.2:80/webfsapi",
+        CONF_PIN: "1234",
+    }
+
+
+async def test_reconfigure_flow_without_unique_id(
+    hass: HomeAssistant, mock_afsapi: AsyncMock
+) -> None:
+    """Test reconfiguring a device that does not report a radio ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi", CONF_PIN: DEFAULT_PIN},
+    )
+    entry.add_to_hass(hass)
+    mock_afsapi.get_radio_id.side_effect = FSNotImplementedError
+
+    result = await entry.start_reconfigure_flow(hass)
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_WEBFSAPI_URL] == "http://2.2.2.2:80/webfsapi"
+
+
+@pytest.mark.parametrize(
+    ("webfsapi_endpoint_error", "radio_id_error", "result_error"),
+    [
+        pytest.param(
+            FSConnectionError, None, "cannot_connect", id="endpoint_connection"
+        ),
+        pytest.param(ValueError, None, "unknown", id="endpoint_unknown"),
+        pytest.param(
+            None, FSConnectionError, "cannot_connect", id="radio_id_connection"
+        ),
+        pytest.param(None, InvalidPinError, "invalid_auth", id="radio_id_invalid_pin"),
+        pytest.param(None, ValueError, "unknown", id="radio_id_unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_afsapi: AsyncMock,
+    config_entry: MockConfigEntry,
+    webfsapi_endpoint_error: type[Exception] | None,
+    radio_id_error: type[Exception] | None,
+    result_error: str,
+) -> None:
+    """Test reconfigure flow errors and recovery."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    mock_afsapi.get_webfsapi_endpoint.side_effect = webfsapi_endpoint_error
+    mock_afsapi.get_radio_id.side_effect = radio_id_error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": result_error}
+
+    mock_afsapi.get_webfsapi_endpoint.side_effect = None
+    mock_afsapi.get_radio_id.side_effect = None
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_WEBFSAPI_URL] == "http://2.2.2.2:80/webfsapi"
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant, mock_afsapi: AsyncMock, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow aborts when pointed at a different device."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    mock_afsapi.get_radio_id.return_value = "other_radio_id"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert config_entry.data[CONF_WEBFSAPI_URL] == "http://1.1.1.1:80/webfsapi"
+
+
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant, mock_afsapi: AsyncMock
+) -> None:
+    """Test reconfigure aborts when another entry uses the endpoint."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi", CONF_PIN: DEFAULT_PIN},
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={CONF_WEBFSAPI_URL: "http://2.2.2.2:80/webfsapi", CONF_PIN: DEFAULT_PIN},
+    ).add_to_hass(hass)
+    mock_afsapi.get_radio_id.side_effect = FSNotImplementedError
+
+    result = await entry.start_reconfigure_flow(hass)
+    mock_afsapi.get_webfsapi_endpoint.return_value = "http://2.2.2.2:80/webfsapi"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_WEBFSAPI_URL] == "http://1.1.1.1:80/webfsapi"
+
+
+@pytest.mark.parametrize(
+    ("webfsapi_url", "expected_port"),
+    [
+        pytest.param("http://1.1.1.1:8080/webfsapi", 8080, id="custom_port"),
+        pytest.param("http://1.1.1.1/webfsapi", 80, id="no_port"),
+    ],
+)
+async def test_reconfigure_flow_suggested_values(
+    hass: HomeAssistant, webfsapi_url: str, expected_port: int
+) -> None:
+    """Test the reconfigure form is prefilled from the stored URL."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="mock_radio_id",
+        data={CONF_WEBFSAPI_URL: webfsapi_url, CONF_PIN: DEFAULT_PIN},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    suggested_values = {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    }
+    assert suggested_values == {CONF_HOST: "1.1.1.1", CONF_PORT: expected_port}

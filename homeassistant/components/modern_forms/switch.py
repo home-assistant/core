@@ -19,10 +19,13 @@ async def async_setup_entry(
     """Set up Modern Forms switch based on a config entry."""
     coordinator = entry.runtime_data
 
-    switches = [
+    switches: list[ModernFormsSwitch] = [
         ModernFormsAwaySwitch(entry.entry_id, coordinator),
-        ModernFormsAdaptiveLearningSwitch(entry.entry_id, coordinator),
     ]
+
+    if coordinator.data.has_adaptive_learning():
+        switches.append(ModernFormsAdaptiveLearningSwitch(entry.entry_id, coordinator))
+
     async_add_entities(switches)
 
 

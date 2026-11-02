@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from aiontfy import Account, AccountTokenResponse, Event, Notification, Version
 from aiontfy.update import LatestRelease
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.ntfy.const import (
     CONF_TOPIC,
@@ -18,14 +19,12 @@ from homeassistant.components.ntfy.const import (
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 
-from tests.common import MockConfigEntry, load_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ntfy.async_setup_entry", return_value=True
+        "homeassistant.components.ntfy.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -45,8 +44,7 @@ def mock_aiontfy() -> Generator[AsyncMock]:
             load_fixture("account.json", DOMAIN)
         )
         client.generate_token.return_value = AccountTokenResponse(
-            token="token",
-            last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+            token="token", last_access=datetime(1970, 1, 1, 0, 0, 0, tzinfo=UTC)
         )
         client.version.return_value = Version.from_json(
             load_fixture("version.json", DOMAIN)

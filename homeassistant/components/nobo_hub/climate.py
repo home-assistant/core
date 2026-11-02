@@ -15,12 +15,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_NAME,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
-    UnitOfTemperature,
-)
+from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -29,7 +24,6 @@ from homeassistant.util import dt as dt_util
 
 from . import NoboHubConfigEntry
 from .const import (
-    ATTR_SERIAL,
     ATTR_TEMP_COMFORT_C,
     ATTR_TEMP_ECO_C,
     CONF_OVERRIDE_TYPE,
@@ -78,7 +72,8 @@ async def async_setup_entry(
         new_zones = [zone_id for zone_id in hub.zones if zone_id not in known_zones]
         known_zones.update(new_zones)
         async_add_entities(
-            NoboZone(zone_id, hub, override_type) for zone_id in new_zones
+            NoboZone(hass, zone_id, hub, override_type, config_entry.entry_id)
+            for zone_id in new_zones
         )
 
     _add_zones(hub)
@@ -101,22 +96,30 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.AUTO
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     # Need to poll to get preset change when in HVACMode.AUTO
     _attr_should_poll = True
 
-    def __init__(self, zone_id, hub: nobo, override_type) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        zone_id: str,
+        hub: nobo,
+        override_type: str,
+        entry_id: str,
+    ) -> None:
         """Initialize the climate device."""
-        super().__init__(hub)
+        super().__init__(hass, hub, entry_id)
         self._id = zone_id
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
         self._override_type = override_type
+        zone_name = hub.zones[zone_id]["name"]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
-            name=hub.zones[zone_id][ATTR_NAME],
-            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
-            suggested_area=hub.zones[zone_id][ATTR_NAME],
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=zone_name,
+            via_device_id=self._hub_device_id,
+            suggested_area=zone_name,
         )
         self._read_state()
 
@@ -206,12 +209,12 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.HEAT
 
         current_temperature = self._nobo.get_current_zone_temperature(self._id)
-        self._attr_current_temperature = (
+        self._attr_native_current_temperature = (
             None if current_temperature is None else float(current_temperature)
         )
-        self._attr_target_temperature_high = int(
+        self._attr_native_target_temperature_high = int(
             self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]
         )
-        self._attr_target_temperature_low = int(
+        self._attr_native_target_temperature_low = int(
             self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
         )

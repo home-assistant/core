@@ -27,6 +27,7 @@
       "manufacturer_id": 741
     }
   ],
+  "categories": ["sensors", "blinds_curtains", "plugs_switches"],
   "codeowners": [
     "@danielhiversen",
     "@RenierM26",
@@ -36,11 +37,12 @@
     "@zerzhang"
   ],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/switchbot",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["switchbot"],
   "quality_scale": "gold",
-  "requirements": ["PySwitchbot==2.3.0"]
+  "requirements": ["PySwitchbot==3.1.0"]
 }

@@ -22,7 +22,7 @@ async def async_setup_entry(
     """Set up Trane Local switch entities."""
     conn = config_entry.runtime_data
     async_add_entities(
-        TraneHoldSwitch(conn, config_entry.entry_id, zone_id)
+        TraneHoldSwitch(hass, conn, config_entry.entry_id, zone_id)
         for zone_id in conn.state.zones
     )
 
@@ -32,9 +32,15 @@ class TraneHoldSwitch(TraneZoneEntity, SwitchEntity):
 
     _attr_translation_key = "hold"
 
-    def __init__(self, conn: ThermostatConnection, entry_id: str, zone_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        conn: ThermostatConnection,
+        entry_id: str,
+        zone_id: str,
+    ) -> None:
         """Initialize the hold switch."""
-        super().__init__(conn, entry_id, zone_id, "hold")
+        super().__init__(hass, conn, entry_id, zone_id, "hold")
 
     @property
     @override

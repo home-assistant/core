@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123')]>,
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -24,7 +24,7 @@
     'object_id_base': 'RouterBOARD',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
     'original_name': 'RouterBOARD',
     'platform': 'mikrotik',
@@ -40,6 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/mikrotik/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mikrotik RouterBOARD',
@@ -69,9 +70,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123')]>,
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -86,7 +87,7 @@
     'object_id_base': 'RouterOS',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
     'original_name': 'RouterOS',
     'platform': 'mikrotik',
@@ -102,6 +103,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/mikrotik/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mikrotik RouterOS',
@@ -131,9 +133,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123')]>,
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -148,7 +150,7 @@
     'object_id_base': 'RouterBOARD',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
     'original_name': 'RouterBOARD',
     'platform': 'mikrotik',
@@ -164,6 +166,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/mikrotik/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mikrotik RouterBOARD',
@@ -193,9 +196,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123')]>,
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -210,7 +213,7 @@
     'object_id_base': 'RouterOS',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
     'original_name': 'RouterOS',
     'platform': 'mikrotik',
@@ -226,6 +229,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/mikrotik/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mikrotik RouterOS',
@@ -255,9 +259,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123')]>,
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -272,7 +276,7 @@
     'object_id_base': 'RouterBOARD',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
     'original_name': 'RouterBOARD',
     'platform': 'mikrotik',
@@ -288,6 +292,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/mikrotik/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mikrotik RouterBOARD',
@@ -317,9 +322,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('mikrotik', 'ABC123')]>,
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -334,7 +339,7 @@
     'object_id_base': 'RouterOS',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
     'original_icon': None,
     'original_name': 'RouterOS',
     'platform': 'mikrotik',
@@ -350,6 +355,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/mikrotik/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mikrotik RouterOS',

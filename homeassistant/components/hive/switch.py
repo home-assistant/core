@@ -41,7 +41,7 @@ async def async_setup_entry(
         return
     async_add_entities(
         (
-            HiveSwitch(hive, dev, description)
+            HiveSwitch(hass, entry, hive, dev, description)
             for dev in devices
             for description in SWITCH_TYPES
             if dev["hiveType"] == description.key
@@ -55,12 +55,14 @@ class HiveSwitch(HiveEntity, SwitchEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        entry: HiveConfigEntry,
         hive: Hive,
         hive_device: dict[str, Any],
         entity_description: SwitchEntityDescription,
     ) -> None:
         """Initialise hive switch."""
-        super().__init__(hive, hive_device)
+        super().__init__(hass, entry, hive, hive_device)
         self.entity_description = entity_description
 
     @refresh_system

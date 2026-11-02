@@ -1,5 +1,7 @@
 """Tests for the sensors provided by the Luftdaten integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.luftdaten.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -18,8 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_luftdaten_sensors(

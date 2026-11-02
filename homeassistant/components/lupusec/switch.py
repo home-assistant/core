@@ -31,7 +31,7 @@ async def async_setup_entry(
     devices = await hass.async_add_executor_job(partial_func)
 
     async_add_entities(
-        LupusecSwitch(device, config_entry.entry_id) for device in devices
+        LupusecSwitch(hass, device, config_entry.entry_id) for device in devices
     )
 
 

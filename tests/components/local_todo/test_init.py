@@ -3,13 +3,12 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_ENTITY
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload(

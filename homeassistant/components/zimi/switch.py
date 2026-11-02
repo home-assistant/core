@@ -22,7 +22,9 @@ async def async_setup_entry(
 
     api = config_entry.runtime_data
 
-    outlets = [ZimiSwitch(device, api) for device in api.outlets]
+    outlets = [
+        ZimiSwitch(hass, device, api, config_entry.entry_id) for device in api.outlets
+    ]
 
     async_add_entities(outlets)
 

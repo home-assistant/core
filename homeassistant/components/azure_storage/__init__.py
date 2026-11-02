@@ -33,7 +33,7 @@ type AzureStorageConfigEntry = ConfigEntry[ContainerClient]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AzureStorageConfigEntry
-) -> bool:
+) -> None:
     """Set up Azure Storage integration."""
     # set increase aiohttp timeout for long running operations (up/download)
     session = async_create_clientsession(
@@ -85,11 +85,8 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AzureStorageConfigEntry
-) -> bool:
+) -> None:
     """Unload an Azure Storage config entry."""
-    return True

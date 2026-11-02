@@ -11,8 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import AutomowerConfigEntry
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,10 +73,10 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         if not program_event:
             return None
         work_area_name = None
-        if self.mower_attributes.work_area_dict and program_event.work_area_id:
-            work_area_name = self.mower_attributes.work_area_dict[
-                program_event.work_area_id
-            ]
+        if (work_area_dict := self.mower_attributes.work_area_dict) and (
+            work_area_id := program_event.work_area_id
+        ) is not None:
+            work_area_name = work_area_dict.get(work_area_id)
         name_str = make_name_string(work_area_name, program_event.schedule_no)
         return CalendarEvent(
             summary=f"{self.device_name} {name_str}",
@@ -104,10 +103,10 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         calendar_events = []
         for program_event in cursor:
             work_area_name = None
-            if self.mower_attributes.work_area_dict and program_event.work_area_id:
-                work_area_name = self.mower_attributes.work_area_dict[
-                    program_event.work_area_id
-                ]
+            if (work_area_dict := self.mower_attributes.work_area_dict) and (
+                work_area_id := program_event.work_area_id
+            ) is not None:
+                work_area_name = work_area_dict.get(work_area_id)
             name_str = make_name_string(work_area_name, program_event.schedule_no)
             calendar_events.append(
                 CalendarEvent(

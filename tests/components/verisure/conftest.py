@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.verisure.const import CONF_GIID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 OVERVIEW = [
     {
@@ -28,7 +27,12 @@ OVERVIEW = [
                 "smartLocks": [
                     {"device": {"deviceLabel": "lock-1"}, "status": "LOCKED"}
                 ],
-                "smartplugs": [{"device": {"deviceLabel": "plug-1"}, "status": "on"}],
+                "smartplugs": [
+                    {
+                        "device": {"deviceLabel": "plug-1", "area": "Living room"},
+                        "currentState": "ON",
+                    }
+                ],
             }
         }
     }
@@ -65,7 +69,7 @@ def mock_verisure() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.verisure.async_setup_entry", return_value=True
+        "homeassistant.components.verisure.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

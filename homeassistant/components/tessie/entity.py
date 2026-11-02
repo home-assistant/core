@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from inspect import isawaitable
 from typing import Any, override
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -167,14 +168,18 @@ class TessieWallConnectorEntity(TessieBaseEntity):
         """Initialize common aspects of a Teslemetry entity."""
         self.din = din
         self._attr_unique_id = f"{data.id}-{din}-{key}"
+        assert data.live_coordinator
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, din)},
             manufacturer="Tesla",
             name="Wall Connector",
-            via_device=(DOMAIN, str(data.id)),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                data.live_coordinator.hass,
+                (DOMAIN, str(data.id)),
+                config_entry_id=data.live_coordinator.config_entry.entry_id,
+            ),
             serial_number=din.rsplit("-", maxsplit=1)[-1],
         )
-        assert data.live_coordinator
         super().__init__(data.live_coordinator, key, data_key)
 
     @property

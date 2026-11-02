@@ -21,10 +21,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -50,7 +49,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZHASiren(ZHAEntity, SirenEntity):
+class ZHASiren(ZHASupportedFeaturesEntity, SirenEntity):
     """Representation of a ZHA siren."""
 
     _attr_available_tones: list[int | str] | dict[int, str] | None = {
@@ -62,12 +61,14 @@ class ZHASiren(ZHAEntity, SirenEntity):
         WarningMode.Emergency_Panic: "Emergency Panic",
     }
 
-    def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
-        """Initialize the ZHA siren."""
-        super().__init__(entity_data, **kwargs)
-
-        features: SirenEntityFeature = SirenEntityFeature(0)
-        zha_features: ZHASirenEntityFeature = self.entity_data.entity.supported_features
+    @staticmethod
+    @functools.cache
+    @override
+    def _convert_supported_features(
+        zha_features: ZHASirenEntityFeature,
+    ) -> SirenEntityFeature:
+        """Convert ZHA siren features to HA siren features."""
+        features = SirenEntityFeature(0)
 
         if ZHASirenEntityFeature.TURN_ON in zha_features:
             features |= SirenEntityFeature.TURN_ON
@@ -80,13 +81,13 @@ class ZHASiren(ZHAEntity, SirenEntity):
         if ZHASirenEntityFeature.DURATION in zha_features:
             features |= SirenEntityFeature.DURATION
 
-        self._attr_supported_features = features
+        return features
 
     @property
     @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.entity_data.entity.is_on
+        return self._zha_state.is_on
 
     @convert_zha_error_to_ha_error()
     @override

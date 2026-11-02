@@ -1,9 +1,10 @@
 """Tests for the Backup integration's utility functions."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 import dataclasses
 import hashlib
+import inspect
 import os
 from pathlib import Path
 import tarfile
@@ -11,6 +12,7 @@ from unittest.mock import Mock, patch
 
 import nacl.bindings.crypto_secretstream as nss
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 import securetar
 
 from homeassistant.components.backup import DOMAIN, AddonInfo, AgentBackup, Folder
@@ -19,12 +21,11 @@ from homeassistant.components.backup.util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
     read_backup,
+    receive_file,
     suggested_filename,
     validate_password,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import get_fixture_path
 
 
 def _deterministic_init_push(
@@ -306,7 +307,7 @@ def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) ->
 
 
 @pytest.mark.parametrize(
-    ("addons", "padding_size", "decrypted_backup"),
+    ("addons", "padding_size", "encrypted_backup", "decrypted_backup"),
     [
         (
             [
@@ -314,6 +315,7 @@ def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) ->
                 AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
             ],
             51200,  # 5 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar",
             "test_backups/c0cb53bd.tar.decrypted",
         ),
         (
@@ -321,7 +323,18 @@ def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) ->
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
             40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar",
             "test_backups/c0cb53bd.tar.decrypted_skip_core2",
+        ),
+        # supervisor.tar.gz is not in the backup metadata but must be decrypted
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+                AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+            ],
+            51200,  # 5 x 10240 byte of padding
+            "test_backups/c0cb53bd_supervisor.tar.encrypted_v3",
+            "test_backups/c0cb53bd_supervisor.tar.decrypted",
         ),
     ],
 )
@@ -329,11 +342,12 @@ async def test_decrypted_backup_streamer(
     hass: HomeAssistant,
     addons: list[AddonInfo],
     padding_size: int,
+    encrypted_backup: str,
     decrypted_backup: str,
 ) -> None:
     """Test the decrypted backup streamer."""
     decrypted_backup_path = get_fixture_path(decrypted_backup, DOMAIN)
-    encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
+    encrypted_backup_path = get_fixture_path(encrypted_backup, DOMAIN)
     backup = AgentBackup(
         addons=addons,
         backup_id="1234",
@@ -403,12 +417,17 @@ async def test_decrypted_backup_streamer_interrupt_stuck_reader(
                 await stuck.wait()
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_decrypted_backup_streamer_interrupt_stuck_writer(
@@ -438,12 +457,17 @@ async def test_decrypted_backup_streamer_interrupt_stuck_writer(
             while chunk := f.read(1024):
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> None:
@@ -484,7 +508,7 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
 
 
 @pytest.mark.parametrize(
-    ("addons", "padding_size", "encrypted_backup"),
+    ("addons", "padding_size", "decrypted_backup", "encrypted_backup"),
     [
         (
             [
@@ -492,6 +516,7 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
                 AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
             ],
             51200,  # 5 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.decrypted",
             "test_backups/c0cb53bd.tar.encrypted_v3",
         ),
         (
@@ -499,7 +524,18 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
             40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.decrypted",
             "test_backups/c0cb53bd.tar.encrypted_v3_skip_core2",
+        ),
+        # supervisor.tar.gz is not in the backup metadata but must be encrypted
+        (
+            [
+                AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
+                AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
+            ],
+            51200,  # 5 x 10240 byte of padding
+            "test_backups/c0cb53bd_supervisor.tar.decrypted",
+            "test_backups/c0cb53bd_supervisor.tar.encrypted_v3",
         ),
     ],
 )
@@ -507,12 +543,11 @@ async def test_encrypted_backup_streamer(
     hass: HomeAssistant,
     addons: list[AddonInfo],
     padding_size: int,
+    decrypted_backup: str,
     encrypted_backup: str,
 ) -> None:
     """Test the encrypted backup streamer."""
-    decrypted_backup_path = get_fixture_path(
-        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
-    )
+    decrypted_backup_path = get_fixture_path(decrypted_backup, DOMAIN)
     encrypted_backup_path = get_fixture_path(encrypted_backup, DOMAIN)
     backup = AgentBackup(
         addons=addons,
@@ -598,12 +633,17 @@ async def test_encrypted_backup_streamer_interrupt_stuck_reader(
                 await stuck.wait()
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_encrypted_backup_streamer_interrupt_stuck_writer(
@@ -635,12 +675,17 @@ async def test_encrypted_backup_streamer_interrupt_stuck_writer(
             while chunk := f.read(1024):
                 yield chunk
 
+    streams: list[AsyncGenerator[bytes]] = []
+
     async def open_backup() -> AsyncIterator[bytes]:
-        return send_backup()
+        stream = send_backup()
+        streams.append(stream)
+        return stream
 
     decryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
     await decryptor.open_stream()
     await decryptor.wait()
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
 
 
 async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> None:
@@ -784,3 +829,87 @@ def test_suggested_filename(name: str, resulting_filename: str) -> None:
         size=1234,
     )
     assert suggested_filename(backup) == resulting_filename
+
+
+# Bound receive_file awaits so a reintroduced deadlock fails fast instead of
+# hanging the test run.
+_RECEIVE_FILE_TIMEOUT = 10
+
+
+async def _stream_chunks(
+    chunks: list[bytes], error: Exception | None = None
+) -> AsyncIterator[bytes]:
+    """Yield chunks, then optionally raise to simulate a broken upload stream."""
+    for chunk in chunks:
+        yield chunk
+    if error is not None:
+        raise error
+
+
+@pytest.mark.parametrize(
+    "chunks",
+    [
+        pytest.param([], id="empty"),
+        pytest.param([b"single"], id="single_chunk"),
+        pytest.param([b"chunk1", b"chunk2", b"chunk3"], id="multi_chunk"),
+        # >5 chunks crosses the backpressure checkpoint (every 5th chunk).
+        pytest.param([f"chunk{i}".encode() for i in range(12)], id="many_chunks"),
+    ],
+)
+async def test_receive_file(
+    hass: HomeAssistant, tmp_path: Path, chunks: list[bytes]
+) -> None:
+    """Test receiving a stream and writing it to a file."""
+    path = tmp_path / "received.bin"
+    async with asyncio.timeout(_RECEIVE_FILE_TIMEOUT):
+        await receive_file(hass, _stream_chunks(chunks), path)
+    assert path.read_bytes() == b"".join(chunks)
+
+
+async def test_receive_file_writer_error(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test an OSError from the file writer propagates without deadlocking."""
+    # The parent directory does not exist, so opening the file for writing fails.
+    path = tmp_path / "missing" / "received.bin"
+    async with asyncio.timeout(_RECEIVE_FILE_TIMEOUT):
+        with pytest.raises(FileNotFoundError):
+            await receive_file(hass, _stream_chunks([b"data"] * 10), path)
+
+
+async def test_receive_file_stream_error(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test a stream error propagates and the consumer still terminates."""
+    path = tmp_path / "received.bin"
+    stream = _stream_chunks(
+        [b"chunk1", b"chunk2"], ConnectionResetError("Connection lost")
+    )
+    async with asyncio.timeout(_RECEIVE_FILE_TIMEOUT):
+        with pytest.raises(ConnectionResetError):
+            await receive_file(hass, stream, path)
+    # The consumer drained the queued chunks and closed the file before the error
+    # surfaced, proving it terminated rather than deadlocked.
+    assert path.read_bytes() == b"chunk1chunk2"
+
+
+async def test_receive_file_cancelled(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test cancelling mid-transfer propagates CancelledError without deadlocking."""
+    path = tmp_path / "received.bin"
+    first_chunk_sent = asyncio.Event()
+    blocked = asyncio.Event()  # never set, so the stream blocks until cancelled
+
+    async def _blocking_stream() -> AsyncIterator[bytes]:
+        yield b"chunk1"
+        first_chunk_sent.set()
+        await blocked.wait()
+
+    task = asyncio.create_task(receive_file(hass, _blocking_stream(), path))
+    await first_chunk_sent.wait()
+    task.cancel()
+
+    # asyncio.wait does not cancel on timeout, so a deadlocked task stays pending
+    # and the assertion fails fast instead of the run hanging.
+    _done, pending = await asyncio.wait({task}, timeout=_RECEIVE_FILE_TIMEOUT)
+    assert not pending
+    with pytest.raises(asyncio.CancelledError):
+        task.result()
+    # The first chunk was flushed and the file closed before cancellation
+    # completed, proving the consumer terminated rather than deadlocked.
+    assert path.read_bytes() == b"chunk1"

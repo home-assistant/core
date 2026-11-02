@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -14,7 +14,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -30,6 +29,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -38,12 +38,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    ATTR_HYSTERESIS,
-    ATTR_LOWER,
-    ATTR_POSITION,
-    ATTR_SENSOR_VALUE,
-    ATTR_TYPE,
-    ATTR_UPPER,
     CONF_HYSTERESIS,
     CONF_LOWER,
     CONF_UPPER,
@@ -55,6 +49,7 @@ from .const import (
     TYPE_LOWER,
     TYPE_RANGE,
     TYPE_UPPER,
+    ThresholdEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,22 +60,22 @@ DEFAULT_NAME: Final = "Threshold"
 def no_missing_threshold(value: dict) -> dict:
     """Validate data point list is greater than polynomial degrees."""
     if value.get(CONF_LOWER) is None and value.get(CONF_UPPER) is None:
-        raise vol.Invalid("Lower or Upper thresholds are not provided")
+        raise probatio.Invalid("Lower or Upper thresholds are not provided")
 
     return value
 
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(
-                float
-            ),
-            vol.Optional(CONF_LOWER): vol.Coerce(float),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_UPPER): vol.Coerce(float),
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+            probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            probatio.Optional(
+                CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS
+            ): probatio.Coerce(float),
+            probatio.Optional(CONF_LOWER): probatio.Coerce(float),
+            probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            probatio.Optional(CONF_UPPER): probatio.Coerce(float),
         }
     ),
     no_missing_threshold,
@@ -108,7 +103,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             ThresholdSensor(
-                hass,
                 entity_id=entity_id,
                 name=name,
                 lower=lower,
@@ -116,6 +110,7 @@ async def async_setup_entry(
                 hysteresis=hysteresis,
                 device_class=device_class,
                 unique_id=unique_id,
+                device=async_entity_id_to_device(hass, entity_id),
             )
         ]
     )
@@ -138,7 +133,6 @@ async def async_setup_platform(
     async_add_entities(
         [
             ThresholdSensor(
-                hass,
                 entity_id=entity_id,
                 name=name,
                 lower=lower,
@@ -165,12 +159,17 @@ class ThresholdSensor(BinarySensorEntity):
 
     _attr_should_poll = False
     _unrecorded_attributes = frozenset(
-        {ATTR_ENTITY_ID, ATTR_HYSTERESIS, ATTR_LOWER, ATTR_TYPE, ATTR_UPPER}
+        {
+            ThresholdEntityStateAttribute.ENTITY_ID,
+            ThresholdEntityStateAttribute.HYSTERESIS,
+            ThresholdEntityStateAttribute.LOWER,
+            ThresholdEntityStateAttribute.TYPE,
+            ThresholdEntityStateAttribute.UPPER,
+        }
     )
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         entity_id: str,
         name: str,
@@ -179,15 +178,12 @@ class ThresholdSensor(BinarySensorEntity):
         hysteresis: float,
         device_class: BinarySensorDeviceClass | None,
         unique_id: str | None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the Threshold sensor."""
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
         self._attr_unique_id = unique_id
-        if entity_id:  # Guard against empty entity_id in preview mode
-            self.device_entry = async_entity_id_to_device(
-                hass,
-                entity_id,
-            )
+        self.device_entry = device
         self._entity_id = entity_id
         self._attr_name = name
         if lower is not None:
@@ -255,13 +251,17 @@ class ThresholdSensor(BinarySensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ENTITY_ID: self._entity_id,
-            ATTR_HYSTERESIS: self._hysteresis,
-            ATTR_LOWER: getattr(self, "_threshold_lower", None),
-            ATTR_POSITION: self._state_position,
-            ATTR_SENSOR_VALUE: self.sensor_value,
-            ATTR_TYPE: self.threshold_type,
-            ATTR_UPPER: getattr(self, "_threshold_upper", None),
+            ThresholdEntityStateAttribute.ENTITY_ID: self._entity_id,
+            ThresholdEntityStateAttribute.HYSTERESIS: self._hysteresis,
+            ThresholdEntityStateAttribute.LOWER: getattr(
+                self, "_threshold_lower", None
+            ),
+            ThresholdEntityStateAttribute.POSITION: self._state_position,
+            ThresholdEntityStateAttribute.SENSOR_VALUE: self.sensor_value,
+            ThresholdEntityStateAttribute.TYPE: self.threshold_type,
+            ThresholdEntityStateAttribute.UPPER: getattr(
+                self, "_threshold_upper", None
+            ),
         }
 
     @callback

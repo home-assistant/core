@@ -55,7 +55,7 @@ async def async_setup_entry(
     """Set up Trane Local climate entities."""
     conn = config_entry.runtime_data
     async_add_entities(
-        TraneClimateEntity(conn, config_entry.entry_id, zone_id)
+        TraneClimateEntity(hass, conn, config_entry.entry_id, zone_id)
         for zone_id in conn.state.zones
     )
 
@@ -73,12 +73,18 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_target_temperature_step = 1.0
 
-    def __init__(self, conn: ThermostatConnection, entry_id: str, zone_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        conn: ThermostatConnection,
+        entry_id: str,
+        zone_id: str,
+    ) -> None:
         """Initialize the climate entity."""
-        super().__init__(conn, entry_id, zone_id, "zone")
+        super().__init__(hass, conn, entry_id, zone_id, "zone")
         modes: list[HVACMode] = []
         for zone_mode in conn.state.supported_modes:
             ha_mode = ZONE_MODE_TO_HA.get(zone_mode)
@@ -92,7 +98,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         # indoor_temperature is a string from the protocol (e.g. "72.00")
         # or empty string if not yet received
@@ -138,7 +144,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return target temperature for single-setpoint modes."""
         # Setpoints are strings from the protocol or empty string if not yet received
         zone = self._zone
@@ -150,7 +156,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         zone = self._zone
         if zone.mode in SINGLE_SETPOINT_MODES:
@@ -159,7 +165,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         zone = self._zone
         if zone.mode in SINGLE_SETPOINT_MODES:

@@ -138,7 +138,8 @@ class MockDevices:
         device = self._devices[Address(address)]
         aldb_records = dict_to_aldb_record(records)
 
-        device.aldb.load_saved_records(ALDBStatus.LOADED, aldb_records)
+        with patch("pyinsteon.aldb.aldb_base.publish_topic", MagicMock()):
+            device.aldb.load_saved_records(ALDBStatus.LOADED, aldb_records)
 
     def fill_properties(self, address, props_dict):
         """Fill the operating flags and extended properties of a device."""

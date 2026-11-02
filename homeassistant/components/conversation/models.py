@@ -68,6 +68,7 @@ class ConversationInput:
             language=self.language,
             assistant=DOMAIN,
             device_id=self.device_id,
+            agent_id=self.agent_id,
         )
 
 

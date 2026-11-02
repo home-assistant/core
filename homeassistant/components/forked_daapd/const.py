@@ -83,6 +83,7 @@ SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+    | MediaPlayerEntityFeature.GROUPING
 )
 SUPPORTED_FEATURES_ZONE = (
     MediaPlayerEntityFeature.VOLUME_SET

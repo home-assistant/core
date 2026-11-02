@@ -17,5 +17,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "send_message_failed": {
+      "message": "Failed to send the Simplepush notification."
+    },
+    "title_or_message_too_long": {
+      "message": "The notification title or message is too long."
+    }
   }
 }

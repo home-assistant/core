@@ -6,7 +6,7 @@ from typing import Any, override
 
 import avea
 from bleak.exc import BleakError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -14,7 +14,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_ADDRESS
 
 from .const import AVEA_SERVICE_UUID, DOMAIN, UNKNOWN_NAME
 
@@ -124,7 +124,6 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "name": self._discovery_info.name or self._discovery_info.address
         }
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],
@@ -178,17 +177,17 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._discovery_info:
             disc = self._discovery_info
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS, default=disc.address): vol.In(
+                    probatio.Required(CONF_ADDRESS, default=disc.address): probatio.In(
                         {disc.address: _discovery_label(disc)}
                     )
                 }
             )
         else:
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             service_info.address: _discovery_label(service_info)
                             for service_info in self._discovered_devices.values()
@@ -201,18 +200,6 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML."""
-        address = import_data[CONF_ADDRESS]
-
-        await self.async_set_unique_id(address, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_data.get(CONF_NAME, address),
-            data={CONF_ADDRESS: address},
         )
 
 

@@ -8,13 +8,12 @@ from botocore.exceptions import (
     ParamValidationError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry_does_not_mask_when_close_fails(
@@ -81,6 +80,26 @@ async def test_setup_entry_create_client_errors(
     ):
         await setup_integration(hass, mock_config_entry)
         assert mock_config_entry.state is state
+
+
+async def test_setup_entry_warms_loader_caches(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that create_client passes warm_up_loader_caches config."""
+    with patch(
+        "homeassistant.components.idrive_e2.AioSession.create_client"
+    ) as create_client:
+        client_ctx = AsyncMock()
+        client = AsyncMock()
+        client_ctx.__aenter__.return_value = client
+        create_client.return_value = client_ctx
+
+        await setup_integration(hass, mock_config_entry)
+
+        create_client.assert_called_once()
+        _, kwargs = create_client.call_args
+        assert kwargs["config"].warm_up_loader_caches is True
 
 
 @pytest.mark.parametrize(

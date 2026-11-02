@@ -90,7 +90,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
     _attr_current_humidity: float | None = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -193,9 +193,9 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         else:
             temperature = humidity = None
 
-        self._attr_current_temperature = temperature
+        self._attr_native_current_temperature = temperature
         self._attr_current_humidity = humidity
-        self._attr_target_temperature = self._climate.temp_celsius
+        self._attr_native_target_temperature = self._climate.temp_celsius
         self._attr_fan_mode = LOOKIN_FAN_MODE_IDX_TO_HASS[self._climate.fan_mode]
         self._attr_swing_mode = LOOKIN_SWING_MODE_IDX_TO_HASS[self._climate.swing_mode]
         self._attr_hvac_mode = LOOKIN_HVAC_MODE_IDX_TO_HASS[self._climate.hvac_mode]
@@ -203,7 +203,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     @callback
     def _async_update_meteo_from_value(self, event: UDPEvent) -> None:
         """Update temperature and humidity from UDP event."""
-        self._attr_current_temperature = float(int(event.value[:4], 16)) / 10
+        self._attr_native_current_temperature = float(int(event.value[:4], 16)) / 10
         self._attr_current_humidity = float(int(event.value[-4:], 16)) / 10
 
     @callback

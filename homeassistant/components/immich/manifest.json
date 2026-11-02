@@ -1,13 +1,15 @@
 {
   "domain": "immich",
   "name": "Immich",
+  "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/immich",
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["aioimmich"],
   "quality_scale": "platinum",
-  "requirements": ["aioimmich==0.16.1"]
+  "requirements": ["aioimmich==0.18.0"]
 }

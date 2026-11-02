@@ -9,14 +9,15 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import NumberType
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
-from .util import plugwise_command
+from .util import deprecate_entity, plugwise_command
 
 PARALLEL_UPDATES = 0
 
@@ -30,14 +31,14 @@ class PlugwiseNumberEntityDescription(NumberEntityDescription):
 
 NUMBER_TYPES = (
     PlugwiseNumberEntityDescription(
-        key="maximum_boiler_temperature",
+        key="boiler_temperature",
         translation_key="maximum_boiler_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     PlugwiseNumberEntityDescription(
-        key="max_dhw_temperature",
+        key="dhw_temperature",
         translation_key="max_dhw_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
@@ -60,6 +61,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Plugwise number platform."""
     coordinator = entry.runtime_data
+    entity_registry = er.async_get(hass)
 
     @callback
     def _add_entities() -> None:
@@ -67,12 +69,26 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
 
-        async_add_entities(
-            PlugwiseNumberEntity(coordinator, device_id, description)
-            for device_id in coordinator.new_devices
-            for description in NUMBER_TYPES
-            if description.key in coordinator.data[device_id]
-        )
+        entities = []
+        for device_id in coordinator.new_devices:
+            for description in NUMBER_TYPES:
+                if description.key not in coordinator.data[device_id]:
+                    continue
+                if description.key == "dhw_temperature" and not deprecate_entity(
+                    hass,
+                    entity_registry,
+                    async_on_unload=entry.async_on_unload,
+                    platform_domain=Platform.NUMBER,
+                    entity_unique_id=f"{device_id}-{description.translation_key}",
+                    issue_id=f"deprecated_dhw_temperature_{device_id}",
+                    translation_key="deprecated_dhw_temperature",
+                ):
+                    continue
+                entities.append(
+                    PlugwiseNumberEntity(coordinator, device_id, description)
+                )
+
+        async_add_entities(entities)
 
     _add_entities()
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
@@ -94,7 +110,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self._attr_mode = NumberMode.BOX
         self._attr_native_max_value = self.device[description.key]["upper_bound"]
         self._attr_native_min_value = self.device[description.key]["lower_bound"]
-        self._attr_unique_id = f"{device_id}-{description.key}"
+        self._attr_unique_id = f"{device_id}-{description.translation_key}"
         self.device_id = device_id
         self.entity_description = description
 

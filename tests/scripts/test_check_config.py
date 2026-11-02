@@ -6,11 +6,10 @@ import os
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_test_config_dir
 
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.scripts import check_config
-
-from tests.common import get_test_config_dir
 
 BASE_CONFIG = (
     "homeassistant:\n"
@@ -134,7 +133,6 @@ def test_secrets() -> None:
         "cors_allowed_origins": ["http://google.com"],
         "ip_ban_enabled": True,
         "login_attempts_threshold": -1,
-        "server_port": 8123,
         "ssl_profile": "modern",
         "use_x_frame_options": True,
     }

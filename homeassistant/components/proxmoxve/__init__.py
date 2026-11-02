@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import (
     AUTH_OTHER,
@@ -14,30 +14,39 @@ from .const import (
     CONF_REALM,
     DEFAULT_REALM,
 )
-from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
+from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, node_device_info
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> None:
     """Set up a ProxmoxVE from a config entry."""
     coordinator = ProxmoxCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register node devices before forwarding platforms so that child devices
+    # (VMs, containers, storages) can deterministically resolve their via_device.
+    device_registry = dr.async_get(hass)
+    for node_data in coordinator.data.values():
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id,
+            device_info=node_device_info(coordinator, node_data),
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> None:
     """Migrate old config entries."""
 
     # Migration for only the old binary sensors to new unique_id format
@@ -80,9 +89,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
 
         hass.config_entries.async_update_entry(entry, data=data, version=3)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

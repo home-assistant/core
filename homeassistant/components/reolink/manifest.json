@@ -1,9 +1,14 @@
 {
   "domain": "reolink",
   "name": "Reolink",
+  "categories": [
+    "security_safety.cameras",
+    "security_safety.doorbells_intercoms"
+  ],
   "codeowners": ["@starkillerOG"],
   "config_flow": true,
-  "dependencies": ["http", "webhook"],
+  "connectivity": ["network"],
+  "dependencies": ["ffmpeg", "http", "webhook"],
   "dhcp": [
     {
       "hostname": "reolink*"
@@ -20,5 +25,5 @@
   "iot_class": "local_push",
   "loggers": ["reolink_aio"],
   "quality_scale": "platinum",
-  "requirements": ["reolink-aio==0.21.7"]
+  "requirements": ["reolink-aio==0.22.0"]
 }

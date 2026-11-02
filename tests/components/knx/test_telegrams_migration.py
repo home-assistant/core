@@ -6,14 +6,13 @@ import os
 from typing import Any
 
 from knx_telegram_store import TelegramQuery
+from pytest_homeassistant.common import async_load_json_object_fixture
 
 from homeassistant.components.knx.const import DOMAIN, KNX_MODULE_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .conftest import KNXTestKit
-
-from tests.common import async_load_json_object_fixture
 
 
 async def test_migrate_telegrams_json_to_sqlite(
@@ -32,7 +31,7 @@ async def test_migrate_telegrams_json_to_sqlite(
     # returns the list. Save the inner list, not the fixture wrapper dict.
     await store.async_save(legacy_data["data"])
 
-    await knx.setup_integration()
+    await knx.setup_integration(real_telegram_store=True)
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
 
     await hass.async_block_till_done()
@@ -110,7 +109,7 @@ async def test_migrate_telegrams_json_missing_keys(
 
     await store.async_save(legacy_data)
 
-    await knx.setup_integration()
+    await knx.setup_integration(real_telegram_store=True)
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
 
     await hass.async_block_till_done()

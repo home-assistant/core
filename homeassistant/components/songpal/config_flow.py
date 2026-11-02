@@ -4,8 +4,8 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
+import probatio
 from songpal import Device, SongpalException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -47,7 +47,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema({vol.Required(CONF_ENDPOINT): str}),
+                data_schema=probatio.Schema({probatio.Required(CONF_ENDPOINT): str}),
             )
 
         # Validate input
@@ -64,9 +64,9 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Connection failed: %s", ex)
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_ENDPOINT, default=user_input.get(CONF_ENDPOINT, "")
                         ): str,
                     }
@@ -142,6 +142,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         name = import_data.get(CONF_NAME)
         endpoint = import_data[CONF_ENDPOINT]
         parsed_url = urlparse(endpoint)
+        self._async_abort_entries_match({CONF_ENDPOINT: endpoint})
 
         # Try to connect to test the endpoint
         try:

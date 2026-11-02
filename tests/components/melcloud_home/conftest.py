@@ -3,18 +3,17 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiomelcloudhome import MELCloudHome, UserContext
+from aiomelcloudhome import MELCloudHome, MELCloudHomeWebSocket, UserContext
 from aiomelcloudhome.models.telemetry import TelemetryValue
 import pytest
-
-from homeassistant.components.melcloud_home.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.melcloud_home.const import DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 MOCK_USER_INPUT = {
     CONF_EMAIL: "user@example.com",
@@ -31,15 +30,22 @@ MOCK_REAUTH_INPUT = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.melcloud_home.async_setup_entry", return_value=True
+        "homeassistant.components.melcloud_home.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
 @pytest.fixture
-def mock_melcloud_client() -> Generator[AsyncMock]:
+def mock_websocket() -> AsyncMock:
+    """Mock the MELCloud Home websocket."""
+    return AsyncMock(MELCloudHomeWebSocket)
+
+
+@pytest.fixture
+def mock_melcloud_client(mock_websocket: AsyncMock) -> Generator[AsyncMock]:
     """Mock MELCloud Home client."""
     client = AsyncMock(MELCloudHome)
+    client.websocket.return_value = mock_websocket
     client.get_context.return_value = UserContext.model_validate(
         load_json_object_fixture("context.json", DOMAIN)
     )
@@ -47,6 +53,7 @@ def mock_melcloud_client() -> Generator[AsyncMock]:
         TelemetryValue.model_validate(value)
         for value in load_json_array_fixture("energy.json", DOMAIN)
     ]
+    client.get_outdoor_temperature.return_value = 19.5
 
     with (
         patch(
@@ -70,4 +77,5 @@ def mock_config_entry() -> MockConfigEntry:
         title=MOCK_USER_INPUT[CONF_EMAIL],
         data=MOCK_USER_INPUT,
         entry_id="config-entry-uuid-1",
+        minor_version=2,
     )

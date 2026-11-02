@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
@@ -32,8 +33,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_CAM_NAME, TEST_UID, TEST_UID_CAM
-
-from tests.common import MockConfigEntry
 
 DEV_ID_NVR = f"{TEST_UID}_{TEST_UID_CAM}"
 DEV_ID_STANDALONE_CAM = f"{TEST_UID_CAM}"
@@ -157,6 +156,8 @@ async def test_get_device_uid_and_ch(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = get_device_uid_and_ch(dev_entry, config_entry.runtime_data.host)
+    result = get_device_uid_and_ch(
+        dev_entry.identifiers, config_entry.runtime_data.host
+    )
     # always get the uid and channel form the DEV_ID_NVR since is_nvr = True
     assert result == ([TEST_UID, TEST_UID_CAM], 0, False)

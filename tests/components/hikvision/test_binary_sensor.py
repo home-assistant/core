@@ -3,42 +3,22 @@
 import logging
 from unittest.mock import MagicMock
 
+from pyhik.constants import SENSOR_MAP
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.hikvision.binary_sensor import (
+    BINARY_SENSOR_DESCRIPTIONS,
+    IGNORED_SENSOR_TYPES,
+)
 from homeassistant.components.hikvision.const import DOMAIN
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_LAST_TRIP_TIME,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    STATE_OFF,
-    Platform,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
-from homeassistant.setup import async_setup_component
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .conftest import (
-    TEST_DEVICE_ID,
-    TEST_DEVICE_NAME,
-    TEST_HOST,
-    TEST_PASSWORD,
-    TEST_PORT,
-    TEST_USERNAME,
-)
-
-from tests.common import MockConfigEntry, snapshot_platform
+from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME
 
 
 @pytest.fixture
@@ -54,32 +34,18 @@ async def test_all_entities(
     mock_hikcamera: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test all binary sensor entities."""
-    await setup_integration(hass, mock_config_entry)
+    """Test an entity is created for every described sensor type."""
+    mock_hikcamera.return_value.current_event_states = {
+        name: [(False, 1)] for name in BINARY_SENSOR_DESCRIPTIONS
+    }
+
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
+
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_binary_sensors_created(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_hikcamera: MagicMock,
-) -> None:
-    """Test binary sensors are created for each event type."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Check Motion sensor (camera type doesn't include channel in name)
-    state = hass.states.get("binary_sensor.front_camera_motion")
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.MOTION
-    assert ATTR_LAST_TRIP_TIME in state.attributes
-
-    # Check Line Crossing sensor
-    state = hass.states.get("binary_sensor.front_camera_line_crossing")
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.MOTION
+    assert "Unknown Hikvision sensor type" not in caplog.text
 
 
 async def test_binary_sensor_device_info(
@@ -91,8 +57,8 @@ async def test_binary_sensor_device_info(
     """Test binary sensors are linked to device."""
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_ID), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.name == TEST_DEVICE_NAME
@@ -147,18 +113,23 @@ async def test_binary_sensor_nvr_device(
 
     await setup_integration(hass, mock_config_entry)
 
-    # Verify NVR channel devices are created with via_device linking
-    channel_1_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_1")}
+    # Verify NVR channel devices are linked to the NVR device via via_device_id
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_ID), mock_config_entry.entry_id
+    )
+    assert nvr_device is not None
+
+    channel_1_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_1"), mock_config_entry.entry_id
     )
     assert channel_1_device is not None
-    assert channel_1_device.via_device_id is not None
+    assert channel_1_device.via_device_id == nvr_device.id
 
-    channel_2_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_2")}
+    channel_2_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_2"), mock_config_entry.entry_id
     )
     assert channel_2_device is not None
-    assert channel_2_device.via_device_id is not None
+    assert channel_2_device.via_device_id == nvr_device.id
 
     # Verify sensors are created (entity IDs depend on translation loading)
     states = hass.states.async_entity_ids("binary_sensor")
@@ -213,6 +184,7 @@ async def test_binary_sensor_state_on(
         None,
         None,
         "2024-01-01T12:00:00Z",
+        None,
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -244,94 +216,33 @@ async def test_binary_sensor_device_class_unknown(
     assert "Unknown Hikvision sensor type 'Unknown Event'" in caplog.text
 
 
-async def test_yaml_import_creates_deprecation_issue(
+async def test_binary_sensor_videoloss_silently_skipped(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
-    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test YAML import creates deprecation issue."""
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": DOMAIN,
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_SSL: False,
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    """Test pyhik's videoloss watchdog event is skipped without warning."""
+    mock_hikcamera.return_value.current_event_states = {
+        SENSOR_MAP["videoloss"]: [(False, 1)],
+    }
 
-    # Check that deprecation issue was created in homeassistant domain
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
+
+    states = hass.states.async_entity_ids("binary_sensor")
+    assert len(states) == 0
+    assert "Unknown Hikvision sensor type" not in caplog.text
 
 
-async def test_yaml_import_with_name(
-    hass: HomeAssistant,
-    mock_hikcamera: MagicMock,
-) -> None:
-    """Test YAML import uses custom name for config entry."""
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": DOMAIN,
-                CONF_NAME: "Custom Camera Name",
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_SSL: False,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    # Check that the config entry was created with the custom name
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].title == "Custom Camera Name"
-
-
-async def test_yaml_import_abort_creates_issue(
-    hass: HomeAssistant,
-    mock_hikcamera: MagicMock,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test YAML import creates issue when import is aborted."""
-    mock_hikcamera.return_value.get_id = None
-
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": DOMAIN,
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_SSL: False,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    # Check that import failure issue was created
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
-    )
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+def test_every_pyhik_sensor_type_is_handled() -> None:
+    """Test every event type pyhik can emit is described or ignored."""
+    unhandled = {
+        name
+        for name in SENSOR_MAP.values()
+        if name not in BINARY_SENSOR_DESCRIPTIONS and name not in IGNORED_SENSOR_TYPES
+    }
+    assert not unhandled
 
 
 async def test_binary_sensor_update_callback(
@@ -352,6 +263,7 @@ async def test_binary_sensor_update_callback(
         None,
         None,
         "2024-01-01T12:00:00Z",
+        None,
     )
 
     # Get the registered callback and call it
@@ -369,3 +281,27 @@ async def test_binary_sensor_update_callback(
     state = hass.states.get("binary_sensor.front_camera_motion")
     assert state is not None
     assert state.state == "on"
+
+
+async def test_binary_sensor_unavailable_when_stream_disconnected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test sensors go unavailable when the event stream disconnects."""
+    camera = mock_hikcamera.return_value
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("binary_sensor.front_camera_motion")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # pyhik notifies every registered callback when the stream drops
+    camera.stream_connected = False
+    callback_func = camera.add_update_callback.call_args_list[0][0][0]
+    callback_func("stream disconnected")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.front_camera_motion")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

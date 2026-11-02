@@ -1,12 +1,13 @@
 """Diagnostics support for Watts Vision +."""
 
 import dataclasses
-from datetime import datetime
+import time
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import WattsVisionConfigEntry
 
@@ -21,7 +22,7 @@ async def async_get_config_entry_diagnostics(
     runtime_data = entry.runtime_data
     hub_coordinator = runtime_data.hub_coordinator
     device_coordinators = runtime_data.device_coordinators
-    now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+    now = time.time()
 
     return async_redact_data(
         {
@@ -34,7 +35,9 @@ async def async_get_config_entry_diagnostics(
                     else None
                 ),
                 "last_discovery": (
-                    hub_coordinator.last_discovery.isoformat()
+                    dt_util.utc_from_timestamp(
+                        hub_coordinator.last_discovery
+                    ).isoformat()
                     if hub_coordinator.last_discovery
                     else None
                 ),
@@ -54,7 +57,9 @@ async def async_get_config_entry_diagnostics(
                         and coordinator.fast_polling_until > now
                     ),
                     "fast_polling_until": (
-                        coordinator.fast_polling_until.isoformat()
+                        dt_util.utc_from_timestamp(
+                            coordinator.fast_polling_until
+                        ).isoformat()
                         if coordinator.fast_polling_until is not None
                         and coordinator.fast_polling_until > now
                         else None

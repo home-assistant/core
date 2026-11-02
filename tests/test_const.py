@@ -1,15 +1,14 @@
 """Test const module."""
 
 import pytest
-
-from homeassistant import const
-from homeassistant.const import UnitOfDensity, UnitOfRatio
-
-from .common import (
+from pytest_homeassistant.common import (
     help_test_all,
     import_and_test_deprecated_constant,
     import_and_test_deprecated_constant_enum,
 )
+
+from homeassistant import const
+from homeassistant.const import UnitOfDensity, UnitOfRatio
 
 
 def test_all() -> None:
@@ -41,6 +40,18 @@ def test_deprecated_constant(
         replacement,
         replacement,
         breaks_in_version,
+    )
+
+
+def test_deprecated_attr_via_device(caplog: pytest.LogCaptureFixture) -> None:
+    """Test ATTR_VIA_DEVICE deprecation in favor of via_device_id."""
+    import_and_test_deprecated_constant(
+        caplog,
+        const,
+        "ATTR_VIA_DEVICE",
+        "via_device_id",
+        "via_device",
+        "2027.8",
     )
 
 

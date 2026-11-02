@@ -20,6 +20,7 @@ from google_health_api.model import (
     FloorsRollupValue,
     HydrationLogRollupValue,
     NutritionLogRollupValue,
+    PairedDevice,
     Sleep,
     StepsRollupValue,
     TotalCaloriesRollupValue,
@@ -39,7 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 
 POLLING_INTERVAL = timedelta(minutes=15)
 BODY_POLLING_INTERVAL = timedelta(hours=1)
+DEVICE_POLLING_INTERVAL = timedelta(hours=1)
 DEFAULT_PAGE_SIZE = 1
+SLEEP_PAGE_SIZE = 10
 
 
 @dataclass
@@ -216,10 +219,43 @@ class GoogleHealthBodyCoordinator(
         )
 
 
+class GoogleHealthDeviceCoordinator(
+    GoogleHealthDataUpdateCoordinator[dict[str, PairedDevice]]
+):
+    """Coordinator to fetch paired devices from Google Health API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleHealthConfigEntry,
+        api_client: GoogleHealthApi,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_devices",
+            update_interval=DEVICE_POLLING_INTERVAL,
+            entry=entry,
+            api_client=api_client,
+        )
+
+    @override
+    async def _async_fetch_data(self) -> dict[str, PairedDevice]:
+        """Fetch paired devices."""
+        devices: dict[str, PairedDevice] = {}
+        result = await self.api.paired_devices.list()
+        async for page in result:
+            for device in page.paired_devices:
+                devices[device.device_id] = device
+        return devices
+
+
 @dataclass
 class GoogleHealthSleepData:
     """Class to hold sleep data."""
 
+    # The most recent sleep session with summary data
     sleep: Sleep | None = None
 
 
@@ -247,9 +283,15 @@ class GoogleHealthSleepCoordinator(
     @override
     async def _async_fetch_data(self) -> GoogleHealthSleepData:
         """Fetch latest sleep session."""
-        sleep_result = await self.api.sleep.list(page_size=DEFAULT_PAGE_SIZE)
-        sleep = sleep_result.data_points[0].data if sleep_result.data_points else None
-        return GoogleHealthSleepData(sleep=sleep)
+        sleep_result = await self.api.sleep.list(page_size=SLEEP_PAGE_SIZE)
+
+        # Find the first session with a sleep summary
+        for data_point in sleep_result.data_points or ():
+            if data_point.data and data_point.data.summary:
+                return GoogleHealthSleepData(sleep=data_point.data)
+
+        # No sessions or current session still in progress
+        return GoogleHealthSleepData()
 
 
 @dataclass

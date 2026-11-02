@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, override
 
 from duco_connectivity.models import Node, NodeType
 
-from homeassistant.const import ATTR_VIA_DEVICE
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -32,14 +32,17 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             else node.general.node_type,
             name=node.general.name or f"Node {node.node_id}",
         )
-        device_info.update(
-            {
-                "connections": {(CONNECTION_NETWORK_MAC, mac)},
-                "serial_number": coordinator.board_info.serial_board_box,
-            }
-            if node.general.node_type == NodeType.BOX
-            else {ATTR_VIA_DEVICE: (DOMAIN, f"{mac}_1")}
-        )
+        if node.general.node_type == NodeType.BOX:
+            device_info.connections = {(CONNECTION_NETWORK_MAC, mac)}
+            device_info.serial_number = coordinator.board_info.serial_board_box
+        else:
+            # The box is pre-registered in async_setup_entry, so it is always
+            # resolvable here even if a sub-node entity is added first.
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, f"{mac}_1"),
+                config_entry_id=coordinator.config_entry.entry_id,
+            )
         self._attr_device_info = device_info
 
     @property

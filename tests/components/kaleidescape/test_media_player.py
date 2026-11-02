@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from kaleidescape import const as kaleidescape_const
 from kaleidescape.device import Movie
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import (
@@ -158,11 +159,13 @@ async def test_services(hass: HomeAssistant, mock_device: MagicMock) -> None:
     assert mock_device.previous.call_count == 1
 
 
-@pytest.mark.usefixtures("mock_device", "mock_integration")
-async def test_device(device_registry: dr.DeviceRegistry) -> None:
+@pytest.mark.usefixtures("mock_device")
+async def test_device(
+    device_registry: dr.DeviceRegistry, mock_integration: MockConfigEntry
+) -> None:
     """Test device attributes."""
-    device = device_registry.async_get_device(
-        identifiers={("kaleidescape", MOCK_SERIAL)}
+    device = device_registry.async_get_device_by_identifier(
+        ("kaleidescape", MOCK_SERIAL), mock_integration.entry_id
     )
     assert device.name == FRIENDLY_NAME
     assert device.model == "Strato"

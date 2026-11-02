@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from govee_ble import GoveeBluetoothDeviceData as DeviceData
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -57,7 +57,6 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=title, data={CONF_DEVICE_TYPE: device.device_type}
             )
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -94,9 +93,9 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             address: (
                                 f"{device.get_device_name(None) or discovery_info.name}"

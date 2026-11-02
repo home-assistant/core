@@ -1,11 +1,11 @@
 """Tests for the telegram_bot integration."""
 
 from collections.abc import Generator
-from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from telegram import (
     AcceptedGiftTypes,
     Bot,
@@ -35,8 +35,7 @@ from homeassistant.components.telegram_bot.const import (
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
+from homeassistant.util import dt as dt_util
 
 
 @pytest.fixture
@@ -82,7 +81,7 @@ def mock_register_webhook() -> Generator[None]:
             AsyncMock(
                 return_value=WebhookInfo(
                     url="mock url",
-                    last_error_date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                    last_error_date=dt_util.utcnow(),
                     has_custom_certificate=False,
                     pending_update_count=0,
                 )
@@ -111,7 +110,7 @@ def mock_external_calls() -> Generator[None]:
     test_user = User(123456, "Testbot", True, "mock last name", "mock_bot")
     message = Message(
         message_id=12345,
-        date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+        date=dt_util.utcnow(),
         chat=Chat(id=123456, type=ChatType.PRIVATE),
     )
 
@@ -130,7 +129,7 @@ def mock_external_calls() -> Generator[None]:
         return [
             Message(
                 message_id=12345 + idx,
-                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                date=dt_util.utcnow(),
                 chat=Chat(id=chat_id, type=ChatType.PRIVATE),
             )
             for idx, _ in enumerate(kwargs[ATTR_MEDIA])
@@ -160,7 +159,7 @@ def mock_external_calls() -> Generator[None]:
                     1,
                     Message(
                         1,
-                        datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                        dt_util.utcnow(),
                         Chat(
                             id=123456,
                             type=ChatType.PRIVATE,

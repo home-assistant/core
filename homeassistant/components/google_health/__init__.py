@@ -10,10 +10,9 @@ from google_health_api.const import HealthApiScope
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -24,6 +23,7 @@ from .coordinator import (
     GoogleHealthActivityCoordinator,
     GoogleHealthBodyCoordinator,
     GoogleHealthDataUpdateCoordinator,
+    GoogleHealthDeviceCoordinator,
     GoogleHealthNutritionCoordinator,
     GoogleHealthSleepCoordinator,
 )
@@ -37,6 +37,7 @@ class GoogleHealthData:
 
     activity_coordinator: GoogleHealthActivityCoordinator | None = None
     body_coordinator: GoogleHealthBodyCoordinator | None = None
+    device_coordinator: GoogleHealthDeviceCoordinator | None = None
     nutrition_coordinator: GoogleHealthNutritionCoordinator | None = None
     sleep_coordinator: GoogleHealthSleepCoordinator | None = None
 
@@ -46,15 +47,9 @@ type GoogleHealthConfigEntry = ConfigEntry[GoogleHealthData]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleHealthConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Health from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth_error",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
 
@@ -100,20 +95,35 @@ async def async_setup_entry(
             *(coord.async_config_entry_first_refresh() for coord in coordinators)
         )
 
+    device_coordinator = None
+    if all(scope in scopes for scope in api_client.paired_devices.required_read_scopes):
+        device_coordinator = GoogleHealthDeviceCoordinator(hass, entry, api_client)
+        await device_coordinator.async_config_entry_first_refresh()
+
     entry.runtime_data = GoogleHealthData(
         activity_coordinator=activity_coordinator,
         body_coordinator=body_coordinator,
+        device_coordinator=device_coordinator,
         nutrition_coordinator=nutrition_coordinator,
         sleep_coordinator=sleep_coordinator,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    # Register the account device up front so the per-device sensors can resolve
+    # it as their via_device parent even when only the device scope is granted
+    # (the account-level sensors that would otherwise create it are gated on
+    # different scopes).
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Google",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
 
-    return True
+    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleHealthConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

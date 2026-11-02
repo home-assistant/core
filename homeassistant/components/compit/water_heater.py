@@ -176,7 +176,7 @@ class CompitWaterHeater(
     """Representation of a Compit Water Heater."""
 
     _attr_target_temperature_step = PRECISION_WHOLE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_name = None
     entity_description: CompitWaterHeaterEntityDescription
@@ -239,7 +239,7 @@ class CompitWaterHeater(
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the set target temperature."""
         value = self.coordinator.connector.get_current_value(
             self.device_id, CompitParameter.DHW_TARGET_TEMPERATURE
@@ -252,7 +252,7 @@ class CompitWaterHeater(
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.entity_description.supports_current_temperature is False:
             return None
@@ -274,7 +274,7 @@ class CompitWaterHeater(
         if temperature is None:
             return
 
-        self._attr_target_temperature = temperature
+        self._attr_native_target_temperature = temperature
 
         await self.coordinator.connector.set_device_parameter(
             self.device_id,

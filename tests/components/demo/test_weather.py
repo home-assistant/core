@@ -1,11 +1,12 @@
 """The tests for the demo weather component."""
 
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import weather
 from homeassistant.components.demo.weather import WEATHER_UPDATE_INTERVAL
@@ -21,8 +22,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -58,7 +57,7 @@ async def test_attributes(hass: HomeAssistant, weather_only) -> None:
     assert data.get(ATTR_ATTRIBUTION) == "Powered by Home Assistant"
 
 
-TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(seconds=5 + 1)
+TEST_TIME_ADVANCE_INTERVAL = dt.timedelta(seconds=5 + 1)
 
 
 @pytest.mark.parametrize(
@@ -163,7 +162,7 @@ async def test_forecast(
     for key, val in expected_forecast[1].items():
         assert forecast1[6][key] == val
 
-    freezer.tick(WEATHER_UPDATE_INTERVAL + datetime.timedelta(seconds=1))
+    freezer.tick(WEATHER_UPDATE_INTERVAL + dt.timedelta(seconds=1))
     await hass.async_block_till_done()
 
     msg = await client.receive_json()

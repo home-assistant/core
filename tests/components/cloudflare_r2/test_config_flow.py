@@ -8,6 +8,7 @@ from botocore.exceptions import (
     ParamValidationError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.cloudflare_r2.const import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def _async_start_flow(
@@ -44,7 +43,17 @@ async def _async_start_flow(
 
 async def test_flow(hass: HomeAssistant) -> None:
     """Test config flow."""
-    result = await _async_start_flow(hass)
+    create_client = AsyncMock(name="create_client")
+    create_client.__aenter__.return_value.head_bucket.return_value = {}
+
+    with patch(
+        "homeassistant.components.cloudflare_r2.config_flow.AioSession.create_client",
+        return_value=create_client,
+    ) as patched_create_client:
+        result = await _async_start_flow(hass)
+
+        assert patched_create_client.call_args.kwargs["config"].warm_up_loader_caches
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
     assert result["data"] == USER_INPUT

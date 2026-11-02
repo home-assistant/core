@@ -29,6 +29,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -95,14 +96,6 @@ GAMUT_TYPE_UNAVAILABLE = "None"
 # 1.12 introduced the state object for groups
 # 1.13 introduced "any_on" to group state objects
 GROUP_MIN_API_VERSION = (1, 13, 0)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Hue lights.
-
-    Can only be called when a user accidentally mentions hue platform in their
-    config. But even in that case it would have been ignored.
-    """
 
 
 def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id):
@@ -314,7 +307,7 @@ def hass_to_hue_brightness(value):
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
-class HueLight(CoordinatorEntity, LightEntity):
+class HueLight(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity):
     """Representation of a Hue light."""
 
     def __init__(
@@ -545,7 +538,11 @@ class HueLight(CoordinatorEntity, LightEntity):
             name=self.name,
             sw_version=self.light.swversion,
             suggested_area=suggested_area,
-            via_device=(DOMAIN, self.bridge.api.config.bridgeid),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.bridge.hass,
+                (DOMAIN, self.bridge.api.config.bridgeid),
+                config_entry_id=self.bridge.config_entry.entry_id,
+            ),
         )
 
     @override

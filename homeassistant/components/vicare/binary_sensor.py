@@ -24,13 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
-from .utils import (
-    get_burners,
-    get_circuits,
-    get_compressors,
-    get_device_serial,
-    is_supported,
-)
+from .utils import get_burners, get_circuits, get_compressors, get_rooms, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +70,20 @@ COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ),
 )
 
+ROOM_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
+    ViCareBinarySensorEntityDescription(
+        key="room_window_open",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        value_getter=lambda api: api.room_control.getRoomWindowOpen(api.id),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="room_condensation_risk",
+        translation_key="condensation_risk",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_getter=lambda api: api.getCondensationRisk(),
+    ),
+)
+
 GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key="solar_pump_active",
@@ -106,6 +114,16 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         translation_key="one_time_charge",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getOneTimeCharge(),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="holiday_active",
+        translation_key="holiday",
+        value_getter=lambda api: api.getHolidayActive(),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="holiday_at_home_active",
+        translation_key="holiday_at_home",
+        value_getter=lambda api: api.getHolidayAtHomeActive(),
     ),
     ViCareBinarySensorEntityDescription(
         key="device_error",
@@ -157,7 +175,7 @@ def _build_entities(
         entities.extend(
             ViCareBinarySensor(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
             )
@@ -169,11 +187,12 @@ def _build_entities(
             (get_circuits(device.api), CIRCUIT_SENSORS),
             (get_burners(device.api), BURNER_SENSORS),
             (get_compressors(device.api), COMPRESSOR_SENSORS),
+            (get_rooms(device.api), ROOM_SENSORS),
         ):
             entities.extend(
                 ViCareBinarySensor(
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                     component,

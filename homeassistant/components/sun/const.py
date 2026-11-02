@@ -1,5 +1,6 @@
 """Constants for the Sun integration."""
 
+from enum import StrEnum
 from typing import Final
 
 import astral
@@ -17,6 +18,13 @@ ELEVATION_CIVIL: Final[float] = -astral.Depression.CIVIL.value
 ELEVATION_NAUTICAL: Final[float] = -astral.Depression.NAUTICAL.value
 ELEVATION_ASTRONOMICAL: Final[float] = -astral.Depression.ASTRONOMICAL.value
 
+# Sun elevation, in degrees, at the golden and blue hour boundaries. Golden hour
+# spans -4° to 6°; blue hour spans -6° to -4° (the two share the -4° boundary).
+ELEVATION_GOLDEN_HOUR_LOW: Final[float] = -4.0
+ELEVATION_GOLDEN_HOUR_HIGH: Final[float] = 6.0
+ELEVATION_BLUE_HOUR_LOW: Final[float] = -6.0
+ELEVATION_BLUE_HOUR_HIGH: Final[float] = -4.0
+
 SIGNAL_POSITION_CHANGED = f"{DOMAIN}_position_changed"
 SIGNAL_EVENTS_CHANGED = f"{DOMAIN}_events_changed"
 
@@ -25,12 +33,15 @@ STATE_ABOVE_HORIZON = "above_horizon"
 STATE_BELOW_HORIZON = "below_horizon"
 
 
-STATE_ATTR_AZIMUTH = "azimuth"
-STATE_ATTR_ELEVATION = "elevation"
-STATE_ATTR_RISING = "rising"
-STATE_ATTR_NEXT_DAWN = "next_dawn"
-STATE_ATTR_NEXT_DUSK = "next_dusk"
-STATE_ATTR_NEXT_MIDNIGHT = "next_midnight"
-STATE_ATTR_NEXT_NOON = "next_noon"
-STATE_ATTR_NEXT_RISING = "next_rising"
-STATE_ATTR_NEXT_SETTING = "next_setting"
+class SunEntityStateAttribute(StrEnum):
+    """State attributes for sun entities."""
+
+    AZIMUTH = "azimuth"
+    ELEVATION = "elevation"
+    RISING = "rising"
+    NEXT_DAWN = "next_dawn"
+    NEXT_DUSK = "next_dusk"
+    NEXT_MIDNIGHT = "next_midnight"
+    NEXT_NOON = "next_noon"
+    NEXT_RISING = "next_rising"
+    NEXT_SETTING = "next_setting"

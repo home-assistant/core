@@ -26,6 +26,8 @@ type TailwindConfigEntry = ConfigEntry[TailwindDataUpdateCoordinator]
 class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus]):
     """Class to manage fetching Tailwind data."""
 
+    config_entry: TailwindConfigEntry
+
     def __init__(self, hass: HomeAssistant, entry: TailwindConfigEntry) -> None:
         """Initialize the coordinator."""
         self.tailwind = Tailwind(

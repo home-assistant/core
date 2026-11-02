@@ -1,12 +1,14 @@
 {
   "domain": "uptime_kuma",
   "name": "Uptime Kuma",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/uptime_kuma",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pythonkuma"],
   "quality_scale": "platinum",
-  "requirements": ["pythonkuma==0.5.1"]
+  "requirements": ["pythonkuma==0.5.3"]
 }

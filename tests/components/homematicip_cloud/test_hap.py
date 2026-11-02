@@ -5,11 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from homematicip.auth import Auth
 from homematicip.connection.connection_context import ConnectionContext
+from homematicip.connection.rest_connection import RestResult
 from homematicip.exceptions.connection_exceptions import (
     HmipAuthenticationError,
     HmipConnectionError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.const import (
@@ -29,8 +31,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .helper import HAPID, HAPPIN, HomeFactory
-
-from tests.common import MockConfigEntry
 
 
 async def test_auth_setup(hass: HomeAssistant) -> None:
@@ -91,9 +91,13 @@ async def test_hap_setup_works(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"},
     )
-    home = Mock()
+    entry.add_to_hass(hass)
+    home = Mock(id="ABC123", label="Home")
     hap = HomematicipHAP(hass, entry)
-    with patch.object(hap, "get_hap", return_value=home):
+    with (
+        patch.object(hap, "get_hap", return_value=home),
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+    ):
         async with entry.setup_lock:
             assert await hap.async_setup()
 
@@ -133,11 +137,13 @@ async def test_hap_reset_unloads_entry_if_setup(
     assert config_entries[0].state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("simple_mock_home")
 async def test_hap_create(
-    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry
 ) -> None:
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(DOMAIN)
+    hmip_config_entry.add_to_hass(hass)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
     with (
@@ -146,6 +152,7 @@ async def test_hap_create(
             return_value=ConnectionContext(),
         ),
         patch.object(hap, "async_connect"),
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
     ):
         async with hmip_config_entry.setup_lock:
             assert await hap.async_setup()
@@ -186,10 +193,36 @@ async def test_hap_create_exception(
         await hap.async_setup()
 
 
+async def test_hap_setup_auth_error_starts_reauth(
+    hass: HomeAssistant, hmip_config_entry: MockConfigEntry, mock_connection_init
+) -> None:
+    """A token the cloud rejects at setup starts a reauthentication."""
+    hmip_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
+            side_effect=HmipAuthenticationError,
+        ),
+    ):
+        await hass.config_entries.async_setup(hmip_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hmip_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+
+
 async def test_auth_create(hass: HomeAssistant, simple_mock_auth) -> None:
     """Mock AsyncAuth to execute get_auth."""
     config = {HMIPC_HAPID: HAPID, HMIPC_PIN: HAPPIN, HMIPC_NAME: "hmip"}
     hmip_auth = HomematicipAuth(hass, config)
+    simple_mock_auth.connection_request.return_value = RestResult(status=200)
     assert hmip_auth
 
     with (
@@ -236,6 +269,29 @@ async def test_auth_create_exception(hass: HomeAssistant, simple_mock_auth) -> N
         ),
     ):
         assert not await hmip_auth.get_auth(hass, HAPID, HAPPIN)
+
+
+async def test_auth_create_rejected(
+    hass: HomeAssistant, simple_mock_auth: AsyncMock
+) -> None:
+    """Test a connection request the cloud rejects does not yield an auth."""
+    config = {HMIPC_HAPID: HAPID, HMIPC_PIN: HAPPIN, HMIPC_NAME: "hmip"}
+    hmip_auth = HomematicipAuth(hass, config)
+    # a wrong or missing PIN is answered with a 400, which the library returns
+    simple_mock_auth.connection_request.return_value = RestResult(
+        status=400, text='{"errorCode":"INVALID_PIN"}'
+    )
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.Auth",
+            return_value=simple_mock_auth,
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
+    ):
+        assert not await hmip_auth.async_setup()
 
 
 async def test_get_state_after_disconnect(

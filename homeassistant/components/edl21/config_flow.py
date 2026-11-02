@@ -2,16 +2,16 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import CONF_SERIAL_PORT, DEFAULT_TITLE, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SERIAL_PORT): SerialPortSelector(),
+        probatio.Required(CONF_SERIAL_PORT): SerialPortSelector(),
     }
 )
 

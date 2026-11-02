@@ -3,26 +3,25 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vilfo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.parametrize(
-    ("mac", "identifiers"),
+    ("mac", "identifier"),
     [
         pytest.param(
             "FF-00-00-00-00-00",
-            {(DOMAIN, "testadmin.vilfo.com", "FF-00-00-00-00-00")},
+            (DOMAIN, "testadmin.vilfo.com", "FF-00-00-00-00-00"),
             id="with_mac",
         ),
         pytest.param(
             None,
-            {(DOMAIN, "testadmin.vilfo.com", None)},
+            (DOMAIN, "testadmin.vilfo.com", None),
             id="without_mac",
         ),
     ],
@@ -33,7 +32,7 @@ async def test_device_registry(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
     mac: str | None,
-    identifiers: set[tuple[str, str | None]],
+    identifier: tuple[str, str, str | None],
 ) -> None:
     """Test the device registry entry.
 
@@ -55,5 +54,7 @@ async def test_device_registry(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(identifiers=identifiers)
+    device_entry = device_registry.async_get_device_by_identifier(
+        identifier, mock_config_entry.entry_id
+    )
     assert device_entry == snapshot

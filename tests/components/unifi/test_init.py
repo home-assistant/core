@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import flush_store
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
@@ -12,6 +14,7 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    DOMAIN,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.config_entries import ConfigEntryState
@@ -24,9 +27,6 @@ from .conftest import (
     ConfigEntryFactoryType,
     WebsocketMessageMock,
 )
-
-from tests.common import flush_store
-from tests.typing import WebSocketGenerator
 
 
 async def test_setup_entry_fails_config_entry_not_ready(
@@ -179,23 +179,23 @@ async def test_remove_config_entry_device(
     ws_client = await hass_ws_client(hass)
 
     # Try to remove an active client from UI: allowed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]), config_entry.entry_id
     )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
-    assert not device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+    assert not device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]), config_entry.entry_id
     )
 
     # Try to remove an active device from UI: not allowed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"]), config_entry.entry_id
     )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert not response["success"]
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
+    assert device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"]), config_entry.entry_id
     )
 
     # Remove a client from Unifi API
@@ -203,11 +203,40 @@ async def test_remove_config_entry_device(
     await hass.async_block_till_done()
 
     # Try to remove an inactive client from UI: allowed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"])}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"]), config_entry.entry_id
     )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
-    assert not device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"])}
+    assert not device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"]), config_entry.entry_id
     )
+
+
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Test removing an unexpected child device is rejected."""
+    config_entry = await config_entry_factory()
+    assert await async_setup_component(hass, "config", {})
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_parent_device")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)

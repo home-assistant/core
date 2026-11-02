@@ -54,10 +54,3 @@ stop:
       default: "modbus_hub"
       selector:
         text:
-restart:
-  fields:
-    hub:
-      example: "hub1"
-      default: "modbus_hub"
-      selector:
-        text:

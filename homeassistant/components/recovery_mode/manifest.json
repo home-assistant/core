@@ -1,6 +1,6 @@
 {
   "domain": "recovery_mode",
-  "name": "Recovery Mode",
+  "name": "Recovery mode",
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/recovery_mode",

@@ -11,7 +11,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -23,6 +23,7 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .utils import (
     async_remove_shelly_entity,
     get_block_device_info,
+    get_blu_trv_device_info,
     get_rpc_channel_name,
     get_rpc_device_info,
     get_rpc_key,
@@ -152,7 +153,8 @@ def async_setup_entry_rpc(
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
 
-    if coordinator.device.initialized:
+    # Mains-powered devices keep the last known data while reconnecting
+    if coordinator.device.initialized or not coordinator.sleep_period:
         async_setup_rpc_attribute_entities(
             hass, config_entry, async_add_entities, sensors, sensor_class
         )
@@ -245,7 +247,6 @@ def async_restore_rpc_attribute_entities(
 ) -> None:
     """Restore RPC attributes entities."""
     entities: list[Entity] = []
-    sleep_period = config_entry.data[CONF_SLEEP_PERIOD]
 
     ent_reg = er.async_get(hass)
     entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
@@ -260,13 +261,11 @@ def async_restore_rpc_attribute_entities(
         attribute = entry.unique_id.split("-")[-1]
 
         if description := sensors.get(attribute):
-            entity_class = get_entity_class(sensor_class, description)
-            if sleep_period:
-                entities.append(
-                    entity_class(coordinator, key, attribute, description, entry)
+            entities.append(
+                get_entity_class(sensor_class, description)(
+                    coordinator, key, attribute, description, entry
                 )
-            else:
-                entities.append(entity_class(coordinator, key, attribute, description))
+            )
 
     if not entities:
         return
@@ -726,16 +725,14 @@ def get_entity_class(
 def get_entity_block_device_info(
     coordinator: ShellyBlockCoordinator,
     block: Block | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Get device info for block entities."""
     return get_block_device_info(
+        coordinator.hass,
+        coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
-        coordinator.configuration_url,
-        coordinator.model,
-        coordinator.model_name,
         block,
-        suggested_area=coordinator.suggested_area,
     )
 
 
@@ -743,15 +740,28 @@ def get_entity_rpc_device_info(
     coordinator: ShellyRpcCoordinator,
     key: str | None = None,
     emeter_phase: str | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Get device info for RPC entities."""
     return get_rpc_device_info(
+        coordinator.hass,
+        coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
-        coordinator.configuration_url,
-        coordinator.model,
-        coordinator.model_name,
         key,
         emeter_phase=emeter_phase,
-        suggested_area=coordinator.suggested_area,
+    )
+
+
+def get_entity_blu_trv_device_info(
+    coordinator: ShellyRpcCoordinator, key: str
+) -> DeviceInfo:
+    """Get device info for BLU TRV entities."""
+    config = coordinator.device.config[key]
+    return get_blu_trv_device_info(
+        coordinator.hass,
+        coordinator.config_entry.entry_id,
+        config,
+        config["addr"],
+        coordinator.mac,
+        coordinator.device.status[key].get("fw_ver"),
     )

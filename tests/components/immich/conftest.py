@@ -25,6 +25,7 @@ from aioimmich.server.models import (
 from aioimmich.tags.models import ImmichTag
 from aioimmich.users.models import ImmichUserObject
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.immich.const import DOMAIN
 from homeassistant.components.media_source import PlayMedia
@@ -44,17 +45,16 @@ from .const import (
     MOCK_ALBUM_ASSETS,
     MOCK_FAVORITE_ASSETS,
     MOCK_PEOPLE_ASSETS,
+    MOCK_SEARCH_ASSETS,
     MOCK_TAGS_ASSETS,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.immich.async_setup_entry", return_value=True
+        "homeassistant.components.immich.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -73,6 +73,7 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="e7ef5713-9dab-4bd4-b899-715b0ca4379e",
         title="Someone",
+        entry_id="01JIMMICH00000000000000000",
     )
 
 
@@ -81,6 +82,7 @@ def mock_immich_albums() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichAlbums)
     mock.async_get_all_albums.return_value = [ALBUM_DATA]
+    mock.async_get_album_info.return_value = ALBUM_DATA
     mock.async_add_assets_to_album.return_value = [
         ImmichAddAssetsToAlbumResponse.from_dict(
             {"id": "abcdef-0123456789", "success": True}
@@ -150,6 +152,7 @@ def mock_immich_people() -> AsyncMock:
             }
         ),
     ]
+    mock.async_get_person_by_id.return_value = mock.async_get_all_people.return_value[0]
     mock.async_get_person_thumbnail.return_value = b"yyyy"
     return mock
 
@@ -162,6 +165,7 @@ def mock_immich_search() -> AsyncMock:
     mock.async_get_all_by_album_ids.return_value = MOCK_ALBUM_ASSETS
     mock.async_get_all_by_person_ids.return_value = MOCK_PEOPLE_ASSETS
     mock.async_get_all_by_tag_ids.return_value = MOCK_TAGS_ASSETS
+    mock.async_smart_search.return_value = MOCK_SEARCH_ASSETS
     return mock
 
 
@@ -255,6 +259,7 @@ def mock_immich_tags() -> AsyncMock:
             },
         ),
     ]
+    mock.async_get_tag_by_id.return_value = mock.async_get_all_tags.return_value[0]
     return mock
 
 

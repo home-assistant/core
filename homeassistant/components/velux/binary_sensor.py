@@ -53,7 +53,9 @@ class VeluxRainSensor(
         node = coordinator.node
         unique_id = velux_unique_id(node, config_entry_id)
         self._attr_unique_id = f"{unique_id}_rain_sensor"
-        self._attr_device_info = velux_device_info(node, config_entry_id)
+        self._attr_device_info = velux_device_info(
+            self.coordinator.hass, node, config_entry_id
+        )
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -5,11 +5,12 @@ from asyncio import timeout
 from contextlib import AsyncExitStack
 import logging
 
-from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
+from arcam.fmj.errors import ConnectionFailed
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_SCAN_INTERVAL
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator, ArcamFmjRuntimeData
@@ -17,10 +18,14 @@ from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator, ArcamFmjRunti
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.SENSOR,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> None:
     """Set up config entry."""
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
@@ -28,6 +33,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     for zone in (1, 2):
         coordinator = ArcamFmjCoordinator(hass, entry, client, zone)
         coordinators[zone] = coordinator
+
+    # Register the zone 1 device before forwarding platforms so the other zones'
+    # entities can link to it via via_device_id.
+    device_registry = dr.async_get(hass)
+    zone1_device = device_registry.async_get_or_create_from_info(
+        config_entry_id=entry.entry_id,
+        device_info=coordinators[1].device_info,
+    )
+    for zone, coordinator in coordinators.items():
+        if zone != 1:
+            coordinator.device_info.via_device_id = zone1_device.id
 
     entry.runtime_data = ArcamFmjRuntimeData(client, coordinators)
 
@@ -38,12 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> None:
     """Cleanup before removing config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _run_client(

@@ -1,5 +1,6 @@
 """Provide models for the Z-Wave integration."""
 
+import asyncio
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
@@ -7,7 +8,8 @@ from typing import TYPE_CHECKING, Any, override
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.const import LogLevel
-from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.endpoint import Endpoint
+from zwave_js_server.model.node import EndpointGroup, Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue as ZwaveConfigurationValue,
     Value as ZwaveValue,
@@ -32,6 +34,8 @@ class ZwaveJSData:
     client: ZwaveClient
     driver_events: DriverEvents
     old_server_log_level: LogLevel | None = None
+    # Serializes routing table reads, which require the radio to be off
+    network_neighbors_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 type ZwaveJSConfigEntry = ConfigEntry[ZwaveJSData]
@@ -99,6 +103,13 @@ class PlatformZwaveDiscoveryInfo:
     platform: Platform
     # additional values that need to be watched by entity
     additional_value_ids_to_watch: set[str]
+    # whether this discovery info was matched only to suppress the value (no entity
+    # created, but the value is consumed so it won't fall through to a generic schema)
+    discovery_suppressed: bool = False
+    # the endpoint child device (a single endpoint or a group of endpoints) the
+    # primary value's entity should live on, or None for the main node device;
+    # resolved by the node-ready handler from the device config and discovered values
+    endpoint_device: Endpoint | EndpointGroup | None = None
 
 
 @dataclass
@@ -191,6 +202,8 @@ class NewZWaveDiscoverySchema:
     device_class_basic: set[str | int] | None = None
     # [optional] the node's generic device class must match ANY of these values
     device_class_generic: set[str | int] | None = None
+    # [optional] the node's or endpoint's generic device class must NOT match ANY of these values
+    not_device_class_generic: set[str | int] | None = None
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: set[str | int] | None = None
     # [optional] additional values that ALL need to be present

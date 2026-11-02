@@ -1,0 +1,87 @@
+[
+  {
+    "id": "sensor-1",
+    "identifier": "device-12345",
+    "name": "Sensor-device-12345",
+    "isOnline": true,
+    "batteryPercentage": 87,
+    "lastDataReceived": "2026-08-19T10:00:00.000Z",
+    "plant": {
+      "id": "plant-1",
+      "name": "Monstera",
+      "species": "Monstera deliciosa",
+      "commonNames": ["Swiss cheese plant"],
+      "environment": "Living Room",
+      "imageUrl": "https://cdn.smartyplants.test/monstera.jpg"
+    },
+    "health": {
+      "score": 82,
+      "isHealthy": true,
+      "needsAttentionCount": 0,
+      "classifications": []
+    },
+    "readings": {
+      "temperature": {
+        "value": 22.5,
+        "unit": "°C",
+        "status": "OK",
+        "optimalRange": {
+          "low": 18,
+          "high": 26
+        },
+        "min": 0,
+        "max": 50,
+        "isCalculating": false
+      },
+      "humidity": {
+        "value": 55,
+        "unit": "%",
+        "status": "OK",
+        "optimalRange": null,
+        "min": 0,
+        "max": 100,
+        "isCalculating": false
+      },
+      "moisture": {
+        "value": 41,
+        "unit": "%",
+        "status": "OK",
+        "optimalRange": null,
+        "min": 0,
+        "max": 100,
+        "isCalculating": false
+      },
+      "light": {
+        "value": 1200,
+        "unit": "lx",
+        "status": "OK",
+        "optimalRange": null,
+        "min": 0,
+        "max": 10000,
+        "isCalculating": false
+      },
+      "lightQuality": {
+        "value": 78,
+        "status": "OPTIMAL",
+        "optimalRange": {
+          "low": 40,
+          "high": 100
+        },
+        "min": 0,
+        "max": 100,
+        "isCalculating": false
+      },
+      "fertiliser": {
+        "daysUntilFertilise": 21,
+        "status": "OK",
+        "isCalculating": false
+      },
+      "battery": {
+        "value": 87,
+        "unit": "%",
+        "status": "OK"
+      },
+      "updatedAt": "2026-08-19T10:00:00.000Z"
+    }
+  }
+]

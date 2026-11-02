@@ -4,13 +4,12 @@ import dataclasses
 from enum import StrEnum
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-
-from .util import get_instance
+from homeassistant.helpers.recorder import get_instance
 
 
 def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
@@ -50,8 +49,8 @@ class RecorderEntityOptions:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/entity_options/get",
-        vol.Required("entity_id"): cv.strict_entity_id,
+        probatio.Required("type"): "recorder/entity_options/get",
+        probatio.Required("entity_id"): cv.strict_entity_id,
     }
 )
 @callback

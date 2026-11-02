@@ -5,13 +5,16 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.airnow.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
-from tests.common import MockConfigEntry, load_json_array_fixture
+TEST_API_KEY = "abc123"
+TEST_LATITUDE = 34.053718
+TEST_LONGITUDE = -118.244842
 
 
 @pytest.fixture(name="config_entry")
@@ -21,7 +24,7 @@ def config_entry_fixture(
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        version=2,
+        version=3,
         entry_id="3bd2acb0e4f0476d40865546d0d91921",
         unique_id=f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}",
         data=config,
@@ -35,18 +38,16 @@ def config_entry_fixture(
 def config_fixture() -> dict[str, Any]:
     """Define a config entry data fixture."""
     return {
-        CONF_API_KEY: "abc123",
-        CONF_LATITUDE: 34.053718,
-        CONF_LONGITUDE: -118.244842,
+        CONF_API_KEY: TEST_API_KEY,
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
     }
 
 
 @pytest.fixture(name="options")
 def options_fixture() -> dict[str, Any]:
     """Define a config options data fixture."""
-    return {
-        CONF_RADIUS: 150,
-    }
+    return {}
 
 
 @pytest.fixture(name="data", scope="package")
