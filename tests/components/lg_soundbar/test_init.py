@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -39,4 +39,18 @@ async def test_unload(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_client.stop.assert_awaited_once()
+
+
+async def test_stop_with_home_assistant(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the client is stopped when Home Assistant stops."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
     mock_client.stop.assert_awaited_once()
