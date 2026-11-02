@@ -2,7 +2,7 @@
   "domain": "lg_soundbar",
   "name": "LG Soundbars",
   "categories": ["media_entertainment.speakers_audio"],
-  "codeowners": [],
+  "codeowners": ["@fthiery"],
   "config_flow": true,
   "connectivity": ["network"],
   "dependencies": ["zeroconf"],
