@@ -305,14 +305,15 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
             )
 
     async def _async_read_cache_file(self) -> bytes | None:
-        paths = [self._cache_path()]
+        cache_path = self._cache_path()
+        paths = [cache_path]
         if self.registry_entry is not None:
             # Restore state moves to the registry ID when a unique_id is added.
             paths.append(image_cache_dir(self.hass) / f"{self.entity_id}.bin")
         for image_path in paths:
             try:
                 async with aiofiles.open(image_path, "rb") as fh:
-                    return await fh.read()
+                    data = await fh.read()
             except FileNotFoundError:
                 continue
             except OSError as err:
@@ -323,6 +324,18 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
                     err,
                 )
                 return None
+            if image_path != cache_path:
+                # Migrate it, so removing the entity also removes the file.
+                try:
+                    await aiofiles.os.replace(image_path, cache_path)
+                except OSError as err:
+                    _LOGGER.debug(
+                        "%s: Unable to migrate image cache %s: %s",
+                        self.entity_id,
+                        image_path,
+                        err,
+                    )
+            return data
         return None
 
     @override

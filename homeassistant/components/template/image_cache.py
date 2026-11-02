@@ -48,11 +48,11 @@ async def async_prune_image_cache(hass: HomeAssistant) -> None:
     while not loaded have no removal hook, so a file is kept as long as restore
     state could still restore its entity.
     """
-    keep = {
-        entry.id
-        for entry in er.async_get(hass).entities.values()
-        if entry.domain == Platform.IMAGE and entry.platform == DOMAIN
-    }
+    keep: set[str] = set()
+    for entry in er.async_get(hass).entities.values():
+        if entry.domain == Platform.IMAGE and entry.platform == DOMAIN:
+            # The entity_id file is migrated when a newly added unique_id restores it.
+            keep.update((entry.id, entry.entity_id))
     keep.update(restore_state.async_get(hass).last_states_by_entity_id)
     await hass.async_add_executor_job(_prune_image_cache, image_cache_dir(hass), keep)
 

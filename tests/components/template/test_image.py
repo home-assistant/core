@@ -1614,6 +1614,8 @@ async def test_orphaned_cache_pruned_once_at_start(
     expired = (dt_util.utcnow() - timedelta(days=30)).timestamp()
     kept = [
         images_cache_dir / f"{registered.id}.bin",
+        # Saved before a unique_id was added, migrated when the entity loads.
+        images_cache_dir / f"{registered.entity_id}.bin",
         images_cache_dir / "image.unregistered.bin",
     ]
     for path in (
@@ -1898,7 +1900,11 @@ async def test_restore_cache_after_unique_id_added(
             "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
         },
     )
-    assert entity_registry.async_get(TEST_IMAGE.entity_id) is not None
+    registry_entry = entity_registry.async_get(TEST_IMAGE.entity_id)
+    assert registry_entry is not None
+    assert list(images_cache_dir.iterdir()) == [
+        images_cache_dir / f"{registry_entry.id}.bin"
+    ]
 
     # example2.com isn't mocked, the image comes from the cache.
     await _assert_state(
@@ -1908,3 +1914,8 @@ async def test_restore_cache_after_unique_id_added(
         imgbytes2_jpg,
         entity_id=TEST_IMAGE.entity_id,
     )
+
+    entity_registry.async_remove(TEST_IMAGE.entity_id)
+    await hass.async_block_till_done()
+
+    assert list(images_cache_dir.iterdir()) == []
