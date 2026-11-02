@@ -187,13 +187,23 @@ async def test_service_error_response(
 
 
 @pytest.mark.usefixtures("mock_version")
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(
+            ConnectionClosedException("Connection is closed"), id="connection_closed"
+        ),
+        pytest.param(ConnectionResetError("Connection reset"), id="connection_reset"),
+    ],
+)
 async def test_service_connection_closed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_websocket_client: AsyncMock,
     device_registry: dr.DeviceRegistry,
+    side_effect: Exception,
 ) -> None:
-    """Test a closed connection raises a connection error."""
+    """Test a closed or reset connection raises a connection error."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -203,9 +213,7 @@ async def test_service_connection_closed(
     )
     assert device_entry
 
-    mock_websocket_client.power_shutdown.side_effect = ConnectionClosedException(
-        "Connection is closed"
-    )
+    mock_websocket_client.power_shutdown.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError, match="A connection error occurred"):
         await hass.services.async_call(

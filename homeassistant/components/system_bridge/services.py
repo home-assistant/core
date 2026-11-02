@@ -217,7 +217,7 @@ async def _async_send_command(
     """Send a command to the bridge, raising on a closed connection or an error."""
     try:
         response = await command
-    except ConnectionClosedException as e:
+    except (ConnectionClosedException, ConnectionResetError) as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="connection_failed",
