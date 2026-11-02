@@ -147,6 +147,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         const.DOMAIN,
+        const.SERVICE_PING,
+        _async_ping,
+        schema=probatio.Schema(
+            probatio.All(
+                TARGET_VALIDATORS,
+                probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+            ),
+        ),
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
         const.SERVICE_REFRESH_NOTIFICATIONS,
         _async_refresh_notifications,
         schema=probatio.Schema(
@@ -409,6 +421,20 @@ def _async_get_nodes(call: ServiceCall) -> set[ZwaveNode]:
             translation_key="no_nodes_found",
         )
     return nodes
+
+
+async def _async_ping(call: ServiceCall) -> None:
+    """Ping node(s)."""
+    _LOGGER.warning(
+        "This service is deprecated in favor of the ping button entity. Service "
+        "calls will still work for now but the service will be removed in a "
+        "future release"
+    )
+    nodes = list(_async_get_nodes(call))
+    results = await asyncio.gather(
+        *(node.async_ping() for node in nodes), return_exceptions=True
+    )
+    raise_exceptions_from_results(nodes, results)
 
 
 async def _async_refresh_notifications(call: ServiceCall) -> None:
@@ -698,21 +724,6 @@ class ZWaveServices:
                     ),
                     get_nodes_from_service_data,
                     validate_multicast_nodes,
-                ),
-            ),
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_PING,
-            self.async_ping,
-            schema=probatio.Schema(
-                probatio.All(
-                    TARGET_VALIDATORS,
-                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
                 ),
             ),
         )
@@ -1012,19 +1023,6 @@ class ZWaveServices:
             raise HomeAssistantError(
                 "Unable to set value via multicast"
             ) from SetValueFailed(f"{result.status} {result.message}")
-
-    async def async_ping(self, service: ServiceCall) -> None:
-        """Ping node(s)."""
-        _LOGGER.warning(
-            "This service is deprecated in favor of the ping button entity. Service "
-            "calls will still work for now but the service will be removed in a "
-            "future release"
-        )
-        nodes: list[ZwaveNode] = list(service.data[const.ATTR_NODES])
-        results = await asyncio.gather(
-            *(node.async_ping() for node in nodes), return_exceptions=True
-        )
-        raise_exceptions_from_results(nodes, results)
 
     async def async_invoke_cc_api(self, service: ServiceCall) -> None:
         """Invoke a command class API."""
