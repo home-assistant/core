@@ -191,16 +191,17 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_finish_reconfigure(self) -> ConfigFlowResult:
         """Store the new login and revoke the token it replaces."""
         entry = self._get_reconfigure_entry()
+        # Not inlined: taken before the await, so cancelling the flow during
+        # it can't make async_remove revoke the new token.
         token = self._take_token()
-        old_client = Seafile(
-            self._user_input[CONF_URL],
-            entry.data[CONF_TOKEN],
-            session=async_get_clientsession(
-                self.hass, verify_ssl=self._user_input[CONF_VERIFY_SSL]
-            ),
-        )
         with suppress(SeafileError):
-            await old_client.logout_device()
+            await Seafile(
+                self._user_input[CONF_URL],
+                entry.data[CONF_TOKEN],
+                session=async_get_clientsession(
+                    self.hass, verify_ssl=self._user_input[CONF_VERIFY_SSL]
+                ),
+            ).logout_device()
         return self.async_update_reload_and_abort(
             entry,
             title=self._entry_title(),
