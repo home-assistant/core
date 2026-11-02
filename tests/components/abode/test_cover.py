@@ -5,8 +5,8 @@ from unittest.mock import patch
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverService
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -32,7 +32,7 @@ async def test_open(hass: HomeAssistant) -> None:
 
     with patch("jaraco.abode.devices.cover.Cover.open_cover") as mock_open:
         await hass.services.async_call(
-            COVER_DOMAIN, CoverService.OPEN, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+            COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()
         mock_open.assert_called_once()
@@ -45,7 +45,7 @@ async def test_close(hass: HomeAssistant) -> None:
     with patch("jaraco.abode.devices.cover.Cover.close_cover") as mock_close:
         await hass.services.async_call(
             COVER_DOMAIN,
-            CoverService.CLOSE,
+            SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
