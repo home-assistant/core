@@ -18,6 +18,7 @@ from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -81,15 +82,6 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )
         ),
-    }
-)
-
-STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_URL): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.URL)
-        ),
-        probatio.Required(CONF_VERIFY_SSL): bool,
     }
 )
 
@@ -185,9 +177,39 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._get_reauth_entry(),
                     data_updates={CONF_TOKEN: self._take_token()},
                 )
+            if self.source == SOURCE_RECONFIGURE:
+                self._abort_if_unique_id_mismatch()
+                return await self._async_finish_reconfigure()
             self._abort_if_unique_id_configured()
             return await self.async_step_libraries()
         return None
+
+    def _entry_title(self) -> str:
+        """Return the title of the entry for the login."""
+        return f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})"
+
+    async def _async_finish_reconfigure(self) -> ConfigFlowResult:
+        """Store the new login and revoke the token it replaces."""
+        entry = self._get_reconfigure_entry()
+        token = self._take_token()
+        old_client = Seafile(
+            self._user_input[CONF_URL],
+            entry.data[CONF_TOKEN],
+            session=async_get_clientsession(
+                self.hass, verify_ssl=self._user_input[CONF_VERIFY_SSL]
+            ),
+        )
+        with suppress(SeafileError):
+            await old_client.logout_device()
+        return self.async_update_reload_and_abort(
+            entry,
+            title=self._entry_title(),
+            data_updates={
+                CONF_URL: self._user_input[CONF_URL],
+                CONF_TOKEN: token,
+                CONF_VERIFY_SSL: self._user_input[CONF_VERIFY_SSL],
+            },
+        )
 
     def _take_token(self) -> str:
         """Hand the token to the entry, so async_remove doesn't revoke it."""
@@ -262,37 +284,16 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Change the address of the server, keeping the token."""
+        """Log in again, to change the server, the login or the SSL check."""
         errors: dict[str, str] = {}
-        entry = self._get_reconfigure_entry()
         if user_input is not None:
-            client = Seafile(
-                user_input[CONF_URL],
-                entry.data[CONF_TOKEN],
-                session=async_get_clientsession(
-                    self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
-                ),
-            )
-            try:
-                account = await client.get_account_info()
-            except SeafileAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except SeafileError:
-                errors["base"] = "cannot_connect"
-            else:
-                await self.async_set_unique_id(account.email)
-                self._abort_if_unique_id_mismatch(reason="different_account")
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates={
-                        CONF_URL: user_input[CONF_URL],
-                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    },
-                )
+            self._user_input = user_input
+            if result := await self._async_login(errors):
+                return result
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_RECONFIGURE_DATA_SCHEMA, user_input or entry.data
+                STEP_USER_DATA_SCHEMA, user_input or self._get_reconfigure_entry().data
             ),
             errors=errors,
         )
@@ -317,7 +318,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             names = {library.id: library.name for library in self._libraries}
             token = self._take_token()
             return self.async_create_entry(
-                title=f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})",
+                title=self._entry_title(),
                 data={
                     CONF_URL: self._user_input[CONF_URL],
                     CONF_TOKEN: token,

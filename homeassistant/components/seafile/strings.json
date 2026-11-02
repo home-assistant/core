@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "different_account": "The access token belongs to a different account on this server. Enter the address of the server that was set up before.",
       "unique_id_mismatch": "You logged in with a different account. Log in with the account that was set up before."
     },
     "error": {
@@ -41,14 +40,18 @@
       },
       "reconfigure": {
         "data": {
+          "password": "[%key:common::config_flow::data::password%]",
           "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
+          "password": "[%key:component::seafile::config::step::user::data_description::password%]",
           "url": "[%key:component::seafile::config::step::user::data_description::url%]",
+          "username": "[%key:component::seafile::config::step::user::data_description::username%]",
           "verify_ssl": "[%key:component::seafile::config::step::user::data_description::verify_ssl%]"
         },
-        "description": "Change the address of the Seafile server, for example after it moved to a new hostname. The existing access token is used, so the account must stay the same."
+        "description": "Log in again to change the address of the Seafile server, the username or the password. This creates a new access token and revokes the old one."
       },
       "user": {
         "data": {
