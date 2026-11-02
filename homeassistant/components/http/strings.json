@@ -15,37 +15,37 @@
     "ssl_profile_outdated": {
       "fix_flow": {
         "abort": {
-          "issue_ignored": "This repair is ignored and the `{profile}` profile stays in use.",
-          "pending_config": "A new HTTP configuration is already waiting to be applied or confirmed. Confirm or revert it first."
+          "issue_ignored": "The `{profile}` profile stays in use and this repair is ignored.",
+          "pending_config": "Another HTTP configuration change is waiting to be applied or confirmed. Confirm or revert it first, then try again."
         },
         "step": {
           "confirm_intermediate_v6": {
-            "description": "Home Assistant restarts with the **Intermediate v6** profile and asks you to confirm the new configuration. Clients that depend on the legacy ciphers of `{profile}`, such as Windows 7 and 8.1 using Internet Explorer or other system TLS with an RSA certificate, can no longer connect. Unless you confirm within 5 minutes, it restores the `{profile}` profile automatically.",
+            "description": "Home Assistant will restart and use the **Intermediate v6** profile. Clients that rely on the older encryption methods will no longer be able to connect, for example Internet Explorer or other apps using the built-in encryption of Windows 7 or 8.1 if your certificate uses an RSA key.\n\nAfter the restart, confirm the new configuration within 5 minutes once Home Assistant opens in your browser. If you don't confirm, for example because you can no longer connect, Home Assistant restores the `{profile}` profile automatically.\n\nAfterwards, check that devices that connect to Home Assistant using HTTPS still work, for example speakers playing media from Home Assistant or devices calling webhooks. If something can no longer connect, switch back under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.",
             "submit": "Upgrade and restart",
             "title": "[%key:component::http::issues::ssl_profile_outdated::title%]"
           },
           "confirm_modern_v6": {
-            "description": "Home Assistant restarts with the **Modern v6** profile and asks you to confirm the new configuration. Clients without TLS 1.3 support can no longer connect. Unless you confirm within 5 minutes, it restores the `{profile}` profile automatically.",
+            "description": "Home Assistant will restart and use the **Modern v6** profile. Devices and apps without TLS 1.3 support will no longer be able to connect, for example some smart home devices, older speakers, or phones and tablets older than Android 10.\n\nAfter the restart, confirm the new configuration within 5 minutes once Home Assistant opens in your browser. If you don't confirm, for example because you can no longer connect, Home Assistant restores the `{profile}` profile automatically.\n\nAfterwards, check that devices that connect to Home Assistant using HTTPS still work, for example speakers playing media from Home Assistant or devices calling webhooks. If something can no longer connect, switch back under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.",
             "submit": "[%key:component::http::issues::ssl_profile_outdated::fix_flow::step::confirm_intermediate_v6::submit%]",
             "title": "[%key:component::http::issues::ssl_profile_outdated::title%]"
           },
           "ignore": {
-            "description": "This repair will be hidden and the `{profile}` profile stays in use. You can change the profile at any time under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.",
+            "description": "Home Assistant keeps using the `{profile}` profile and this repair will be hidden. You can change the profile at any time under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.",
             "submit": "Ignore",
             "title": "[%key:component::http::issues::ssl_profile_outdated::title%]"
           },
           "init": {
-            "description": "The HTTP server uses the SSL profile `{profile}`, which follows outdated Mozilla TLS guidelines: it accepts TLS 1.2 and newer, but still allows legacy ciphers such as CBC suites, RSA key exchange, or DHE.\n\nWe recommend **Modern v6**, which accepts TLS 1.3 only. Browsers, mobile apps, and operating systems have supported TLS 1.3 since around 2018 to 2019, so most setups are not affected. Choose **Intermediate v6** instead if devices that stopped receiving updates before then, such as older smart TVs, cameras, or hubs, connect to Home Assistant directly. It accepts TLS 1.2 and newer with current ciphers.\n\nOldest clients that can connect:\n\n| Profile | Chrome | Firefox | Safari | iOS | Android | Edge |\n| --- | --- | --- | --- | --- | --- | --- |\n| Modern v6 | 70 | 63 | 12.1 | 12.2 | 10 | 75 |\n| Intermediate v6 | 49 | 31 | 9 | 9 | 4.4 | 15 |\n\nClients that depend on the legacy ciphers, such as Windows 7 and 8.1 using Internet Explorer or other system TLS with an RSA certificate, can only keep connecting with `{profile}`.\n\nEither upgrade is applied as a trial and reverts automatically unless you confirm the new configuration within 5 minutes. You can close this dialog to decide later, or change the profile at any time under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.",
+            "description": "Your Home Assistant's HTTPS encryption settings are outdated. They use `{profile}`, which is based on Mozilla's TLS recommendations from 2016 (version 4) and still allows older encryption methods that are no longer considered secure. Your SSL certificate is not affected and does not need to change.\n\nThis only affects devices and apps that connect to Home Assistant over HTTPS, such as browsers, the Home Assistant apps, wall tablets, devices that call webhooks, and speakers that play text-to-speech or media from Home Assistant. Connections Home Assistant makes to your devices and services are not affected.\n\nWe recommend upgrading to **Intermediate v6**, based on the current recommendations (version 6). It accepts TLS 1.2 and TLS 1.3, but only with current encryption methods, so it works with almost all devices and apps.\n\nChoose **Modern v6** only if you know that everything connecting to Home Assistant supports TLS 1.3. Current browsers do, but some smart home devices, older speakers, and phones or tablets older than Android 10 do not.\n\nOldest supported clients:\n\n| Profile | Chrome | Firefox | Safari | iOS | Android | Edge |\n| --- | --- | --- | --- | --- | --- | --- |\n| Intermediate v6 | 49 | 31 | 9 | 9 | 4.4 | 15 |\n| Modern v6 | 70 | 63 | 12.1 | 12.2 | 10 | 75 |\n\nIf you can no longer reach Home Assistant after the restart, it switches back to `{profile}` automatically after 5 minutes. You can close this dialog to decide later, or change the profile at any time under **Settings** > **System** > **Network** > **HTTP server** > **SSL/TLS**.",
             "menu_options": {
-              "confirm_intermediate_v6": "Upgrade to Intermediate v6 (keeps TLS 1.2)",
-              "confirm_modern_v6": "Upgrade to Modern v6 (recommended)",
-              "ignore": "Keep the current profile and ignore this repair"
+              "confirm_intermediate_v6": "Upgrade to Intermediate v6 (recommended)",
+              "confirm_modern_v6": "Upgrade to Modern v6 (TLS 1.3 only)",
+              "ignore": "Keep the current profile"
             },
             "title": "[%key:component::http::issues::ssl_profile_outdated::title%]"
           }
         }
       },
-      "title": "The SSL profile {profile} is outdated"
+      "title": "Update the HTTPS encryption settings"
     },
     "yaml_still_present_after_migration": {
       "description": "The HTTP configuration in `configuration.yaml` has already been migrated and is now being ignored. Please remove the `http:` block from your `configuration.yaml`. Manage the HTTP configuration from the UI under **Settings** > **System** > **Network**.",

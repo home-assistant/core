@@ -13,6 +13,7 @@ from pytest_homeassistant.common import (
     assert_platform_setup_creates_issue,
     async_fire_time_changed,
 )
+from sqlalchemy import make_url
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import CONF_DB_URL, Recorder
@@ -517,7 +518,7 @@ async def test_postgresql_url_uses_psycopg2_from_yaml(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    assert create_engine_mock.mock_calls[0].args[0] == (
+    assert create_engine_mock.mock_calls[0].args[0] == make_url(
         "postgresql+psycopg2://user:pass@host/db"
     )
 

@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from sqlalchemy import make_url
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
@@ -282,7 +283,7 @@ async def test_flow_postgresql_url_uses_psycopg2(hass: HomeAssistant) -> None:
         )
 
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
-    assert create_engine_mock.mock_calls[0].args[0] == (
+    assert create_engine_mock.mock_calls[0].args[0] == make_url(
         "postgresql+psycopg2://user:pass@host/db"
     )
 

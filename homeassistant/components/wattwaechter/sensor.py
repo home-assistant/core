@@ -40,6 +40,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import OBIS_GAS_POWER
 from .coordinator import WattwaechterConfigEntry, WattwaechterCoordinator
 from .entity import WattwaechterEntity
 
@@ -127,6 +128,60 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
+    ),
+    "21.7.0": SensorEntityDescription(
+        key="21.7.0",
+        translation_key="active_power_phase",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    "41.7.0": SensorEntityDescription(
+        key="41.7.0",
+        translation_key="active_power_phase",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    "61.7.0": SensorEntityDescription(
+        key="61.7.0",
+        translation_key="active_power_phase",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    "22.7.0": SensorEntityDescription(
+        key="22.7.0",
+        translation_key="active_power_export_phase",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    "42.7.0": SensorEntityDescription(
+        key="42.7.0",
+        translation_key="active_power_export_phase",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    "62.7.0": SensorEntityDescription(
+        key="62.7.0",
+        translation_key="active_power_export_phase",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
     ),
     # Voltage (V) - measurement
     "32.7.0": SensorEntityDescription(
@@ -367,6 +422,14 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
+    OBIS_GAS_POWER: SensorEntityDescription(
+        key=OBIS_GAS_POWER,
+        translation_key="gas_power",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+    ),
     OBIS_WATER_VOLUME: SensorEntityDescription(
         key=OBIS_WATER_VOLUME,
         translation_key="water_consumption",
@@ -396,6 +459,12 @@ OBIS_PHASE: dict[str, str] = {
     "36.7.0": "L1",
     "56.7.0": "L2",
     "76.7.0": "L3",
+    "21.7.0": "L1",
+    "41.7.0": "L2",
+    "61.7.0": "L3",
+    "22.7.0": "L1",
+    "42.7.0": "L2",
+    "62.7.0": "L3",
     "32.7.0": "L1",
     "52.7.0": "L2",
     "72.7.0": "L3",

@@ -39,7 +39,7 @@ on:
 env:
   CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.11"
+  HA_SHORT_VERSION: "2026.12"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # LTS versions: 10.3, 10.6, 10.11, 11.4, 11.8, 12.3
   # - 10.3 and 10.6 are the versions currently phased out until 2027.3
@@ -121,10 +121,11 @@ jobs:
           HASH_REQUIREMENTS_ALL: ${{ hashFiles('requirements_all.txt') }}
           HASH_PACKAGE_CONSTRAINTS: ${{ hashFiles('homeassistant/package_constraints.txt') }}
           HASH_GEN_REQUIREMENTS: ${{ hashFiles('script/gen_requirements_all.py') }}
+          HASH_EDITABLE_PACKAGES: ${{ hashFiles('pyproject.toml', 'packages/hassfest/pyproject.toml', 'packages/hassfest/setup.py', '.github/actions/restore-or-build-venv/action.yml') }}
         run: |
           # Include HA_SHORT_VERSION to force the immediate creation
           # of a new uv cache entry after a version bump.
-          echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}" >> $GITHUB_OUTPUT
+          echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}-${HASH_EDITABLE_PACKAGES}" >> $GITHUB_OUTPUT
       - name: Filter for core changes
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: core
@@ -401,6 +402,10 @@ jobs:
           python-cache-key: ${{ needs.info.outputs.python_cache_key }}
           uv-cache-dir: ${{ env.UV_CACHE_DIR }}
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
+      - name: Test hassfest package
+        run: |
+          . venv/bin/activate
+          pytest -c packages/hassfest/pyproject.toml packages/hassfest/tests
       - name: Run hassfest
         run: |
           . venv/bin/activate
@@ -790,6 +795,40 @@ jobs:
           run: |
             . venv/bin/activate
             pytest benchmarks --codspeed --no-cov -o addopts="-p no:respx"
+
+  build-hassfest-package:
+    name: Build hassfest package
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: $/.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Build hassfest source distribution and wheel
+        run: uv build packages/hassfest --out-dir dist/hassfest
+      - name: Install wheel in a clean environment
+        run: |
+          uv venv "${RUNNER_TEMP}/hassfest-venv"
+          uv pip install --python "${RUNNER_TEMP}/hassfest-venv/bin/python" \
+            dist/hassfest/*.whl
+      - name: Check installed package outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${RUNNER_TEMP}/hassfest-venv/bin/python" \
+            "${GITHUB_WORKSPACE}/packages/hassfest/tests/check_package.py"
 
   build-pytest-package:
     name: Build pytest-home-assistant package

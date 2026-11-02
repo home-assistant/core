@@ -90,12 +90,14 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         device = MyPVLocalDevice(self._host, session=async_get_clientsession(self.hass))
         try:
-            if not await device.connect():
-                return self.async_abort(reason="cannot_connect")
+            connected = await device.connect()
         except MyPVAuthenticationError:
             password_needed = True
         except MyPVDeviceNotSupportedError:
             return self.async_abort(reason="unsupported_device")
+        else:
+            if not connected:
+                return self.async_abort(reason="cannot_connect")
         finally:
             await device.disconnect()
 
@@ -116,7 +118,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=self.context["title_placeholders"],

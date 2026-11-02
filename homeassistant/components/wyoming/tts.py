@@ -25,10 +25,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_SPEAKER
+from .const import ATTR_SPEAKER, DOMAIN
 from .coordinator import WyomingInfoCoordinator
 from .data import WyomingService
-from .error import WyomingError, error_event_message
+from .error import WyomingError, error_event_details
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -157,7 +157,13 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
                         if Error.is_type(event.type):
                             raise HomeAssistantError(
-                                error_event_message(Error.from_event(event))
+                                translation_domain=DOMAIN,
+                                translation_key="service_error",
+                                translation_placeholders={
+                                    "error": error_event_details(
+                                        Error.from_event(event)
+                                    )
+                                },
                             )
 
                         if AudioStop.is_type(event.type):
@@ -258,7 +264,11 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
             while event := await client.read_event():
                 if Error.is_type(event.type):
                     raise HomeAssistantError(
-                        error_event_message(Error.from_event(event))
+                        translation_domain=DOMAIN,
+                        translation_key="service_error",
+                        translation_placeholders={
+                            "error": error_event_details(Error.from_event(event))
+                        },
                     )
 
                 if wav_header_sent and AudioChunk.is_type(event.type):

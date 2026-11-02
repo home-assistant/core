@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     assert_platform_setup_creates_issue,
@@ -33,7 +34,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
 
@@ -64,10 +64,13 @@ async def test_platform_config_creates_issue(
     )
 
 
-async def test_setup_config(hass: HomeAssistant, load_yaml_integration: None) -> None:
+async def test_setup_config(
+    hass: HomeAssistant, load_yaml_integration: None, freezer: FrozenDateTimeFactory
+) -> None:
     """Test setup from yaml."""
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state_binary_sensor = hass.states.get("binary_sensor.test")
@@ -82,11 +85,15 @@ async def test_setup_config(hass: HomeAssistant, load_yaml_integration: None) ->
 
 
 async def test_reload_service(
-    hass: HomeAssistant, load_yaml_integration: None, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test reload serviice."""
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state_binary_sensor = hass.states.get("binary_sensor.test")
@@ -136,6 +143,7 @@ async def test_reload_service(
 async def test_reload_prunes_stale_template_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A deprecation issue is pruned on reload when its entity is gone."""
     hass.states.async_set("sensor.input_sensor", "safe_value")
@@ -156,7 +164,8 @@ async def test_reload_prunes_stale_template_issue(
     await hass.async_block_till_done()
 
     with mock_asyncio_subprocess_run(b"safe_value\n"):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert any(
@@ -178,6 +187,7 @@ async def test_reload_prunes_stale_template_issue(
 async def test_reload_keeps_valid_template_issue_and_ignore_state(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A still-valid deprecation issue and its ignore state survive reload."""
     hass.states.async_set("sensor.input_sensor", "safe_value")
@@ -198,7 +208,8 @@ async def test_reload_keeps_valid_template_issue_and_ignore_state(
     await hass.async_block_till_done()
 
     with mock_asyncio_subprocess_run(b"safe_value\n"):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     issue = next(
@@ -228,6 +239,7 @@ async def test_reload_keeps_issues_of_entities_set_up_again(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     tmp_path: Path,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Issues of entities set up again survive a reload, those of others are deleted.
 
@@ -243,7 +255,8 @@ async def test_reload_keeps_issues_of_entities_set_up_again(
     await setup.async_setup_component(hass, DOMAIN, {DOMAIN: [sensor, notify, stale]})
     await hass.async_block_till_done()
     with mock_asyncio_subprocess_run(b"safe_value\n"):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.services.async_call(
             NOTIFY_DOMAIN, "notifier", {"message": "message"}, blocking=True
         )

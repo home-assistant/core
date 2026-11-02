@@ -20,6 +20,7 @@ from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
@@ -44,7 +45,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.recorder import DATA_RECORDER, session_scope
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.event_type import EventType
@@ -55,13 +56,8 @@ from .const import (
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
-    MARIADB_PYMYSQL_URL_PREFIX,
-    MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
     MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG,
-    MYSQLDB_PYMYSQL_URL_PREFIX,
-    MYSQLDB_URL_PREFIX,
-    SQLITE_URL_PREFIX,
     SupportedDialect,
 )
 from .db_schema import (
@@ -112,6 +108,7 @@ from .util import (
     dburl_to_path,
     end_incomplete_runs,
     get_engine_db_url,
+    is_file_sqlite_url,
     is_second_sunday,
     move_away_broken_database,
     setup_connection_for_dialect,
@@ -125,7 +122,7 @@ _LOGGER = logging.getLogger(__name__)
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
 
-SHUTDOWN_TASK = object()
+SHUTDOWN_TASK = sentinel("SHUTDOWN_TASK")
 
 COMMIT_TASK = CommitTask()
 KEEP_ALIVE_TASK = KeepAliveTask()
@@ -172,7 +169,9 @@ class Recorder(threading.Thread):
         self.auto_repack = auto_repack
         self.keep_days = keep_days
         self.is_running: bool = False
-        self._hass_started: asyncio.Future[object] = hass.loop.create_future()
+        self._hass_started: asyncio.Future[SHUTDOWN_TASK | None] = (
+            hass.loop.create_future()
+        )
         self.commit_interval = commit_interval
         self._queue: queue.SimpleQueue[RecorderTask | Event] = queue.SimpleQueue()
         self.db_url = uri
@@ -245,13 +244,6 @@ class Recorder(threading.Thread):
     def dialect_name(self) -> SupportedDialect | None:
         """Return the dialect the recorder uses."""
         return self._dialect_name
-
-    @property
-    def _using_file_sqlite(self) -> bool:
-        """Short version to check if we are using sqlite3 as a file."""
-        return self.db_url != SQLITE_URL_PREFIX and self.db_url.startswith(
-            SQLITE_URL_PREFIX
-        )
 
     @property
     def recording(self) -> bool:
@@ -633,9 +625,9 @@ class Recorder(threading.Thread):
         self,
         statistic_id: str,
         *,
-        new_statistic_id: str | UndefinedType = UNDEFINED,
-        new_unit_class: str | UndefinedType | None = UNDEFINED,
-        new_unit_of_measurement: str | UndefinedType | None = UNDEFINED,
+        new_statistic_id: str | Undefined = Undefined,
+        new_unit_class: str | Undefined | None = Undefined,
+        new_unit_of_measurement: str | Undefined | None = Undefined,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
@@ -1476,26 +1468,32 @@ class Recorder(threading.Thread):
         kwargs: dict[str, Any] = {}
         self._completed_first_database_setup = False
 
-        if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
+        engine_url = get_engine_db_url(self.db_url)
+        backend_name = engine_url.get_backend_name()
+        driver_name = engine_url.get_driver_name()
+        # Only the default pysqlite driver gets the SQLite specific setup below.
+        # Other SQLite drivers, such as the encrypted pysqlcipher, need a key to
+        # read the file, so the sqlite3 based corruption check would see a
+        # healthy database as corrupt and move it away.
+        using_pysqlite = backend_name == "sqlite" and driver_name == "pysqlite"
+        using_file_sqlite = using_pysqlite and is_file_sqlite_url(engine_url)
+
+        if using_pysqlite and not using_file_sqlite:
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = MutexPool
             MutexPool.pool_lock = threading.RLock()
             kwargs["pool_reset_on_return"] = None
-        elif self.db_url.startswith(SQLITE_URL_PREFIX):
+        elif using_pysqlite:
             kwargs["poolclass"] = RecorderPool
             kwargs["recorder_and_worker_thread_ids"] = (
                 self.recorder_and_worker_thread_ids
             )
-        elif self.db_url.startswith(
-            (
-                MARIADB_URL_PREFIX,
-                MARIADB_PYMYSQL_URL_PREFIX,
-                MYSQLDB_URL_PREFIX,
-                MYSQLDB_PYMYSQL_URL_PREFIX,
-            )
+        elif backend_name in ("mariadb", "mysql") and driver_name in (
+            "mysqldb",
+            "pymysql",
         ):
             kwargs["connect_args"] = {"charset": "utf8mb4"}
-            if self.db_url.startswith((MARIADB_URL_PREFIX, MYSQLDB_URL_PREFIX)):
+            if driver_name == "mysqldb":
                 # If they have configured MySQLDB but don't have
                 # the MySQLDB module installed this will throw
                 # an ImportError which we suppress here since
@@ -1505,16 +1503,14 @@ class Recorder(threading.Thread):
                     kwargs["connect_args"]["conv"] = build_mysqldb_conv()
 
         # Disable extended logging for non SQLite databases
-        if not self.db_url.startswith(SQLITE_URL_PREFIX):
+        if not using_pysqlite:
             kwargs["echo"] = False
 
-        if self._using_file_sqlite:
+        if using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
         assert not self.engine
-        self.engine = create_engine(
-            get_engine_db_url(self.db_url), **kwargs, future=True
-        )
+        self.engine = create_engine(engine_url, **kwargs, future=True)
         self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
         self.__dict__.pop("dialect_name", None)
         sqlalchemy_event.listen(self.engine, "connect", self._setup_recorder_connection)
