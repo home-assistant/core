@@ -4,6 +4,7 @@
   "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/google_sheets",
   "integration_type": "service",
