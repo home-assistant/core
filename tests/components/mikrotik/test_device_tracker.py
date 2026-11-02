@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import setup_mikrotik_entry
+from . import build_mock_command, setup_mikrotik_entry
 from .conftest import MockConfigEntryFactory
 from .const import (
     DEVICE_1_DHCP,
@@ -136,6 +136,46 @@ async def test_tracker_device(
     assert device is not None
     assert device.name == expected_device_name
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")}
+
+
+async def test_existing_device_name_kept_without_hostname(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a client without a DHCP lease does not rename its existing device."""
+    config_entry = await setup_mikrotik_entry(hass, dhcp_data=[], wireless_data=[])
+    # The device is left over from before a restart, the lease is gone since
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, DEVICE_1_WIRELESS["mac-address"])},
+        name="phone",
+    )
+
+    with patch.object(
+        mikrotik.coordinator.MikrotikData,
+        "command",
+        new=build_mock_command(
+            {
+                mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIRELESS]: [
+                    DEVICE_1_WIRELESS
+                ]
+            }
+        ),
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    tracker_entity_id = entity_registry.async_get_entity_id(
+        device_tracker.DOMAIN, mikrotik.DOMAIN, DEVICE_1_WIRELESS["mac-address"]
+    )
+    assert tracker_entity_id is not None
+    tracker_entry = entity_registry.async_get(tracker_entity_id)
+    assert tracker_entry is not None
+    assert tracker_entry.device_id == device_entry.id
+    device_entry = device_registry.async_get(device_entry.id)
+    assert device_entry is not None
+    assert device_entry.name == "phone"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

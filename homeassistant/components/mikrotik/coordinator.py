@@ -10,8 +10,9 @@ from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ARP,
@@ -65,6 +66,8 @@ class MikrotikData:
         self._host: str = self.config_entry.data[CONF_HOST]
         self.all_devices: dict[str, dict[str, Any]] = {}
         self.devices: dict[str, Device] = {}
+        # Clients removed by the user, re-created only once present again
+        self.forgotten_devices: set[str] = set()
         self.support_capsman: bool = False
         self.support_wireless: bool = False
         self.support_wifiwave2: bool = False
@@ -225,6 +228,11 @@ class MikrotikData:
         """Restore a missing device after restart."""
         self.devices[mac] = Device(mac, self.all_devices[mac])
 
+    def forget_device(self, mac: str) -> None:
+        """Forget a client until it is present again."""
+        self.devices.pop(mac, None)
+        self.forgotten_devices.add(mac)
+
     def update_devices(self) -> None:
         """Get list of devices with latest status."""
         arp_devices = {}
@@ -273,29 +281,34 @@ class MikrotikData:
             return
 
         for mac, params in device_list.items():
-            if mac not in self.devices:
-                self.devices[mac] = Device(mac, self.all_devices.get(mac, {}))
+            if mac in wireless_devices:
+                active = True
+            # for wired devices or when forcing dhcp check for active-address
+            elif not params.get("active-address"):
+                active = False
             else:
-                self.devices[mac].update(params=self.all_devices.get(mac, {}))
+                # ping check the rest of active devices if arp ping is enabled
+                active = True
+                if self.arp_enabled and mac in arp_devices:
+                    active = self.do_arp_ping(
+                        str(params.get("active-address")),
+                        str(arp_devices[mac].get("interface")),
+                    )
+
+            if (device := self.devices.get(mac)) is None:
+                # an inactive DHCP lease must not re-create a removed client
+                if mac in self.forgotten_devices and not active:
+                    continue
+                self.forgotten_devices.discard(mac)
+                device = self.devices[mac] = Device(mac, self.all_devices.get(mac, {}))
+            else:
+                device.update(params=self.all_devices.get(mac, {}))
 
             if mac in wireless_devices:
                 # if wireless is supported then wireless_params are params
-                self.devices[mac].update(
-                    wireless_params=wireless_devices[mac], active=True
-                )
-                continue
-            # for wired devices or when forcing dhcp check for active-address
-            if not params.get("active-address"):
-                self.devices[mac].update(active=False)
-                continue
-            # ping check the rest of active devices if arp ping is enabled
-            active = True
-            if self.arp_enabled and mac in arp_devices:
-                active = self.do_arp_ping(
-                    str(params.get("active-address")),
-                    str(arp_devices[mac].get("interface")),
-                )
-            self.devices[mac].update(active=active)
+                device.update(wireless_params=wireless_devices[mac], active=True)
+            else:
+                device.update(active=active)
 
     def do_arp_ping(self, ip_address: str, interface: str) -> bool:
         """Attempt to arp ping MAC address via interface."""
@@ -361,6 +374,8 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize the Mikrotik Client."""
         self._mk_data = mk_data
+        # MACs which have a device tracker entity
+        self.tracked_macs: set[str] = set()
         super().__init__(
             hass,
             LOGGER,
@@ -407,6 +422,19 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def api(self) -> MikrotikData:
         """Represent Mikrotik data object."""
         return self._mk_data
+
+    def is_client_connected(self, device: Device) -> bool:
+        """Return true if the client was seen within the detection time."""
+        return bool(
+            device.last_seen
+            and dt_util.utcnow() - device.last_seen < self.option_detection_time
+        )
+
+    @callback
+    def async_forget_client(self, mac: str) -> None:
+        """Forget a removed client so it is re-created when it returns."""
+        self._mk_data.forget_device(mac)
+        self.tracked_macs.discard(mac)
 
     @override
     async def _async_update_data(self) -> None:

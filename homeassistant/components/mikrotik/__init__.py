@@ -4,6 +4,7 @@ from typing import Any
 
 from librouteros import Api
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -111,14 +112,27 @@ async def async_unload_entry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: MikrotikConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
-    """Allow removing client devices which are not currently tracked."""
+    """Allow removing client devices which are not currently connected."""
     if not isinstance(device_entry, dr.DeviceEntry):
         return False
     # Hub and interface devices are removed automatically when they go away
     if any(identifier[0] == DOMAIN for identifier in device_entry.identifiers):
         return False
-    tracked_macs = {format_mac(mac) for mac in config_entry.runtime_data.api.devices}
-    return not any(
-        connection_type == dr.CONNECTION_NETWORK_MAC and mac in tracked_macs
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return True
+    coordinator = config_entry.runtime_data
+    device_macs = {
+        mac
         for connection_type, mac in device_entry.connections
-    )
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    clients = {
+        mac: client
+        for mac, client in coordinator.api.devices.items()
+        if format_mac(mac) in device_macs
+    }
+    if any(coordinator.is_client_connected(client) for client in clients.values()):
+        return False
+    for mac in clients:
+        coordinator.async_forget_client(mac)
+    return True
