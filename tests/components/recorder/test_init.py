@@ -80,12 +80,7 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.pool import MutexPool, RecorderPool
 from homeassistant.components.recorder.queries import select_event_type_ids
-from homeassistant.components.recorder.services import (
-    SERVICE_DISABLE,
-    SERVICE_ENABLE,
-    SERVICE_PURGE,
-    SERVICE_PURGE_ENTITIES,
-)
+from homeassistant.components.recorder.services import RecorderService
 from homeassistant.components.recorder.table_managers import (
     state_attributes as state_attributes_table_manager,
     states_meta as states_meta_table_manager,
@@ -1624,10 +1619,10 @@ async def test_saving_state_with_serializable_data(
 
 async def test_has_services(hass: HomeAssistant, setup_recorder: None) -> None:
     """Test the services exist."""
-    assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
+    assert hass.services.has_service(DOMAIN, RecorderService.DISABLE)
+    assert hass.services.has_service(DOMAIN, RecorderService.ENABLE)
+    assert hass.services.has_service(DOMAIN, RecorderService.PURGE)
+    assert hass.services.has_service(DOMAIN, RecorderService.PURGE_ENTITIES)
 
 
 async def test_service_disable_events_not_recording(
@@ -1637,7 +1632,7 @@ async def test_service_disable_events_not_recording(
     """Test that events are not recorded when recorder is disabled using service."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         {},
         blocking=True,
     )
@@ -1671,7 +1666,7 @@ async def test_service_disable_events_not_recording(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         {},
         blocking=True,
     )
@@ -1720,7 +1715,7 @@ async def test_service_disable_states_not_recording(
     """Test state changes are not recorded when recorder is disabled."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         {},
         blocking=True,
     )
@@ -1733,7 +1728,7 @@ async def test_service_disable_states_not_recording(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         {},
         blocking=True,
     )
@@ -1777,7 +1772,7 @@ async def test_service_disable_run_information_recorded(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DISABLE,
+            RecorderService.DISABLE,
             {},
             blocking=True,
         )

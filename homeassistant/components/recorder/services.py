@@ -1,6 +1,7 @@
 """Support for recorder services."""
 
 from datetime import timedelta
+from enum import StrEnum
 from typing import cast
 
 import probatio
@@ -23,38 +24,60 @@ from homeassistant.helpers.service import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
-from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
+from .const import DOMAIN
 from .statistics import statistics_during_period
 from .tasks import PurgeEntitiesTask, PurgeTask
 
-SERVICE_PURGE = "purge"
-SERVICE_PURGE_ENTITIES = "purge_entities"
-SERVICE_ENABLE = "enable"
-SERVICE_DISABLE = "disable"
-SERVICE_GET_STATISTICS = "get_statistics"
+
+class RecorderService(StrEnum):
+    """Store keys for recorder services."""
+
+    DISABLE = "disable"
+    ENABLE = "enable"
+    GET_STATISTICS = "get_statistics"
+    PURGE = "purge"
+    PURGE_ENTITIES = "purge_entities"
+
+
+class RecorderServiceArgument(StrEnum):
+    """Store keys for recorder service arguments."""
+
+    APPLY_FILTER = "apply_filter"
+    DOMAINS = "domains"
+    END_TIME = "end_time"
+    ENTITY_GLOBS = "entity_globs"
+    KEEP_DAYS = "keep_days"
+    PERIOD = "period"
+    REPACK = "repack"
+    START_TIME = "start_time"
+    STATISTIC_IDS = "statistic_ids"
+    TYPES = "types"
+    UNITS = "units"
+
 
 SERVICE_PURGE_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(ATTR_KEEP_DAYS): cv.positive_int,
-        probatio.Optional(ATTR_REPACK, default=False): cv.boolean,
-        probatio.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
+        probatio.Optional(RecorderServiceArgument.KEEP_DAYS): cv.positive_int,
+        probatio.Optional(RecorderServiceArgument.REPACK, default=False): cv.boolean,
+        probatio.Optional(
+            RecorderServiceArgument.APPLY_FILTER, default=False
+        ): cv.boolean,
     }
 )
-
-ATTR_DOMAINS = "domains"
-ATTR_ENTITY_GLOBS = "entity_globs"
 
 SERVICE_PURGE_ENTITIES_SCHEMA = probatio.All(
     probatio.Schema(
         {
             probatio.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-            probatio.Optional(ATTR_DOMAINS, default=[]): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(ATTR_ENTITY_GLOBS, default=[]): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
+            probatio.Optional(
+                RecorderServiceArgument.DOMAINS, default=[]
+            ): probatio.All(probatio.EnsureList(), [cv.string]),
+            probatio.Optional(
+                RecorderServiceArgument.ENTITY_GLOBS, default=[]
+            ): probatio.All(probatio.EnsureList(), [cv.string]),
+            probatio.Optional(
+                RecorderServiceArgument.KEEP_DAYS, default=0
+            ): cv.positive_int,
         }
     ),
     probatio.Any(
@@ -63,11 +86,15 @@ SERVICE_PURGE_ENTITIES_SCHEMA = probatio.All(
             extra=probatio.ALLOW_EXTRA,
         ),
         probatio.Schema(
-            {probatio.Required(ATTR_DOMAINS): probatio.IsTrue()},
+            {probatio.Required(RecorderServiceArgument.DOMAINS): probatio.IsTrue()},
             extra=probatio.ALLOW_EXTRA,
         ),
         probatio.Schema(
-            {probatio.Required(ATTR_ENTITY_GLOBS): probatio.IsTrue()},
+            {
+                probatio.Required(
+                    RecorderServiceArgument.ENTITY_GLOBS
+                ): probatio.IsTrue()
+            },
             extra=probatio.ALLOW_EXTRA,
         ),
         msg="At least one of entity_id, domains, or entity_globs must have a value",
@@ -79,15 +106,15 @@ SERVICE_DISABLE_SCHEMA = probatio.Schema({})
 
 SERVICE_GET_STATISTICS_SCHEMA = probatio.Schema(
     {
-        probatio.Required("start_time"): cv.datetime,
-        probatio.Optional("end_time"): cv.datetime,
-        probatio.Required("statistic_ids"): probatio.All(
+        probatio.Required(RecorderServiceArgument.START_TIME): cv.datetime,
+        probatio.Optional(RecorderServiceArgument.END_TIME): cv.datetime,
+        probatio.Required(RecorderServiceArgument.STATISTIC_IDS): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Required("period"): probatio.In(
+        probatio.Required(RecorderServiceArgument.PERIOD): probatio.In(
             ["5minute", "hour", "day", "week", "month", "year"]
         ),
-        probatio.Required("types"): probatio.All(
+        probatio.Required(RecorderServiceArgument.TYPES): probatio.All(
             probatio.EnsureList(),
             [
                 probatio.In(
@@ -95,7 +122,9 @@ SERVICE_GET_STATISTICS_SCHEMA = probatio.Schema(
                 )
             ],
         ),
-        probatio.Optional("units"): probatio.Schema({cv.string: cv.string}),
+        probatio.Optional(RecorderServiceArgument.UNITS): probatio.Schema(
+            {cv.string: cv.string}
+        ),
     }
 )
 
@@ -104,9 +133,9 @@ async def _async_handle_purge_service(service: ServiceCall) -> None:
     """Handle calls to the purge service."""
     instance = service.hass.data[DATA_INSTANCE]
     kwargs = service.data
-    keep_days = kwargs.get(ATTR_KEEP_DAYS, instance.keep_days)
-    repack = cast(bool, kwargs[ATTR_REPACK])
-    apply_filter = cast(bool, kwargs[ATTR_APPLY_FILTER])
+    keep_days = kwargs.get(RecorderServiceArgument.KEEP_DAYS, instance.keep_days)
+    repack = cast(bool, kwargs[RecorderServiceArgument.REPACK])
+    apply_filter = cast(bool, kwargs[RecorderServiceArgument.APPLY_FILTER])
     purge_before = dt_util.utcnow() - timedelta(days=keep_days)
     instance.queue_task(PurgeTask(purge_before, repack, apply_filter))
 
@@ -115,9 +144,9 @@ async def _async_handle_purge_entities_service(service: ServiceCall) -> None:
     """Handle calls to the purge entities service."""
     # Keep group entities as purge targets instead of expanding them to their members.
     entity_ids = await async_extract_entity_ids(service, expand_group=False)
-    domains = service.data.get(ATTR_DOMAINS, [])
-    keep_days = service.data.get(ATTR_KEEP_DAYS, 0)
-    entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
+    domains = service.data.get(RecorderServiceArgument.DOMAINS, [])
+    keep_days = service.data.get(RecorderServiceArgument.KEEP_DAYS, 0)
+    entity_globs = service.data.get(RecorderServiceArgument.ENTITY_GLOBS, [])
     entity_filter = generate_filter(domains, list(entity_ids), [], [], entity_globs)
     purge_before = dt_util.utcnow() - timedelta(days=keep_days)
     service.hass.data[DATA_INSTANCE].queue_task(
@@ -138,15 +167,17 @@ async def _async_handle_get_statistics_service(
 ) -> ServiceResponse:
     """Handle calls to the get_statistics service."""
     hass = service.hass
-    start_time = dt_util.as_utc(service.data["start_time"])
+    start_time = dt_util.as_utc(service.data[RecorderServiceArgument.START_TIME])
     end_time = (
-        dt_util.as_utc(service.data["end_time"]) if "end_time" in service.data else None
+        dt_util.as_utc(service.data[RecorderServiceArgument.END_TIME])
+        if RecorderServiceArgument.END_TIME in service.data
+        else None
     )
 
-    statistic_ids = service.data["statistic_ids"]
-    types = service.data["types"]
-    period = service.data["period"]
-    units = service.data.get("units")
+    statistic_ids = service.data[RecorderServiceArgument.STATISTIC_IDS]
+    types = service.data[RecorderServiceArgument.TYPES]
+    period = service.data[RecorderServiceArgument.PERIOD]
+    units = service.data.get(RecorderServiceArgument.UNITS)
 
     result = await hass.data[DATA_INSTANCE].async_add_executor_job(
         statistics_during_period,
@@ -198,7 +229,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_PURGE,
+        RecorderService.PURGE,
         _async_handle_purge_service,
         schema=SERVICE_PURGE_SCHEMA,
     )
@@ -206,7 +237,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_PURGE_ENTITIES,
+        RecorderService.PURGE_ENTITIES,
         _async_handle_purge_entities_service,
         schema=SERVICE_PURGE_ENTITIES_SCHEMA,
     )
@@ -214,7 +245,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         _async_handle_enable_service,
         schema=SERVICE_ENABLE_SCHEMA,
     )
@@ -222,7 +253,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         _async_handle_disable_service,
         schema=SERVICE_DISABLE_SCHEMA,
     )
@@ -230,7 +261,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_GET_STATISTICS,
+        RecorderService.GET_STATISTICS,
         _async_handle_get_statistics_service,
         schema=SERVICE_GET_STATISTICS_SCHEMA,
         supports_response=SupportsResponse.ONLY,

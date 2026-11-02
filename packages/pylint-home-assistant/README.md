@@ -112,6 +112,7 @@ Every check has a code following the
 | `E7404` | [`home-assistant-missing-super-call`](#e7404-home-assistant-missing-super-call) | Method must call its parent via `super()` |
 | `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
 | `E7406` | [`home-assistant-exception-translation-key-missing`](#e7406-home-assistant-exception-translation-key-missing) | Translation key not found in `strings.json` exceptions section |
+| `E7407` | [`home-assistant-function-async-mismatch`](#e7407-home-assistant-function-async-mismatch) | Function should be a coroutine, or should not be one |
 | `E7408` | [`home-assistant-exception-translation-key-domain-mismatch`](#e7408-home-assistant-exception-translation-key-domain-mismatch) | Only one of `translation_key` / `translation_domain` is set |
 | `E7409` | [`home-assistant-mdi-icon-not-found`](#e7409-home-assistant-mdi-icon-not-found) | MDI icon string does not exist in the Material Design Icons set |
 | `E7410` | [`home-assistant-mdi-icon-json-not-found`](#e7410-home-assistant-mdi-icon-json-not-found) | MDI icon in `icons.json` does not exist in the Material Design Icons set |
@@ -170,6 +171,7 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form or handles the unique ID inside a `try` block |
 
 ## `home_assistant_logger` checker
 
@@ -289,6 +291,12 @@ like `async_setup_entry` have well-defined signatures that must be followed.
 ### `E7403`: `home-assistant-return-type`
 
 Function should have the specified return type hint.
+
+### `E7407`: `home-assistant-function-async-mismatch`
+
+Function should be defined with `async def`, or with `def`. Home Assistant
+awaits functions like `async_setup_platform`, and runs functions like
+`setup_platform` in the executor, so the wrong kind fails at runtime.
 
 ### `R7401`: `home-assistant-consider-usefixtures-decorator`
 
@@ -546,6 +554,32 @@ class are skipped to avoid false positives.
 
 A `menu_options` entry does not match any `async_step_*` method defined on
 the flow class or its ancestors.
+
+
+## `home_assistant_flow_call_in_try` checker
+
+Checks for flow calls inside a `try` block.
+
+### `W7457`: `home-assistant-flow-call-in-try`
+
+A `try` block in a flow step should only contain the code that can raise the
+errors it catches, such as the calls to the device or service. Creating the
+entry, showing a form, aborting and handling the unique ID belong after it:
+
+```python
+try:
+    info = await client.get_info()
+except CannotConnect:
+    errors["base"] = "cannot_connect"
+else:
+    await self.async_set_unique_id(info.serial_number)
+    self._abort_if_unique_id_configured()
+    return self.async_create_entry(title=info.name, data=user_input)
+```
+
+The unique ID helpers raise `AbortFlow`, which a broad `except Exception`
+swallows and reports as an unknown error. `try` statements that catch
+`AbortFlow` themselves are not checked.
 
 
 ## `home_assistant_unused_test_fixture_args` checker
