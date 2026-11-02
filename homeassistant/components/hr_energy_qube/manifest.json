@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@MattieGit"],
   "config_flow": true,
+  "connectivity": ["modbus"],
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/hr_energy_qube",
   "integration_type": "hub",

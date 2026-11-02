@@ -10,13 +10,14 @@ from aioseafile import (
     Seafile,
     SeafileAuthenticationError,
     SeafileError,
+    SeafilePermissionError,
     SeafileTimeoutError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -33,6 +34,7 @@ class SeafileData:
 
     libraries: dict[str, Library]
     file_counts: dict[str, int]
+    history_limits: dict[str, int]
 
 
 class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
@@ -78,8 +80,25 @@ class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
                     if library_id in libraries
                 )
             )
+            # Only the owner, or a user the library is shared with as admin,
+            # can read the history setting of a library.
+            owned_library_ids = [
+                library_id
+                for library_id in library_ids
+                if library_id in libraries
+                and (
+                    libraries[library_id].type == "repo"
+                    or libraries[library_id].permission == "admin"
+                )
+            ]
+            history_limits = await asyncio.gather(
+                *(
+                    self._async_get_history_limit(library_id)
+                    for library_id in owned_library_ids
+                )
+            )
         except SeafileAuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except SeafileTimeoutError as err:
@@ -94,4 +113,19 @@ class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
             return SeafileData(
                 libraries=libraries,
                 file_counts={detail.id: detail.file_count for detail in details},
+                history_limits={
+                    library_id: keep_days
+                    for library_id, keep_days in zip(
+                        owned_library_ids, history_limits, strict=True
+                    )
+                    if keep_days is not None
+                },
             )
+
+    async def _async_get_history_limit(self, library_id: str) -> int | None:
+        """Return the days of history a library keeps, if the server allows it."""
+        try:
+            return await self.client.get_library_history_limit(library_id)
+        except SeafilePermissionError:
+            # Virtual libraries have no history setting.
+            return None

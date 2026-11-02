@@ -135,6 +135,15 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
         """Return the release notes for the latest controller update."""
         if (update := self._update_data) is None:
             return None
+        if (
+            update.hardware is None
+            and update.software is not None
+            and (download_link := update.software.download_link)
+        ):
+            download_text = f"Download controller software:  \n{download_link}"
+            if notes := update.release_notes:
+                return f"{download_text}\n\n{notes}"
+            return download_text
         return update.release_notes
 
     @property

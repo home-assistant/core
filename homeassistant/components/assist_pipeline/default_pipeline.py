@@ -12,6 +12,7 @@ import audioop  # pylint: disable=deprecated-module
 import hass_nabucasa
 
 from homeassistant.components import conversation, media_player, stt, tts, wake_word
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -172,6 +173,7 @@ class _DefaultPipelineProcessor:
     _intent_agent_only: bool = field(init=False, default=False)
     _streamed_response_text: bool = field(init=False, default=False)
     _invalidated: bool = field(init=False, default=False)
+    _stt_last_timestamp_ms: int | None = field(init=False, default=None)
     intent_agent: conversation.AgentInfo | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -431,13 +433,19 @@ class _DefaultPipelineProcessor:
         else:
             engine = self.stt_provider.entity_id
 
+        audio_processing = self.stt_provider.async_get_audio_processing(metadata)
+        provider_vad = (
+            self.host.audio_settings.is_vad_enabled
+            and not audio_processing.requires_external_vad
+        )
+
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_START,
                 {
                     "engine": engine,
                     "metadata": asdict(metadata),
-                    "audio_processing": asdict(self.stt_provider.audio_processing),
+                    "audio_processing": asdict(audio_processing),
                 },
             )
         )
@@ -449,7 +457,7 @@ class _DefaultPipelineProcessor:
             stt_vad: VoiceCommandSegmenter | None = None
             if (
                 self.host.audio_settings.is_vad_enabled
-                and self.stt_provider.audio_processing.requires_external_vad
+                and audio_processing.requires_external_vad
             ):
                 stt_vad = VoiceCommandSegmenter(
                     silence_seconds=self.host.audio_settings.silence_seconds
@@ -479,6 +487,15 @@ class _DefaultPipelineProcessor:
             ) from src_error
 
         _LOGGER.debug("speech-to-text result %s", result)
+
+        # The provider detected the end of speech by returning the transcribed text
+        if provider_vad:
+            self.host.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_END,
+                    {"timestamp": self._stt_last_timestamp_ms or 0},
+                )
+            )
 
         if result.result != stt.SpeechResultState.SUCCESS:
             raise SpeechToTextError(
@@ -538,6 +555,7 @@ class _DefaultPipelineProcessor:
                     )
                     sent_vad_start = True
 
+            self._stt_last_timestamp_ms = chunk.timestamp_ms
             yield chunk.audio
 
     @callback
@@ -995,17 +1013,25 @@ class _DefaultPipelineProcessor:
 
         tts_options: dict[str, Any] = {}
         if self.host.pipeline.tts_voice is not None:
-            tts_options[tts.ATTR_VOICE] = self.host.pipeline.tts_voice
+            tts_options[TextToSpeechCommonOption.VOICE] = self.host.pipeline.tts_voice
 
         if isinstance(self.host.tts_audio_output, dict):
             tts_options.update(self.host.tts_audio_output)
         elif isinstance(self.host.tts_audio_output, str):
-            tts_options[tts.ATTR_PREFERRED_FORMAT] = self.host.tts_audio_output
+            tts_options[TextToSpeechCommonOption.PREFERRED_FORMAT] = (
+                self.host.tts_audio_output
+            )
             if self.host.tts_audio_output == "wav":
                 # 16 Khz, 16-bit mono
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = SAMPLE_RATE
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = SAMPLE_CHANNELS
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = SAMPLE_WIDTH
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE] = (
+                    SAMPLE_RATE
+                )
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS] = (
+                    SAMPLE_CHANNELS
+                )
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES] = (
+                    SAMPLE_WIDTH
+                )
 
         try:
             self.tts_stream = tts.async_create_stream(

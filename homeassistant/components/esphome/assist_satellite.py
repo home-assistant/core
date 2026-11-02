@@ -41,6 +41,7 @@ from homeassistant.components.intent import (
     async_register_timer_handler,
 )
 from homeassistant.components.media_player import async_process_play_media_url
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -583,10 +584,10 @@ class EsphomeAssistSatellite(
         if feature_flags & VoiceAssistantFeature.SPEAKER:
             # Stream WAV audio
             self._attr_tts_options = {
-                tts.ATTR_PREFERRED_FORMAT: "wav",
-                tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
-                tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
-                tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+                TextToSpeechCommonOption.PREFERRED_FORMAT: "wav",
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 16000,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 1,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
             }
         else:
             # ANNOUNCEMENT format from media player
@@ -742,23 +743,23 @@ class EsphomeAssistSatellite(
             # Find first announcement format
             if supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT:
                 self._attr_tts_options = {
-                    tts.ATTR_PREFERRED_FORMAT: supported_format.format,
+                    TextToSpeechCommonOption.PREFERRED_FORMAT: supported_format.format,
                 }
 
                 if supported_format.sample_rate > 0:
-                    self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = (
-                        supported_format.sample_rate
-                    )
+                    self._attr_tts_options[
+                        TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE
+                    ] = supported_format.sample_rate
 
-                if supported_format.sample_rate > 0:
-                    self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = (
-                        supported_format.num_channels
-                    )
+                if supported_format.num_channels > 0:
+                    self._attr_tts_options[
+                        TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+                    ] = supported_format.num_channels
 
-                if supported_format.sample_rate > 0:
-                    self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = (
-                        supported_format.sample_bytes
-                    )
+                if supported_format.sample_bytes > 0:
+                    self._attr_tts_options[
+                        TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES
+                    ] = supported_format.sample_bytes
 
                 break
 

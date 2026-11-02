@@ -1,4 +1,107 @@
 # serializer version: 1
+# name: test_hmip_arming_blocked_sensor[binary_sensor.home_arming_blocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '00000000-0000-0000-0000-000000000001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.home_arming_blocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Arming blocked',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': 'mdi:alert',
+    'original_name': 'Arming blocked',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arming_blocked',
+    'unique_id': '00000000-0000-0000-0000-000000000001_arming_blocked',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_arming_blocked_sensor[binary_sensor.home_arming_blocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Arming blocked',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_arming_blocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_hmip_arming_blocked_sensor[binary_sensor.home_cloud_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '00000000-0000-0000-0000-000000000001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_cloud_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cloud connection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:access-point-network',
+    'original_name': 'Cloud connection',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_connection',
+    'unique_id': '00000000-0000-0000-0000-000000000001_cloud_connection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_arming_blocked_sensor[binary_sensor.home_cloud_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Cloud connection',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_cloud_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_hmip_heating_output_sensor[binary_sensor.bwth_1_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -53,6 +156,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_hmip_heating_output_sensor[binary_sensor.home_arming_blocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '00000000-0000-0000-0000-000000000001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.home_arming_blocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Arming blocked',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': 'mdi:alert',
+    'original_name': 'Arming blocked',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arming_blocked',
+    'unique_id': '00000000-0000-0000-0000-000000000001_arming_blocked',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_heating_output_sensor[binary_sensor.home_arming_blocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Arming blocked',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_arming_blocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_hmip_heating_output_sensor[binary_sensor.home_cloud_connection-entry]
@@ -163,6 +318,58 @@
     'state': 'off',
   })
 # ---
+# name: test_hmip_motion_detector_switch_outdoor[binary_sensor.home_arming_blocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '00000000-0000-0000-0000-000000000001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.home_arming_blocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Arming blocked',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': 'mdi:alert',
+    'original_name': 'Arming blocked',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arming_blocked',
+    'unique_id': '00000000-0000-0000-0000-000000000001_arming_blocked',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_motion_detector_switch_outdoor[binary_sensor.home_arming_blocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Arming blocked',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_arming_blocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_hmip_motion_detector_switch_outdoor[binary_sensor.home_cloud_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -212,6 +419,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_hmip_water_alarm_sensor[binary_sensor.home_arming_blocked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '00000000-0000-0000-0000-000000000001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.home_arming_blocked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Arming blocked',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': 'mdi:alert',
+    'original_name': 'Arming blocked',
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arming_blocked',
+    'unique_id': '00000000-0000-0000-0000-000000000001_arming_blocked',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hmip_water_alarm_sensor[binary_sensor.home_arming_blocked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Arming blocked',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_arming_blocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_hmip_water_alarm_sensor[binary_sensor.home_cloud_connection-entry]
