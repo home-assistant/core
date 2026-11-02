@@ -684,9 +684,6 @@
           "categories": [
             "other_ecosystems"
           ],
-          "connectivity": [
-            "homekit"
-          ],
           "name": "HomeKit Bridge"
         },
         "ibeacon": {
