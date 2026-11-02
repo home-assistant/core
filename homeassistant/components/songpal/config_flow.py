@@ -142,6 +142,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         name = import_data.get(CONF_NAME)
         endpoint = import_data[CONF_ENDPOINT]
         parsed_url = urlparse(endpoint)
+        self._async_abort_entries_match({CONF_ENDPOINT: endpoint})
 
         # Try to connect to test the endpoint
         try:

@@ -318,6 +318,26 @@ class MyFlow(ConfigFlow, domain="test_int"):
             ("async_set_unique_id", "_abort_if_unique_id_configured"),
             id="nested_try_reraises_abort_flow",
         ),
+        pytest.param(
+            """
+from homeassistant.config_entries import ConfigFlow
+
+class MyFlow(ConfigFlow, domain="test_int"):
+    async def async_step_user(self, user_input=None):
+        try:
+            await validate(user_input)
+            return await self.async_step_confirm()
+        except Exception:
+            return self.async_abort(reason="unknown")
+
+    async def async_step_confirm(self, user_input=None):
+        await self.async_set_unique_id("serial_number")
+        self._abort_if_unique_id_configured()
+        return self.async_show_form(step_id="confirm")
+""",
+            ("async_step_confirm",),
+            id="next_step",
+        ),
     ],
 )
 def test_flow_call_in_try(
