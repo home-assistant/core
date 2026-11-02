@@ -885,6 +885,56 @@ async def test_translated_readme_follows_the_installed_version(
     assert await repository.async_get_translated_readme("de") == "2.0.0"
 
 
+async def test_translated_readme_named_by_the_installed_version(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the README in the language is named by the files of the installed version."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    # 2.0.0 renamed the translation of the installed 1.0.0
+    repository.tree_ref = "2.0.0"
+    repository.treefiles = ["README.md", "README.de-DE.md"]
+    repository.data.installed = True
+    repository.data.installed_version = "1.0.0"
+    url = (
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
+    )
+    response_mocker.add(url, mocked_response(url, content=b"1.0.0"), keep=True)
+
+    with patch.object(
+        repository,
+        "get_tree",
+        return_value=_tree(("README.md", False), ("README.de.md", False)),
+    ) as get_tree:
+        assert await repository.async_get_translated_readme("de") == "1.0.0"
+        assert await repository.async_get_translated_readme("de") == "1.0.0"
+
+    get_tree.assert_called_once_with("1.0.0")
+
+
+async def test_translated_readme_without_the_installed_tree(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the files of the tree name the README when the installed ones are unknown."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.tree_ref = "2.0.0"
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.data.installed = True
+    repository.data.installed_version = "1.0.0"
+    url = (
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
+    )
+    response_mocker.add(url, mocked_response(url, content=b"1.0.0"))
+
+    with patch.object(
+        repository, "get_tree", side_effect=GitHubAnonymousRateLimitError
+    ):
+        assert await repository.async_get_translated_readme("de") == "1.0.0"
+
+
 @pytest.mark.parametrize(
     "treefiles",
     [
