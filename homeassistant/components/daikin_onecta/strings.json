@@ -108,6 +108,9 @@
     "rate_limit_exceeded": {
       "message": "Daikin API rate limit exceeded"
     },
+    "refresh_deferred": {
+      "message": "Refresh delayed while waiting to retry the Daikin API"
+    },
     "set_fan_mode_failed": {
       "message": "Failed to set the fan mode for {device}"
     },

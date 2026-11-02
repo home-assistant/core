@@ -569,12 +569,47 @@ class TestOnectaDataUpdateCoordinator:
         assert coordinator._polling_backoff_until is None
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    async def test_backoff_skipped_poll_preserves_failed_state(
+        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Do not mark the coordinator successful when backoff skips a poll."""
+        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+        mock_utcnow.return_value = now
+        coordinator.last_update_success = False
+        coordinator._polling_backoff_until = now + timedelta(seconds=60)
+        coordinator._async_get_cloud_devices = AsyncMock()
+
+        with pytest.raises(UpdateFailed) as exc_info:
+            await coordinator._async_update_data_from_cloud()
+
+        assert exc_info.value.retry_after == 60
+        coordinator._async_get_cloud_devices.assert_not_awaited()
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    async def test_write_cooldown_skipped_poll_preserves_failed_state(
+        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Do not mark the coordinator successful when cooldown skips a poll."""
+        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+        mock_utcnow.return_value = now
+        coordinator.last_update_success = False
+        coordinator._last_patch_call = now
+        coordinator._async_get_cloud_devices = AsyncMock()
+
+        with pytest.raises(UpdateFailed) as exc_info:
+            await coordinator._async_update_data_from_cloud()
+
+        assert exc_info.value.retry_after == 30
+        coordinator._async_get_cloud_devices.assert_not_awaited()
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_poll_rechecks_backoff_after_acquiring_cloud_lock(
         self, mock_utcnow, hass: HomeAssistant, coordinator
     ) -> None:
-        """Skip a poll if a rate-limited command sets backoff while it waits."""
+        """Preserve failed poll state if backoff starts while a poll waits."""
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
         mock_utcnow.return_value = now
+        coordinator.last_update_success = False
         coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
         await coordinator._cloud_lock.acquire()
         poll_task = hass.async_create_task(coordinator._async_update_data_from_cloud())
@@ -584,7 +619,9 @@ class TestOnectaDataUpdateCoordinator:
         coordinator._polling_backoff_until = now + timedelta(seconds=60)
         coordinator._cloud_lock.release()
 
-        assert await poll_task == {}
+        with pytest.raises(UpdateFailed) as exc_info:
+            await poll_task
+        assert exc_info.value.retry_after == 60
         coordinator.client.get_gateway_devices.assert_not_awaited()
         assert coordinator.update_interval == timedelta(seconds=60)
 
