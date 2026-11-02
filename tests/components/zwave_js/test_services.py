@@ -2121,6 +2121,7 @@ async def test_refresh_notifications(
             {ATTR_NOTIFICATION_TYPE: 1},
             id="refresh_notifications",
         ),
+        pytest.param(SERVICE_PING, {}, id="ping"),
     ],
 )
 async def test_service_driver_not_ready(
