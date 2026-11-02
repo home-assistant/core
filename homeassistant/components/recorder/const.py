@@ -44,10 +44,6 @@ ALL_DOMAIN_EXCLUDE_ATTRS: set[str] = {
     EntityStateAttribute.SUPPORTED_FEATURES,
 }
 
-ATTR_KEEP_DAYS = "keep_days"
-ATTR_REPACK = "repack"
-ATTR_APPLY_FILTER = "apply_filter"
-
 KEEPALIVE_TIME = 30
 
 CONTEXT_ID_AS_BINARY_SCHEMA_VERSION = 36

@@ -4,6 +4,8 @@ from collections import defaultdict
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.xiaomi_aqara import const
 from homeassistant.components.xiaomi_aqara.entity import TIME_TILL_UNAVAILABLE
@@ -11,8 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HOST = "1.2.3.4"
 TEST_PORT = 1234

@@ -33,7 +33,7 @@ from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -47,6 +47,7 @@ from homeassistant.helpers.typing import VolDictType
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
 from .helpers import (
+    DriverNotReadyError,
     async_get_node_from_device_id,
     async_get_node_from_entity_id,
     async_get_nodes_from_area_id,
@@ -83,6 +84,87 @@ def async_setup_services(hass: HomeAssistant) -> None:
         },
         func="async_reset_meter",
     )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_GET_LOCK_USERCODE,
+        admin_only=True,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            probatio.Optional(ATTR_CODE_SLOT): probatio.Coerce(int),
+        },
+        func="async_get_lock_usercode",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_SET_LOCK_USERCODE,
+        admin_only=True,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
+            probatio.Required(ATTR_USERCODE): cv.string,
+        },
+        func="async_set_lock_usercode",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_CLEAR_LOCK_USERCODE,
+        admin_only=True,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
+        },
+        func="async_clear_lock_usercode",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_SET_LOCK_CONFIGURATION,
+        admin_only=True,
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            probatio.Required(const.ATTR_OPERATION_TYPE): probatio.All(
+                cv.string,
+                probatio.Upper,
+                probatio.In(["TIMED", "CONSTANT"]),
+                lambda x: OperationType[x],
+            ),
+            probatio.Optional(const.ATTR_LOCK_TIMEOUT): UNIT16_SCHEMA,
+            probatio.Optional(const.ATTR_AUTO_RELOCK_TIME): UNIT16_SCHEMA,
+            probatio.Optional(const.ATTR_HOLD_AND_RELEASE_TIME): UNIT16_SCHEMA,
+            probatio.Optional(const.ATTR_TWIST_ASSIST): probatio.Coerce(bool),
+            probatio.Optional(const.ATTR_BLOCK_TO_BLOCK): probatio.Coerce(bool),
+        },
+        func="async_set_lock_configuration",
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
+        const.SERVICE_REFRESH_NOTIFICATIONS,
+        _async_refresh_notifications,
+        schema=probatio.Schema(
+            probatio.All(
+                {
+                    **TARGET_VALIDATORS,
+                    probatio.Required(const.ATTR_NOTIFICATION_TYPE): probatio.All(
+                        probatio.Coerce(int), probatio.Coerce(NotificationType)
+                    ),
+                    probatio.Optional(const.ATTR_NOTIFICATION_EVENT): probatio.Coerce(
+                        int
+                    ),
+                },
+                probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+            ),
+        ),
+    )
+
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
     services.async_register()
 
@@ -308,6 +390,38 @@ async def _async_invoke_cc_api(
     raise_exceptions_from_results(nodes_or_endpoints_list, results)
 
 
+@callback
+def _async_get_nodes(call: ServiceCall) -> set[ZwaveNode]:
+    """Get the nodes targeted by the action call."""
+    try:
+        nodes = async_get_nodes_from_targets(
+            call.hass, call.data, logger=_LOGGER, raise_on_driver_not_ready=True
+        )
+    except DriverNotReadyError as err:
+        # Not a validation error, so continue_on_error can tolerate it
+        raise HomeAssistantError(
+            translation_domain=const.DOMAIN,
+            translation_key="driver_not_ready",
+        ) from err
+    if not nodes:
+        raise ServiceValidationError(
+            translation_domain=const.DOMAIN,
+            translation_key="no_nodes_found",
+        )
+    return nodes
+
+
+async def _async_refresh_notifications(call: ServiceCall) -> None:
+    """Refresh notifications on a node."""
+    nodes = _async_get_nodes(call)
+    notification_type: NotificationType = call.data[const.ATTR_NOTIFICATION_TYPE]
+    notification_event: int | None = call.data.get(const.ATTR_NOTIFICATION_EVENT)
+    param: dict[str, int] = {"notificationType": notification_type.value}
+    if notification_event is not None:
+        param["notificationEvent"] = notification_event
+    await _async_invoke_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)
+
+
 class ZWaveServices:
     """Class that holds our services (Zwave Commands).
 
@@ -332,9 +446,21 @@ class ZWaveServices:
         @callback
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
-            val[const.ATTR_NODES] = async_get_nodes_from_targets(
-                self._hass, val, self._ent_reg, self._dev_reg, _LOGGER
-            )
+            try:
+                val[const.ATTR_NODES] = async_get_nodes_from_targets(
+                    self._hass,
+                    val,
+                    self._ent_reg,
+                    self._dev_reg,
+                    _LOGGER,
+                    raise_on_driver_not_ready=True,
+                )
+            except DriverNotReadyError as err:
+                # Not a validation error, so continue_on_error can tolerate it
+                raise HomeAssistantError(
+                    translation_domain=const.DOMAIN,
+                    translation_key="driver_not_ready",
+                ) from err
             return val
 
         @callback
@@ -412,6 +538,8 @@ class ZWaveServices:
 
             return val
 
+        # Should be adjusted to register actions outside the ZWaveServices class
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_SET_CONFIG_PARAMETER,
@@ -452,6 +580,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
@@ -484,6 +613,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_REFRESH_VALUE,
@@ -501,6 +631,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_SET_VALUE,
@@ -532,6 +663,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_MULTICAST_SET_VALUE,
@@ -570,6 +702,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_PING,
@@ -584,6 +717,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_INVOKE_CC_API,
@@ -607,88 +741,6 @@ class ZWaveServices:
             description_placeholders={
                 "api_docs_url": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index"
             },
-        )
-
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_REFRESH_NOTIFICATIONS,
-            self.async_refresh_notifications,
-            schema=probatio.Schema(
-                probatio.All(
-                    {
-                        **TARGET_VALIDATORS,
-                        probatio.Required(const.ATTR_NOTIFICATION_TYPE): probatio.All(
-                            probatio.Coerce(int), probatio.Coerce(NotificationType)
-                        ),
-                        probatio.Optional(
-                            const.ATTR_NOTIFICATION_EVENT
-                        ): probatio.Coerce(int),
-                    },
-                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        async_register_platform_entity_service(
-            self._hass,
-            const.DOMAIN,
-            const.SERVICE_GET_LOCK_USERCODE,
-            admin_only=True,
-            entity_domain=LOCK_DOMAIN,
-            schema={
-                probatio.Optional(ATTR_CODE_SLOT): probatio.Coerce(int),
-            },
-            func="async_get_lock_usercode",
-            supports_response=SupportsResponse.ONLY,
-        )
-
-        async_register_platform_entity_service(
-            self._hass,
-            const.DOMAIN,
-            const.SERVICE_SET_LOCK_USERCODE,
-            admin_only=True,
-            entity_domain=LOCK_DOMAIN,
-            schema={
-                probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
-                probatio.Required(ATTR_USERCODE): cv.string,
-            },
-            func="async_set_lock_usercode",
-        )
-
-        async_register_platform_entity_service(
-            self._hass,
-            const.DOMAIN,
-            const.SERVICE_CLEAR_LOCK_USERCODE,
-            admin_only=True,
-            entity_domain=LOCK_DOMAIN,
-            schema={
-                probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
-            },
-            func="async_clear_lock_usercode",
-        )
-
-        async_register_platform_entity_service(
-            self._hass,
-            const.DOMAIN,
-            const.SERVICE_SET_LOCK_CONFIGURATION,
-            admin_only=True,
-            entity_domain=LOCK_DOMAIN,
-            schema={
-                probatio.Required(const.ATTR_OPERATION_TYPE): probatio.All(
-                    cv.string,
-                    probatio.Upper,
-                    probatio.In(["TIMED", "CONSTANT"]),
-                    lambda x: OperationType[x],
-                ),
-                probatio.Optional(const.ATTR_LOCK_TIMEOUT): UNIT16_SCHEMA,
-                probatio.Optional(const.ATTR_AUTO_RELOCK_TIME): UNIT16_SCHEMA,
-                probatio.Optional(const.ATTR_HOLD_AND_RELEASE_TIME): UNIT16_SCHEMA,
-                probatio.Optional(const.ATTR_TWIST_ASSIST): probatio.Coerce(bool),
-                probatio.Optional(const.ATTR_BLOCK_TO_BLOCK): probatio.Coerce(bool),
-            },
-            func="async_set_lock_configuration",
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
@@ -1033,13 +1085,3 @@ class ZWaveServices:
             )
 
         await _async_invoke_cc_api(endpoints, command_class, method_name, *parameters)
-
-    async def async_refresh_notifications(self, service: ServiceCall) -> None:
-        """Refresh notifications on a node."""
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        notification_type: NotificationType = service.data[const.ATTR_NOTIFICATION_TYPE]
-        notification_event: int | None = service.data.get(const.ATTR_NOTIFICATION_EVENT)
-        param: dict[str, int] = {"notificationType": notification_type.value}
-        if notification_event is not None:
-            param["notificationEvent"] = notification_event
-        await _async_invoke_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)

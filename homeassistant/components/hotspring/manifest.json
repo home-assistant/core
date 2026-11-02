@@ -1,8 +1,10 @@
 {
   "domain": "hotspring",
   "name": "Hot Spring",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@Moustachauve"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/hotspring",
   "integration_type": "device",
   "iot_class": "local_polling",

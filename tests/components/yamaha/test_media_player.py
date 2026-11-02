@@ -13,6 +13,7 @@ from homeassistant.components.yamaha.const import (
     SERVICE_SELECT_SCENE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 
@@ -210,9 +211,7 @@ async def test_menu_cursor(hass: HomeAssistant, main_zone, cursor, method) -> No
     getattr(main_zone, method).assert_called_once_with()
 
 
-async def test_select_scene(
-    hass: HomeAssistant, device, main_zone, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_select_scene(hass: HomeAssistant, device, main_zone) -> None:
     """Test select scene service."""
     scene_prop = PropertyMock(return_value=None)
     type(main_zone).scene = scene_prop
@@ -244,6 +243,8 @@ async def test_select_scene(
     missing_scene = "Missing scene"
     data["scene"] = missing_scene
 
-    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SCENE, data, True)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(DOMAIN, SERVICE_SELECT_SCENE, data, True)
 
-    assert f"Scene '{missing_scene}' does not exist!" in caplog.text
+    assert exc_info.value.translation_key == "scene_not_found"
+    assert exc_info.value.translation_placeholders == {"scene": missing_scene}

@@ -19,13 +19,12 @@ from asyncsleepiq import (
     SleepIQSleeper,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sleepiq import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 BED_ID = "123456"
 BED_NAME = "Test Bed"
@@ -51,7 +50,7 @@ SLEEPIQ_CONFIG = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sleepiq.async_setup_entry", return_value=True
+        "homeassistant.components.sleepiq.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -98,6 +97,16 @@ def mock_bed() -> MagicMock:
     )
 
     bed.foundation = create_autospec(SleepIQFoundation)
+    bed.foundation.type = "splitKing"
+    bed.foundation.features = {
+        "boardIsASingle": False,
+        "hasMassageAndLight": False,
+        "hasFootControl": False,
+        "hasFootWarming": True,
+        "hasUnderbedLight": True,
+        "leftUnderbedLightPMW": False,
+        "rightUnderbedLightPMW": False,
+    }
     light_1 = create_autospec(SleepIQLight)
     light_1.outlet_id = 1
     light_1.is_on = False

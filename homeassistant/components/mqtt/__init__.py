@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     SERVICE_RELOAD,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
@@ -82,7 +83,8 @@ from .const import (
     PROTOCOL_311,
     SERVICE_PUBLISH,
     TEMPLATE_ERRORS,
-    Platform,
+    MqttService,
+    MqttServiceArgument,
 )
 from .models import (
     DATA_MQTT,
@@ -106,7 +108,7 @@ from .util import (
     async_check_config_schema,
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
-    async_remove_mqtt_issues,
+    async_refresh_mqtt_issues,
     async_wait_for_mqtt_client,
     mqtt_config_entry_enabled,
     platforms_from_config,
@@ -158,6 +160,8 @@ __all__ = [
     "EntitySubscription",
     "MqttCommandTemplate",
     "MqttData",
+    "MqttService",
+    "MqttServiceArgument",
     "MqttValueTemplate",
     "PayloadSentinel",
     "PublishPayloadType",
@@ -278,7 +282,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate the config entry to the latest version."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
     data: dict[str, Any] = dict(entry.data)
@@ -307,10 +311,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
-    return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Load a config entry."""
     mqtt_data: MqttData
 
@@ -409,16 +412,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # messages on connect
     await mqtt_data.client.async_connect(client_available)
 
-    # setup platforms and discovery
-    await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
+    # setup platforms and discovery, this re-creates the issues of manually
+    # configured items which are still invalid, also those stored before a restart
+    with async_refresh_mqtt_issues(hass):
+        await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
 
     # Setup discovery
     if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await discovery.async_start(
             hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
         )
-
-    return True
 
 
 @websocket_api.websocket_command(
@@ -514,38 +517,37 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload MQTT dump and publish service when the config entry is unloaded."""
     mqtt_data = hass.data[DATA_MQTT]
     mqtt_client = mqtt_data.client
 
     # Stop the discovery
     await discovery.async_stop(hass)
-    # Unload the platforms
-    await hass.config_entries.async_unload_platforms(entry, mqtt_data.platforms_loaded)
-    mqtt_data.platforms_loaded = set()
-    await asyncio.sleep(0)
-    # Unsubscribe reload dispatchers
-    while reload_dispatchers := mqtt_data.reload_dispatchers:
-        reload_dispatchers.pop()()
-    # Cleanup listeners
-    mqtt_client.cleanup()
+    try:
+        # Unload the platforms
+        await hass.config_entries.async_unload_platforms_or_raise(
+            entry, mqtt_data.platforms_loaded
+        )
+    finally:
+        mqtt_data.platforms_loaded = set()
+        await asyncio.sleep(0)
+        # Unsubscribe reload dispatchers
+        while reload_dispatchers := mqtt_data.reload_dispatchers:
+            reload_dispatchers.pop()()
+        # Cleanup listeners
+        mqtt_client.cleanup()
 
-    # Cleanup entity registry hooks
-    registry_hooks = mqtt_data.discovery_registry_hooks
-    while registry_hooks:
-        registry_hooks.popitem()[1]()
-    # Wait for all ACKs, stop the loop and disconnect the client
-    await mqtt_client.async_disconnect(disconnect_paho_client=True)
+        # Cleanup entity registry hooks
+        registry_hooks = mqtt_data.discovery_registry_hooks
+        while registry_hooks:
+            registry_hooks.popitem()[1]()
+        # Wait for all ACKs, stop the loop and disconnect the client
+        await mqtt_client.async_disconnect(disconnect_paho_client=True)
 
-    # Cleanup MQTT client availability
-    hass.data.pop(DATA_MQTT_AVAILABLE, None)
-    # Store remaining subscriptions to be able to restore or reload them
-    # when the entry is set up again
-    if subscriptions := mqtt_client.subscriptions:
-        mqtt_data.subscriptions_to_restore = subscriptions
-
-    # Remove repair issues
-    async_remove_mqtt_issues(hass, mqtt_data)
-
-    return True
+        # Cleanup MQTT client availability
+        hass.data.pop(DATA_MQTT_AVAILABLE, None)
+        # Store remaining subscriptions to be able to restore or reload them
+        # when the entry is set up again
+        if subscriptions := mqtt_client.subscriptions:
+            mqtt_data.subscriptions_to_restore = subscriptions

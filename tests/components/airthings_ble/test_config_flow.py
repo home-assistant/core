@@ -6,6 +6,7 @@ from airthings_ble import AirthingsDevice, AirthingsDeviceType, UnsupportedDevic
 from bleak import BleakError
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airthings_ble.const import DEVICE_MODEL, DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
@@ -23,8 +24,6 @@ from . import (
     patch_async_ble_device_from_address,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -193,7 +192,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.airthings_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"}
@@ -246,7 +245,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.airthings_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"}
@@ -411,7 +410,7 @@ async def test_step_user_firmware_required(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.airthings_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"}

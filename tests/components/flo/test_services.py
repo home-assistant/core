@@ -3,6 +3,8 @@
 from aioflo.location import SYSTEM_MODE_HOME
 from probatio.error import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.flo.const import DOMAIN
 from homeassistant.components.flo.services import (
@@ -15,9 +17,6 @@ from homeassistant.components.flo.services import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 SWITCH_ENTITY_ID = "switch.smart_water_shutoff_shutoff_valve"
 

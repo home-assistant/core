@@ -9,6 +9,7 @@ from async_upnp_client.aiohttp import AiohttpNotifyServer
 from async_upnp_client.exceptions import UpnpCommunicationError
 from async_upnp_client.profiles.igd import IgdDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
@@ -32,8 +33,6 @@ from .conftest import (
     TEST_UDN,
     TEST_USN,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("ssdp_instant_discovery", "mock_mac_address_from_host")

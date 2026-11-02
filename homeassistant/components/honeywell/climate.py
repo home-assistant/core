@@ -1,6 +1,6 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 
-import datetime
+import datetime as dt
 from typing import Any, override
 
 from aiohttp import ClientConnectionError
@@ -38,13 +38,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import HoneywellConfigEntry, HoneywellData
-from .const import (
-    CONF_COOL_AWAY_TEMPERATURE,
-    CONF_HEAT_AWAY_TEMPERATURE,
-    DOMAIN,
-    LOGGER,
-    RETRY,
-)
+from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN, RETRY
 
 MODE_PERMANENT_HOLD = 2
 MODE_TEMPORARY_HOLD = 1
@@ -90,7 +84,7 @@ HW_FAN_MODE_TO_HA = {
     "follow schedule": FAN_AUTO,
 }
 
-SCAN_INTERVAL = datetime.timedelta(seconds=30)
+SCAN_INTERVAL = dt.timedelta(seconds=30)
 
 
 async def async_setup_entry(
@@ -382,11 +376,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 # Set temporary hold time and temperature
                 if mode in COOLING_MODES:
                     await self._device.set_hold_cool(
-                        datetime.time(hour_cool, minute_cool), temperature
+                        dt.time(hour_cool, minute_cool), temperature
                     )
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(
-                        datetime.time(hour_heat, minute_heat), temperature
+                        dt.time(hour_heat, minute_heat), temperature
                     )
 
             # Set temperature if not in auto - set the temperature
@@ -403,7 +397,6 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
-            LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed_value",
@@ -428,7 +421,6 @@ class HoneywellUSThermostat(ClimateEntity):
                 ) from err
 
             except SomeComfortError as err:
-                LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_failed_value",
@@ -484,14 +476,6 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
-            LOGGER.error(
-                "Temperature out of range. Mode: %s,"
-                " Heat Temperature:  %.1f,"
-                " Cool Temperature: %.1f",
-                mode,
-                self._heat_away_temp,
-                self._cool_away_temp,
-            )
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed_range",
@@ -516,13 +500,11 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_hold_heat(True)
 
             except SomeComfortError as err:
-                LOGGER.error("Couldn't set permanent hold")
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_hold_failed",
                 ) from err
         else:
-            LOGGER.error("Invalid system mode returned: %s", mode)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_mode_failed",
@@ -538,7 +520,6 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._device.set_hold_heat(False)
 
         except SomeComfortError as err:
-            LOGGER.error("Can not stop hold mode")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="stop_hold_failed",

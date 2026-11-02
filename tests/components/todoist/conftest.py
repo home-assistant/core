@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import HTTPError
 from requests.models import Response
 from todoist_api_python.api_async import TodoistAPIAsync
@@ -15,8 +16,6 @@ from homeassistant.components.todoist.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 PROJECT_ID = "project-id-1"
 SECTION_ID = "section-id-1"
@@ -68,7 +67,7 @@ def make_api_due(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.todoist.async_setup_entry", return_value=True
+        "homeassistant.components.todoist.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

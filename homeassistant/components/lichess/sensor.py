@@ -15,8 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LichessConfigEntry
-from .coordinator import LichessCoordinator
+from .coordinator import LichessConfigEntry, LichessCoordinator
 from .entity import LichessEntity
 
 

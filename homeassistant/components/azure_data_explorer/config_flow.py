@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.selector import BooleanSelector
 
-from . import AzureDataExplorerClient
+from .client import AzureDataExplorerClient
 from .const import (
     CONF_ADX_CLUSTER_INGEST_URI,
     CONF_ADX_DATABASE_NAME,

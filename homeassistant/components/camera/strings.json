@@ -46,18 +46,14 @@
     },
     "stream_not_supported": {
       "message": "Camera {entity_id} does not support streaming."
-    },
-    "write_failed": {
-      "message": "Cannot write image to {filename}."
-    },
-    "write_no_space": {
-      "message": "Cannot write image to {filename}: no space left on the device."
-    },
-    "write_permission_denied": {
-      "message": "Cannot write image to {filename}: permission denied."
-    },
-    "write_read_only": {
-      "message": "Cannot write image to {filename}: the file system is read-only."
+    }
+  },
+  "preview_features": {
+    "two_way_audio": {
+      "description": "Talk to people near your cameras and doorbells while you watch the live stream.\n\nThis works with cameras that support two-way audio and whose integration has added this capability. A talk button appears on the live stream when both conditions are met; if you don't see it for your camera, either the camera or its integration doesn't support two-way audio yet.\nTwo-way audio is currently only available when Home Assistant is opened over HTTPS, because browsers require a secure connection for microphone access. We're working on bringing it to the Home Assistant apps over HTTP as well.",
+      "disable_confirmation": "Two-way audio will be turned off for all cameras.",
+      "enable_confirmation": "This feature is still in development and may change. Two-way audio only works when Home Assistant is opened over HTTPS.",
+      "name": "Two-way audio"
     }
   },
   "selector": {},

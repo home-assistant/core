@@ -11,6 +11,30 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockEntity,
+    MockEntityPlatform,
+    async_fire_time_changed,
+    async_test_home_assistant,
+    mock_platform,
+)
+from pytest_homeassistant.components.recorder.common import (
+    async_block_recorder,
+    async_recorder_block_till_done,
+    async_wait_recorder,
+    async_wait_recording_done,
+    convert_pending_states_to_meta,
+    corrupt_db_file,
+    db_event_data_to_native,
+    db_event_to_native,
+    db_state_attributes_to_native,
+    db_state_to_native,
+    run_information_with_session,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 
@@ -50,12 +74,7 @@ from homeassistant.components.recorder.db_schema import (
 )
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.queries import select_event_type_ids
-from homeassistant.components.recorder.services import (
-    SERVICE_DISABLE,
-    SERVICE_ENABLE,
-    SERVICE_PURGE,
-    SERVICE_PURGE_ENTITIES,
-)
+from homeassistant.components.recorder.services import RecorderService
 from homeassistant.components.recorder.table_managers import (
     state_attributes as state_attributes_table_manager,
     states_meta as states_meta_table_manager,
@@ -80,29 +99,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
-
-from .common import (
-    async_block_recorder,
-    async_recorder_block_till_done,
-    async_wait_recorder,
-    async_wait_recording_done,
-    convert_pending_states_to_meta,
-    corrupt_db_file,
-    db_event_data_to_native,
-    db_event_to_native,
-    db_state_attributes_to_native,
-    db_state_to_native,
-    run_information_with_session,
-)
-
-from tests.common import (
-    MockEntity,
-    MockEntityPlatform,
-    async_fire_time_changed,
-    async_test_home_assistant,
-    mock_platform,
-)
-from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
@@ -260,6 +256,118 @@ async def test_state_gets_saved_when_set_before_start_event(
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
+
+
+async def test_commit_future_covers_startup_batch(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test a commit future is returned while the startup batch is processed.
+
+    Once Home Assistant has started, the recorder drains its whole queue into a
+    startup batch before processing it. The queue is then empty although the
+    batch is not committed yet.
+    """
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass))
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+    hass.states.async_set("test.recorder", "on")
+
+    batch_drained = threading.Event()
+    release_batch = threading.Event()
+    real_pre_process = instance._pre_process_startup_events
+
+    def _pre_process_startup_events(
+        startup_task_or_events: list[recorder.tasks.RecorderTask | Event],
+    ) -> None:
+        batch_drained.set()
+        release_batch.wait()
+        real_pre_process(startup_task_or_events)
+
+    with (
+        patch.object(
+            instance, "_pre_process_startup_events", _pre_process_startup_events
+        ),
+        # Periodic tasks run on the wall clock and could queue a task
+        patch.object(instance, "_async_setup_periodic_tasks"),
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        try:
+            assert await hass.async_add_executor_job(batch_drained.wait, 10)
+            assert instance.backlog == 0
+            commit_future = instance.async_get_commit_future()
+        finally:
+            release_batch.set()
+
+    assert commit_future is not None
+    await commit_future
+    with session_scope(hass=hass, read_only=True) as session:
+        assert len(list(session.query(States))) == 1
+
+
+async def test_queued_states_until_ready(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test state changes queued before the recorder is ready are indexed."""
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(
+        async_setup_recorder_instance(hass, {"exclude": {"entities": "test.excluded"}})
+    )
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+
+    hass.states.async_set("test.recorder", "on")
+    hass.states.async_set("test.excluded", "on")
+    hass.states.async_remove("test.recorder")
+    hass.states.async_set("test.recorder", "off")
+    hass.states.async_set("test.other", "on")
+
+    queued = instance.async_get_queued_states(
+        ["test.recorder", "test.excluded", "test.unknown"]
+    )
+    assert queued is not None
+    assert list(queued) == ["test.recorder"]
+    assert [state and state.state for state in queued["test.recorder"]] == [
+        "on",
+        None,
+        "off",
+    ]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await async_wait_recording_done(hass)
+    assert instance.async_recorder_ready.is_set()
+    assert instance.async_get_queued_states(["test.recorder"]) is None
+
+    # The index is not kept up to date once the recorder is ready
+    hass.states.async_set("test.recorder", "on")
+    await async_wait_recording_done(hass)
+    assert instance._queued_states is None
+
+
+async def test_queued_states_frozen_when_recording_stops(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test the queued states are kept when recording stops.
+
+    That happens when the queue grows too large; later changes are not queued,
+    so they are missing from the index too.
+    """
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass))
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+
+    hass.states.async_set("test.recorder", "on")
+    with patch.object(instance, "_reached_max_backlog", return_value=True):
+        instance._async_check_queue()
+    hass.states.async_set("test.recorder", "off")
+
+    queued = instance.async_get_queued_states(["test.recorder"])
+    assert queued is not None
+    assert [state and state.state for state in queued["test.recorder"]] == ["on"]
 
 
 async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
@@ -1505,10 +1613,10 @@ async def test_saving_state_with_serializable_data(
 
 async def test_has_services(hass: HomeAssistant, setup_recorder: None) -> None:
     """Test the services exist."""
-    assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
+    assert hass.services.has_service(DOMAIN, RecorderService.DISABLE)
+    assert hass.services.has_service(DOMAIN, RecorderService.ENABLE)
+    assert hass.services.has_service(DOMAIN, RecorderService.PURGE)
+    assert hass.services.has_service(DOMAIN, RecorderService.PURGE_ENTITIES)
 
 
 async def test_service_disable_events_not_recording(
@@ -1518,7 +1626,7 @@ async def test_service_disable_events_not_recording(
     """Test that events are not recorded when recorder is disabled using service."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         {},
         blocking=True,
     )
@@ -1552,7 +1660,7 @@ async def test_service_disable_events_not_recording(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         {},
         blocking=True,
     )
@@ -1601,7 +1709,7 @@ async def test_service_disable_states_not_recording(
     """Test state changes are not recorded when recorder is disabled."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         {},
         blocking=True,
     )
@@ -1614,7 +1722,7 @@ async def test_service_disable_states_not_recording(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         {},
         blocking=True,
     )
@@ -1658,7 +1766,7 @@ async def test_service_disable_run_information_recorded(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DISABLE,
+            RecorderService.DISABLE,
             {},
             blocking=True,
         )
@@ -2727,10 +2835,7 @@ async def test_commit_before_commits_pending_writes(
         recorder.CONF_COMMIT_INTERVAL: 60,
     }
 
-    recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await async_wait_recorder(hass)
-    instance = get_instance(hass)
+    instance = await async_setup_recorder_instance(hass, config)
     assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()
     verify_session_commit_future = hass.loop.create_future()

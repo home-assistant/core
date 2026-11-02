@@ -6,6 +6,11 @@ from unittest.mock import call
 from freezegun.api import FrozenDateTimeFactory
 from lg_rs232_tv import CommandRejected, InputSource, PowerState, TVState
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lg_tv_rs232.media_player import (
@@ -41,8 +46,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
 
 from .conftest import MockLGTV, _default_state
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "media_player.lg_tv"
 

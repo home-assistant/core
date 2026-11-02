@@ -56,7 +56,7 @@
             "prompt": "[%key:common::config_flow::data::prompt%]"
           },
           "data_description": {
-            "llm_hass_api": "Select which tools the model can use to interact with your devices and entities.",
+            "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
             "model": "The model to use for the conversation agent",
             "prompt": "Instruct how the LLM should respond. This can be a template."
           },
@@ -68,10 +68,10 @@
             "prompt": "[%key:common::config_flow::data::prompt%]"
           },
           "data_description": {
-            "llm_hass_api": "[%key:component::ovhcloud_ai_endpoints::config_subentries::conversation::step::init::data_description::llm_hass_api%]",
+            "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
             "prompt": "[%key:component::ovhcloud_ai_endpoints::config_subentries::conversation::step::init::data_description::prompt%]"
           },
-          "description": "Update the prompt and the Home Assistant LLM APIs for this conversation agent. Create a new conversation agent to use a different model."
+          "description": "Update the instructions and the tools for this conversation agent. Create a new conversation agent to use a different model."
         }
       }
     }

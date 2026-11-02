@@ -3,6 +3,7 @@
 from bitvis_protobuf import powerhub_pb2
 from bitvis_protobuf.parse import PayloadSample
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bitvis.const import DATA_LISTENER_REGISTRY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import find_listener_callback, setup_integration
 from .conftest import TEST_DEVICE_MAC, FakeListener
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

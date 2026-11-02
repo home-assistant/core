@@ -130,6 +130,7 @@ async def async_setup_entry(
             "picture_mode",
         ) and not deprecate_entity(
             hass,
+            entry.entry_id,
             entity_registry,
             SENSOR_DOMAIN,
             f"{coordinator.unique_id}_{description.key}",

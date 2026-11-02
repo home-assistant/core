@@ -8,6 +8,7 @@ from typing import Any, override
 import openai
 import probatio
 
+from homeassistant import data_entry_flow
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -28,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+from homeassistant.helpers.field_visibility import FieldCondition
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -68,6 +70,7 @@ from .const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_STT_PROMPT,
     DEFAULT_TTS_NAME,
@@ -76,6 +79,8 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CODE_INTERPRETER,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    RECOMMENDED_DECISION_MODEL,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_PRO_MODE,
@@ -127,7 +132,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAI Conversation."""
 
     VERSION = 2
-    MINOR_VERSION = 7
+    MINOR_VERSION = 8
 
     @override
     async def async_step_user(
@@ -184,6 +189,12 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                             "unique_id": None,
                         },
                         {
+                            "subentry_type": "ai_task_evaluate",
+                            "data": RECOMMENDED_EVALUATION_OPTIONS,
+                            "title": DEFAULT_EVALUATION_NAME,
+                            "unique_id": None,
+                        },
+                        {
                             "subentry_type": "stt",
                             "data": RECOMMENDED_STT_OPTIONS,
                             "title": DEFAULT_STT_NAME,
@@ -237,6 +248,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         return {
             "conversation": OpenAISubentryFlowHandler,
             "ai_task_data": OpenAISubentryFlowHandler,
+            "ai_task_evaluate": OpenAISubentryEvaluationFlowHandler,
             "stt": OpenAISubentrySTTFlowHandler,
             "tts": OpenAISubentryTTSFlowHandler,
         }
@@ -278,6 +290,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
+        errors: dict[str, str] = {}
 
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
@@ -315,7 +328,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         },
                     ): TemplateSelector(),
                     probatio.Optional(CONF_LLM_HASS_API): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             )
@@ -325,6 +342,40 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
             )
         ] = bool
+
+        not_recommended: FieldCondition = {
+            "field": CONF_RECOMMENDED,
+            "value": False,
+        }
+        step_schema.update(
+            {
+                data_entry_flow.Optional(
+                    CONF_CHAT_MODEL,
+                    default=RECOMMENDED_CHAT_MODEL,
+                    visible=not_recommended,
+                ): str,
+                data_entry_flow.Optional(
+                    CONF_MAX_TOKENS,
+                    default=RECOMMENDED_MAX_TOKENS,
+                    visible=not_recommended,
+                ): int,
+                data_entry_flow.Optional(
+                    CONF_TOP_P,
+                    default=RECOMMENDED_TOP_P,
+                    visible=not_recommended,
+                ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+                data_entry_flow.Optional(
+                    CONF_TEMPERATURE,
+                    default=RECOMMENDED_TEMPERATURE,
+                    visible=not_recommended,
+                ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+                data_entry_flow.Optional(
+                    CONF_STORE_RESPONSES,
+                    default=RECOMMENDED_STORE_RESPONSES,
+                    visible=not_recommended,
+                ): bool,
+            }
+        )
 
         if user_input is not None:
             if user_input.get(CONF_LLM_HASS_API) is None:
@@ -342,58 +393,17 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     data=user_input,
                 )
 
-            options.update(user_input)
-            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
-                options.pop(CONF_LLM_HASS_API)
-            return await self.async_step_additional()
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema(step_schema), options
-            ),
-        )
-
-    async def async_step_additional(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Manage additional options."""
-        options = self.options
-        errors: dict[str, str] = {}
-
-        step_schema: VolDictType = {
-            probatio.Optional(
-                CONF_CHAT_MODEL,
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
-            probatio.Optional(
-                CONF_MAX_TOKENS,
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            probatio.Optional(
-                CONF_TOP_P,
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            probatio.Optional(
-                CONF_TEMPERATURE,
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-            probatio.Optional(
-                CONF_STORE_RESPONSES,
-                default=RECOMMENDED_STORE_RESPONSES,
-            ): bool,
-        }
-
-        if user_input is not None:
-            options.update(user_input)
             if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                 errors[CONF_CHAT_MODEL] = "model_not_supported"
 
+            options.update(user_input)
+            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
+                options.pop(CONF_LLM_HASS_API)
             if not errors:
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="additional",
+            step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(step_schema), options
             ),
@@ -626,7 +636,14 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
-            "gpt-6-luna": ["none", "low", "medium", "high", "xhigh", "max"],
+            ("gpt-6-luna", "gpt-6.1-terra"): [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max",
+            ],
             "gpt-6": ["low", "medium", "high", "xhigh", "max"],
             "gpt-5.6": ["none", "low", "medium", "high", "xhigh", "max"],
             ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
@@ -881,4 +898,65 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
                 probatio.Schema(step_schema), options
             ),
             errors=errors,
+        )
+
+
+class OpenAISubentryEvaluationFlowHandler(ConfigSubentryFlow):
+    """Configure an OpenAI evaluation entity."""
+
+    options: dict[str, Any]
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == "user"
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add an evaluation task entity."""
+        self.options = {CONF_CHAT_MODEL: RECOMMENDED_DECISION_MODEL}
+        return await self.async_step_init()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure an evaluation task entity."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init()
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Configure the decision model."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            self.options.update(user_input)
+            if self._is_new:
+                return self.async_create_entry(
+                    title=self.options.pop(CONF_NAME), data=self.options
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=self.options,
+            )
+
+        schema: VolDictType = {}
+        if self._is_new:
+            schema[probatio.Required(CONF_NAME, default=DEFAULT_EVALUATION_NAME)] = str
+        schema[probatio.Required(CONF_CHAT_MODEL)] = SelectSelector(
+            SelectSelectorConfig(
+                options=[RECOMMENDED_DECISION_MODEL],
+                mode=SelectSelectorMode.DROPDOWN,
+                custom_value=True,
+            )
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(schema), self.options
+            ),
         )

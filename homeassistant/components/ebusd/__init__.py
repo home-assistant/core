@@ -19,6 +19,7 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, EBUSD_DATA, SENSOR_TYPES
+from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +27,6 @@ DEFAULT_NAME = "ebusd"
 DEFAULT_PORT = 8888
 CONF_CIRCUIT = "circuit"
 CACHE_TTL = 900
-SERVICE_EBUSD_WRITE = "ebusd_write"
 
 
 def verify_ebusd_config(config: ConfigType) -> ConfigType:
@@ -62,6 +62,7 @@ CONFIG_SCHEMA = probatio.Schema(
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the eBusd component."""
     _LOGGER.debug("Integration setup started")
+    setup_services(hass)
     conf: ConfigType = config[DOMAIN]
     name: str = conf[CONF_NAME]
     circuit: str = conf[CONF_CIRCUIT]
@@ -79,8 +80,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "sensor_types": SENSOR_TYPES[circuit],
     }
     load_platform(hass, Platform.SENSOR, DOMAIN, sensor_config, config)
-
-    hass.services.register(DOMAIN, SERVICE_EBUSD_WRITE, hass.data[EBUSD_DATA].write)
 
     _LOGGER.debug("Ebusd integration setup completed")
     return True

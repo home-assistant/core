@@ -22,15 +22,15 @@ from pyportainer.models.portainer import (
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
-
-from homeassistant.components.portainer.const import DOMAIN
-from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_value_fixture,
 )
+
+from homeassistant.components.portainer.const import DOMAIN, SUBENTRY_TYPE_ENVIRONMENT
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 MOCK_TEST_CONFIG = {
     CONF_URL: "https://127.0.0.1:9000/",
@@ -48,7 +48,7 @@ TEST_CONTAINER_ID = "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.portainer.async_setup_entry", return_value=True
+        "homeassistant.components.portainer.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -197,4 +197,19 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id=TEST_INSTANCE_ID,
         entry_id=TEST_ENTRY,
         version=5,
+        minor_version=2,
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                title="my-environment",
+                unique_id="1",
+            ),
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_ENVIRONMENT,
+                title="my-edge-offline",
+                unique_id="42",
+            ),
+        ],
     )

@@ -1,11 +1,11 @@
 """Tests for the JuiceNet component."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.juicenet import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 async def test_juicenet_repair_issue(

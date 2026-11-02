@@ -183,13 +183,29 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-
         # id is in the format 'slide_000000000000'
-        self._mac = format_mac(str(discovery_info.properties.get("id"))[6:])
+        return await self._async_handle_discovery(
+            str(discovery_info.properties.get("id"))[6:],
+            str(discovery_info.ip_address),
+        )
+
+    @override
+    async def async_step_homekit(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle HomeKit discovery."""
+        # name is in the format 'Slide-000000000000._hap._tcp.local.'
+        return await self._async_handle_discovery(
+            discovery_info.name.split(".", 1)[0][6:],
+            str(discovery_info.ip_address),
+        )
+
+    async def _async_handle_discovery(self, mac: str, ip: str) -> ConfigFlowResult:
+        """Handle a discovered Slide device."""
+        self._mac = format_mac(mac)
 
         await self.async_set_unique_id(self._mac)
 
-        ip = str(discovery_info.ip_address)
         _LOGGER.debug("Slide device discovered, ip %s", ip)
 
         self._abort_if_unique_id_configured({CONF_HOST: ip}, reload_on_update=True)
@@ -228,7 +244,6 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 options={CONF_INVERT_POSITION: False},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
