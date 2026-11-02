@@ -83,6 +83,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: Requirements 'samsungctl[websocket]==0.7.1' appear untyped
+  strict-typing: done
