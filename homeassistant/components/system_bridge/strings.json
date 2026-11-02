@@ -19,6 +19,17 @@
         },
         "description": "Please enter the token set in your configuration for {name}."
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the computer running System Bridge.",
+          "port": "The port System Bridge listens on. The default is 9170."
+        },
+        "description": "Update the connection details for System Bridge."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

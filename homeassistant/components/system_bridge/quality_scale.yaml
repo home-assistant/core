@@ -84,7 +84,7 @@ rules:
     status: todo
     comment: Some errors, such as the coordinator's UpdateFailed, are not translated.
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: todo
     comment: |

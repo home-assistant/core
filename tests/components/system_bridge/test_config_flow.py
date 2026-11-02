@@ -2,18 +2,21 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from dataclasses import replace
 from unittest.mock import patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgeconnector.models.modules import ModulesData
 
 from homeassistant import config_entries
 from homeassistant.components.system_bridge.const import DOMAIN
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -617,3 +620,121 @@ async def test_zeroconf_bad_zeroconf_info(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
+
+
+async def test_zeroconf_updates_existing_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test zeroconf updates the host and port of an existing entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=replace(
+            FIXTURE_ZEROCONF,
+            properties={
+                **FIXTURE_ZEROCONF.properties,
+                "ip": "192.168.1.20",
+                "port": "9171",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.20"
+    assert mock_config_entry.data[CONF_PORT] == "9171"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "192.168.1.20",
+        CONF_PORT: "9171",
+        CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(ConnectionErrorException, "cannot_connect", id="cannot_connect"),
+        pytest.param(AuthenticationException, "invalid_auth", id="invalid_auth"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test reconfigure flow shows errors and recovers."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow aborts when the host is a different System Bridge."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_success(),
+        patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.get_data",
+            return_value=ModulesData(
+                system=replace(FIXTURE_DATA_RESPONSE.system, uuid="other-uuid")
+            ),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == FIXTURE_USER_INPUT[CONF_HOST]
