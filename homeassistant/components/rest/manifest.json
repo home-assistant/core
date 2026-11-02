@@ -4,6 +4,7 @@
   "categories": ["diy_makers.web_data_connectors"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["template"],
   "documentation": "https://www.home-assistant.io/integrations/rest",
   "integration_type": "service",

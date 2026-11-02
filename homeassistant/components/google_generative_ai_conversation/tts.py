@@ -1,6 +1,7 @@
 """Text to speech support for Google Generative AI."""
 
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Any, override
 
 from google.genai import types
@@ -8,7 +9,7 @@ from google.genai.errors import APIError, ClientError
 from propcache.api import cached_property
 
 from homeassistant.components.tts import (
-    ATTR_VOICE,
+    TextToSpeechCommonOption,
     TextToSpeechEntity,
     TtsAudioType,
     Voice,
@@ -33,7 +34,12 @@ from .entity import (
 )
 from .helpers import convert_to_wav
 
-ATTR_STYLE = "style"
+
+class GoogleGenerativeAITextToSpeechOption(StrEnum):
+    """Store keys for the Google Generative AI text-to-speech options."""
+
+    STYLE = "style"
+
 
 VOICES_PAGE_SIZE = 1000
 VOICES_MAX_PAGES = 10
@@ -313,8 +319,11 @@ class GoogleGenerativeAITextToSpeechEntity(
         """Return the options supported by the configured model."""
         model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL)
         if supports_speech_metadata(model):
-            return [ATTR_VOICE, ATTR_STYLE]
-        return [ATTR_VOICE]
+            return [
+                TextToSpeechCommonOption.VOICE,
+                GoogleGenerativeAITextToSpeechOption.STYLE,
+            ]
+        return [TextToSpeechCommonOption.VOICE]
 
     @callback
     @override
@@ -327,7 +336,7 @@ class GoogleGenerativeAITextToSpeechEntity(
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
-            ATTR_VOICE: self._supported_voices[0].voice_id,
+            TextToSpeechCommonOption.VOICE: self._supported_voices[0].voice_id,
         }
 
     @override
@@ -345,13 +354,13 @@ class GoogleGenerativeAITextToSpeechEntity(
         config.speech_config = types.SpeechConfig(
             voice_config=types.VoiceConfig(
                 prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                    voice_name=options[ATTR_VOICE]
+                    voice_name=options[TextToSpeechCommonOption.VOICE]
                 )
             )
         )
 
         contents: str | types.Part = message
-        if style := options.get(ATTR_STYLE):
+        if style := options.get(GoogleGenerativeAITextToSpeechOption.STYLE):
             contents = types.Part(
                 text=message,
                 speech_metadata=types.SpeechMetadata(style=style),

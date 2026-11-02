@@ -8,6 +8,10 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 import httpx2
+
+# mcp imports jsonschema lazily to validate tool results, and that import
+# reads schema files from disk, so load it here in the import executor.
+import jsonschema  # noqa: F401
 from mcp import MCPError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client

@@ -167,16 +167,32 @@ async def test_client_tracker_device_info(
     assert hass.states.get(entity.entity_id).name == expected_name
 
 
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1]])
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
+async def test_enabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Verify only UniFi devices, not clients, are tracked by default."""
+    await config_entry_factory()
+
+    client_entry = entity_registry.async_get("device_tracker.ws_client_1")
+    assert client_entry is not None
+    assert client_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    device_entry = entity_registry.async_get("device_tracker.switch_1")
+    assert device_entry is not None
+    assert device_entry.disabled_by is None
+    assert hass.states.get("device_tracker.switch_1") is not None
+
+
 @pytest.mark.parametrize(
-    ("device_payload", "expected_entity_id", "expected_device_name", "expected_name"),
+    ("device_payload", "expected_entity_id", "expected_name"),
     [
-        pytest.param(
-            [SWITCH_1], "device_tracker.switch_1", "Switch 1", "Switch 1", id="name"
-        ),
+        pytest.param([SWITCH_1], "device_tracker.switch_1", "Switch 1", id="name"),
         pytest.param(
             [{k: v for k, v in SWITCH_1.items() if k != "name"}],
             "device_tracker.us16p150",
-            None,
             "US16P150",
             id="no_name",
         ),
@@ -189,10 +205,12 @@ async def test_device_tracker_device_info(
     entity_registry: er.EntityRegistry,
     config_entry_factory: ConfigEntryFactoryType,
     expected_entity_id: str,
-    expected_device_name: str | None,
     expected_name: str,
 ) -> None:
-    """Verify the device scanner is the main feature of the UniFi device."""
+    """Verify the device scanner is the main feature of the UniFi device.
+
+    A UniFi device without a name is named by its model.
+    """
     with patch("homeassistant.components.unifi.PLATFORMS", [Platform.DEVICE_TRACKER]):
         config_entry = await config_entry_factory()
 
@@ -200,7 +218,7 @@ async def test_device_tracker_device_info(
         (dr.CONNECTION_NETWORK_MAC, SWITCH_1["mac"]), config_entry.entry_id
     )
     assert device is not None
-    assert device.name == expected_device_name
+    assert device.name == expected_name
     assert device.manufacturer == "Ubiquiti Networks"
     assert device.model == "US16P150"
     (entity,) = er.async_entries_for_device(entity_registry, device.id)

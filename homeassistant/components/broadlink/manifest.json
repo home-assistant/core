@@ -4,6 +4,7 @@
   "categories": ["buttons_remotes", "plugs_switches"],
   "codeowners": ["@danielhiversen", "@felipediel", "@L-I-Am", "@DAB-LABS"],
   "config_flow": true,
+  "connectivity": ["infrared", "network", "rf"],
   "dhcp": [
     {
       "registered_devices": true

@@ -2,9 +2,11 @@
 
 from collections.abc import Generator
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from pytest_homeassistant.common import (
     ANY,
     AsyncMock,
@@ -13,6 +15,7 @@ from pytest_homeassistant.common import (
 )
 from pytest_homeassistant.typing import ClientSessionGenerator
 from watergate_local_api import WatergateApiException
+from watergate_local_api.models import TelemetryData
 
 from homeassistant.components.valve import ValveState
 from homeassistant.components.watergate.const import DOMAIN
@@ -234,3 +237,140 @@ async def test_confirmed_device_state_v2_is_never_downgraded(
     await hass.async_block_till_done()
 
     assert hass.states.get(NEGATIVE_VOLUME_ENTITY_ID).state == "0.3"
+
+
+async def test_unload_clears_device_webhook_url(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Unloading asks the device to stop sending events to the dead webhook."""
+    await init_integration(hass, mock_entry)
+
+    await hass.config_entries.async_unload(mock_entry.entry_id)
+
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
+    mock_watergate_client.async_delete_webhook_url.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "side_effect", [WatergateApiException("offline"), TimeoutError]
+)
+async def test_unload_succeeds_when_device_unreachable(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+    side_effect: Exception | type[Exception],
+) -> None:
+    """A device that cannot clear the URL must not block the unload."""
+    await init_integration(hass, mock_entry)
+    mock_watergate_client.async_delete_webhook_url.side_effect = side_effect
+
+    assert await hass.config_entries.async_unload(mock_entry.entry_id)
+
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
+    mock_watergate_client.async_delete_webhook_url.assert_awaited_once()
+
+
+async def test_reload_registers_webhook_again(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Reload clears the URL on unload and sets it again on setup."""
+    hass.config.internal_url = "http://hassio.local"
+    await init_integration(hass, mock_entry)
+    mock_watergate_client.async_set_webhook_url.reset_mock()
+
+    await hass.config_entries.async_reload(mock_entry.entry_id)
+
+    assert mock_entry.state is ConfigEntryState.LOADED
+    mock_watergate_client.async_delete_webhook_url.assert_awaited_once()
+    mock_watergate_client.async_set_webhook_url.assert_awaited_once_with(
+        f"http://hassio.local/api/webhook/{MOCK_WEBHOOK_ID}"
+    )
+
+
+async def test_webhook_online_event_refreshes_coordinator(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """An online event triggers a refresh, since state may have changed offline."""
+    await init_integration(hass, mock_entry)
+    assert mock_watergate_client.async_get_device_state_v2.await_count == 1
+
+    client = await hass_client_no_auth()
+    response = await client.post(
+        f"/api/webhook/{MOCK_WEBHOOK_ID}", json={"type": "online"}
+    )
+    await hass.async_block_till_done()
+
+    assert response.status == HTTPStatus.OK
+    assert mock_watergate_client.async_get_device_state_v2.await_count == 2
+
+
+async def test_webhook_telemetry_without_errors(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """Telemetry carrying no errors list still updates the readings."""
+    # Webhooks mutate the telemetry object, so don't hand out the shared default.
+    mock_watergate_client.async_get_telemetry_data.return_value = TelemetryData(
+        0.0, 100, 28.32, None, []
+    )
+    await init_integration(hass, mock_entry)
+
+    client = await hass_client_no_auth()
+    response = await client.post(
+        f"/api/webhook/{MOCK_WEBHOOK_ID}",
+        json={
+            "type": "telemetry",
+            "data": {"flow": 12, "pressure": 3000, "temperature": 20.5, "errors": None},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert response.status == HTTPStatus.OK
+    telemetry = mock_entry.runtime_data.data.telemetry
+    assert telemetry.flow == 12
+    assert telemetry.pressure == 3000
+    assert telemetry.water_temperature == 20.5
+
+
+async def test_webhook_without_body_is_rejected(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """A webhook call without a body is answered with 400."""
+    await init_integration(hass, mock_entry)
+
+    client = await hass_client_no_auth()
+    response = await client.post(f"/api/webhook/{MOCK_WEBHOOK_ID}")
+
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_webhook_is_acknowledged_without_coordinator_data(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """A webhook arriving before the coordinator has data is acknowledged."""
+    await init_integration(hass, mock_entry)
+    mock_entry.runtime_data.data = None
+
+    client = await hass_client_no_auth()
+    response = await client.post(
+        f"/api/webhook/{MOCK_WEBHOOK_ID}",
+        json={"type": "valve", "data": {"state": "open"}},
+    )
+
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == "OK"
