@@ -4,17 +4,15 @@ import logging
 from typing import override
 
 from huum.const import SaunaStatus
-from huum.exceptions import HuumError, SafetyException
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.const import UnitOfRatio
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONFIG_STEAMER, CONFIG_STEAMER_AND_LIGHT, DOMAIN
+from .const import CONFIG_STEAMER, CONFIG_STEAMER_AND_LIGHT
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
-from .entity import HuumBaseEntity
+from .entity import HuumBaseEntity, huum_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +55,7 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
         return self.coordinator.data.humidity
 
     @override
+    @huum_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         target_temperature = self.coordinator.data.target_temperature
@@ -66,18 +65,7 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
         ):
             return
 
-        try:
-            await self.coordinator.huum.turn_on(
-                temperature=target_temperature, humidity=int(value)
-            )
-        except SafetyException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="unable_to_turn_on",
-            ) from err
-        except HuumError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-            ) from err
+        await self.coordinator.huum.turn_on(
+            temperature=target_temperature, humidity=int(value)
+        )
         await self.coordinator.async_refresh()
