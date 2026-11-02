@@ -1288,6 +1288,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1897,6 +1900,9 @@
       "integration_type": "device",
       "categories": [
         "climate"
+      ],
+      "connectivity": [
+        "serial"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2869,6 +2875,9 @@
           "categories": [
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "serial"
+          ],
           "name": "Denon RS-232"
         },
         "heos": {
@@ -3509,6 +3518,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3676,6 +3688,9 @@
       "categories": [
         "plugs_switches"
       ],
+      "connectivity": [
+        "serial"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -3779,6 +3794,9 @@
       "integration_type": "device",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "serial"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4357,6 +4375,9 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "serial"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -7379,6 +7400,9 @@
           "categories": [
             "energy.solar_batteries"
           ],
+          "connectivity": [
+            "serial"
+          ],
           "name": "KACO RS485"
         }
       }
@@ -7763,6 +7787,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8007,6 +8034,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "serial"
+          ],
           "name": "LG TV via Serial"
         },
         "webostv": {
@@ -8231,6 +8261,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.lighting_systems"
+      ],
+      "connectivity": [
+        "serial"
       ],
       "config_flow": true,
       "iot_class": "local_push",
@@ -8644,6 +8677,9 @@
           "iot_class": "local_push",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "serial"
           ],
           "name": "Marantz RS-232"
         }
@@ -9284,6 +9320,9 @@
       "categories": [
         "messaging_notifications.email_sms_calls"
       ],
+      "connectivity": [
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -9340,6 +9379,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "serial"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10293,6 +10335,9 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "serial"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -12855,6 +12900,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "serial"
+          ],
           "name": "Samsung TV via ExLink"
         },
         "samsung_infrared": {
@@ -13201,6 +13249,9 @@
       "categories": [
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "serial"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -13210,6 +13261,9 @@
       "categories": [
         "sensors.air_quality",
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "serial"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -14849,6 +14903,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "serial"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14913,6 +14970,9 @@
       "integration_type": "hub",
       "categories": [
         "sensors.temperature_humidity"
+      ],
+      "connectivity": [
+        "serial"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -15288,6 +15348,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "serial"
       ],
       "config_flow": true,
       "iot_class": "local_push"
