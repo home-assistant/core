@@ -7,10 +7,9 @@ from pychromecast.const import CAST_TYPE_CHROMECAST
 
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.cast.services import (  # pylint: disable=home-assistant-component-root-import
-    ATTR_URL_PATH,
-    ATTR_VIEW_PATH,
     NO_URL_AVAILABLE_ERROR,
-    SERVICE_SHOW_VIEW,
+    CastService,
+    CastServiceArgument,
 )
 from homeassistant.components.media_player import (
     BrowseError,
@@ -136,14 +135,14 @@ async def async_play_media(
 
     data = {
         ATTR_ENTITY_ID: cast_entity_id,
-        ATTR_VIEW_PATH: view_path,
+        CastServiceArgument.VIEW_PATH: view_path,
     }
     if url_path != DEFAULT_DASHBOARD:
-        data[ATTR_URL_PATH] = url_path
+        data[CastServiceArgument.DASHBOARD_PATH] = url_path
 
     await hass.services.async_call(
         CAST_DOMAIN,
-        SERVICE_SHOW_VIEW,
+        CastService.SHOW_LOVELACE_VIEW,
         data,
         blocking=True,
     )
