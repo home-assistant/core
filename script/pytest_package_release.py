@@ -1,4 +1,4 @@
-"""Pin pytest-home-assistant to the Home Assistant release being published."""
+"""Pin pytest-homeassistant to the Home Assistant release being published."""
 
 from pathlib import Path
 import tomllib
