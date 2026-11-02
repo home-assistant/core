@@ -98,6 +98,16 @@
         "name": "Empty trash"
       }
     },
+    "select": {
+      "history": {
+        "name": "History",
+        "state": {
+          "keep_all": "Keep full history",
+          "keep_none": "Don't keep history",
+          "limited": "Keep a period of history"
+        }
+      }
+    },
     "sensor": {
       "file_count": {
         "name": "Files",
