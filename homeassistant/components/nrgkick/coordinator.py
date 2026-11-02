@@ -18,7 +18,8 @@ from nrgkick_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -71,7 +72,20 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
                 translation_key="authentication_error",
             ) from error
         except NRGkickAPIDisabledError as error:
-            raise ConfigEntryError(
+            # Only the user can enable the API again in the NRGkick app. Keep
+            # retrying, so the integration recovers once that is done.
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                self._json_api_disabled_issue_id,
+                config_entry_id=self.config_entry.entry_id,
+                is_fixable=False,
+                is_persistent=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="json_api_disabled",
+                translation_placeholders={"device_name": self.config_entry.title},
+            )
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="json_api_disabled",
             ) from error
@@ -102,4 +116,10 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
                 translation_key="invalid_response",
             ) from error
 
+        ir.async_delete_issue(self.hass, DOMAIN, self._json_api_disabled_issue_id)
         return NRGkickData(info=info, control=control, values=values)
+
+    @property
+    def _json_api_disabled_issue_id(self) -> str:
+        """Return the ID of the repair issue for a disabled JSON API."""
+        return f"json_api_disabled_{self.config_entry.entry_id}"
