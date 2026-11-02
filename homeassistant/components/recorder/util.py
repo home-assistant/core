@@ -262,8 +262,8 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
     """Ensure that the database is valid or move it away."""
     dbpath = dburl_to_path(dburl)
 
-    if not os.path.exists(dbpath):
-        # Database does not exist yet, this is OK
+    if not os.path.isfile(dbpath):
+        # Database does not exist yet, or the path is not a file, like a directory
         return True
 
     if not validate_sqlite_database(dbpath):
