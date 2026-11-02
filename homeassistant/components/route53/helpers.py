@@ -1,11 +1,24 @@
 """Helpers for the Route53 integration."""
 
+from dataclasses import dataclass
 from http import HTTPStatus
 
 import boto3
 import requests
 
 from .const import DOMAIN, LOGGER
+
+
+@dataclass(frozen=True, slots=True)
+class Route53Data:
+    """Route53 configuration."""
+
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    zone: str
+    domain: str
+    records: list[str]
+    ttl: int
 
 
 def _get_fqdn(record, domain):

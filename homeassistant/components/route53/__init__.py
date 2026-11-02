@@ -5,13 +5,14 @@ from datetime import timedelta
 import probatio
 
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
-from .helpers import update_route53
+from .const import DATA_ROUTE53, DOMAIN
+from .helpers import Route53Data, update_route53
+from .services import setup_services
 
 CONF_ACCESS_KEY_ID = "aws_access_key_id"
 CONF_SECRET_ACCESS_KEY = "aws_secret_access_key"
@@ -41,28 +42,27 @@ CONFIG_SCHEMA = probatio.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Route53 component."""
-    domain = config[DOMAIN][CONF_DOMAIN]
-    records = config[DOMAIN][CONF_RECORDS]
-    zone = config[DOMAIN][CONF_ZONE]
-    aws_access_key_id = config[DOMAIN][CONF_ACCESS_KEY_ID]
-    aws_secret_access_key = config[DOMAIN][CONF_SECRET_ACCESS_KEY]
-    ttl = config[DOMAIN][CONF_TTL]
+    data = hass.data[DATA_ROUTE53] = Route53Data(
+        aws_access_key_id=config[DOMAIN][CONF_ACCESS_KEY_ID],
+        aws_secret_access_key=config[DOMAIN][CONF_SECRET_ACCESS_KEY],
+        zone=config[DOMAIN][CONF_ZONE],
+        domain=config[DOMAIN][CONF_DOMAIN],
+        records=config[DOMAIN][CONF_RECORDS],
+        ttl=config[DOMAIN][CONF_TTL],
+    )
 
     def update_records_interval(now):
         """Set up recurring update."""
         update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
-        )
-
-    def update_records_service(call: ServiceCall) -> None:
-        """Set up service for manual trigger."""
-        update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
+            data.aws_access_key_id,
+            data.aws_secret_access_key,
+            data.zone,
+            data.domain,
+            data.records,
+            data.ttl,
         )
 
     track_time_interval(hass, update_records_interval, INTERVAL)
 
-    # Should be adjusted to register actions in setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.register(DOMAIN, "update_records", update_records_service)
+    setup_services(hass)
     return True
