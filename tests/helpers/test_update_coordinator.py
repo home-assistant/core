@@ -10,6 +10,7 @@ import weakref
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 
 from homeassistant import config_entries
@@ -24,8 +25,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import frame, update_coordinator
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -885,6 +884,51 @@ async def test_async_config_entry_first_refresh_translation_key_propagation(
     assert exc_info.value.translation_domain == expected_translation_domain
     assert exc_info.value.translation_key == expected_translation_key
     assert exc_info.value.translation_placeholders == expected_translation_placeholders
+
+
+@pytest.mark.parametrize(
+    ("cause", "expected_retry_after"),
+    [
+        pytest.param(
+            update_coordinator.UpdateFailed(retry_after=60),
+            60,
+            id="update_failed",
+        ),
+        pytest.param(
+            ConfigEntryNotReady(retry_after=120),
+            120,
+            id="config_entry_not_ready",
+        ),
+        pytest.param(
+            update_coordinator.UpdateFailed(),
+            None,
+            id="update_failed_without_retry_after",
+        ),
+        pytest.param(Exception("boom"), None, id="plain_exception"),
+    ],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
+)
+async def test_async_config_entry_first_refresh_retry_after_propagation(
+    hass: HomeAssistant,
+    cause: Exception,
+    expected_retry_after: float | None,
+    method: str,
+) -> None:
+    """Test that retry_after from the cause is propagated to ConfigEntryNotReady."""
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    setattr(crd, method, AsyncMock(side_effect=cause))
+
+    with pytest.raises(ConfigEntryNotReady) as exc_info:
+        await crd.async_config_entry_first_refresh()
+
+    assert exc_info.value.retry_after == expected_retry_after
 
 
 async def test_async_config_entry_first_refresh_success(hass: HomeAssistant) -> None:

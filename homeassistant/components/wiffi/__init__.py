@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import errno
-import logging
 
 from wiffi import WiffiTcpServer
 
@@ -21,15 +20,12 @@ from .const import (
 )
 from .entity import generate_unique_id
 
-_LOGGER = logging.getLogger(__name__)
-
-
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 type WiffiConfigEntry = ConfigEntry[WiffiIntegrationApi]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> None:
     """Set up wiffi from a config entry."""
 
     # create api object
@@ -48,24 +44,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> boo
                 translation_key="start_server_failed",
                 translation_placeholders={"port": str(entry.data[CONF_PORT])},
             ) from exc
-        _LOGGER.error("Port %s already in use", entry.data[CONF_PORT])
-        raise ConfigEntryNotReady from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="port_in_use",
+            translation_placeholders={"port": str(entry.data[CONF_PORT])},
+        ) from exc
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> None:
     """Unload a config entry."""
     api = entry.runtime_data
     await api.server.close_server()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        api.shutdown()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    api.shutdown()
 
 
 class WiffiIntegrationApi:

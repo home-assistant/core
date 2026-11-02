@@ -39,8 +39,6 @@ BUTTON_TYPES: tuple[OpenEVSEButtonDescription, ...] = (
     ),
     OpenEVSEButtonDescription(
         key="restart_evse",
-        # pylint: disable-next=home-assistant-redundant-translation-key
-        translation_key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda ev: ev.restart_evse(),

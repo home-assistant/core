@@ -6,7 +6,7 @@ from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 
 async def async_get_service(

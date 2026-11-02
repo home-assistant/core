@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import config_entries, setup
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("config_entry")
@@ -44,7 +43,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_password(hass: HomeAssistant) -> None:
+async def test_invalid_password(hass: HomeAssistant, client: AsyncMock) -> None:
     """Test that an invalid password throws an error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -63,6 +62,25 @@ async def test_invalid_password(hass: HomeAssistant) -> None:
             },
         )
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    with (
+        patch(
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=None
+        ),
+        patch(
+            "homeassistant.components.rainmachine.config_flow.Client",
+            return_value=client,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_IP_ADDRESS: "192.168.1.100",
+                CONF_PASSWORD: "password",
+                CONF_PORT: 8080,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -110,7 +128,7 @@ async def test_migrate_1_2(
 
     with (
         patch(
-            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.rainmachine.config_flow.Client",
@@ -129,7 +147,7 @@ async def test_migrate_1_2(
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test config flow options."""
     with patch(
-        "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+        "homeassistant.components.rainmachine.async_setup_entry", return_value=None
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -162,7 +180,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("setup_rainmachine")
-async def test_step_user(hass: HomeAssistant) -> None:
+async def test_step_user(hass: HomeAssistant, controller_mac: str) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -179,7 +197,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
             CONF_PORT: 8080,
         },
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "12345"
     assert result["data"] == {
@@ -189,6 +206,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         CONF_SSL: True,
         CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
+    assert result["result"].unique_id == controller_mac
 
 
 @pytest.mark.parametrize(
@@ -253,7 +271,7 @@ async def test_step_homekit_zeroconf_ip_change(
     "source", [config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_HOMEKIT]
 )
 async def test_step_homekit_zeroconf_new_controller_when_some_exist(
-    hass: HomeAssistant, client: AsyncMock, source: str
+    hass: HomeAssistant, client: AsyncMock, controller_mac: str, source: str
 ) -> None:
     """Test homekit and zeroconf for a new controller when one already exists."""
     with patch(
@@ -278,7 +296,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
 
     with (
         patch(
-            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.rainmachine.config_flow.Client",
@@ -295,7 +313,6 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "12345"
     assert result2["data"] == {
@@ -305,6 +322,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
         CONF_SSL: True,
         CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
+    assert result2["result"].unique_id == controller_mac
 
 
 async def test_discovery_by_homekit_and_zeroconf_same_time(

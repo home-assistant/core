@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioridwell.errors import InvalidCredentialsError, RidwellError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.ridwell.const import (
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -137,7 +136,7 @@ async def test_successful_config_flow(
         result["flow_id"], user_input=config
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USERNAME
     assert result["data"] == config
+    assert result["result"].unique_id == TEST_USERNAME.lower()

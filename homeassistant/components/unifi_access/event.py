@@ -29,7 +29,6 @@ class UnifiAccessEventEntityDescription(EventEntityDescription):
 
 DOORBELL_EVENT_DESCRIPTION = UnifiAccessEventEntityDescription(
     key="doorbell",
-    # pylint: disable-next=home-assistant-redundant-translation-key
     translation_key="doorbell",
     device_class=EventDeviceClass.DOORBELL,
     event_types=[DoorbellEventType.RING],

@@ -22,7 +22,7 @@ from .coordinator import LibrenmsCentralDataUpdateCoordinator, LibrenmsConfigEnt
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LibrenmsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LibrenmsConfigEntry) -> None:
     """Set up LibreNMS from a config entry."""
 
     api = Librenms(
@@ -52,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LibrenmsConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LibrenmsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LibrenmsConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

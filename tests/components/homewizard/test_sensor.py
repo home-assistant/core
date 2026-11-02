@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from homewizard_energy.errors import RequestError
 from homewizard_energy.models import CombinedModels, Measurement, State, System
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homewizard.const import DOMAIN, UPDATE_INTERVAL
@@ -12,8 +13,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),

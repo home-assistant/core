@@ -9,7 +9,7 @@ from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DATA_CAMERA_PREFS, DOMAIN, PREF_ORIENTATION, PREF_PRELOAD_STREAM
 
@@ -55,19 +55,24 @@ class CameraPreferences:
     def _async_entity_registry_filter(
         self, event_data: er.EventEntityRegistryUpdatedData
     ) -> bool:
-        """Filter entity registry events for renamed cameras."""
+        """Filter entity registry events for removed or renamed cameras."""
         return (
-            event_data["action"] == "update"
-            and "old_entity_id" in event_data
-            and split_entity_id(event_data["entity_id"])[0] == DOMAIN
-        )
+            event_data["action"] == "remove"
+            or (event_data["action"] == "update" and "old_entity_id" in event_data)
+        ) and split_entity_id(event_data["entity_id"])[0] == DOMAIN
 
     @callback
     def _async_entity_registry_updated(
         self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
-        """Move the preferences of a renamed camera to its new entity_id."""
+        """Drop or move the preferences of a removed or renamed camera."""
         data = event.data
+        if data["action"] == "remove":
+            self._dynamic_stream_settings_by_entity_id.pop(data["entity_id"], None)
+            if self._preload_prefs.pop(data["entity_id"], None) is not None:
+                self._store.async_delay_save(lambda: self._preload_prefs, 0)
+            return
+
         assert data["action"] == "update"
         old_entity_id = data["old_entity_id"]
         new_entity_id = data["entity_id"]
@@ -91,8 +96,8 @@ class CameraPreferences:
         self,
         entity_id: str,
         *,
-        preload_stream: bool | UndefinedType = UNDEFINED,
-        orientation: Orientation | UndefinedType = UNDEFINED,
+        preload_stream: bool | Undefined = Undefined,
+        orientation: Orientation | Undefined = Undefined,
     ) -> dict[str, bool | Orientation]:
         """Update camera preferences.
 
@@ -106,13 +111,13 @@ class CameraPreferences:
         dynamic_stream_settings = self._dynamic_stream_settings_by_entity_id.get(
             entity_id
         )
-        if preload_stream is not UNDEFINED:
+        if preload_stream is not Undefined:
             if dynamic_stream_settings:
                 dynamic_stream_settings.preload_stream = preload_stream
             self._preload_prefs[entity_id] = {PREF_PRELOAD_STREAM: preload_stream}
             await self._store.async_save(self._preload_prefs)
 
-        if orientation is not UNDEFINED:
+        if orientation is not Undefined:
             if (registry := er.async_get(self._hass)).async_get(entity_id):
                 registry.async_update_entity_options(
                     entity_id, DOMAIN, {PREF_ORIENTATION: orientation}

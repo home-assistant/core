@@ -1,5 +1,6 @@
 """Tests for the Gree Infrared climate platform."""
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -10,6 +11,24 @@ from infrared_protocols.commands.gree_ac import (
     GreeAcMode,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -21,35 +40,37 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.infrared import InfraredReceivedSignal
+from homeassistant.components.infrared import InfraredCommand, InfraredReceivedSignal
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import (
-    MockConfigEntry,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
-from tests.components.infrared.common import (
-    MockInfraredEmitterEntity,
-    MockInfraredReceiverEntity,
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
 )
 
 _CLIMATE_ENTITY_ID = "climate.gree_ac"
+_STORED_CLIMATE_DATA = {
+    "native_current_temperature": None,
+    "native_target_temperature": 25.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+}
 
 
 @pytest.fixture
@@ -240,6 +261,67 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
             fan=GreeAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("prior_modes", "service", "power", "expected_state"),
+    [
+        pytest.param(
+            (HVACMode.DRY,), SERVICE_TURN_OFF, False, HVACMode.OFF, id="turn_off"
+        ),
+        pytest.param(
+            (HVACMode.DRY, HVACMode.OFF),
+            SERVICE_TURN_ON,
+            True,
+            HVACMode.DRY,
+            id="turn_on",
+        ),
+    ],
+)
+async def test_turn_on_off_uses_the_last_active_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    prior_modes: tuple[HVACMode, ...],
+    service: str,
+    power: bool,
+    expected_state: HVACMode,
+) -> None:
+    """Test turning on or off sends a frame carrying the last active mode.
+
+    Dry is deliberately not the first configured mode, so a turn on that ignored the
+    last active mode would come back in cool.
+    """
+    for hvac_mode in prior_modes:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
+            blocking=True,
+        )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=power,
+            mode=GreeAcMode.DRY,
+            temperature=MIN_TEMP,
+            fan=GreeAcFanSpeed.AUTO,
+        ).get_raw_timings()
+    )
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -656,12 +738,84 @@ async def test_receiver_off_signal_records_the_mode_it_carries(
     )
 
 
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_off_signal_in_unconfigured_mode_keeps_the_last_active_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test an off frame in an unconfigured mode is recorded with the last mode.
+
+    The unit is off either way, so the frame still applies, but its mode is not one
+    this entry may send and the next power-off frame carries the one before it.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
+        blocking=True,
+    )
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                power=False,
+                mode=GreeAcMode.HEAT,
+                temperature=24,
+                fan=GreeAcFanSpeed.HIGH,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=False,
+            mode=GreeAcMode.DRY,
+            temperature=24,
+            fan=GreeAcFanSpeed.HIGH,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize(
+    ("extra_data", "expected_temperature"),
+    [
+        pytest.param(
+            {"last_active_hvac_mode": HVACMode.DRY.value},
+            24,
+            id="legacy_extra_data_falls_back_to_attributes",
+        ),
+        pytest.param(
+            {**_STORED_CLIMATE_DATA, "last_active_hvac_mode": HVACMode.DRY.value},
+            25,
+            id="climate_extra_data",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_last_active_mode_restored_on_restart_while_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     platforms: list[Platform],
+    extra_data: dict[str, Any],
+    expected_temperature: int,
 ) -> None:
     """Test an off frame after a restart carries the mode the unit was last in.
 
@@ -673,7 +827,7 @@ async def test_last_active_mode_restored_on_restart_while_off(
         [
             (
                 State(_CLIMATE_ENTITY_ID, HVACMode.OFF, {ATTR_TEMPERATURE: 24.0}),
-                {"last_active_hvac_mode": HVACMode.DRY.value},
+                extra_data,
             )
         ],
     )
@@ -697,7 +851,7 @@ async def test_last_active_mode_restored_on_restart_while_off(
         == GreeAcCommand(
             power=False,
             mode=GreeAcMode.DRY,
-            temperature=24,
+            temperature=expected_temperature,
             fan=GreeAcFanSpeed.AUTO,
         ).get_raw_timings()
     )
@@ -774,6 +928,190 @@ async def test_receiver_ignores_unconfigured_hvac_mode(
 
 @pytest.mark.parametrize("has_receiver", [True])
 @pytest.mark.usefixtures("init_integration")
+async def test_next_frame_keeps_what_the_remote_set(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test the fields this entity does not expose survive the next frame sent.
+
+    Every frame carries the whole state, so the louvres and feature flags the
+    physical remote set would otherwise be reset by the next frame HA sends.
+    """
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                mode=GreeAcMode.COOL,
+                temperature=24,
+                fan=GreeAcFanSpeed.AUTO,
+                swing_v=True,
+                swing_h=True,
+                turbo=True,
+                display=False,
+                blow=True,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 26},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL,
+            temperature=26,
+            fan=GreeAcFanSpeed.AUTO,
+            swing_v=True,
+            swing_h=True,
+            turbo=True,
+            display=False,
+            blow=True,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_remote_frame_during_send_is_kept(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test a remote frame landing mid-send is not undone once the send finishes.
+
+    The send only asked for a temperature, so every other field keeps what the
+    remote set while it was going out, mode included.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    sending = asyncio.Event()
+    finish_sending = asyncio.Event()
+    send_command = mock_infrared_emitter_entity.async_send_command
+
+    async def blocking_send(command: InfraredCommand) -> None:
+        """Hold the frame in flight until the remote frame has been received."""
+        sending.set()
+        await finish_sending.wait()
+        await send_command(command)
+
+    with patch.object(
+        mock_infrared_emitter_entity, "async_send_command", blocking_send
+    ):
+        temperature_call = hass.async_create_task(
+            hass.services.async_call(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_TEMPERATURE,
+                {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 25},
+                blocking=True,
+            )
+        )
+        await sending.wait()
+        mock_infrared_receiver_entity._handle_received_signal(
+            InfraredReceivedSignal(
+                timings=GreeAcCommand(
+                    mode=GreeAcMode.DRY,
+                    temperature=27,
+                    fan=GreeAcFanSpeed.HIGH,
+                    swing_v=True,
+                ).get_raw_timings()
+            )
+        )
+        finish_sending.set()
+        await temperature_call
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.DRY
+    assert state.attributes["fan_mode"] == FAN_HIGH
+    assert state.attributes[ATTR_TEMPERATURE] == 25
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=False,
+            mode=GreeAcMode.DRY,
+            temperature=25,
+            fan=GreeAcFanSpeed.HIGH,
+            swing_v=True,
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_unconfigured_mode_frame_is_not_carried(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test a frame in an unconfigured mode is dropped whole, flags included.
+
+    A mode the user did not configure is another unit's, so its flags must not reach
+    the frames sent to this one.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                mode=GreeAcMode.HEAT,
+                temperature=24,
+                fan=GreeAcFanSpeed.HIGH,
+                swing_v=True,
+                turbo=True,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 26},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL, temperature=26, fan=GreeAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_ignores_non_gree_ac_signal(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -797,7 +1135,10 @@ async def test_supported_features_always_include_target_temperature(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.attributes["supported_features"] == (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
     )
 
 
@@ -806,7 +1147,11 @@ async def test_supported_features_always_include_target_temperature(
     [
         pytest.param(
             HVACMode.COOL,
-            {"fan_mode": FAN_HIGH, "temperature": 29.0},
+            {
+                "fan_mode": FAN_HIGH,
+                "temperature": 29.0,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
+            },
             (HVACMode.COOL, FAN_HIGH, 29.0),
             id="full_state",
         ),
@@ -818,7 +1163,11 @@ async def test_supported_features_always_include_target_temperature(
         ),
         pytest.param(
             HVACMode.HEAT,
-            {"fan_mode": FAN_HIGH, "temperature": 29.0},
+            {
+                "fan_mode": FAN_HIGH,
+                "temperature": 29.0,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
+            },
             (HVACMode.OFF, FAN_HIGH, 29.0),
             id="mode_no_longer_configured_is_ignored",
         ),
@@ -849,6 +1198,115 @@ async def test_state_restored_on_restart(
     assert state.state == expected_mode
     assert state.attributes["fan_mode"] == expected_fan
     assert state.attributes["temperature"] == expected_temp
+
+
+@pytest.mark.parametrize(
+    ("restored_attributes", "unit_system", "expected_temperature"),
+    [
+        pytest.param(
+            {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            METRIC_SYSTEM,
+            17,
+            id="celsius_to_celsius",
+        ),
+        pytest.param(
+            {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            METRIC_SYSTEM,
+            17,
+            id="fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="fahrenheit_to_fahrenheit",
+        ),
+        pytest.param({"temperature": 17}, METRIC_SYSTEM, 17, id="legacy_celsius"),
+        pytest.param(
+            {"temperature": 63}, US_CUSTOMARY_SYSTEM, 63, id="legacy_fahrenheit"
+        ),
+    ],
+)
+async def test_restore_temperature_unit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+    restored_attributes: dict[str, int | str],
+    unit_system: UnitSystem,
+    expected_temperature: int,
+) -> None:
+    """Test restoration uses the saved unit, falling back to the configured unit."""
+    hass.config.units = unit_system
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                _CLIMATE_ENTITY_ID,
+                HVACMode.COOL,
+                restored_attributes,
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.gree_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["temperature"] == expected_temperature
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            mode=GreeAcMode.COOL, temperature=17, fan=GreeAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_data_saved(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the native temperatures are stored along with the last active mode."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ATTR_TEMPERATURE: 25,
+            "hvac_mode": HVACMode.DRY,
+        },
+        blocking=True,
+    )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    stored = {
+        data["state"]["entity_id"]: data["extra_data"]
+        for data in hass_storage[RESTORE_STATE_KEY]["data"]
+    }
+    assert stored[_CLIMATE_ENTITY_ID] == {
+        **_STORED_CLIMATE_DATA,
+        "last_active_hvac_mode": HVACMode.DRY.value,
+    }
 
 
 @pytest.mark.usefixtures("init_integration")

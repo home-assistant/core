@@ -1,8 +1,10 @@
 {
   "domain": "solaredge",
   "name": "SolarEdge",
-  "codeowners": ["@frenck", "@bdraco", "@tronikos"],
+  "categories": ["energy.solar_batteries"],
+  "codeowners": ["@bdraco", "@tronikos"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["recorder"],
   "dhcp": [
     {

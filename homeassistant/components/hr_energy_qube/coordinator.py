@@ -13,8 +13,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
+
+    from . import QubeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +35,10 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
     sw_version: str | None = None
 
     def __init__(
-        self, hass: HomeAssistant, client: QubeClient, entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        client: QubeClient,
+        entry: QubeConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         self.client = client

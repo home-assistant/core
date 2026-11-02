@@ -276,7 +276,7 @@ class KnxUiFan(_KnxFan, KnxUiEntity):
 
         self._device = XknxFan(
             xknx=knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             group_address_speed=write_address(speed_ga),
             group_address_speed_state=state_and_passive(speed_ga),
             group_address_oscillation=write_address(knx_conf.ga_oscillation),

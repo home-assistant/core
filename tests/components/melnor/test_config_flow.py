@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.melnor.const import DOMAIN
@@ -18,8 +19,6 @@ from .conftest import (
     FAKE_SERVICE_INFO_2,
     patch_async_discovered_service_info,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_no_devices(
@@ -61,9 +60,9 @@ async def test_user_step_discovered_devices(
             result["flow_id"], user_input={CONF_ADDRESS: FAKE_ADDRESS_1}
         )
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["data"] == {CONF_ADDRESS: FAKE_ADDRESS_1}
+        assert result2["result"].unique_id == FAKE_ADDRESS_1
 
     mock_setup_entry.assert_called_once()
 
@@ -147,10 +146,10 @@ async def test_bluetooth_confirm(
         result["flow_id"], user_input={}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == FAKE_ADDRESS_1
     assert result2["data"] == {CONF_ADDRESS: FAKE_ADDRESS_1}
+    assert result2["result"].unique_id == FAKE_ADDRESS_1
 
     mock_setup_entry.assert_called_once()
 

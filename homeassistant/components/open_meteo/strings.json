@@ -8,6 +8,15 @@
       "zone_not_found": "The selected zone does not exist."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "zone": "[%key:component::open_meteo::config::step::user::data::zone%]"
+        },
+        "data_description": {
+          "zone": "[%key:component::open_meteo::config::step::user::data_description::zone%]"
+        },
+        "description": "Update the zone used for weather forecasting"
+      },
       "user": {
         "data": {
           "zone": "Zone"
@@ -17,6 +26,14 @@
         },
         "description": "Select location to use for weather forecasting"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Open-Meteo API."
+    },
+    "zone_not_found": {
+      "message": "Zone {zone} not found."
     }
   }
 }

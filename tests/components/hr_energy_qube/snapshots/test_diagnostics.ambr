@@ -53,7 +53,7 @@
         'setpoint_room_heat_night': 18.0,
         'srcflw': True,
         'srsalrm': False,
-        'status': None,
+        'status': 'standby',
         'status_code': 1,
         'surplus_pv': False,
         'temp_dhw': 50.0,

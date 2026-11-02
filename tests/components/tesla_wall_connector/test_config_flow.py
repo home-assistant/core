@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 from tesla_wall_connector.exceptions import WallConnectorConnectionError
 
 from homeassistant import config_entries
@@ -23,8 +25,6 @@ from .conftest import (
     get_wifi_status_mock,
 )
 
-from tests.common import MockConfigEntry, get_schema_suggested_value
-
 
 async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -36,7 +36,7 @@ async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tesla_wall_connector.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -44,14 +44,15 @@ async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Tesla Wall Connector"
     assert result2["data"] == {CONF_HOST: "1.1.1.1"}
     assert result2["options"] == {CONF_SPLIT_PHASE: DEFAULT_SPLIT_PHASE}
+    assert result2["result"].unique_id == "abc123"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_wall_connector_version")
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -78,10 +79,19 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         is True
     )
 
+    with patch(
+        "homeassistant.components.tesla_wall_connector.async_setup_entry",
+        return_value=None,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: "1.1.1.1"},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_form_other_error(
-    mock_wall_connector_version, hass: HomeAssistant
-) -> None:
+
+@pytest.mark.usefixtures("mock_wall_connector_version")
+async def test_form_other_error(hass: HomeAssistant) -> None:
     """Test we handle any other error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -98,6 +108,16 @@ async def test_form_other_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with patch(
+        "homeassistant.components.tesla_wall_connector.async_setup_entry",
+        return_value=None,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: "1.1.1.1"},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_configured(
@@ -151,10 +171,10 @@ async def test_dhcp_can_finish(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "1.2.3.4"}
     assert result["options"] == {CONF_SPLIT_PHASE: DEFAULT_SPLIT_PHASE}
+    assert result["result"].unique_id == "abc123"
 
 
 async def test_form_with_split_phase(hass: HomeAssistant) -> None:
@@ -170,7 +190,7 @@ async def test_form_with_split_phase(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.tesla_wall_connector.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -182,10 +202,10 @@ async def test_form_with_split_phase(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {CONF_HOST: "1.1.1.1"}
     assert result2["options"] == {CONF_SPLIT_PHASE: True}
+    assert result2["result"].unique_id == "abc123"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

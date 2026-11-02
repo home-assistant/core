@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_DEVICE_1, MOCK_DEVICE_2, MOCK_DEVICE_3
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 YAML_CONFIG = {
     DEVICE_TRACKER_DOMAIN: {
@@ -142,16 +141,49 @@ async def test_legacy_known_devices_issue(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, _issue_id(mock_config_entry.entry_id)
-    )
+    issue_id = _issue_id(mock_config_entry.entry_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {
         "host": "192.168.1.1",
         "path": "known_devices.yaml",
         "devices": "- `homeserver`\n- `router_phone`",
     }
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.usefixtures("mock_luci_client")
+async def test_legacy_known_devices_issue_kept_on_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test reloading keeps the issue and its ignore."""
+    legacy_devices = [
+        Device(hass, timedelta(0), True, "homeserver", MOCK_DEVICE_1.mac),
+    ]
+    issue_id = _issue_id(mock_config_entry.entry_id)
+
+    with patch(
+        "homeassistant.components.luci.async_load_config",
+        return_value=legacy_devices,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        issue_registry.async_ignore(DOMAIN, issue_id, True)
+
+        assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
 
 
 @pytest.mark.usefixtures("mock_luci_client")
@@ -228,13 +260,13 @@ async def test_legacy_known_devices_issue_on_new_device(
     }
 
 
-async def test_legacy_known_devices_issue_not_recreated_on_unload(
+async def test_legacy_known_devices_check_cancelled_on_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_luci_client: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a check still running when the entry unloads cannot recreate the issue."""
+    """Test a check still running when the entry unloads cannot raise the issue."""
     legacy_devices = [
         Device(hass, timedelta(0), True, "late_arrival", MOCK_DEVICE_3.mac),
     ]
@@ -260,7 +292,7 @@ async def test_legacy_known_devices_issue_not_recreated_on_unload(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Released while unloading, after the integration deleted its issue.
+        # Released while unloading, so a check left running would raise the issue.
         mock_config_entry.async_on_unload(release_load.set)
 
         # A conflicting MAC starts a check that blocks before it can raise.

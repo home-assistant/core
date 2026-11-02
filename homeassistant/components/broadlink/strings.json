@@ -18,12 +18,6 @@
       "auth": {
         "title": "Authenticate to the device"
       },
-      "finish": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]"
-        },
-        "title": "Choose a name for the device"
-      },
       "reset": {
         "description": "{name} ({model} at {host}) is locked. You need to unlock the device in order to authenticate and complete the configuration. Instructions:\n1. Open the Broadlink app.\n2. Select the device.\n3. Select `...` in the upper right.\n4. Scroll to the bottom of the page.\n5. Disable the lock.",
         "title": "Unlock the device"
@@ -48,9 +42,22 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "IR emitter"
+      }
+    },
+    "number": {
+      "max_temp": {
+        "name": "Maximum setpoint"
+      },
+      "min_temp": {
+        "name": "Minimum setpoint"
       }
     },
     "radio_frequency": {
@@ -88,20 +95,50 @@
     }
   },
   "exceptions": {
+    "command_not_found": {
+      "message": "Command not found: {command}"
+    },
+    "commands_not_found": {
+      "message": "Commands not found: {commands}"
+    },
     "connect_failed": {
       "message": "Failed to connect to the device at {host}: {error}"
+    },
+    "device_not_found": {
+      "message": "Device not found: {device}"
     },
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
     },
+    "invalid_command": {
+      "message": "Invalid command: {error}"
+    },
+    "learn_command_failed": {
+      "message": "Failed to learn command {command}: {error}"
+    },
+    "learn_commands_failed": {
+      "message": "Failed to learn commands {commands}: {error}"
+    },
+    "rf_not_supported": {
+      "message": "{entity_id} doesn't support RF commands"
+    },
     "send_command_failed": {
-      "message": "Failed to send IR command: {error}"
+      "message": "Failed to send command: {error}"
+    },
+    "setpoint_limits_inverted": {
+      "message": "The minimum setpoint ({min_temp} °C) cannot be higher than the maximum setpoint ({max_temp} °C)"
     },
     "setup_failed": {
       "message": "Failed to set up the device at {host}"
     },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
+    },
+    "unload_failed": {
+      "message": "Failed to unload the device"
+    },
+    "update_failed": {
+      "message": "Failed to update the device"
     }
   }
 }

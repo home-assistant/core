@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
@@ -91,7 +90,6 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="power",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -208,7 +206,6 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="signalStrength",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
@@ -229,7 +226,6 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="powerFactor",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="power_factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         native_unit_of_measurement=PERCENTAGE,
@@ -541,6 +537,7 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="range_remaining",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
@@ -736,7 +733,7 @@ class TibberSensor(SensorEntity):
             manufacturer=MANUFACTURER,
         )
         if self._model is not None:
-            device_info["model"] = self._model
+            device_info.model = self._model
         return device_info
 
 
@@ -994,13 +991,13 @@ class TibberRtEntityCreator:
             self._async_add_entities(new_entities)
 
 
-class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-assistant-enforce-class-module
+class TibberRtDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=home-assistant-enforce-class-module
     """Handle Tibber realtime data."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: TibberConfigEntry,
         add_sensor_callback: Callable[[TibberRtDataCoordinator, Any], None],
         tibber_home: TibberHome,
     ) -> None:

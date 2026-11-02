@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import adax_local
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.adax.const import (
@@ -17,8 +18,6 @@ from homeassistant.components.adax.const import (
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_DATA = {
     ACCOUNT_ID: 12345,
@@ -49,7 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -93,6 +92,24 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "adax.get_adax_token",
+            return_value="test_token",
+        ),
+        patch(
+            "homeassistant.components.adax.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
@@ -156,7 +173,7 @@ async def test_local_create_entry(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.adax.config_flow.adax_local.AdaxConfig",
@@ -267,6 +284,28 @@ async def test_local_connection_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.adax.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.adax.config_flow.adax_local.AdaxConfig",
+            autospec=True,
+        ) as mock_client_class,
+    ):
+        client = mock_client_class.return_value
+        client.configure_device.return_value = True
+        client.device_ip = "192.168.1.4"
+        client.access_token = "token"
+        client.mac_id = "8383838"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            test_data,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_local_heater_not_available(hass: HomeAssistant) -> None:

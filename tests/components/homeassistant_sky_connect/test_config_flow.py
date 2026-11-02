@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hassio import AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware import (
@@ -34,8 +35,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_SKY, USB_DATA_ZBT1
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(name="supervisor")
 def mock_supervisor_fixture() -> Generator[None]:
@@ -52,7 +51,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.homeassistant_sky_connect.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -127,7 +126,6 @@ async def test_config_flow_zigbee(
             user_input={"next_step_id": "zigbee_intent_recommended"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = create_result["result"]
     assert config_entry.data == {
@@ -141,6 +139,7 @@ async def test_config_flow_zigbee(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -228,7 +227,6 @@ async def test_config_flow_thread(
 
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_openthread_border_router")
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = create_result["result"]
     assert config_entry.data == {
@@ -242,6 +240,7 @@ async def test_config_flow_thread(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 

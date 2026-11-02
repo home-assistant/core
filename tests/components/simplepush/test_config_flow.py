@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from simplepush.legacy import UnknownError
 
 from homeassistant import config_entries
@@ -10,8 +11,6 @@ from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT
 from homeassistant.const import CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {
     CONF_DEVICE_KEY: "abc",
@@ -23,7 +22,7 @@ MOCK_CONFIG = {
 def simplepush_setup_fixture():
     """Patch simplepush setup entry."""
     with patch(
-        "homeassistant.components.simplepush.async_setup_entry", return_value=True
+        "homeassistant.components.simplepush.async_setup_entry", return_value=None
     ):
         yield
 
@@ -45,10 +44,10 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "simplepush"
     assert result["data"] == MOCK_CONFIG
+    assert result["result"].unique_id == "abc"
 
 
 async def test_flow_with_password(hass: HomeAssistant) -> None:
@@ -62,10 +61,10 @@ async def test_flow_with_password(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input=mock_config_pass,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "simplepush"
     assert result["data"] == mock_config_pass
+    assert result["result"].unique_id == "abc"
 
 
 async def test_flow_user_device_key_already_configured(hass: HomeAssistant) -> None:
@@ -131,3 +130,9 @@ async def test_error_on_connection_failure(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

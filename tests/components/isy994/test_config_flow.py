@@ -1,5 +1,7 @@
 """Test the Universal Devices ISY/IoX config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 import re
 import ssl
 from unittest.mock import AsyncMock, patch
@@ -7,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from pyisy import ISYConnectionError, ISYInvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.isy994.const import (
@@ -24,8 +27,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_HOSTNAME = "1.1.1.1"
 MOCK_USERNAME = "test-username"
@@ -81,6 +82,16 @@ PATCH_ASYNC_SETUP = f"{INTEGRATION}.async_setup"
 PATCH_ASYNC_SETUP_ENTRY = f"{INTEGRATION}.async_setup_entry"
 
 
+@contextmanager
+def _patch_isy_success() -> Generator[None]:
+    """Patch a successful connection to the ISY."""
+    with (
+        patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
+        patch(PATCH_ASYNC_SETUP_ENTRY, return_value=None),
+    ):
+        yield
+
+
 def _get_schema_default(schema, key_name):
     """Iterate schema to find a key."""
     for schema_key in schema:
@@ -102,7 +113,7 @@ async def test_form(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -136,6 +147,14 @@ async def test_form_invalid_host(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_host"}
 
+    with _patch_isy_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
@@ -153,6 +172,14 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+    with _patch_isy_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
@@ -172,6 +199,14 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    with _patch_isy_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_isy_connection_error(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
@@ -189,6 +224,14 @@ async def test_form_isy_connection_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_isy_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_isy_ssl_error(hass: HomeAssistant) -> None:
@@ -215,6 +258,14 @@ async def test_form_isy_ssl_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "ssl_error"}
 
+    with _patch_isy_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**MOCK_USER_INPUT, CONF_HOST: f"https://{MOCK_HOSTNAME}"},
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize("verify_ssl", [True, False])
 async def test_form_forwards_verify_ssl_to_connection(
@@ -231,7 +282,7 @@ async def test_form_forwards_verify_ssl_to_connection(
         ) as mock_connection_cls,
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_connection_cls.return_value.test_connection = AsyncMock(
@@ -247,8 +298,8 @@ async def test_form_forwards_verify_ssl_to_connection(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == MOCK_UUID
     assert mock_connection_cls.call_args.kwargs["verify_ssl"] is verify_ssl
 
 
@@ -269,6 +320,14 @@ async def test_form_isy_parse_response_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_isy_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_no_name_in_response(hass: HomeAssistant) -> None:
     """Test we handle invalid response from ISY with name not set."""
@@ -288,6 +347,14 @@ async def test_form_no_name_in_response(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_isy_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_existing_config_entry(hass: HomeAssistant) -> None:
@@ -357,7 +424,7 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -519,7 +586,7 @@ async def test_form_dhcp(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -559,7 +626,7 @@ async def test_form_dhcp_with_polisy(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -599,7 +666,7 @@ async def test_form_dhcp_with_eisy(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -765,7 +832,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             "homeassistant.components.isy994.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(

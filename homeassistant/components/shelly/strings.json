@@ -31,14 +31,6 @@
     },
     "step": {
       "bluetooth_confirm": {
-        "data": {
-          "disable_ap": "Disable Wi-Fi access point after provisioning",
-          "disable_ble_rpc": "Disable Bluetooth RPC after provisioning"
-        },
-        "data_description": {
-          "disable_ap": "For improved security, disable the Wi-Fi access point after successfully connecting to your network.",
-          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after Wi-Fi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
-        },
         "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to Wi-Fi.\n\nDo you want to provision Wi-Fi credentials to this device?",
         "title": "Provision Wi-Fi via Bluetooth"
       },
@@ -178,6 +170,9 @@
       "input_with_number": {
         "name": "Input {input_number}"
       },
+      "motion_with_channel_name": {
+        "name": "{channel_name} motion"
+      },
       "mute": {
         "name": "Mute"
       },
@@ -234,6 +229,9 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "zone_motion_with_number": {
+        "name": "Zone {zone_number} motion"
       }
     },
     "button": {
@@ -242,6 +240,9 @@
       },
       "close": {
         "name": "Close"
+      },
+      "ir_code": {
+        "name": "IR code {id}"
       },
       "mute_alarm": {
         "name": "Mute alarm"
@@ -301,9 +302,47 @@
         }
       }
     },
+    "infrared": {
+      "infrared_emitter": {
+        "name": "Infrared emitter"
+      },
+      "infrared_receiver": {
+        "name": "Infrared receiver"
+      }
+    },
+    "light": {
+      "ledstrip": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "aurora": "Aurora",
+              "blink": "Blink",
+              "blurz": "BlurZ",
+              "colorwipe": "Color wipe",
+              "ddp": "DDP receiver",
+              "fade": "Fade",
+              "freqwave": "FreqWave",
+              "glitterwaves": "Glitter waves",
+              "meteors": "Meteors",
+              "pixeldance": "Pixel dance",
+              "rainbow": "Rainbow",
+              "snow": "Snow",
+              "solid": "Solid color",
+              "twinkle": "Twinkle"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "current_limit": {
         "name": "Current limit"
+      },
+      "effect_intensity": {
+        "name": "Effect intensity"
+      },
+      "effect_speed": {
+        "name": "Effect speed"
       },
       "external_temperature": {
         "name": "External temperature"
@@ -335,6 +374,20 @@
           "none": "None",
           "reception": "Reception",
           "workplace": "Workplace"
+        }
+      },
+      "effect_palette": {
+        "name": "Effect palette",
+        "state": {
+          "complementary": "Complementary",
+          "contrast": "Contrast",
+          "fire": "Fire",
+          "forest": "Forest",
+          "harmony": "Harmony",
+          "monochrome": "Monochrome",
+          "ocean": "Ocean",
+          "pastel": "Pastel",
+          "rainbow": "Rainbow"
         }
       }
     },
@@ -443,6 +496,109 @@
       },
       "lamp_life": {
         "name": "Lamp life"
+      },
+      "last_command_source": {
+        "name": "Last command source",
+        "state": {
+          "activate": "Input activation",
+          "analog": "Analog input",
+          "ble": "Bluetooth",
+          "ble_indicate": "Bluetooth indication",
+          "button": "Button",
+          "calibration": "Calibration",
+          "dim": "Dimming started",
+          "dimstop": "Dimming stopped",
+          "double": "Double press",
+          "dual_dim": "Dual dimming started",
+          "http": "HTTP",
+          "init": "Restored state",
+          "knx": "KNX",
+          "limit_switch": "Limit switch",
+          "local": "Manual operation",
+          "long_push": "Long press",
+          "loopback": "Internal",
+          "mqtt": "MQTT",
+          "night_mode_end_period": "Night mode ended",
+          "night_mode_start_full_period": "Night mode full period",
+          "night_mode_start_period": "Night mode started",
+          "night_mode_started_period": "Night mode already active",
+          "overcurrent": "Overcurrent",
+          "overpower": "Overpower",
+          "overtemp": "Overheating",
+          "overvoltage": "Overvoltage",
+          "overvoltage_clear": "Overvoltage cleared",
+          "profile_change": "Profile change",
+          "reboot": "Reboot",
+          "rpc": "RPC",
+          "rpc_set": "RPC",
+          "safety_switch": "Safety switch",
+          "shc": "Shelly Cloud",
+          "short_push": "Short press",
+          "stuck": "Stuck",
+          "switch": "Switch input",
+          "timeout": "Timeout",
+          "timer": "Timer",
+          "transition": "Transition",
+          "ui": "Device controls",
+          "undervoltage": "Undervoltage",
+          "undervoltage_clear": "Undervoltage cleared",
+          "unknown": "Unknown",
+          "unsupported_load": "Unsupported load",
+          "ws_in": "WebSocket"
+        }
+      },
+      "last_command_source_with_channel_name": {
+        "name": "{channel_name} last command source",
+        "state": {
+          "activate": "[%key:component::shelly::entity::sensor::last_command_source::state::activate%]",
+          "analog": "[%key:component::shelly::entity::sensor::last_command_source::state::analog%]",
+          "ble": "[%key:component::shelly::entity::sensor::last_command_source::state::ble%]",
+          "ble_indicate": "[%key:component::shelly::entity::sensor::last_command_source::state::ble_indicate%]",
+          "button": "[%key:component::shelly::entity::sensor::last_command_source::state::button%]",
+          "calibration": "[%key:component::shelly::entity::sensor::last_command_source::state::calibration%]",
+          "dim": "[%key:component::shelly::entity::sensor::last_command_source::state::dim%]",
+          "dimstop": "[%key:component::shelly::entity::sensor::last_command_source::state::dimstop%]",
+          "double": "[%key:component::shelly::entity::sensor::last_command_source::state::double%]",
+          "dual_dim": "[%key:component::shelly::entity::sensor::last_command_source::state::dual_dim%]",
+          "http": "[%key:component::shelly::entity::sensor::last_command_source::state::http%]",
+          "init": "[%key:component::shelly::entity::sensor::last_command_source::state::init%]",
+          "knx": "[%key:component::shelly::entity::sensor::last_command_source::state::knx%]",
+          "limit_switch": "[%key:component::shelly::entity::sensor::last_command_source::state::limit_switch%]",
+          "local": "[%key:component::shelly::entity::sensor::last_command_source::state::local%]",
+          "long_push": "[%key:component::shelly::entity::sensor::last_command_source::state::long_push%]",
+          "loopback": "[%key:component::shelly::entity::sensor::last_command_source::state::loopback%]",
+          "mqtt": "[%key:component::shelly::entity::sensor::last_command_source::state::mqtt%]",
+          "night_mode_end_period": "[%key:component::shelly::entity::sensor::last_command_source::state::night_mode_end_period%]",
+          "night_mode_start_full_period": "[%key:component::shelly::entity::sensor::last_command_source::state::night_mode_start_full_period%]",
+          "night_mode_start_period": "[%key:component::shelly::entity::sensor::last_command_source::state::night_mode_start_period%]",
+          "night_mode_started_period": "[%key:component::shelly::entity::sensor::last_command_source::state::night_mode_started_period%]",
+          "overcurrent": "[%key:component::shelly::entity::sensor::last_command_source::state::overcurrent%]",
+          "overpower": "[%key:component::shelly::entity::sensor::last_command_source::state::overpower%]",
+          "overtemp": "[%key:component::shelly::entity::sensor::last_command_source::state::overtemp%]",
+          "overvoltage": "[%key:component::shelly::entity::sensor::last_command_source::state::overvoltage%]",
+          "overvoltage_clear": "[%key:component::shelly::entity::sensor::last_command_source::state::overvoltage_clear%]",
+          "profile_change": "[%key:component::shelly::entity::sensor::last_command_source::state::profile_change%]",
+          "reboot": "[%key:component::shelly::entity::sensor::last_command_source::state::reboot%]",
+          "rpc": "[%key:component::shelly::entity::sensor::last_command_source::state::rpc%]",
+          "rpc_set": "[%key:component::shelly::entity::sensor::last_command_source::state::rpc_set%]",
+          "safety_switch": "[%key:component::shelly::entity::sensor::last_command_source::state::safety_switch%]",
+          "shc": "[%key:component::shelly::entity::sensor::last_command_source::state::shc%]",
+          "short_push": "[%key:component::shelly::entity::sensor::last_command_source::state::short_push%]",
+          "stuck": "[%key:component::shelly::entity::sensor::last_command_source::state::stuck%]",
+          "switch": "[%key:component::shelly::entity::sensor::last_command_source::state::switch%]",
+          "timeout": "[%key:component::shelly::entity::sensor::last_command_source::state::timeout%]",
+          "timer": "[%key:component::shelly::entity::sensor::last_command_source::state::timer%]",
+          "transition": "[%key:component::shelly::entity::sensor::last_command_source::state::transition%]",
+          "ui": "[%key:component::shelly::entity::sensor::last_command_source::state::ui%]",
+          "undervoltage": "[%key:component::shelly::entity::sensor::last_command_source::state::undervoltage%]",
+          "undervoltage_clear": "[%key:component::shelly::entity::sensor::last_command_source::state::undervoltage_clear%]",
+          "unknown": "[%key:component::shelly::entity::sensor::last_command_source::state::unknown%]",
+          "unsupported_load": "[%key:component::shelly::entity::sensor::last_command_source::state::unsupported_load%]",
+          "ws_in": "[%key:component::shelly::entity::sensor::last_command_source::state::ws_in%]"
+        }
+      },
+      "last_seen": {
+        "name": "Last seen"
       },
       "left_slot_level": {
         "name": "Left slot level"
@@ -595,6 +751,9 @@
       "cury_away_mode": {
         "name": "Away mode"
       },
+      "effect_reverse": {
+        "name": "Reverse effect"
+      },
       "frost_protection": {
         "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
       },
@@ -658,9 +817,6 @@
     },
     "device_not_initialized": {
       "message": "{device} not initialized"
-    },
-    "firmware_unsupported": {
-      "message": "{device} is running an unsupported firmware, please update the firmware"
     },
     "http_call_error": {
       "message": "HTTP call error occurred for {device}"
@@ -760,6 +916,25 @@
       "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'.",
       "title": "Shelly device {device_name} is not calibrated"
     },
+    "ir_raw_receive_disabled": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "issue_ignored": "[%key:component::shelly::issues::coiot_unconfigured::fix_flow::abort::issue_ignored%]"
+        },
+        "step": {
+          "init": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has RAW receive disabled for the infrared receiver. RAW receive must be enabled for the infrared receiver entity to be available.\n\nSelect **Enable RAW receive** to enable it on the device.",
+            "menu_options": {
+              "confirm": "Enable RAW receive",
+              "ignore": "[%key:component::shelly::issues::coiot_unconfigured::fix_flow::step::init::menu_options::ignore%]"
+            },
+            "title": "[%key:component::shelly::issues::ir_raw_receive_disabled::title%]"
+          }
+        }
+      },
+      "title": "Infrared RAW receive disabled on {device_name}"
+    },
     "open_wifi_ap": {
       "fix_flow": {
         "abort": {
@@ -819,6 +994,21 @@
     "unsupported_firmware": {
       "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device.",
       "title": "Unsupported firmware for device {device_name}"
+    },
+    "unsupported_firmware_fixable": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Until the firmware is updated, only the firmware update entity is available for this device.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
+            "title": "[%key:component::shelly::issues::unsupported_firmware::title%]"
+          }
+        }
+      },
+      "title": "[%key:component::shelly::issues::unsupported_firmware::title%]"
     }
   },
   "options": {
@@ -868,6 +1058,20 @@
         }
       },
       "name": "Get Shelly KVS value"
+    },
+    "set_cover_position_and_tilt": {
+      "description": "Moves a cover and its tilt to the target positions with a single command.",
+      "fields": {
+        "position": {
+          "description": "Target position of the cover. 0 means closed, 100 means fully open.",
+          "name": "Position"
+        },
+        "tilt_position": {
+          "description": "Target tilt position of the cover. 0 means closed, 100 means fully open.",
+          "name": "Tilt position"
+        }
+      },
+      "name": "Set cover position and tilt"
     },
     "set_kvs_value": {
       "description": "Sets a value in a Shelly device's Key-Value Storage.",

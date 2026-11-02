@@ -71,12 +71,10 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
             name=f"Thermostat {room.room_no}",
         )
         if coordinator.unique_id:
-            self._attr_device_info["via_device_id"] = (
-                dr.async_get_device_id_by_identifier(
-                    coordinator.hass,
-                    (DOMAIN, coordinator.config_entry.entry_id),
-                    config_entry_id=coordinator.config_entry.entry_id,
-                )
+            self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.entry_id),
+                config_entry_id=coordinator.config_entry.entry_id,
             )
 
     @property

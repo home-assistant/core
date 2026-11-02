@@ -4,6 +4,10 @@ from collections.abc import Iterator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
 from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
@@ -17,9 +21,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TRANSMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 
 @pytest.fixture(autouse=True)
@@ -70,7 +71,7 @@ async def test_user_flow_test_then_finish(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Novy Cooker Hood"
     assert result["data"] == {
-        CONF_TRANSMITTER: entity_entry.id,
+        CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
         CONF_CODE: 3,
     }
     assert result["result"].unique_id == f"{entity_entry.id}_3"
@@ -110,9 +111,10 @@ async def test_user_flow_retry_picks_different_code(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "finish"}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CODE] == 7
+    entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
+    assert result["result"].unique_id == f"{entity_entry.id}_7"
 
 
 async def test_user_flow_test_transmit_failure(
@@ -236,7 +238,10 @@ async def test_reconfigure_updates_entry(
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert init_novy_cooker_hood.data[CONF_CODE] == 4
+    assert init_novy_cooker_hood.data == {
+        CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
+        CONF_CODE: 4,
+    }
     entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
     assert init_novy_cooker_hood.unique_id == f"{entity_entry.id}_4"
 
@@ -245,6 +250,7 @@ async def test_reconfigure_frees_old_unique_id(
     hass: HomeAssistant,
     init_novy_cooker_hood: MockConfigEntry,
     mock_rf_entity: MockRadioFrequencyEntity,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """After reconfigure, the previous (transmitter, code) can be reused."""
     # Reconfigure away from code 1.
@@ -264,9 +270,10 @@ async def test_reconfigure_frees_old_unique_id(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "finish"}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CODE] == 1
+    entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
+    assert result["result"].unique_id == f"{entity_entry.id}_1"
 
 
 async def test_reconfigure_aborts_on_collision(
@@ -283,8 +290,9 @@ async def test_reconfigure_aborts_on_collision(
     other = MockConfigEntry(
         domain=DOMAIN,
         title="Novy Cooker Hood",
-        data={CONF_TRANSMITTER: entity_entry.id, CONF_CODE: 9},
+        data={CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID, CONF_CODE: 9},
         unique_id=f"{entity_entry.id}_9",
+        minor_version=2,
     )
     other.add_to_hass(hass)
 

@@ -2,12 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import assert_setup_component
+
 from homeassistant.components.homematic import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
 
 
 async def test_setup_full(hass: HomeAssistant) -> None:

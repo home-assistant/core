@@ -1,6 +1,7 @@
 """Define tests for the The Things Network onfig flows."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from ttn_client import TTNAuthError
 
 from homeassistant.components.thethingsnetwork.const import CONF_APP_ID, DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
 from .conftest import API_KEY, APP_ID, HOST
-
-from tests.common import MockConfigEntry
 
 USER_DATA = {CONF_HOST: HOST, CONF_APP_ID: APP_ID, CONF_API_KEY: API_KEY}
 
@@ -31,12 +30,12 @@ async def test_user(hass: HomeAssistant, mock_ttnclient) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=USER_DATA
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == APP_ID
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_APP_ID] == APP_ID
     assert result["data"][CONF_API_KEY] == API_KEY
+    assert result["result"].unique_id == APP_ID
 
 
 @pytest.mark.parametrize(

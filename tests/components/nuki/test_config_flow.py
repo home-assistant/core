@@ -1,5 +1,7 @@
 """Test the nuki config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from pynuki.bridge import InvalidCredentialsException
@@ -12,7 +14,33 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .mock import DHCP_FORMATTED_MAC, HOST, MOCK_INFO, NAME, setup_nuki_integration
+from .mock import (
+    DHCP_FORMATTED_MAC,
+    HOST,
+    ID_HEX,
+    MOCK_INFO,
+    NAME,
+    setup_nuki_integration,
+)
+
+USER_INPUT = {
+    CONF_HOST: "1.1.1.1",
+    CONF_PORT: 8080,
+    CONF_TOKEN: "test-token",
+}
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch a successful bridge connection and entry setup."""
+    with (
+        patch(
+            "homeassistant.components.nuki.config_flow.NukiBridge.info",
+            return_value=MOCK_INFO,
+        ),
+        patch("homeassistant.components.nuki.async_setup_entry", return_value=None),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -31,7 +59,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nuki.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -44,7 +72,6 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "BC614E"
     assert result2["data"] == {
@@ -52,6 +79,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_PORT: 8080,
         CONF_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == ID_HEX
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -77,6 +105,14 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -100,6 +136,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exceptions."""
@@ -122,6 +166,14 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
@@ -166,7 +218,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nuki.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -178,7 +230,6 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             },
         )
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == "BC614E"
         assert result2["data"] == {
@@ -186,6 +237,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             CONF_PORT: 8080,
             CONF_TOKEN: "test-token",
         }
+        assert result2["result"].unique_id == ID_HEX
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
@@ -219,7 +271,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nuki.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -254,6 +306,16 @@ async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
         assert result2["step_id"] == "reauth_confirm"
         assert result2["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_TOKEN: "new-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 async def test_reauth_cannot_connect(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow with cannot connect."""
@@ -276,6 +338,16 @@ async def test_reauth_cannot_connect(hass: HomeAssistant) -> None:
         assert result2["step_id"] == "reauth_confirm"
         assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_TOKEN: "new-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 async def test_reauth_unknown_exception(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow with an unknown exception."""
@@ -297,3 +369,13 @@ async def test_reauth_unknown_exception(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "reauth_confirm"
         assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_TOKEN: "new-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"

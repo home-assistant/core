@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import (
     device_entry_as_dict,
     entity_entry_as_dict,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 
@@ -49,6 +49,22 @@ def test_redact() -> None:
         "key5": None,
         "key6": "",
         "key7": REDACTED,
+    }
+
+
+def test_redact_device_info() -> None:
+    """Test the async_redact_data helper redacts a device info."""
+    device_info = DeviceInfo(
+        connections={("mac", "12:34:56:ab:cd:ef")},
+        name="name",
+        serial_number="serial",
+    )
+    to_redact = {"connections", "serial_number"}
+    redacted = {"connections": REDACTED, "name": "name", "serial_number": REDACTED}
+
+    assert async_redact_data(device_info, to_redact) == redacted
+    assert async_redact_data({"device_info": device_info}, to_redact) == {
+        "device_info": redacted
     }
 
 
@@ -111,7 +127,6 @@ def test_device_entry_as_dict() -> None:
         "_cache",
         "_composite_subentries",
         "_pending_move",
-        "_suggested_area",
         "composite_device_id",
         "composite_primary_config_entry",
         "has_composite_identifiers",

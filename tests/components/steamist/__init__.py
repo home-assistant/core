@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiosteamist import Steamist, SteamistStatus
 from discovery30303 import AIODiscovery30303, Device30303
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import steamist
 from homeassistant.components.steamist.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 MOCK_ASYNC_GET_STATUS_INACTIVE = SteamistStatus(
     temp=70, temp_units="F", minutes_remain=0, active=False

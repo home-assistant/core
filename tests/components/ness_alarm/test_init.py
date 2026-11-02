@@ -3,6 +3,7 @@
 from types import MappingProxyType
 
 from nessclient import ArmingMode, ArmingState
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
@@ -34,8 +35,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_entry_setup(hass: HomeAssistant, mock_nessclient) -> None:

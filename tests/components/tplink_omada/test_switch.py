@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client import SwitchPortSettings
 from tplink_omada_client.definitions import PoEMode
@@ -27,8 +28,6 @@ from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 UPDATE_INTERVAL = timedelta(seconds=10)
 POLL_INTERVAL = timedelta(seconds=POLL_GATEWAY + 10)

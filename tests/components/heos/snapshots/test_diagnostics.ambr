@@ -279,8 +279,6 @@
       'model_id': None,
       'name': 'Test Player',
       'name_by_user': None,
-      'next_name_part': None,
-      'parent_device_id': None,
       'serial_number': '**REDACTED**',
       'sw_version': '1.0.0',
       'via_device_id': None,
@@ -288,11 +286,24 @@
     'entities': list([
       dict({
         'entity': dict({
+          'aliases': list([
+            None,
+          ]),
           'area_id': None,
+          'capabilities': dict({
+            'source_list': list([
+              "Today's Hits Radio",
+              'Classical MPR (Classical Music)',
+              'HEOS Drive - Line In 1',
+              'Speaker - Line In 1',
+            ]),
+          }),
           'categories': dict({
           }),
           'config_subentry_id': None,
+          'device_class': None,
           'disabled_by': None,
+          'domain': 'media_player',
           'entity_category': None,
           'entity_id': 'media_player.test_player',
           'has_entity_name': True,
@@ -301,13 +312,19 @@
           'labels': list([
           ]),
           'name': None,
-          'next_name_part': 'device',
+          'object_id_base': None,
           'options': dict({
           }),
+          'original_device_class': None,
+          'original_icon': None,
           'original_name': None,
           'platform': 'heos',
+          'previous_unique_id': None,
+          'suggested_object_id': None,
+          'supported_features': 3079741,
           'translation_key': None,
           'unique_id': '1',
+          'unit_of_measurement': None,
         }),
         'state': dict({
           'attributes': dict({

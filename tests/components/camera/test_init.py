@@ -1,5 +1,6 @@
 """The tests for the camera component."""
 
+import asyncio
 from collections.abc import Callable
 import errno
 from http import HTTPStatus
@@ -9,6 +10,11 @@ from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 from aiohttp import hdrs
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera, async_register_webrtc_provider
@@ -16,17 +22,19 @@ from homeassistant.components.camera.const import (
     DOMAIN,
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
+    PREVIEW_FEATURE_TWO_WAY_AUDIO,
     StreamType,
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.camera.prefs import get_dynamic_camera_stream_settings
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -34,9 +42,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, SomeTestProvider, mock_turbo_jpeg
-
-from tests.common import async_fire_time_changed, setup_test_component_platform
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(name="image_mock_url")
@@ -186,6 +191,30 @@ async def test_get_image_without_exists_camera(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("image_mock_url")
+async def test_get_image_cancelled(hass: HomeAssistant) -> None:
+    """Test cancelling fetching an image propagates the cancellation."""
+    started = asyncio.Event()
+
+    async def _camera_image(*args: Any, **kwargs: Any) -> bytes:
+        started.set()
+        await asyncio.Event().wait()
+        return b"Test"
+
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+        side_effect=_camera_image,
+    ):
+        task = hass.async_create_task(
+            camera.async_get_image(hass, "camera.demo_camera")
+        )
+        await started.wait()
+        task.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+
+@pytest.mark.usefixtures("image_mock_url")
 async def test_get_image_with_timeout(hass: HomeAssistant) -> None:
     """Try to get image with timeout."""
     with (
@@ -294,48 +323,56 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_camera")
 @pytest.mark.parametrize(
-    ("target", "side_effect", "message"),
+    ("error", "translation_key"),
     [
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.EACCES, "Permission denied"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
         ),
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.EPERM, "Operation not permitted"),
-            "Cannot write image to /test/snapshot.jpg: permission denied$",
-        ),
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.ENOSPC, "No space left on device"),
-            "Cannot write image to /test/snapshot.jpg: no space left on the device$",
-        ),
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.EROFS, "Read-only file system"),
-            "Cannot write image to /test/snapshot.jpg: the file system is read-only$",
-        ),
-        (
-            "homeassistant.components.camera.services.os.makedirs",
-            OSError(errno.EIO, "Input/output error"),
-            "Cannot write image to /test/snapshot.jpg$",
-        ),
-        (
-            "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
-            TimeoutError,
-            "Unable to get snapshot: timed out after 10 seconds",
-        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
     ],
 )
-async def test_snapshot_service_error(
-    hass: HomeAssistant, target: str, side_effect: Exception, message: str
+async def test_snapshot_service_write_error(
+    hass: HomeAssistant, error: int, translation_key: str
 ) -> None:
-    """Test snapshot service with error."""
+    """Test snapshot service when the image can't be written."""
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch(target, side_effect=side_effect),
-        pytest.raises(HomeAssistantError, match=message),
+        patch(
+            "homeassistant.components.camera.services.os.makedirs",
+            side_effect=OSError(error, "Error"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": "/test/snapshot.jpg"}
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_snapshot_service_timeout(hass: HomeAssistant) -> None:
+    """Test snapshot service when getting the image times out."""
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+            side_effect=TimeoutError,
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="Unable to get snapshot: timed out after 10 seconds",
+        ),
     ):
         await hass.services.async_call(
             camera.DOMAIN,
@@ -862,7 +899,9 @@ async def test_use_stream_for_stills(
             "homeassistant.components.demo.camera.DemoCamera.stream_source",
             return_value="rtsp://some_source",
         ) as mock_stream_source,
-        patch("homeassistant.components.camera.create_stream") as mock_create_stream,
+        patch(
+            "homeassistant.components.camera.entity.create_stream"
+        ) as mock_create_stream,
         patch(
             "homeassistant.components.demo.camera.DemoCamera.use_stream_for_stills",
             return_value=True,
@@ -995,15 +1034,19 @@ async def _test_capabilities(
     entity_id: str,
     expected_stream_types: set[StreamType],
     expected_stream_types_with_webrtc_provider: set[StreamType],
+    expected_two_way_audio: bool = False,
+    expected_two_way_audio_with_webrtc_provider: bool = False,
 ) -> None:
     """Test camera capabilities."""
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    async def test(expected_types: set[StreamType]) -> None:
+    async def test(expected_types: set[StreamType], two_way_audio: bool) -> None:
         camera_obj = get_camera_from_entity_id(hass, entity_id)
         capabilities = camera_obj.camera_capabilities
-        assert capabilities == camera.CameraCapabilities(expected_types)
+        assert capabilities == camera.CameraCapabilities(
+            expected_types, two_way_audio=two_way_audio
+        )
 
         # Request capabilities through WebSocket
         client = await hass_ws_client(hass)
@@ -1015,14 +1058,20 @@ async def _test_capabilities(
         # Assert WebSocket response
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == {"frontend_stream_types": ANY}
+        assert msg["result"] == {
+            "frontend_stream_types": ANY,
+            "two_way_audio": two_way_audio,
+        }
         assert sorted(msg["result"]["frontend_stream_types"]) == sorted(expected_types)
 
-    await test(expected_stream_types)
+    await test(expected_stream_types, expected_two_way_audio)
 
     # Test with WebRTC provider
     await _register_test_webrtc_provider(hass)
-    await test(expected_stream_types_with_webrtc_provider)
+    await test(
+        expected_stream_types_with_webrtc_provider,
+        expected_two_way_audio_with_webrtc_provider,
+    )
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")
@@ -1050,6 +1099,97 @@ async def test_camera_capabilities_webrtc(
     await _test_capabilities(
         hass, hass_ws_client, "camera.async", {StreamType.WEB_RTC}, {StreamType.WEB_RTC}
     )
+
+
+async def _async_set_two_way_audio_preview_feature(
+    hass: HomeAssistant, enabled: bool
+) -> None:
+    """Set up labs and set the two way audio preview feature."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_TWO_WAY_AUDIO, enabled
+    )
+
+
+@pytest.mark.parametrize(
+    ("preview_feature_enabled", "expected_two_way_audio_with_webrtc_provider"),
+    [
+        pytest.param(True, True, id="preview_feature_enabled"),
+        pytest.param(False, False, id="preview_feature_disabled"),
+    ],
+)
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_camera_capabilities_two_way_audio_hls(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    preview_feature_enabled: bool,
+    expected_two_way_audio_with_webrtc_provider: bool,
+) -> None:
+    """Test two way audio for HLS cameras needs a WebRTC provider and labs."""
+    await _async_set_two_way_audio_preview_feature(hass, preview_feature_enabled)
+    cam = get_camera_from_entity_id(hass, "camera.demo_camera")
+    cam._attr_camera_entity_capabilities = camera.CameraEntityCapabilities(
+        two_way_audio=True
+    )
+
+    await _test_capabilities(
+        hass,
+        hass_ws_client,
+        cam.entity_id,
+        {StreamType.HLS},
+        {StreamType.HLS, StreamType.WEB_RTC},
+        expected_two_way_audio_with_webrtc_provider=expected_two_way_audio_with_webrtc_provider,
+    )
+
+
+@pytest.mark.parametrize(
+    ("preview_feature_enabled", "expected_two_way_audio"),
+    [
+        pytest.param(True, True, id="preview_feature_enabled"),
+        pytest.param(False, False, id="preview_feature_disabled"),
+    ],
+)
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
+async def test_camera_capabilities_two_way_audio_native_webrtc(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    preview_feature_enabled: bool,
+    expected_two_way_audio: bool,
+) -> None:
+    """Test two way audio for native WebRTC cameras needs the labs feature."""
+    await _async_set_two_way_audio_preview_feature(hass, preview_feature_enabled)
+    cam = get_camera_from_entity_id(hass, "camera.async")
+    cam._attr_camera_entity_capabilities = camera.CameraEntityCapabilities(
+        two_way_audio=True
+    )
+
+    await _test_capabilities(
+        hass,
+        hass_ws_client,
+        cam.entity_id,
+        {StreamType.WEB_RTC},
+        {StreamType.WEB_RTC},
+        expected_two_way_audio=expected_two_way_audio,
+        expected_two_way_audio_with_webrtc_provider=expected_two_way_audio,
+    )
+
+
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
+async def test_camera_capabilities_two_way_audio_preview_feature_toggled(
+    hass: HomeAssistant,
+) -> None:
+    """Test toggling the labs feature is reflected without reloading."""
+    await _async_set_two_way_audio_preview_feature(hass, True)
+    cam = get_camera_from_entity_id(hass, "camera.async")
+    cam._attr_camera_entity_capabilities = camera.CameraEntityCapabilities(
+        two_way_audio=True
+    )
+    assert cam.camera_capabilities.two_way_audio
+
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_TWO_WAY_AUDIO, False
+    )
+    assert not cam.camera_capabilities.two_way_audio
 
 
 @pytest.mark.usefixtures("mock_test_webrtc_cameras", "register_test_provider")

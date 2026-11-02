@@ -2,12 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.landisgyr_heat_meter.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 API_HEAT_METER_SERVICE = (
     "homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService"

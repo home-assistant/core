@@ -12,6 +12,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
+from .const import DOMAIN
 from .coordinator import RuuviGatewayUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +72,9 @@ def async_connect_scanner(
 ) -> tuple[RuuviGatewayScanner, CALLBACK_TYPE]:
     """Connect scanner and start polling."""
     assert entry.unique_id is not None
-    source = str(entry.unique_id)
+    # Scanner sources are upper case MAC addresses everywhere else in core, and
+    # the device registry does not normalise CONNECTION_BLUETOOTH values.
+    source = str(entry.unique_id).upper()
     _LOGGER.debug(
         "%s [%s]: Connecting scanner",
         entry.title,
@@ -83,7 +86,12 @@ def async_connect_scanner(
         coordinator=coordinator,
     )
     unload_callbacks = [
-        async_register_scanner(hass, scanner),
+        async_register_scanner(
+            hass,
+            scanner,
+            source_domain=DOMAIN,
+            source_config_entry_id=entry.entry_id,
+        ),
         scanner.async_setup(),
         scanner.start_polling(),
     ]

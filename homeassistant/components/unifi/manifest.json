@@ -1,8 +1,13 @@
 {
   "domain": "unifi",
   "name": "UniFi Network",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@Kane610"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["unifi_discovery"],
   "documentation": "https://www.home-assistant.io/integrations/unifi",
   "integration_type": "hub",

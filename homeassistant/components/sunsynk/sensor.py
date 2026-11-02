@@ -139,7 +139,6 @@ SENSORS_INVERTER: tuple[SunsynkSensorEntityDescription, ...] = (
 SENSORS_BATTERY: tuple[SunsynkSensorEntityDescription, ...] = (
     SunsynkSensorEntityDescription(
         key="battery_power",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -156,8 +155,6 @@ SENSORS_BATTERY: tuple[SunsynkSensorEntityDescription, ...] = (
     ),
     SunsynkSensorEntityDescription(
         key="battery_voltage",
-        # pylint: disable-next=home-assistant-redundant-translation-key
-        translation_key="voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -167,8 +164,6 @@ SENSORS_BATTERY: tuple[SunsynkSensorEntityDescription, ...] = (
     ),
     SunsynkSensorEntityDescription(
         key="battery_current",
-        # pylint: disable-next=home-assistant-redundant-translation-key
-        translation_key="current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -178,8 +173,6 @@ SENSORS_BATTERY: tuple[SunsynkSensorEntityDescription, ...] = (
     ),
     SunsynkSensorEntityDescription(
         key="battery_temperature",
-        # pylint: disable-next=home-assistant-redundant-translation-key
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,

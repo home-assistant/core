@@ -1,6 +1,7 @@
 {
   "domain": "sunricher_dali",
   "name": "Sunricher DALI",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": ["@niracler"],
   "config_flow": true,
   "dhcp": [

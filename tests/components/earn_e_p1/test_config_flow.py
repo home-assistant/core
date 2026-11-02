@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from earn_e_p1 import EarnEP1Device
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL
@@ -22,8 +23,6 @@ from .conftest import (
     MOCK_NEW_HOST,
     MOCK_SERIAL,
 )
-
-from tests.common import MockConfigEntry
 
 DISCOVER_PATH = "homeassistant.components.earn_e_p1.config_flow.discover"
 VALIDATE_PATH = "homeassistant.components.earn_e_p1.config_flow.validate"
@@ -72,9 +71,9 @@ async def test_user_flow_discovery_no_serial_validates(hass: HomeAssistant) -> N
             result["flow_id"], user_input={}
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SERIAL] == MOCK_SERIAL
+    assert result["result"].unique_id == MOCK_SERIAL
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -153,10 +152,10 @@ async def test_user_flow_discovery_timeout_shows_manual_form(
             result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"EARN-E P1 ({MOCK_HOST})"
     assert result["data"] == {CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL}
+    assert result["result"].unique_id == MOCK_SERIAL
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -335,8 +334,8 @@ async def test_validate_uses_shared_listener(
         result["flow_id"], user_input={CONF_HOST: other_host}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == other_serial
     mock_listener.validate.assert_called_once()
 
 
@@ -355,8 +354,8 @@ async def test_validate_without_shared_listener(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_HOST: MOCK_HOST}
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_SERIAL
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

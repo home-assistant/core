@@ -4,6 +4,8 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components import mqtt as real_mqtt
 from homeassistant.components.greencell.const import (
@@ -15,9 +17,6 @@ from homeassistant.components.greencell.const import (
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-
-from tests.common import MockConfigEntry
-from tests.typing import MqttMockHAClient
 
 # Test constants
 TEST_SERIAL_NUMBER = "EVGC021A22750001ZM0001"
@@ -103,7 +102,7 @@ def mock_setup_entry():
     """Override async_setup_entry to prevent the integration from starting."""
     with patch(
         "homeassistant.components.greencell.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

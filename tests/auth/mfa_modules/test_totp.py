@@ -3,12 +3,12 @@
 import asyncio
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockUser
+
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockUser
 
 MOCK_CODE = "123456"
 

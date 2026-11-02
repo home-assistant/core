@@ -22,20 +22,23 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfLength,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfRatio,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import BleBoxConfigEntry
-from .const import CO2_LEVEL, OPEN_STATUS
-from .coordinator import BleBoxCoordinator
+from .const import CO2_LEVEL, DOMAIN, OPEN_STATUS
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .entity import BleBoxEntity
 
 PARALLEL_UPDATES = 0
@@ -69,7 +72,6 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="temperature",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -129,7 +131,6 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="reactivePower",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="reactive_power",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
@@ -144,7 +145,6 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="apparentPower",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="apparent_power",
         device_class=SensorDeviceClass.APPARENT_POWER,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
@@ -152,7 +152,6 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="voltage",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -160,7 +159,6 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="current",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
@@ -168,7 +166,6 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="frequency",
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -193,6 +190,36 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=list(CO2_LEVEL.values()),
         value_fn=lambda v: CO2_LEVEL.get(int(v)) if v is not None else None,
+    ),
+    BleBoxSensorEntityDescription(
+        key="gaugePressure",
+        translation_key="gauge_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    BleBoxSensorEntityDescription(
+        key="liquidHeight",
+        translation_key="liquid_height",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    BleBoxSensorEntityDescription(
+        key="fillLevel",
+        translation_key="fill_level",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    BleBoxSensorEntityDescription(
+        key="volume",
+        translation_key="volume",
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
 )
 
@@ -243,6 +270,50 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
         elif index is not None and description.translation_key:
             self._attr_translation_key = f"{description.translation_key}_n"
             self._attr_translation_placeholders = {"index": str(index)}
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Sync the probe configuration issue when added."""
+        await super().async_added_to_hass()
+        self._async_update_probe_issue()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Delete the probe configuration issue when removed."""
+        await super().async_will_remove_from_hass()
+        ir.async_delete_issue(self.hass, DOMAIN, self._probe_issue_id)
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Sync the probe configuration issue and write state."""
+        self._async_update_probe_issue()
+        super()._handle_coordinator_update()
+
+    @property
+    def _probe_issue_id(self) -> str:
+        return f"probe_not_configured_{self.unique_id}"
+
+    @callback
+    def _async_update_probe_issue(self) -> None:
+        if not self._feature.needs_configuration:
+            ir.async_delete_issue(self.hass, DOMAIN, self._probe_issue_id)
+            return
+        sensor_name = self.name
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            self._probe_issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="probe_not_configured",
+            translation_placeholders={
+                "device_name": self._feature.product.name,
+                "sensor_name": sensor_name
+                if isinstance(sensor_name, str)
+                else self.entity_id,
+            },
+        )
 
     @property
     @override

@@ -13,6 +13,7 @@ from aiohasupervisor.models import (
     AddonsStats,
     AddonState,
     CIFSMountResponse,
+    DiskMountResponse,
     HomeAssistantInfo,
     HomeAssistantStats,
     HostInfo,
@@ -34,7 +35,7 @@ from aiohasupervisor.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME, ATTR_STATE
+from homeassistant.const import ATTR_NAME, ATTR_STATE
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -46,6 +47,7 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -108,6 +110,7 @@ from .const import (
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
+    ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
     ISSUE_MOUNT_MOUNT_FAILED,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
@@ -146,7 +149,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_MOUNT_MOUNT_FAILED,
     "issue_system_multiple_data_disks",
-    "issue_system_reboot_required",
+    ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
@@ -326,63 +329,53 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             previous_issue == issue and previous_issue.suggestions == issue.suggestions
         )
 
-    def _process_reason_deltas(
-        self,
-        previous_data: SupervisorIssuesData,
-        current_data: SupervisorIssuesData,
-    ) -> None:
-        """Create/delete unhealthy and unsupported repairs based on reason deltas."""
-        for unhealthy in (
-            current_data.unhealthy_reasons - previous_data.unhealthy_reasons
+    def _update_unhealthy_issues(self, unhealthy_reasons: set[str]) -> None:
+        """Create unhealthy repairs and delete those whose reason is gone."""
+        with ir.async_refresh_issues(
+            self.hass, DOMAIN, issue_id_pattern=f"{ISSUE_ID_UNHEALTHY}_"
         ):
-            if unhealthy in UnhealthyReason:
-                translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
-                translation_placeholders = None
-            else:
-                translation_key = ISSUE_KEY_UNHEALTHY
-                translation_placeholders = {PLACEHOLDER_KEY_REASON: unhealthy}
+            for unhealthy in unhealthy_reasons:
+                if unhealthy in UnhealthyReason:
+                    translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
+                    translation_placeholders = None
+                else:
+                    translation_key = ISSUE_KEY_UNHEALTHY
+                    translation_placeholders = {PLACEHOLDER_KEY_REASON: unhealthy}
 
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
-                is_fixable=False,
-                learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
-                severity=IssueSeverity.CRITICAL,
-                translation_key=translation_key,
-                translation_placeholders=translation_placeholders,
-            )
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
+                    is_fixable=False,
+                    learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
+                    severity=IssueSeverity.CRITICAL,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
 
-        for fixed in previous_data.unhealthy_reasons - current_data.unhealthy_reasons:
-            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNHEALTHY}_{fixed}")
-
-        for unsupported in (
-            current_data.unsupported_reasons
-            - UNSUPPORTED_SKIP_REPAIR
-            - previous_data.unsupported_reasons
+    def _update_unsupported_issues(self, unsupported_reasons: set[str]) -> None:
+        """Create unsupported repairs and delete those whose reason is gone."""
+        with ir.async_refresh_issues(
+            self.hass, DOMAIN, issue_id_pattern=f"{ISSUE_ID_UNSUPPORTED}_"
         ):
-            if unsupported in UnsupportedReason:
-                translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
-                translation_placeholders = None
-            else:
-                translation_key = ISSUE_KEY_UNSUPPORTED
-                translation_placeholders = {PLACEHOLDER_KEY_REASON: unsupported}
+            for unsupported in unsupported_reasons - UNSUPPORTED_SKIP_REPAIR:
+                if unsupported in UnsupportedReason:
+                    translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
+                    translation_placeholders = None
+                else:
+                    translation_key = ISSUE_KEY_UNSUPPORTED
+                    translation_placeholders = {PLACEHOLDER_KEY_REASON: unsupported}
 
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
-                is_fixable=False,
-                learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
-                severity=IssueSeverity.WARNING,
-                translation_key=translation_key,
-                translation_placeholders=translation_placeholders,
-            )
-
-        for fixed in previous_data.unsupported_reasons - (
-            current_data.unsupported_reasons - UNSUPPORTED_SKIP_REPAIR
-        ):
-            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNSUPPORTED}_{fixed}")
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
+                    is_fixable=False,
+                    learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
+                    severity=IssueSeverity.WARNING,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
 
     def _create_or_update_issue_repair(self, issue: Issue) -> None:
         """Create/update a repair for an issue if needed."""
@@ -408,7 +401,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
                 ISSUE_KEY_ADDON_PWNED,
             }:
                 placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
-                    f"/hassio/addon/{issue.reference}"
+                    f"/config/app/{issue.reference}"
                 )
                 addons_list = get_addons_list(self.hass) or []
                 placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
@@ -557,7 +550,8 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
         if self.last_update_success and self.data is not None:
-            self._process_reason_deltas(previous_data, self.data)
+            self._update_unhealthy_issues(self.data.unhealthy_reasons)
+            self._update_unsupported_issues(self.data.unsupported_reasons)
             self._process_issue_deltas(previous_data, self.data)
 
     @override
@@ -628,7 +622,10 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             return
 
         self.async_set_updated_data(updated_data)
-        self._process_reason_deltas(previous_data, updated_data)
+        if event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
+            self._update_unhealthy_issues(updated_data.unhealthy_reasons)
+        elif event[ATTR_WS_EVENT] == EVENT_SUPPORTED_CHANGED:
+            self._update_unsupported_issues(updated_data.unsupported_reasons)
         self._process_issue_deltas(previous_data, updated_data)
 
 
@@ -833,7 +830,7 @@ class HassioMainData:
     core: HomeAssistantInfo
     supervisor: SupervisorInfo
     host: HostInfo
-    mounts: dict[str, CIFSMountResponse | NFSMountResponse]
+    mounts: dict[str, CIFSMountResponse | DiskMountResponse | NFSMountResponse]
     os: OSInfo | None
     panels: dict[str, IngressPanel]
 
@@ -1120,18 +1117,20 @@ def async_register_addons_in_dev_reg(
             sw_version=addon.version,
             name=addon.name,
             entry_type=dr.DeviceEntryType.SERVICE,
-            configuration_url=f"homeassistant://hassio/addon/{addon.slug}",
+            configuration_url=f"homeassistant://config/app/{addon.slug}",
         )
         if manufacturer := addon_data.repository or addon.url:
-            params[ATTR_MANUFACTURER] = manufacturer
-        dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+            params.manufacturer = manufacturer
+        dev_reg.async_get_or_create_from_info(
+            config_entry_id=entry_id, device_info=params
+        )
 
 
 @callback
 def async_register_mounts_in_dev_reg(
     entry_id: str,
     dev_reg: dr.DeviceRegistry,
-    mounts: list[CIFSMountResponse | NFSMountResponse],
+    mounts: list[CIFSMountResponse | DiskMountResponse | NFSMountResponse],
 ) -> None:
     """Register mounts in the device registry."""
     for mount in mounts:
@@ -1143,7 +1142,9 @@ def async_register_mounts_in_dev_reg(
             name=mount.name,
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+        dev_reg.async_get_or_create_from_info(
+            config_entry_id=entry_id, device_info=params
+        )
 
 
 @callback
@@ -1159,7 +1160,7 @@ def async_register_os_in_dev_reg(
         name="Home Assistant Operating System",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1175,7 +1176,7 @@ def async_register_host_in_dev_reg(
         name="Home Assistant Host",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1193,7 +1194,7 @@ def async_register_core_in_dev_reg(
         name="Home Assistant Core",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1211,7 +1212,7 @@ def async_register_supervisor_in_dev_reg(
         name="Home Assistant Supervisor",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1242,7 +1243,7 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator[HassioStatsData]):
             ),
         )
         self.supervisor_client = get_supervisor_client(hass)
-        self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
+        self._container_updates: defaultdict[str, dict[str, set[Entity]]] = defaultdict(
             lambda: defaultdict(set)
         )
 
@@ -1317,17 +1318,17 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator[HassioStatsData]):
 
     @callback
     def async_enable_container_updates(
-        self, slug: str, entity_id: str, types: set[str]
+        self, slug: str, entity: Entity, types: set[str]
     ) -> CALLBACK_TYPE:
         """Enable stats updates for a container."""
         enabled_updates = self._container_updates[slug]
         for key in types:
-            enabled_updates[key].add(entity_id)
+            enabled_updates[key].add(entity)
 
         @callback
         def _remove() -> None:
             for key in types:
-                enabled_updates[key].discard(entity_id)
+                enabled_updates[key].discard(entity)
                 if not enabled_updates[key]:
                     del enabled_updates[key]
             if not enabled_updates:
@@ -1362,7 +1363,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         )
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
-        self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
+        self._addon_info_subscriptions: defaultdict[str, set[Entity]] = defaultdict(set)
         # State change events recorded while data fetches are in flight
         self._event_state_recorders: list[dict[str, AddonState]] = []
         self.supervisor_client = get_supervisor_client(hass)
@@ -1543,14 +1544,14 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
 
     @callback
     def async_enable_addon_info_updates(
-        self, slug: str, entity_id: str
+        self, slug: str, entity: Entity
     ) -> CALLBACK_TYPE:
         """Enable info updates for an add-on."""
-        self._addon_info_subscriptions[slug].add(entity_id)
+        self._addon_info_subscriptions[slug].add(entity)
 
         @callback
         def _remove() -> None:
-            self._addon_info_subscriptions[slug].discard(entity_id)
+            self._addon_info_subscriptions[slug].discard(entity)
             if not self._addon_info_subscriptions[slug]:
                 del self._addon_info_subscriptions[slug]
 

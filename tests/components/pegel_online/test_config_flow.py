@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pegel_online.const import CONF_STATION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -17,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import PegelOnlineMock
 from .const import MOCK_CONFIG_ENTRY_DATA_DRESDEN, MOCK_NEARBY_STATIONS
-
-from tests.common import MockConfigEntry
 
 MOCK_USER_DATA_STEP1 = {
     CONF_LOCATION: {CONF_LATITUDE: 51.0, CONF_LONGITUDE: 13.0},
@@ -38,7 +37,7 @@ async def test_user(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.pegel_online.async_setup_entry", return_value=True
+            "homeassistant.components.pegel_online.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.pegel_online.config_flow.PegelOnline",
@@ -54,10 +53,10 @@ async def test_user(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA_STEP2
         )
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_STATION] == "70272185-xxxx-xxxx-xxxx-43bea330dcae"
         assert result["title"] == "DRESDEN ELBE"
+        assert result["result"].unique_id == MOCK_USER_DATA_STEP2[CONF_STATION]
 
         await hass.async_block_till_done()
 
@@ -106,7 +105,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.pegel_online.async_setup_entry", return_value=True
+            "homeassistant.components.pegel_online.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.pegel_online.config_flow.PegelOnline",
@@ -151,7 +150,7 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.pegel_online.async_setup_entry", return_value=True
+            "homeassistant.components.pegel_online.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.pegel_online.config_flow.PegelOnline",
