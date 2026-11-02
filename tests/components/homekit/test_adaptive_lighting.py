@@ -7,6 +7,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
 
 from homeassistant.components.homekit.adaptive_lighting import (
     CHAR_TRANSITION_CONTROL,
@@ -48,8 +49,6 @@ from homeassistant.components.light import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, async_mock_service
 
 # A real schedule written by the Home app to a colour temperature light. The
 # curve covers 24 hours in 42 points and asks for an update every 60 seconds.
