@@ -611,21 +611,36 @@ async def test_remove_departed_client_and_rediscover(
     assert await async_setup_component(hass, "config", {})
     client = await hass_ws_client(hass)
 
+    def hub_command(dhcp_data: list[dict[str, Any]]) -> Callable[..., Any]:
+        return build_mock_command(
+            {
+                MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}],
+                MIKROTIK_SERVICES[ROUTERBOARD]: ROUTERBOARD_DATA,
+                MIKROTIK_SERVICES[DHCP]: dhcp_data,
+            }
+        )
+
     async def poll(dhcp_data: list[dict[str, Any]], delay: timedelta) -> None:
         with patch.object(
             mikrotik.coordinator.MikrotikData,
             "command",
-            new=build_mock_command({MIKROTIK_SERVICES[DHCP]: dhcp_data}),
+            new=hub_command(dhcp_data),
         ):
             freezer.tick(delay)
             async_fire_time_changed(hass)
             await hass.async_block_till_done(wait_background_tasks=True)
 
+    def client_entries() -> tuple[dr.DeviceEntry | None, str | None]:
+        return (
+            device_registry.async_get_device_by_connection(
+                connection, config_entry.entry_id
+            ),
+            entity_registry.async_get_entity_id("device_tracker", DOMAIN, mac),
+        )
+
     # The client left, but is still within the detection time
     await poll([inactive_lease], timedelta(minutes=4))
-    device_entry = device_registry.async_get_device_by_connection(
-        connection, config_entry.entry_id
-    )
+    device_entry, _ = client_entries()
     assert device_entry is not None
     response = await client.remove_device(device_entry.id)
     assert not response["success"]
@@ -633,21 +648,24 @@ async def test_remove_departed_client_and_rediscover(
     await poll([inactive_lease], timedelta(minutes=2))
     response = await client.remove_device(device_entry.id)
     assert response["success"]
-    assert device_registry.async_get(device_entry.id) is None
-    assert entity_registry.async_get_entity_id("device_tracker", DOMAIN, mac) is None
+    assert client_entries() == (None, None)
 
-    # The bound but inactive lease must not re-create the removed client
+    # The inactive lease must not re-create the removed client
     await poll([inactive_lease], timedelta(seconds=10))
-    assert (
-        device_registry.async_get_device_by_connection(
-            connection, config_entry.entry_id
-        )
-        is None
-    )
-    assert entity_registry.async_get_entity_id("device_tracker", DOMAIN, mac) is None
+    assert client_entries() == (None, None)
+
+    # Not even after a reload, which starts without any in-memory client state
+    with patch.object(
+        mikrotik.coordinator.MikrotikData,
+        "command",
+        new=hub_command([inactive_lease]),
+    ):
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert client_entries() == (None, None)
 
     await poll([DEVICE_2_DHCP], timedelta(seconds=10))
-    assert device_registry.async_get_device_by_connection(
-        connection, config_entry.entry_id
-    )
-    assert entity_registry.async_get_entity_id("device_tracker", DOMAIN, mac)
+    device_entry, entity_id = client_entries()
+    assert device_entry is not None
+    assert entity_id is not None

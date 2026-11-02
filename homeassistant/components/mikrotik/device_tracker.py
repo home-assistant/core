@@ -58,7 +58,8 @@ def update_items(
 ) -> None:
     """Update tracked device state from the hub."""
     new_tracked: list[MikrotikDataUpdateCoordinatorTracker] = []
-    for mac, device in coordinator.api.devices.items():
+    # A poll in the executor can add clients meanwhile
+    for mac, device in list(coordinator.api.devices.items()):
         if mac not in coordinator.tracked_macs:
             coordinator.tracked_macs.add(mac)
             new_tracked.append(

@@ -128,7 +128,8 @@ async def async_remove_config_entry_device(
     }
     clients = {
         mac: client
-        for mac, client in coordinator.api.devices.items()
+        # Copy, a poll in the executor can add clients while iterating
+        for mac, client in list(coordinator.api.devices.items())
         if format_mac(mac) in device_macs
     }
     if any(coordinator.is_client_connected(client) for client in clients.values()):

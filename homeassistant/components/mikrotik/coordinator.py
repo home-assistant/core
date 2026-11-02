@@ -66,8 +66,6 @@ class MikrotikData:
         self._host: str = self.config_entry.data[CONF_HOST]
         self.all_devices: dict[str, dict[str, Any]] = {}
         self.devices: dict[str, Device] = {}
-        # Clients removed by the user, re-created only once present again
-        self.forgotten_devices: set[str] = set()
         self.support_capsman: bool = False
         self.support_wireless: bool = False
         self.support_wifiwave2: bool = False
@@ -228,11 +226,6 @@ class MikrotikData:
         """Restore a missing device after restart."""
         self.devices[mac] = Device(mac, self.all_devices[mac])
 
-    def forget_device(self, mac: str) -> None:
-        """Forget a client until it is present again."""
-        self.devices.pop(mac, None)
-        self.forgotten_devices.add(mac)
-
     def update_devices(self) -> None:
         """Get list of devices with latest status."""
         arp_devices = {}
@@ -296,10 +289,10 @@ class MikrotikData:
                     )
 
             if (device := self.devices.get(mac)) is None:
-                # an inactive DHCP lease must not re-create a removed client
-                if mac in self.forgotten_devices and not active:
+                # Known clients are restored from the entity registry, so an
+                # inactive lease can't bring back a client the user removed
+                if not active:
                     continue
-                self.forgotten_devices.discard(mac)
                 device = self.devices[mac] = Device(mac, self.all_devices.get(mac, {}))
             else:
                 device.update(params=self.all_devices.get(mac, {}))
@@ -433,7 +426,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     @callback
     def async_forget_client(self, mac: str) -> None:
         """Forget a removed client so it is re-created when it returns."""
-        self._mk_data.forget_device(mac)
+        self._mk_data.devices.pop(mac, None)
         self.tracked_macs.discard(mac)
 
     @override
