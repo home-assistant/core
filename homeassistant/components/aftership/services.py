@@ -1,6 +1,5 @@
 """Services for aftership."""
 
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -12,18 +11,12 @@ from .const import (
     DOMAIN,
     REMOVE_TRACKING_SERVICE_SCHEMA,
     UPDATE_TOPIC,
+    AfterShipService,
     AfterShipServiceArgument,
 )
 
 if TYPE_CHECKING:
     from . import AfterShipConfigEntry
-
-
-class AfterShipService(StrEnum):
-    """Store keys for AfterShip services."""
-
-    ADD_TRACKING = "add_tracking"
-    REMOVE_TRACKING = "remove_tracking"
 
 
 async def handle_add_tracking(call: ServiceCall) -> None:

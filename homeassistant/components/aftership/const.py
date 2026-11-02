@@ -21,6 +21,13 @@ UPDATE_TOPIC: Final = f"{DOMAIN}_update"
 MIN_TIME_BETWEEN_UPDATES: Final = timedelta(minutes=15)
 
 
+class AfterShipService(StrEnum):
+    """Store keys for AfterShip services."""
+
+    ADD_TRACKING = "add_tracking"
+    REMOVE_TRACKING = "remove_tracking"
+
+
 class AfterShipServiceArgument(StrEnum):
     """Store keys for AfterShip service arguments."""
 
