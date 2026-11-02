@@ -110,6 +110,19 @@
       "total_range": {
         "name": "Total range"
       }
+    },
+    "switch": {
+      "active_ventilation": {
+        "name": "Active ventilation"
+      },
+      "charging": {
+        "name": "Charging"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to send the command to the vehicle: {error}"
     }
   }
 }

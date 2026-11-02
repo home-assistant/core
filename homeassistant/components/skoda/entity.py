@@ -1,11 +1,17 @@
 """Entity base for the Škoda integration."""
 
+from collections.abc import Awaitable
+from typing import Any
+
+from skoda_public_api.api_layer.exceptions import OpenApiError
+from skoda_public_api.models.active_ventilation import ActiveVentilation
 from skoda_public_api.models.air_conditioning import AirConditioning
 from skoda_public_api.models.auxiliary_heating import AuxiliaryHeating
 from skoda_public_api.models.charging import Charging
 from skoda_public_api.models.driving_range import FuelStatus
 from skoda_public_api.models.vehicle import Odometer, VehicleObject
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -62,6 +68,22 @@ class SkodaEntity(CoordinatorEntity[SkodaUpdateCoordinator]):
         return self.coordinator.data.vehicle_response.vehicle.charging
 
     @property
+    def open_api_active_ventilation(self) -> ActiveVentilation | None:
+        """Returns main ActiveVentilation from new OpenAPI."""
+        return self.coordinator.data.vehicle_response.vehicle.active_ventilation
+
+    @property
     def open_api_auxiliary_heating(self) -> AuxiliaryHeating | None:
         """Returns main AuxiliaryHeating from new OpenAPI."""
         return self.coordinator.data.vehicle_response.vehicle.auxiliary_heating
+
+    async def async_send_command(self, command: Awaitable[Any]) -> None:
+        """Send a command to the vehicle, raising a translated error on failure."""
+        try:
+            await command
+        except OpenApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
