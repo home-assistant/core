@@ -22,7 +22,7 @@ from .const import (
     EventEntityCapabilityAttribute,
     EventEntityStateAttribute,
 )
-from .entity import EventEntity, EventEntityDescription
+from .entity import EventEntity, EventEntityDescription, EventExtraStoredData
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
@@ -46,6 +46,7 @@ __all__ = [
     "EventEntityCapabilityAttribute",
     "EventEntityDescription",
     "EventEntityStateAttribute",
+    "EventExtraStoredData",
 ]
 
 # mypy: disallow-any-generics

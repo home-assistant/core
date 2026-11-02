@@ -96,7 +96,10 @@ def _async_import_options_from_data_if_missing(
 
 
 async def _update_listener(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
-    """Handle options update."""
+    """Reload when the host changes and pass options updates to the entities."""
+    if entry.data[CONF_HOST] != entry.runtime_data.address:
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
     async_dispatcher_send(
         hass, f"{HARMONY_OPTIONS_UPDATE}-{entry.unique_id}", entry.options
     )

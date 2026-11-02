@@ -58,11 +58,7 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_SERVICE,
-    ATTR_SW_VERSION,
     CONF_NAME,
     CONF_TYPE,
     LIGHT_LUX,
@@ -98,7 +94,11 @@ from .climate_util import (
 )
 from .const import (
     ATTR_DISPLAY_NAME,
+    ATTR_HW_VERSION,
     ATTR_INTEGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_SERIAL_NUMBER,
@@ -373,6 +373,10 @@ def get_accessory(  # noqa: C901
             a_type = "NitrogenDioxideSensor"
         elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
             a_type = "VolatileOrganicCompoundsSensor"
+        elif device_class == SensorDeviceClass.OZONE:
+            a_type = "OzoneSensor"
+        elif device_class == SensorDeviceClass.SULPHUR_DIOXIDE:
+            a_type = "SulphurDioxideSensor"
         elif device_class == SensorDeviceClass.GAS:
             a_type = "AirQualitySensor"
         elif device_class == SensorDeviceClass.CO:

@@ -42,7 +42,6 @@ from .prefs import CloudPreferences
 
 ATTR_GENDER = "gender"
 
-DEPRECATED_VOICES = {"XiaoxuanNeural": "XiaozhenNeural"}
 SUPPORT_LANGUAGES = list(TTS_VOICES)
 
 DEFAULT_VOICES = {
@@ -212,10 +211,9 @@ def _prepare_voice_args(
     """Prepare voice arguments."""
     gender = handle_deprecated_gender(hass, gender)
     style: str | None
-    original_voice, _, style = voice.partition(VOICE_STYLE_SEPERATOR)
+    updated_voice, _, style = voice.partition(VOICE_STYLE_SEPERATOR)
     if not style:
         style = None
-    updated_voice = handle_deprecated_voice(hass, original_voice)
     if updated_voice not in TTS_VOICES[language]:
         default_voice = DEFAULT_VOICES[language]
         _LOGGER.debug(
@@ -605,33 +603,3 @@ def handle_deprecated_gender(
         },
     )
     return Gender(gender)
-
-
-@callback
-def handle_deprecated_voice(
-    hass: HomeAssistant,
-    original_voice: str | None,
-) -> str | None:
-    """Handle deprecated voice."""
-    voice = original_voice
-    if (
-        original_voice
-        and voice
-        and (voice := DEPRECATED_VOICES.get(original_voice, original_voice))
-        != original_voice
-    ):
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_voice_{original_voice}",
-            is_fixable=True,
-            is_persistent=True,
-            severity=IssueSeverity.WARNING,
-            breaks_in_ha_version="2024.8.0",
-            translation_key="deprecated_voice",
-            translation_placeholders={
-                "deprecated_voice": original_voice,
-                "replacement_voice": voice,
-            },
-        )
-    return voice

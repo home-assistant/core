@@ -22,7 +22,7 @@ dependencies = [
   "paho-mqtt==2.1.0",
   "pytest==9.0.3",
   "pytest-aiohttp==1.1.1",
-  "pytest-asyncio==1.4.0",
+  "pytest-asyncio==1.4.1",
   "pytest-freezer==0.4.9",
   "pytest-socket==0.8.1",
   "pytest-xdist==3.8.0",
@@ -36,13 +36,13 @@ pytest_homeassistant = "pytest_homeassistant.bootstrap"
 
 [project.optional-dependencies]
 bluetooth = [
-  "aiohasupervisor==0.8.1",
+  "aiohasupervisor==0.9.0",
   "aiousbwatcher==1.1.2",
   "bluetooth-adapters==2.4.0",
   "bluetooth-auto-recovery==1.6.4",
   "bluetooth-data-tools==1.29.24",
   "habluetooth==7.1.2",
-  "serialx==1.15.0",
+  "serialx==1.15.1",
 ]
 infrared = ["infrared-protocols==10.5.0"]
 radio-frequency = ["rf-protocols==4.3.0"]

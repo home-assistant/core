@@ -6,7 +6,6 @@ from grandstream_home_api import GDSPhoneAPI, attempt_login, create_device_api_i
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_MODEL,
     CONF_PASSWORD,
@@ -21,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN
+from .const import CONF_SW_VERSION, DOMAIN
 from .coordinator import (
     GrandstreamConfigEntry,
     GrandstreamCoordinator,
@@ -133,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
 
     # 3. Create device info
     mac_address = api.device_mac
-    discovery_version = entry.data.get(ATTR_SW_VERSION)
+    discovery_version = entry.data.get(CONF_SW_VERSION)
 
     device_info = _create_device_info(
         entry=entry,

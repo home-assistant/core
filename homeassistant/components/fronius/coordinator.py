@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from fronius_modbus import (
@@ -25,25 +25,24 @@ from fronius_solarapi import (
 )
 from modbus_connection import ModbusError
 
-from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     AUTO_REVERT_SECONDS,
     CONF_AUTO_REVERT_POWER_LIMIT,
     DOMAIN,
-    HEARTBEAT_INTERVAL,
     SOLAR_NET_ID_POWER_FLOW,
     SOLAR_NET_ID_SYSTEM,
     FroniusDeviceInfo,
     SolarNetId,
 )
 from .entity import ModbusComponentFn, ModbusValues
+from .heartbeat import LimitHeartbeat
 
 if TYPE_CHECKING:
-    from . import FroniusConfigEntry, FroniusSolarNet
+    from . import FroniusConfigEntry
+    from .solar_net import FroniusSolarNet
 
 
 class FroniusCoordinatorBase[_DataT](
@@ -212,9 +211,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
 
     default_interval = timedelta(minutes=5)
 
-    _heartbeat_unsub: CALLBACK_TYPE | None = None
-    _heartbeat_stopped = False
-
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Set up a coordinator that also writes to the device."""
         super().__init__(*args, **kwargs)
@@ -227,94 +223,25 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             if self.config_entry.data[CONF_AUTO_REVERT_POWER_LIMIT]
             else 0
         )
+        self._heartbeat = LimitHeartbeat(
+            self.hass,
+            self.modbus_inverter,
+            device_lock=self._device_lock,
+            revert_seconds=self._revert_seconds,
+            logger=self.logger,
+            solar_net_id=self.inverter_info.solar_net_id,
+        )
 
     async def async_start_heartbeat(self) -> None:
-        """Keep an active power limit alive against the device's fallback.
-
-        The device holds a power limit only for as long as it keeps hearing
-        it, so with the setting on the limit is sent again well before the
-        period is up - starting right away, because the device may have been
-        counting down while Home Assistant was not running.
-        """
-        self.config_entry.async_on_unload(self._async_stop_heartbeat)
-        # the first refresh may have scheduled a beat already
-        self._async_cancel_heartbeat()
-        if self._revert_seconds:
-            await self._async_send_heartbeat()
-
-    async def _async_send_heartbeat(self, _now: datetime | None = None) -> None:
-        """Send the limit again and line up the next beat."""
-        self._heartbeat_unsub = None
-        await self._async_resend_power_limit()
-        self._async_update_heartbeat()
-
-    @callback
-    def _async_update_heartbeat(self) -> None:
-        """Beat only while there is a limit to keep alive."""
-        controls = self.modbus_inverter.controls
-        if (
-            self._heartbeat_stopped
-            or not self._revert_seconds
-            or controls is None
-            or not controls.enabled
-        ):
-            self._async_cancel_heartbeat()
-            return
-        if self._heartbeat_unsub is None:
-            self._heartbeat_unsub = async_call_later(
-                self.hass, HEARTBEAT_INTERVAL, self._async_send_heartbeat
-            )
-
-    @callback
-    def _async_stop_heartbeat(self) -> None:
-        """Stop beating for good, even from a beat that is under way."""
-        self._heartbeat_stopped = True
-        self._async_cancel_heartbeat()
-
-    @callback
-    def _async_cancel_heartbeat(self) -> None:
-        """Drop a pending beat."""
-        if self._heartbeat_unsub is not None:
-            self._heartbeat_unsub()
-            self._heartbeat_unsub = None
-
-    async def _async_resend_power_limit(self) -> None:
-        """Send an active power limit again to restart the fallback period.
-
-        Fronius documents the period as restarted by every received Modbus
-        message, but a Gen24 dropped the limit on time while being read every
-        five seconds - only writing the limit again restarts it.
-
-        Nothing to do while no limit is in force: without one there is no
-        period running that could be restarted or cleared. That is decided on
-        a fresh read, so a limit released on the device since the last poll
-        is not taken back here.
-        """
-        controls = self.modbus_inverter.controls
-        if controls is None:
-            return
-        try:
-            async with self._device_lock:
-                await controls.async_update()
-                if not controls.enabled or (limit := controls.power_limit) is None:
-                    return
-                # the same registers `set_power_limit` writes - but that one
-                # would enable the limit, and this may only refresh a running one
-                await controls.write("revert_seconds", self._revert_seconds)
-                await controls.write("power_limit", limit)
-                await controls.write("enabled", True)
-        except (ModbusError, SunSpecError) as err:
-            self.logger.warning(
-                "Could not send the AC power limit to inverter %s again: %s",
-                self.inverter_info.solar_net_id,
-                err,
-            )
+        """Start keeping active limits alive, until the entry unloads."""
+        self.config_entry.async_on_unload(self._heartbeat.async_stop)
+        await self._heartbeat.async_start()
 
     @override
     async def _async_update_data(self) -> dict[SolarNetId, ModbusValues]:
         """Refresh the settings and keep the heartbeat in step with them."""
         data = await super()._async_update_data()
-        self._async_update_heartbeat()
+        self._heartbeat.async_update()
         if not self._revert_seconds:
             await self._async_clear_revert_period()
         return data
@@ -328,9 +255,11 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         tried again while the device holds a period it should not.
         """
         controls = self.modbus_inverter.controls
-        if controls is None or controls.revert_seconds != AUTO_REVERT_SECONDS:
-            return
-        await self._async_resend_power_limit()
+        if controls is not None and controls.revert_seconds == AUTO_REVERT_SECONDS:
+            await self._heartbeat.async_resend_power_limit()
+        storage = self.modbus_inverter.storage
+        if storage is not None and storage.revert_seconds == AUTO_REVERT_SECONDS:
+            await self._heartbeat.async_resend_battery_limits()
 
     @override
     async def _refresh_components(self) -> None:
@@ -357,8 +286,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         move when the data type setting is changed on the device.
 
         A device holding a different fallback period than the configured one
-        is corrected first, so an output power limit the user sets reverts on
-        the schedule they chose.
+        is corrected first, so an output power or battery limit the user sets
+        reverts on the schedule they chose.
 
         ``enable_field`` names the register that puts a setpoint into effect.
         It is written again after a change, because the device only picks up a
@@ -376,11 +305,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         try:
             async with self._device_lock:
                 await component.async_update()
-                if (
-                    isinstance(component, Controls)
-                    and component.revert_seconds != self._revert_seconds
-                ):
-                    await component.write("revert_seconds", self._revert_seconds)
                 if isinstance(component, Storage) and (
                     refused := _refused_battery_limits(component, field, value)
                 ):
@@ -392,6 +316,13 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                             "discharge_limit": f"{refused[1]:g}",
                         },
                     )
+                if (
+                    isinstance(component, Controls)
+                    or (
+                        isinstance(component, Storage) and field in BATTERY_LIMIT_FIELDS
+                    )
+                ) and component.revert_seconds != self._revert_seconds:
+                    await component.write("revert_seconds", self._revert_seconds)
                 await component.write(field, value)
                 if enable_field is not None and getattr(component, enable_field):
                     await component.write(enable_field, True)
@@ -401,8 +332,6 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                 translation_key="modbus_write_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        # the write restarted the device's period, so the beat starts over
-        self._async_cancel_heartbeat()
         # not debounced: the entity should settle on what the device reports
         # back, and writes are rare and user initiated
         await self.async_refresh()

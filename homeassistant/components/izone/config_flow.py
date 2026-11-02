@@ -263,12 +263,14 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 endpoint = await izone_discovery.async_discover_endpoint(
                     self.hass, device_uid
                 )
-                if endpoint is None:
-                    return self.async_abort(reason="no_devices_found")
-                endpoints = {**endpoints, endpoint.uid: endpoint}
+                if endpoint is not None:
+                    endpoints = {**endpoints, endpoint.uid: endpoint}
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
+
+        if endpoint is None:
+            return self.async_abort(reason="no_devices_found")
 
         self._discovered_controller_host = endpoint.host
 

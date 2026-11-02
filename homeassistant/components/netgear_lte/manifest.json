@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/netgear_lte",
   "integration_type": "device",
   "iot_class": "local_polling",

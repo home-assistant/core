@@ -204,6 +204,7 @@ class AsusWrtRouter:
             CONF_REQUIRE_IP: True,
         }
         self._options.update(entry.options)
+        self._data = dict(entry.data)
 
         self._api: AsusWrtBridge = AsusWrtBridge.get_bridge(
             self.hass, dict(self._entry.data), self._options
@@ -389,6 +390,10 @@ class AsusWrtRouter:
 
         self._options.update(new_options)
         return req_reload
+
+    def data_changed(self, new_data: Mapping[str, Any]) -> bool:
+        """Return if the connection data differs from the data used at setup."""
+        return new_data != self._data
 
     @property
     def device_info(self) -> DeviceInfo:

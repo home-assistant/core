@@ -3,6 +3,7 @@
   "name": "Push",
   "categories": ["security_safety.cameras"],
   "codeowners": ["@dgomes"],
+  "connectivity": ["network"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/push",
   "iot_class": "local_push",
