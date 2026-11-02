@@ -17,7 +17,11 @@ from homeassistant.components.luci.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_DEVICE_1, MOCK_DEVICE_2, MOCK_DEVICE_3
@@ -363,7 +367,7 @@ async def test_legacy_known_devices_issue_per_entry(
 @pytest.mark.parametrize(
     ("mac", "removable"),
     [
-        pytest.param(MOCK_DEVICE_1.mac, False, id="tracked"),
+        pytest.param(MOCK_DEVICE_1.mac, False, id="connected"),
         pytest.param(MOCK_DEVICE_3.mac, True, id="stale"),
     ],
 )
@@ -376,7 +380,7 @@ async def test_remove_config_entry_device(
     mac: str,
     removable: bool,
 ) -> None:
-    """Test only client devices which are not tracked can be removed."""
+    """Test only client devices which are not connected can be removed."""
     mock_config_entry.add_to_hass(hass)
     # A client device left over from before the router stopped reporting it
     device_registry.async_get_or_create(
@@ -428,3 +432,62 @@ async def test_remove_config_entry_device_not_loaded(
 
     assert response["success"]
     assert device_registry.async_get(device.id) is None
+
+
+async def test_remove_departed_client_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_luci_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a departed client's device is removable and re-created on reconnect."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "config", {})
+    connection = (dr.CONNECTION_NETWORK_MAC, MOCK_DEVICE_1.mac)
+    unique_id = f"{mock_config_entry.entry_id}_{MOCK_DEVICE_1.mac}"
+
+    mock_luci_client.get_all_connected_devices.return_value = [MOCK_DEVICE_2]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_connection(
+        connection, mock_config_entry.entry_id
+    )
+    assert device is not None
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+    assert response["success"]
+    assert (
+        device_registry.async_get_device_by_connection(
+            connection, mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id)
+        is None
+    )
+
+    mock_luci_client.get_all_connected_devices.return_value = [
+        MOCK_DEVICE_1,
+        MOCK_DEVICE_2,
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_connection(
+        connection, mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == MOCK_DEVICE_1.hostname
+    assert (
+        entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id)
+        is not None
+    )

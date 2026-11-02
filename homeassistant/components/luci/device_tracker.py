@@ -107,7 +107,22 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_devices() -> None:
-        """Add entities for devices seen for the first time."""
+        """Rename the devices of renamed clients and add new clients."""
+        # Done here because disabled trackers do not listen to the coordinator
+        device_registry = dr.async_get(hass)
+        for mac, device in coordinator.data.items():
+            if (
+                device.hostname
+                and (
+                    device_entry := device_registry.async_get_device_by_connection(
+                        (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
+                    )
+                )
+                and device_entry.name != device.hostname
+            ):
+                device_registry.async_update_device(
+                    device_entry.id, name=device.hostname
+                )
         if new_macs := coordinator.data.keys() - coordinator.tracked_macs:
             coordinator.tracked_macs.update(new_macs)
             async_add_entities(
@@ -167,12 +182,4 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
             device = self.coordinator.data[self._mac]
             self._attr_hostname = device.hostname
             self._attr_ip_address = device.ip
-            if (
-                device.hostname
-                and (device_entry := self.device_entry)
-                and device_entry.name != device.hostname
-            ):
-                dr.async_get(self.hass).async_update_device(
-                    device_entry.id, name=device.hostname
-                )
         super()._handle_coordinator_update()
