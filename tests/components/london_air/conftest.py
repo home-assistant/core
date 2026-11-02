@@ -133,16 +133,6 @@ def mock_london_air_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Prevent setup of the integration during tests."""
-    with patch(
-        "homeassistant.components.london_air.async_setup_entry",
-        return_value=None,
-    ) as mock_setup:
-        yield mock_setup
-
-
-@pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock an existing London Air config entry."""
     entry = MockConfigEntry(

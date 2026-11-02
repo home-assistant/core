@@ -2,8 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from pylondonair import LondonAirConnectionError
-import pytest
+from pylondonair import LondonAirConnectionError, LondonAirData
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
@@ -12,11 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_london_air_client: AsyncMock
+    hass: HomeAssistant,
+    mock_london_air_client: AsyncMock,
+    london_air_data: LondonAirData,
 ) -> None:
     """Test a successful user config flow."""
+    mock_london_air_client.async_update.return_value = london_air_data
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -33,11 +34,13 @@ async def test_user_flow_success(
     assert result["data"] == {CONF_LOCATIONS: ["Merton", "Barnet"]}
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, mock_london_air_client: AsyncMock
+    hass: HomeAssistant,
+    mock_london_air_client: AsyncMock,
+    london_air_data: LondonAirData,
 ) -> None:
     """Test the user flow when the API cannot be reached."""
+    mock_london_air_client.async_update.return_value = london_air_data
     mock_london_air_client.async_test_connection.side_effect = LondonAirConnectionError(
         "Request to London Air API failed"
     )
@@ -59,11 +62,13 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_required(
-    hass: HomeAssistant, mock_london_air_client: AsyncMock
+    hass: HomeAssistant,
+    mock_london_air_client: AsyncMock,
+    london_air_data: LondonAirData,
 ) -> None:
     """Test the user flow when no locations are selected."""
+    mock_london_air_client.async_update.return_value = london_air_data
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -81,7 +86,6 @@ async def test_user_flow_required(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_london_air_client: AsyncMock,
@@ -95,11 +99,13 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_success(
-    hass: HomeAssistant, mock_london_air_client: AsyncMock
+    hass: HomeAssistant,
+    mock_london_air_client: AsyncMock,
+    london_air_data: LondonAirData,
 ) -> None:
     """Test a successful YAML import."""
+    mock_london_air_client.async_update.return_value = london_air_data
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},

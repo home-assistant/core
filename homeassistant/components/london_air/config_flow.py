@@ -7,10 +7,27 @@ import probatio
 from pylondonair import LondonAirClient, LondonAirConnectionError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import AUTHORITIES, CONF_LOCATIONS, DOMAIN, INTEGRATION_TITLE
+
+SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_LOCATIONS): SelectSelector(
+            SelectSelectorConfig(
+                options=AUTHORITIES,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                sort=True,
+            )
+        )
+    }
+)
 
 
 class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,16 +39,6 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
         """Verify the API is reachable, raising on failure."""
         client = LondonAirClient(session=async_get_clientsession(self.hass))
         await client.async_test_connection()
-
-    def _schema(self, default: list[str]) -> probatio.Schema:
-        """Build the locations selection schema."""
-        return probatio.Schema(
-            {
-                probatio.Required(CONF_LOCATIONS, default=default): cv.multi_select(
-                    AUTHORITIES
-                )
-            }
-        )
 
     @override
     async def async_step_user(
@@ -52,10 +59,18 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=INTEGRATION_TITLE, data=user_input
                     )
 
-        default = AUTHORITIES if user_input is None else user_input[CONF_LOCATIONS]
         return self.async_show_form(
             step_id="user",
-            data_schema=self._schema(default),
+            data_schema=self.add_suggested_values_to_schema(
+                SCHEMA,
+                {
+                    CONF_LOCATIONS: (
+                        user_input[CONF_LOCATIONS]
+                        if user_input is not None
+                        else AUTHORITIES
+                    )
+                },
+            ),
             errors=errors,
         )
 
