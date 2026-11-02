@@ -116,6 +116,7 @@ def async_register_commands(
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
+    async_reg(hass, handle_explain_target_exclude)
     async_reg(hass, handle_extract_from_target)
     async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_conditions_for_target)
@@ -964,6 +965,45 @@ def handle_extract_from_target(
     }
 
     connection.send_result(msg["id"], extracted_dict)
+
+
+@callback
+@decorators.websocket_command(
+    {
+        probatio.Required("type"): "explain_target_exclude",
+        probatio.Required("target"): cv.TARGET_FIELDS,
+        probatio.Optional("expand_group", default=True): bool,
+        probatio.Optional("primary_entities_only", default=True): bool,
+    }
+)
+def handle_explain_target_exclude(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle explain target exclude command."""
+    explanation = target_helpers.async_explain_exclude(
+        hass,
+        target_helpers.TargetSelection(msg["target"]),
+        expand_group=msg["expand_group"],
+        primary_entities_only=msg["primary_entities_only"],
+    )
+
+    def _item(item: target_helpers.TargetItemEntities) -> dict[str, Any]:
+        return {"type": item.type, "id": item.id, "entities": sorted(item.entities)}
+
+    connection.send_result(
+        msg["id"],
+        {
+            "includes": [_item(include) for include in explanation.includes],
+            "excludes": [
+                {
+                    "type": exclude.type,
+                    "id": exclude.id,
+                    "removed": [_item(removed) for removed in exclude.removed],
+                }
+                for exclude in explanation.excludes
+            ],
+        },
+    )
 
 
 @decorators.websocket_command(

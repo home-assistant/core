@@ -4596,6 +4596,56 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
+async def test_explain_target_exclude(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test explain_target_exclude command."""
+    kitchen = area_registry.async_create("Kitchen")
+    in_kitchen = entity_registry.async_get_or_create("light", "test", "unique1")
+    entity_registry.async_update_entity(in_kitchen.entity_id, area_id=kitchen.id)
+    other = entity_registry.async_get_or_create("light", "test", "unique2")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "explain_target_exclude",
+            "target": {
+                "area_id": [kitchen.id],
+                "entity_id": [other.entity_id],
+                "exclude": {"entity_id": [in_kitchen.entity_id, "light.not_targeted"]},
+            },
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "includes": [
+            {"type": "entity", "id": other.entity_id, "entities": [other.entity_id]},
+            {"type": "area", "id": kitchen.id, "entities": [in_kitchen.entity_id]},
+        ],
+        "excludes": [
+            {
+                "type": "entity",
+                "id": "light.not_targeted",
+                "removed": [],
+            },
+            {
+                "type": "entity",
+                "id": in_kitchen.entity_id,
+                "removed": [
+                    {
+                        "type": "area",
+                        "id": kitchen.id,
+                        "entities": [in_kitchen.entity_id],
+                    }
+                ],
+            },
+        ],
+    }
+
+
 @pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])

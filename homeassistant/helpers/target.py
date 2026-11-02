@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     CONF_EXCLUDE,
+    ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
 from homeassistant.core import (
@@ -407,6 +408,100 @@ def _async_extract_referenced_entity_ids(
     )
 
     return selected
+
+
+_TARGET_ITEM_TYPES: tuple[tuple[str, str], ...] = (
+    ("entity", ATTR_ENTITY_ID),
+    ("device", ATTR_DEVICE_ID),
+    ("area", ATTR_AREA_ID),
+    ("floor", ATTR_FLOOR_ID),
+    ("label", ATTR_LABEL_ID),
+)
+
+
+@dataclasses.dataclass(slots=True)
+class TargetItemEntities:
+    """A single item of a target selection and the entities it resolves to."""
+
+    type: str
+    id: str
+    entities: set[str]
+
+
+@dataclasses.dataclass(slots=True)
+class ExcludeEffect:
+    """What a single item of an exclude block takes out of a target selection."""
+
+    type: str
+    id: str
+    # The entities it takes out of each included item.
+    removed: list[TargetItemEntities] = dataclasses.field(default_factory=list)
+
+
+@dataclasses.dataclass(slots=True)
+class ExcludeExplanation:
+    """How the exclude block of a target selection affects its items."""
+
+    includes: list[TargetItemEntities]
+    excludes: list[ExcludeEffect]
+
+
+def _iter_target_items(
+    target_selection: TargetSelection,
+) -> list[tuple[str, str, TargetSelection]]:
+    """Return each item of a target selection as a target selection of its own."""
+    return [
+        (item_type, item_id, TargetSelection({attr: [item_id]}))
+        for item_type, attr in _TARGET_ITEM_TYPES
+        for item_id in sorted(getattr(target_selection, f"{item_type}_ids"))
+    ]
+
+
+@callback
+def async_explain_exclude(
+    hass: HomeAssistant,
+    target_selection: TargetSelection,
+    expand_group: bool = True,
+    *,
+    primary_entities_only: bool = True,
+) -> ExcludeExplanation:
+    """Explain which entities each exclude takes out of each targeted item.
+
+    Items are resolved the same way as async_extract_referenced_entity_ids
+    resolves the whole target selection, so the union of what is reported here
+    is what the target selection resolves to. An exclude which takes nothing out
+    of any item has no effect.
+    """
+    includes: list[TargetItemEntities] = []
+    for item_type, item_id, selection in _iter_target_items(target_selection):
+        if item_type == "entity" and item_id == ENTITY_MATCH_ALL:
+            entities = set(hass.states.async_entity_ids())
+        else:
+            selected = _async_extract_referenced_entity_ids(
+                hass,
+                selection,
+                expand_group,
+                primary_entities_only=primary_entities_only,
+            )
+            entities = selected.referenced | selected.indirectly_referenced
+        includes.append(TargetItemEntities(item_type, item_id, entities))
+
+    if target_selection.exclude is None or not includes:
+        return ExcludeExplanation(includes, [])
+
+    excludes: list[ExcludeEffect] = []
+    for item_type, item_id, selection in _iter_target_items(target_selection.exclude):
+        excluded = _async_extract_excluded(hass, selection, expand_group)
+        excluded_entity_ids = excluded.referenced | excluded.indirectly_referenced
+        effect = ExcludeEffect(item_type, item_id)
+        for include in includes:
+            if removed := include.entities & excluded_entity_ids:
+                effect.removed.append(
+                    TargetItemEntities(include.type, include.id, removed)
+                )
+        excludes.append(effect)
+
+    return ExcludeExplanation(includes, excludes)
 
 
 class TargetEntityChangeTracker(abc.ABC):
