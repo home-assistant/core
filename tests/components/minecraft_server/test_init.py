@@ -339,3 +339,32 @@ async def test_entry_migration_v3_failure(
     assert v1_mock_config_entry.error_reason_translation_placeholders == {
         "address": f"{TEST_HOST}:{TEST_PORT}"
     }
+
+
+async def test_device_entry_type(
+    hass: HomeAssistant,
+    java_mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the device entry type."""
+    java_mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
+            return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            "homeassistant.components.minecraft_server.api.JavaServer.async_status",
+            return_value=TEST_JAVA_STATUS_RESPONSE,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(java_mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, java_mock_config_entry.entry_id),
+        java_mock_config_entry.entry_id,
+    )
+    assert device is not None
+    assert device.entry_type is dr.DeviceEntryType.SERVICE

@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.ezviz.async_setup_entry", return_value=True
+        "homeassistant.components.ezviz.async_setup_entry", return_value=None
     ) as setup_entry_mock:
         yield setup_entry_mock
 
@@ -64,8 +64,8 @@ def mock_camera_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_ezviz_client() -> Generator[AsyncMock]:
-    """Mock the EzvizAPI for easier testing."""
+def mock_ezviz_client_class() -> Generator[MagicMock]:
+    """Mock the EzvizAPI class for easier testing."""
     with (
         patch(
             "homeassistant.components.ezviz.EzvizClient", autospec=True
@@ -81,7 +81,13 @@ def mock_ezviz_client() -> Generator[AsyncMock]:
         }
         instance.get_detection_sensibility.return_value = True
 
-        yield instance
+        yield mock_ezviz
+
+
+@pytest.fixture
+def mock_ezviz_client(mock_ezviz_client_class: MagicMock) -> AsyncMock:
+    """Mock the EzvizAPI for easier testing."""
+    return mock_ezviz_client_class.return_value
 
 
 @pytest.fixture

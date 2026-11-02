@@ -3,6 +3,7 @@
 import asyncio
 import base64
 from collections.abc import Generator
+from dataclasses import asdict
 import json
 import logging
 import math
@@ -19,7 +20,9 @@ from aioesphomeapi import (
     BinarySensorState,
     BluetoothProxyFeature,
     CameraState,
+    DeviceCapabilities,
     DeviceInfo,
+    DeviceRelation,
     EncryptionPlaintextAPIError,
     EntityInfo,
     EntityState,
@@ -31,8 +34,10 @@ from aioesphomeapi import (
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
+    SendspinFeature,
     SensorInfo,
     SensorState,
+    SerialProxyPortType,
     SubDeviceInfo,
     SupportsResponseType,
     UserService,
@@ -74,7 +79,10 @@ from homeassistant.components.esphome.entry_data import (
     SAVE_DELAY,
     STATE_TYPE_TO_COMPONENT_TYPE,
 )
-from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
+from homeassistant.components.esphome.manager import (
+    DEVICE_CONFLICT_ISSUE_FORMAT,
+    async_replace_device,
+)
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -99,7 +107,13 @@ from homeassistant.helpers import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+from .conftest import (
+    SUB_DEVICE_RELATIONS,
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+    SubDeviceLookup,
+    reconnect_with_updated_entity_info,
+)
 
 
 async def test_esphome_device_subscribe_logs(
@@ -239,10 +253,20 @@ async def test_reconnect_logic_seeds_deep_sleep_from_restored_device_info(
 
 _DEEP_SLEEP_SENSOR_INFOS = [SensorInfo(object_id="mysensor", key=1, name="my sensor")]
 _DEEP_SLEEP_SENSOR_STATES = {"sensor": [SensorState(key=1, state=42).to_dict()]}
-_SUB_DEVICES = [
-    SubDeviceInfo(device_id=11111111, name="Sub Device 1", area_id=0),
-    SubDeviceInfo(device_id=22222222, name="Sub Device 2", area_id=0),
-]
+
+
+def _sub_devices(relation: DeviceRelation) -> list[SubDeviceInfo]:
+    """Return two sub devices with the given relation to the main device."""
+    return [
+        SubDeviceInfo(
+            device_id=11111111, name="Sub Device 1", area_id=0, relation=relation
+        ),
+        SubDeviceInfo(
+            device_id=22222222, name="Sub Device 2", area_id=0, relation=relation
+        ),
+    ]
+
+
 _SUB_DEVICE_SENSOR_INFOS = [
     SensorInfo(object_id="temp", key=1, name="Temp", device_id=11111111),
     SensorInfo(object_id="temp", key=1, name="Temp", device_id=22222222),
@@ -355,9 +379,17 @@ async def _async_setup_without_connecting(
             _SUB_DEVICE_SENSOR_INFOS,
             _SUB_DEVICE_SENSOR_STATES,
             [],
-            {"devices": _SUB_DEVICES},
+            {"devices": _sub_devices(DeviceRelation.VIA)},
             {"sensor": [state.to_dict() for state in _SUB_DEVICE_SENSOR_STATES]},
-            id="same_key_on_sub_devices",
+            id="same_key_on_via_devices",
+        ),
+        pytest.param(
+            _SUB_DEVICE_SENSOR_INFOS,
+            _SUB_DEVICE_SENSOR_STATES,
+            [],
+            {"devices": _sub_devices(DeviceRelation.CHILD)},
+            {"sensor": [state.to_dict() for state in _SUB_DEVICE_SENSOR_STATES]},
+            id="same_key_on_child_devices",
         ),
     ],
 )
@@ -497,11 +529,35 @@ async def test_cold_start_offline_restores_deep_sleep_entities(
     assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    ("relation", "lookup", "link_attr", "linked_before_connect"),
+    [
+        pytest.param(
+            DeviceRelation.VIA,
+            dr.DeviceRegistry.async_get_device_by_identifier,
+            "via_device_id",
+            False,
+            id="via",
+        ),
+        pytest.param(
+            DeviceRelation.CHILD,
+            dr.DeviceRegistry.async_get_child_device_by_identifier,
+            "parent_device_id",
+            True,
+            id="child",
+        ),
+    ],
+)
 async def test_cold_start_restores_same_key_on_sub_devices(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    relation: DeviceRelation,
+    lookup: SubDeviceLookup,
+    link_attr: str,
+    linked_before_connect: bool,
 ) -> None:
     """Restored states with the same key land on their own sub device entity."""
     entry = _seed_deep_sleep_storage(
@@ -509,11 +565,15 @@ async def test_cold_start_restores_same_key_on_sub_devices(
         hass_storage,
         infos={"sensor": _SUB_DEVICE_SENSOR_INFOS},
         states={"sensor": [state.to_dict() for state in _SUB_DEVICE_SENSOR_STATES]},
-        sub_devices=_SUB_DEVICES,
+        sub_devices=_sub_devices(relation),
     )
 
     await _async_setup_without_connecting(hass, mock_client, entry)
 
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa"), entry.entry_id
+    )
+    assert main_device is not None
     for info, expected in zip(_SUB_DEVICE_SENSOR_INFOS, ("11", "22"), strict=True):
         entity_id = entity_registry.async_get_entity_id(
             "sensor", DOMAIN, build_device_unique_id("11:22:33:44:55:AA", info)
@@ -522,6 +582,19 @@ async def test_cold_start_restores_same_key_on_sub_devices(
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == expected
+        # Only a child device is linked to the main device before connecting
+        sub_device = lookup(
+            device_registry,
+            (DOMAIN, f"11:22:33:44:55:AA_{info.device_id}"),
+            entry.entry_id,
+        )
+        assert sub_device is not None
+        assert (
+            getattr(sub_device, link_attr) == main_device.id
+        ) is linked_before_connect
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry is not None
+        assert entity_entry.device_id == sub_device.id
 
 
 async def test_restored_state_of_removed_entity_dropped_on_wake(
@@ -2511,12 +2584,113 @@ async def test_assist_in_progress_issue_deleted(
     )
 
 
+async def test_assist_satellite_removed_when_a_voice_assistant_goes_away(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the satellite goes when a device stops offering a voice assistant."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    unique_id = f"{device.device_info.mac_address}-assist_satellite"
+    assert entity_registry.async_get_entity_id(
+        Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+    )
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": 0}
+    )
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+        )
+        is None
+    )
+
+
+async def test_assist_satellite_restored_when_a_voice_assistant_returns(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the satellite comes back when a device offers a voice assistant again.
+
+    It needs no device info subscription of its own, unlike the selects: the
+    platform is unloaded on every disconnect and forwarded again on the connect
+    that finds the flags, so removing the registry entry does not strand it.
+    """
+    flags = VoiceAssistantFeature.VOICE_ASSISTANT
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"voice_assistant_feature_flags": flags},
+    )
+    await hass.async_block_till_done()
+
+    unique_id = f"{device.device_info.mac_address}-assist_satellite"
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+    )
+    assert entity_id is not None
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": 0}
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+        )
+        is None
+    )
+    assert Platform.ASSIST_SATELLITE not in device.entry.runtime_data.loaded_platforms
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": flags}
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+        )
+        == entity_id
+    )
+    # A registry row is not an entity: the re-added satellite has to be live
+    assert hass.states.get(entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    ("relation", "lookup", "link_attr"),
+    [
+        pytest.param(
+            DeviceRelation.VIA,
+            dr.DeviceRegistry.async_get_device_by_identifier,
+            "via_device_id",
+            id="via",
+        ),
+        pytest.param(
+            DeviceRelation.CHILD,
+            dr.DeviceRegistry.async_get_child_device_by_identifier,
+            "parent_device_id",
+            id="child",
+        ),
+    ],
+)
 async def test_sub_device_creation(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
+    relation: DeviceRelation,
+    lookup: SubDeviceLookup,
+    link_attr: str,
 ) -> None:
     """Test sub devices are created in device registry."""
 
@@ -2529,9 +2703,15 @@ async def test_sub_device_creation(
 
     # Define sub devices
     sub_devices = [
-        SubDeviceInfo(device_id=11111111, name="Motion Sensor", area_id=1),
-        SubDeviceInfo(device_id=22222222, name="Light Switch", area_id=1),
-        SubDeviceInfo(device_id=33333333, name="Temperature Sensor", area_id=2),
+        SubDeviceInfo(
+            device_id=11111111, name="Motion Sensor", area_id=1, relation=relation
+        ),
+        SubDeviceInfo(
+            device_id=22222222, name="Light Switch", area_id=1, relation=relation
+        ),
+        SubDeviceInfo(
+            device_id=33333333, name="Temperature Sensor", area_id=2, relation=relation
+        ),
     ]
 
     device_info = {
@@ -2554,48 +2734,63 @@ async def test_sub_device_creation(
     assert main_device.area_id == area_registry.async_get_area_by_name("Main Hub").id
 
     # Check sub devices are created
-    sub_device_1 = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
+    sub_device_1 = lookup(
+        device_registry,
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"),
+        device.entry.entry_id,
     )
     assert sub_device_1 is not None
     assert sub_device_1.name == "Motion Sensor"
     assert (
         sub_device_1.area_id == area_registry.async_get_area_by_name("Living Room").id
     )
-    assert sub_device_1.via_device_id == main_device.id
+    assert getattr(sub_device_1, link_attr) == main_device.id
 
-    sub_device_2 = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
+    sub_device_2 = lookup(
+        device_registry,
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"),
+        device.entry.entry_id,
     )
     assert sub_device_2 is not None
     assert sub_device_2.name == "Light Switch"
     assert (
         sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
     )
-    assert sub_device_2.via_device_id == main_device.id
+    assert getattr(sub_device_2, link_attr) == main_device.id
 
-    sub_device_3 = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
+    sub_device_3 = lookup(
+        device_registry,
+        (DOMAIN, f"{device.device_info.mac_address}_33333333"),
+        device.entry.entry_id,
     )
     assert sub_device_3 is not None
     assert sub_device_3.name == "Temperature Sensor"
     assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
-    assert sub_device_3.via_device_id == main_device.id
+    assert getattr(sub_device_3, link_attr) == main_device.id
 
 
+@pytest.mark.parametrize(("relation", "lookup"), SUB_DEVICE_RELATIONS)
 async def test_sub_device_cleanup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
+    relation: DeviceRelation,
+    lookup: SubDeviceLookup,
 ) -> None:
     """Test sub devices are removed when they no longer exist."""
 
     # Initial sub devices
     sub_devices_initial = [
-        SubDeviceInfo(device_id=11111111, name="Device 1", area_id=0),
-        SubDeviceInfo(device_id=22222222, name="Device 2", area_id=0),
-        SubDeviceInfo(device_id=33333333, name="Device 3", area_id=0),
+        SubDeviceInfo(
+            device_id=11111111, name="Device 1", area_id=0, relation=relation
+        ),
+        SubDeviceInfo(
+            device_id=22222222, name="Device 2", area_id=0, relation=relation
+        ),
+        SubDeviceInfo(
+            device_id=33333333, name="Device 3", area_id=0, relation=relation
+        ),
     ]
 
     device_info = {
@@ -2609,21 +2804,24 @@ async def test_sub_device_cleanup(
 
     # Verify all sub devices exist
     assert (
-        device_registry.async_get_device_by_identifier(
+        lookup(
+            device_registry,
             (DOMAIN, f"{device.device_info.mac_address}_11111111"),
             device.entry.entry_id,
         )
         is not None
     )
     assert (
-        device_registry.async_get_device_by_identifier(
+        lookup(
+            device_registry,
             (DOMAIN, f"{device.device_info.mac_address}_22222222"),
             device.entry.entry_id,
         )
         is not None
     )
     assert (
-        device_registry.async_get_device_by_identifier(
+        lookup(
+            device_registry,
             (DOMAIN, f"{device.device_info.mac_address}_33333333"),
             device.entry.entry_id,
         )
@@ -2632,8 +2830,12 @@ async def test_sub_device_cleanup(
 
     # Now update with fewer sub devices (device 2 removed)
     sub_devices_updated = [
-        SubDeviceInfo(device_id=11111111, name="Device 1", area_id=0),
-        SubDeviceInfo(device_id=33333333, name="Device 3", area_id=0),
+        SubDeviceInfo(
+            device_id=11111111, name="Device 1", area_id=0, relation=relation
+        ),
+        SubDeviceInfo(
+            device_id=33333333, name="Device 3", area_id=0, relation=relation
+        ),
     ]
 
     # Update device info
@@ -2658,21 +2860,24 @@ async def test_sub_device_cleanup(
 
     # Verify device 2 was removed
     assert (
-        device_registry.async_get_device_by_identifier(
+        lookup(
+            device_registry,
             (DOMAIN, f"{device.device_info.mac_address}_11111111"),
             device.entry.entry_id,
         )
         is not None
     )
     assert (
-        device_registry.async_get_device_by_identifier(
+        lookup(
+            device_registry,
             (DOMAIN, f"{device.device_info.mac_address}_22222222"),
             device.entry.entry_id,
         )
         is None
     )  # Should be removed
     assert (
-        device_registry.async_get_device_by_identifier(
+        lookup(
+            device_registry,
             (DOMAIN, f"{device.device_info.mac_address}_33333333"),
             device.entry.entry_id,
         )
@@ -2680,18 +2885,270 @@ async def test_sub_device_cleanup(
     )
 
 
-async def test_sub_device_with_empty_name(
+async def test_via_devices_converted_to_child_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
+    """Test child devices registered as full devices keep their device ids."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        title="test",
+    )
+    entry.add_to_hass(hass)
+    main_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")},
+    )
+    via_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "11:22:33:44:55:AA_11111111")},
+        name="Device 1",
+        via_device_id=main_device.id,
+    )
+    stale_sub_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "11:22:33:44:55:AA_22222222")},
+        name="Device 2",
+        via_device_id=main_device.id,
+    )
+    # The devices were registered by a previous setup session
+    device_registry.async_config_entry_unloaded(entry.entry_id)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "devices": [
+                SubDeviceInfo(
+                    device_id=11111111,
+                    name="Device 1",
+                    area_id=0,
+                    relation=DeviceRelation.CHILD,
+                )
+            ]
+        },
+    )
+
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "11:22:33:44:55:AA_11111111"), entry.entry_id
+    )
+    assert child_device is not None
+    assert child_device.id == via_device.id
+    assert child_device.parent_device_id == main_device.id
+    assert device_registry.async_get(stale_sub_device.id) is None
+    assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == [
+        device_registry.async_get(main_device.id)
+    ]
+
+
+@pytest.mark.parametrize(
+    "new_entity_name",
+    [pytest.param("Sensor", id="same_name"), pytest.param("Renamed", id="renamed")],
+)
+async def test_sub_device_relation_changed_while_connected(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    new_entity_name: str,
+) -> None:
+    """Test a sub device changing its relation keeps its id and entities.
+
+    The entity may be renamed with a stable key in the same update, which
+    migrates its unique id; its registry entry survives either way.
+    """
+    entity_info = [
+        BinarySensorInfo(object_id="sensor", key=1, name="Sensor", device_id=11111111)
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=11111111)
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "devices": [SubDeviceInfo(device_id=11111111, name="Sub", area_id=0)]
+        },
+        entity_info=entity_info,
+        states=states,
+    )
+    entry_id = device.entry.entry_id
+    mac = device.device_info.mac_address
+    identifier = (DOMAIN, f"{mac}_11111111")
+    via_device = device_registry.async_get_device_by_identifier(identifier, entry_id)
+    assert via_device is not None
+    assert hass.states.get("binary_sensor.sub_sensor").state == STATE_ON
+    entity_entry = entity_registry.async_get("binary_sensor.sub_sensor")
+    assert entity_entry is not None
+    registry_id = entity_entry.id
+    entity_registry.async_update_entity("binary_sensor.sub_sensor", name="Custom")
+
+    new_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor", key=1, name=new_entity_name, device_id=11111111
+        )
+    ]
+    new_unique_id = build_device_unique_id(mac, new_entity_info[0])
+
+    async def reconnect_with_relation(relation: DeviceRelation) -> None:
+        device_info_dict = asdict(device.device_info)
+        device_info_dict["devices"] = [
+            SubDeviceInfo(device_id=11111111, name="Sub", area_id=0, relation=relation)
+        ]
+        new_device_info = DeviceInfo(**device_info_dict)
+        mock_client.device_info = AsyncMock(return_value=new_device_info)
+        mock_client.device_info_and_list_entities = AsyncMock(
+            return_value=(new_device_info, new_entity_info, [])
+        )
+        await device.mock_disconnect(expected_disconnect=False)
+        await device.mock_connect()
+
+    def assert_entity_kept(device_id: str) -> None:
+        """Assert the entity kept its registry entry and is on the device."""
+        entity_entry = entity_registry.async_get("binary_sensor.sub_sensor")
+        assert entity_entry is not None
+        assert entity_entry.id == registry_id
+        assert entity_entry.unique_id == new_unique_id
+        assert entity_entry.name == "Custom"
+        assert entity_entry.device_id == device_id
+        assert hass.states.get("binary_sensor.sub_sensor").state == STATE_ON
+
+    # A device registered in this session can't be converted in place, so it is
+    # removed and restored as a child device with the same id
+    await reconnect_with_relation(DeviceRelation.CHILD)
+    child_device = device_registry.async_get_child_device_by_identifier(
+        identifier, entry_id
+    )
+    assert child_device is not None
+    assert child_device.id == via_device.id
+    assert device_registry.async_get_device_by_identifier(identifier, entry_id) is None
+    assert_entity_kept(child_device.id)
+
+    await reconnect_with_relation(DeviceRelation.VIA)
+    via_device = device_registry.async_get_device_by_identifier(identifier, entry_id)
+    assert via_device is not None
+    assert via_device.id == child_device.id
+    assert (
+        via_device.via_device_id
+        == device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), entry_id
+        ).id
+    )
+    assert (
+        device_registry.async_get_child_device_by_identifier(identifier, entry_id)
+        is None
+    )
+    assert_entity_kept(via_device.id)
+
+
+async def test_sub_device_with_unsupported_relation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a sub device with an unknown relation is skipped with its entities."""
+    entity_info = [
+        BinarySensorInfo(object_id="main", key=1, name="Main", device_id=0),
+        BinarySensorInfo(object_id="sub", key=2, name="Sub", device_id=11111111),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False, device_id=0),
+        BinarySensorState(key=2, state=True, missing_state=False, device_id=11111111),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            # The library maps a relation it does not know to None
+            "devices": [
+                SubDeviceInfo(device_id=11111111, name="Sub", area_id=0, relation=None)
+            ]
+        },
+        entity_info=entity_info,
+        states=states,
+    )
+
+    assert hass.states.get("binary_sensor.test_main") is not None
+    assert hass.states.get("binary_sensor.sub_sub") is None
+    identifier = (DOMAIN, f"{device.device_info.mac_address}_11111111")
+    entry_id = device.entry.entry_id
+    assert device_registry.async_get_device_by_identifier(identifier, entry_id) is None
+    assert (
+        device_registry.async_get_child_device_by_identifier(identifier, entry_id)
+        is None
+    )
+    assert "relation of sub devices [11111111]" in caplog.text
+
+
+async def test_replace_device_migrates_sub_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test replacing the mac keeps via devices and child devices."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        title="test",
+    )
+    entry.add_to_hass(hass)
+    main_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")},
+    )
+    via_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "11:22:33:44:55:AA_11111111")},
+        name="Via",
+        via_device_id=main_device.id,
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "11:22:33:44:55:AA_22222222")},
+        name="Child",
+        parent_device_id=main_device.id,
+    )
+
+    await async_replace_device(
+        hass, entry.entry_id, "11:22:33:44:55:aa", "11:22:33:44:55:ab"
+    )
+
+    main_device = device_registry.async_get(main_device.id)
+    assert main_device is not None
+    assert main_device.connections == {(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:ab")}
+    via_device = device_registry.async_get(via_device.id)
+    assert via_device is not None
+    assert via_device.connections == set()
+    assert via_device.identifiers == {(DOMAIN, "11:22:33:44:55:AB_11111111")}
+    child_device = device_registry.async_get(child_device.id)
+    assert child_device is not None
+    assert child_device.identifiers == {(DOMAIN, "11:22:33:44:55:AB_22222222")}
+
+
+@pytest.mark.parametrize(("relation", "lookup"), SUB_DEVICE_RELATIONS)
+async def test_sub_device_with_empty_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    relation: DeviceRelation,
+    lookup: SubDeviceLookup,
+) -> None:
     """Test sub devices with empty names are handled correctly."""
 
     # Define sub devices with empty names
     sub_devices = [
-        SubDeviceInfo(device_id=11111111, name="", area_id=0),  # Empty name
-        SubDeviceInfo(device_id=22222222, name="Valid Name", area_id=0),
+        SubDeviceInfo(
+            device_id=11111111, name="", area_id=0, relation=relation
+        ),  # Empty name
+        SubDeviceInfo(
+            device_id=22222222, name="Valid Name", area_id=0, relation=relation
+        ),
     ]
 
     device_info = {
@@ -2705,8 +3162,10 @@ async def test_sub_device_with_empty_name(
     await hass.async_block_till_done()
 
     # Check sub device with empty name
-    sub_device_1 = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
+    sub_device_1 = lookup(
+        device_registry,
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"),
+        device.entry.entry_id,
     )
     assert sub_device_1 is not None
     # Empty sub-device names should fall back to main device name
@@ -2714,22 +3173,45 @@ async def test_sub_device_with_empty_name(
         (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
         device.entry.entry_id,
     )
+    assert main_device is not None
     assert sub_device_1.name == main_device.name
 
     # Check sub device with valid name
-    sub_device_2 = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
+    sub_device_2 = lookup(
+        device_registry,
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"),
+        device.entry.entry_id,
     )
     assert sub_device_2 is not None
     assert sub_device_2.name == "Valid Name"
 
 
+@pytest.mark.parametrize(
+    ("relation", "lookup", "inherits_main_area"),
+    [
+        pytest.param(
+            DeviceRelation.VIA,
+            dr.DeviceRegistry.async_get_device_by_identifier,
+            False,
+            id="via",
+        ),
+        pytest.param(
+            DeviceRelation.CHILD,
+            dr.DeviceRegistry.async_get_child_device_by_identifier,
+            True,
+            id="child",
+        ),
+    ],
+)
 async def test_sub_device_references_main_device_area(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
+    relation: DeviceRelation,
+    lookup: SubDeviceLookup,
+    inherits_main_area: bool,
 ) -> None:
     """Test sub devices can reference the main device's area."""
 
@@ -2742,13 +3224,13 @@ async def test_sub_device_references_main_device_area(
     # Define sub devices - one references the main device's area (area_id=0)
     sub_devices = [
         SubDeviceInfo(
-            device_id=11111111, name="Motion Sensor", area_id=0
+            device_id=11111111, name="Motion Sensor", area_id=0, relation=relation
         ),  # Main device area
         SubDeviceInfo(
-            device_id=22222222, name="Light Switch", area_id=1
+            device_id=22222222, name="Light Switch", area_id=1, relation=relation
         ),  # Living Room
         SubDeviceInfo(
-            device_id=33333333, name="Temperature Sensor", area_id=2
+            device_id=33333333, name="Temperature Sensor", area_id=2, relation=relation
         ),  # Bedroom
     ]
 
@@ -2773,18 +3255,25 @@ async def test_sub_device_references_main_device_area(
         main_device.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
     )
 
-    # Check sub device 1 uses main device's area
-    sub_device_1 = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
+    # Sub device 1 has no area of its own; only a child device inherits the
+    # main device's area
+    sub_device_1 = lookup(
+        device_registry,
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"),
+        device.entry.entry_id,
     )
     assert sub_device_1 is not None
+    assert sub_device_1.area_id is None
     assert (
-        sub_device_1.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
-    )
+        dr.async_get_effective_area_id(hass, sub_device_1)
+        == area_registry.async_get_area_by_name("Main Hub Area").id
+    ) is inherits_main_area
 
     # Check sub device 2 uses Living Room
-    sub_device_2 = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
+    sub_device_2 = lookup(
+        device_registry,
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"),
+        device.entry.entry_id,
     )
     assert sub_device_2 is not None
     assert (
@@ -2792,8 +3281,10 @@ async def test_sub_device_references_main_device_area(
     )
 
     # Check sub device 3 uses Bedroom
-    sub_device_3 = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
+    sub_device_3 = lookup(
+        device_registry,
+        (DOMAIN, f"{device.device_info.mac_address}_33333333"),
+        device.entry.entry_id,
     )
     assert sub_device_3 is not None
     assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
@@ -4051,11 +4542,18 @@ async def test_zwave_proxy_request_home_id_change(
         "mac_address": "11:22:33:44:55:AA",
         "zwave_proxy_feature_flags": 1,
     }
+    device_capabilities = {
+        "bluetooth_proxy": {"feature_flags": 1},
+        "zwave_proxy": {"feature_flags": 1},
+        "serial_proxies": [{"name": "uart0", "port_type": SerialProxyPortType.TTL}],
+        "sendspin": {"feature_flags": SendspinFeature.PAIRING_TOKEN},
+    }
 
     await mock_esphome_device(
         mock_client=mock_client,
         entry=entry,
         device_info=device_info,
+        device_capabilities=device_capabilities,
     )
     await hass.async_block_till_done()
 
@@ -4115,12 +4613,16 @@ async def test_zwave_proxy_request_home_id_change(
         # The noise PSK is taken from the config entry, not the live client
         assert call_args[0][3].noise_psk == noise_psk
 
-    assert entry.runtime_data.device_info.zwave_home_id == zwave_home_id
+    # Only the home ID changes
+    device_capabilities["zwave_proxy"]["home_id"] = zwave_home_id
+    assert entry.runtime_data.device_capabilities == DeviceCapabilities.from_dict(
+        device_capabilities
+    )
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
-    assert data["device_info"]["zwave_home_id"] == zwave_home_id
+    assert data["device_capabilities"]["zwave_proxy"]["home_id"] == zwave_home_id
 
 
 async def test_zwave_home_id_change_saved_after_reconnect(
@@ -4153,7 +4655,7 @@ async def test_zwave_home_id_change_saved_after_reconnect(
     with patch("homeassistant.helpers.discovery_flow.async_create_flow"):
         await report_home_id()
         stored = hass_storage[storage_key]["data"]
-        assert stored["device_info"]["zwave_home_id"] == zwave_home_id
+        assert stored["device_capabilities"]["zwave_proxy"]["home_id"] == zwave_home_id
 
         # The device reconnects with home ID 0, so the connect-time save holds 0
         await device.mock_disconnect(expected_disconnect=False)

@@ -11,7 +11,11 @@ from unittest.mock import ANY, Mock, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import mock_platform, setup_test_component_platform
+from pytest_homeassistant.common import (
+    async_capture_events,
+    mock_platform,
+    setup_test_component_platform,
+)
 from pytest_homeassistant.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     assert_multiple_states_equal_without_context_and_last_changed,
@@ -6779,6 +6783,7 @@ async def _one_hour_stats(hass: HomeAssistant, start: datetime) -> datetime:
 )
 async def test_update_statistics_issues(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     units,
     attributes,
 ) -> None:
@@ -6819,6 +6824,23 @@ async def test_update_statistics_issues(
         }
     }
     assert_issues(hass, expected)
+
+    # Ignore the issue, it's kept ignored while still valid
+    ir.async_ignore_issue(hass, DOMAIN, "state_class_removed_sensor.test", True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    now = await _one_hour_stats(hass, now)
+    issue = issue_registry.async_get_issue(DOMAIN, "state_class_removed_sensor.test")
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert events == []
+
+    # State class restored, the issue is deleted
+    hass.states.async_set(
+        "sensor.test", 14, attributes=attributes, timestamp=now.timestamp()
+    )
+    await hass.async_block_till_done()
+    now = await _one_hour_stats(hass, now)
+    assert_issues(hass, {})
 
 
 @pytest.mark.parametrize(
@@ -7063,10 +7085,31 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
 )
 async def test_clean_up_repairs(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test cleaning up repairs."""
+    # A statistics issue created before a restart is loaded as inactive
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
+        "minor_version": ir.STORAGE_VERSION_MINOR,
+        "data": {
+            "issues": [
+                {
+                    "config_entry_id": None,
+                    "created": "2022-07-19T09:41:13.746514+00:00",
+                    "dismissed_version": None,
+                    "domain": DOMAIN,
+                    "is_persistent": False,
+                    "issue_id": "units_changed_sensor.inactive",
+                },
+            ]
+        },
+    }
+    await issue_registry.async_load()
+    assert not issue_registry.issues[(DOMAIN, "units_changed_sensor.inactive")].active
+
     await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client()
 
@@ -7082,21 +7125,32 @@ async def test_clean_up_repairs(
             translation_key="",
         )
 
-    create_issue("test", "test_issue", None)
+    create_issue("test", "state_class_removed_sensor.test", None)
     create_issue(DOMAIN, "test_issue_1", None)
     create_issue(DOMAIN, "test_issue_2", {"issue_type": "another_issue"})
-    create_issue(DOMAIN, "test_issue_3", {"issue_type": STATE_CLASS_REMOVED_ISSUE})
-    create_issue(DOMAIN, "test_issue_4", {"issue_type": UNITS_CHANGED_ISSUE})
-    create_issue(DOMAIN, "test_issue_5", {"issue_type": MEAN_TYPE_CHANGED_ISSUE})
+    create_issue(
+        DOMAIN,
+        "state_class_removed_sensor.test",
+        {"issue_type": STATE_CLASS_REMOVED_ISSUE},
+    )
+    create_issue(
+        DOMAIN, "units_changed_sensor.test", {"issue_type": UNITS_CHANGED_ISSUE}
+    )
+    create_issue(
+        DOMAIN,
+        "mean_type_changed_sensor.test",
+        {"issue_type": MEAN_TYPE_CHANGED_ISSUE},
+    )
 
     # Check the issues
     assert set(issue_registry.issues) == {
-        ("test", "test_issue"),
+        ("test", "state_class_removed_sensor.test"),
         ("sensor", "test_issue_1"),
         ("sensor", "test_issue_2"),
-        ("sensor", "test_issue_3"),
-        ("sensor", "test_issue_4"),
-        ("sensor", "test_issue_5"),
+        ("sensor", "state_class_removed_sensor.test"),
+        ("sensor", "units_changed_sensor.test"),
+        ("sensor", "mean_type_changed_sensor.test"),
+        ("sensor", "units_changed_sensor.inactive"),
     }
 
     # Request update of issues
@@ -7106,7 +7160,7 @@ async def test_clean_up_repairs(
 
     # Check the issues
     assert set(issue_registry.issues) == {
-        ("test", "test_issue"),
+        ("test", "state_class_removed_sensor.test"),
         ("sensor", "test_issue_1"),
         ("sensor", "test_issue_2"),
     }

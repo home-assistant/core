@@ -13,11 +13,9 @@ from grpc import RpcError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -110,12 +108,12 @@ async def async_send_text_commands(
                 )
                 await hass.services.async_call(
                     MP_DOMAIN,
-                    SERVICE_PLAY_MEDIA,
+                    MediaPlayerService.PLAY_MEDIA,
                     {
                         ATTR_ENTITY_ID: media_players,
-                        ATTR_MEDIA_CONTENT_ID: audio_url,
-                        ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                        ATTR_MEDIA_ANNOUNCE: True,
+                        MediaPlayerServiceArgument.MEDIA_CONTENT_ID: audio_url,
+                        MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                        MediaPlayerServiceArgument.ANNOUNCE: True,
                     },
                     blocking=True,
                 )

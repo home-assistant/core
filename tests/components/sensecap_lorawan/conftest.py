@@ -54,14 +54,13 @@ def connection_integration(
 ) -> Generator[None]:
     """Provide a connection through the shared integration's public interface."""
 
-    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         entry.async_on_unload(
             await async_register_connection(hass, entry, connection=mock_connection)
         )
-        return True
 
-    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-        return True
+    async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Unload a config entry."""
 
     mock_integration(
         hass,

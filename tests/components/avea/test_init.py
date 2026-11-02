@@ -41,7 +41,7 @@ async def _setup_yaml_import(hass: HomeAssistant, bulbs: list[MagicMock]) -> Non
         ),
         patch(
             "homeassistant.components.avea.async_setup_entry",
-            new=AsyncMock(return_value=True),
+            new=AsyncMock(return_value=None),
         ),
     ):
         assert await async_setup_component(

@@ -8,7 +8,7 @@ from aiofarmad import FarmadAuthenticationError, FarmadClient, FarmadError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> None:
     """Set up Mijn Farmad Apotheek from a config entry."""
 
     async def persist_tokens(access_token: str, refresh_token: str | None) -> None:
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bo
                 skip += BASKET_PAGE_SIZE
     except FarmadAuthenticationError as err:
         await client.async_close()
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="authentication_failed"
         ) from err
     except FarmadError as err:
@@ -89,10 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bo
         ) from err
 
     entry.runtime_data = FarmadData(client=client, products=products)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> None:
     """Unload a Mijn Farmad Apotheek config entry."""
     await entry.runtime_data.client.async_close()
-    return True

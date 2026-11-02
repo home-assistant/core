@@ -77,7 +77,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         ) as mock_get_request,
         patch(
             "homeassistant.components.forked_daapd.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_get_request.return_value = SAMPLE_CONFIG
@@ -177,7 +177,7 @@ async def test_config_flow_no_websocket(hass: HomeAssistant) -> None:
         ) as mock_test_connection,
         patch(
             "homeassistant.components.forked_daapd.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         # test invalid config data
@@ -309,7 +309,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         ) as mock_get_request,
         patch(
             "homeassistant.components.forked_daapd.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_get_request.return_value = SAMPLE_CONFIG

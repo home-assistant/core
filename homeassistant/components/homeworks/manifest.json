@@ -4,6 +4,7 @@
   "categories": ["lighting.lighting_systems"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/homeworks",
   "integration_type": "hub",
   "iot_class": "local_push",

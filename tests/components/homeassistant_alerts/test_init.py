@@ -2,11 +2,17 @@
 
 from datetime import timedelta
 import json
+from typing import Any
 from unittest.mock import ANY, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed, async_load_fixture
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    async_load_fixture,
+    async_load_json_array_fixture,
+)
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
@@ -19,6 +25,7 @@ from homeassistant.components.homeassistant_alerts.const import (
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -685,3 +692,91 @@ async def test_alerts_change(
             for alert_id, integration in expected_alerts_2
         ]
     )
+
+
+async def test_alerts_refresh(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test ignored alerts are kept while valid and stale alerts are deleted."""
+    # Alerts created before a restart are loaded as inactive
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
+        "minor_version": ir.STORAGE_VERSION_MINOR,
+        "data": {
+            "issues": [
+                {
+                    "config_entry_id": None,
+                    "created": "2022-07-19T09:41:13.746514+00:00",
+                    "dismissed_version": "2022.6.0",
+                    "domain": DOMAIN,
+                    "is_persistent": False,
+                    "issue_id": "dark_sky.markdown_darksky",
+                },
+                {
+                    "config_entry_id": None,
+                    "created": "2022-07-19T09:41:13.746514+00:00",
+                    "dismissed_version": None,
+                    "domain": DOMAIN,
+                    "is_persistent": False,
+                    "issue_id": "stale.markdown_stale",
+                },
+            ]
+        },
+    }
+    await issue_registry.async_load()
+
+    alerts = await async_load_json_array_fixture(hass, "alerts_1.json", DOMAIN)
+    aioclient_mock.get("https://alerts.home-assistant.io/alerts.json", json=alerts)
+    for alert in alerts:
+        stub_alert(aioclient_mock, alert["id"])
+    hass.config.components.update(("darksky", "hikvision"))
+
+    with patch(
+        "homeassistant.components.homeassistant_alerts.coordinator.__version__",
+        "2022.7.0",
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # The ignored alert is still ignored, the stale alert is deleted
+    assert set(issue_registry.issues) == {
+        (DOMAIN, "dark_sky.markdown_darksky"),
+        (DOMAIN, "hikvision.markdown_hikvision"),
+    }
+    issue = issue_registry.async_get_issue(DOMAIN, "dark_sky.markdown_darksky")
+    assert issue.active
+    assert issue.dismissed_version == "2022.6.0"
+
+    # The dark_sky alert is updated but fetching it times out, the hikvision
+    # alert is resolved
+    dark_sky = next(alert for alert in alerts if alert["id"] == "dark_sky")
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "https://alerts.home-assistant.io/alerts.json",
+        json=[dark_sky | {"updated": "2022-08-01T00:00:00.000Z"}],
+    )
+    aioclient_mock.get(
+        "https://alerts.home-assistant.io/alerts/dark_sky.json", exc=TimeoutError
+    )
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    with patch(
+        "homeassistant.components.homeassistant_alerts.coordinator.__version__",
+        "2022.7.0",
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert set(issue_registry.issues) == {(DOMAIN, "dark_sky.markdown_darksky")}
+    issue = issue_registry.async_get_issue(DOMAIN, "dark_sky.markdown_darksky")
+    assert issue.dismissed_version == "2022.6.0"
+    assert [event.data for event in events] == [
+        {
+            "action": "remove",
+            "domain": DOMAIN,
+            "issue_id": "hikvision.markdown_hikvision",
+        }
+    ]

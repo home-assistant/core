@@ -1,10 +1,9 @@
 """Services for the Google Travel Time integration."""
 
-from typing import cast
+import datetime as dt
+from typing import Any, cast
 
-from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import GoogleAPIError, PermissionDenied
-from google.maps.routing_v2 import RoutesAsyncClient
+from google_maps_routing_api import ComputeRoutesResponse, GoogleMapsRoutingApiAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -34,12 +33,15 @@ from .const import (
     CONF_TRANSIT_ROUTING_PREFERENCE,
     CONF_UNITS,
     DOMAIN,
-    TRAVEL_MODES_TO_GOOGLE_SDK_ENUM,
+    TRAVEL_MODES_TO_API_ENUM,
 )
 from .helpers import (
     async_compute_routes,
     create_routes_api_disabled_issue,
     delete_routes_api_disabled_issue,
+    get_client,
+    get_localized_text,
+    is_routes_api_disabled,
 )
 from .schemas import SERVICE_GET_TRANSIT_TIMES_SCHEMA, SERVICE_GET_TRAVEL_TIMES_SCHEMA
 
@@ -47,17 +49,37 @@ SERVICE_GET_TRAVEL_TIMES = "get_travel_times"
 SERVICE_GET_TRANSIT_TIMES = "get_transit_times"
 
 
-def _build_routes_response(response) -> list[dict]:
+def _seconds(value: dt.timedelta | None) -> int:
+    """Return a duration in whole seconds, or 0 when it is missing."""
+    return int(value.total_seconds()) if value is not None else 0
+
+
+def _build_routes_response(
+    response: ComputeRoutesResponse | None,
+) -> list[dict[str, Any]]:
     """Build the routes response from the API response."""
     if response is None or not response.routes:
         return []
     return [
         {
-            "duration": route.duration.seconds,
-            "duration_text": route.localized_values.duration.text,
-            "static_duration_text": route.localized_values.static_duration.text,
-            "distance_meters": route.distance_meters,
-            "distance_text": route.localized_values.distance.text,
+            "duration": (duration := _seconds(route.duration)),
+            "duration_text": get_localized_text(
+                route.localized_values.duration if route.localized_values else None
+            ),
+            "static_duration": (
+                _seconds(route.static_duration)
+                if route.static_duration is not None
+                else duration
+            ),
+            "static_duration_text": get_localized_text(
+                route.localized_values.static_duration
+                if route.localized_values
+                else None
+            ),
+            "distance_meters": route.distance_meters or 0,
+            "distance_text": get_localized_text(
+                route.localized_values.distance if route.localized_values else None
+            ),
         }
         for route in response.routes
     ]
@@ -67,19 +89,25 @@ def _raise_service_error(
     hass: HomeAssistant, entry: ConfigEntry, exc: Exception
 ) -> None:
     """Raise a HomeAssistantError based on the exception."""
-    if isinstance(exc, PermissionDenied):
+    if isinstance(exc, HomeAssistantError):
+        raise exc
+    if isinstance(exc, GoogleMapsRoutingApiAuthError) and is_routes_api_disabled(exc):
         create_routes_api_disabled_issue(hass, entry)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="permission_denied",
         ) from exc
-    if isinstance(exc, GoogleAPIError):
+    if isinstance(exc, TimeoutError):
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="api_error",
-            translation_placeholders={"error": str(exc)},
+            translation_key="timeout",
         ) from exc
-    raise exc
+    # Wrap any other error too, so that continue_on_error works for all failures
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="api_error",
+        translation_placeholders={"error": str(exc) or type(exc).__name__},
+    ) from exc
 
 
 @callback
@@ -93,10 +121,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         api_key = entry.data[CONF_API_KEY]
 
-        travel_mode = TRAVEL_MODES_TO_GOOGLE_SDK_ENUM[service.data[CONF_MODE]]
+        travel_mode = TRAVEL_MODES_TO_API_ENUM[service.data[CONF_MODE]]
 
-        client_options = ClientOptions(api_key=api_key)
-        client = RoutesAsyncClient(client_options=client_options)
+        client = get_client(hass, api_key)
 
         try:
             response = await async_compute_routes(
@@ -124,8 +151,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         api_key = entry.data[CONF_API_KEY]
 
-        client_options = ClientOptions(api_key=api_key)
-        client = RoutesAsyncClient(client_options=client_options)
+        client = get_client(hass, api_key)
 
         try:
             response = await async_compute_routes(
@@ -133,7 +159,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 origin=service.data[CONF_ORIGIN],
                 destination=service.data[CONF_DESTINATION],
                 hass=hass,
-                travel_mode=TRAVEL_MODES_TO_GOOGLE_SDK_ENUM["transit"],
+                travel_mode=TRAVEL_MODES_TO_API_ENUM["transit"],
                 units=service.data[CONF_UNITS],
                 language=service.data.get(CONF_LANGUAGE),
                 transit_mode=service.data.get(CONF_TRANSIT_MODE),

@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.httpx_client import create_async_httpx_client
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import WolflinkConfigEntry, WolfLinkCoordinator
@@ -54,14 +54,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
                 device.id,
             )
             return None
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, str(device.id))},
-                configuration_url="https://www.wolf-smartset.com/",
-                manufacturer=MANUFACTURER,
-                name=device.name,
-            ),
+            identifiers={(DOMAIN, str(device.id))},
+            configuration_url="https://www.wolf-smartset.com/",
+            manufacturer=MANUFACTURER,
+            name=device.name,
         )
         return device.id, coordinator
 
@@ -175,7 +173,7 @@ def _reattach_device_to_hub(
     # The device registry will set the disabled_by flag to None when moving a
     # device disabled by CONFIG_ENTRY to an enabled config entry, but we want
     # to set it to USER instead.
-    device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
+    device_disabled_by: dr.DeviceEntryDisabler | Undefined = Undefined
     if (
         device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
         and hub_entry.disabled_by is None

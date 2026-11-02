@@ -27,7 +27,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_ip_address
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,7 +182,6 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         if user_input is not None and self._discovered_device is not None:
             return await self._async_create_device_entry()
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"name": self._discovered_device.name},

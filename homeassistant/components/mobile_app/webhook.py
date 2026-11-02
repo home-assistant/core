@@ -39,8 +39,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     CONF_NAME,
@@ -68,6 +66,8 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
@@ -440,15 +440,13 @@ async def webhook_update_registration(
 
     device_registry = dr.async_get(hass)
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, config_entry.data[ATTR_DEVICE_ID])},
-            manufacturer=new_registration[ATTR_MANUFACTURER],
-            model=new_registration[ATTR_MODEL],
-            name=new_registration[ATTR_DEVICE_NAME],
-            sw_version=new_registration[ATTR_OS_VERSION],
-        ),
+        identifiers={(DOMAIN, config_entry.data[ATTR_DEVICE_ID])},
+        manufacturer=new_registration[ATTR_MANUFACTURER],
+        model=new_registration[ATTR_MODEL],
+        name=new_registration[ATTR_DEVICE_NAME],
+        sw_version=new_registration[ATTR_OS_VERSION],
     )
 
     hass.config_entries.async_update_entry(config_entry, data=new_registration)

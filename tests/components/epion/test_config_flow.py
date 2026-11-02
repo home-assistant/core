@@ -26,7 +26,7 @@ async def test_user_flow(hass: HomeAssistant, mock_epion: MagicMock) -> None:
 
     with patch(
         "homeassistant.components.epion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -72,7 +72,7 @@ async def test_form_exceptions(
 
     with patch(
         "homeassistant.components.epion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -128,7 +128,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_epion: MagicMock) -> None:
 
     with patch(
         "homeassistant.components.epion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -179,7 +179,7 @@ async def test_reauth_flow_errors(
 
     with patch(
         "homeassistant.components.epion.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

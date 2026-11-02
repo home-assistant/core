@@ -623,6 +623,11 @@ async def test_sensor_with_uoms_but_no_device_class(
         "Unable to use state. Only entities with correct unit"
         " of measurement is supported" in caplog.text
     )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "sensor.test_sum_uoms_not_matching_no_device_class"
+    )
+    assert issue is not None
+    assert issue.config_entry_id is None
 
     hass.states.async_set(
         entity_ids[0],
@@ -704,6 +709,133 @@ async def test_sensor_calculated_properties_not_same(
     assert issue_registry.async_get_issue(
         DOMAIN, "sensor.test_sum_state_classes_not_matching"
     )
+
+
+@pytest.mark.parametrize(
+    ("issue_kind", "member_attributes", "fixed_attributes"),
+    [
+        pytest.param(
+            "state_classes_not_matching",
+            [
+                {"state_class": SensorStateClass.TOTAL},
+                {"state_class": SensorStateClass.MEASUREMENT},
+            ],
+            {"state_class": SensorStateClass.TOTAL},
+            id="state_classes",
+        ),
+        pytest.param(
+            "device_classes_not_matching",
+            [
+                {"device_class": SensorDeviceClass.ENERGY},
+                {"device_class": SensorDeviceClass.GAS},
+            ],
+            {"device_class": SensorDeviceClass.ENERGY},
+            id="device_classes",
+        ),
+        pytest.param(
+            "uoms_not_matching_device_class",
+            [
+                {
+                    "device_class": SensorDeviceClass.ENERGY,
+                    "unit_of_measurement": "kWh",
+                },
+                {"device_class": SensorDeviceClass.ENERGY, "unit_of_measurement": "A"},
+            ],
+            {"device_class": SensorDeviceClass.ENERGY, "unit_of_measurement": "kWh"},
+            id="uoms_device_class",
+        ),
+        pytest.param(
+            "uoms_not_matching_no_device_class",
+            [{"unit_of_measurement": "kWh"}, {"unit_of_measurement": "A"}],
+            {"unit_of_measurement": "kWh"},
+            id="uoms_no_device_class",
+        ),
+    ],
+)
+async def test_sensor_issue_deleted_when_members_match(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    issue_kind: str,
+    member_attributes: list[dict[str, str]],
+    fixed_attributes: dict[str, str],
+) -> None:
+    """Test a mismatch issue is deleted once the members match again."""
+    entity_ids = ["sensor.test_1", "sensor.test_2"]
+    base_attributes = {"unit_of_measurement": "kWh"}
+    for entity_id, attributes in zip(entity_ids, member_attributes, strict=True):
+        hass.states.async_set(entity_id, "1", base_attributes | attributes)
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": DOMAIN,
+            "name": "test_sum",
+            "type": "sum",
+            "entities": entity_ids,
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    issue_id = f"sensor.test_sum_{issue_kind}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    hass.states.async_set(entity_ids[1], "2", base_attributes | fixed_attributes)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_config_entry_issues_linked_to_entry(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test issues of a config entry sensor group are removed with the entry."""
+    hass.states.async_set(
+        "sensor.test_1",
+        str(VALUES[0]),
+        {
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "kWh",
+        },
+    )
+    hass.states.async_set(
+        "sensor.test_2",
+        str(VALUES[1]),
+        {
+            "device_class": SensorDeviceClass.CURRENT,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": "A",
+        },
+    )
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": ["sensor.test_1", "sensor.test_2"],
+            "group_type": "sensor",
+            "hide_members": False,
+            "ignore_non_numeric": False,
+            "name": "test_sum",
+            "type": "sum",
+        },
+        title="test_sum",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_ids = [
+        "sensor.test_sum_uoms_not_matching_no_device_class",
+        "sensor.test_sum_device_classes_not_matching",
+        "sensor.test_sum_state_classes_not_matching",
+    ]
+    for issue_id in issue_ids:
+        issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+        assert issue is not None
+        assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    for issue_id in issue_ids:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> None:

@@ -46,6 +46,7 @@ def mock_only_feature(spec, set_spec: bool = True, **kwargs):
     if issubclass(spec, blebox_uniapi.sensor.BaseSensor):
         # Autospec would leave is_error as a truthy Mock, making entities unavailable.
         kwargs.setdefault("is_error", False)
+        kwargs.setdefault("needs_configuration", False)
     return mock.create_autospec(spec, set_spec, True, **kwargs)
 
 
@@ -106,7 +107,7 @@ def config_entry_fixture() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.blebox.async_setup_entry", return_value=True
+        "homeassistant.components.blebox.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
