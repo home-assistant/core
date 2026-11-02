@@ -33,6 +33,9 @@
       "categories": [
         "appliances_cleaning.cooking"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -253,6 +256,9 @@
           "iot_class": "local_polling",
           "categories": [
             "sensors.air_quality"
+          ],
+          "connectivity": [
+            "bluetooth"
           ],
           "name": "Airthings BLE"
         }
@@ -690,6 +696,9 @@
           "categories": [
             "presence_location.trackers"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "iBeacon Tracker"
         },
         "icloud": {
@@ -809,6 +818,9 @@
       "integration_type": "device",
       "categories": [
         "sensors.air_quality"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -966,6 +978,9 @@
           "iot_class": "local_push",
           "categories": [
             "security_safety.locks_access"
+          ],
+          "connectivity": [
+            "bluetooth"
           ],
           "name": "Yale Access Bluetooth"
         }
@@ -1165,6 +1180,9 @@
       "categories": [
         "energy.ev_charging"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1283,6 +1301,9 @@
       "categories": [
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1309,6 +1330,9 @@
       "integration_type": "hub",
       "categories": [
         "presence_location"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -1502,6 +1526,9 @@
         "sensors",
         "diy_makers"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1606,6 +1633,9 @@
         "lighting.bulbs_lamps",
         "health_wellbeing"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1650,6 +1680,9 @@
       "integration_type": "device",
       "categories": [
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -2410,6 +2443,9 @@
       "categories": [
         "security_safety.locks_access"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2782,6 +2818,9 @@
           "categories": [
             "lighting.bulbs_lamps"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "Elgato Avea"
         },
         "elgato": {
@@ -3082,6 +3121,9 @@
           "categories": [
             "climate.thermostats_heating"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "eQ-3 Bluetooth Smart Thermostats"
         }
       }
@@ -3143,6 +3185,9 @@
           "categories": [
             "health_wellbeing"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "EufyLife"
         }
       }
@@ -3152,6 +3197,9 @@
       "integration_type": "device",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3201,6 +3249,9 @@
       "integration_type": "device",
       "categories": [
         "energy.ev_charging"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3415,6 +3466,9 @@
         "appliances_cleaning.cooking",
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3477,6 +3531,9 @@
           "iot_class": "local_push",
           "categories": [
             "buttons_remotes"
+          ],
+          "connectivity": [
+            "bluetooth"
           ],
           "name": "Flic"
         }
@@ -3864,6 +3921,9 @@
       "integration_type": "device",
       "categories": [
         "garden_plants"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4317,6 +4377,9 @@
             "sensors",
             "appliances_cleaning.cooking",
             "buttons_remotes"
+          ],
+          "connectivity": [
+            "bluetooth"
           ],
           "name": "Govee Bluetooth"
         },
@@ -5048,6 +5111,9 @@
           "categories": [
             "garden_plants"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "Husqvarna Automower BLE"
         }
       }
@@ -5227,6 +5293,9 @@
           "categories": [
             "health_wellbeing"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "IKEA Idasen Desk"
         }
       }
@@ -5281,6 +5350,9 @@
       "integration_type": "device",
       "categories": [
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5347,6 +5419,9 @@
       "categories": [
         "sensors.temperature_humidity",
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -5527,6 +5602,9 @@
       "categories": [
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5535,6 +5613,9 @@
       "integration_type": "device",
       "categories": [
         "security_safety.locks_access"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5774,6 +5855,9 @@
       "categories": [
         "appliances_cleaning.cooking"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5799,6 +5883,9 @@
       "integration_type": "device",
       "categories": [
         "buttons_remotes"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
@@ -5932,6 +6019,9 @@
       "categories": [
         "lighting.bulbs_lamps"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6032,6 +6122,9 @@
       "categories": [
         "sensors.motion_presence"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6041,6 +6134,9 @@
       "categories": [
         "health_wellbeing"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6049,6 +6145,9 @@
       "integration_type": "device",
       "categories": [
         "lighting.led_strips_controllers"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6288,6 +6387,9 @@
       "integration_type": "virtual",
       "categories": [
         "health_wellbeing"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "supported_by": "idasen_desk"
     },
@@ -6781,6 +6883,9 @@
       "categories": [
         "sensors"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6817,6 +6922,9 @@
       "integration_type": "device",
       "categories": [
         "garden_plants"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7138,6 +7246,9 @@
       "categories": [
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -7244,6 +7355,9 @@
       "categories": [
         "energy"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -7265,6 +7379,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "blinds_curtains"
+          ],
+          "connectivity": [
+            "bluetooth"
           ],
           "name": "Motionblinds Bluetooth"
         }
@@ -7961,6 +8078,9 @@
         "sensors.temperature_humidity",
         "appliances_cleaning.cooking"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "supported_by": "inkbird"
     },
     "nws": {
@@ -8078,6 +8198,9 @@
       "integration_type": "device",
       "categories": [
         "health_wellbeing"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -8218,6 +8341,9 @@
       "integration_type": "device",
       "categories": [
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -8389,6 +8515,9 @@
       "integration_type": "device",
       "categories": [
         "health_wellbeing"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -8689,6 +8818,9 @@
           "categories": [
             "lighting.bulbs_lamps"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "Philips Hue BLE"
         },
         "philips_infrared": {
@@ -8753,6 +8885,9 @@
       "integration_type": "virtual",
       "categories": [
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "supported_by": "iron_os"
     },
@@ -8923,6 +9058,9 @@
       "categories": [
         "presence_location.trackers"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -8941,6 +9079,9 @@
       "integration_type": "device",
       "categories": [
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -9202,6 +9343,9 @@
         "sensors.temperature_humidity",
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -9383,6 +9527,9 @@
       "integration_type": "device",
       "categories": [
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -9852,6 +9999,9 @@
             "sensors.temperature_humidity",
             "sensors.air_quality"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "Ruuvi BLE"
         }
       }
@@ -10101,6 +10251,9 @@
         "sensors.air_quality",
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -10110,6 +10263,9 @@
       "categories": [
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "supported_by": "thermobeacon"
     },
     "sensorpro": {
@@ -10117,6 +10273,9 @@
       "integration_type": "device",
       "categories": [
         "sensors.temperature_humidity"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -10130,6 +10289,9 @@
           "iot_class": "local_push",
           "categories": [
             "sensors.temperature_humidity"
+          ],
+          "connectivity": [
+            "bluetooth"
           ],
           "name": "SensorPush"
         },
@@ -10445,6 +10607,9 @@
       "categories": [
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -10693,6 +10858,9 @@
       "categories": [
         "health_wellbeing"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -10893,6 +11061,9 @@
       "categories": [
         "vehicles_transport.bikes_scooters"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -11005,6 +11176,9 @@
           "iot_class": "local_push",
           "categories": [
             "media_entertainment.gaming"
+          ],
+          "connectivity": [
+            "bluetooth"
           ],
           "name": "SteamVR Base Station"
         }
@@ -11186,6 +11360,9 @@
             "blinds_curtains",
             "plugs_switches"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "SwitchBot Bluetooth"
         },
         "switchbot_cloud": {
@@ -11221,6 +11398,9 @@
       "integration_type": "hub",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -11570,6 +11750,9 @@
       "categories": [
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -11579,6 +11762,9 @@
       "categories": [
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "bluetooth"
+      ],
       "supported_by": "thermobeacon"
     },
     "thermopro": {
@@ -11587,6 +11773,9 @@
       "categories": [
         "sensors.temperature_humidity",
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -11698,6 +11887,9 @@
           "categories": [
             "appliances_cleaning.cooking"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "Tilt Hydrometer BLE"
         },
         "tilt_pi": {
@@ -11742,6 +11934,9 @@
       "integration_type": "device",
       "categories": [
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -12457,6 +12652,9 @@
           "categories": [
             "energy.solar_batteries"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "Victron BLE"
         },
         "victron_remote_monitoring": {
@@ -12967,6 +13165,9 @@
             "garden_plants",
             "health_wellbeing"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "Xiaomi BLE"
         },
         "xiaomi_miio": {
@@ -13058,6 +13259,9 @@
           "categories": [
             "security_safety.locks_access"
           ],
+          "connectivity": [
+            "bluetooth"
+          ],
           "name": "Yale Access Bluetooth"
         },
         "yale_smart_alarm": {
@@ -13091,6 +13295,9 @@
           "supported_by": "yalexs_ble",
           "categories": [
             "security_safety.locks_access"
+          ],
+          "connectivity": [
+            "bluetooth"
           ],
           "name": "August Bluetooth"
         }
@@ -13233,6 +13440,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "bluetooth"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
