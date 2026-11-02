@@ -18,7 +18,7 @@ from nrgkick_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -72,8 +72,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
                 translation_key="authentication_error",
             ) from error
         except NRGkickAPIDisabledError as error:
-            # Only the user can enable the API again in the NRGkick app. Keep
-            # retrying, so the integration recovers once that is done.
+            # Only the user can enable the API again in the NRGkick app.
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -85,7 +84,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
                 translation_key="json_api_disabled",
                 translation_placeholders={"device_name": self.config_entry.title},
             )
-            raise UpdateFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="json_api_disabled",
             ) from error

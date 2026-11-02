@@ -53,7 +53,7 @@ async def test_load_unload_entry(
         ),
         (
             NRGkickAPIDisabledError("API disabled"),
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_ERROR,
             "json_api_disabled",
             None,
         ),
@@ -133,14 +133,13 @@ async def test_json_api_disabled_at_setup(
     mock_config_entry: MockConfigEntry,
     mock_nrgkick_api: AsyncMock,
     issue_registry: ir.IssueRegistry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a repair issue is created and setup recovers once the API is enabled."""
+    """Test a repair issue is created and a reload recovers once the API is enabled."""
     mock_nrgkick_api.get_info.side_effect = NRGkickAPIDisabledError("API disabled")
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     issue_id = f"json_api_disabled_{mock_config_entry.entry_id}"
     assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
     assert issue.config_entry_id == mock_config_entry.entry_id
@@ -149,11 +148,10 @@ async def test_json_api_disabled_at_setup(
     assert issue.severity is ir.IssueSeverity.ERROR
     assert not issue.is_fixable
 
-    # The user enables the JSON API again, the next setup retry succeeds.
+    # The user enables the JSON API again and reloads the integration.
     mock_nrgkick_api.get_info.side_effect = None
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
