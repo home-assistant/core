@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sql.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.components.sql.util import generate_lambda_stmt
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_query_service_recorder_db(

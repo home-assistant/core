@@ -1,5 +1,6 @@
 """Config flow for Kodi integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -232,6 +233,52 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._create_entry()
 
         return self._show_ws_port_form(errors)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with new credentials."""
+        errors = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                await validate_http(self.hass, {**reauth_entry.data, **user_input})
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
+                )
+
+        schema = probatio.Schema(
+            {
+                probatio.Required(
+                    CONF_USERNAME,
+                    description={
+                        "suggested_value": reauth_entry.data.get(CONF_USERNAME)
+                    },
+                ): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+            }
+        )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=schema,
+            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            errors=errors,
+        )
 
     @callback
     def _show_credentials_form(

@@ -4,6 +4,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 import tibber
 
 from homeassistant.components.recorder import Recorder
@@ -15,10 +18,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .conftest import create_tibber_device
 from .test_common import mock_get_homes
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics_empty(

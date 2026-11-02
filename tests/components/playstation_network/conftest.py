@@ -13,11 +13,10 @@ from psnawp_api.models.trophies import (
     TrophyTitle,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
-
-from tests.common import MockConfigEntry
 
 NPSSO_TOKEN: str = "npsso-token"
 NPSSO_TOKEN_INVALID_JSON: str = "{'npsso': 'npsso-token'"
@@ -51,7 +50,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.playstation_network.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

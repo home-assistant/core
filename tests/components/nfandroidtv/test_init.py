@@ -4,12 +4,11 @@ from unittest.mock import AsyncMock
 
 from notifications_android_tv.notifications import ConnectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_notifications_android_tv")

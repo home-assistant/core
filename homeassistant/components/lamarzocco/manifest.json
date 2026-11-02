@@ -24,8 +24,10 @@
       "local_name": "GS3MP_*"
     }
   ],
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
+  "connectivity": ["bluetooth", "cloud"],
   "dependencies": ["bluetooth_adapters"],
   "dhcp": [
     {
@@ -46,5 +48,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pylamarzocco"],
   "quality_scale": "platinum",
-  "requirements": ["pylamarzocco==2.5.2"]
+  "requirements": ["pylamarzocco==2.5.3"]
 }

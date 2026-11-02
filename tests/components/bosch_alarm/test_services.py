@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_alarm.const import (
     ATTR_DATETIME,
@@ -20,8 +21,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

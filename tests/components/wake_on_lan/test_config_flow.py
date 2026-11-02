@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.wake_on_lan.const import CONF_SECUREON_PASSWORD, DOMAIN
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
@@ -9,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import DEFAULT_MAC
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:

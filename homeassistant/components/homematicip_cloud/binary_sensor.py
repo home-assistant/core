@@ -11,7 +11,7 @@ from homematicip.base.enums import (
     SmokeDetectorAlarmType,
     WindowState,
 )
-from homematicip.base.functionalChannels import MultiModeInputChannel
+from homematicip.base.functionalChannels import FunctionalChannel, MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
     ContactInterface,
@@ -21,6 +21,7 @@ from homematicip.device import (
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
     MotionDetectorPushButton,
+    MotionDetectorSwitchOutdoor,
     PluggableMainsFailureSurveillance,
     PresenceDetectorIndoor,
     RainSensor,
@@ -29,7 +30,9 @@ from homematicip.device import (
     ShutterContactMagnetic,
     SmokeDetector,
     TiltVibrationSensor,
+    WallMountedThermostatPro,
     WaterSensor,
+    WaterSupplyStop,
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
@@ -42,14 +45,20 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_ARMING_BLOCKED
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-from .helpers import get_channel_index_by_type, smoke_detector_channel_data_exists
+from .helpers import (
+    get_channel_index_by_type,
+    get_channels_from_device,
+    smoke_detector_channel_data_exists,
+)
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -90,12 +99,16 @@ def _always_exists(_device: Device) -> bool:
 class HmipBinarySensorDescription[_DeviceT: Device](BinarySensorEntityDescription):
     """Describe a simple HomematicIP binary sensor."""
 
-    value_fn: Callable[[_DeviceT], bool]
+    value_fn: Callable[[_DeviceT], bool | None] = lambda _: None
+    # for values that live on the channel instead of the device
+    channel_value_fn: Callable[[FunctionalChannel], bool | None] | None = None
     exists_fn: Callable[[_DeviceT], bool] = _always_exists
     # Required: contributes to unique_id via {device.id}_{channel}_{key}. An
     # implicit default would silently lean on get_channel_index()'s fallback
     # and create a migration footgun.
     channel: int
+    # for devices whose channel does not sit at the position `channel` names
+    channel_type: FunctionalChannelType | None = None
 
 
 MOTION_SENSOR_DESCRIPTIONS: tuple[
@@ -109,6 +122,19 @@ MOTION_SENSOR_DESCRIPTIONS: tuple[
         device_class=BinarySensorDeviceClass.MOTION,
         value_fn=lambda device: device.motionDetected,
         channel=1,
+    ),
+)
+
+MOTION_SWITCH_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[MotionDetectorSwitchOutdoor],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        channel_value_fn=lambda channel: channel.motionDetected,
+        channel=1,
+        channel_type=FunctionalChannelType.MOTION_DETECTION_CHANNEL,
     ),
 )
 
@@ -185,6 +211,42 @@ MAINS_FAILURE_SENSOR_DESCRIPTIONS: tuple[
     ),
 )
 
+
+WALL_THERMOSTAT_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[WallMountedThermostatPro],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="heating",
+        translation_key="heating",
+        channel_value_fn=lambda channel: (
+            None if channel.valvePosition is None else channel.valvePosition > 0
+        ),
+        exists_fn=lambda device: any(
+            channel.internalSwitchOutputEnabled
+            for channel in get_channels_from_device(
+                device, FunctionalChannelType.INTERNAL_SWITCH_CHANNEL
+            )
+        ),
+        channel=1,
+        channel_type=FunctionalChannelType.INTERNAL_SWITCH_CHANNEL,
+    ),
+)
+
+WATER_SUPPLY_STOP_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[WaterSupplyStop],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="water_alarm",
+        translation_key="water_alarm",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        channel_value_fn=lambda channel: channel.waterAlarmActive,
+        channel=1,
+        channel_type=FunctionalChannelType.WATER_SUPPLY_STOP_CHANNEL,
+    ),
+)
+
 BATTERY_SENSOR_DESCRIPTION = HmipBinarySensorDescription[Device](
     key="battery",
     device_class=BinarySensorDeviceClass.BATTERY,
@@ -200,11 +262,14 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
         MotionDetectorOutdoor,
         MotionDetectorPushButton,
     ): MOTION_SENSOR_DESCRIPTIONS,
+    (MotionDetectorSwitchOutdoor,): MOTION_SWITCH_SENSOR_DESCRIPTIONS,
     (PresenceDetectorIndoor,): PRESENCE_SENSOR_DESCRIPTIONS,
     (SmokeDetector,): SMOKE_SENSOR_DESCRIPTIONS,
     (WaterSensor,): WATER_SENSOR_DESCRIPTIONS,
     (RainSensor, WeatherSensorPlus, WeatherSensorPro): RAIN_SENSOR_DESCRIPTIONS,
     (PluggableMainsFailureSurveillance,): MAINS_FAILURE_SENSOR_DESCRIPTIONS,
+    (WallMountedThermostatPro,): WALL_THERMOSTAT_DESCRIPTIONS,
+    (WaterSupplyStop,): WATER_SUPPLY_STOP_DESCRIPTIONS,
 }
 
 
@@ -267,7 +332,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = config_entry.runtime_data
-    entities: list[HomematicipGenericEntity] = [HomematicipCloudConnectionSensor(hap)]
+    entities: list[HomematicipGenericEntity] = [
+        HomematicipCloudConnectionSensor(hap),
+        HomematicipArmingBlockedSensor(hap),
+    ]
     for device in hap.home.devices:
         if isinstance(device, AccelerationSensor):
             entities.append(HomematicipAccelerationSensor(hap, device))
@@ -328,10 +396,16 @@ class HomematicipSimpleBinarySensor[_DeviceT: Device](
         description: HmipBinarySensorDescription[_DeviceT],
     ) -> None:
         """Initialize the described binary sensor."""
+        channel_real_index = (
+            get_channel_index_by_type(device, description.channel_type)
+            if description.channel_type is not None
+            else None
+        )
         super().__init__(
             hap,
             device,
             channel=description.channel,
+            channel_real_index=channel_real_index,
             feature_id=description.key,
             use_description_name=True,
         )
@@ -339,9 +413,13 @@ class HomematicipSimpleBinarySensor[_DeviceT: Device](
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return whether the binary sensor is on."""
-        return self.entity_description.value_fn(self._device)
+        description = self.entity_description
+        if description.channel_value_fn is not None:
+            channel = self.functional_channel
+            return description.channel_value_fn(channel) if channel else None
+        return description.value_fn(self._device)
 
 
 class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEntity):
@@ -389,6 +467,51 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
     def available(self) -> bool:
         """Sensor is always available."""
         return True
+
+
+class HomematicipArmingBlockedSensor(HomematicipGenericEntity, BinarySensorEntity):
+    """Representation of a refused arming attempt of the alarm control panel."""
+
+    entity_description = BinarySensorEntityDescription(
+        key="arming_blocked",
+        translation_key="arming_blocked",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+
+    def __init__(self, hap: HomematicipHAP) -> None:
+        """Initialize the arming blocked sensor."""
+        super().__init__(
+            hap,
+            hap.home,
+            feature_id=self.entity_description.key,
+            use_description_name=True,
+        )
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        # the access point is registered before the platforms are set up
+        return DeviceInfo(identifiers={(DOMAIN, self._home.id)})
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if the last arming attempt was refused."""
+        return self._hap.arming_blocked
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_ARMING_BLOCKED.format(self._hap.config_entry.entry_id),
+                self.async_write_ha_state,
+            )
+        )
 
 
 class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):

@@ -3,11 +3,17 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import mock_config_flow, mock_platform
 
 
 class MockFlow(ConfigFlow):
@@ -21,3 +27,40 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 
     with mock_config_flow("test", MockFlow):
         yield
+
+
+@pytest.fixture
+def register_test_integration(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> MockConfigEntry:
+    """Provide a mocked integration for tests."""
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    async def help_async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.WATER_HEATER]
+        )
+
+    async def help_async_unload_entry(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Unload test config entry."""
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, [Platform.WATER_HEATER]
+        )
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+
+    return config_entry

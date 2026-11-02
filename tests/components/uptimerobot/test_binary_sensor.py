@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import async_fire_time_changed
 from pyuptimerobot import UptimeRobotAuthenticationException
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -20,8 +21,6 @@ from .common import (
     mock_uptimerobot_api_response,
     setup_uptimerobot_integration,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_presentation(hass: HomeAssistant) -> None:

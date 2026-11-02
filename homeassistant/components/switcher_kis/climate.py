@@ -95,7 +95,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         self._attr_min_temp = remote.min_temperature
         self._attr_max_temp = remote.max_temperature
         self._attr_target_temperature_step = 1
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
         self._attr_hvac_modes = [HVACMode.OFF]
         for mode in remote.modes_features:
@@ -124,11 +124,11 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         features = self._remote.modes_features[data.mode]
 
         # Ignore empty update from device that was power cycled
-        if data.target_temperature == 0 and self.target_temperature is not None:
+        if data.target_temperature == 0 and self.native_target_temperature is not None:
             return
 
-        self._attr_current_temperature = data.temperature
-        self._attr_target_temperature = float(data.target_temperature)
+        self._attr_native_current_temperature = data.temperature
+        self._attr_native_target_temperature = float(data.target_temperature)
 
         self._attr_hvac_mode = HVACMode.OFF
         if data.device_state is DeviceState.ON:

@@ -13,6 +13,8 @@ from aiopnsense import (
     OPNsenseUnknownFirmware,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.opnsense.const import (
     CONF_API_SECRET,
@@ -22,8 +24,10 @@ from homeassistant.components.opnsense.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from .const import ARP
 
 
 @pytest.mark.parametrize(
@@ -86,3 +90,74 @@ async def test_setup_entry_tracker_interface_not_found(
         "interface": "NOPE",
         "known": "WAN, LAN",
     }
+
+
+STALE_MAC = "aa:bb:cc:dd:ee:ff"
+
+
+@pytest.mark.parametrize(
+    ("mac", "removable"),
+    [
+        pytest.param(ARP[0]["mac"], False, id="tracked"),
+        pytest.param(STALE_MAC, True, id="stale"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    mac: str,
+    removable: bool,
+) -> None:
+    """Test only client devices which are not tracked can be removed."""
+    # A client device left over from before the router stopped reporting it
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, STALE_MAC)},
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "config", {})
+
+    connection = (dr.CONNECTION_NETWORK_MAC, mac)
+    device = device_registry.async_get_device_by_connection(
+        connection, mock_config_entry.entry_id
+    )
+    assert device is not None
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"] is removable
+    assert (
+        device_registry.async_get_device_by_connection(
+            connection, mock_config_entry.entry_id
+        )
+        is None
+    ) is removable
+
+
+async def test_remove_config_entry_device_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test client devices can be removed while the entry is not loaded."""
+    mock_opnsense_client.validate.side_effect = OPNsenseConnectionError
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, ARP[0]["mac"])},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert await async_setup_component(hass, "config", {})
+
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"]
+    assert device_registry.async_get(device.id) is None

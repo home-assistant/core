@@ -4,13 +4,8 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from modbus_connection import ModbusError
-from sofar_modbus.modern.device import (
-    BATTERY_STRING_COMPONENTS,
-    SofarInverter,
-    identify,
-)
-from sofar_modbus.tuning import LinkTuner, TimedUnit
+from modbus_connection import ModbusTimeoutError
+from sofar_modbus.modern.device import BATTERY_STRING_COMPONENTS, SofarInverter
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
@@ -20,7 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -28,18 +23,21 @@ from homeassistant.helpers import (
     restore_state,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     CONF_UNIT_ID,
     DOMAIN,
+    FAULT_LOG,
     METER_ENERGY,
     SCAN_INTERVAL,
+    SERVED_COMPONENTS,
     SETTINGS_SCAN_INTERVAL,
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 from .helpers import create_modbus_params
-from .sensor import SENSOR_DESCRIPTIONS
+from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,12 +45,11 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-_IDENTITY_ATTEMPTS = 3
 
 _REMOVED_SENSOR_KEYS = ("serial_number", "waiting_time")
 
@@ -79,7 +76,7 @@ def _async_remove_denied_meter_energy(
     if METER_ENERGY in served:
         return
     registry = er.async_get(hass)
-    for description in SENSOR_DESCRIPTIONS:
+    for description in TOTAL_SENSOR_DESCRIPTIONS:
         if description.component != METER_ENERGY:
             continue
         entity_id = registry.async_get_entity_id(
@@ -89,38 +86,47 @@ def _async_remove_denied_meter_energy(
             registry.async_remove(entity_id)
 
 
-async def _async_read_identity(entry: SofarConfigEntry, device: SofarInverter) -> None:
-    """Read identity once, retrying a few times against a transient blip."""
-    for attempt in range(_IDENTITY_ATTEMPTS):
-        try:
-            await device.identity.async_update()
-        except ModbusError as err:
-            if attempt == _IDENTITY_ATTEMPTS - 1:
-                _LOGGER.warning("%s: could not read identity: %s", entry.title, err)
-        else:
-            return
-
-
 def _async_seed_high_water_marks(
     hass: HomeAssistant, serial: str, device: SofarInverter
 ) -> None:
     """Prime high-water marks before the first poll has nothing to compare."""
     registry = er.async_get(hass)
-    last_states = restore_state.async_get(hass).last_states
-    for description in SENSOR_DESCRIPTIONS:
-        if (total_fn := description.total_fn) is None:
-            continue
+    restore_state_data = restore_state.async_get(hass)
+    for description in TOTAL_SENSOR_DESCRIPTIONS:
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
         )
-        if entity_id is None or (stored := last_states.get(entity_id)) is None:
+        if (
+            entity_id is None
+            or (stored := restore_state_data.async_get_stored_state(entity_id)) is None
+        ):
             continue
         if stored.extra_data is None:
             continue
         extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
         if extra is None or not isinstance(extra.native_value, (int, float)):
             continue
-        total_fn(device).seed(float(extra.native_value))
+        description.total_fn(device).seed(float(extra.native_value))
+
+
+@callback
+def _async_store_served(
+    hass: HomeAssistant, entry: SofarConfigEntry, served: frozenset[str]
+) -> None:
+    """Remember what the inverter serves for a setup it sleeps through."""
+    if (stored := sorted(served)) != entry.data.get(SERVED_COMPONENTS):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, SERVED_COMPONENTS: stored}
+        )
+
+
+async def _async_refresh_versions(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
+    """Read the firmware versions a setup without the inverter missed."""
+    readings = entry.runtime_data.readings
+    await readings.device.async_read_identity()
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=readings.device_info
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -129,18 +135,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
     """Set up Sofar from a config entry."""
     serial = entry.unique_id
     assert serial is not None
     _async_remove_stale_sensors(hass, serial)
-    inverter_type, model = identify(serial)
-    if not inverter_type:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="unrecognized_inverter_model",
-            translation_placeholders={"title": entry.title},
-        )
 
     unit = async_get_unit(
         hass,
@@ -149,13 +148,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         entry.data[CONF_UNIT_ID],
     )
 
-    link = TimedUnit(unit)
-    tuner = LinkTuner(link)
     device = SofarInverter(
-        link,
+        unit,
         serial_number=serial,
-        model=model,
-        inverter_type=inverter_type,
+        has_fault_log=FAULT_LOG in entry.data.get(SERVED_COMPONENTS, ()),
     )
     _async_seed_high_water_marks(hass, serial, device)
 
@@ -165,7 +161,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         device,
         device.async_update_readings,
         timedelta(seconds=SCAN_INTERVAL),
-        tuner,
     )
     settings = SofarDataUpdateCoordinator(
         hass,
@@ -173,25 +168,57 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         device,
         device.async_update_settings,
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
-        tuner,
     )
-    await readings.async_config_entry_first_refresh()
-    await settings.async_refresh()
+    try:
+        await readings.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
+        failure = readings.last_exception
+        if not (
+            device.connected
+            and isinstance(failure, UpdateFailed)
+            and isinstance(failure.__cause__, ModbusTimeoutError)
+        ):
+            raise
+        _LOGGER.info(
+            "%s: inverter is not answering, setting up without it: %s",
+            entry.title,
+            err,
+        )
 
-    # Not tied to a coordinator: identity never changes once read.
-    await _async_read_identity(entry, device)
+        served = frozenset(
+            entry.data.get(SERVED_COMPONENTS, device.expected_components)
+        )
+
+        @callback
+        def _async_settle_on_first_answer() -> None:
+            """Take in what the inverter serves once it answers."""
+            remove_listener()
+            _async_store_served(hass, entry, device.expected_components)
+            if device.expected_components != served:
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+                return
+            entry.async_create_background_task(
+                hass, _async_refresh_versions(hass, entry), "sofar_refresh_versions"
+            )
+
+        remove_listener = readings.async_add_listener(_async_settle_on_first_answer)
+    else:
+        await settings.async_refresh()
+        # Not tied to a coordinator: identity never changes once read.
+        await device.async_read_identity()
+        served = device.expected_components
+        _async_store_served(hass, entry, served)
 
     # Up front: a part's device must name an inverter that has an id.
-    inverter = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **readings.device_info
+    inverter = dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=readings.device_info
     )
-    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, link, tuner)
-    _async_remove_denied_meter_energy(
-        hass, serial, entry.runtime_data.served_components
-    )
+    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, served)
+    # Until the masks settle the type, nothing is served or denied.
+    if device.inverter_type:
+        _async_remove_denied_meter_energy(hass, serial, served)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 def _battery_pack_number(serial: str, identifier: str) -> int | None:
@@ -226,7 +253,10 @@ async def async_remove_config_entry_device(
             return False
         if (number := _battery_pack_number(serial, identifier)) is None:
             continue
-        if runtime_data is not None and runtime_data.pack_is_wired(number):
+        if (
+            runtime_data is not None
+            and number in runtime_data.readings.device.wired_battery_strings
+        ):
             return False
         packs.add(number)
 
@@ -235,15 +265,14 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
     """Migrate an old config entry."""
     if entry.version == 1 and entry.minor_version == 1:
         hass.config_entries.async_update_entry(
             entry, data={CONF_TYPE: TYPE_TCP, **entry.data}, minor_version=2
         )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

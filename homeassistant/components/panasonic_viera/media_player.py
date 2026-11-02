@@ -15,9 +15,9 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.const import ATTR_MANUFACTURER, CONF_NAME
+from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PanasonicVieraConfigEntry
@@ -45,8 +45,9 @@ async def async_setup_entry(
     remote = config_entry.runtime_data
     name = config[CONF_NAME]
     device_info = config[ATTR_DEVICE_INFO]
+    mac = config.get(CONF_MAC)
 
-    tv_device = PanasonicVieraTVEntity(remote, name, device_info)
+    tv_device = PanasonicVieraTVEntity(remote, name, device_info, mac)
     async_add_entities([tv_device])
 
 
@@ -71,19 +72,29 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.TV
 
-    def __init__(self, remote, name, device_info):
+    def __init__(self, remote, name, device_info, mac=None) -> None:
         """Initialize the entity."""
         self._remote = remote
         if device_info is not None:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, device_info[ATTR_UDN])},
-                manufacturer=device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+                connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
+                manufacturer=device_info.get("manufacturer", DEFAULT_MANUFACTURER),
                 model=device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
                 name=name,
             )
             self._attr_unique_id = device_info[ATTR_UDN]
         else:
             self._attr_name = name
+
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        features = self._attr_supported_features
+        if self._remote.source_list:
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        return features
 
     @property
     @override
@@ -108,6 +119,18 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         return self._remote.muted
+
+    @property
+    @override
+    def source(self) -> str | None:
+        """Name of the current input source."""
+        return self._remote.source
+
+    @property
+    @override
+    def source_list(self) -> list[str] | None:
+        """List of available input sources."""
+        return self._remote.source_list or None
 
     async def async_update(self) -> None:
         """Retrieve the latest data."""
@@ -164,6 +187,11 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         """Send pause command."""
         await self._remote.async_send_key(Keys.PAUSE)
         self._remote.playing = False
+
+    @override
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        await self._remote.async_select_source(source)
 
     @override
     async def async_media_stop(self) -> None:

@@ -4,6 +4,8 @@ import logging
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import (
     CONF_PAYLOAD_LENGTH,
@@ -20,9 +22,6 @@ from homeassistant.exceptions import ServiceValidationError
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache
-from tests.typing import WebSocketGenerator
 
 
 async def test_select_dpt_2_simple(

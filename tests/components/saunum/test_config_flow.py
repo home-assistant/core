@@ -2,6 +2,7 @@
 
 from pysaunum import SaunumConnectionError, SaunumException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.saunum.const import (
     DOMAIN,
@@ -13,8 +14,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_USER_INPUT = {CONF_HOST: "192.168.1.100"}
 TEST_RECONFIGURE_INPUT = {CONF_HOST: "192.168.1.200"}

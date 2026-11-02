@@ -51,6 +51,7 @@ async def perform_action(
     try:
         await coroutine
     except MelCloudHomeAuthenticationError as err:
+        coordinator.config_entry.async_start_reauth(coordinator.hass)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",

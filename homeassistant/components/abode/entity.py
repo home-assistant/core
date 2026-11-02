@@ -5,6 +5,7 @@ from typing import override
 from jaraco.abode.automation import Automation as AbodeAuto
 from jaraco.abode.devices.base import Device as AbodeDev
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -32,6 +33,14 @@ class AbodeEntity(Entity):
             self._update_connection_status,
         )
 
+        self._data.entity_ids.add(self.entity_id)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Make the services target the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._data.entity_ids.discard(old_entity_id)
         self._data.entity_ids.add(self.entity_id)
 
     @override

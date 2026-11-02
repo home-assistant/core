@@ -3,6 +3,9 @@
     "binary_sensor": {
       "event_in_progress": {
         "default": "mdi:calendar-clock"
+      },
+      "participation": {
+        "default": "mdi:account-check"
       }
     },
     "sensor": {

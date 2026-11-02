@@ -8,6 +8,7 @@ from aionotion.listener.models import Listener
 from aionotion.sensor.models import Sensor
 from aionotion.user.models import UserPreferences
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.notion.const import (
     CONF_REFRESH_TOKEN,
@@ -16,8 +17,6 @@ from homeassistant.components.notion.const import (
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_USERNAME = "user@host.com"
 TEST_PASSWORD = "password123"
@@ -29,7 +28,7 @@ TEST_USER_UUID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.notion.async_setup_entry", return_value=True
+        "homeassistant.components.notion.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

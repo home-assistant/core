@@ -51,6 +51,9 @@
     "reload": {
       "service": "mdi:reload"
     },
+    "save_scene": {
+      "service": "mdi:content-save-cog"
+    },
     "send": {
       "service": "mdi:email-arrow-right"
     }
