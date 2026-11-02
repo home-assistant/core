@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.hddtemp.const import HddtempEntityStateAttribute
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -98,13 +97,11 @@ async def test_hddtemp_min_config(hass: HomeAssistant, telnetmock) -> None:
     entity_id = hass.states.async_all()[0].entity_id
     state = hass.states.get(entity_id)
 
-    reference = REFERENCE[state.attributes.get(HddtempEntityStateAttribute.DEVICE)]
+    reference = REFERENCE[state.attributes.get("device")]
 
     assert state.state == reference["temperature"]
-    assert (
-        state.attributes.get(HddtempEntityStateAttribute.DEVICE) == reference["device"]
-    )
-    assert state.attributes.get(HddtempEntityStateAttribute.MODEL) == reference["model"]
+    assert state.attributes.get("device") == reference["device"]
+    assert state.attributes.get("model") == reference["model"]
     assert (
         state.attributes.get("unit_of_measurement") == reference["unit_of_measurement"]
     )
@@ -121,7 +118,7 @@ async def test_hddtemp_rename_config(hass: HomeAssistant, telnetmock) -> None:
     entity_id = hass.states.async_all()[0].entity_id
     state = hass.states.get(entity_id)
 
-    reference = REFERENCE[state.attributes.get(HddtempEntityStateAttribute.DEVICE)]
+    reference = REFERENCE[state.attributes.get("device")]
 
     assert state.attributes.get("friendly_name") == f"FooBar {reference['device']}"
 
@@ -133,13 +130,11 @@ async def test_hddtemp_one_disk(hass: HomeAssistant, telnetmock) -> None:
 
     state = hass.states.get("sensor.hd_temperature_dev_sdd1")
 
-    reference = REFERENCE[state.attributes.get(HddtempEntityStateAttribute.DEVICE)]
+    reference = REFERENCE[state.attributes.get("device")]
 
     assert round(float(state.state), 0) == float(reference["temperature"])
-    assert (
-        state.attributes.get(HddtempEntityStateAttribute.DEVICE) == reference["device"]
-    )
-    assert state.attributes.get(HddtempEntityStateAttribute.MODEL) == reference["model"]
+    assert state.attributes.get("device") == reference["device"]
+    assert state.attributes.get("model") == reference["model"]
     assert (
         state.attributes.get("unit_of_measurement") == reference["unit_of_measurement"]
     )
@@ -170,17 +165,11 @@ async def test_hddtemp_multiple_disks(hass: HomeAssistant, telnetmock) -> None:
     ):
         state = hass.states.get(sensor)
 
-        reference = REFERENCE[state.attributes.get(HddtempEntityStateAttribute.DEVICE)]
+        reference = REFERENCE[state.attributes.get("device")]
 
         assert state.state == reference["temperature"]
-        assert (
-            state.attributes.get(HddtempEntityStateAttribute.DEVICE)
-            == reference["device"]
-        )
-        assert (
-            state.attributes.get(HddtempEntityStateAttribute.MODEL)
-            == reference["model"]
-        )
+        assert state.attributes.get("device") == reference["device"]
+        assert state.attributes.get("model") == reference["model"]
         assert (
             state.attributes.get("unit_of_measurement")
             == reference["unit_of_measurement"]
