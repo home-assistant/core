@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaType,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -133,8 +133,8 @@ async def async_play_media(
             raise HomeAssistantError(f"Invalid dashboard {media_id} specified") from err
         view_path = info["views"][0]["path"] if info["views"] else "0"
 
-    data = {
-        ATTR_ENTITY_ID: cast_entity_id,
+    data: dict[str, Any] = {
+        CommonServiceArgument.ENTITY_ID: cast_entity_id,
         CastServiceArgument.VIEW_PATH: view_path,
     }
     if url_path != DEFAULT_DASHBOARD:
@@ -181,7 +181,7 @@ async def _get_dashboard_info(
         title = config.get("title", url_path) if config else url_path
 
     views: list[dict[str, Any]] = []
-    data = {
+    data: dict[str, Any] = {
         "title": title,
         "url_path": url_path,
         "views": views,
