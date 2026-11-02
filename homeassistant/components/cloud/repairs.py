@@ -9,7 +9,7 @@ from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
     RepairsFlowResult,
-    async_get,
+    repairs_flow_manager,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -72,7 +72,9 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
         cloud = self.hass.data[DATA_CLOUD]
 
         async def _async_wait_for_plan_change() -> None:
-            flow_manager = async_get(self.hass)
+            flow_manager = repairs_flow_manager(self.hass)
+            # We cannot get here without a flow manager
+            assert flow_manager is not None
 
             retries = 0
             while retries < MAX_RETRIES:
