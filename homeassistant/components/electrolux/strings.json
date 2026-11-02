@@ -685,6 +685,25 @@
       "child_lock": {
         "name": "Child lock"
       }
+    },
+    "vacuum": {
+      "rvc": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "energy_saving": "Energy saving",
+              "max": "Max",
+              "max_power": "Max power",
+              "power": "Power",
+              "powerful": "Powerful",
+              "quiet": "Quiet",
+              "silent": "Silent",
+              "smart": "Smart",
+              "standard": "Standard"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {
@@ -696,6 +715,9 @@
     },
     "generic_error": {
       "message": "An unexpected error occurred. Please try again later."
+    },
+    "no_map_selected": {
+      "message": "Canot perform cleaning command: no map selected on the robot vacuum. Please select a map and try again."
     },
     "read_only_option": {
       "message": "The selected option is read-only and the entity cannot be set to it."
