@@ -231,6 +231,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 # authentication failures rather than retrying the coordinator.
                 raise
             except OnectaRateLimitError as err:
+                # Retry-After delays scheduled polling; manual updates still poll.
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="rate_limit_exceeded",
