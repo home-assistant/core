@@ -1,14 +1,15 @@
 """Enforce that the integration uses ConfigEntry.runtime_data to store runtime data.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/runtime-data
+https://contributors.home-assistant.io/core/quality-scale/runtime-data/
 """
 
 import ast
 import re
 
+from hassfest import ast_parse_module
+from hassfest.model import Config, Integration
+
 from homeassistant.const import Platform
-from script.hassfest import ast_parse_module
-from script.hassfest.model import Config, Integration
 
 _ANNOTATION_MATCH = re.compile(r"^[A-Za-z][A-Za-z0-9]+ConfigEntry$")
 _FUNCTIONS: dict[str, dict[str, int]] = {

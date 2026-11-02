@@ -51,7 +51,7 @@ _QUERY_SCHEME = probatio.Schema(
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_API_APP_ID): cv.string,
-        probatio.Required(CONF_API_APP_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_APP_KEY)): cv.string,
         probatio.Required(CONF_QUERIES): [_QUERY_SCHEME],
     }
 )

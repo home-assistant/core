@@ -60,7 +60,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock async_setup_entry."""
     with patch(
         "homeassistant.components.nws.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 
@@ -80,7 +80,7 @@ def mock_simple_nws_config():
 def no_sensor():
     """Remove sensors."""
     with patch(
-        "homeassistant.components.nws.sensor.async_setup_entry", return_value=True
+        "homeassistant.components.nws.sensor.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -89,6 +89,6 @@ def no_sensor():
 def no_weather():
     """Remove weather."""
     with patch(
-        "homeassistant.components.nws.weather.async_setup_entry", return_value=True
+        "homeassistant.components.nws.weather.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

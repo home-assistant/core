@@ -10,6 +10,7 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -37,10 +38,12 @@ BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
     ButtonEntityDescription(
         key=PARAM_RESTART_DEVICE,
         device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
     ),
     ButtonEntityDescription(
         key=PARAM_MUTE,
         translation_key=PARAM_MUTE,
+        entity_category=EntityCategory.CONFIG,
     ),
     ButtonEntityDescription(
         key=PARAM_PTZ_UP,

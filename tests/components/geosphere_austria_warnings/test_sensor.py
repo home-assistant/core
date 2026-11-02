@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from pygeosphere_warnings import GeoSphereConnectionError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
@@ -18,17 +23,15 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
 pytestmark = pytest.mark.usefixtures("mock_client")
 
-WARNING_LEVEL_ENTITY_ID = "sensor.schwechat_warning_level"
+ACTIVE_WARNING_LEVEL_ENTITY_ID = "sensor.schwechat_active_warning_level"
 ACTIVE_WARNINGS_ENTITY_ID = "sensor.schwechat_active_warnings"
 ADVANCE_WARNING_LEVEL_ENTITY_ID = "sensor.schwechat_advance_warning_level"
 ADVANCE_WARNINGS_ENTITY_ID = "sensor.schwechat_advance_warnings"
 
 EXPECTED_ENTITY_IDS = {
-    WARNING_LEVEL_ENTITY_ID,
+    ACTIVE_WARNING_LEVEL_ENTITY_ID,
     ACTIVE_WARNINGS_ENTITY_ID,
     ADVANCE_WARNING_LEVEL_ENTITY_ID,
     ADVANCE_WARNINGS_ENTITY_ID,
@@ -64,7 +67,7 @@ async def test_sensor_set_and_active_warning(
     }
     assert entity_ids == EXPECTED_ENTITY_IDS
 
-    assert (state := hass.states.get(WARNING_LEVEL_ENTITY_ID))
+    assert (state := hass.states.get(ACTIVE_WARNING_LEVEL_ENTITY_ID))
     assert state.state == "orange"
     assert warning_details(state) == {
         "type": "storm",
@@ -105,7 +108,7 @@ async def test_sensors_without_active_warning(
     """Test the sensor states and empty attributes when no warning is active."""
     await setup_integration(hass, mock_config_entry)
 
-    assert (state := hass.states.get(WARNING_LEVEL_ENTITY_ID))
+    assert (state := hass.states.get(ACTIVE_WARNING_LEVEL_ENTITY_ID))
     assert state.state == "none"
     assert warning_details(state) == {}
 

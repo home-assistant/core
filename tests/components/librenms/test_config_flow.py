@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 from aiohttp import ClientError
 from aiolibrenms.exceptions import LibrenmsUnauthenticatedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.librenms.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import MOCK_CONFIG_ENTRY_DATA, MOCK_USER_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_step_user(

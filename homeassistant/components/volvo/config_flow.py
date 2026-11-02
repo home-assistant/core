@@ -133,9 +133,10 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 # form. If it is, skip this step and go directly to the next step.
                 try:
                     await self._async_load_vehicles(api)
-                    return await self.async_step_vin()
                 except VolvoApiException:
                     pass
+                else:
+                    return await self.async_step_vin()
 
             elif self.source == SOURCE_RECONFIGURE:
                 user_input = self._config_data = dict(
@@ -147,7 +148,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(
             probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.TEXT, autocomplete="password"
                         )

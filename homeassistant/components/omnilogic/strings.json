@@ -17,6 +17,11 @@
       }
     }
   },
+  "exceptions": {
+    "login_failed": {
+      "message": "Login to OmniLogic failed"
+    }
+  },
   "options": {
     "step": {
       "init": {

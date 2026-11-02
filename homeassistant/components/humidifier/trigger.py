@@ -28,7 +28,7 @@ MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(CONF_MODE): probatio.All(
-                probatio.EnsureList(), probatio.Length(min=1), [str]
+                probatio.EnsureList(), probatio.NonEmpty(), [str]
             ),
         },
     }

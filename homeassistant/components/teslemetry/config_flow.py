@@ -20,6 +20,7 @@ from tesla_fleet_api.const import (
 from tesla_fleet_api.exceptions import (
     BluetoothTimeout,
     BluetoothTransportError,
+    EnergyGatewayUnreachable,
     InvalidToken,
     NotOnWhitelistFault,
     PrivateKeyError,
@@ -286,6 +287,15 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Re-run Bluetooth pairing for an already added vehicle."""
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
+        self._vin = self._get_reconfigure_subentry().data[CONF_VIN]
+        return await self.async_step_scan()
+
     async def async_step_scan(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -417,6 +427,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         except (BleakError, TeslaFleetError, TimeoutError) as err:
             LOGGER.error("Bluetooth security handshake failed: %s", err)
             # The scan step owns the form; re-show it so a retry redoes scan and connect.
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="scan",
                 # The key is already on the vehicle; say so rather than prompt a re-pair.
@@ -432,6 +443,17 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             assert self._address is not None
             assert self._vin is not None
         self._vehicle = None
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_entry()
+            result = self.async_update_and_abort(
+                entry,
+                self._get_reconfigure_subentry(),
+                data_updates={CONF_ADDRESS: self._address},
+            )
+            # Reload manually: the update listener only reloads on subentry add or
+            # remove, and async_update_reload_and_abort raises while a listener is set.
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return result
         return self.async_create_entry(
             title=self._title or self._vin,
             data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
@@ -540,6 +562,12 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             self.hass.async_create_task(self._async_disconnect())
 
 
+def _energy_site_name(energy_data: TeslemetryEnergyData) -> str | None:
+    """Return the name of an energy site, if it has one."""
+    name = energy_data.device.name
+    return name if isinstance(name, str) else None
+
+
 class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     """Pair a local Powerwall gateway for TEDAPI v1r command routing."""
 
@@ -587,10 +615,12 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
-            self._site_name = energy_data.device.get("name") or "Energy Site"
+            self._site_name = _energy_site_name(energy_data) or "Energy Site"
             try:
                 await self._prepare_energy_site(energy_data)
                 return await self._async_begin_pairing()
+            except EnergyGatewayUnreachable:
+                errors["base"] = "powerwall_unreachable"
             except PowerwallSetupError:
                 errors["base"] = "cannot_connect"
 
@@ -600,7 +630,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     probatio.Required(CONF_SITE_ID): probatio.In(
                         {
-                            site_id: energy_data.device.get("name") or site_id
+                            site_id: _energy_site_name(energy_data) or site_id
                             for site_id, energy_data in available.items()
                         }
                     )
@@ -631,6 +661,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         try:
             await self._prepare_energy_site(energy_data)
             return await self._async_begin_pairing()
+        except EnergyGatewayUnreachable:
+            return self.async_abort(reason="powerwall_unreachable")
         except PowerwallSetupError:
             return self.async_abort(reason="cannot_connect")
 
@@ -697,6 +729,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 key_type=AuthorizedClientKeyType.RSA,
                 authorized_client_type=AuthorizedClientType.CUSTOMER_MOBILE_APP,
             )
+        except EnergyGatewayUnreachable:
+            raise
         except (ClientError, TeslaFleetError) as err:
             LOGGER.error("Add authorized client failed: %s", err)
             raise PowerwallSetupError from err
@@ -716,6 +750,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             # The user saw the expired-window notice and submitted to try again.
             try:
                 result = await self._async_begin_pairing()
+            except EnergyGatewayUnreachable:
+                return self.async_show_form(
+                    step_id="pair", errors={"base": "powerwall_unreachable"}
+                )
             except PowerwallSetupError:
                 return self.async_show_form(
                     step_id="pair", errors={"base": "cannot_connect"}
@@ -725,6 +763,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         try:
             client = await self._find_authorized_client()
+        except EnergyGatewayUnreachable:
+            return self.async_show_form(
+                step_id="pair", errors={"base": "powerwall_unreachable"}
+            )
         except PowerwallLookupError:
             return self.async_show_form(
                 step_id="pair", errors={"base": "cannot_connect"}
@@ -752,6 +794,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
+        except EnergyGatewayUnreachable:
+            # Unwrapped so callers can report an unreachable gateway as retryable.
+            raise
         except (ClientError, TeslaFleetError) as err:
             # Raise so a failed lookup is not mistaken for an unregistered key.
             LOGGER.debug("find_authorized_clients failed: %s", err)
@@ -814,7 +859,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                         CONF_HOST,
                         default=self._default_gateway_host() or probatio.UNDEFINED,
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

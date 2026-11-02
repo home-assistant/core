@@ -109,6 +109,12 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
     ),
+    "hrs": SensorEntityDescription(
+        key="hrs",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
     "h": SensorEntityDescription(
         key="h",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -249,7 +255,10 @@ class Sensor(CoilEntity, SensorEntity):
         if state_class := NATURE_TO_STATE_CLASS.get(coil.nature):
             self._attr_state_class = state_class
 
-        if not coil.mappings:
+        if coil.mappings:
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = list(coil.mappings.values())
+        else:
             self._attr_suggested_display_precision = ceil(log10(abs(coil.factor)))
 
     @override

@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
@@ -19,11 +20,8 @@ from homeassistant.components.homeassistant import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_exec, mock_asyncio_subprocess_run
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -97,16 +95,16 @@ async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> Non
     ],
 )
 async def test_template_render(
-    hass: HomeAssistant, load_yaml_integration: None
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Ensure command with templates get rendered properly."""
     hass.states.async_set("sensor.input_sensor", "sensor_value")
 
     # Give time for template to load
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(minutes=1),
-    )
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
@@ -114,7 +112,9 @@ async def test_template_render(
     assert entity_state.state == "sensor_value"
 
 
-async def test_template_render_with_quote(hass: HomeAssistant) -> None:
+async def test_template_render_with_quote(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Ensure command with templates and quotes uses exec for security."""
     hass.states.async_set("sensor.input_sensor", "sensor_value")
     await setup.async_setup_component(
@@ -137,10 +137,8 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
 
     with mock_asyncio_subprocess_exec(b"Works\n") as mock_subprocess_exec:
         # Give time for template to load
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=1),
-        )
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(mock_subprocess_exec.mock_calls) == 1
@@ -573,7 +571,9 @@ async def test_unique_id(
 
 
 async def test_updating_to_often(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling updating when command already running."""
     wait_till_event = asyncio.Event()
@@ -611,7 +611,8 @@ async def test_updating_to_often(
         await hass.async_block_till_done()
 
     assert called
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=15))
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
     wait_till_event.set()
     await asyncio.sleep(0)
 
@@ -622,9 +623,11 @@ async def test_updating_to_often(
 
     # Simulate update takes too long
     wait_till_event.clear()
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     await asyncio.sleep(0)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     wait_till_event.set()
     await asyncio.sleep(0)
 
@@ -899,7 +902,9 @@ async def test_availability_with_value_template(
 
 
 async def test_template_render_with_availability_syntax_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test availability template render with syntax errors."""
     assert await setup.async_setup_component(
@@ -923,10 +928,8 @@ async def test_template_render_with_availability_syntax_error(
     await hass.async_block_till_done()
 
     # Give time for template to load
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(minutes=1),
-    )
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Sensors are unknown if never triggered
@@ -959,16 +962,16 @@ async def test_template_render_with_availability_syntax_error(
     ],
 )
 async def test_command_template_render_with_availability(
-    hass: HomeAssistant, load_yaml_integration: None
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test command template is rendered properly with availability."""
     hass.states.async_set("sensor.input_sensor", "sensor_value")
 
     # Give time for template to load
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(minutes=1),
-    )
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
@@ -978,10 +981,8 @@ async def test_command_template_render_with_availability(
     hass.states.async_set("sensor.input_sensor", "1")
 
     # Give time for template to load
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(minutes=1),
-    )
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
@@ -1038,6 +1039,7 @@ async def test_availability_blocks_value_template(
 async def test_template_without_shell_features_uses_exec(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Templated commands with no shell metacharacters run via exec, no repair issue."""
     hass.states.async_set("sensor.input_sensor", "sensor_value")
@@ -1058,10 +1060,8 @@ async def test_template_without_shell_features_uses_exec(
     await hass.async_block_till_done()
 
     with mock_asyncio_subprocess_exec(b"sensor_value\n") as mock_exec:
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=1),
-        )
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_exec.assert_called_once_with(
@@ -1080,6 +1080,7 @@ async def test_template_without_shell_features_uses_exec(
 async def test_template_with_shell_features_uses_shell_and_creates_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Templated commands with shell metacharacters keep shell path and create a repair issue."""
     hass.states.async_set("sensor.input_sensor", "safe_value")
@@ -1100,10 +1101,8 @@ async def test_template_with_shell_features_uses_shell_and_creates_issue(
     await hass.async_block_till_done()
 
     with mock_asyncio_subprocess_run(b"safe_value\n") as mock_shell:
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=1),
-        )
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_shell.assert_called_once_with(
@@ -1130,6 +1129,7 @@ async def test_template_with_shell_features_uses_shell_and_creates_issue(
 async def test_static_command_with_shell_features_no_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Commands without a template keep the shell path and create no repair issue."""
     # A folded YAML block scalar (command: >) leaves a trailing newline,
@@ -1143,10 +1143,8 @@ async def test_static_command_with_shell_features_no_issue(
     await hass.async_block_till_done()
 
     with mock_asyncio_subprocess_run(b"42\n") as mock_shell:
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=1),
-        )
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_shell.assert_called_once_with(
@@ -1164,6 +1162,7 @@ async def test_static_command_with_shell_features_no_issue(
 async def test_template_shell_feature_issue_cleared_when_metachar_gone(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Repair issue is deleted when the rendered args no longer contain shell features."""
     hass.states.async_set("sensor.input_sensor", "bad | value")
@@ -1185,7 +1184,8 @@ async def test_template_shell_feature_issue_cleared_when_metachar_gone(
 
     # First update: rendered args contain "|" → shell path + repair issue
     with mock_asyncio_subprocess_run(b"bad | value\n"):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert any(
@@ -1196,7 +1196,8 @@ async def test_template_shell_feature_issue_cleared_when_metachar_gone(
     # Second update: rendered args are clean → exec path, issue deleted
     hass.states.async_set("sensor.input_sensor", "clean_value")
     with mock_asyncio_subprocess_exec(b"clean_value\n"):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not any(
@@ -1208,6 +1209,7 @@ async def test_template_shell_feature_issue_cleared_when_metachar_gone(
 async def test_template_render_unbalanced_quote_logs_and_skips(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A rendered value with an unbalanced quote is handled without crashing."""
     hass.states.async_set("sensor.input_sensor", "O'Brien")
@@ -1227,7 +1229,8 @@ async def test_template_render_unbalanced_quote_logs_and_skips(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error parsing command" in caplog.text
@@ -1248,6 +1251,7 @@ async def test_template_non_shell_metachar_uses_exec(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     state_value: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Values with characters that are not special to /bin/sh run via exec."""
     hass.states.async_set("sensor.input_sensor", state_value)
@@ -1268,7 +1272,8 @@ async def test_template_non_shell_metachar_uses_exec(
     await hass.async_block_till_done()
 
     with mock_asyncio_subprocess_exec(f"{state_value}\n".encode()) as mock_exec:
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_exec.assert_called_once_with(
@@ -1279,6 +1284,118 @@ async def test_template_non_shell_metachar_uses_exec(
         close_fds=False,
     )
     assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+@pytest.mark.parametrize(
+    ("command", "expected_args"),
+    [
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}"',
+            ["echo", "abc|def;ghi&jkl*"],
+            id="double_quoted",
+        ),
+        pytest.param(
+            "echo '{{ states.sensor.input_sensor.state }}'",
+            ["echo", "abc|def;ghi&jkl*"],
+            id="single_quoted",
+        ),
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}" "a\\"b\\\\c"',
+            ["echo", "abc|def;ghi&jkl*", 'a"b\\c'],
+            id="escaped_quote_in_double_quotes",
+        ),
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}" a\\|b',
+            ["echo", "abc|def;ghi&jkl*", "a|b"],
+            id="escaped_outside_quotes",
+        ),
+    ],
+)
+async def test_template_quoted_shell_metachar_uses_exec(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    command: str,
+    expected_args: list[str],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Quoted or escaped shell metacharacters are literal, so exec is used."""
+    hass.states.async_set("sensor.input_sensor", "abc|def;ghi&jkl*")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {"command_line": [{"sensor": {"name": "Test", "command": command}}]},
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_exec(b"5\n") as mock_exec:
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_exec.assert_called_once_with(
+        *expected_args,
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        # "$" and "`" are still expanded by the shell inside double quotes.
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}$HOME"',
+            id="variable_in_double_quotes",
+        ),
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}`id`"',
+            id="backtick_in_double_quotes",
+        ),
+        # The shell drops these backslashes but shlex.split keeps them.
+        pytest.param(
+            'echo "{{ states.sensor.input_sensor.state }}\\$HOME"',
+            id="escaped_variable_in_double_quotes",
+        ),
+        pytest.param(
+            "echo {{ states.sensor.input_sensor.state }}\\\nmore",
+            id="escaped_newline",
+        ),
+        pytest.param(
+            "echo '{{ states.sensor.input_sensor.state }}' | cat",
+            id="pipe_after_quoted_arg",
+        ),
+    ],
+)
+async def test_template_unquoted_shell_feature_keeps_shell(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    command: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Shell features the shell still interprets keep the shell path and warn."""
+    hass.states.async_set("sensor.input_sensor", "safe_value")
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {"command_line": [{"sensor": {"name": "Test", "command": command}}]},
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"5\n") as mock_shell:
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_shell.assert_called_once()
+    assert any(
         issue.translation_key == "shell_command_template_deprecation"
         for issue in issue_registry.issues.values()
     )
@@ -1312,6 +1429,7 @@ async def test_template_shell_feature_in_executable_keeps_shell(
     issue_registry: ir.IssueRegistry,
     command: str,
     assembled: str,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Shell syntax in the executable token keeps the shell path and warns."""
     hass.states.async_set("sensor.input_sensor", "safe_value")
@@ -1323,7 +1441,8 @@ async def test_template_shell_feature_in_executable_keeps_shell(
     await hass.async_block_till_done()
 
     with mock_asyncio_subprocess_run(b"safe_value\n") as mock_shell:
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_shell.assert_called_once_with(
@@ -1341,6 +1460,7 @@ async def test_template_shell_feature_in_executable_keeps_shell(
 async def test_template_quoted_executable_uses_exec(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A quoted executable is unquoted for exec instead of taken literally."""
     hass.states.async_set("sensor.input_sensor", "safe_value")
@@ -1363,7 +1483,8 @@ async def test_template_quoted_executable_uses_exec(
     await hass.async_block_till_done()
 
     with mock_asyncio_subprocess_exec(b"safe_value\n") as mock_exec:
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_exec.assert_called_once_with(

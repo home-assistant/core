@@ -14,7 +14,10 @@ from . import async_get_flo_api
 from .const import CONF_USE_SSO, DOMAIN, LOGGER
 
 DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
 
@@ -51,14 +54,15 @@ class FloConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             try:
                 used_sso = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
                 entry_data = dict(user_input)
                 if used_sso:
                     entry_data[CONF_USE_SSO] = True
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=entry_data
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

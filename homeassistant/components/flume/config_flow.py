@@ -31,9 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_CLIENT_ID): str,
-        probatio.Required(CONF_CLIENT_SECRET): str,
+        probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): str,
     }
 )
 
@@ -103,11 +103,12 @@ class FlumeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            else:
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -154,7 +155,7 @@ class FlumeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

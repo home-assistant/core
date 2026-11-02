@@ -16,8 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import RingConfigEntry
-from .coordinator import RingDataCoordinator
+from .coordinator import RingConfigEntry, RingDataCoordinator
 from .entity import RingDeviceT, RingEntity, refresh_after
 
 # Coordinator is used to centralize the data updates

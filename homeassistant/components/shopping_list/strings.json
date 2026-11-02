@@ -17,6 +17,11 @@
       }
     }
   },
+  "exceptions": {
+    "item_not_found": {
+      "message": "No item named {name} found in the shopping list."
+    }
+  },
   "services": {
     "add_item": {
       "description": "Adds an item to the shopping list.",

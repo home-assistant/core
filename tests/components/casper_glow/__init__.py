@@ -1,14 +1,14 @@
 """Tests for the Casper Glow integration."""
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
     generate_advertisement_data,
     generate_ble_device,
     inject_bluetooth_service_info,
 )
+
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.core import HomeAssistant
 
 CASPER_GLOW_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="Jar",

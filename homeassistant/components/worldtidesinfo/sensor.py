@@ -29,7 +29,7 @@ SCAN_INTERVAL = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Optional(CONF_LATITUDE): cv.latitude,
         probatio.Optional(CONF_LONGITUDE): cv.longitude,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

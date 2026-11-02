@@ -26,7 +26,7 @@ CONF_TO = "to"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_TO): cv.string,
         probatio.Optional(CONF_DEVICE): cv.string,
     }

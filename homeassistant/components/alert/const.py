@@ -1,9 +1,18 @@
 """Constants for the Alert integration."""
 
+from enum import StrEnum
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .entity import AlertEntity
 
 DOMAIN: Final = "alert"
+
+DATA_COMPONENT: HassKey[EntityComponent[AlertEntity]] = HassKey(DOMAIN)
 
 LOGGER = logging.getLogger(__package__)
 
@@ -17,3 +26,11 @@ CONF_DATA = "data"
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
+
+
+class AlertService(StrEnum):
+    """Store keys for Alert services."""
+
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"

@@ -7,9 +7,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import ToGrillConfigEntry
 from .const import CONF_PROBE_COUNT
-from .coordinator import ToGrillCoordinator
+from .coordinator import ToGrillConfigEntry, ToGrillCoordinator
 from .entity import ToGrillEntity
 
 PARALLEL_UPDATES = 0

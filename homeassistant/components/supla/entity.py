@@ -31,6 +31,7 @@ class SuplaEntity(CoordinatorEntity[SuplaCoordinator]):
         """Return a unique ID."""
         uid = self.channel_data["iodevice"]["gUIDString"].lower()
         channel_number = self.channel_data["channelNumber"]
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         return f"supla-{uid}-{channel_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property

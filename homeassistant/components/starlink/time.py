@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime, time, tzinfo
+from datetime import UTC, time, tzinfo
 import math
 from typing import override
 
@@ -80,9 +80,9 @@ def _utc_minutes_to_time(utc_minutes: int, timezone: tzinfo) -> time:
 
 def _time_to_utc_minutes(t: time, timezone: tzinfo) -> int:
     try:
-        zoned_time = datetime.now(  # pylint: disable=home-assistant-enforce-now
-            timezone
-        ).replace(hour=t.hour, minute=t.minute, second=0, microsecond=0)
+        zoned_time = dt_util.now(timezone).replace(
+            hour=t.hour, minute=t.minute, second=0, microsecond=0
+        )
     except ValueError as exc:
         raise HomeAssistantError from exc
     utc_time = zoned_time.astimezone(UTC).time()

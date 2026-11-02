@@ -514,9 +514,17 @@ class TemplateEntity(AbstractTemplateEntity):
             log_fn=log_fn,
             has_super_template=has_availability_template,
         )
-        self.async_on_remove(result_info.async_remove)
         self._template_result_info = result_info
+        # Started again on entity_id changes, register the cleanup only once
+        if self._async_remove_template_result_info not in (self._on_remove or ()):
+            self.async_on_remove(self._async_remove_template_result_info)
         result_info.async_refresh()
+
+    @callback
+    def _async_remove_template_result_info(self) -> None:
+        """Stop tracking the templates."""
+        if self._template_result_info is not None:
+            self._template_result_info.async_remove()
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -607,6 +615,21 @@ class TemplateEntity(AbstractTemplateEntity):
 
         async_at_start(self.hass, self._async_template_startup)
         await self.async_restore_last_state()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-track the templates, `this` was bound to the old entity_id.
+
+        The state is written first, `this.state` must exist when rendering.
+        """
+        super().async_entity_id_changed(old_entity_id)
+        self.async_write_ha_state()
+        if self._template_result_info is None:
+            # Not started yet, the startup will use the new entity_id
+            return
+        self._template_result_info.async_remove()
+        self._async_template_startup(None)
 
     async def async_update(self) -> None:
         """Call for forced update."""

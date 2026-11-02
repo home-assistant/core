@@ -1,7 +1,7 @@
 """The enphase_envoy component."""
 
 import contextlib
-import datetime
+import datetime as dt
 from datetime import timedelta
 import logging
 import math
@@ -128,7 +128,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return int(low), int(high)
 
     @callback
-    def _async_refresh_token_if_needed(self, now: datetime.datetime) -> None:
+    def _async_refresh_token_if_needed(self, now: dt.datetime) -> None:
         """Proactively refresh token if its stale in case cloud services goes down."""
         assert isinstance(self.envoy.auth, EnvoyTokenAuth)
         fresh = self._track_token_lifetime()
@@ -172,6 +172,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "name": self.name,
                 },
                 learn_more_url="https://www.home-assistant.io/integrations/enphase_envoy",
+                config_entry_id=self.config_entry.entry_id,
             )
             return
         if not self.manual_token:
@@ -197,7 +198,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._async_update_saved_token()
 
     @callback
-    def _async_refresh_firmware(self, now: datetime.datetime) -> None:
+    def _async_refresh_firmware(self, now: dt.datetime) -> None:
         """Proactively check for firmware changes in Envoy."""
         self.config_entry.async_create_background_task(
             self.hass,
@@ -255,7 +256,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     @callback
-    def _async_verify_mac(self, now: datetime.datetime) -> None:
+    def _async_verify_mac(self, now: dt.datetime) -> None:
         """Verify Envoy active interface mac address in background."""
         self.config_entry.async_create_background_task(
             self.hass,

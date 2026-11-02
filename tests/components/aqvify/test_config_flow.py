@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohttp import ClientResponseError
 from pyaqvify import AqvifyAccount, AqvifyAuthException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.aqvify.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_full_flow(

@@ -10,8 +10,9 @@ from typing import Any, cast, override
 import probatio
 
 from homeassistant.components import fan, switch
+from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import CONF_NAME, DEGREE
+from homeassistant.const import CONF_NAME, DEGREE, UnitOfTemperature
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -19,6 +20,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowError,
     SchemaFlowFormStep,
 )
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_AC_MODE,
@@ -31,8 +33,10 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
     CONF_MIN_TEMP,
+    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_TEMP_STEP,
     DEFAULT_TOLERANCE,
     DOMAIN,
 )
@@ -85,6 +89,18 @@ OPTIONS_SCHEMA = {
             mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     ),
+    probatio.Optional(CONF_PRECISION): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=["0.1", "0.5", "1"],
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    ),
+    probatio.Optional(CONF_TEMP_STEP): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=["0.1", "0.5", "1"],
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    ),
 }
 
 PRESETS_SCHEMA = {
@@ -112,6 +128,24 @@ async def _validate_config(
 
         if min_cycle >= max_cycle:
             raise SchemaFlowError("min_max_runtime")
+
+    if CONF_MIN_TEMP in user_input or CONF_MAX_TEMP in user_input:
+        # A missing bound falls back to the climate default at runtime
+        unit = handler.parent_handler.hass.config.units.temperature_unit
+        min_temp = user_input.get(
+            CONF_MIN_TEMP,
+            TemperatureConverter.convert(
+                DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, unit
+            ),
+        )
+        max_temp = user_input.get(
+            CONF_MAX_TEMP,
+            TemperatureConverter.convert(
+                DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, unit
+            ),
+        )
+        if min_temp > max_temp:
+            raise SchemaFlowError("min_max_temp")
 
     return user_input
 

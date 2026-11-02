@@ -77,7 +77,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(CONF_HOST): str,
                     probatio.Optional(CONF_USERNAME): str,
-                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Optional(probatio.Secret(CONF_PIN)): str,
                     probatio.Optional(CONF_SSL, default=False): bool,
                 }
@@ -88,15 +88,21 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import entry from configuration.yaml."""
         self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
-        return await self.async_step_user(
-            {
-                CONF_HOST: import_data[CONF_HOST],
-                CONF_USERNAME: import_data.get(CONF_USERNAME),
-                CONF_PASSWORD: import_data.get(CONF_PASSWORD),
-                CONF_PIN: import_data.get(CONF_PIN),
-                CONF_SSL: import_data[CONF_SSL],
-            }
-        )
+        data = {
+            CONF_HOST: import_data[CONF_HOST],
+            CONF_USERNAME: import_data.get(CONF_USERNAME),
+            CONF_PASSWORD: import_data.get(CONF_PASSWORD),
+            CONF_PIN: import_data.get(CONF_PIN),
+            CONF_SSL: import_data[CONF_SSL],
+        }
+        try:
+            title = await validate_input(self.hass, data)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+        return self.async_create_entry(title=title, data=data)
 
 
 class CannotConnect(HomeAssistantError):

@@ -11,8 +11,10 @@ import probatio
 from synology_dsm import SynologyDSM
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
+    SynologyDSMAPIInsufficientPrivilegeException,
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginInvalidException,
     SynologyDSMRequestException,
@@ -90,7 +92,7 @@ def _reauth_schema() -> probatio.Schema:
     return probatio.Schema(
         {
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         }
     )
 
@@ -110,7 +112,7 @@ def _ordered_shared_schema(schema_input: dict[str, Any]) -> VolDictType:
             CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")
         ): str,
         probatio.Required(
-            CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")
+            probatio.Secret(CONF_PASSWORD), default=schema_input.get(CONF_PASSWORD, "")
         ): str,
         probatio.Optional(CONF_PORT, default=schema_input.get(CONF_PORT, "")): str,
         probatio.Optional(
@@ -223,12 +225,16 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             errors[CONF_OTP_CODE] = "otp_failed"
             user_input[CONF_OTP_CODE] = None
             return await self.async_step_2sa(user_input, errors)
+        except SynologyDSMLogin2SAForcedException:
+            errors["base"] = "otp_enforced"
         except SynologyDSMLoginInvalidException as ex:
             _LOGGER.error(ex)
             errors[CONF_USERNAME] = "invalid_auth"
         except SynologyDSMRequestException as ex:
             _LOGGER.error(ex)
             errors[CONF_HOST] = "cannot_connect"
+        except SynologyDSMAPIInsufficientPrivilegeException:
+            errors["base"] = "insufficient_privilege"
         except SynologyDSMException as ex:
             _LOGGER.error(ex)
             errors["base"] = "unknown"
@@ -439,7 +445,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                         probatio.Required(
                             CONF_BACKUP_PATH,
                             default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
-                        ): probatio.All(str, probatio.Length(min=1)),
+                        ): probatio.All(str, probatio.NonEmpty()),
                     }
                 ),
             )

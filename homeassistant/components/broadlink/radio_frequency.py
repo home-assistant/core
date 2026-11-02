@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import BROADLINK_DATA, DOMAIN
 from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 
@@ -87,9 +87,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Broadlink radio frequency transmitter."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    device: BroadlinkDevice = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device: BroadlinkDevice = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
     async_add_entities([BroadlinkRadioFrequency(device)])
 
 

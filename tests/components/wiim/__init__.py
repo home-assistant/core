@@ -2,11 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from wiim.consts import PlayingStatus
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

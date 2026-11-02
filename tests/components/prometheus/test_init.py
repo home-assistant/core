@@ -1,7 +1,7 @@
 """The tests for the Prometheus exporter."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import Any
 from unittest import mock
@@ -10,6 +10,8 @@ from freezegun import freeze_time
 import prometheus_client
 from prometheus_client.utils import floatToGoString
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -103,9 +105,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
@@ -2040,7 +2039,7 @@ async def sensor_fixture(
         suggested_object_id="radio_energy",
         original_name="Radio Energy",
     )
-    with freeze_time(datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
+    with freeze_time(dt.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
         set_state_with_entry(hass, sensor_3, 14)
     data["sensor_3"] = sensor_3
 

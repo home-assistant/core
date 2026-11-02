@@ -20,6 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 ENTITY_SIREN = "siren.siren"
@@ -72,14 +73,20 @@ async def test_turn_on(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
 
-    # Test that an invalid tone will raise a ValueError
-    with pytest.raises(ValueError):
+    # Test that an invalid tone will raise a ServiceValidationError
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             SIREN_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: ENTITY_SIREN_WITH_ALL_FEATURES, ATTR_TONE: "invalid_tone"},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == SIREN_DOMAIN
+    assert exc_info.value.translation_key == "invalid_tone"
+    assert str(exc_info.value) == (
+        f"Invalid tone specified for entity {ENTITY_SIREN_WITH_ALL_FEATURES}: "
+        "invalid_tone, check the available_tones attribute for valid tones to pass in"
+    )
 
 
 async def test_turn_off(hass: HomeAssistant) -> None:
