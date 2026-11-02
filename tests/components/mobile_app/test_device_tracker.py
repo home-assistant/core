@@ -647,6 +647,7 @@ async def test_saving_state(
 )
 async def test_restoring_state(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     restored_data: dict[str, Any],
     expected_state: str,
@@ -669,6 +670,15 @@ async def test_restoring_state(
     assert state is not None
     assert state.state == expected_state
     assert state.attributes == expected_attributes
+
+    # Saving again must persist all restored data, not just what the state shows
+    await async_mock_restore_state_shutdown_restart(hass)
+    saved = next(
+        item
+        for item in hass_storage[RESTORE_STATE_KEY]["data"]
+        if item["state"]["entity_id"] == "device_tracker.test_1_2"
+    )
+    assert saved["extra_data"] == {"data": restored_data}
 
 
 @pytest.mark.usefixtures("setup_zone")
