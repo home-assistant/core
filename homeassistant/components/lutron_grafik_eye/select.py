@@ -37,7 +37,7 @@ class GrafikEyeSceneSelect(SelectEntity):
     """Scene selector for a Lutron GRAFIK Eye control unit."""
 
     _attr_has_entity_name = True
-    _attr_name = "Scene"
+    _attr_translation_key = "scene"
     _attr_options = [str(scene) for scene in range(17)]
 
     def __init__(

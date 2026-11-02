@@ -24,5 +24,12 @@
         "title": "Connect to GRAFIK Eye"
       }
     }
+  },
+  "entity": {
+    "select": {
+      "scene": {
+        "name": "Scene"
+      }
+    }
   }
 }
