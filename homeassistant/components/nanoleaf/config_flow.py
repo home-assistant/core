@@ -23,6 +23,7 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo,
 )
 from homeassistant.util.json import JsonObjectType, JsonValueType, load_json_object
+from homeassistant.util.network import is_ipv4_address
 
 from .const import DOMAIN
 
@@ -176,7 +177,12 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle Nanoleaf discovery."""
         # The name is unique and printed on the device and cannot be changed.
         await self.async_set_unique_id(name)
-        self._abort_if_unique_id_configured({CONF_HOST: host})
+        # A discovery message can announce a device with IPv6 addresses only. It must
+        # not replace the IPv4 host of an existing entry, otherwise the entry is
+        # reloaded every time the host flips between IPv6 and IPv4.
+        self._abort_if_unique_id_configured(
+            {CONF_HOST: host} if is_ipv4_address(host) else None
+        )
 
         # Import from discovery integration
         self.device_id = device_id
