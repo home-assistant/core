@@ -218,9 +218,11 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     def available(self) -> bool:
         """Return whether the camera can currently operate."""
+        if not super().available:
+            return False
         if self._override_connection is not None:
-            return super().available and self._override_connection
-        return super().available and self.device.reachable is not False
+            return self._override_connection
+        return self.device.reachable is not False
 
     @property
     @override
