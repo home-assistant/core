@@ -169,14 +169,25 @@ async def async_remove_config_entry_device(
     config_entry: OPNsenseConfigEntry,
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
-    """Allow removing a client device which is not currently tracked."""
+    """Allow removing a client device while the client is not connected."""
     if not isinstance(device_entry, dr.DeviceEntry):
         # This integration does not create child devices.
         return False
     if config_entry.state is not ConfigEntryState.LOADED:
         return True
-    tracked = config_entry.runtime_data.tracked_devices
-    return not any(
-        connection_type == dr.CONNECTION_NETWORK_MAC and mac in tracked
-        for connection_type, mac in device_entry.connections
+    runtime_data = config_entry.runtime_data
+    connected = (
+        coordinator.data
+        if (coordinator := runtime_data.tracker_coordinator) and coordinator.data
+        else {}
     )
+    device_macs = {
+        mac
+        for connection_type, mac in device_entry.connections
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    if not device_macs.isdisjoint(connected):
+        return False
+    # Forget the client, so it is added again when it reconnects
+    runtime_data.tracked_devices -= device_macs
+    return True
