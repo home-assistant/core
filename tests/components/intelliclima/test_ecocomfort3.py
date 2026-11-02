@@ -1,5 +1,6 @@
 """Test ECOCOMFORT 3 support alongside ECOCOMFORT 2.0."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -204,6 +205,37 @@ async def test_filter_warning(
     single_eco3_device.ecocomfort3_devices["33333"].dev_state = dev_state
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(FILTER_ENTITY_ID).state == expected
+
+
+async def test_mixed_account_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_interface: AsyncMock,
+    single_eco_device: IntelliClimaDevices,
+    single_eco3_device: IntelliClimaDevices,
+) -> None:
+    """Each model reads its current status when polling replaces both device maps."""
+    single_eco3_device.ecocomfort2_devices = single_eco_device.ecocomfort2_devices
+    await setup_integration(hass, mock_config_entry)
+
+    updated_devices = deepcopy(single_eco3_device)
+    eco2 = updated_devices.ecocomfort2_devices["56789"]
+    eco2.mode_state = "1"
+    eco2.speed_state = "3"
+    eco3 = updated_devices.ecocomfort3_devices["33333"]
+    eco3.mode_state = "2"
+    eco3.speed_state = "4"
+    mock_cloud_interface.get_all_device_status.reset_mock()
+    mock_cloud_interface.get_all_device_status.return_value = updated_devices
+
+    await async_poll(hass, freezer)
+
+    mock_cloud_interface.get_all_device_status.assert_awaited_once()
+    assert hass.states.get("fan.test_vmc").attributes[ATTR_PERCENTAGE] == 75
+    assert hass.states.get(FAN_ENTITY_ID).attributes[ATTR_PERCENTAGE] == 100
+    assert hass.states.get("select.test_vmc_fan_direction_mode").state == "forward"
+    assert hass.states.get(SELECT_ENTITY_ID).state == "reverse"
 
 
 async def test_mixed_account_and_device_disappears(
