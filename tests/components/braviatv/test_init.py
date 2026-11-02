@@ -1,12 +1,20 @@
 """Test the Bravia TV integration setup."""
 
-import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
+from homeassistant.components import ssdp
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+
+from . import init_integration
 
 ENTRY_DATA = {
     CONF_HOST: "bravia-host",
@@ -95,3 +103,45 @@ async def test_migration_keeps_entities_and_device(
     assert device_registry.async_get(device.id).identifiers == {
         (DOMAIN, "aa:bb:cc:dd:ee:ff")
     }
+
+
+async def test_ssdp_callback_triggers_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_braviatv_client: AsyncMock,
+) -> None:
+    """Test that an SSDP update for the TV refreshes the coordinator."""
+    unsubscribe = MagicMock()
+    with patch(
+        "homeassistant.components.braviatv.ssdp.async_register_callback",
+        return_value=unsubscribe,
+    ) as mock_register:
+        await init_integration(hass, mock_config_entry)
+
+    callback, match_dict = mock_register.call_args.args[1:]
+    assert match_dict == {
+        "nt": "urn:schemas-upnp-org:device:MediaRenderer:1",
+        "_host": "bravia-host",
+    }
+    assert mock_braviatv_client.get_power_status.call_count == 1
+
+    await callback(
+        SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://bravia-host:52323/dmr.xml",
+            upnp={},
+        ),
+        ssdp.SsdpChange.ALIVE,
+    )
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_braviatv_client.get_power_status.call_count == 2
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unsubscribe.assert_called_once()
