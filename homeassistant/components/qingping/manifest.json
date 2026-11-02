@@ -18,6 +18,7 @@
   "categories": ["sensors.temperature_humidity", "sensors.air_quality"],
   "codeowners": ["@bdraco", "@tengfeili-qingping"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/qingping",
   "integration_type": "device",

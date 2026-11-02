@@ -4,6 +4,7 @@
   "categories": ["water.pools_spas"],
   "codeowners": ["@lmaertin"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "kommspot"
