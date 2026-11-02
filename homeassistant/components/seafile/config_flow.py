@@ -190,10 +190,6 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_libraries()
         return None
 
-    def _entry_title(self) -> str:
-        """Return the title of the entry for the login."""
-        return f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})"
-
     @callback
     def _async_finish_reconfigure(self) -> ConfigFlowResult:
         """Store the new login and revoke the token it replaces."""
@@ -219,7 +215,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             else self.async_update_reload_and_abort
         )(
             entry,
-            title=self._entry_title(),
+            title=f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})",
             data_updates={
                 CONF_URL: self._user_input[CONF_URL],
                 CONF_TOKEN: self._take_token(),
@@ -333,7 +329,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             names = {library.id: library.name for library in self._libraries}
             token = self._take_token()
             return self.async_create_entry(
-                title=self._entry_title(),
+                title=f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})",
                 data={
                     CONF_URL: self._user_input[CONF_URL],
                     CONF_TOKEN: token,
