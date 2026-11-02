@@ -54,7 +54,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     _attr_supported_features = (
         WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.OPERATION_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_operation_list = SUPPORT_WATER_HEATER
 
     @refresh_system

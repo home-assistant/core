@@ -8,6 +8,13 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from mashumaro.exceptions import MissingField
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from spotifyaio import (
     PlaybackState,
     Playlist,
@@ -57,14 +64,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -850,6 +849,36 @@ async def test_smart_polling_interval_handles_paused(
 
     mock_spotify.return_value.get_playback.assert_called_once()
     mock_spotify.return_value.get_playback.reset_mock()
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_playing_without_item(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test playback that is reported as playing without an item."""
+    mock_spotify.return_value.get_playback.return_value.item = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_spotify.return_value.get_playback.return_value.is_playing is True
+    assert mock_spotify.return_value.get_playback.return_value.progress_ms is not None
+
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
 
 
 @pytest.mark.usefixtures("setup_credentials")

@@ -1,6 +1,7 @@
 {
   "domain": "led_infrared",
   "name": "LED Infrared",
+  "categories": ["lighting"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "dependencies": ["infrared"],

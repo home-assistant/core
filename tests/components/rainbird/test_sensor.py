@@ -4,6 +4,8 @@ from http import HTTPStatus
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -18,9 +20,6 @@ from .conftest import (
     mock_response_error,
 )
 from .test_calendar import SCHEDULE_RESPONSES
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 PGM_A_NEXT_RUN = "sensor.rain_bird_controller_pgm_a_next_run"
 PGM_B_NEXT_RUN = "sensor.rain_bird_controller_pgm_b_next_run"

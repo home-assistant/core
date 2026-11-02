@@ -85,7 +85,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         """Initialize the Climate device."""
         super().__init__(hass, entry, hive, hive_device)
         self.thermostat_node_id = hive_device["device_id"]
-        self._attr_temperature_unit = TEMP_UNIT[hive_device["temperatureunit"]]
+        self._attr_native_temperature_unit = TEMP_UNIT[hive_device["temperatureunit"]]
 
     @refresh_system
     @override
@@ -109,7 +109,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
             await self.hive.heating.setBoostOff(self.device)
         elif preset_mode == PRESET_BOOST:
-            curtemp = round((self.current_temperature or 0) * 2) / 2
+            curtemp = round((self.native_current_temperature or 0) * 2) / 2
             temperature = curtemp + 0.5
             await self.hive.heating.setBoostOn(self.device, 30, temperature)
 
@@ -133,10 +133,12 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
             self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION.get(
                 self.device["status"]["action"]
             )
-            self._attr_current_temperature = self.device["status"][
+            self._attr_native_current_temperature = self.device["status"][
                 "current_temperature"
             ]
-            self._attr_target_temperature = self.device["status"]["target_temperature"]
+            self._attr_native_target_temperature = self.device["status"][
+                "target_temperature"
+            ]
             self._attr_min_temp = self.device["min_temp"]
             self._attr_max_temp = self.device["max_temp"]
             if self.device["status"]["boost"] == "ON":

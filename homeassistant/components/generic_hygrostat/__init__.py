@@ -21,25 +21,24 @@ from homeassistant.helpers.helper_integration import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "generic_hygrostat"
-
-CONF_HUMIDIFIER = "humidifier"
-CONF_SENSOR = "target_sensor"
-CONF_MIN_HUMIDITY = "min_humidity"
-CONF_MAX_HUMIDITY = "max_humidity"
-CONF_TARGET_HUMIDITY = "target_humidity"
-CONF_MIN_DUR = "min_cycle_duration"
-CONF_DRY_TOLERANCE = "dry_tolerance"
-CONF_WET_TOLERANCE = "wet_tolerance"
-CONF_KEEP_ALIVE = "keep_alive"
-CONF_INITIAL_STATE = "initial_state"
-CONF_AWAY_HUMIDITY = "away_humidity"
-CONF_AWAY_FIXED = "away_fixed"
-CONF_STALE_DURATION = "sensor_stale_duration"
-
-
-DEFAULT_TOLERANCE = 3
-DEFAULT_NAME = "Generic Hygrostat"
+from .const import (
+    CONF_AWAY_FIXED,
+    CONF_AWAY_HUMIDITY,
+    CONF_DRY_TOLERANCE,
+    CONF_HUMIDIFIER,
+    CONF_INITIAL_STATE,
+    CONF_KEEP_ALIVE,
+    CONF_MAX_HUMIDITY,
+    CONF_MIN_DUR,
+    CONF_MIN_HUMIDITY,
+    CONF_SENSOR,
+    CONF_STALE_DURATION,
+    CONF_TARGET_HUMIDITY,
+    CONF_WET_TOLERANCE,
+    DEFAULT_NAME,
+    DEFAULT_TOLERANCE,
+    DOMAIN,
+)
 
 HYGROSTAT_SCHEMA = probatio.Schema(
     {
@@ -81,6 +80,10 @@ CONFIG_SCHEMA = probatio.Schema(
 
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Generic Hygrostat component."""
@@ -97,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up from a config entry."""
 
     def set_humidifier_entity_id_or_uuid(source_entity_id: str) -> None:
@@ -146,10 +149,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, (Platform.HUMIDIFIER,))
-    return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
@@ -177,11 +179,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, (Platform.HUMIDIFIER,)
     )

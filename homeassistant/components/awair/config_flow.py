@@ -67,7 +67,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._device.device_addr},
             )
 
-        self._set_confirm_only()
         placeholders = {
             "model": self._device.model,
             "device_id": self._device.device_id,

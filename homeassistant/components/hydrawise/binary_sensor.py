@@ -12,11 +12,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HydrawiseConfigEntry
-from .entity import HydrawiseEntity
+from .entity import HydrawiseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -33,6 +34,7 @@ CONTROLLER_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = 
     HydrawiseBinarySensorEntityDescription(
         key="status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=(
             lambda status_sensor: (
                 status_sensor.coordinator.last_update_success
@@ -143,16 +145,19 @@ class HydrawiseZoneBinarySensor(HydrawiseBinarySensor):
 
     zone: Zone
 
+    @exception_handler
     async def start_watering(self, duration: int | None = None) -> None:
         """Start watering in the irrigation zone."""
         await self.coordinator.api.start_zone(
             self.zone, custom_run_duration=int((duration or 0) * 60)
         )
 
+    @exception_handler
     async def suspend(self, until: datetime) -> None:
         """Suspend automatic watering in the irrigation zone."""
         await self.coordinator.api.suspend_zone(self.zone, until=until)
 
+    @exception_handler
     async def resume(self) -> None:
         """Resume automatic watering in the irrigation zone."""
         await self.coordinator.api.resume_zone(self.zone)

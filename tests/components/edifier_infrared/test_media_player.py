@@ -4,13 +4,21 @@ from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierMo
 from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.edifier_infrared.const import (
     CONF_COMMAND_SET,
     CONF_INFRARED_ENTITY_ID,
     DOMAIN,
+    SUPPORTED_COMMAND_SETS,
 )
+from homeassistant.components.edifier_infrared.media_player import COMMAND_SET_COMMANDS
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -26,11 +34,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.edifier_r1700bts"
 
@@ -141,3 +144,8 @@ async def test_media_player_availability_follows_ir_entity(
     await assert_availability_follows_source_entity(
         hass, MEDIA_PLAYER_ENTITY_ID, [EMITTER_ENTITY_ID]
     )
+
+
+def test_command_sets_match_supported_command_sets() -> None:
+    """Test that the media player implements every supported command set."""
+    assert set(COMMAND_SET_COMMANDS) == set(SUPPORTED_COMMAND_SETS)

@@ -1,8 +1,10 @@
 {
   "domain": "sleep_as_android",
   "name": "Sleep as Android",
+  "categories": ["health_wellbeing"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/sleep_as_android",
   "integration_type": "service",

@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock
 
 from mill import Heater, Mill, Sensor
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components.mill.const import DOMAIN
 from homeassistant.components.mill.coordinator import MillHistoricDataUpdateCoordinator
@@ -10,9 +12,6 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_mill_historic_data(recorder_mock: Recorder, hass: HomeAssistant) -> None:

@@ -216,6 +216,9 @@
       "pm25": {
         "default": "mdi:molecule"
       },
+      "pump_speed": {
+        "default": "mdi:speedometer"
+      },
       "remaining_time": {
         "default": "mdi:timer"
       },

@@ -1,6 +1,7 @@
 {
   "domain": "command_line",
   "name": "Command line",
+  "categories": ["diy_makers"],
   "codeowners": ["@gjohansson-ST"],
   "documentation": "https://www.home-assistant.io/integrations/command_line",
   "iot_class": "local_polling",

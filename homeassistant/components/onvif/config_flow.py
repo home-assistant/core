@@ -51,7 +51,7 @@ from .const import (
     GET_CAPABILITIES_EXCEPTIONS,
     LOGGER,
 )
-from .device import get_device
+from .device import get_device, get_mac_address
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -120,7 +120,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the ONVIF config flow."""
-        self.device_id = None
+        self.device_id: str | None = None
         self.devices: list[dict[str, Any]] = []
         self.onvif_config: dict[str, Any] = {}
 
@@ -329,12 +329,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if not self.device_id:
                 try:
                     network_interfaces = await device_mgmt.GetNetworkInterfaces()
-                    interface = next(
-                        filter(lambda interface: interface.Enabled, network_interfaces),
-                        None,
-                    )
-                    if interface:
-                        self.device_id = interface.Info.HwAddress
+                    self.device_id = get_mac_address(network_interfaces)
                 except Fault as fault:
                     if "not implemented" not in fault.message:
                         raise
@@ -352,7 +347,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                 raise AbortFlow(reason="no_mac")
 
             if configure_unique_id:
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 await self.async_set_unique_id(self.device_id, raise_on_progress=False)
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 self._abort_if_unique_id_configured(
                     updates={
                         CONF_HOST: self.onvif_config[CONF_HOST],

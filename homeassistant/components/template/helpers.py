@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
@@ -37,7 +36,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_ADDITIONAL_OPTIONS, CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS
+from .const import (
+    CONF_ADDITIONAL_OPTIONS,
+    CONF_DEFAULT_ENTITY_ID,
+    DOMAIN,
+    PLATFORMS,
+    TemplateService,
+)
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
@@ -86,7 +91,7 @@ def _blueprint_in_use(hass: HomeAssistant, blueprint_path: str) -> bool:
 
 async def _reload_blueprint_templates(hass: HomeAssistant, blueprint_path: str) -> None:
     """Reload all templates that rely on a specific blueprint."""
-    await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+    await hass.services.async_call(DOMAIN, TemplateService.RELOAD)
 
 
 @singleton(DATA_BLUEPRINTS)

@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyschlage.exceptions import UnknownError
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MockSchlageConfigEntry
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 async def test_binary_sensor_attributes(

@@ -1,8 +1,10 @@
 {
   "domain": "energenie_power_sockets",
   "name": "Energenie Power Sockets",
+  "categories": ["plugs_switches"],
   "codeowners": ["@gnumpi"],
   "config_flow": true,
+  "connectivity": ["serial"],
   "documentation": "https://www.home-assistant.io/integrations/energenie_power_sockets",
   "integration_type": "device",
   "iot_class": "local_polling",

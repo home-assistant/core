@@ -253,8 +253,6 @@ class RestoreStateData:
         This includes the states of all registered entities, as well as the
         stored states from the previous run, which have not been created as
         entities on this run, and have not expired.
-
-        Stored states that will not be saved are dropped from memory too.
         """
         now = dt_util.utcnow()
         all_states = self.hass.states.async_all()
@@ -295,7 +293,6 @@ class RestoreStateData:
             )
         expiration_time = now - STATE_EXPIRATION
 
-        last_states_by_entity_registry_id: dict[str, StoredState] = {}
         for (
             entity_registry_id,
             stored_state,
@@ -309,11 +306,6 @@ class RestoreStateData:
                 continue
 
             stored_states.append(stored_state)
-            last_states_by_entity_registry_id[entity_registry_id] = stored_state
-
-        self.last_states_by_entity_registry_id = last_states_by_entity_registry_id
-
-        last_states: dict[str, StoredState] = {}
 
         for entity_id, stored_state in self.last_states_by_entity_id.items():
             # Don't save old states that have entities in the current run
@@ -327,9 +319,6 @@ class RestoreStateData:
                 continue
 
             stored_states.append(stored_state)
-            last_states[entity_id] = stored_state
-
-        self.last_states_by_entity_id = last_states
 
         return stored_states
 
@@ -413,6 +402,19 @@ class RestoreStateData:
 
         del self.entities[entity_id]
 
+    @callback
+    def async_restore_entity_moved(
+        self, entity: RestoreEntity, old_entity_id: str
+    ) -> None:
+        """Track an entity whose entity_id was changed in place."""
+        # When removed and re-added, it is already tracked under its new
+        # entity_id, this is backwards compatibility for custom integrations
+        # not yet migrated to async_entity_id_changed, can be removed in
+        # Home Assistant Core 2027.11.
+        if self.entities.get(old_entity_id) is entity:
+            del self.entities[old_entity_id]
+            self.entities[entity.entity_id] = entity
+
 
 @callback
 def _entity_registry_entry_created_filter(
@@ -456,6 +458,13 @@ class RestoreEntity(Entity):
             self.entity_id, state, extra_data, self.__added_entity_registry_id
         )
         await super().async_internal_will_remove_from_hass()
+
+    @callback
+    @override
+    def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
+        """Track restore state under the new entity_id."""
+        super().async_internal_entity_id_changed(old_entity_id)
+        async_get(self.hass).async_restore_entity_moved(self, old_entity_id)
 
     @callback
     def _async_get_restored_data(self) -> StoredState | None:

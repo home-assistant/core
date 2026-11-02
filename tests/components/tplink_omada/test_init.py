@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -16,8 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from tests.common import MockConfigEntry
 
 MOCK_ENTRY_DATA = {
     "host": "https://fake.omada.host",

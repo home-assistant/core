@@ -19,6 +19,7 @@ from lifx import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
@@ -38,6 +39,7 @@ from homeassistant.components.lifx.const import (
     ATTR_SKY_TYPE,
     ATTR_SPEED,
     ATTR_THEME,
+    DATA_LIFX_MANAGER,
     SERVICE_EFFECT_COLORLOOP,
     SERVICE_EFFECT_COLORSWEEP,
     SERVICE_EFFECT_FLAME,
@@ -111,14 +113,13 @@ from .helpers import (
     create_reference_matrix_light,
 )
 
-from tests.common import async_fire_time_changed
-
 ENTITY_ID = "light.my_group_my_bulb"
 OTHER_IP_ADDRESS = "127.0.0.2"
 OTHER_SERIAL = "d073d5aabbcc"
 OTHER_MAC_ADDRESS = "d0:73:d5:aa:bb:cc"
 OTHER_LABEL = "Other Bulb"
 OTHER_ENTITY_ID = "light.my_group_other_bulb"
+RENAMED_ENTITY_ID = "light.renamed_bulb"
 
 pytestmark = pytest.mark.usefixtures("mock_effect_conductor")
 
@@ -364,6 +365,42 @@ async def test_effect_pulse_uses_public_effect(
     assert effect.cycles == 4
     assert effect.color == HSBK(120.0, 0.5, 128 / 255, 3500)
     assert participants == [device]
+
+
+async def test_effect_service_follows_renamed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_effect_conductor: MagicMock,
+) -> None:
+    """Test effect services target a light by its new entity_id after a rename."""
+    device = create_mock_light()
+    entry = await async_setup_lifx_entry(hass, device)
+    manager = hass.data[DATA_LIFX_MANAGER]
+
+    entity_registry.async_update_entity(ENTITY_ID, new_entity_id=RENAMED_ENTITY_ID)
+    await hass.async_block_till_done()
+
+    assert set(manager.entity_id_to_coordinator) == {RENAMED_ENTITY_ID}
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_PULSE,
+        {ATTR_ENTITY_ID: RENAMED_ENTITY_ID},
+        blocking=True,
+    )
+    _, participants = mock_effect_conductor.start.await_args.args
+    assert participants == [device]
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EFFECT_PULSE,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    # Unloading must unregister the new entity_id, not the old one
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert manager.entity_id_to_coordinator == {}
 
 
 async def test_effect_pulse_reads_color_before_merging(
@@ -1052,7 +1089,7 @@ async def test_kelvin_outside_the_protocol_range_is_rejected(
         await hass.services.async_call(
             DOMAIN,
             "set_state",
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COLOR_TEMP_KELVIN: 1200},
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COLOR_TEMP_KELVIN: 500},
             blocking=True,
         )
 
@@ -1549,6 +1586,13 @@ async def test_matrix_color_preserves_tile_brightness(
 
 
 @pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(LifxError("device unreachable"), id="library-error"),
+        pytest.param(OSError("network down"), id="unexpected-error"),
+    ],
+)
+@pytest.mark.parametrize(
     ("factory", "method"),
     [
         pytest.param(
@@ -1558,13 +1602,16 @@ async def test_matrix_color_preserves_tile_brightness(
     ],
 )
 async def test_partial_write_is_refused_when_the_state_cannot_be_read(
-    hass: HomeAssistant, factory: Callable[[], MockDevice], method: str
+    hass: HomeAssistant,
+    factory: Callable[[], MockDevice],
+    method: str,
+    error: Exception,
 ) -> None:
     """Test a partial write is not merged over the state of a failed read."""
     device = factory()
     device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
-    device.refresh_state.side_effect = LifxError("device unreachable")
+    device.refresh_state.side_effect = error
 
     with pytest.raises(HomeAssistantError, match="could not be read"):
         await hass.services.async_call(
@@ -1902,17 +1949,91 @@ async def test_library_errors_become_home_assistant_errors(
         )
 
 
-async def test_failed_refresh_marks_light_unavailable(hass: HomeAssistant) -> None:
-    """Test coordinator availability remains visible on the light entity."""
+@pytest.mark.parametrize(
+    ("missed_polls", "expected_state"),
+    [
+        pytest.param(1, STATE_ON, id="one_missed_poll"),
+        pytest.param(2, STATE_ON, id="two_missed_polls"),
+        pytest.param(3, STATE_UNAVAILABLE, id="three_missed_polls"),
+    ],
+)
+async def test_light_is_unavailable_after_three_missed_polls(
+    hass: HomeAssistant, missed_polls: int, expected_state: str
+) -> None:
+    """Test a light keeps its last state until it misses three polls in a row."""
     device = create_mock_light()
+    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
     device.refresh_state.side_effect = LifxError("offline")
 
+    for _ in range(missed_polls):
+        await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == expected_state
+
+
+async def test_answered_poll_resets_missed_polls(hass: HomeAssistant) -> None:
+    """Test the missed polls are counted again after the light answers."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+
+    device.refresh_state.side_effect = LifxError("offline")
+    await async_trigger_update(hass)
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = LifxError("offline")
+    await async_trigger_update(hass)
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_light_recovers_after_being_unavailable(hass: HomeAssistant) -> None:
+    """Test a light is available again as soon as it answers a poll."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+    device.refresh_state.side_effect = LifxError("offline")
+    for _ in range(3):
+        await async_trigger_update(hass)
+
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_unavailable_light_only_recovers_by_answering(
+    hass: HomeAssistant,
+) -> None:
+    """Test a missed poll does not bring back a light that went unavailable."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+
+    device.refresh_state.side_effect = OSError("network down")
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = LifxError("offline")
     await async_trigger_update(hass)
 
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(

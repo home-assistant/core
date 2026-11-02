@@ -65,6 +65,9 @@
     "fan_mode_failed": {
       "message": "Honeywell could not set fan mode"
     },
+    "no_devices_found": {
+      "message": "No Honeywell devices found"
+    },
     "set_hold_failed": {
       "message": "Honeywell could not set permanent hold"
     },

@@ -41,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: OpenweathermapConfigEntry
-) -> bool:
+) -> None:
     """Set up OpenWeatherMap as config entry."""
     api_key = entry.data[CONF_API_KEY]
     language = entry.options[CONF_LANGUAGE]
@@ -63,12 +63,10 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: OpenweathermapConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     config_entries = hass.config_entries
     data = entry.data
@@ -89,8 +87,6 @@ async def async_migrate_entry(
 
     _LOGGER.debug("Migration to version %s successful", CONFIG_FLOW_VERSION)
 
-    return True
-
 
 async def async_update_options(
     hass: HomeAssistant, entry: OpenweathermapConfigEntry
@@ -101,6 +97,6 @@ async def async_update_options(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OpenweathermapConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

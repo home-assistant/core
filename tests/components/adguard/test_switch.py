@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from adguardhome import AdGuardHomeAuthenticationError, AdGuardHomeError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.adguard.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -114,6 +113,8 @@ async def test_switch_actions(
     call_assertion: Callable[[AsyncMock], Any],
 ) -> None:
     """Test the adguard switch actions."""
+    mock_adguard.status.reset_mock()
+
     await hass.services.async_call(
         "switch",
         service,
@@ -122,6 +123,9 @@ async def test_switch_actions(
     )
 
     call_assertion(mock_adguard)
+
+    # The new state is fetched right away, instead of on the next poll.
+    mock_adguard.status.assert_called_once()
 
 
 @pytest.mark.parametrize(

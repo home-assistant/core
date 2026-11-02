@@ -1,6 +1,7 @@
 {
   "domain": "tradfri",
   "name": "IKEA TR\u00c5DFRI",
+  "categories": ["hubs_protocols.smart_home_hubs", "lighting.bulbs_lamps"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tradfri",

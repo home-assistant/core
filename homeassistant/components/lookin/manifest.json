@@ -1,6 +1,7 @@
 {
   "domain": "lookin",
   "name": "LOOKin",
+  "categories": ["buttons_remotes"],
   "codeowners": ["@ANMalko", "@bdraco"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lookin",

@@ -8,6 +8,15 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    Mock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import MagicMock, WebSocketGenerator
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.smartglass.models import (
     CommandResponse,
@@ -44,16 +53,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
-    AsyncMock,
-    Mock,
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.typing import MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -160,6 +159,40 @@ async def test_media_player_added_before_console_status(
     freezer.tick(timedelta(seconds=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_media_player_unavailable_on_failed_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the media player becomes unavailable when a status update fails."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    xbox_live_client.smartglass.get_console_status.side_effect = TimeoutException(
+        "timeout"
+    )
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("media_player.xonex")) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    xbox_live_client.smartglass.get_console_status.side_effect = None
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get("media_player.xonex")) is not None
     assert state.state != STATE_UNAVAILABLE

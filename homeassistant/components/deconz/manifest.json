@@ -1,6 +1,7 @@
 {
   "domain": "deconz",
   "name": "deCONZ",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@Kane610"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/deconz",

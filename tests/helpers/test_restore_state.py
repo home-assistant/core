@@ -8,6 +8,15 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    json_round_trip,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, CoreState, HomeAssistant, State
@@ -29,16 +38,6 @@ from homeassistant.helpers.restore_state import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    async_fire_time_changed,
-    json_round_trip,
-    mock_integration,
-    mock_platform,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -323,11 +322,6 @@ async def test_dump_data(hass: HomeAssistant) -> None:
     assert state1["state"]["state"] == "off"
     assert state2["state"]["entity_id"] == "input_boolean.b5"
     assert state2["state"]["state"] == "off"
-    # States that are not written anymore are dropped from memory as well
-    assert list(data.last_states_by_entity_id) == [
-        "input_boolean.b3",
-        "input_boolean.b5",
-    ]
 
     # Test that removed entities are not persisted
     await entity.async_remove()
@@ -1249,7 +1243,6 @@ async def test_dump_drops_stored_state_of_entity_with_failing_extra_data(
     await data.async_dump_states()
 
     assert hass_storage[STORAGE_KEY]["data"] == []
-    assert not data.last_states_by_entity_registry_id
 
 
 async def test_load_stored_state_without_registry_entry(
@@ -1356,3 +1349,54 @@ async def test_async_get_stored_state_entity_id_changed(
         "entity_id": "test.test2",
     }
     assert stored_state.state.context is context
+
+
+async def test_entity_id_change_in_place(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test restore state follows an entity whose entity_id changes in place."""
+
+    class InPlaceRestoreEntity(RestoreEntity):
+        """Restore entity without add or remove code, renamed in place."""
+
+        _attr_unique_id = "1234"
+
+        @property
+        def state(self) -> str:
+            """Return the state."""
+            return "on"
+
+    registry_entry = entity_registry.async_get_or_create(
+        "input_boolean", "test_platform", "1234", suggested_object_id="old"
+    )
+    data = async_get(hass)
+    data.last_states_by_entity_registry_id[registry_entry.id] = StoredState(
+        State("input_boolean.old", "stored"), None, dt_util.utcnow(), registry_entry.id
+    )
+    platform = MockEntityPlatform(hass, domain="input_boolean")
+    entity = InPlaceRestoreEntity()
+    await platform.async_add_entities([entity])
+    assert data.entities == {"input_boolean.old": entity}
+
+    entity_registry.async_update_entity(
+        "input_boolean.old", new_entity_id="input_boolean.new"
+    )
+    await hass.async_block_till_done()
+
+    assert data.entities == {"input_boolean.new": entity}
+    last_state = await entity.async_get_last_state()
+    assert last_state.entity_id == "input_boolean.new"
+    assert last_state.state == "stored"
+    # The live entity is dumped, superseding the previous run's state
+    assert [
+        (stored.state.entity_id, stored.state.state, stored.entity_registry_id)
+        for stored in data.async_get_stored_states()
+    ] == [("input_boolean.new", "on", registry_entry.id)]
+
+    await entity.async_remove()
+
+    assert data.entities == {}
+    assert not data.last_states_by_entity_id
+    stored_state = data.last_states_by_entity_registry_id[registry_entry.id]
+    assert stored_state.state.entity_id == "input_boolean.new"
+    assert stored_state.state.state == "on"
