@@ -33,7 +33,7 @@ from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -143,6 +143,38 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Optional(const.ATTR_BLOCK_TO_BLOCK): probatio.Coerce(bool),
         },
         func="async_set_lock_configuration",
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
+        const.SERVICE_PING,
+        _async_ping,
+        schema=probatio.Schema(
+            probatio.All(
+                TARGET_VALIDATORS,
+                probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+            ),
+        ),
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
+        const.SERVICE_REFRESH_NOTIFICATIONS,
+        _async_refresh_notifications,
+        schema=probatio.Schema(
+            probatio.All(
+                {
+                    **TARGET_VALIDATORS,
+                    probatio.Required(const.ATTR_NOTIFICATION_TYPE): probatio.All(
+                        probatio.Coerce(int), probatio.Coerce(NotificationType)
+                    ),
+                    probatio.Optional(const.ATTR_NOTIFICATION_EVENT): probatio.Coerce(
+                        int
+                    ),
+                },
+                probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+            ),
+        ),
     )
 
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
@@ -368,6 +400,52 @@ async def _async_invoke_cc_api(
                 result,
             )
     raise_exceptions_from_results(nodes_or_endpoints_list, results)
+
+
+@callback
+def _async_get_nodes(call: ServiceCall) -> set[ZwaveNode]:
+    """Get the nodes targeted by the action call."""
+    try:
+        nodes = async_get_nodes_from_targets(
+            call.hass, call.data, logger=_LOGGER, raise_on_driver_not_ready=True
+        )
+    except DriverNotReadyError as err:
+        # Not a validation error, so continue_on_error can tolerate it
+        raise HomeAssistantError(
+            translation_domain=const.DOMAIN,
+            translation_key="driver_not_ready",
+        ) from err
+    if not nodes:
+        raise ServiceValidationError(
+            translation_domain=const.DOMAIN,
+            translation_key="no_nodes_found",
+        )
+    return nodes
+
+
+async def _async_ping(call: ServiceCall) -> None:
+    """Ping node(s)."""
+    _LOGGER.warning(
+        "This service is deprecated in favor of the ping button entity. Service "
+        "calls will still work for now but the service will be removed in a "
+        "future release"
+    )
+    nodes = list(_async_get_nodes(call))
+    results = await asyncio.gather(
+        *(node.async_ping() for node in nodes), return_exceptions=True
+    )
+    raise_exceptions_from_results(nodes, results)
+
+
+async def _async_refresh_notifications(call: ServiceCall) -> None:
+    """Refresh notifications on a node."""
+    nodes = _async_get_nodes(call)
+    notification_type: NotificationType = call.data[const.ATTR_NOTIFICATION_TYPE]
+    notification_event: int | None = call.data.get(const.ATTR_NOTIFICATION_EVENT)
+    param: dict[str, int] = {"notificationType": notification_type.value}
+    if notification_event is not None:
+        param["notificationEvent"] = notification_event
+    await _async_invoke_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)
 
 
 class ZWaveServices:
@@ -653,21 +731,6 @@ class ZWaveServices:
         # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
-            const.SERVICE_PING,
-            self.async_ping,
-            schema=probatio.Schema(
-                probatio.All(
-                    TARGET_VALIDATORS,
-                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
             const.SERVICE_INVOKE_CC_API,
             self.async_invoke_cc_api,
             schema=probatio.Schema(
@@ -689,29 +752,6 @@ class ZWaveServices:
             description_placeholders={
                 "api_docs_url": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index"
             },
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_REFRESH_NOTIFICATIONS,
-            self.async_refresh_notifications,
-            schema=probatio.Schema(
-                probatio.All(
-                    {
-                        **TARGET_VALIDATORS,
-                        probatio.Required(const.ATTR_NOTIFICATION_TYPE): probatio.All(
-                            probatio.Coerce(int), probatio.Coerce(NotificationType)
-                        ),
-                        probatio.Optional(
-                            const.ATTR_NOTIFICATION_EVENT
-                        ): probatio.Coerce(int),
-                    },
-                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
@@ -984,19 +1024,6 @@ class ZWaveServices:
                 "Unable to set value via multicast"
             ) from SetValueFailed(f"{result.status} {result.message}")
 
-    async def async_ping(self, service: ServiceCall) -> None:
-        """Ping node(s)."""
-        _LOGGER.warning(
-            "This service is deprecated in favor of the ping button entity. Service "
-            "calls will still work for now but the service will be removed in a "
-            "future release"
-        )
-        nodes: list[ZwaveNode] = list(service.data[const.ATTR_NODES])
-        results = await asyncio.gather(
-            *(node.async_ping() for node in nodes), return_exceptions=True
-        )
-        raise_exceptions_from_results(nodes, results)
-
     async def async_invoke_cc_api(self, service: ServiceCall) -> None:
         """Invoke a command class API."""
         command_class: CommandClass = service.data[const.ATTR_COMMAND_CLASS]
@@ -1056,13 +1083,3 @@ class ZWaveServices:
             )
 
         await _async_invoke_cc_api(endpoints, command_class, method_name, *parameters)
-
-    async def async_refresh_notifications(self, service: ServiceCall) -> None:
-        """Refresh notifications on a node."""
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        notification_type: NotificationType = service.data[const.ATTR_NOTIFICATION_TYPE]
-        notification_event: int | None = service.data.get(const.ATTR_NOTIFICATION_EVENT)
-        param: dict[str, int] = {"notificationType": notification_type.value}
-        if notification_event is not None:
-            param["notificationEvent"] = notification_event
-        await _async_invoke_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)

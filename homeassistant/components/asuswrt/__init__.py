@@ -40,8 +40,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> 
 
 
 async def update_listener(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> None:
-    """Update when config_entry options update."""
+    """Reload when the connection data or options requiring a reload change."""
     router = entry.runtime_data
 
-    if router.update_options(entry.options):
+    if router.update_options(entry.options) or router.data_changed(entry.data):
         await hass.config_entries.async_reload(entry.entry_id)

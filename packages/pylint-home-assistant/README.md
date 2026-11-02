@@ -106,6 +106,7 @@ Every check has a code following the
 | `C7417` | [`home-assistant-init-not-first`](#c7417-home-assistant-init-not-first) | `__init__` should be defined before other instance methods and properties |
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
+| `C7458` | [`home-assistant-logger-const-name`](#c7458-home-assistant-logger-const-name) | Logger in an integration's `const.py` should use `__package__` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
 | `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
@@ -171,11 +172,11 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
-| `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form or handles the unique ID inside a `try` block |
+| `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 
 ## `home_assistant_logger` checker
 
-Enforces consistent formatting of logger messages across the codebase.
+Enforces consistent formatting and naming of loggers across the codebase.
 
 
 ### `C7401`: `home-assistant-logger-period`
@@ -189,6 +190,13 @@ Home Assistant follow a convention of not using trailing punctuation.
 Logger messages must start with a capital letter. Debug-level messages
 are exempt from this rule. If a message does not warrant capitalization,
 consider downgrading it to debug level.
+
+
+### `C7458`: `home-assistant-logger-const-name`
+
+The logger defined in an integration's `const.py` must use
+`logging.getLogger(__package__)`. With `__name__`, log records are attributed
+to `homeassistant.components.<domain>.const` instead of the integration.
 
 
 ## `home_assistant_imports` checker
@@ -564,7 +572,8 @@ Checks for flow calls inside a `try` block.
 
 A `try` block in a flow step should only contain the code that can raise the
 errors it catches, such as the calls to the device or service. Creating the
-entry, showing a form, aborting and handling the unique ID belong after it:
+entry, showing a form, aborting, handling the unique ID and moving on to
+another step (`self.async_step_*()`) belong after it:
 
 ```python
 try:
@@ -577,8 +586,9 @@ else:
     return self.async_create_entry(title=info.name, data=user_input)
 ```
 
-The unique ID helpers raise `AbortFlow`, which a broad `except Exception`
-swallows and reports as an unknown error. `try` statements that catch
+The unique ID helpers raise `AbortFlow`, also when called from another step,
+which a broad `except Exception` swallows and reports as an unknown error.
+`try` statements that catch
 `AbortFlow` themselves are not checked.
 
 
