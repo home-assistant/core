@@ -226,8 +226,8 @@ class BaseTelegramBot:
             event_data[ATTR_REPLY_TO_MSGID] = message.reply_to_message.message_id
 
         if filters.COMMAND.filter(message):
-            # This is a command message
-            # set event type to command and split data into command and args
+            # This is a command message - set event type
+            # to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
         elif filters.ATTACHMENT.filter(message):
@@ -314,6 +314,124 @@ class BaseTelegramBot:
         return False
 
 
+def make_inline_keyboard(keys: Any) -> InlineKeyboardMarkup:
+    """Make an InlineKeyboardMarkup from the inline_keyboard action data.
+
+    Raises ServiceValidationError if the keyboard is invalid.
+    """
+    rows = keys if isinstance(keys, list) else [keys]
+    return InlineKeyboardMarkup([_make_inline_keyboard_row(row) for row in rows])
+
+
+def is_deprecated_inline_keyboard(keys: Any) -> bool:
+    """Return True if a valid inline keyboard uses a deprecated format.
+
+    Deprecated: remove in 2027.6.0
+    """
+    rows = keys if isinstance(keys, list) else [keys]
+    return any(
+        isinstance(row, str)
+        or (isinstance(row, list) and not all(isinstance(b, dict) for b in row))
+        for row in rows
+    )
+
+
+def _make_inline_keyboard_row(row_keyboard: Any) -> list[InlineKeyboardButton]:
+    """Make a list of InlineKeyboardButtons.
+
+    Each button is a mapping with `text`, exactly one of `callback_data` or
+    `url`, and an optional `style` ("primary", "success" or "danger").
+    """
+    # Deprecated: remove in 2027.6.0
+    if isinstance(row_keyboard, str):
+        return _make_deprecated_inline_keyboard_row(row_keyboard)
+
+    if not isinstance(row_keyboard, list):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_inline_keyboard",
+        )
+
+    buttons: list[InlineKeyboardButton] = []
+    for entry in row_keyboard:
+        if isinstance(entry, dict):
+            buttons.append(_make_inline_keyboard_button(entry))
+            continue
+
+        # Deprecated: remove in 2027.6.0
+        if not (
+            isinstance(entry, (list, tuple))
+            and len(entry) == 2
+            and all(isinstance(value, str) for value in entry)
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_inline_keyboard",
+            )
+        text_btn, data_btn = entry
+        if data_btn.startswith(("https://", "http://")):
+            buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
+        else:
+            buttons.append(InlineKeyboardButton(text_btn, callback_data=data_btn))
+    return buttons
+
+
+def _make_inline_keyboard_button(entry: dict[str, Any]) -> InlineKeyboardButton:
+    """Make an InlineKeyboardButton from a button mapping."""
+    text = entry.get(ATTR_TEXT)
+    style = entry.get(ATTR_STYLE)
+    url = entry.get(ATTR_URL)
+    callback_data = entry.get(ATTR_CALLBACK_DATA)
+
+    if style is not None and (
+        not isinstance(style, str) or style not in VALID_INLINE_KEYBOARD_BUTTON_STYLES
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_inline_keyboard_style",
+            translation_placeholders={
+                "style": str(style),
+                "valid_styles": ", ".join(sorted(VALID_INLINE_KEYBOARD_BUTTON_STYLES)),
+            },
+        )
+
+    if isinstance(text, str) and text:
+        if isinstance(url, str) and url and callback_data is None:
+            return InlineKeyboardButton(text, url=url, style=style)
+        if isinstance(callback_data, str) and callback_data and url is None:
+            return InlineKeyboardButton(text, callback_data=callback_data, style=style)
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_inline_keyboard_button",
+    )
+
+
+# Deprecated: remove in 2027.6.0
+def _make_deprecated_inline_keyboard_row(row: str) -> list[InlineKeyboardButton]:
+    """Make a list of InlineKeyboardButtons from a comma-separated string.
+
+    Accepts `/cmd1, /cmd2`, `Text 1:/cmd1, Text 2:/cmd2` or `Text:https://url`.
+    """
+    buttons: list[InlineKeyboardButton] = []
+    for key in row.split(","):
+        if ":/" in key:
+            label, _, value = key.partition(":")
+            # only a value that starts with a scheme is a URL
+            if value.startswith(("https://", "http://")):
+                buttons.append(InlineKeyboardButton(label, url=value))
+            else:
+                # commands like: 'Label:/cmd' become ('Label', '/cmd')
+                label = key.split(":/")[0]
+                command = key[len(label) + 1 :]
+                buttons.append(InlineKeyboardButton(label, callback_data=command))
+        else:
+            # commands like: '/cmd' become ('CMD', '/cmd')
+            label = key.strip()[1:].upper()
+            buttons.append(InlineKeyboardButton(label, callback_data=key))
+    return buttons
+
+
 class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
@@ -367,107 +485,6 @@ class TelegramNotificationService:
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
 
-        def _make_row_inline_keyboard(row_keyboard: Any) -> list[InlineKeyboardButton]:
-            """Make a list of InlineKeyboardButtons.
-
-            It can accept:
-              - a dict per button (recommended - safe for text/data containing
-                "," ":" or "/", and the only way to set a button style):
-                `{"text": ..., "callback_data": ... | "url": ..., "style": ...}`
-                `style` is one of "primary", "success", "danger".
-              - also supports urls instead of callback commands
-            """
-            buttons = []
-            # Deprecated: remove in 2027.6.0
-            if isinstance(row_keyboard, str):
-                for key in row_keyboard.split(","):
-                    if ":/" in key:
-                        # check if command or URL
-                        if "https://" in key or "http://" in key:
-                            label = key.split(":")[0]
-                            url = key[len(label) + 1 :]
-                            buttons.append(InlineKeyboardButton(label, url=url))
-                        else:
-                            # commands like: 'Label:/cmd' become ('Label', '/cmd')
-                            label = key.split(":/")[0]
-                            command = key[len(label) + 1 :]
-                            buttons.append(
-                                InlineKeyboardButton(label, callback_data=command)
-                            )
-                    else:
-                        # commands like: '/cmd' become ('CMD', '/cmd')
-                        label = key.strip()[1:].upper()
-                        buttons.append(InlineKeyboardButton(label, callback_data=key))
-            elif isinstance(row_keyboard, list):
-                for entry in row_keyboard:
-                    if isinstance(entry, dict):
-                        text = entry.get(ATTR_TEXT)
-                        style = entry.get(ATTR_STYLE)
-                        if style is not None and (
-                            not isinstance(style, str)
-                            or style not in VALID_INLINE_KEYBOARD_BUTTON_STYLES
-                        ):
-                            raise ServiceValidationError(
-                                translation_domain=DOMAIN,
-                                translation_key="invalid_inline_keyboard_style",
-                                translation_placeholders={
-                                    "style": str(style),
-                                    "valid_styles": ", ".join(
-                                        sorted(VALID_INLINE_KEYBOARD_BUTTON_STYLES)
-                                    ),
-                                },
-                            )
-
-                        # NOTE: distinct names from the deprecated branch above,
-                        # which binds `url` to a str and would narrow these.
-                        button_url = entry.get(ATTR_URL)
-                        button_data = entry.get(ATTR_CALLBACK_DATA)
-                        # `text` is required, and exactly one of `url` /
-                        # `callback_data` must be a non-empty string.
-                        if not isinstance(text, str) or not text:
-                            raise ServiceValidationError(
-                                translation_domain=DOMAIN,
-                                translation_key="invalid_inline_keyboard_button",
-                            )
-                        if (
-                            isinstance(button_url, str)
-                            and button_url
-                            and button_data is None
-                        ):
-                            buttons.append(
-                                InlineKeyboardButton(text, url=button_url, style=style)
-                            )
-                        elif (
-                            isinstance(button_data, str)
-                            and button_data
-                            and button_url is None
-                        ):
-                            buttons.append(
-                                InlineKeyboardButton(
-                                    text, callback_data=button_data, style=style
-                                )
-                            )
-                        else:
-                            raise ServiceValidationError(
-                                translation_domain=DOMAIN,
-                                translation_key="invalid_inline_keyboard_button",
-                            )
-                        continue
-                    # Deprecated: remove in 2027.6.0
-                    text_btn, data_btn = entry
-                    if data_btn.startswith(("https://", "http://")):
-                        buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
-                    else:
-                        buttons.append(
-                            InlineKeyboardButton(text_btn, callback_data=data_btn)
-                        )
-            else:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_inline_keyboard",
-                )
-            return buttons
-
         # Defaults
         params: dict[str, Any] = {
             ATTR_PARSER: self.parse_mode,
@@ -506,11 +523,7 @@ class TelegramNotificationService:
                 params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
 
         elif ATTR_KEYBOARD_INLINE in data:
-            keys = data.get(ATTR_KEYBOARD_INLINE)
-            keys = keys if isinstance(keys, list) else [keys]
-            params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
-                [_make_row_inline_keyboard(row) for row in keys]
-            )
+            params[ATTR_REPLYMARKUP] = make_inline_keyboard(data[ATTR_KEYBOARD_INLINE])
         if params[ATTR_PARSER] == PARSER_PLAIN_TEXT:
             params[ATTR_PARSER] = None
         return params
@@ -696,7 +709,7 @@ class TelegramNotificationService:
         context: Context | None = None,
         **kwargs: Any,
     ) -> Any:
-        """Edit message media of a previously sent message."""
+        "Edit message media of a previously sent message."
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(

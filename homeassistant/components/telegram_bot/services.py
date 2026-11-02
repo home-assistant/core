@@ -35,7 +35,12 @@ from homeassistant.helpers.target import (
 from homeassistant.helpers.typing import VolSchemaType
 from homeassistant.util.json import JsonValueType
 
-from .bot import TelegramBotConfigEntry, TelegramNotificationService
+from .bot import (
+    TelegramBotConfigEntry,
+    TelegramNotificationService,
+    is_deprecated_inline_keyboard,
+    make_inline_keyboard,
+)
 from .const import (
     ATTR_ALLOWS_MULTIPLE_ANSWERS,
     ATTR_AUTHENTICATION,
@@ -462,7 +467,7 @@ SERVICE_MAP: dict[str, VolSchemaType] = {
 async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
     """Handle sending Telegram Bot message service calls."""
 
-    _deprecate_inline_keyboard(service)
+    _validate_inline_keyboard(service)
 
     # this is the list of targets to send the message to
     targets = _build_targets(service)
@@ -605,35 +610,32 @@ def _service_call_origin(service: ServiceCall) -> str:
     return service_call_origin
 
 
-# Deprecated: remove in 2027.6.0
-def _deprecate_inline_keyboard(service: ServiceCall) -> None:
-    """Warn when a legacy inline_keyboard format is used."""
-    rows = service.data.get(ATTR_KEYBOARD_INLINE)
-    if not rows:
+def _validate_inline_keyboard(service: ServiceCall) -> None:
+    """Validate the inline keyboard once, before sending to any target."""
+    # `keyboard` takes precedence, so `inline_keyboard` is not used at all
+    if ATTR_KEYBOARD in service.data or ATTR_KEYBOARD_INLINE not in service.data:
         return
 
-    # the dict format nests one mapping per button inside each row
-    if all(
-        isinstance(row, list) and all(isinstance(button, dict) for button in row)
-        for row in rows
-    ):
-        return
+    keys = service.data[ATTR_KEYBOARD_INLINE]
+    make_inline_keyboard(keys)
 
-    service_call_origin = _service_call_origin(service)
-    ir.async_create_issue(
-        service.hass,
-        DOMAIN,
-        f"deprecated_inline_keyboard_{service_call_origin}",
-        breaks_in_ha_version="2027.6.0",
-        is_fixable=False,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_inline_keyboard",
-        translation_placeholders={
-            "action": f"{DOMAIN}.{service.service}",
-            "action_origin": service_call_origin,
-        },
-    )
+    # Deprecated: remove in 2027.6.0
+    if is_deprecated_inline_keyboard(keys):
+        service_call_origin = _service_call_origin(service)
+        ir.async_create_issue(
+            service.hass,
+            DOMAIN,
+            f"deprecated_inline_keyboard_{service_call_origin}",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_inline_keyboard",
+            translation_placeholders={
+                "action": f"{DOMAIN}.{service.service}",
+                "action_origin": service_call_origin,
+            },
+        )
 
 
 def _build_targets(

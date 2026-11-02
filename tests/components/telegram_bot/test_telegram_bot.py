@@ -22,6 +22,7 @@ from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
+    ReplyKeyboardMarkup,
     Update,
 )
 from telegram.constants import ChatType, InputMediaType
@@ -739,6 +740,7 @@ async def test_send_message_with_deprecated_inline_keyboard_http_url(
 )
 async def test_deprecated_inline_keyboard_creates_issue(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     webhook_bot: None,
     issue_registry: IssueRegistry,
     keyboard: Any,
@@ -774,10 +776,26 @@ async def test_deprecated_inline_keyboard_creates_issue(
     assert issue is not None
     assert issue.translation_key == "deprecated_inline_keyboard"
     assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.is_fixable
     assert issue.translation_placeholders == {
         "action": f"{DOMAIN}.{SERVICE_SEND_MESSAGE}",
         "action_origin": "call_service",
     }
+
+    # the user can clear the issue once the action is updated
+    client = await hass_client()
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": issue.issue_id},
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data["step_id"] == "confirm"
+
+    resp = await client.post(f"/api/repairs/issues/fix/{data['flow_id']}")
+    assert resp.status == HTTPStatus.OK
+    assert (await resp.json())["type"] == "create_entry"
+    assert not issue_registry.async_get_issue(DOMAIN, issue.issue_id)
 
 
 async def test_inline_keyboard_dict_format_creates_no_issue(
@@ -813,6 +831,157 @@ async def test_inline_keyboard_dict_format_creates_no_issue(
 
     assert not issue_registry.async_get_issue(
         DOMAIN, "deprecated_inline_keyboard_call_service"
+    )
+
+
+async def test_inline_keyboard_ignored_when_keyboard_is_set(
+    hass: HomeAssistant,
+    webhook_bot: None,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Test that an unused deprecated inline keyboard creates no repair issue."""
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message",
+        AsyncMock(
+            return_value=Message(
+                message_id=12345,
+                date=dt_util.utcnow(),
+                chat=Chat(id=12345678, type=ChatType.PRIVATE),
+            )
+        ),
+    ) as mock_send_message:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_KEYBOARD: ["/command1, /command2"],
+                ATTR_KEYBOARD_INLINE: "command1:/cmd1",
+            },
+            blocking=True,
+            return_response=True,
+        )
+        await hass.async_block_till_done()
+
+    assert isinstance(
+        mock_send_message.call_args.kwargs["reply_markup"], ReplyKeyboardMarkup
+    )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_inline_keyboard_call_service"
+    )
+
+
+@pytest.mark.parametrize(
+    ("keyboard", "translation_key"),
+    [
+        pytest.param(
+            [[["command1", "/cmd1", "extra"]]],
+            "invalid_inline_keyboard",
+            id="list_entry_wrong_length",
+        ),
+        pytest.param(
+            [[["command1", 1]]], "invalid_inline_keyboard", id="list_entry_not_str"
+        ),
+        pytest.param([[123]], "invalid_inline_keyboard", id="button_not_a_list"),
+        pytest.param(
+            [[["command1", "/cmd1"], {ATTR_TEXT: "command2"}]],
+            "invalid_inline_keyboard_button",
+            id="mixed_with_invalid_mapping",
+        ),
+    ],
+)
+async def test_invalid_inline_keyboard_creates_no_issue(
+    hass: HomeAssistant,
+    webhook_bot: None,
+    issue_registry: IssueRegistry,
+    keyboard: Any,
+    translation_key: str,
+) -> None:
+    """Test that an invalid inline keyboard raises without a repair issue."""
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_KEYBOARD_INLINE: keyboard,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == translation_key
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_inline_keyboard_call_service"
+    )
+
+
+async def test_invalid_inline_keyboard_multiple_targets(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test that the inline keyboard is validated once, before any target."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.send_message"
+        ) as mock_send_message,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_CHAT_ID: [123456, 654321],
+                ATTR_KEYBOARD_INLINE: [[{ATTR_TEXT: "mock_text"}]],
+            },
+            blocking=True,
+            return_response=True,
+        )
+    await hass.async_block_till_done()
+
+    mock_send_message.assert_not_called()
+    assert err.value.translation_key == "invalid_inline_keyboard_button"
+
+
+async def test_deprecated_string_inline_keyboard_url_in_callback_data(
+    hass: HomeAssistant,
+    webhook_bot: None,
+) -> None:
+    """Test that a URL inside callback data does not make a link button."""
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message",
+        AsyncMock(
+            return_value=Message(
+                message_id=12345,
+                date=dt_util.utcnow(),
+                chat=Chat(id=12345678, type=ChatType.PRIVATE),
+            )
+        ),
+    ) as mock_send_message:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_KEYBOARD_INLINE: "Open:/open?next=https://mock_link",
+            },
+            blocking=True,
+            return_response=True,
+        )
+        await hass.async_block_till_done()
+
+    assert mock_send_message.call_args.kwargs["reply_markup"] == InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Open", callback_data="/open?next=https://mock_link")]]
     )
 
 
