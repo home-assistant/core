@@ -5,8 +5,20 @@ from datetime import timedelta
 DOMAIN = "entur_public_transport"
 
 API_CLIENT_NAME = "homeassistant-{}"
+ENTUR_CLIENT_NAME = "homeassistant-entur-public-transport"
 
 CONF_STOP_IDS = "stop_ids"
+CONF_STOP_ID = "stop_id"
+CONF_QUERY = "query"
+CONF_RECONFIGURE_ACTION = "reconfigure_action"
+CONF_MANUAL_WHITELIST_LINES = "manual_line_whitelist"
+CONF_PLATFORM_MODE = "platform_mode"
+CONF_QUAY_IDS = "quay_ids"
+CONF_ROUTE_LABELS = "route_labels"
+CONF_STOP_PLACE_NAME = "stop_place_name"
+CONF_STOP_PLACE_METADATA_VERSION = "stop_place_metadata_version"
+CONF_STOP_PLACE_TYPES = "stop_place_types"
+SUBENTRY_TYPE_STOP_PLACE = "stop_place"
 CONF_EXPAND_PLATFORMS = "expand_platforms"
 CONF_WHITELIST_LINES = "line_whitelist"
 CONF_OMIT_NON_BOARDING = "omit_non_boarding"
@@ -14,6 +26,14 @@ CONF_NUMBER_OF_DEPARTURES = "number_of_departures"
 
 DEFAULT_NAME = "Entur"
 DEFAULT_ICON_KEY = "bus"
+STOP_PLACE_METADATA_VERSION = 4
+
+PLATFORM_MODE_STOP_PLACE = "stop_place"
+PLATFORM_MODE_ALL = "all"
+PLATFORM_MODE_SELECTED = "selected"
+
+RECONFIGURE_ACTION_EDIT = "edit"
+RECONFIGURE_ACTION_REPLACE = "replace"
 
 ICONS = {
     "air": "mdi:airplane",
