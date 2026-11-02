@@ -1,5 +1,6 @@
 """The Swisscom Internet-Box integration."""
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -30,13 +31,17 @@ async def async_remove_config_entry_device(
     if not isinstance(device_entry, dr.DeviceEntry):
         # This integration does not create child devices.
         return False
-    protected_macs = {
+    macs = {
+        mac
+        for connection_type, mac in device_entry.connections
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    if entry.unique_id in macs:
+        return False
+    # Without data from the Internet-Box, any client device may be stale
+    if entry.state is not ConfigEntryState.LOADED:
+        return True
+    return macs.isdisjoint(
         dr.format_mac(device.phys_address)
         for device in entry.runtime_data.data.values()
-    }
-    if entry.unique_id:
-        protected_macs.add(entry.unique_id)
-    return not any(
-        connection_type == dr.CONNECTION_NETWORK_MAC and mac in protected_macs
-        for connection_type, mac in device_entry.connections
     )

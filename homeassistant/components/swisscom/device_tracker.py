@@ -1,6 +1,6 @@
 """Device tracker for the Swisscom Internet-Box."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 import probatio
 
@@ -10,7 +10,7 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
 )
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -62,19 +62,63 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker entities for the Swisscom Internet-Box."""
     coordinator = entry.runtime_data
-    tracked: set[str] = set()
+    device_registry = dr.async_get(hass)
+    # Formatted MAC address of each tracked client, by client key
+    tracked: dict[str, str] = {}
 
     @callback
-    def _add_new_entities() -> None:
+    def _async_update_devices() -> None:
+        # Disabled trackers get no coordinator updates, so rename devices here
+        for client in coordinator.data.values():
+            if (
+                client.name
+                and (
+                    device_entry := device_registry.async_get_device_by_connection(
+                        (dr.CONNECTION_NETWORK_MAC, client.phys_address),
+                        entry.entry_id,
+                    )
+                )
+                and device_entry.name != client.name
+            ):
+                device_registry.async_update_device(device_entry.id, name=client.name)
         new_keys = [key for key in coordinator.data if key not in tracked]
         if new_keys:
-            tracked.update(new_keys)
+            tracked.update(
+                (key, dr.format_mac(coordinator.data[key].phys_address))
+                for key in new_keys
+            )
             async_add_entities(
                 SwisscomScannerEntity(coordinator, key) for key in new_keys
             )
 
-    _add_new_entities()
-    entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
+    @callback
+    def _async_device_removed(
+        event: Event[dr.EventDeviceRegistryUpdatedData],
+    ) -> None:
+        """Track a client again if it returns after its device was removed."""
+        if TYPE_CHECKING:
+            assert event.data["action"] == "remove"
+        connections = {tuple(conn) for conn in event.data["device"]["connections"]}
+        for key, mac in list(tracked.items()):
+            if (dr.CONNECTION_NETWORK_MAC, mac) in connections:
+                del tracked[key]
+
+    @callback
+    def _is_own_device_removed(event_data: dr.EventDeviceRegistryUpdatedData) -> bool:
+        return (
+            event_data["action"] == "remove"
+            and event_data["device"]["config_entry_id"] == entry.entry_id
+        )
+
+    _async_update_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
+    entry.async_on_unload(
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            _async_device_removed,
+            event_filter=_is_own_device_removed,
+        )
+    )
 
 
 class SwisscomScannerEntity(
@@ -133,15 +177,3 @@ class SwisscomScannerEntity(
         """Return the IP address of the device."""
         device = self._device
         return device.ip_address if device else None
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Rename the tracked device when its hostname changes."""
-        if (
-            (hostname := self.hostname)
-            and (device_entry := self.device_entry)
-            and device_entry.name != hostname
-        ):
-            dr.async_get(self.hass).async_update_device(device_entry.id, name=hostname)
-        super()._handle_coordinator_update()

@@ -9,6 +9,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.swisscom.const import DOMAIN
 from homeassistant.components.swisscom.coordinator import SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -110,6 +111,34 @@ async def test_device_renamed_on_hostname_change(
     assert hass.states.get(entity_id).attributes["friendly_name"] == "laptop"
 
 
+async def test_disabled_tracker_device_renamed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_swisscom_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the device of a disabled tracker follows a hostname change."""
+    client = _client(CLIENT_MAC, "phone")
+    mock_swisscom_client.get_devices.return_value = [client]
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Trackers are disabled by default
+    assert hass.states.get("device_tracker.phone") is None
+
+    client.name = "laptop"
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, CLIENT_MAC), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "laptop"
+
+
 async def test_reload_without_name_keeps_device_name(
     hass: HomeAssistant,
     mock_swisscom_client: MagicMock,
@@ -193,6 +222,94 @@ async def test_remove_config_entry_device(
         )
         is None
     ) is removable
+
+
+@pytest.mark.parametrize(
+    ("mac", "removable"),
+    [
+        pytest.param(CLIENT_MAC, True, id="client"),
+        pytest.param(TEST_FORMATTED_MAC, False, id="internet_box"),
+    ],
+)
+async def test_remove_config_entry_device_unloaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_swisscom_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mac: str,
+    removable: bool,
+) -> None:
+    """Test removing a device of an unloaded config entry."""
+    assert await async_setup_component(hass, "config", {})
+    mock_swisscom_client.get_devices.return_value = [_client(CLIENT_MAC, "phone")]
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, TEST_FORMATTED_MAC)},
+    )
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac), mock_config_entry.entry_id
+    )
+    assert device is not None
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+    assert response["success"] is removable
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac), mock_config_entry.entry_id
+        )
+        is None
+    ) is removable
+
+
+async def test_removed_client_rediscovered(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    mock_swisscom_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a client returning after its device was removed is tracked again."""
+    assert await async_setup_component(hass, "config", {})
+    client = _client(CLIENT_MAC, "phone")
+    mock_swisscom_client.get_devices.return_value = [client]
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_swisscom_client.get_devices.return_value = []
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, CLIENT_MAC), mock_config_entry.entry_id
+    )
+    assert device is not None
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+    assert response["success"]
+    assert entity_registry.async_get("device_tracker.phone") is None
+
+    mock_swisscom_client.get_devices.return_value = [client]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_entry = entity_registry.async_get("device_tracker.phone")
+    assert entity_entry is not None
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, CLIENT_MAC), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert entity_entry.device_id == device.id
 
 
 @pytest.mark.usefixtures("mock_swisscom_client")
