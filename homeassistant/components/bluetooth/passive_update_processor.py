@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import async_get_current_platform
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN
@@ -156,7 +156,7 @@ class PassiveBluetoothDataUpdate[_T]:
         for device_key, device_info in new_data.devices.items():
             if (
                 not device_change
-                and self.devices.get(device_key, UNDEFINED) != device_info
+                and self.devices.get(device_key, Undefined) != device_info
             ):
                 device_change = True
             # Stored even when equal, so the next comparison is with the same object
@@ -167,7 +167,7 @@ class PassiveBluetoothDataUpdate[_T]:
             (new_data.entity_data, self.entity_data),
         ):
             for key, data in incoming.items():
-                if current.get(key, UNDEFINED) != data:
+                if current.get(key, Undefined) != data:
                     changed_entity_keys.add(key)
                     current[key] = data  # type: ignore[assignment]
         # If the device changed we don't need to return the changed

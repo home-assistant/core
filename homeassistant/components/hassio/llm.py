@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.llm import LLM_API_HOME_ASSISTANT, LLMContext
 
-from .const import DATA_ADDONS_LIST, DATA_COMPONENT, DOMAIN
-from .handler import HassioAPIError
+from .const import DATA_ADDONS_LIST, DOMAIN
+from .handler import HassioAPIError, get_supervisor_passthrough_client
 
 APP_SOURCE_PREFIX = "app:"
 
@@ -74,8 +74,10 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
             command = f"/addons/{source.removeprefix(APP_SOURCE_PREFIX)}/logs"
         else:
             command = f"/{source}/logs"
+
+        supervisor = get_supervisor_passthrough_client(hass)
         try:
-            text: str = await hass.data[DATA_COMPONENT].send_command(
+            text: str = await supervisor.send_command(
                 command,
                 method="get",
                 return_text=True,

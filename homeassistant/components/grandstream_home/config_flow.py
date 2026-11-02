@@ -18,7 +18,6 @@ import probatio
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
-    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_MODEL,
     CONF_PASSWORD,
@@ -31,7 +30,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_SW_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,7 +137,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
         # Prepare updates
         updates = {CONF_HOST: self._host, CONF_PORT: self._port}
         if self._firmware_version:
-            updates[ATTR_SW_VERSION] = self._firmware_version
+            updates[CONF_SW_VERSION] = self._firmware_version
 
         self._abort_if_unique_id_configured(updates=updates)
 
@@ -240,7 +239,7 @@ class GrandstreamConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL: verify_ssl,
                 CONF_TYPE: self._device_model,
                 CONF_MODEL: self._product_model,
-                ATTR_SW_VERSION: self._firmware_version,
+                CONF_SW_VERSION: self._firmware_version,
             },
         )
 
