@@ -437,7 +437,9 @@ async def test_setup_first_refresh_unauthorized_closes_client(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_close.assert_awaited()
+    # One close for the migration client, one for the setup client that
+    # closes after the first refresh triggers reauthentication.
+    assert mock_close.await_count == 2
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

@@ -64,6 +64,42 @@ async def test_duplicate_account_aborts(
     assert result["reason"] == "already_configured"
 
 
+async def test_duplicate_account_id_under_different_username_aborts(
+    hass: HomeAssistant,
+) -> None:
+    """Test config flow aborts when a different username resolves to the same account."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="existing@example.com",
+        data={
+            CONF_USERNAME: "existing@example.com",
+            CONF_PASSWORD: "password",
+        },
+        unique_id=MOCK_USER_ID,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        _async_mock_login,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "other@example.com",
+                CONF_PASSWORD: "password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_second_account_creates_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -82,13 +118,20 @@ async def test_second_account_creates_entry(
         CONF_USERNAME: "other@example.com",
         CONF_PASSWORD: "other_password",
     }
-    with patch(
-        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        _async_mock_login_other,
+    with (
+        patch(
+            "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+            _async_mock_login_other,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.async_setup_entry",
+            return_value=None,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], other_data
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "other@example.com"
