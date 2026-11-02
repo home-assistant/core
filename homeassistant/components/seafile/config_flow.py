@@ -191,26 +191,33 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_finish_reconfigure(self) -> ConfigFlowResult:
         """Store the new login and revoke the token it replaces."""
         entry = self._get_reconfigure_entry()
-        # Not inlined: taken before the await, so cancelling the flow during
-        # it can't make async_remove revoke the new token.
-        token = self._take_token()
-        with suppress(SeafileError):
-            await Seafile(
-                self._user_input[CONF_URL],
-                entry.data[CONF_TOKEN],
-                session=async_get_clientsession(
-                    self.hass, verify_ssl=self._user_input[CONF_VERIFY_SSL]
-                ),
-            ).logout_device()
-        return self.async_update_reload_and_abort(
+        # Not inlined: read before the update below replaces it.
+        old_token = entry.data[CONF_TOKEN]
+        # Not inlined: the entry is updated before the await, so the new token
+        # is stored even when the flow is cancelled while the old one is revoked.
+        result = (
+            # The update listener reloads the entry when it is loaded.
+            self.async_update_and_abort
+            if entry.update_listeners
+            else self.async_update_reload_and_abort
+        )(
             entry,
             title=self._entry_title(),
             data_updates={
                 CONF_URL: self._user_input[CONF_URL],
-                CONF_TOKEN: token,
+                CONF_TOKEN: self._take_token(),
                 CONF_VERIFY_SSL: self._user_input[CONF_VERIFY_SSL],
             },
         )
+        with suppress(SeafileError):
+            await Seafile(
+                self._user_input[CONF_URL],
+                old_token,
+                session=async_get_clientsession(
+                    self.hass, verify_ssl=self._user_input[CONF_VERIFY_SSL]
+                ),
+            ).logout_device()
+        return result
 
     def _take_token(self) -> str:
         """Hand the token to the entry, so async_remove doesn't revoke it."""
