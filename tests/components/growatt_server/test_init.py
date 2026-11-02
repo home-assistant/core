@@ -15,7 +15,6 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.growatt_server import _CACHED_SESSIONS
 from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
@@ -623,6 +622,61 @@ async def test_classic_api_early_expiry_waits_for_relogin_interval(
     assert hass.states.get(TLX_OUTPUT_POWER).state == "1900"
 
 
+async def test_classic_api_setup_retry_reuses_session(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test setup retries after a failed first refresh do not log in again."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    plant_info = mock_growatt_classic_api.plant_info.return_value
+    mock_growatt_classic_api.plant_info.side_effect = requests.exceptions.HTTPError(
+        "500 Server Error"
+    )
+
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
+
+    # Several setup retries on Home Assistant's short backoff
+    for _ in range(10):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_growatt_classic_api.plant_info.side_effect = None
+    mock_growatt_classic_api.plant_info.return_value = plant_info
+    mock_growatt_classic_api.tlx_detail.return_value = tlx_detail(2100)
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+    mock_growatt_classic_api.login.assert_called_once()
+    assert hass.states.get(TLX_OUTPUT_POWER).state == "2100"
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_classic_session_cooldown_wins_over_relogin_interval(
+    hass: HomeAssistant,
+) -> None:
+    """Test a renew after a 507 reports the cooldown, not the re-login interval."""
+    api = Mock(server_url="https://openapi.growatt.com/")
+    api.login.return_value = {"success": False, "msg": "507"}
+    session = GrowattClassicSession(hass, api, "test_user", "test_password")
+
+    with pytest.raises(GrowattLoginRateLimited):
+        session.renew(0)
+    # A second coordinator that saw the same dead session
+    with pytest.raises(GrowattLoginRateLimited) as err:
+        session.renew(0)
+
+    assert err.value.retry_after == LOGIN_COOLDOWN.total_seconds()
+    api.login.assert_called_once()
+
+
 async def test_classic_session_cooldown_is_per_server(
     hass: HomeAssistant,
 ) -> None:
@@ -1121,7 +1175,7 @@ async def test_setup_reuses_cached_api_from_migration(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify log message confirms API reuse (rate limit optimization)
-    assert "Reusing logged-in session from migration" in caplog.text
+    assert "Reusing logged-in Growatt session" in caplog.text
 
     # Verify login was called with correct credentials
     # Note: Coordinators also call login() during refresh, so we verify
@@ -1131,9 +1185,6 @@ async def test_setup_reuses_cached_api_from_migration(
     # Verify plant_list was called only once (during migration, not during setup)
     # This confirms setup did NOT resolve plant_id again (optimization working)
     mock_growatt_classic_api.plant_list.assert_called_once_with(123456)
-
-    # Verify the cached API was removed after use (one-time handoff)
-    assert mock_config_entry.entry_id not in _CACHED_SESSIONS
 
 
 @pytest.mark.parametrize(

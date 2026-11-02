@@ -67,6 +67,7 @@ from .const import (
     V1_DEVICE_TYPES,
 )
 from .coordinator import (
+    DATA_CLASSIC_SESSIONS,
     GrowattClassicSession,
     GrowattConfigEntry,
     GrowattCoordinator,
@@ -78,11 +79,6 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-# Temporary handoff of logged-in Classic API sessions from async_migrate_entry
-# to async_setup_entry. Avoids a second login() during the same startup, which
-# would hit Growatt's 5-minute per-endpoint rate limit. Popped after first use.
-_CACHED_SESSIONS: dict[str, GrowattClassicSession] = {}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -164,7 +160,7 @@ async def async_migrate_entry(
             if config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
                 username = config.get(CONF_USERNAME)
                 password = config.get(CONF_PASSWORD)
-                url = config.get(CONF_URL, DEFAULT_URL)
+                url = _server_url(config)
 
                 if not username or not password:
                     raise ConfigEntryError(
@@ -207,9 +203,6 @@ async def async_migrate_entry(
                     config_entry, data=new_data, minor_version=1
                 )
 
-                # Cache the logged-in session for reuse in async_setup_entry()
-                _CACHED_SESSIONS[config_entry.entry_id] = session
-
                 _LOGGER.info(
                     "Migrated config entry to use specific plant_id '%s'",
                     first_plant_id,
@@ -219,6 +212,12 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(config_entry, minor_version=1)
 
         _LOGGER.debug("Migration completed to version %s.%s", config_entry.version, 1)
+
+
+def _server_url(config: Mapping[str, str]) -> str:
+    """Return the configured server URL, with deprecated ones replaced."""
+    url = config.get(CONF_URL, DEFAULT_URL)
+    return DEFAULT_URL if url in DEPRECATED_URLS else url
 
 
 async def _create_api_and_login(
@@ -235,6 +234,7 @@ async def _create_api_and_login(
     session = GrowattClassicSession(hass, api, username, password)
 
     login_response = await hass.async_add_executor_job(_login_classic_api, session)
+    hass.data.setdefault(DATA_CLASSIC_SESSIONS, {})[session.account] = session
 
     return session, login_response
 
@@ -332,11 +332,9 @@ async def async_setup_entry(
     """Set up Growatt from a config entry."""
 
     config = config_entry.data
-    url = config.get(CONF_URL, DEFAULT_URL)
+    url = _server_url(config)
 
-    # If the URL has been deprecated then change to the default instead
-    if url in DEPRECATED_URLS:
-        url = DEFAULT_URL
+    if url != config.get(CONF_URL, DEFAULT_URL):
         new_data = dict(config_entry.data)
         new_data[CONF_URL] = url
         hass.config_entries.async_update_entry(config_entry, data=new_data)
@@ -358,15 +356,13 @@ async def async_setup_entry(
         username = config[CONF_USERNAME]
         password = config[CONF_PASSWORD]
 
-        # Check if migration cached a logged-in session for us to reuse.
-        # This avoids calling login() twice (once in migration, once here) which
-        # would trigger rate limiting.
-        if cached_session := _CACHED_SESSIONS.pop(config_entry.entry_id, None):
+        # Reuse the session from migration, an earlier setup attempt or before
+        # a reload, so none of them costs another login.
+        cached_session = hass.data.get(DATA_CLASSIC_SESSIONS, {}).get((url, username))
+        if cached_session is not None and cached_session.password == password:
             classic_session = cached_session
-            _LOGGER.debug("Reusing logged-in session from migration")
+            _LOGGER.debug("Reusing logged-in Growatt session")
         else:
-            # No cached session (normal setup or migration didn't run)
-            # Create new API instance and login
             classic_session, _ = await _create_api_and_login(
                 hass, username, password, url
             )

@@ -22,6 +22,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     BATT_MODE_BATTERY_FIRST,
@@ -104,6 +105,16 @@ class GrowattClassicSession:
         # Shared across reloads, since the lockout belongs to the account.
         self._blocked_until = hass.data.setdefault(DATA_LOGIN_BLOCKED_UNTIL, {})
 
+    @property
+    def account(self) -> tuple[str, str]:
+        """Return the server URL and username that logins are limited by."""
+        return (self.api.server_url, self.username)
+
+    def _raise_if_rate_limited(self, now: dt.datetime) -> None:
+        """Raise GrowattLoginRateLimited while the cooldown after a 507 runs."""
+        if (until := self._blocked_until.get(self.account)) and now < until:
+            raise GrowattLoginRateLimited((until - now).total_seconds())
+
     def login(self) -> dict[str, Any]:
         """Log in and return the login response.
 
@@ -112,15 +123,13 @@ class GrowattClassicSession:
         """
         with self._lock:
             now = dt_util.utcnow()
-            account = (self.api.server_url, self.username)
-            if (until := self._blocked_until.get(account)) and now < until:
-                raise GrowattLoginRateLimited((until - now).total_seconds())
+            self._raise_if_rate_limited(now)
             self.last_login_attempt = now
             login_response = self.api.login(self.username, self.password)
             # growattServer releases after 2.2.0 raise GrowattRateLimitError
             # from any call instead.
             if login_response.get("msg") == LOGIN_RATE_LIMITED_CODE:
-                self._blocked_until[account] = now + LOGIN_COOLDOWN
+                self._blocked_until[self.account] = now + LOGIN_COOLDOWN
                 raise GrowattLoginRateLimited(LOGIN_COOLDOWN.total_seconds())
             if login_response.get("success"):
                 self.generation += 1
@@ -137,11 +146,20 @@ class GrowattClassicSession:
         with self._lock:
             if self.generation != seen_generation:
                 return None
+            now = dt_util.utcnow()
+            self._raise_if_rate_limited(now)
             if self.last_login_attempt is not None:
-                wait = self.last_login_attempt + RELOGIN_INTERVAL - dt_util.utcnow()
+                wait = self.last_login_attempt + RELOGIN_INTERVAL - now
                 if wait > dt.timedelta(0):
                     raise GrowattReloginThrottled(wait.total_seconds())
             return self.login()
+
+
+# Logged-in sessions by (server URL, username), so setup retries and reloads
+# reuse them instead of logging in again.
+DATA_CLASSIC_SESSIONS: HassKey[dict[tuple[str, str], GrowattClassicSession]] = HassKey(
+    "growatt_server_classic_sessions"
+)
 
 
 def _latest_power_value(
