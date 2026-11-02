@@ -17,6 +17,9 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
@@ -26,6 +29,9 @@
       "integration_type": "hub",
       "categories": [
         "vehicles_transport.cars_evs"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -48,6 +54,9 @@
       "categories": [
         "weather_alerts.forecasts",
         "weather_alerts.air_quality_pollen"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -93,6 +102,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -153,6 +165,9 @@
       "categories": [
         "weather_alerts.forecasts"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -162,6 +177,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "aep_texas": {
@@ -169,6 +187,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "opower"
     },
@@ -187,6 +208,9 @@
       "integration_type": "service",
       "categories": [
         "productivity_information"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -233,6 +257,9 @@
       "categories": [
         "weather_alerts.air_quality_pollen"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -241,6 +268,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.air_quality_pollen"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -262,6 +292,9 @@
       "integration_type": "device",
       "categories": [
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -287,6 +320,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "sensors.air_quality"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Airthings"
         },
@@ -338,6 +374,9 @@
           "categories": [
             "weather_alerts.air_quality_pollen"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "AirVisual Cloud"
         },
         "airvisual_pro": {
@@ -376,6 +415,9 @@
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Airzone Cloud"
         }
       }
@@ -385,6 +427,9 @@
       "integration_type": "hub",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -426,6 +471,9 @@
       "categories": [
         "finance"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -452,6 +500,9 @@
             "ai_voice.voice_assistants",
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Alexa Devices"
         },
         "amazon_polly": {
@@ -460,6 +511,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "ai_voice.speech"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Amazon Polly"
         },
@@ -471,6 +525,9 @@
             "computers_network.cloud_developer_tools",
             "messaging_notifications"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Amazon Web Services (AWS)"
         },
         "aws_s3": {
@@ -479,6 +536,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "computers_network.cloud_developer_tools"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "AWS S3"
         },
@@ -501,6 +561,9 @@
           "categories": [
             "computers_network.cloud_developer_tools"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "AWS Route53"
         }
       }
@@ -510,6 +573,9 @@
       "integration_type": "service",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -524,6 +590,9 @@
           "categories": [
             "weather_alerts"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Ambient Weather Network"
         },
         "ambient_station": {
@@ -533,6 +602,9 @@
           "categories": [
             "weather_alerts",
             "sensors.temperature_humidity"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Ambient Weather Station"
         }
@@ -560,6 +632,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "climate.thermostats_heating"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Nexia/American Standard/Trane"
         },
@@ -593,6 +668,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.cloud_developer_tools"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -652,6 +730,9 @@
       "categories": [
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -660,6 +741,9 @@
       "integration_type": "hub",
       "categories": [
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -682,6 +766,9 @@
       "categories": [
         "ai_voice.ai_models"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -690,6 +777,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "energyzero"
     },
@@ -700,6 +790,9 @@
         "productivity_information.shopping_groceries",
         "productivity_information.calendars_todos"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -708,6 +801,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.water_heaters"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -752,6 +848,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "opower"
     },
@@ -811,6 +910,9 @@
             "productivity_information.calendars_todos",
             "productivity_information.documents_photos"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Apple iCloud"
         },
         "itunes": {
@@ -832,6 +934,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "weather_alerts.forecasts"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Apple WeatherKit"
         }
@@ -869,6 +974,9 @@
       "categories": [
         "presence_location.trackers"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -896,6 +1004,9 @@
       "integration_type": "device",
       "categories": [
         "water.water_treatment"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -929,6 +1040,9 @@
       "integration_type": "hub",
       "categories": [
         "water"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1042,6 +1156,9 @@
       "categories": [
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1063,6 +1180,9 @@
       "integration_type": "hub",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1098,6 +1218,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "atome": {
@@ -1105,6 +1228,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -1119,6 +1245,9 @@
           "categories": [
             "security_safety.locks_access",
             "security_safety.doorbells_intercoms"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "August"
         },
@@ -1141,6 +1270,9 @@
       "categories": [
         "weather_alerts.forecasts"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1162,6 +1294,9 @@
       "categories": [
         "computers_network"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1171,6 +1306,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "fumis"
     },
     "autarco": {
@@ -1178,6 +1316,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1188,6 +1329,9 @@
       "categories": [
         "presence_location.trackers",
         "vehicles_transport.cars_evs"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1235,6 +1379,9 @@
       "categories": [
         "energy"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1243,6 +1390,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.cloud_developer_tools"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -1275,6 +1425,9 @@
       "categories": [
         "ai_voice.speech"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -1284,6 +1437,9 @@
       "categories": [
         "appliances_cleaning",
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "home_connect"
     },
@@ -1318,6 +1474,9 @@
         "appliances_cleaning.laundry",
         "appliances_cleaning.cooking",
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "whirlpool"
     },
@@ -1380,6 +1539,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "bitcoin": {
@@ -1387,6 +1549,9 @@
       "integration_type": "service",
       "categories": [
         "finance"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -1409,6 +1574,9 @@
       "integration_type": "hub",
       "categories": [
         "vehicles_transport.public_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -1446,6 +1614,9 @@
       "categories": [
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1477,6 +1648,9 @@
       "categories": [
         "finance"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -1485,6 +1659,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.ev_charging"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -1593,6 +1770,9 @@
           "categories": [
             "security_safety.cameras"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Bosch Smart Camera"
         },
         "home_connect": {
@@ -1602,6 +1782,9 @@
           "categories": [
             "appliances_cleaning",
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Home Connect"
         }
@@ -1635,6 +1818,9 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.shopping_groceries"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1673,6 +1859,9 @@
         "local_services",
         "news_social_media"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1690,6 +1879,9 @@
       "integration_type": "hub",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -1817,6 +2009,9 @@
       "categories": [
         "weather_alerts.forecasts"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1825,6 +2020,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "opower"
     },
@@ -1871,6 +2069,9 @@
         "security_safety.cameras",
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -1907,6 +2108,9 @@
       "categories": [
         "energy"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1928,6 +2132,9 @@
       "categories": [
         "plugs_switches",
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -1962,6 +2169,9 @@
       "categories": [
         "media_entertainment.gaming"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1983,6 +2193,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning",
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2023,6 +2236,9 @@
           "categories": [
             "messaging_notifications.chat_apps"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Cisco Webex Teams"
         },
         "meraki": {
@@ -2032,6 +2248,9 @@
           "categories": [
             "presence_location.network_presence",
             "computers_network.routers_network"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Meraki"
         }
@@ -2044,6 +2263,9 @@
         "vehicles_transport.public_transport",
         "vehicles_transport.bikes_scooters"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2052,6 +2274,9 @@
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.email_sms_calls"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -2066,6 +2291,9 @@
           "categories": [
             "messaging_notifications.email_sms_calls"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "ClickSend SMS"
         },
         "clicksend_tts": {
@@ -2074,6 +2302,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "messaging_notifications.email_sms_calls"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "ClickSend TTS"
         }
@@ -2089,6 +2320,9 @@
           "categories": [
             "computers_network.cloud_developer_tools"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Cloudflare"
         },
         "cloudflare_r2": {
@@ -2097,6 +2331,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "computers_network.cloud_developer_tools"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Cloudflare R2"
         }
@@ -2121,6 +2358,9 @@
       "categories": [
         "energy"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2130,6 +2370,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "coinbase": {
@@ -2137,6 +2380,9 @@
       "integration_type": "service",
       "categories": [
         "finance"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2178,6 +2424,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "comed_hourly_pricing": {
@@ -2185,6 +2434,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -2252,6 +2504,9 @@
         "climate.thermostats_heating",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2273,6 +2528,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "constructa": {
@@ -2281,6 +2539,9 @@
       "categories": [
         "appliances_cleaning",
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "home_connect"
     },
@@ -2302,6 +2563,9 @@
       "categories": [
         "productivity_information.shopping_groceries",
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2325,6 +2589,9 @@
         "climate.air_purifiers_humidifiers",
         "plugs_switches",
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "vesync"
     },
@@ -2379,6 +2646,9 @@
       "categories": [
         "finance"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2388,6 +2658,9 @@
       "categories": [
         "lighting.bulbs_lamps"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -2396,6 +2669,9 @@
       "integration_type": "virtual",
       "categories": [
         "vehicles_transport.cars_evs"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "renault"
     },
@@ -2429,6 +2705,9 @@
       "categories": [
         "vehicles_transport.public_transport",
         "local_services"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2515,6 +2794,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2523,6 +2805,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "opower"
     },
@@ -2661,6 +2946,9 @@
       "categories": [
         "health_wellbeing"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2693,6 +2981,9 @@
       "categories": [
         "computers_network.cloud_developer_tools"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -2714,6 +3005,9 @@
       "categories": [
         "media_entertainment.music_radio_services"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2723,6 +3017,9 @@
       "categories": [
         "messaging_notifications.chat_apps"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -2731,6 +3028,9 @@
       "integration_type": "service",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2877,6 +3177,9 @@
       "categories": [
         "computers_network.cloud_developer_tools"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2924,6 +3227,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2970,6 +3276,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "dwd_weather_warnings": {
@@ -2977,6 +3286,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -2995,6 +3307,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3030,6 +3345,9 @@
       "categories": [
         "energy.energy_prices"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -3039,6 +3357,9 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -3074,6 +3395,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -3097,6 +3421,9 @@
         "climate.water_heaters",
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -3105,6 +3432,9 @@
       "integration_type": "service",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3115,6 +3445,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "fumis"
     },
     "ecovacs": {
@@ -3123,6 +3456,9 @@
       "categories": [
         "appliances_cleaning.cleaning",
         "garden_plants"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -3178,6 +3514,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3236,6 +3575,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3245,6 +3587,9 @@
       "categories": [
         "energy.energy_prices"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3253,6 +3598,9 @@
       "integration_type": "service",
       "categories": [
         "ai_voice.speech"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3336,6 +3684,9 @@
       "integration_type": "service",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3441,6 +3792,9 @@
       "categories": [
         "energy.energy_prices"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "energyzero"
     },
     "energieleser": {
@@ -3462,6 +3816,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -3470,6 +3827,9 @@
       "integration_type": "service",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -3480,6 +3840,9 @@
       "integration_type": "service",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3524,6 +3887,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -3546,6 +3912,9 @@
         "weather_alerts.forecasts",
         "weather_alerts.public_warnings"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3567,6 +3936,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -3576,6 +3948,9 @@
       "categories": [
         "media_entertainment.gaming"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3584,6 +3959,9 @@
       "integration_type": "hub",
       "categories": [
         "sensors.air_quality"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3668,6 +4046,9 @@
       "categories": [
         "energy.energy_prices"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -3725,6 +4106,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "opower"
     },
@@ -3794,6 +4178,9 @@
       "categories": [
         "vehicles_transport.flights"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3802,6 +4189,9 @@
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.chat_apps"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -3820,6 +4210,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -3881,6 +4274,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -3919,6 +4315,9 @@
       "categories": [
         "finance"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -3947,6 +4346,9 @@
         "messaging_notifications.push_notifications",
         "productivity_information.calendars_todos"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3968,6 +4370,9 @@
       "categories": [
         "ai_voice.speech"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3976,6 +4381,9 @@
       "integration_type": "service",
       "categories": [
         "health_wellbeing"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -3997,6 +4405,9 @@
       "integration_type": "hub",
       "categories": [
         "finance"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -4020,6 +4431,9 @@
       "categories": [
         "vehicles_transport.cars_evs",
         "presence_location.trackers"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -4097,6 +4511,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -4106,6 +4523,9 @@
       "categories": [
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4114,6 +4534,9 @@
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.chat_apps"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -4136,6 +4559,9 @@
       "categories": [
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4145,6 +4571,9 @@
       "categories": [
         "blinds_curtains",
         "security_safety.locks_access"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4195,6 +4624,9 @@
       "categories": [
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -4204,6 +4636,9 @@
       "categories": [
         "weather_alerts.forecasts"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4212,6 +4647,9 @@
       "integration_type": "service",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4260,6 +4698,9 @@
         "news_social_media",
         "presence_location"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -4281,6 +4722,9 @@
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.email_sms_calls"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -4305,6 +4749,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -4313,6 +4760,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4324,6 +4774,9 @@
         "climate.fans_ventilation",
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4332,6 +4785,9 @@
       "integration_type": "hub",
       "categories": [
         "pets"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4413,6 +4869,9 @@
       "categories": [
         "local_services"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4438,6 +4897,9 @@
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "FGLair"
         }
       }
@@ -4461,6 +4923,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4483,6 +4948,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4493,6 +4961,9 @@
         "appliances_cleaning",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "home_connect"
     },
     "garadget": {
@@ -4501,6 +4972,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -4508,6 +4982,9 @@
       "integration_type": "service",
       "categories": [
         "local_services"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4553,6 +5030,9 @@
       "categories": [
         "weather_alerts.public_warnings"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4585,6 +5065,9 @@
       "categories": [
         "buttons_remotes",
         "vehicles_transport.cars_evs"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -4623,6 +5106,9 @@
       "categories": [
         "media_entertainment.gaming"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4649,6 +5135,9 @@
           "categories": [
             "weather_alerts.public_warnings"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "GeoNet NZ Quakes"
         },
         "geonetnz_volcano": {
@@ -4657,6 +5146,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "weather_alerts.public_warnings"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "GeoNet NZ Volcano"
         }
@@ -4672,6 +5164,9 @@
           "categories": [
             "weather_alerts"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "GeoSphere Austria"
         },
         "geosphere_austria_warnings": {
@@ -4680,6 +5175,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "weather_alerts.public_warnings"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "GeoSphere Austria Warnings"
         }
@@ -4704,6 +5202,9 @@
       "categories": [
         "weather_alerts.air_quality_pollen"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4712,6 +5213,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.cloud_developer_tools"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4825,6 +5329,9 @@
           "categories": [
             "weather_alerts.air_quality_pollen"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Google Air Quality"
         },
         "google_assistant_sdk": {
@@ -4834,6 +5341,9 @@
           "categories": [
             "ai_voice.voice_assistants"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Google Assistant SDK"
         },
         "google_cloud": {
@@ -4842,6 +5352,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "ai_voice.speech"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Google Cloud"
         },
@@ -4853,6 +5366,9 @@
             "computers_network.cloud_developer_tools",
             "productivity_information.documents_photos"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Google Drive"
         },
         "google_generative_ai_conversation": {
@@ -4863,6 +5379,9 @@
             "ai_voice.ai_models",
             "ai_voice.speech"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Google Gemini"
         },
         "google_health": {
@@ -4871,6 +5390,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "health_wellbeing"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Google Health"
         },
@@ -4881,6 +5403,9 @@
           "categories": [
             "messaging_notifications.email_sms_calls"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Google Mail"
         },
         "google_maps": {
@@ -4889,6 +5414,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "presence_location"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Google Maps"
         },
@@ -4899,6 +5427,9 @@
           "categories": [
             "productivity_information.documents_photos"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Google Photos"
         },
         "google_pubsub": {
@@ -4907,6 +5438,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "computers_network.cloud_developer_tools"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Google Pub/Sub"
         },
@@ -4917,6 +5451,9 @@
           "categories": [
             "productivity_information.documents_photos"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Google Sheets"
         },
         "google_tasks": {
@@ -4925,6 +5462,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "productivity_information.calendars_todos"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Google Tasks"
         },
@@ -4935,6 +5475,9 @@
           "categories": [
             "ai_voice.speech"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Google Translate text-to-speech"
         },
         "google_travel_time": {
@@ -4943,6 +5486,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "vehicles_transport"
+          ],
+          "connectivity": [
+            "cloud"
           ]
         },
         "google_weather": {
@@ -4951,6 +5497,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "weather_alerts.forecasts"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Google Weather"
         },
@@ -4973,6 +5522,9 @@
           "categories": [
             "productivity_information.calendars_todos"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Google Calendar"
         },
         "nest": {
@@ -4983,6 +5535,9 @@
             "climate.thermostats_heating",
             "security_safety.cameras",
             "security_safety.doorbells_intercoms"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Google Nest"
         },
@@ -5006,6 +5561,9 @@
           "categories": [
             "ai_voice.voice_assistants"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Dialogflow"
         },
         "youtube": {
@@ -5014,6 +5572,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "news_social_media"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "YouTube"
         }
@@ -5132,6 +5693,9 @@
       "categories": [
         "energy.energy_prices"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -5164,6 +5728,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5207,6 +5774,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "fumis"
     },
     "habitica": {
@@ -5227,6 +5797,9 @@
       "integration_type": "hub",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5283,6 +5856,9 @@
       "categories": [
         "water.water_treatment"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "aquacell"
     },
     "hase_iq": {
@@ -5323,6 +5899,9 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -5463,6 +6042,9 @@
           "categories": [
             "climate.fans_ventilation"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Helty Flow Cloud"
         }
       }
@@ -5473,6 +6055,9 @@
       "categories": [
         "vehicles_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5481,6 +6066,9 @@
       "integration_type": "virtual",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "fumis"
     },
@@ -5569,6 +6157,9 @@
         "lighting.bulbs_lamps",
         "plugs_switches"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5577,6 +6168,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5687,6 +6281,9 @@
           "categories": [
             "hubs_protocols.smart_home_hubs"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "HomematicIP Cloud"
         }
       }
@@ -5733,6 +6330,9 @@
           "categories": [
             "climate.thermostats_heating"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Honeywell Lyric"
         },
         "evohome": {
@@ -5742,6 +6342,9 @@
           "categories": [
             "climate.thermostats_heating"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Honeywell Total Connect Comfort (Europe)"
         },
         "honeywell": {
@@ -5750,6 +6353,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "climate.thermostats_heating"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Honeywell Total Connect Comfort (US)"
         },
@@ -5781,6 +6387,9 @@
       "integration_type": "hub",
       "categories": [
         "garden_plants"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5838,6 +6447,9 @@
       "categories": [
         "messaging_notifications.push_notifications"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
@@ -5859,6 +6471,9 @@
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5896,6 +6511,9 @@
           "categories": [
             "garden_plants"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Husqvarna Automower"
         },
         "husqvarna_automower_ble": {
@@ -5918,6 +6536,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5926,6 +6547,9 @@
       "integration_type": "service",
       "categories": [
         "vehicles_transport.public_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5936,6 +6560,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5944,6 +6571,9 @@
       "integration_type": "service",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5965,6 +6595,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -5999,6 +6632,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -6008,6 +6644,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.cloud_developer_tools"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -6031,6 +6670,9 @@
         "diy_makers.web_data_connectors",
         "other_ecosystems"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -6052,6 +6694,9 @@
       "categories": [
         "security_safety.locks_access"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6060,6 +6705,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -6146,6 +6794,9 @@
       "categories": [
         "weather_alerts.public_warnings"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6168,6 +6819,9 @@
         "security_safety.cameras",
         "security_safety.alarm_systems",
         "plugs_switches"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6226,6 +6880,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "opower"
     },
@@ -6305,6 +6962,9 @@
       "categories": [
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6334,6 +6994,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -6370,6 +7033,9 @@
         "presence_location.phones_companion_apps",
         "messaging_notifications.push_notifications"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -6403,6 +7069,9 @@
         "plugs_switches",
         "blinds_curtains"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6423,6 +7092,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6446,6 +7118,9 @@
         "weather_alerts.air_quality_pollen",
         "health_wellbeing"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6455,6 +7130,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -6462,6 +7140,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6528,6 +7209,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6536,6 +7220,9 @@
       "integration_type": "service",
       "categories": [
         "vehicles_transport.flights"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -6547,6 +7234,9 @@
       "categories": [
         "energy.meters_monitoring",
         "water.meters_leak_detection"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6571,6 +7261,9 @@
       "categories": [
         "vehicles_transport.cars_evs",
         "presence_location.trackers"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6621,6 +7314,9 @@
       "categories": [
         "messaging_notifications.push_notifications"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -6629,6 +7325,9 @@
       "integration_type": "device",
       "categories": [
         "water"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -6687,6 +7386,9 @@
       "integration_type": "hub",
       "categories": [
         "sensors.air_quality"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -6782,6 +7484,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "keyboard_remote": {
@@ -6842,6 +7547,9 @@
       "categories": [
         "security_safety.locks_access"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -6871,6 +7579,9 @@
       "integration_type": "hub",
       "categories": [
         "buttons_remotes"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -6932,6 +7643,9 @@
       "categories": [
         "finance"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6990,6 +7704,9 @@
       "categories": [
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7036,6 +7753,9 @@
       "categories": [
         "media_entertainment.music_radio_services"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7044,6 +7764,9 @@
       "integration_type": "service",
       "categories": [
         "news_social_media"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -7054,6 +7777,9 @@
       "integration_type": "hub",
       "categories": [
         "appliances_cleaning.laundry"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -7154,6 +7880,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -7173,6 +7902,9 @@
           "categories": [
             "plugs_switches"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Leviton Decora Wi-Fi"
         }
       },
@@ -7187,6 +7919,9 @@
         "climate.air_purifiers_humidifiers",
         "plugs_switches",
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "vesync"
     },
@@ -7234,6 +7969,9 @@
           "categories": [
             "appliances_cleaning",
             "climate"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "LG ThinQ"
         },
@@ -7305,6 +8043,9 @@
       "categories": [
         "media_entertainment.gaming"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7326,6 +8067,9 @@
       "categories": [
         "appliances_cleaning.cooking"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -7346,6 +8090,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -7431,6 +8178,9 @@
       "categories": [
         "computers_network.cloud_developer_tools"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -7486,6 +8236,9 @@
       "categories": [
         "pets"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -7531,6 +8284,9 @@
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.push_notifications"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -7620,6 +8376,9 @@
         "vehicles_transport.cars_evs",
         "presence_location.trackers"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7629,6 +8388,9 @@
       "categories": [
         "weather_alerts.air_quality_pollen"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -7637,6 +8399,9 @@
       "integration_type": "service",
       "categories": [
         "vehicles_transport.public_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -7677,6 +8442,9 @@
       "integration_type": "device",
       "categories": [
         "weather_alerts.air_quality_pollen"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -7812,6 +8580,9 @@
       "categories": [
         "messaging_notifications.email_sms_calls"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -7922,6 +8693,9 @@
         "appliances_cleaning.cooking",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "whirlpool"
     },
     "mcp": {
@@ -7964,6 +8738,9 @@
       "integration_type": "hub",
       "categories": [
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8008,6 +8785,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -8029,6 +8809,9 @@
       "categories": [
         "messaging_notifications.email_sms_calls"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -8038,6 +8821,9 @@
       "categories": [
         "weather_alerts.forecasts"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8046,6 +8832,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8057,6 +8846,9 @@
         "weather_alerts.forecasts",
         "weather_alerts.public_warnings"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8065,6 +8857,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8075,6 +8870,9 @@
       "categories": [
         "weather_alerts.public_warnings"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -8084,6 +8882,9 @@
       "categories": [
         "weather_alerts"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8092,6 +8893,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8116,6 +8920,9 @@
         "hubs_protocols.smart_home_hubs",
         "plugs_switches"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8129,6 +8936,9 @@
           "categories": [
             "computers_network.cloud_developer_tools"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Azure Data Explorer"
         },
         "azure_devops": {
@@ -8137,6 +8947,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "computers_network.cloud_developer_tools"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Azure DevOps"
         },
@@ -8147,6 +8960,9 @@
           "categories": [
             "computers_network.cloud_developer_tools"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Azure Event Hub"
         },
         "azure_service_bus": {
@@ -8155,6 +8971,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "computers_network.cloud_developer_tools"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Azure Service Bus"
         },
@@ -8165,6 +8984,9 @@
           "categories": [
             "computers_network.cloud_developer_tools"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Azure Storage"
         },
         "microsoft": {
@@ -8173,6 +8995,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "ai_voice.speech"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Microsoft Text-to-Speech (TTS)"
         },
@@ -8183,6 +9008,9 @@
           "categories": [
             "productivity_information.documents_photos"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "OneDrive"
         },
         "onedrive_for_business": {
@@ -8192,6 +9020,9 @@
           "categories": [
             "computers_network.cloud_developer_tools"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "OneDrive for Business"
         },
         "xbox": {
@@ -8200,6 +9031,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "media_entertainment.gaming"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Xbox"
         }
@@ -8243,6 +9077,9 @@
         "appliances_cleaning",
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
@@ -8253,6 +9090,9 @@
       "categories": [
         "health_wellbeing"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -8262,6 +9102,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "energyzero"
     },
@@ -8326,6 +9169,9 @@
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "MELCloud"
         },
         "melcloud_home": {
@@ -8334,6 +9180,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "MELCloud Home"
         },
@@ -8443,6 +9292,9 @@
       "categories": [
         "finance"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8475,6 +9327,9 @@
       "integration_type": "service",
       "categories": [
         "finance"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8651,6 +9506,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8659,6 +9517,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -8694,6 +9555,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -8716,6 +9580,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -8753,6 +9620,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -8761,6 +9631,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8795,6 +9668,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -8831,6 +9707,9 @@
         "energy.meters_monitoring",
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8839,6 +9718,9 @@
       "integration_type": "hub",
       "categories": [
         "appliances_cleaning.cleaning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -8849,6 +9731,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -8858,6 +9743,9 @@
       "categories": [
         "appliances_cleaning",
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "home_connect"
     },
@@ -8985,6 +9873,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -8994,6 +9885,9 @@
       "categories": [
         "energy.ev_charging"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9002,6 +9896,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "hypontech"
     },
@@ -9021,6 +9918,9 @@
       "integration_type": "service",
       "categories": [
         "vehicles_transport.public_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9043,6 +9943,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9078,6 +9981,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -9112,6 +10018,9 @@
       "categories": [
         "weather_alerts.air_quality_pollen"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -9120,6 +10029,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -9131,6 +10043,9 @@
       "categories": [
         "media_entertainment.gaming"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9139,6 +10054,9 @@
       "integration_type": "hub",
       "categories": [
         "vehicles_transport.cars_evs"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -9160,6 +10078,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9169,6 +10090,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -9177,6 +10101,9 @@
       "integration_type": "hub",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -9199,6 +10126,9 @@
       "categories": [
         "energy.energy_prices"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -9209,6 +10139,9 @@
       "categories": [
         "weather_alerts.air_quality_pollen"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -9217,6 +10150,9 @@
       "integration_type": "hub",
       "categories": [
         "messaging_notifications.push_notifications"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -9227,6 +10163,9 @@
       "categories": [
         "sensors",
         "water.meters_leak_detection"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9259,6 +10198,9 @@
       "categories": [
         "local_services"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -9267,6 +10209,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -9289,6 +10234,9 @@
       "integration_type": "device",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9355,6 +10303,9 @@
       "categories": [
         "weather_alerts.forecasts"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9375,6 +10326,9 @@
       "integration_type": "service",
       "categories": [
         "media_entertainment.gaming"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9398,6 +10352,9 @@
       "integration_type": "hub",
       "categories": [
         "vehicles_transport.public_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -9457,6 +10414,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "fujitsu_fglair"
     },
     "ohmconnect": {
@@ -9464,6 +10424,9 @@
       "integration_type": "hub",
       "categories": [
         "energy"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -9473,6 +10436,9 @@
       "integration_type": "device",
       "categories": [
         "energy.ev_charging"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9532,6 +10498,9 @@
       "categories": [
         "energy.energy_prices"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -9542,6 +10511,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -9551,6 +10523,9 @@
       "integration_type": "hub",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -9604,6 +10579,9 @@
       "categories": [
         "weather_alerts.forecasts"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9612,6 +10590,9 @@
       "integration_type": "service",
       "categories": [
         "ai_voice.ai_models"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9623,6 +10604,9 @@
         "ai_voice.ai_models",
         "ai_voice.speech"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9631,6 +10615,9 @@
       "integration_type": "hub",
       "categories": [
         "ai_voice.image_recognition"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -9653,6 +10640,9 @@
       "categories": [
         "local_services"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -9673,6 +10663,9 @@
       "integration_type": "service",
       "categories": [
         "finance"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9731,6 +10724,9 @@
       "categories": [
         "weather_alerts.air_quality_pollen"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9739,6 +10735,9 @@
       "integration_type": "service",
       "categories": [
         "vehicles_transport.flights"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9762,6 +10761,9 @@
       "categories": [
         "weather_alerts"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9771,6 +10773,9 @@
       "categories": [
         "weather_alerts.forecasts",
         "weather_alerts.air_quality_pollen"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9825,6 +10830,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9858,6 +10866,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "orvibo": {
@@ -9877,6 +10888,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.water_heaters"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -9929,6 +10943,9 @@
       "categories": [
         "productivity_information.shopping_groceries"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9963,6 +10980,9 @@
       "categories": [
         "ai_voice.ai_models"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -9971,6 +10991,9 @@
       "integration_type": "service",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -10007,6 +11030,9 @@
       "integration_type": "hub",
       "categories": [
         "presence_location.trackers"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -10095,6 +11121,9 @@
       "categories": [
         "local_services"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -10104,6 +11133,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "pegel_online": {
@@ -10111,6 +11143,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -10134,6 +11169,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "persang_infrared": {
@@ -10150,6 +11188,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "opower"
     },
@@ -10245,6 +11286,9 @@
       "categories": [
         "productivity_information.shopping_groceries"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -10319,6 +11363,9 @@
         "appliances_cleaning",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "home_connect"
     },
     "pjlink": {
@@ -10338,6 +11385,9 @@
       "integration_type": "hub",
       "categories": [
         "appliances_cleaning.cooking"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -10381,6 +11431,9 @@
       "categories": [
         "media_entertainment.music_radio_services"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -10390,6 +11443,9 @@
       "categories": [
         "security_safety.alarm_systems",
         "sensors"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -10411,6 +11467,9 @@
       "integration_type": "device",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -10437,6 +11496,9 @@
           "categories": [
             "energy.meters_monitoring",
             "water.meters_leak_detection"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Powerfox Cloud"
         },
@@ -10530,6 +11592,9 @@
         "appliances_cleaning",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "home_connect"
     },
     "progettihwsw": {
@@ -10572,6 +11637,9 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -10580,6 +11648,9 @@
       "integration_type": "service",
       "categories": [
         "messaging_notifications.push_notifications"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -10631,6 +11702,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "psoklahoma": {
@@ -10639,6 +11713,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "ptdevices": {
@@ -10646,6 +11723,9 @@
       "integration_type": "hub",
       "categories": [
         "water"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -10694,6 +11774,9 @@
         "weather_alerts.air_quality_pollen",
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -10715,6 +11798,9 @@
       "categories": [
         "messaging_notifications.push_notifications"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -10723,6 +11809,9 @@
       "integration_type": "service",
       "categories": [
         "messaging_notifications.push_notifications"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -10733,6 +11822,9 @@
       "categories": [
         "messaging_notifications.push_notifications"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -10742,6 +11834,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -10750,6 +11845,9 @@
       "integration_type": "service",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -10816,6 +11914,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -10925,6 +12026,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -10945,6 +12049,9 @@
       "integration_type": "service",
       "categories": [
         "media_entertainment.music_radio_services"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -11093,6 +12200,9 @@
       "categories": [
         "vehicles_transport.cars_evs"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11101,6 +12211,9 @@
       "integration_type": "service",
       "categories": [
         "local_services"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11123,6 +12236,9 @@
       "categories": [
         "news_social_media"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -11131,6 +12247,9 @@
       "integration_type": "service",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11155,6 +12274,9 @@
       "categories": [
         "energy.backup_power"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11163,6 +12285,9 @@
       "integration_type": "service",
       "categories": [
         "vehicles_transport.public_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -11173,6 +12298,9 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11194,6 +12322,9 @@
       "integration_type": "hub",
       "categories": [
         "vehicles_transport.cars_evs"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11311,6 +12442,9 @@
       "categories": [
         "local_services"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11321,6 +12455,9 @@
         "security_safety.doorbells_intercoms",
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11329,6 +12466,9 @@
       "integration_type": "hub",
       "categories": [
         "finance"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -11351,6 +12491,9 @@
       "categories": [
         "appliances_cleaning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11359,6 +12502,9 @@
       "integration_type": "hub",
       "categories": [
         "vehicles_transport.public_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -11473,6 +12619,9 @@
           "categories": [
             "climate.thermostats_heating"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Roth Touchline SL"
         }
       }
@@ -11495,6 +12644,9 @@
       "integration_type": "service",
       "categories": [
         "local_services"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11600,6 +12752,9 @@
       "categories": [
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11632,6 +12787,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "energyzero"
     },
@@ -11704,6 +12862,9 @@
       "categories": [
         "water"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11735,6 +12896,9 @@
       "categories": [
         "security_safety.locks_access"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11743,6 +12907,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -11753,6 +12920,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "scorpiontrack": {
@@ -11761,6 +12931,9 @@
       "categories": [
         "vehicles_transport.cars_evs",
         "presence_location.trackers"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11827,6 +13000,9 @@
       "categories": [
         "messaging_notifications.email_sms_calls"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -11835,6 +13011,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11862,6 +13041,9 @@
         "climate.heat_pumps_air_conditioning",
         "climate.air_purifiers_humidifiers",
         "sensors.air_quality"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11924,6 +13106,9 @@
           "categories": [
             "sensors.temperature_humidity"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "SensorPush Cloud"
         }
       }
@@ -11934,6 +13119,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11943,6 +13131,9 @@
       "categories": [
         "computers_network.cloud_developer_tools"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -11951,6 +13142,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -11986,6 +13180,9 @@
       "categories": [
         "security_safety.locks_access"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -12003,6 +13200,9 @@
       "integration_type": "service",
       "categories": [
         "productivity_information"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -12036,6 +13236,9 @@
       "integration_type": "hub",
       "categories": [
         "appliances_cleaning.cleaning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -12077,6 +13280,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -12107,6 +13313,9 @@
         "appliances_cleaning",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "home_connect"
     },
     "sighthound": {
@@ -12114,6 +13323,9 @@
       "integration_type": "hub",
       "categories": [
         "ai_voice.image_recognition"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -12158,6 +13370,9 @@
       "categories": [
         "finance"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12167,6 +13382,9 @@
       "categories": [
         "messaging_notifications.push_notifications"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12175,6 +13393,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -12210,6 +13431,9 @@
       "categories": [
         "messaging_notifications.email_sms_calls"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -12231,6 +13455,9 @@
       "integration_type": "device",
       "categories": [
         "vehicles_transport.cars_evs"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -12283,6 +13510,9 @@
       "categories": [
         "security_safety.doorbells_intercoms"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12291,6 +13521,9 @@
       "integration_type": "service",
       "categories": [
         "messaging_notifications.chat_apps"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -12313,6 +13546,9 @@
       "categories": [
         "health_wellbeing"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12325,6 +13561,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "blinds_curtains"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Slide"
         },
@@ -12388,6 +13627,9 @@
       "categories": [
         "health_wellbeing"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -12418,6 +13660,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -12453,6 +13698,9 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -12461,6 +13709,9 @@
       "integration_type": "hub",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -12480,6 +13731,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12488,6 +13742,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -12523,6 +13780,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "snapcast": {
@@ -12555,6 +13815,9 @@
       "integration_type": "hub",
       "categories": [
         "health_wellbeing"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -12589,6 +13852,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "energy.solar_batteries"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "SolarEdge"
         },
@@ -12646,6 +13912,9 @@
       "categories": [
         "energy.meters_monitoring",
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -12769,6 +14038,9 @@
           "categories": [
             "media_entertainment.gaming"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "PlayStation Network"
         }
       }
@@ -12824,6 +14096,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12845,6 +14120,9 @@
       "integration_type": "service",
       "categories": [
         "media_entertainment.music_radio_services"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -12868,6 +14146,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12877,6 +14158,9 @@
       "categories": [
         "vehicles_transport.cars_evs"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12885,6 +14169,9 @@
       "integration_type": "hub",
       "categories": [
         "finance"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -12906,6 +14193,9 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -12931,6 +14221,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "media_entertainment.gaming"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Steam"
         },
@@ -12987,6 +14280,9 @@
       "categories": [
         "weather_alerts.air_quality_pollen"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -12995,6 +14291,9 @@
       "integration_type": "service",
       "categories": [
         "water.meters_leak_detection"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -13005,6 +14304,9 @@
       "categories": [
         "vehicles_transport.cars_evs"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -13013,6 +14315,9 @@
       "integration_type": "service",
       "categories": [
         "water.meters_leak_detection"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -13040,6 +14345,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -13076,6 +14384,9 @@
       "categories": [
         "pets"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -13085,6 +14396,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "supported_by": "opower"
     },
     "swiss_hydrological_data": {
@@ -13092,6 +14406,9 @@
       "integration_type": "hub",
       "categories": [
         "weather_alerts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -13101,6 +14418,9 @@
       "integration_type": "service",
       "categories": [
         "vehicles_transport.public_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -13156,6 +14476,9 @@
             "sensors",
             "blinds_curtains",
             "plugs_switches"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "SwitchBot Cloud"
         }
@@ -13297,6 +14620,9 @@
         "climate.thermostats_heating",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -13305,6 +14631,9 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -13328,6 +14657,9 @@
         "water.water_treatment",
         "appliances_cleaning.cooking"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -13336,6 +14668,9 @@
       "integration_type": "hub",
       "categories": [
         "energy"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -13346,6 +14681,9 @@
       "categories": [
         "local_services"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -13354,6 +14692,9 @@
       "integration_type": "hub",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -13556,6 +14897,9 @@
             "vehicles_transport.cars_evs",
             "energy.solar_batteries"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Tesla Fleet"
         }
       }
@@ -13582,6 +14926,9 @@
         "vehicles_transport.cars_evs",
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -13603,6 +14950,9 @@
       "categories": [
         "appliances_cleaning",
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "home_connect"
     },
@@ -13666,6 +15016,9 @@
             "hubs_protocols.wireless_protocols",
             "diy_makers.web_data_connectors"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "The Things Network (Cloud Storage)"
         }
       }
@@ -13675,6 +15028,9 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers.web_data_connectors"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -13730,6 +15086,9 @@
       "categories": [
         "messaging_notifications.chat_apps"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -13740,6 +15099,9 @@
         "energy.energy_prices",
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -13748,6 +15110,9 @@
       "integration_type": "hub",
       "categories": [
         "presence_location.trackers"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -13795,6 +15160,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -13803,6 +15171,9 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -13851,6 +15222,9 @@
         "weather_alerts.forecasts",
         "weather_alerts.air_quality_pollen"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -13872,6 +15246,9 @@
       "categories": [
         "climate.thermostats_heating",
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -13906,6 +15283,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -13994,6 +15374,9 @@
       "categories": [
         "pets"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -14007,6 +15390,9 @@
           "categories": [
             "vehicles_transport"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Trafikverket Camera"
         },
         "trafikverket_ferry": {
@@ -14015,6 +15401,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "vehicles_transport.public_transport"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Trafikverket Ferry"
         },
@@ -14025,6 +15414,9 @@
           "categories": [
             "vehicles_transport.public_transport"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Trafikverket Train"
         },
         "trafikverket_weatherstation": {
@@ -14033,6 +15425,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "weather_alerts"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Trafikverket Weather Station"
         }
@@ -14047,6 +15442,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "climate.thermostats_heating"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Nexia/American Standard/Trane"
         },
@@ -14082,6 +15480,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -14090,6 +15491,9 @@
       "integration_type": "hub",
       "categories": [
         "computers_network"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14100,6 +15504,9 @@
       "categories": [
         "productivity_information"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14109,6 +15516,9 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -14117,6 +15527,9 @@
       "integration_type": "service",
       "categories": [
         "local_services"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14131,6 +15544,9 @@
           "categories": [
             "messaging_notifications.email_sms_calls"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Twilio"
         },
         "twilio_call": {
@@ -14140,6 +15556,9 @@
           "categories": [
             "messaging_notifications.email_sms_calls"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Twilio Call"
         },
         "twilio_sms": {
@@ -14148,6 +15567,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "messaging_notifications.email_sms_calls"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Twilio SMS"
         }
@@ -14171,6 +15593,9 @@
       "categories": [
         "news_social_media"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14179,6 +15604,9 @@
       "integration_type": "hub",
       "categories": [
         "news_social_media"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
@@ -14298,6 +15726,9 @@
       "categories": [
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14307,6 +15738,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -14315,6 +15749,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14360,6 +15797,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.cloud_developer_tools"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14415,6 +15855,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14423,6 +15866,9 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -14493,6 +15939,9 @@
       "categories": [
         "vehicles_transport.public_transport"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -14562,6 +16011,9 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14606,6 +16058,9 @@
         "plugs_switches",
         "appliances_cleaning.cooking"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14614,6 +16069,9 @@
       "integration_type": "hub",
       "categories": [
         "vehicles_transport.public_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -14624,6 +16082,9 @@
       "categories": [
         "climate.thermostats_heating",
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14662,6 +16123,9 @@
           "categories": [
             "energy.solar_batteries"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Victron Remote Monitoring"
         }
       }
@@ -14684,6 +16148,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -14692,6 +16159,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.air_purifiers_humidifiers"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14751,6 +16221,9 @@
       "categories": [
         "ai_voice.speech"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -14792,6 +16265,9 @@
       "integration_type": "device",
       "categories": [
         "vehicles_transport.cars_evs"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14836,6 +16312,9 @@
       "categories": [
         "energy.ev_charging"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14845,6 +16324,9 @@
       "categories": [
         "weather_alerts.air_quality_pollen"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14853,6 +16335,9 @@
       "integration_type": "device",
       "categories": [
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14875,6 +16360,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14883,6 +16371,9 @@
       "integration_type": "service",
       "categories": [
         "energy"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14903,6 +16394,9 @@
       "integration_type": "service",
       "categories": [
         "vehicles_transport"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -14928,6 +16422,9 @@
           "iot_class": "cloud_polling",
           "categories": [
             "weather_alerts.forecasts"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "WeatherflowCloud"
         }
@@ -14964,6 +16461,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -14988,6 +16488,9 @@
         "appliances_cleaning.cooking",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -15008,6 +16511,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -15056,6 +16562,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -15065,6 +16574,9 @@
       "categories": [
         "sensors"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -15073,6 +16585,9 @@
       "integration_type": "hub",
       "categories": [
         "health_wellbeing"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -15122,6 +16637,9 @@
         "climate.thermostats_heating",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -15148,6 +16666,9 @@
       "integration_type": "hub",
       "categories": [
         "weather_alerts.forecasts"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -15182,6 +16703,9 @@
       "categories": [
         "vehicles_transport",
         "local_services"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -15281,6 +16805,9 @@
           "categories": [
             "weather_alerts.forecasts"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Xiaomi Weather"
         },
         "xiaomi": {
@@ -15330,6 +16857,9 @@
         "lighting.bulbs_lamps",
         "security_safety.locks_access"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -15343,6 +16873,9 @@
           "categories": [
             "security_safety.locks_access",
             "security_safety.doorbells_intercoms"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Yale Home"
         },
@@ -15366,6 +16899,9 @@
             "security_safety.alarm_systems",
             "security_safety.locks_access"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Yale Smart Living"
         }
       }
@@ -15380,6 +16916,9 @@
           "categories": [
             "security_safety.locks_access",
             "security_safety.doorbells_intercoms"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "August"
         },
@@ -15436,6 +16975,9 @@
           "categories": [
             "vehicles_transport.public_transport"
           ],
+          "connectivity": [
+            "cloud"
+          ],
           "name": "Yandex Transport"
         },
         "yandextts": {
@@ -15444,6 +16986,9 @@
           "iot_class": "cloud_push",
           "categories": [
             "ai_voice.speech"
+          ],
+          "connectivity": [
+            "cloud"
           ],
           "name": "Yandex TTS"
         }
@@ -15508,6 +17053,9 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -15516,6 +17064,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -15632,6 +17183,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "cloud"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -15648,6 +17202,9 @@
       "integration_type": "virtual",
       "categories": [
         "energy.energy_prices"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "supported_by": "energyzero"
     },
@@ -15669,6 +17226,9 @@
       "categories": [
         "energy.energy_prices",
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "cloud"
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
