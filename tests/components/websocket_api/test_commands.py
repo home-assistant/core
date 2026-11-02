@@ -4681,6 +4681,64 @@ async def test_explain_target_exclude_all_entities(
     }
 
 
+async def test_explain_target_exclude_filters_unreadable_entities(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test explain_target_exclude only returns entities the user can read."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+
+    kitchen = area_registry.async_create("Kitchen")
+    for unique_id, object_id in (
+        ("unique1", "permitted"),
+        ("unique2", "not_permitted"),
+    ):
+        entry = entity_registry.async_get_or_create(
+            "light", "test", unique_id, suggested_object_id=object_id
+        )
+        entity_registry.async_update_entity(entry.entity_id, area_id=kitchen.id)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "explain_target_exclude",
+            "target": {
+                "area_id": [kitchen.id],
+                "entity_id": ["light.not_permitted"],
+                "exclude": {
+                    "area_id": [kitchen.id],
+                    "entity_id": ["light.not_permitted"],
+                },
+            },
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "includes": [
+            {"type": "entity", "id": "light.not_permitted", "entities": []},
+            {"type": "area", "id": kitchen.id, "entities": ["light.permitted"]},
+        ],
+        "excludes": [
+            {"type": "entity", "id": "light.not_permitted", "removed": []},
+            {
+                "type": "area",
+                "id": kitchen.id,
+                "removed": [
+                    {
+                        "type": "area",
+                        "id": kitchen.id,
+                        "entities": ["light.permitted"],
+                    }
+                ],
+            },
+        ],
+    }
+
+
 @pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
