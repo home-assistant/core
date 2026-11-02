@@ -98,6 +98,11 @@
         "name": "Empty trash"
       }
     },
+    "number": {
+      "history_days": {
+        "name": "History days"
+      }
+    },
     "select": {
       "history": {
         "name": "History",
