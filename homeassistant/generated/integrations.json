@@ -7328,9 +7328,6 @@
             "security_safety.alarm_systems",
             "diy_makers"
           ],
-          "connectivity": [
-            "mqtt"
-          ],
           "name": "Manual MQTT alarm control panel"
         },
         "mqtt": {
