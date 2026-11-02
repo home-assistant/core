@@ -3,6 +3,7 @@
   "name": "LAGUTE LW-12",
   "categories": ["lighting.led_strips_controllers"],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/lw12wifi",
   "iot_class": "local_polling",
   "quality_scale": "legacy",

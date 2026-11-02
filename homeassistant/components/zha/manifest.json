@@ -5,6 +5,7 @@
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
+  "connectivity": ["zigbee"],
   "dependencies": ["file_upload", "homeassistant_hardware", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "integration_type": "hub",

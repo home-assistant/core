@@ -15,7 +15,11 @@ from homeassistant.components.homekit.accessories import (
 )
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
+    ATTR_HW_VERSION,
     ATTR_INTEGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_NAME,
@@ -38,11 +42,7 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_SERVICE,
-    ATTR_SW_VERSION,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,

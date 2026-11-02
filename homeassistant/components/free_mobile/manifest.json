@@ -3,6 +3,7 @@
   "name": "Free Mobile",
   "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/free_mobile",
   "iot_class": "cloud_push",
   "loggers": ["freesms"],

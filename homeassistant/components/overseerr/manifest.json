@@ -5,6 +5,7 @@
   "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@joostlek", "@AmGarera", "@felixschndr"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/overseerr",
   "integration_type": "service",
