@@ -326,7 +326,9 @@ class LunatoneLineBroadcastLight(
             )
         )
         brightness_values = {
-            device.brightness for device in devices if device.brightness is not None
+            device.brightness
+            for device in devices
+            if device.is_on and device.brightness is not None
         }
         return (
             value_to_brightness(self.BRIGHTNESS_SCALE, next(iter(brightness_values)))
