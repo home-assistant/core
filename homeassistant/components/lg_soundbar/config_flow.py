@@ -14,6 +14,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -54,6 +55,10 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _host: str
+    _port: int
+    _name: str
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -82,6 +87,46 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "no_data"
 
         return self._show_form(errors)
+
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a soundbar announcing itself over mDNS."""
+        self._host = discovery_info.host
+        self._port = discovery_info.port or DEFAULT_PORT
+        self._async_abort_entries_match({CONF_HOST: self._host})
+
+        try:
+            details = await async_get_details(self._host, self._port)
+        except TemescalConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        if not details:
+            return self.async_abort(reason="no_data")
+        # The uuid of the announcement differs from the one the device reports,
+        # which identifies entries set up by hand
+        if "uuid" not in details:
+            return self.async_abort(reason="not_supported")
+
+        await self.async_set_unique_id(details["uuid"])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+        self._name = details["name"]
+        self.context["title_placeholders"] = {"name": self._name}
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the setup of a discovered soundbar."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={"name": self._name},
+            )
+        return self.async_create_entry(
+            title=self._name,
+            data={CONF_HOST: self._host, CONF_PORT: self._port},
+        )
 
     def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
         """Show the form to the user."""
