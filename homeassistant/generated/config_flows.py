@@ -143,6 +143,7 @@ FLOWS = {
         "chess_com",
         "chirpstack",
         "cielo_home",
+        "cisco_ios",
         "cloudflare",
         "cloudflare_r2",
         "co2signal",
