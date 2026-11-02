@@ -7,11 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry, mock_device_registry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
-from homeassistant.components.alexa_devices.services import (
-    ATTR_INFO_SKILL,
-    ATTR_SOUND,
-    ATTR_TEXT_COMMAND,
-)
+from homeassistant.components.alexa_devices.services import AlexaDevicesServiceArgument
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -56,7 +52,7 @@ async def test_info_skill_service(
         DOMAIN,
         "send_info_skill",
         {
-            ATTR_INFO_SKILL: "tell_joke",
+            AlexaDevicesServiceArgument.INFO_SKILL: "tell_joke",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -86,7 +82,7 @@ async def test_send_sound_service(
         DOMAIN,
         "send_sound",
         {
-            ATTR_SOUND: "bell_02",
+            AlexaDevicesServiceArgument.SOUND: "bell_02",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -116,7 +112,7 @@ async def test_send_text_service(
         DOMAIN,
         "send_text_command",
         {
-            ATTR_TEXT_COMMAND: "Play B.B.C. radio on TuneIn",
+            AlexaDevicesServiceArgument.TEXT_COMMAND: "Play B.B.C. radio on TuneIn",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -182,7 +178,7 @@ async def test_invalid_parameters(
             DOMAIN,
             "send_sound",
             {
-                ATTR_SOUND: sound,
+                AlexaDevicesServiceArgument.SOUND: sound,
                 ATTR_DEVICE_ID: device_id,
             },
             blocking=True,
@@ -249,7 +245,7 @@ async def test_invalid_info_skillparameters(
             DOMAIN,
             "send_info_skill",
             {
-                ATTR_INFO_SKILL: info_skill,
+                AlexaDevicesServiceArgument.INFO_SKILL: info_skill,
                 ATTR_DEVICE_ID: device_id,
             },
             blocking=True,
@@ -286,7 +282,7 @@ async def test_config_entry_not_loaded(
             DOMAIN,
             "send_sound",
             {
-                ATTR_SOUND: "bell_02",
+                AlexaDevicesServiceArgument.SOUND: "bell_02",
                 ATTR_DEVICE_ID: device_entry.id,
             },
             blocking=True,
@@ -323,7 +319,7 @@ async def test_invalid_config_entry(
             DOMAIN,
             "send_sound",
             {
-                ATTR_SOUND: "bell_02",
+                AlexaDevicesServiceArgument.SOUND: "bell_02",
                 ATTR_DEVICE_ID: TEST_DEVICE_1_ID,
             },
             blocking=True,
@@ -365,7 +361,7 @@ async def test_missing_config_entry(
             DOMAIN,
             "send_sound",
             {
-                ATTR_SOUND: "bell_02",
+                AlexaDevicesServiceArgument.SOUND: "bell_02",
                 ATTR_DEVICE_ID: device_entry.id,
             },
             blocking=True,
