@@ -14,7 +14,9 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_fire_time_changed_exact,
+    async_mock_restore_state_shutdown_restart,
     get_fixture_path,
+    mock_restore_cache_with_extra_data,
 )
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
@@ -48,7 +50,13 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
@@ -60,6 +68,17 @@ VALUES_NUMERIC_LINEAR = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 A1 = {"attr": "value1"}
 A2 = {"attr": "value2"}
+
+
+async def _async_record_statistics_sensor_history(hass: HomeAssistant) -> None:
+    """Record history for sensor.test, as for a sensor created before restore support.
+
+    Only such sensors are primed from the recorder.
+    """
+    hass.states.async_set("sensor.test", "0")
+    await hass.async_block_till_done()
+    hass.states.async_remove("sensor.test")
+    await async_wait_recording_done(hass)
 
 
 async def test_unique_id(
@@ -1654,6 +1673,7 @@ async def test_initialize_from_database(
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
+    await _async_record_statistics_sensor_history(hass)
 
     for value in VALUES_NUMERIC:
         hass.states.async_set(
@@ -1720,6 +1740,7 @@ async def test_initialize_from_database_with_maxage(
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
+    await _async_record_statistics_sensor_history(hass)
 
     with (
         freeze_time(current_time) as freezer,
@@ -1910,6 +1931,7 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
+    await _async_record_statistics_sensor_history(hass)
 
     with (
         freeze_time(current_time) as freezer,
@@ -2327,6 +2349,7 @@ async def test_not_valid_device_class(hass: HomeAssistant) -> None:
 
 async def test_attributes_remains(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test attributes are always present."""
+    await _async_record_statistics_sensor_history(hass)
     for value in VALUES_NUMERIC:
         hass.states.async_set(
             "sensor.test_monitored",
@@ -2513,6 +2536,7 @@ async def test_initialize_from_database_equal_timestamps(
     # enable and pre-fill the recorder
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
+    await _async_record_statistics_sensor_history(hass)
 
     for value in (1, 2, 3):
         hass.states.async_set(
@@ -2545,3 +2569,218 @@ async def test_initialize_from_database_equal_timestamps(
     assert state is not None
     assert state.state == expected
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+
+
+STATISTICS_YAML_CONFIG = {
+    "sensor": [
+        {
+            "platform": "statistics",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "state_characteristic": "mean",
+            "sampling_size": 20,
+        },
+    ]
+}
+
+
+def _stored_data(**overrides: Any) -> dict[str, Any]:
+    """Return stored data for sensor.test with the samples 10 and 20."""
+    now = dt_util.utcnow().timestamp()
+    return {
+        "native_value": 15.0,
+        "native_unit_of_measurement": UnitOfTemperature.CELSIUS,
+        "states": [10.0, 20.0],
+        "ages": [now - 20, now - 10],
+        "source_value_valid": True,
+        "device_class": SensorDeviceClass.TEMPERATURE,
+        "state_class": SensorStateClass.MEASUREMENT,
+    } | overrides
+
+
+async def _async_record_source_history(hass: HomeAssistant) -> None:
+    """Record VALUES_NUMERIC as history for the source sensor."""
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+    for value in VALUES_NUMERIC:
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(value),
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        )
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+
+async def test_new_sensor_not_primed_from_database(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test a new sensor starts empty although the source has recorded history."""
+    await _async_record_source_history(hass)
+
+    assert await async_setup_component(hass, "sensor", STATISTICS_YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set(
+        "sensor.test_monitored",
+        "5",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "5.0"
+    assert state.attributes[StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO] == 0.05
+
+
+async def test_restore_from_stored_data(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test the buffer is restored from stored data instead of the recorder."""
+    await _async_record_source_history(hass)
+    await _async_record_statistics_sensor_history(hass)
+    mock_restore_cache_with_extra_data(
+        hass, [(State("sensor.test", "15.0"), _stored_data())]
+    )
+
+    assert await async_setup_component(hass, "sensor", STATISTICS_YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "15.0"
+    assert state.attributes == {
+        StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO: 0.1,
+        StatisticsEntityStateAttribute.SOURCE_VALUE_VALID: True,
+        ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+        ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        "friendly_name": "test",
+        "icon": "mdi:calculator",
+    }
+
+
+@pytest.mark.parametrize(
+    "stored_data",
+    [
+        pytest.param(
+            {key: value for key, value in _stored_data().items() if key != "states"},
+            id="missing_states",
+        ),
+        pytest.param(_stored_data(states=[10.0]), id="length_mismatch"),
+    ],
+)
+async def test_restore_invalid_stored_data(
+    recorder_mock: Recorder, hass: HomeAssistant, stored_data: dict[str, Any]
+) -> None:
+    """Test invalid stored data falls back to the recorder."""
+    await _async_record_source_history(hass)
+    await _async_record_statistics_sensor_history(hass)
+    mock_restore_cache_with_extra_data(
+        hass, [(State("sensor.test", "15.0"), stored_data)]
+    )
+
+    assert await async_setup_component(hass, "sensor", STATISTICS_YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
+
+
+@pytest.mark.parametrize(
+    ("limits", "expected"),
+    [
+        pytest.param({"sampling_size": 1}, "20.0", id="sampling_size_reduced"),
+        pytest.param(
+            {"sampling_size": 20, "max_age": {"seconds": 15}},
+            "20.0",
+            id="max_age_expired",
+        ),
+        pytest.param({"sampling_size": 20}, "15.0", id="all_samples_kept"),
+    ],
+)
+async def test_restore_applies_buffer_limits(
+    hass: HomeAssistant, limits: dict[str, Any], expected: str
+) -> None:
+    """Test restored samples are limited by the current buffer size and max age."""
+    mock_restore_cache_with_extra_data(
+        hass, [(State("sensor.test", "15.0"), _stored_data())]
+    )
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                }
+                | limits,
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == expected
+
+
+@pytest.mark.usefixtures("hass_storage")
+async def test_repeated_values_survive_restart(hass: HomeAssistant) -> None:
+    """Test reported samples with repeated values are kept over a restart.
+
+    The recorder only stores state changes, so the repeated values would be
+    lost if the buffer was primed from the recorder.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            CONF_NAME: "test",
+            CONF_ENTITY_ID: "sensor.test_monitored",
+            CONF_STATE_CHARACTERISTIC: STAT_MEAN,
+            CONF_SAMPLES_MAX_BUFFER_SIZE: 20.0,
+            CONF_KEEP_LAST_SAMPLE: False,
+            CONF_PERCENTILE: 50.0,
+            CONF_PRECISION: 2.0,
+        },
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    values = [18, 1, 1, 1, 1, 1, 1, 1, 9]
+    for value in values:
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(value),
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        )
+    await hass.async_block_till_done()
+
+    expected = str(round(sum(values) / len(values), 2))
+    assert hass.states.get("sensor.test").state == expected
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == expected
+    assert state.attributes[StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO] == round(
+        9 / 20, 2
+    )
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
