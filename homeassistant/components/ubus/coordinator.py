@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the OpenWrt (ubus) integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -10,12 +10,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_DHCP_SOFTWARE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
+LEASE_REREAD_INTERVAL = timedelta(minutes=10)
 
 type UbusConfigEntry = ConfigEntry[UbusDataUpdateCoordinator]
 
@@ -37,6 +39,8 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         self._hostapd: list[str] = []
         self._leasefile: str | None = None
         self._mac2name: dict[str, str] | None = None
+        self._unnamed: set[str] = set()
+        self._last_lease_read = datetime.min.replace(tzinfo=dt_util.UTC)
 
         super().__init__(
             hass,
@@ -83,13 +87,21 @@ class UbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
         """
         clients = self._fetch_hostapd_clients()
         authorized = [mac for mac, client in clients.items() if client["authorized"]]
-        # Reread the leases only when a client has no hostname yet, and keep
-        # the previous names if the leases can't be read.
-        if self._mac2name is None or any(
-            mac.upper() not in self._mac2name for mac in authorized
+        known = self._mac2name or {}
+        unnamed = {mac.upper() for mac in authorized} - known.keys()
+        now = dt_util.utcnow()
+        # Reread the leases for a new client without a hostname, and only
+        # periodically for clients which never get one (e.g. static IPs).
+        if (
+            self._mac2name is None
+            or unnamed - self._unnamed
+            or (unnamed and now - self._last_lease_read >= LEASE_REREAD_INTERVAL)
         ):
+            self._last_lease_read = now
             if (mac2name := self._generate_mac2name()) is not None:
-                self._mac2name = mac2name
+                # Merge, as an empty or partial read must not forget names.
+                self._mac2name = {**known, **mac2name}
+                self._unnamed = unnamed - mac2name.keys()
         return {mac: self._name_for(mac) for mac in authorized}
 
     def _fetch_hostapd_clients(self) -> dict[str, dict]:

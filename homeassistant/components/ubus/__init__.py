@@ -1,5 +1,6 @@
 """The OpenWrt (ubus) integration."""
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -30,6 +31,8 @@ async def async_remove_config_entry_device(
     if not isinstance(device_entry, dr.DeviceEntry):
         # This integration does not create child devices.
         return False
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return True
     connected = {dr.format_mac(mac) for mac in config_entry.runtime_data.data}
     return not any(
         connection in connected

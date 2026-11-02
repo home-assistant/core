@@ -101,12 +101,26 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     tracked: set[str] = set()
 
+    device_registry = dr.async_get(hass)
+
     @callback
-    def _async_add_new_devices() -> None:
+    def _async_update_devices() -> None:
         new_macs = [mac for mac in coordinator.data if mac not in tracked]
         tracked.update(new_macs)
         if new_macs:
             async_add_entities(UbusScannerEntity(coordinator, mac) for mac in new_macs)
+        # Rename here, as trackers are disabled by default and get no updates.
+        for mac, name in coordinator.data.items():
+            if (
+                name
+                and (
+                    device_entry := device_registry.async_get_device_by_connection(
+                        (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
+                    )
+                )
+                and device_entry.name != name
+            ):
+                device_registry.async_update_device(device_entry.id, name=name)
 
     @callback
     def _async_device_removed(
@@ -131,7 +145,7 @@ async def async_setup_entry(
             and event_data["device"]["config_entry_id"] == config_entry.entry_id
         )
 
-    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
     config_entry.async_on_unload(
         hass.bus.async_listen(
             dr.EVENT_DEVICE_REGISTRY_UPDATED,
@@ -139,7 +153,7 @@ async def async_setup_entry(
             event_filter=_is_own_device_removed,
         )
     )
-    _async_add_new_devices()
+    _async_update_devices()
 
 
 class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEntity):
@@ -177,15 +191,3 @@ class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEnt
     def hostname(self) -> str | None:
         """Return the hostname of the device."""
         return self.coordinator.data.get(self._mac)
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Rename the device when the router reports a new hostname."""
-        if (
-            (name := self.coordinator.data.get(self._mac))
-            and (device_entry := self.device_entry)
-            and device_entry.name != name
-        ):
-            dr.async_get(self.hass).async_update_device(device_entry.id, name=name)
-        super()._handle_coordinator_update()

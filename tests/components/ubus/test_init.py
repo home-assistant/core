@@ -180,3 +180,29 @@ async def test_remove_config_entry_device_rejects_child_device(
 
     assert not response["success"]
     assert device_registry.async_get(child_device.id)
+
+
+async def test_remove_device_of_unloaded_entry(
+    hass: HomeAssistant,
+    mock_ubus: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a client device can be removed while the entry is not loaded."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "config", {})
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_PHONE), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+    ws_client = await hass_ws_client(hass)
+
+    response = await ws_client.remove_device(device_entry.id)
+
+    assert response["success"]
+    assert not device_registry.async_get(device_entry.id)
