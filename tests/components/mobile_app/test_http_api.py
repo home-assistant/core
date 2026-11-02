@@ -21,7 +21,7 @@ from homeassistant.components.mobile_app.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT, RENDER_TEMPLATE
@@ -74,6 +74,7 @@ async def test_registration(
 async def test_registration_again_updates_entry(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -97,6 +98,10 @@ async def test_registration_again_updates_entry(
     entity_registry.async_update_entity(
         "sensor.test_1_battery_state", name="Phone battery"
     )
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, REGISTER_CLEARTEXT["device_id"]), entry.entry_id
+    )
+    device_registry.async_update_device(device.id, name_by_user="My phone")
 
     resp = await api_client.post(
         "/api/mobile_app/registrations",
@@ -113,6 +118,17 @@ async def test_registration_again_updates_entry(
     assert hass.data[DOMAIN][DATA_DELETED_IDS] == [old_webhook_id]
     assert entity_registry.async_get("device_tracker.test_1")
     assert "same unique ID exists" not in caplog.text
+
+    # The device is kept with its customization and gets the new name
+    assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == [
+        device_registry.async_get(device.id)
+    ]
+    device = device_registry.async_get(device.id)
+    assert device.name == "Test 2"
+    assert device.name_by_user == "My phone"
+    assert entity_registry.async_get("sensor.test_1_battery_state").device_id == (
+        device.id
+    )
 
     # The sensor is moved to the new webhook ID and keeps its customization
     sensor_entry = entity_registry.async_get("sensor.test_1_battery_state")
