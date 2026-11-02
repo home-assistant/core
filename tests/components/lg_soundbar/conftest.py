@@ -1,7 +1,7 @@
 """Common fixtures for the lg_soundbar tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -10,11 +10,6 @@ from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from . import set_answers
-
-
-@pytest.fixture(autouse=True)
-def lg_soundbar_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
-    """Mock zeroconf, which the integration listens to for announcements."""
 
 
 @pytest.fixture
