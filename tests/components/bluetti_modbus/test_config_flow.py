@@ -327,12 +327,40 @@ def _zeroconf_info(host: str = HOST) -> ZeroconfServiceInfo:
     )
 
 
+def _bluetti_info(host: str = HOST) -> ZeroconfServiceInfo:
+    """What a Balco 260 on newer firmware announces with its serial number."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        hostname="blhems-1a2b3c4d5e6f.local.",
+        name=f"Balco260{SERIAL}._bluetti._tcp.local.",
+        port=80,
+        type="_bluetti._tcp.local.",
+        properties={
+            "vendor": "BLUETTI",
+            "model": "Balco260",
+            "sn": SERIAL,
+            "mac": "1a2b3c4d5e6f",
+            "path": "/",
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        pytest.param(_zeroconf_info(), id="http"),
+        pytest.param(_bluetti_info(), id="bluetti"),
+    ],
+)
 async def test_zeroconf_flow(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+    hass: HomeAssistant,
+    mock_modbus_unit: MockModbusUnit,
+    discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """A discovered power station is probed, confirmed and added."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
@@ -382,6 +410,70 @@ async def test_zeroconf_discovery_in_progress(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+
+
+async def test_zeroconf_both_services_probe_once(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """The second service a power station announces aborts without a read."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_bluetti_info()
+    )
+    assert result["type"] is FlowResultType.FORM
+    reads = len(mock_modbus_unit.read_events)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    assert len(mock_modbus_unit.read_events) == reads
+
+
+@pytest.mark.parametrize(
+    "entry_data",
+    [
+        pytest.param({}, id="default_settings"),
+        pytest.param({CONF_PORT: 1502, CONF_UNIT_ID: 2}, id="other_settings"),
+    ],
+)
+async def test_zeroconf_announced_serial_updates_without_a_read(
+    hass: HomeAssistant,
+    mock_modbus_unit: MockModbusUnit,
+    entry_data: dict[str, Any],
+) -> None:
+    """An announced serial moves its entry to the new address without a read."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=SERIAL, data={**bluetti_data(), **entry_data}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_bluetti_info(NEW_HOST)
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {**bluetti_data(), **entry_data, CONF_HOST: NEW_HOST}
+    assert not mock_modbus_unit.read_events
+
+
+async def test_zeroconf_announced_serial_ignored_without_a_read(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """An ignored power station announcing its serial is not probed."""
+    MockConfigEntry(domain=DOMAIN, source=SOURCE_IGNORE, unique_id=SERIAL).add_to_hass(
+        hass
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_bluetti_info()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert not mock_modbus_unit.read_events
 
 
 async def test_user_flow_replaces_a_pending_discovery(

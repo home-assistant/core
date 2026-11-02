@@ -1,7 +1,7 @@
 """Config flow to configure the BLUETTI Modbus integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Self, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
 import probatio
@@ -52,6 +52,7 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _discovered: dict[str, Any]
+    _host: str | None = None
 
     @override
     async def async_step_user(
@@ -94,6 +95,15 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         # The device accepts few Modbus clients at once, so a known one is
         # dropped before it is asked anything.
         self._async_abort_entries_match({CONF_HOST: host})
+        # Newer firmware announces two services, which must not both probe it.
+        self._host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
+        if announced_serial := discovery_info.properties.get("sn"):
+            # An announced serial lets a known power station follow its new
+            # address without a Modbus connection.
+            await self.async_set_unique_id(announced_serial)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         data = {
             CONF_HOST: host,
@@ -124,6 +134,11 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
         self._discovered = data
         self.context["title_placeholders"] = {"name": MODEL, "host": host}
         return await self.async_step_zeroconf_confirm()
+
+    @override
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow discovered the same address."""
+        return other_flow._host == self._host
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
