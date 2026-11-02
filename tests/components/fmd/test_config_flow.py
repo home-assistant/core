@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from fmd_api import AuthenticationError, FmdApiException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.fmd.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import TEST_ID, TEST_PASSWORD, TEST_URL
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_URL: TEST_URL, CONF_ID: TEST_ID, CONF_PASSWORD: TEST_PASSWORD}
 

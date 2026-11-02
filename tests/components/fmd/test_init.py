@@ -3,14 +3,13 @@
 from unittest.mock import MagicMock, patch
 
 from fmd_api import AuthenticationError, FmdApiException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from . import TEST_ID, TEST_URL, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload(

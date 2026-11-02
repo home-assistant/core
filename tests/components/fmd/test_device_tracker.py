@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, MagicMock
 from fmd_api import AuthenticationError, FmdApiException
 from fmd_api.models import Location
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fmd.const import DEFAULT_POLLING_INTERVAL, DOMAIN
@@ -15,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import TEST_ARTIFACTS, TEST_ID, TEST_LOCATION, TEST_URL, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "device_tracker.fmd_test_user"
 

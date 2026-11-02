@@ -6,12 +6,11 @@ from unittest.mock import AsyncMock, create_autospec, patch
 from fmd_api import FmdClient
 from fmd_api.models import Location
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fmd.const import DOMAIN
 from homeassistant.const import CONF_ID, CONF_URL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_URL = "https://fmd.example.com"
 TEST_ID = "test_user"

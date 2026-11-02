@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 type FmdConfigEntry = ConfigEntry[FmdCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FmdConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FmdConfigEntry) -> None:
     """Set up FMD from a config entry."""
     try:
         api = await FmdClient.from_auth_artifacts(entry.data["artifacts"])
@@ -43,9 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FmdConfigEntry) -> bool:
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FmdConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FmdConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
