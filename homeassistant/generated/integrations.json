@@ -175,6 +175,9 @@
         "climate.fans_ventilation",
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1528,6 +1531,9 @@
       "integration_type": "device",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "modbus"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3930,6 +3936,9 @@
           "categories": [
             "climate.fans_ventilation"
           ],
+          "connectivity": [
+            "modbus"
+          ],
           "name": "Flexit"
         },
         "flexit_bacnet": {
@@ -5686,6 +5695,9 @@
         "climate.thermostats_heating",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6501,6 +6513,9 @@
           "iot_class": "local_polling",
           "categories": [
             "energy.solar_batteries"
+          ],
+          "connectivity": [
+            "modbus"
           ],
           "name": "KACO Modbus"
         },
@@ -8190,6 +8205,9 @@
       "categories": [
         "diy_makers"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -8633,6 +8651,9 @@
       "integration_type": "hub",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -11359,6 +11380,9 @@
         "water.pools_spas",
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -12115,6 +12139,9 @@
       "categories": [
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -12220,6 +12247,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -12244,6 +12274,9 @@
           "iot_class": "local_polling",
           "categories": [
             "energy.solar_batteries"
+          ],
+          "connectivity": [
+            "modbus"
           ],
           "name": "SolarEdge Modbus"
         }
@@ -12587,6 +12620,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning",
         "climate.fans_ventilation"
+      ],
+      "connectivity": [
+        "modbus"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
