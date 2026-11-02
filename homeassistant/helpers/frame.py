@@ -183,6 +183,11 @@ def report_usage(
     """
     if (hass := _hass.hass) is None:
         raise RuntimeError("Frame helper not set up")
+    # Where report_usage was called from, so different issues reported for the same
+    # integration line are logged separately
+    reporter = sys._getframe(1)  # noqa: SLF001
+    reported_from = f"{reporter.f_code.co_filename}:{reporter.f_lineno}"
+    del reporter
     integration_frame: IntegrationFrame | None = None
     integration_frame_err: MissingIntegrationFrame | None = None
     if not integration_domain:
@@ -210,6 +215,7 @@ def report_usage(
         integration_frame=integration_frame,
         integration_frame_err=integration_frame_err,
         level=level,
+        reported_from=reported_from,
     )
     if hass.loop_thread_id != threading.get_ident():
         future = run_callback_threadsafe(hass.loop, _report_usage_partial)
@@ -230,6 +236,7 @@ def _report_usage(
     integration_frame: IntegrationFrame | None,
     integration_frame_err: MissingIntegrationFrame | None,
     level: int,
+    reported_from: str,
 ) -> None:
     """Report incorrect code usage.
 
@@ -266,6 +273,7 @@ def _report_usage(
             what,
             breaks_in_ha_version,
             integration_frame,
+            reported_from,
             level,
             integration_behavior is ReportBehavior.ERROR,
         )
@@ -326,6 +334,7 @@ def _report_usage_integration_frame(
     what: str,
     breaks_in_ha_version: str | None,
     integration_frame: IntegrationFrame,
+    reported_from: str,
     level: int = logging.WARNING,
     error: bool = False,
 ) -> None:
@@ -334,7 +343,9 @@ def _report_usage_integration_frame(
     Async friendly.
     """
     # Keep track of integrations already reported to prevent flooding
-    key = f"{integration_frame.filename}:{integration_frame.line_number}"
+    key = (
+        f"{integration_frame.filename}:{integration_frame.line_number}:{reported_from}"
+    )
     if not error and key in _REPORTED_INTEGRATIONS:
         return
     _REPORTED_INTEGRATIONS.add(key)

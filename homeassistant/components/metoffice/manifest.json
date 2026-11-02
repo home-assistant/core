@@ -4,6 +4,7 @@
   "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@MrHarcombe", "@avee87"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/metoffice",
   "integration_type": "service",
   "iot_class": "cloud_polling",

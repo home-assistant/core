@@ -16,7 +16,7 @@ from yarl import URL
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.async_ import create_eager_task
 
 from .const import X_HASS_SOURCE, X_INGRESS_PATH
@@ -206,9 +206,9 @@ class HassIOIngress(HomeAssistantView):
 
             # Simple request
             content_length_int = 0
-            content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
+            content_length = result.headers.get(hdrs.CONTENT_LENGTH, Undefined)
             if (
-                content_length is not UNDEFINED
+                content_length is not Undefined
                 and (content_length_int := int(content_length))
                 <= MAX_SIMPLE_RESPONSE_SIZE
             ):

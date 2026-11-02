@@ -1,6 +1,6 @@
 """Constants for the Marketplace."""
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.util.signal_type import SignalType
@@ -16,8 +16,6 @@ CLIENT_NAME = f"HomeAssistantMarketplace/{HAVERSION}"
 # serves as /local.
 DASHBOARD_RESOURCE_BASE = "/local/community"
 LEGACY_DASHBOARD_RESOURCE_BASE = "/hacsfiles"
-
-TV = TypeVar("TV")
 
 # A first install, the platforms add the entities of that repository. Not one
 # of the signals the panel subscribes to, it carries the repository itself.
