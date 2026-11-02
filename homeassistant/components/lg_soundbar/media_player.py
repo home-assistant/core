@@ -1,6 +1,6 @@
 """Support for LG soundbars."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable
 import contextlib
 from typing import Any, override
 
@@ -96,7 +96,6 @@ class LGDevice(MediaPlayerEntity):
     )
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_available = False
 
     def __init__(self, entry: LGSoundbarConfigEntry) -> None:
         """Initialize the LG speakers."""
@@ -125,41 +124,19 @@ class LGDevice(MediaPlayerEntity):
         """Follow the messages and the connection state of the device."""
         self.async_on_remove(self._client.subscribe(self._handle_event))
         self.async_on_remove(self._client.subscribe_connection(self._handle_connection))
-        if self._client.connected:
-            self._handle_connection(True)
+        self._attr_available = self._client.connected
 
     @callback
     def _handle_connection(self, connected: bool) -> None:
-        """Track availability and fetch the whole state after each connection."""
+        """Track availability; the client fetches the state before connecting."""
         self._attr_available = connected
-        if connected:
-            self._async_schedule_requests(
-                self._client.get_product_info,
-                self._client.get_mac_info,
-                self._client.get_eq,
-                self._client.get_info,
-                self._client.get_func,
-                self._client.get_settings,
-                self._client.get_play,
-            )
         self.async_write_ha_state()
 
-    @callback
-    def _async_schedule_requests(
-        self, *requests: Callable[[], Awaitable[None]]
-    ) -> None:
-        """Send requests whose answers arrive as messages."""
-        self._entry.async_create_background_task(
-            self.hass, self._async_send_requests(requests), "lg_soundbar requests"
-        )
-
-    async def _async_send_requests(
-        self, requests: tuple[Callable[[], Awaitable[None]], ...]
-    ) -> None:
+    async def _async_get_play(self) -> None:
+        """Ask for the play info, whose answer arrives as a message."""
         # A lost connection is reported through _handle_connection
         with contextlib.suppress(TemescalConnectionError):
-            for request in requests:
-                await request()
+            await self._client.get_play()
 
     async def _async_send(self, command: Awaitable[None]) -> None:
         """Send a command on behalf of an action."""
@@ -221,7 +198,9 @@ class LGDevice(MediaPlayerEntity):
             if self._stream_type != data["i_stream_type"]:
                 self._stream_type = data["i_stream_type"]
                 # Ask device for current play info when stream type changed.
-                self._async_schedule_requests(self._client.get_play)
+                self._entry.async_create_background_task(
+                    self.hass, self._async_get_play(), "lg_soundbar play info"
+                )
             if data["i_stream_type"] == 0:
                 # If the stream type is 0 (aka the soundbar
                 # is used as an actual soundbar) the last

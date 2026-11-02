@@ -490,7 +490,7 @@ aiotankerkoenig==0.5.5
 aiotedee==0.3.0
 
 # homeassistant.components.lg_soundbar
-aiotemescal==0.2.1
+aiotemescal==0.3.0
 
 # homeassistant.components.threema
 aiothreema==0.3.0

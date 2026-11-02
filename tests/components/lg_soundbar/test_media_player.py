@@ -324,52 +324,39 @@ async def test_availability_follows_the_connection(
     mock_client.connected = False
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-    mock_client.get_info.assert_not_awaited()
 
     find_connection_callback(mock_client)(True)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
-    mock_client.get_info.assert_awaited_once()
 
     find_connection_callback(mock_client)(False)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
-async def test_state_is_fetched_when_already_connected(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(None, id="connected"),
+        pytest.param(TemescalConnectionError, id="connection_lost"),
+    ],
+)
+async def test_play_info_requested_when_stream_type_changes(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception] | None,
 ) -> None:
-    """Test the state is fetched if the device connected before the entity."""
+    """Test the play info is asked for again when the stream type changes."""
+    mock_client.get_play.side_effect = side_effect
     await setup_integration(hass, mock_config_entry)
+
+    find_update_callback(mock_client)(
+        {"msg": "PLAY_INFO", "data": {"i_stream_type": 1}}
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
-    for request in (
-        mock_client.get_product_info,
-        mock_client.get_mac_info,
-        mock_client.get_eq,
-        mock_client.get_info,
-        mock_client.get_func,
-        mock_client.get_settings,
-        mock_client.get_play,
-    ):
-        request.assert_awaited_once()
-
-
-async def test_lost_connection_while_fetching_the_state(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a connection lost during the refresh is left to the client."""
-    mock_client.get_eq.side_effect = TemescalConnectionError
-
-    await setup_integration(hass, mock_config_entry)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    mock_client.get_info.assert_not_awaited()
+    mock_client.get_play.assert_awaited_once()
 
 
 async def test_action_while_connection_is_lost(
