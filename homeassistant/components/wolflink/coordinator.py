@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type WolflinkConfigEntry = ConfigEntry[dict[int, "WolfLinkCoordinator"]]
+type WolflinkConfigEntry = ConfigEntry[dict[int, WolfLinkCoordinator]]
 
 
 class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):

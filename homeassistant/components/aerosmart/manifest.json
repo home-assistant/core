@@ -13,5 +13,5 @@
   "iot_class": "local_polling",
   "loggers": ["modbus_connection", "aerosmart_modbus"],
   "quality_scale": "bronze",
-  "requirements": ["aerosmart-modbus==0.3.1"]
+  "requirements": ["aerosmart-modbus==0.3.2"]
 }

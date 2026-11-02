@@ -58,5 +58,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "position_error": {
+      "message": "An error occurred while fetching the position of {entity_id}"
+    }
   }
 }

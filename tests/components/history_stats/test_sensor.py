@@ -1514,6 +1514,55 @@ async def test_measure_sliding_window(
     assert hass.states.get("sensor.sensor4").state == "8.3"
 
 
+async def test_ratio_over_daylight_saving_time_change(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test the ratio uses the real length of a day with a daylight saving change."""
+    # The US/Pacific day of the fall back to standard time lasts 25 hours
+    now = dt_util.parse_datetime("2026-11-02T12:00:00-08:00")
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.test_id": [
+                ha.State(
+                    "binary_sensor.test_id",
+                    "on",
+                    last_changed=dt_util.parse_datetime("2026-10-31T12:00:00-07:00"),
+                ),
+            ]
+        }
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(now),
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ as_timestamp(today_at() - timedelta(days=1)) }}",
+                        "end": "{{ as_timestamp(today_at()) }}",
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "100.0"
+
+
 async def test_measure_from_end_going_backwards(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:

@@ -10,5 +10,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aiobotocore", "botocore"],
   "quality_scale": "legacy",
-  "requirements": ["aiobotocore==3.7.0"]
+  "requirements": ["aiobotocore==3.10.0"]
 }
