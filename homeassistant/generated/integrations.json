@@ -3243,9 +3243,6 @@
       "categories": [
         "other_ecosystems"
       ],
-      "connectivity": [
-        "network"
-      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -3256,9 +3253,6 @@
         "other_ecosystems",
         "energy.meters_monitoring"
       ],
-      "connectivity": [
-        "network"
-      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -3267,9 +3261,6 @@
       "categories": [
         "other_ecosystems",
         "buttons_remotes"
-      ],
-      "connectivity": [
-        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -7982,9 +7973,6 @@
       "categories": [
         "presence_location.phones_companion_apps"
       ],
-      "connectivity": [
-        "network"
-      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -9786,9 +9774,6 @@
         "presence_location.network_presence",
         "computers_network.monitoring"
       ],
-      "connectivity": [
-        "network"
-      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -10060,9 +10045,6 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
-      ],
-      "connectivity": [
-        "network"
       ],
       "config_flow": false,
       "iot_class": "assumed_state"
@@ -14044,9 +14026,6 @@
       "integration_type": "hub",
       "categories": [
         "ai_voice.voice_assistants"
-      ],
-      "connectivity": [
-        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"

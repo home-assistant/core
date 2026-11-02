@@ -5,7 +5,6 @@
   "categories": ["presence_location.phones_companion_apps"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
-  "connectivity": ["network"],
   "dependencies": [
     "http",
     "intent",
