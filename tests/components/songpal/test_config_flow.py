@@ -225,7 +225,7 @@ async def test_import_exist(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
-    mocked_device.get_supported_methods.assert_called_once()
+    mocked_device.get_supported_methods.assert_not_called()
     mocked_device.get_interface_information.assert_not_called()
 
 
@@ -260,7 +260,6 @@ async def test_user_invalid(hass: HomeAssistant) -> None:
 async def test_import_invalid(hass: HomeAssistant) -> None:
     """Test importing invalid config."""
     mocked_device = _create_mocked_device(True)
-    _create_mock_config_entry(hass)
 
     with _patch_config_flow_device(mocked_device):
         result = await hass.config_entries.flow.async_init(

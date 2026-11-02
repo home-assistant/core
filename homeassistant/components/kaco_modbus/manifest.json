@@ -4,6 +4,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@g4bri3lDev"],
   "config_flow": true,
+  "connectivity": ["modbus"],
   "dependencies": ["modbus"],
   "documentation": "https://www.home-assistant.io/integrations/kaco_modbus",
   "integration_type": "device",
