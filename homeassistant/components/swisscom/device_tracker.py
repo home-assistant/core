@@ -11,8 +11,12 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -83,6 +87,20 @@ class SwisscomScannerEntity(
         super().__init__(coordinator)
         self._key = key
         self._attr_unique_id = key
+        connection = (dr.CONNECTION_NETWORK_MAC, self.mac_address)
+        if self.hostname:
+            self._attr_device_info = DeviceInfo(
+                connections={connection}, name=self.hostname
+            )
+        elif dr.async_get(coordinator.hass).async_get_device_by_connection(
+            connection, coordinator.config_entry.entry_id
+        ):
+            # Don't overwrite the name of an existing device with the MAC address
+            self._attr_device_info = DeviceInfo(connections={connection})
+        else:
+            self._attr_device_info = DeviceInfo(
+                connections={connection}, name=self.mac_address
+            )
 
     @property
     def _device(self):
@@ -116,11 +134,14 @@ class SwisscomScannerEntity(
         device = self._device
         return device.ip_address if device else None
 
-    @property
+    @callback
     @override
-    def device_info(self) -> DeviceInfo:
-        """Return the device info of the tracked device."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.mac_address)},
-            name=self.hostname or self.mac_address,
-        )
+    def _handle_coordinator_update(self) -> None:
+        """Rename the tracked device when its hostname changes."""
+        if (
+            (hostname := self.hostname)
+            and (device_entry := self.device_entry)
+            and device_entry.name != hostname
+        ):
+            dr.async_get(self.hass).async_update_device(device_entry.id, name=hostname)
+        super()._handle_coordinator_update()
