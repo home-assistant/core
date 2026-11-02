@@ -240,6 +240,25 @@ def test_validate_or_move_away_sqlite_database(
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
+@pytest.mark.parametrize("suffix", ["", "/"])
+def test_validate_or_move_away_sqlite_database_directory(
+    tmp_path: Path, suffix: str
+) -> None:
+    """Ensure a directory given as the database is not moved away."""
+    test_dir = tmp_path.joinpath("config")
+    test_dir.mkdir()
+    test_dir.joinpath("configuration.yaml").touch()
+
+    assert (
+        util.validate_or_move_away_sqlite_database(
+            f"{SQLITE_URL_PREFIX}/{test_dir}{suffix}"
+        )
+        is True
+    )
+    assert list(tmp_path.iterdir()) == [test_dir]
+    assert test_dir.joinpath("configuration.yaml").exists()
+
+
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
