@@ -46,7 +46,6 @@ from .util import get_engine_db_url, is_file_sqlite_url
 _LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_INTEGRITY_CHECK = True
 DEFAULT_DB_MAX_RETRIES = 10
@@ -82,7 +81,6 @@ ALLOW_IN_MEMORY_DB = False
 __all__ = [
     "CONF_DB_URL",
     "DEFAULT_DB_FILE",
-    "DEFAULT_URL",
     "DOMAIN",
     "Recorder",
     "SupportedDialect",
@@ -94,6 +92,9 @@ __all__ = [
 
 def validate_db_url(db_url: str) -> Any:
     """Validate database URL."""
+    # An empty URL falls back to the default database in async_setup
+    if not db_url:
+        return db_url
     try:
         url = make_url(db_url)
     except (ArgumentError, ValueError) as err:

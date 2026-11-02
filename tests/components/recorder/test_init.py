@@ -2490,6 +2490,14 @@ async def test_postgresql_url_uses_psycopg2(hass: HomeAssistant) -> None:
             "mysql://user:pass@host/db", None, "utf8mb4", False, False, id="mysqldb"
         ),
         pytest.param(
+            "mysql+mysqldb://user:pass@host/db",
+            None,
+            "utf8mb4",
+            False,
+            False,
+            id="explicit_mysqldb",
+        ),
+        pytest.param(
             "mariadb+pymysql://user:pass@host/db",
             None,
             "utf8mb4",
@@ -2553,6 +2561,7 @@ async def test_engine_options_for_backend_and_driver(
 @pytest.mark.parametrize(
     "db_url",
     [
+        pytest.param("", id="empty"),
         pytest.param("sqlite:////config/home-assistant_v2.db", id="sqlite"),
         pytest.param("sqlite+pysqlite:////config/db.db", id="pysqlite"),
         pytest.param("sqlite+pysqlcipher://:key@/config/db.db", id="pysqlcipher"),

@@ -30,11 +30,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, util
-from homeassistant.components.recorder.const import (
-    DOMAIN,
-    SQLITE_URL_PREFIX,
-    SupportedDialect,
-)
+from homeassistant.components.recorder.const import DOMAIN, SupportedDialect
 from homeassistant.components.recorder.db_schema import RecorderRuns, StatesMeta
 from homeassistant.components.recorder.history import _get_single_entity_start_time_stmt
 from homeassistant.components.recorder.models import (
@@ -225,7 +221,7 @@ def test_validate_or_move_away_sqlite_database(
     test_dir = tmp_path.joinpath("test_validate_or_move_away_sqlite_database")
     test_dir.mkdir()
     test_db_file = f"{test_dir}/broken.db"
-    dburl = f"{SQLITE_URL_PREFIX}/{test_db_file}"
+    dburl = f"sqlite:///{test_db_file}"
 
     assert util.validate_sqlite_database(test_db_file) is False
     assert os.path.exists(test_db_file) is True
