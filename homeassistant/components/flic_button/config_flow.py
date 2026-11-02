@@ -311,7 +311,10 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
             finally:
                 self._client = None
                 await self._async_disconnect_client(client)
-                self._pairing_started = False
+                # The flow stays on this step while the new entry is set up, so
+                # only a failed attempt may be retried
+                if pairing is None:
+                    self._pairing_started = False
 
             if pairing is not None:
                 pairing_id, pairing_key, serial_number, _, sig_bits, _, _ = pairing

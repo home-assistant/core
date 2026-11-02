@@ -441,6 +441,58 @@ async def test_pairing_duplicate_submission_ignored(
 
 
 @pytest.mark.usefixtures("mock_discovered_service_info")
+@pytest.mark.parametrize(
+    "inputs_while_setting_up",
+    [
+        pytest.param([{}], id="resubmit"),
+        pytest.param([None, {}], id="refresh_then_resubmit"),
+    ],
+)
+async def test_pairing_submission_during_entry_setup_ignored(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    inputs_while_setting_up: list[dict[str, Any] | None],
+) -> None:
+    """Test a pair submission while the paired entry is set up does not pair again."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _setup_entry(*args: Any) -> bool:
+        started.set()
+        await release.wait()
+        return True
+
+    mock_setup_entry.side_effect = _setup_entry
+
+    result = await _init_bt_flow(hass, DeviceType.FLIC2)
+    flow_id = result["flow_id"]
+    first = asyncio.create_task(
+        hass.config_entries.flow.async_configure(flow_id, user_input={})
+    )
+    # The flow stays on the pair step until the entry is set up
+    await started.wait()
+    # A second attempt fails, rather than waiting on the entry being set up
+    mock_flic_client.connect.side_effect = BleakError("Connection failed")
+
+    for user_input in inputs_while_setting_up:
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, user_input=user_input
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pair"
+        assert not result["errors"]
+
+    release.set()
+    result = await first
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == FLIC2_ADDRESS
+    mock_flic_client.connect.assert_awaited_once()
+    mock_flic_client.full_verify_pairing.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_discovered_service_info")
 async def test_abort_while_connecting_skips_pairing(
     hass: HomeAssistant,
     mock_flic_client: MagicMock,
