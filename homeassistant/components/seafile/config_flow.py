@@ -112,6 +112,12 @@ def _backup_data(user_input: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+async def _async_logout(client: Seafile) -> None:
+    """Revoke the token of the client, ignoring errors."""
+    with suppress(SeafileError):
+        await client.logout_device()
+
+
 def _library_options(libraries: list[Library]) -> list[SelectOptionDict]:
     """Return the libraries that can be added, sorted by name."""
     return [
@@ -179,7 +185,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             if self.source == SOURCE_RECONFIGURE:
                 self._abort_if_unique_id_mismatch()
-                return await self._async_finish_reconfigure()
+                return self._async_finish_reconfigure()
             self._abort_if_unique_id_configured()
             return await self.async_step_libraries()
         return None
@@ -188,14 +194,25 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the title of the entry for the login."""
         return f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})"
 
-    async def _async_finish_reconfigure(self) -> ConfigFlowResult:
+    @callback
+    def _async_finish_reconfigure(self) -> ConfigFlowResult:
         """Store the new login and revoke the token it replaces."""
         entry = self._get_reconfigure_entry()
-        # Not inlined: read before the update below replaces it.
-        old_token = entry.data[CONF_TOKEN]
-        # Not inlined: the entry is updated before the await, so the new token
-        # is stored even when the flow is cancelled while the old one is revoked.
-        result = (
+        # The old token is only sent to the server it belongs to. In the
+        # background, as that server may have moved and no longer respond.
+        self.hass.async_create_background_task(
+            _async_logout(
+                Seafile(
+                    entry.data[CONF_URL],
+                    entry.data[CONF_TOKEN],
+                    session=async_get_clientsession(
+                        self.hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+                    ),
+                )
+            ),
+            "seafile_revoke_replaced_token",
+        )
+        return (
             # The update listener reloads the entry when it is loaded.
             self.async_update_and_abort
             if entry.update_listeners
@@ -209,15 +226,6 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL: self._user_input[CONF_VERIFY_SSL],
             },
         )
-        with suppress(SeafileError):
-            await Seafile(
-                self._user_input[CONF_URL],
-                old_token,
-                session=async_get_clientsession(
-                    self.hass, verify_ssl=self._user_input[CONF_VERIFY_SSL]
-                ),
-            ).logout_device()
-        return result
 
     def _take_token(self) -> str:
         """Hand the token to the entry, so async_remove doesn't revoke it."""
@@ -232,8 +240,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._token is None:
             return
         self._token = None
-        with suppress(SeafileError):
-            await client.logout_device()
+        await _async_logout(client)
 
     @callback
     @override
