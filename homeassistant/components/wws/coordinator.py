@@ -31,7 +31,6 @@ class WwsCoordinator(
         self, hass: HomeAssistant, config_entry: WwsConfigEntry, api: DynamiT
     ) -> None:
         """Initialize the coordinator."""
-        self._notify_listeners_at_boundary = False
         super().__init__(
             hass,
             logger=LOGGER,
@@ -53,18 +52,13 @@ class WwsCoordinator(
     def _async_notify_listeners(self, now: datetime) -> None:
         """Refresh time-dependent entity states at quarter-hour boundaries."""
         if self.data is not None:
-            self._notify_listeners_at_boundary = True
-            try:
-                self.async_update_listeners()
-            finally:
-                self._notify_listeners_at_boundary = False
+            self.async_update_listeners()
 
     @callback
     @override
     def async_update_listeners(self) -> None:
-        """Only notify entities at quarter-hour boundaries."""
-        if self._notify_listeners_at_boundary:
-            super().async_update_listeners()
+        """Notify entities when data or availability changes."""
+        super().async_update_listeners()
 
     @override
     async def _async_update_data(self) -> dict[str, Sequence[dict[str, Any]]]:

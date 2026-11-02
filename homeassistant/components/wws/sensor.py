@@ -191,7 +191,7 @@ class WwsSensor(CoordinatorEntity[WwsCoordinator], SensorEntity):
     @property
     def next_period(self) -> dict[str, Any] | None:
         """Find the next period containing the current time."""
-        next_after_now = dt_util.now() + timedelta(minutes=15)
+        next_after_now = dt_util.utcnow() + timedelta(minutes=15)
         for period in self._price_periods:
             start = _parse_datetime(period["start"])
             end = _parse_datetime(period["end"])
