@@ -89,11 +89,13 @@ from .const import (
     DOMAIN,
     ISSUE_ENERGY_SITE_NOT_PAIRED,
     ISSUE_GATEWAY_NOT_FOUND,
+    ISSUE_STREAMING_ALLOWANCE,
     LABS_CHARGE_ON_SOLAR_FEATURE,
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
     STREAM_DISCONNECT_GRACE,
+    STREAMING_ALLOWANCE_EXCEEDED,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
     VEHICLE_ISSUE_KEY,
@@ -1012,6 +1014,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     gateway_refresh.async_finish()
 
+    # A config that is still refused returns its repair when it is sent again below
+    ir.async_refresh_issues(
+        hass,
+        DOMAIN,
+        issue_id_pattern=f"{ISSUE_STREAMING_ALLOWANCE}_",
+        config_entry_id=entry.entry_id,
+    ).async_finish()
+
     # Run all first refreshes
     await asyncio.gather(
         *(
@@ -1434,6 +1444,27 @@ async def async_setup_stream(
         vehicle.stream_vehicle.listen_Version(
             create_vehicle_streaming_listener(hass, vehicle.vin, entry.entry_id)
         )
+    )
+
+    @callback
+    def handle_config_refused(error: str, description: str | None) -> None:
+        """Raise a repair when the streaming allowance refuses the config."""
+        if error != STREAMING_ALLOWANCE_EXCEEDED:
+            return
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"{ISSUE_STREAMING_ALLOWANCE}_{vehicle.vin}",
+            config_entry_id=entry.entry_id,
+            is_fixable=False,
+            learn_more_url=f"https://teslemetry.com/console/vehicle/{vehicle.vin}/fields",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_STREAMING_ALLOWANCE,
+            translation_placeholders={"vehicle": vehicle.device["name"] or vehicle.vin},
+        )
+
+    entry.async_on_unload(
+        vehicle.stream_vehicle.listen_config_refused(handle_config_refused)
     )
 
 
