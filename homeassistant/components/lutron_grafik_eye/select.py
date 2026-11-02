@@ -24,9 +24,9 @@ async def async_setup_entry(
 
     async_add_entities(
         GrafikEyeSceneSelect(
-            controller=controller,
             entry_id=entry.entry_id,
-            unit_id=unit_id,
+            controller=controller,
+            control_unit_id=unit_id,
             scene=scene,
         )
         for unit_id, scene in scenes.items()
@@ -42,30 +42,29 @@ class GrafikEyeSceneSelect(SelectEntity):
 
     def __init__(
         self,
-        controller: GrafikEyeController,
         entry_id: str,
-        unit_id: int,
+        controller: GrafikEyeController,
+        control_unit_id: int,
         scene: int,
     ) -> None:
         """Initialize the scene selector."""
-        self._controller = controller
-        self._unit_id = unit_id
-
-        self._attr_unique_id = f"{entry_id}_{unit_id}_scene"
+        self._attr_unique_id = f"{entry_id}_{control_unit_id}_scene"
         self._attr_current_option = str(scene)
-
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry_id}_{unit_id}")},
-            name=f"GRAFIK Eye Control Unit {unit_id}",
+            identifiers={(DOMAIN, f"{entry_id}_{control_unit_id}")},
+            name=f"GRAFIK Eye Control Unit {control_unit_id}",
             manufacturer="Lutron",
         )
+
+        self._controller = controller
+        self._control_unit_id = control_unit_id
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register scene updates."""
         self.async_on_remove(
             self._controller.register_scene_callback(
-                self._unit_id,
+                self._control_unit_id,
                 self._scene_changed,
             )
         )
@@ -73,11 +72,7 @@ class GrafikEyeSceneSelect(SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Select a scene."""
-        self._controller.select_scene(
-            int(option),
-            self._unit_id,
-        )
-
+        await self._controller.select_scene(int(option), self._control_unit_id)
         self._attr_current_option = option
         self.async_write_ha_state()
 
