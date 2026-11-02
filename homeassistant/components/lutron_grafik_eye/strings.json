@@ -28,7 +28,26 @@
   "entity": {
     "select": {
       "scene": {
-        "name": "Scene"
+        "name": "Scene",
+        "state": {
+          "0": "Off",
+          "1": "Scene 1",
+          "2": "Scene 2",
+          "3": "Scene 3",
+          "4": "Scene 4",
+          "5": "Scene 5",
+          "6": "Scene 6",
+          "7": "Scene 7",
+          "8": "Scene 8",
+          "9": "Scene 9",
+          "10": "Scene 10",
+          "11": "Scene 11",
+          "12": "Scene 12",
+          "13": "Scene 13",
+          "14": "Scene 14",
+          "15": "Scene 15",
+          "16": "Scene 16"
+        }
       }
     }
   }
