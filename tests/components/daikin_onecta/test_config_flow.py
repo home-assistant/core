@@ -240,24 +240,52 @@ async def test_oauth_create_entry_validates_gateway_access(
     assert result["reason"] == reason
 
 
+@pytest.mark.parametrize(
+    "source",
+    [config_entries.SOURCE_USER, SOURCE_ZEROCONF],
+    ids=["user", "zeroconf"],
+)
+@pytest.mark.parametrize(
+    ("failure", "reason"),
+    [
+        ("invalid_token", "invalid_token"),
+        ("invalid_auth", "invalid_auth"),
+        ("cannot_connect", "cannot_connect"),
+    ],
+)
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_oauth_gateway_validation_failure_can_be_retried(
+async def test_oauth_errors_can_be_retried_from_supported_sources(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     setup_credentials,
+    source: str,
+    failure: str,
+    reason: str,
 ) -> None:
-    """Allow retrying OAuth after gateway validation fails transiently."""
+    """Allow retrying OAuth errors from user and Zeroconf setup flows."""
     assert await async_setup_component(hass, DOMAIN, {})
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential(TEST_CLIENT_ID, TEST_CLIENT_SECRET)
     )
 
-    async def async_complete_oauth_flow() -> ConfigFlowResult:
-        """Complete the external OAuth callback and configure the flow."""
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    async def async_complete_oauth_flow(access_token: str) -> ConfigFlowResult:
+        """Complete an OAuth flow started from the requested source."""
+        if source == SOURCE_ZEROCONF:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": source},
+                data=ZEROCONF_DISCOVERY,
+            )
+            assert result["type"] == "form"
+            assert result["step_id"] == "oauth_discovery"
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {}
+            )
+        else:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": source}
+            )
         state = oauth_state(result)
         client = await hass_client_no_auth()
         response = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -267,40 +295,53 @@ async def test_oauth_gateway_validation_failure_can_be_retried(
             OAUTH2_TOKEN,
             json={
                 "refresh_token": "mock-refresh-token",
-                "access_token": FAKE_ACCESS_TOKEN,
+                "access_token": access_token,
                 "type": "Bearer",
                 "expires_in": 60,
             },
         )
+        if source == SOURCE_ZEROCONF:
+            await hass.async_block_till_done()
+            return await hass.config_entries.flow.async_configure(result["flow_id"], {})
         return await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    connection_error = OnectaConnectionError(
-        "network unavailable", method="GET", path="/v1/gateway-devices"
-    )
+    gateway_error = {
+        "invalid_auth": OnectaAuthenticationError(
+            401, method="GET", path="/v1/gateway-devices"
+        ),
+        "cannot_connect": OnectaConnectionError(
+            "network unavailable", method="GET", path="/v1/gateway-devices"
+        ),
+    }.get(failure)
+    successful_access_token = FAKE_ACCESS_TOKEN
+    failed_access_token = "invalid" if failure == "invalid_token" else FAKE_ACCESS_TOKEN
     with (
         patch(
             "homeassistant.components.daikin_onecta.config_flow.OnectaClient.get_gateway_devices",
-            side_effect=[connection_error, []],
+            side_effect=[gateway_error, []] if gateway_error else [[]],
         ) as mock_get_gateway_devices,
         patch(
             "homeassistant.components.daikin_onecta.async_setup_entry",
             return_value=None,
         ),
     ):
-        result = await async_complete_oauth_flow()
+        result = await async_complete_oauth_flow(failed_access_token)
 
         assert result["type"] == "abort"
-        assert result["reason"] == "cannot_connect"
+        assert result["reason"] == reason
         assert hass.config_entries.async_entries(DOMAIN) == []
 
-        result = await async_complete_oauth_flow()
+        aioclient_mock.clear_requests()
+        result = await async_complete_oauth_flow(successful_access_token)
 
     assert result["type"] == "create_entry"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == get_account_id(
         FAKE_ACCESS_TOKEN
     )
-    assert mock_get_gateway_devices.call_count == 2
+    assert mock_get_gateway_devices.call_count == (
+        1 if failure == "invalid_token" else 2
+    )
 
 
 async def test_zeroconf_already_configured(
