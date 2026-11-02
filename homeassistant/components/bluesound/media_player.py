@@ -11,6 +11,7 @@ from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -66,6 +67,7 @@ async def async_setup_entry(
 class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
     _attr_has_entity_name = True
     _attr_name = None
