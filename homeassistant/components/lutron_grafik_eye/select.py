@@ -10,7 +10,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GrafikEyeConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 
 
 async def async_setup_entry(
@@ -53,7 +53,7 @@ class GrafikEyeSceneSelect(SelectEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry_id}_{control_unit_id}")},
             name=f"GRAFIK Eye Control Unit {control_unit_id}",
-            manufacturer="Lutron",
+            manufacturer=MANUFACTURER,
         )
 
         self._controller = controller
