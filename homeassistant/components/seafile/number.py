@@ -8,7 +8,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_LIBRARY_ID, SUBENTRY_TYPE_LIBRARY
@@ -36,13 +36,31 @@ async def async_setup_entry(
 ) -> None:
     """Set up Seafile numbers."""
     coordinator = entry.runtime_data
-    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIBRARY):
-        if subentry.data[CONF_LIBRARY_ID] not in coordinator.data.history_limits:
-            continue
-        async_add_entities(
-            [SeafileHistoryDaysNumber(coordinator, subentry, HISTORY_DAYS_DESCRIPTION)],
-            config_subentry_id=subentry.subentry_id,
-        )
+    added_subentry_ids: set[str] = set()
+
+    @callback
+    def _async_add_history_days_numbers() -> None:
+        """Add a number for each library that has a history limit."""
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIBRARY):
+            if (
+                subentry.subentry_id in added_subentry_ids
+                or subentry.data[CONF_LIBRARY_ID] not in coordinator.data.history_limits
+            ):
+                continue
+            added_subentry_ids.add(subentry.subentry_id)
+            async_add_entities(
+                [
+                    SeafileHistoryDaysNumber(
+                        coordinator, subentry, HISTORY_DAYS_DESCRIPTION
+                    )
+                ],
+                config_subentry_id=subentry.subentry_id,
+            )
+
+    _async_add_history_days_numbers()
+    entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_history_days_numbers)
+    )
 
 
 class SeafileHistoryDaysNumber(SeafileEntity, NumberEntity):

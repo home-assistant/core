@@ -4,8 +4,13 @@ import dataclasses
 from unittest.mock import AsyncMock, patch
 
 from aioseafile import SeafileConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -13,6 +18,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.seafile.coordinator import UPDATE_INTERVAL
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -154,3 +160,31 @@ async def test_no_number_for_shared_library(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(HISTORY_DAYS) is None
+
+
+async def test_number_added_when_shared_as_admin(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the days are added once the library is shared with the account as admin."""
+    mock_seafile_client.get_library_history_limit.return_value = 45
+    libraries = mock_seafile_client.get_libraries.return_value
+    mock_seafile_client.get_libraries.return_value = [
+        dataclasses.replace(library, type="srepo", permission="rw")
+        for library in libraries
+    ]
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(HISTORY_DAYS) is None
+
+    mock_seafile_client.get_libraries.return_value = [
+        dataclasses.replace(library, type="srepo", permission="admin")
+        for library in libraries
+    ]
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(HISTORY_DAYS))
+    assert state.state == "45"
