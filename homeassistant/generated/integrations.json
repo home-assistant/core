@@ -11150,6 +11150,10 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network",
+        "rf"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -11832,7 +11836,9 @@
           ],
           "connectivity": [
             "cloud",
-            "network"
+            "network",
+            "rf",
+            "zwave"
           ],
           "name": "Telldus Live"
         },
