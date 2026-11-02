@@ -175,6 +175,7 @@ class SatelIntegraPartitionsCoordinator(
     def setup(self) -> None:
         """Set up client callbacks for this coordinator."""
         super().setup()
+        self.config_entry.async_on_unload(self._debouncer.async_shutdown)
         self.config_entry.async_on_unload(
             self.client.controller.add_alarm_status_callback(
                 self.partitions_update_callback
