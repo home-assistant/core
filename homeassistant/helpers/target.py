@@ -486,7 +486,7 @@ def async_explain_exclude(
             entities = selected.referenced | selected.indirectly_referenced
         includes.append(TargetItemEntities(item_type, item_id, entities))
 
-    if target_selection.exclude is None or not includes:
+    if target_selection.exclude is None:
         return ExcludeExplanation(includes, [])
 
     excludes: list[ExcludeEffect] = []

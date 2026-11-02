@@ -971,7 +971,7 @@ def handle_extract_from_target(
 @decorators.websocket_command(
     {
         probatio.Required("type"): "explain_target_exclude",
-        probatio.Required("target"): cv.TARGET_FIELDS,
+        probatio.Required("target"): cv.ENTITY_SERVICE_FIELDS,
         probatio.Optional("expand_group", default=True): bool,
         probatio.Optional("primary_entities_only", default=True): bool,
     }

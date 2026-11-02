@@ -4646,6 +4646,41 @@ async def test_explain_target_exclude(
     }
 
 
+async def test_explain_target_exclude_all_entities(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test explain_target_exclude command when all entities are targeted."""
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.hallway", "on")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "explain_target_exclude",
+            "target": {"entity_id": "all", "exclude": {"entity_id": "light.kitchen"}},
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "includes": [
+            {
+                "type": "entity",
+                "id": "all",
+                "entities": ["light.hallway", "light.kitchen"],
+            }
+        ],
+        "excludes": [
+            {
+                "type": "entity",
+                "id": "light.kitchen",
+                "removed": [
+                    {"type": "entity", "id": "all", "entities": ["light.kitchen"]}
+                ],
+            }
+        ],
+    }
+
+
 @pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
