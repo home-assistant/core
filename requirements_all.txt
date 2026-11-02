@@ -112,7 +112,7 @@ RestrictedPython==8.5
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.54
+SQLAlchemy==2.1.6
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -454,7 +454,7 @@ aioruuvigateway==0.1.0
 aiosaj==0.2.2
 
 # homeassistant.components.seafile
-aioseafile==0.1.1
+aioseafile==0.1.3
 
 # homeassistant.components.shelly
 aioshelly==14.0.1
@@ -1044,7 +1044,7 @@ eurotronic-cometblue-ha==2.0.0
 # evdev==1.9.3
 
 # homeassistant.components.evohome
-evohome-async==3.1.0
+evohome-async==3.2.1
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.19
@@ -1385,7 +1385,7 @@ horimote==0.4.1
 huawei-lte-api==1.11.0
 
 # homeassistant.components.huum
-huum==0.8.2
+huum==0.8.4
 
 # homeassistant.components.hydroquebec_peak
 hydropeak-opendata==0.2.0
@@ -2874,7 +2874,7 @@ python-opensky==1.0.1
 python-otbr-api==3.1.0
 
 # homeassistant.components.overseerr
-python-overseerr==0.9.0
+python-overseerr==0.10.0
 
 # homeassistant.components.picnic
 python-picnic-api2==2.0.1
@@ -3022,7 +3022,7 @@ qbittorrent-api==2026.5.1
 qbusmqttapi==1.5.1
 
 # homeassistant.components.qingping
-qingping-ble==1.1.6
+qingping-ble==1.3.0
 
 # homeassistant.components.qnap
 qnapstats==0.6.2
@@ -3195,7 +3195,7 @@ simplisafe-python==2026.06.0
 sisyphus-control==3.1.4
 
 # homeassistant.components.skoda
-skoda-public-api==1.3.0
+skoda-public-api==1.4.0
 
 # homeassistant.components.sky_remote
 skyboxremote==0.0.6
@@ -3344,7 +3344,7 @@ tesla-powerwall==0.5.3
 tesla-wall-connector==1.2.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==1.3.0
+teslemetry-stream==1.3.1
 
 # homeassistant.components.tessie
 tessie-api==0.1.3

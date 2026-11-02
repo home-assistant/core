@@ -34,6 +34,7 @@ from homeassistant.components.recorder.models import (
     datetime_to_timestamp_or_none,
     process_timestamp,
 )
+from homeassistant.components.recorder.services import RecorderService
 from homeassistant.components.recorder.statistics import (
     _PRIMARY_UNIT_CONVERTERS,
     _SECONDARY_UNIT_CONVERTERS,
@@ -1677,6 +1678,85 @@ async def test_statistics_during_period_stream_error_falls_back(
             ],
         }
     assert "Error reading statistics, retrying" in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "unit_class",
+        "unit",
+        "units",
+        "change_whole",
+        "change_from_second",
+        "row_changes",
+    ),
+    [
+        pytest.param(
+            "temperature", "°C", None, 50.0, 40.0, [10.0, 10.0, 30.0], id="celsius"
+        ),
+        pytest.param(
+            "temperature",
+            "°C",
+            {"temperature": "°F"},
+            90.0,
+            72.0,
+            [18.0, 18.0, 54.0],
+            id="fahrenheit",
+        ),
+        pytest.param(
+            "energy_distance",
+            "kWh/100km",
+            {"energy_distance": "km/kWh"},
+            2.0,
+            2.5,
+            [10.0, -5.0, -3.0],
+            id="inverse_unit",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_change_converted_without_offset(
+    hass: HomeAssistant,
+    unit_class: str,
+    unit: str,
+    units: dict[str, str] | None,
+    change_whole: float,
+    change_from_second: float,
+    row_changes: list[float],
+) -> None:
+    """Test a change is converted as a difference, without the converter offset."""
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0) - timedelta(
+        hours=5
+    )
+    end = start + timedelta(hours=3)
+    async_import_statistics(
+        hass,
+        {
+            "has_sum": True,
+            "mean_type": StatisticMeanType.NONE,
+            "name": None,
+            "source": "recorder",
+            "statistic_id": "sensor.test",
+            "unit_class": unit_class,
+            "unit_of_measurement": unit,
+        },
+        [
+            {"start": start + timedelta(hours=i), "sum": value}
+            for i, value in enumerate((10.0, 20.0, 50.0))
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    assert statistics.statistic_during_period(
+        hass, None, end, "sensor.test", {"change"}, units
+    ) == {"change": change_whole}
+    assert statistics.statistic_during_period(
+        hass, start + timedelta(hours=1), end, "sensor.test", {"change"}, units
+    ) == {"change": change_from_second}
+    # The first row has no earlier statistic and starts from a sum of 0
+    stats = statistics_during_period(
+        hass, start, end, {"sensor.test"}, "hour", units, {"change"}
+    )
+    assert [row["change"] for row in stats["sensor.test"]] == row_changes
 
 
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
@@ -4732,14 +4812,18 @@ async def test_get_statistics_service(
     await async_recorder_block_till_done(hass)
 
     result = await hass.services.async_call(
-        DOMAIN, "get_statistics", service_args, return_response=True, blocking=True
+        DOMAIN,
+        RecorderService.GET_STATISTICS,
+        service_args,
+        return_response=True,
+        blocking=True,
     )
     assert result == expected_result
 
     with pytest.raises(exceptions.Unauthorized):
         result = await hass.services.async_call(
             DOMAIN,
-            "get_statistics",
+            RecorderService.GET_STATISTICS,
             service_args,
             return_response=True,
             blocking=True,
@@ -4800,7 +4884,7 @@ async def test_get_statistics_service_missing_mandatory_keys(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "get_statistics",
+            RecorderService.GET_STATISTICS,
             service_args,
             return_response=True,
             blocking=True,

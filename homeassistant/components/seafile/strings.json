@@ -136,6 +136,9 @@
     "invalid_auth": {
       "message": "The access token of the Seafile account is no longer valid."
     },
+    "library_not_found": {
+      "message": "The library no longer exists on the Seafile server."
+    },
     "permission_denied": {
       "message": "The Seafile account is not allowed to perform this action on the library."
     },
