@@ -112,7 +112,7 @@ RestrictedPython==8.5
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.54
+SQLAlchemy==2.1.6
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -1047,7 +1047,7 @@ eurotronic-cometblue-ha==2.0.0
 # evdev==1.9.3
 
 # homeassistant.components.evohome
-evohome-async==3.1.0
+evohome-async==3.2.1
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.19
@@ -2877,7 +2877,7 @@ python-opensky==1.0.1
 python-otbr-api==3.1.0
 
 # homeassistant.components.overseerr
-python-overseerr==0.9.0
+python-overseerr==0.10.0
 
 # homeassistant.components.picnic
 python-picnic-api2==2.0.1
@@ -3025,7 +3025,7 @@ qbittorrent-api==2026.5.1
 qbusmqttapi==1.5.1
 
 # homeassistant.components.qingping
-qingping-ble==1.1.6
+qingping-ble==1.3.0
 
 # homeassistant.components.qnap
 qnapstats==0.6.2

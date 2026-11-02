@@ -6,7 +6,7 @@ from typing import cast
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -68,7 +68,9 @@ SERVICE_PURGE_SCHEMA = probatio.Schema(
 SERVICE_PURGE_ENTITIES_SCHEMA = probatio.All(
     probatio.Schema(
         {
-            probatio.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
+            probatio.Optional(
+                CommonServiceArgument.ENTITY_ID, default=[]
+            ): cv.entity_ids,
             probatio.Optional(
                 RecorderServiceArgument.DOMAINS, default=[]
             ): probatio.All(probatio.EnsureList(), [cv.string]),
@@ -82,7 +84,7 @@ SERVICE_PURGE_ENTITIES_SCHEMA = probatio.All(
     ),
     probatio.Any(
         probatio.Schema(
-            {probatio.Required(ATTR_ENTITY_ID): probatio.IsTrue()},
+            {probatio.Required(CommonServiceArgument.ENTITY_ID): probatio.IsTrue()},
             extra=probatio.ALLOW_EXTRA,
         ),
         probatio.Schema(

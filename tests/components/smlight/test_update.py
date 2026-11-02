@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Firmware, Info, Radio
@@ -96,6 +96,82 @@ async def test_update_setup(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("radios", "radio_type", "radio_idx", "latest_version"),
+    [
+        pytest.param(
+            [
+                Radio(zb_type=-1, chip_index=0),
+                Radio(zb_type=1, chip_index=1, zb_version="20240314"),
+                Radio(zb_type=5, chip_index=2, zb_version="20240716"),
+            ],
+            1,
+            1,
+            "20240716",
+            id="unsupported_first",
+        ),
+        pytest.param(
+            [
+                Radio(zb_type=0, chip_index=0, zb_version="20240314"),
+                Radio(zb_type=-1, chip_index=1),
+                Radio(zb_type=5, chip_index=2, zb_version="20240716"),
+            ],
+            0,
+            0,
+            "20250201",
+            id="unsupported_middle",
+        ),
+    ],
+)
+async def test_unsupported_radio_catalog(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    radios: list[Radio],
+    radio_type: int,
+    radio_idx: int,
+    latest_version: str,
+) -> None:
+    """Test unsupported slots are skipped without shifting supported catalogs."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        model="SLZB-Ultima3",
+        addons={"zwave": True},
+        fw_channel="dev",
+        sw_version="v2.3.6",
+        radios=radios,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_smlight_client.get_firmware_version.await_args_list == [
+        call("dev", device="SLZB-Ultima3"),
+        call(
+            "dev",
+            device="SLZB-Ultima3",
+            mode="zigbee",
+            zb_type=radio_type,
+            idx=radio_idx,
+        ),
+        call("dev", device="SLZB-Ultima3", mode="zigbee", zb_type=5, idx=2),
+    ]
+    assert set(hass.states.async_entity_ids(UPDATE_DOMAIN)) == {
+        "update.mock_title_core_firmware",
+        "update.mock_title_zigbee_firmware",
+        "update.mock_title_z_wave_firmware",
+    }
+    state = hass.states.get("update.mock_title_zigbee_firmware")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "20240314"
+    assert state.attributes[ATTR_LATEST_VERSION] == latest_version
+
+    state = hass.states.get("update.mock_title_z_wave_firmware")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "20240716"
+    assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
 
 
 @patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)

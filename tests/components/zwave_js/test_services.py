@@ -1798,6 +1798,18 @@ async def test_ping(
             blocking=True,
         )
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PING,
+            {ATTR_ENTITY_ID: "sensor.fake"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+
     client.async_send_command.reset_mock()
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
     with pytest.raises(HomeAssistantError):
@@ -2109,6 +2121,7 @@ async def test_refresh_notifications(
             {ATTR_NOTIFICATION_TYPE: 1},
             id="refresh_notifications",
         ),
+        pytest.param(SERVICE_PING, {}, id="ping"),
     ],
 )
 async def test_service_driver_not_ready(

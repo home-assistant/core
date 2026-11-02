@@ -239,6 +239,8 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
                         zb_type=r.zb_type,
                         idx=idx,
                     )
+                    if r.zb_type != -1
+                    else []
                     for idx, r in enumerate(info.radios)
                 ]
             )
