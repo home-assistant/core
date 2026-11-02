@@ -443,8 +443,13 @@ class ReolinkVODMediaSource(MediaSource):
                     title=file_name,
                     can_play=True,
                     can_expand=False,
-                    thumbnail=async_generate_thumbnail_url(
-                        config_entry_id, channel, file.start_time_id
+                    # snapshot_past cannot select the autotrack lens.
+                    thumbnail=(
+                        None
+                        if stream.startswith("autotrack_")
+                        else async_generate_thumbnail_url(
+                            config_entry_id, channel, file.start_time_id
+                        )
                     ),
                 )
             )

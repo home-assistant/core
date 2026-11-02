@@ -300,6 +300,38 @@ async def test_browsing(
     )
 
 
+@pytest.mark.parametrize("stream", ["autotrack_sub", "autotrack_main"])
+async def test_browsing_autotrack_no_thumbnail(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    stream: str,
+) -> None:
+    """Test recordings of an autotrack stream have no thumbnail."""
+    entry_id = config_entry.entry_id
+    reolink_host.is_nvr = False
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
+        assert await hass.config_entries.async_setup(entry_id) is True
+    await hass.async_block_till_done()
+
+    mock_vod_file = MagicMock()
+    mock_vod_file.start_time = TEST_START_TIME
+    mock_vod_file.start_time_id = TEST_START
+    mock_vod_file.end_time_id = TEST_END
+    mock_vod_file.duration = timedelta(minutes=5)
+    mock_vod_file.file_name = TEST_FILE_NAME
+    mock_vod_file.triggers = VOD_trigger.PERSON
+    reolink_host.request_vod_files.return_value = ([], [mock_vod_file])
+
+    browse_day_id = (
+        f"DAY|{entry_id}|{TEST_CHANNEL}|{stream}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+    )
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_id}")
+
+    assert browse.children[0].thumbnail is None
+
+
 async def test_browsing_h265_encoding(
     hass: HomeAssistant,
     reolink_host: MagicMock,

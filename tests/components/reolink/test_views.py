@@ -355,3 +355,28 @@ async def test_thumbnail_errors(
 
     assert response.status == HTTPStatus.BAD_REQUEST
     assert await response.content.read() == bytes(body, "utf-8")
+
+
+async def test_thumbnail_unloaded_config_entry(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test getting a thumbnail after the config entry has been unloaded."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(return_value=TEST_IMAGE)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    http_client = await hass_client()
+    response = await http_client.get(
+        async_generate_thumbnail_url(
+            config_entry.entry_id, int(TEST_CHANNEL), TEST_START_TIME_ID
+        )
+    )
+
+    assert response.status == HTTPStatus.BAD_REQUEST
+    reolink_host.baichuan.snapshot_past.assert_not_called()
