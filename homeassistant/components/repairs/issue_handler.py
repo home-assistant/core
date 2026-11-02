@@ -141,10 +141,6 @@ def _process_repairs_platform(
 
 def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager | None:
     """Return the repairs flow manager."""
-    report_usage(
-        "accesses the repairs flow manager using repairs_flow_manager rather than async_get",
-        breaks_in_ha_version="2027.12.0",
-    )
     try:
         return async_get(hass)
     except HomeAssistantError:
