@@ -4,7 +4,6 @@
   "categories": ["blinds_curtains"],
   "codeowners": ["@sslivins"],
   "config_flow": true,
-  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "somfy_*",

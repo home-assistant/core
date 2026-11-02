@@ -12048,9 +12048,6 @@
       "categories": [
         "blinds_curtains"
       ],
-      "connectivity": [
-        "network"
-      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
