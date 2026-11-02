@@ -686,8 +686,8 @@
     "generic_error": {
       "message": "An unexpected error occurred. Please try again later."
     },
-    "multiple_map_ids": {
-      "message": "Can't perform cleaning command: segments from multiple maps selected. Please select segments from a single map."
+    "no_map_selected": {
+      "message": "Canot perform cleaning command: no map selected on the robot vacuum. Please select a map and try again."
     },
     "read_only_option": {
       "message": "The selected option is read-only and the entity cannot be set to it."

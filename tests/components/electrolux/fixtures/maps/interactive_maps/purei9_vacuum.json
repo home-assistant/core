@@ -2,8 +2,8 @@
   {
     "zones": [
       {
-        "name": "Bathroom",
-        "id": "zone-id-1",
+        "name": "Storage",
+        "id": "11",
         "zoneType": "clean",
         "vertices": [
           {
@@ -28,7 +28,7 @@
       },
       {
         "name": "No clean zone",
-        "id": "zone-id-2",
+        "id": "filtered-out-zone-id",
         "zoneType": "avoid",
         "vertices": [
           {
@@ -53,7 +53,7 @@
       },
       {
         "name": "Kitchen",
-        "id": "zone-id-3",
+        "id": "12",
         "zoneType": "clean",
         "vertices": [
           {
@@ -78,7 +78,40 @@
       }
     ],
     "name": "Map 1",
-    "id": "map-id-1",
+    "id": "1",
+    "rotation": -1.2728935,
+    "timestamp": "2022-07-20T08:19:06.521Z"
+  },
+  {
+    "zones": [
+      {
+        "name": "Garage",
+        "id": "11",
+        "zoneType": "clean",
+        "vertices": [
+          {
+            "x": -3.147479,
+            "y": -2.607366
+          },
+          {
+            "x": -3.163067,
+            "y": -0.92906797
+          },
+          {
+            "x": -1.55375,
+            "y": -0.7167846
+          },
+          {
+            "x": -1.4418235,
+            "y": -2.6256099
+          }
+        ],
+        "roomCategory": 4,
+        "powerMode": 1
+      }
+    ],
+    "name": "Map 2",
+    "id": "2",
     "rotation": -1.2728935,
     "timestamp": "2022-07-20T08:19:06.521Z"
   }

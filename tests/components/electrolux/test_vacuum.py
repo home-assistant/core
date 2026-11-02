@@ -756,6 +756,7 @@ async def test_command_errors(
             [
                 {"id": "1_11", "name": "Map 1: Storage", "group": None},
                 {"id": "1_12", "name": "Map 1: Kitchen", "group": None},
+                {"id": "2_11", "name": "Map 2: Garage", "group": None},
             ],
         ),
         # gordias RVC
@@ -765,6 +766,7 @@ async def test_command_errors(
             [
                 {"id": "1_11", "name": "Map 1: Storage", "group": None},
                 {"id": "1_12", "name": "Map 1: Kitchen", "group": None},
+                {"id": "2_11", "name": "Map 2: Garage", "group": None},
             ],
         ),
         # pure i9 RVC
@@ -772,8 +774,9 @@ async def test_command_errors(
             "purei9_vacuum",
             "vacuum.pure_i9_vacuum",
             [
-                {"id": "map-id-1_zone-id-1", "name": "Map 1: Bathroom", "group": None},
-                {"id": "map-id-1_zone-id-3", "name": "Map 1: Kitchen", "group": None},
+                {"id": "1_11", "name": "Map 1: Storage", "group": None},
+                {"id": "1_12", "name": "Map 1: Kitchen", "group": None},
+                {"id": "2_11", "name": "Map 2: Garage", "group": None},
             ],
         ),
     ],
@@ -813,9 +816,9 @@ async def test_get_segments(
             [
                 {
                     "mapCommand": "selectRoomsClean",
-                    "mapId": 18,
+                    "mapId": 1,
                     "type": 0,
-                    "roomInfo": [{"roomId": 42}, {"roomId": 48}],
+                    "roomInfo": [{"roomId": 11}, {"roomId": 12}],
                 }
             ],
         ),
@@ -826,18 +829,18 @@ async def test_get_segments(
             [
                 {
                     "mapCommand": "selectRoomsClean",
-                    "mapId": 18,
+                    "mapId": 1,
                     "type": 1,
                     "roomInfo": [
                         {
-                            "roomId": 42,
+                            "roomId": 11,
                             "sweepMode": 0,
                             "vacuumMode": "standard",
                             "waterPumpRate": "off",
                             "numberOfCleaningRepetitions": 1,
                         },
                         {
-                            "roomId": 48,
+                            "roomId": 12,
                             "sweepMode": 0,
                             "vacuumMode": "standard",
                             "waterPumpRate": "off",
@@ -854,10 +857,10 @@ async def test_get_segments(
             [
                 {
                     "CustomPlay": {
-                        "persistentMapId": "18",
+                        "persistentMapId": "1",
                         "zones": [
-                            {"zoneId": "42", "powerMode": 2},
-                            {"zoneId": "48", "powerMode": 2},
+                            {"zoneId": "11", "powerMode": 2},
+                            {"zoneId": "12", "powerMode": 2},
                         ],
                     }
                 }
@@ -884,11 +887,11 @@ async def test_clean_area(
         entity_id,
         VACUUM_DOMAIN,
         {
-            "area_mapping": {"area_id_1": ["18_42", "18_48"]},
+            "area_mapping": {"area_id_1": ["1_11", "1_12", "2_11"]},
             "last_seen_segments": [
-                {"id": "18_42", "name": "Example room 1", "group": "Floor 1"},
-                {"id": "18_48", "name": "Example room 2", "group": "Floor 1"},
-                {"id": "19_42", "name": "Example room 1", "group": "Floor 2"},
+                {"id": "1_11", "name": "Map 1: Storage", "group": None},
+                {"id": "1_12", "name": "Map 1: Kitchen", "group": None},
+                {"id": "2_11", "name": "Map 2: Garage", "group": None},
             ],
         },
     )
@@ -915,19 +918,13 @@ async def test_clean_area(
         (
             "cybele_vacuum",
             "vacuum.cybele_vacuum",
-            "multiple_map_ids",
+            "no_map_selected",
         ),
         # gordias RVC
         (
             "gordias_vacuum",
             "vacuum.gordias_vacuum",
-            "multiple_map_ids",
-        ),
-        # pure i9 RVC
-        (
-            "purei9_vacuum",
-            "vacuum.pure_i9_vacuum",
-            "multiple_map_ids",
+            "no_map_selected",
         ),
     ],
 )
@@ -944,15 +941,18 @@ async def test_clean_area_errors(
 
     await setup_integration(hass, mock_config_entry)
 
+    appliances.get_memory_maps.side_effect = None
+    appliances.get_memory_maps.return_value = []
+
     entity_registry.async_update_entity_options(
         entity_id,
         VACUUM_DOMAIN,
         {
-            "area_mapping": {"area_id_1": ["18_42", "19_42"]},
+            "area_mapping": {"area_id_1": ["1_11", "1_12", "2_11"]},
             "last_seen_segments": [
-                {"id": "18_42", "name": "Example room 1", "group": "Floor 1"},
-                {"id": "18_48", "name": "Example room 2", "group": "Floor 1"},
-                {"id": "19_42", "name": "Example room 1", "group": "Floor 2"},
+                {"id": "1_11", "name": "Map 1: Storage", "group": None},
+                {"id": "1_12", "name": "Map 1: Kitchen", "group": None},
+                {"id": "2_11", "name": "Map 2: Garage", "group": None},
             ],
         },
     )

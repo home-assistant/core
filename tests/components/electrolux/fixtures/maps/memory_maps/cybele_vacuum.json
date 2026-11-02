@@ -13,5 +13,16 @@
     "name": "Map 1",
     "id": 1,
     "currentMap": true
+  },
+  {
+    "rooms": [
+      {
+        "Id": 11,
+        "Name": "Garage"
+      }
+    ],
+    "name": "Map 2",
+    "id": 2,
+    "currentMap": false
   }
 ]

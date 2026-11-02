@@ -75,6 +75,9 @@ class ElectroluxVacuumDescription[T: RVCAppliance](StateVacuumEntityDescription)
     get_segments_fn: (
         Callable[[ApplianceClient, str], Awaitable[list[Segment]]] | None
     ) = None
+    get_current_map_fn: (
+        Callable[[ApplianceClient, str], Awaitable[str | None]] | None
+    ) = None
     clean_segments_command_fn: Callable[[T, str, list[str]], dict[str, Any]] | None = (
         None
     )
@@ -140,6 +143,18 @@ async def _get_memory_maps_segments(
     return segments
 
 
+async def _get_current_map_memory_maps(
+    client: ApplianceClient, appliance_id: str
+) -> str | None:
+    memory_maps = await client.get_memory_maps(appliance_id)
+    for memory_map in memory_maps:
+        map_id = memory_map.get("id")
+        if memory_map.get("currentMap") is True:
+            return str(map_id)
+
+    return None
+
+
 def _get_clean_segments_command_purei9(
     appliance_data: RVCAppliance, map_id: str, zone_ids: list[str]
 ) -> dict[str, Any]:
@@ -182,6 +197,7 @@ VACUUM_DESCRIPTIONS: tuple[ElectroluxVacuumDescription, ...] = (
         translation_key="rvc",
         exists_fn=_is_gordias_vacuum,
         get_segments_fn=_get_memory_maps_segments,
+        get_current_map_fn=_get_current_map_memory_maps,
         clean_segments_command_fn=_get_clean_segments_command_gordias,
     ),
     ElectroluxVacuumDescription(
@@ -189,6 +205,7 @@ VACUUM_DESCRIPTIONS: tuple[ElectroluxVacuumDescription, ...] = (
         translation_key="rvc",
         exists_fn=_is_cybele_vacuum,
         get_segments_fn=_get_memory_maps_segments,
+        get_current_map_fn=_get_current_map_memory_maps,
         clean_segments_command_fn=_get_clean_segments_command_cybele,
     ),
 )
@@ -383,16 +400,28 @@ class RvcEntity(ElectroluxBaseEntity[RVCAppliance], StateVacuumEntity):
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments."""
 
-        map_id_set = {segment_id.split("_")[0] for segment_id in segment_ids}
-        if len(map_id_set) > 1:
+        description = self._entity_description
+
+        map_id: str | None = None
+        if description.get_current_map_fn is not None:
+            map_id = await description.get_current_map_fn(
+                self.coordinator.client, self._appliance_id
+            )
+        else:
+            map_id = segment_ids[0].split("_")[0]
+
+        if map_id is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="multiple_map_ids",
+                translation_key="no_map_selected",
             )
-        map_id = map_id_set.pop()
-        zone_ids = [segment_id[len(map_id) + 1 :] for segment_id in segment_ids]
 
-        description = self._entity_description
+        zone_ids = [
+            segment_id[len(map_id) + 1 :]
+            for segment_id in segment_ids
+            if segment_id.startswith(f"{map_id}_")
+        ]
+
         # CLEAN_AREA feature is only supported if vacuum has get_segments_fn and clean_segments_command_fn
         if TYPE_CHECKING:
             assert description.clean_segments_command_fn is not None
