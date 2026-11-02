@@ -137,3 +137,27 @@ def _process_repairs_platform(
     if not hasattr(platform, "async_create_fix_flow"):
         raise HomeAssistantError(f"Invalid repairs platform {platform}")
     return platform
+
+
+def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager | None:
+    """Return the repairs flow manager."""
+    report_usage(
+        "accesses the repairs flow manager using repairs_flow_manager rather than async_get",
+        breaks_in_ha_version="2027.12.0",
+    )
+    try:
+        return async_get(hass)
+    except HomeAssistantError:
+        pass
+    return None
+
+
+@callback
+def async_get(hass: HomeAssistant) -> RepairsFlowManager:
+    """Return the repairs flow manager."""
+    if domain_data := hass.data.get(DOMAIN):
+        flow_manager: RepairsFlowManager = domain_data.get("flow_manager")
+        if flow_manager is not None:
+            return flow_manager
+
+    raise HomeAssistantError("repairs flow manager is not available")

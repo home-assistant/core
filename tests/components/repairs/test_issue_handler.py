@@ -12,9 +12,11 @@ from homeassistant.components.repairs import (
     DOMAIN,
     RepairsFlow,
     RepairsFlowResult,
+    async_get,
     repairs_flow_manager,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.issue_registry as ir
 
 
@@ -69,7 +71,7 @@ async def test_flow_fix_via_data_deprecation(
         translation_key="fake_key",
     )
 
-    assert (repairs := repairs_flow_manager(hass))
+    repairs = async_get(hass)
 
     result = await repairs.async_init(
         "fake_integration", data={"issue_id": "context_issue"}
@@ -95,9 +97,24 @@ async def test_flow_fix_missing_context(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, DOMAIN, {})
 
-    assert (repairs := repairs_flow_manager(hass))
+    repairs = async_get(hass)
 
     with pytest.raises(KeyError) as exc:
         await repairs.async_init("fake_integration")
 
     assert "issue_id was not set in context" in str(exc.value)
+
+
+async def test_flow_manager_helper(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test accessing the repairs flow manager with the helper."""
+    assert repairs_flow_manager(hass) is None
+    assert "accesses the repairs flow manager using repairs_flow_manager" in caplog.text
+    with pytest.raises(HomeAssistantError) as exc:
+        async_get(hass)
+    assert str(exc.value) == "repairs flow manager is not available"
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_get(hass)
