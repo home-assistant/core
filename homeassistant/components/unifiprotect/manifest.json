@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@RaHehl"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http", "repairs", "unifi_discovery"],
   "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
   "integration_type": "hub",

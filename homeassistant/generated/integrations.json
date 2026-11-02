@@ -6,6 +6,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "abode": {
@@ -64,6 +67,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -73,6 +79,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "actiontec": {
@@ -81,6 +90,9 @@
       "categories": [
         "computers_network.routers_network",
         "presence_location.network_presence"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -116,6 +128,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -126,6 +141,9 @@
         "hubs_protocols.building_automation",
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -134,6 +152,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -203,6 +224,9 @@
       "categories": [
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -212,6 +236,9 @@
       "categories": [
         "lighting.bulbs_lamps"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -220,6 +247,9 @@
       "integration_type": "device",
       "categories": [
         "sensors.air_quality"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -254,6 +284,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -274,6 +307,9 @@
       "integration_type": "hub",
       "categories": [
         "sensors.air_quality"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -313,6 +349,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -321,6 +360,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -347,6 +389,9 @@
           "categories": [
             "sensors.air_quality"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "AirVisual Pro"
         }
       }
@@ -360,6 +405,9 @@
           "iot_class": "local_polling",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Airzone"
         },
@@ -441,6 +489,9 @@
       "categories": [
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -503,6 +554,9 @@
           "supported_by": "androidtv",
           "categories": [
             "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Amazon Fire TV"
         },
@@ -569,6 +623,9 @@
         "security_safety.cameras",
         "security_safety.doorbells_intercoms"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -594,6 +651,9 @@
           "categories": [
             "climate.thermostats_heating"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Trane Local"
         }
       }
@@ -603,6 +663,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -625,6 +688,9 @@
       "categories": [
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -633,6 +699,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -643,6 +712,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -651,6 +723,9 @@
       "integration_type": "hub",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -684,6 +759,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -742,6 +820,9 @@
       "categories": [
         "diy_makers.web_data_connectors"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -750,6 +831,9 @@
       "integration_type": "device",
       "categories": [
         "energy.backup_power"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -785,6 +869,9 @@
           "iot_class": "local_push",
           "categories": [
             "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Apple TV"
         },
@@ -842,6 +929,9 @@
             "media_entertainment.music_radio_services",
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Apple iTunes"
         },
         "weatherkit": {
@@ -878,6 +968,9 @@
         "climate.thermostats_heating",
         "climate.air_purifiers_humidifiers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -898,6 +991,9 @@
       "integration_type": "device",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -927,6 +1023,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -935,6 +1034,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -969,6 +1071,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -977,6 +1082,9 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -989,6 +1097,9 @@
         "appliances_cleaning",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "midea"
     },
     "arris_tg2492lg": {
@@ -998,6 +1109,9 @@
         "computers_network.routers_network",
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -1006,6 +1120,9 @@
       "integration_type": "virtual",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "linkplay"
     },
@@ -1020,6 +1137,9 @@
             "computers_network.routers_network",
             "presence_location.network_presence"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Aruba"
         },
         "cppm_tracker": {
@@ -1028,6 +1148,9 @@
           "iot_class": "local_polling",
           "categories": [
             "presence_location.network_presence"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Aruba ClearPass"
         }
@@ -1077,6 +1200,9 @@
         "computers_network.routers_network",
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1085,6 +1211,9 @@
       "integration_type": "device",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -1216,6 +1345,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "awair": {
@@ -1237,6 +1369,9 @@
       "categories": [
         "security_safety.cameras",
         "security_safety.doorbells_intercoms"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -1281,6 +1416,9 @@
       "categories": [
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1314,6 +1452,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1322,6 +1463,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -1355,6 +1499,9 @@
         "computers_network.routers_network",
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -1383,6 +1530,9 @@
         "climate.heat_pumps_air_conditioning",
         "appliances_cleaning",
         "climate.water_heaters"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "midea"
     },
@@ -1415,6 +1565,9 @@
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -1452,6 +1605,9 @@
         "blinds_curtains",
         "lighting.led_strips_controllers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1473,6 +1629,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "bloc_blinds": {
@@ -1480,6 +1639,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -1524,6 +1686,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -1587,6 +1752,9 @@
           "categories": [
             "security_safety.alarm_systems"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Bosch Alarm"
         },
         "bosch_shc": {
@@ -1595,6 +1763,9 @@
           "iot_class": "local_push",
           "categories": [
             "hubs_protocols.smart_home_hubs"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Bosch SHC"
         },
@@ -1643,6 +1814,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "bring": {
@@ -1677,6 +1851,9 @@
       "integration_type": "device",
       "categories": [
         "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -1731,6 +1908,9 @@
         "climate.thermostats_heating",
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1741,6 +1921,9 @@
         "hubs_protocols.smart_home_hubs",
         "plugs_switches"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "switchbee"
     },
     "bt_home_hub_5": {
@@ -1749,6 +1932,9 @@
       "categories": [
         "presence_location.network_presence",
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -1759,6 +1945,9 @@
       "categories": [
         "presence_location.network_presence",
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -1812,6 +2001,9 @@
         "appliances_cleaning",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "midea"
     },
     "buienradar": {
@@ -1843,6 +2035,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "pooldose"
     },
     "caldav": {
@@ -1863,6 +2058,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -1888,6 +2086,9 @@
         "climate.heat_pumps_air_conditioning",
         "appliances_cleaning",
         "climate.water_heaters"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "midea"
     },
@@ -1947,6 +2148,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -1980,6 +2184,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2007,6 +2214,9 @@
             "presence_location.network_presence",
             "computers_network.routers_network"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Cisco IOS"
         },
         "cisco_mobility_express": {
@@ -2016,6 +2226,9 @@
           "categories": [
             "presence_location.network_presence",
             "computers_network.routers_network"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Cisco Mobility Express"
         },
@@ -2194,6 +2407,9 @@
         "appliances_cleaning",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "midea"
     },
     "color_extractor": {
@@ -2235,6 +2451,9 @@
         "hubs_protocols.smart_home_hubs",
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2246,6 +2465,9 @@
         "appliances_cleaning",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "midea"
     },
     "comfoconnect": {
@@ -2253,6 +2475,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.fans_ventilation"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -2294,6 +2519,9 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -2326,6 +2554,9 @@
       "categories": [
         "hubs_protocols.smart_home_hubs"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2347,6 +2578,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2390,6 +2624,9 @@
       "integration_type": "virtual",
       "categories": [
         "diy_makers.web_data_connectors"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "splunk"
     },
@@ -2447,6 +2684,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2455,6 +2695,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.fans_ventilation"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -2478,6 +2721,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2488,6 +2734,9 @@
         "computers_network.routers_network",
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -2496,6 +2745,9 @@
       "integration_type": "hub",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling",
@@ -2534,6 +2786,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "delijn": {
@@ -2565,6 +2820,9 @@
       "categories": [
         "computers_network.nas_servers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2587,6 +2845,9 @@
           "categories": [
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Denon Network Receivers"
         },
         "denonavr": {
@@ -2595,6 +2856,9 @@
           "iot_class": "local_push",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Denon AVR Network Receivers"
         },
@@ -2614,6 +2878,9 @@
           "categories": [
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Denon HEOS"
         }
       }
@@ -2623,6 +2890,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2660,6 +2930,9 @@
           "categories": [
             "computers_network.routers_network"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "devolo Home Network"
         }
       },
@@ -2685,6 +2958,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "digital_loggers": {
@@ -2693,6 +2969,9 @@
       "categories": [
         "plugs_switches",
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "wemo"
     },
@@ -2713,6 +2992,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2759,6 +3041,9 @@
       "categories": [
         "plugs_switches"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2772,6 +3057,9 @@
           "categories": [
             "media_entertainment"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "DLNA Digital Media Renderer"
         },
         "dlna_dms": {
@@ -2781,6 +3069,9 @@
           "categories": [
             "media_entertainment",
             "computers_network.nas_servers"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "DLNA Digital Media Server"
         }
@@ -2805,6 +3096,9 @@
       "categories": [
         "ai_voice.image_recognition"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -2814,6 +3108,9 @@
       "categories": [
         "security_safety.doorbells_intercoms"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2822,6 +3119,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -2851,6 +3151,9 @@
       "integration_type": "device",
       "categories": [
         "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2885,6 +3188,9 @@
       "integration_type": "device",
       "categories": [
         "water.meters_leak_detection"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -2933,6 +3239,9 @@
       "categories": [
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2942,6 +3251,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2950,6 +3262,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.building_automation"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push",
@@ -3008,6 +3323,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3018,6 +3336,9 @@
         "energy.meters_monitoring",
         "water.meters_leak_detection",
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "homewizard"
     },
@@ -3053,6 +3374,9 @@
         "climate.thermostats_heating",
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -3061,6 +3385,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -3083,6 +3410,9 @@
       "integration_type": "device",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3143,6 +3473,9 @@
         "sensors",
         "weather_alerts"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3163,6 +3496,9 @@
       "integration_type": "hub",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -3194,6 +3530,9 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -3202,6 +3541,9 @@
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3212,6 +3554,9 @@
       "categories": [
         "pets"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3220,6 +3565,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.locks_access"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -3281,6 +3629,9 @@
           "iot_class": "local_polling",
           "categories": [
             "lighting.bulbs_lamps"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Elgato Light"
         }
@@ -3346,6 +3697,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -3386,6 +3740,9 @@
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3444,6 +3801,9 @@
         "energy.meters_monitoring",
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3490,6 +3850,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3512,6 +3875,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3532,6 +3898,9 @@
       "integration_type": "device",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3554,6 +3923,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -3600,6 +3972,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3612,6 +3987,9 @@
           "iot_class": "local_polling",
           "categories": [
             "climate.thermostats_heating"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "eQ-3 MAX!"
         },
@@ -3634,6 +4012,9 @@
       "integration_type": "device",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -3682,6 +4063,9 @@
           "categories": [
             "lighting.bulbs_lamps",
             "plugs_switches"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "EufyHome"
         },
@@ -3734,6 +4118,9 @@
       "categories": [
         "lighting.lighting_systems"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -3753,6 +4140,9 @@
       "integration_type": "device",
       "categories": [
         "lighting.led_strips_controllers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3910,6 +4300,9 @@
       "categories": [
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3936,6 +4329,9 @@
       "integration_type": "service",
       "categories": [
         "finance"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3991,6 +4387,9 @@
       "integration_type": "service",
       "categories": [
         "media_entertainment.gaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4055,6 +4454,9 @@
           "categories": [
             "climate.fans_ventilation"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Flexit Nordic (BACnet)"
         }
       }
@@ -4080,6 +4482,9 @@
           "iot_class": "local_push",
           "categories": [
             "buttons_remotes"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Flic"
         },
@@ -4139,6 +4544,9 @@
       "categories": [
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4182,6 +4590,9 @@
       "categories": [
         "lighting.led_strips_controllers",
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -4246,6 +4657,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4256,6 +4670,9 @@
         "computers_network.routers_network",
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -4264,6 +4681,9 @@
       "integration_type": "device",
       "categories": [
         "security_safety.cameras"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4289,6 +4709,9 @@
         "lighting.bulbs_lamps",
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "shelly"
     },
     "free_mobile": {
@@ -4310,6 +4733,9 @@
         "computers_network.routers_network",
         "presence_location.network_presence",
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4380,6 +4806,9 @@
             "computers_network.routers_network",
             "presence_location.network_presence"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "FRITZ!Box Tools"
         },
         "fritzbox": {
@@ -4400,6 +4829,9 @@
           "iot_class": "local_polling",
           "categories": [
             "messaging_notifications.email_sms_calls"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "FRITZ!Box Call Monitor"
         }
@@ -4425,6 +4857,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4449,6 +4884,9 @@
           "supported_by": "advantage_air",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Fujitsu anywAIR"
         },
@@ -4497,6 +4935,9 @@
       "categories": [
         "plugs_switches",
         "lighting.lighting_systems"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -4566,6 +5007,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4574,6 +5018,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -4594,6 +5041,9 @@
       "categories": [
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4602,6 +5052,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4798,6 +5251,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4810,6 +5266,9 @@
           "iot_class": "local_polling",
           "categories": [
             "diy_makers.boards_hardware"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Global Cach\u00e9 GC-100"
         },
@@ -4833,6 +5292,9 @@
       "categories": [
         "energy.backup_power"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4842,6 +5304,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4850,6 +5315,9 @@
       "integration_type": "device",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5045,6 +5513,9 @@
           "categories": [
             "computers_network.routers_network"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Google Wifi"
         },
         "google": {
@@ -5080,6 +5551,9 @@
           "categories": [
             "media_entertainment.tv_streaming",
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Google Cast"
         },
@@ -5133,6 +5607,9 @@
           "categories": [
             "lighting"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Govee lights local"
         }
       }
@@ -5143,6 +5620,9 @@
       "categories": [
         "presence_location.trackers",
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5166,6 +5646,9 @@
       "categories": [
         "security_safety.doorbells_intercoms"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5174,6 +5657,9 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers.web_data_connectors"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -5187,6 +5673,9 @@
           "iot_class": "local_polling",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Gree Climate"
         },
@@ -5235,6 +5724,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -5264,6 +5756,9 @@
       "categories": [
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5272,6 +5767,9 @@
       "integration_type": "device",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5319,6 +5817,9 @@
         "health_wellbeing",
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5337,6 +5838,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -5345,6 +5849,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5366,6 +5873,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5384,6 +5894,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -5405,6 +5918,9 @@
       "categories": [
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5414,6 +5930,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -5422,6 +5941,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5451,6 +5973,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -5460,6 +5985,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5468,6 +5996,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -5483,6 +6014,9 @@
       "integration_type": "virtual",
       "categories": [
         "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "gree"
     },
@@ -5501,6 +6035,9 @@
           "iot_class": "local_polling",
           "categories": [
             "climate.fans_ventilation"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Helty Flow"
         },
@@ -5575,6 +6112,9 @@
           "categories": [
             "security_safety.cameras"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Hikvision"
         },
         "hikvisioncam": {
@@ -5583,6 +6123,9 @@
           "iot_class": "local_polling",
           "categories": [
             "security_safety.cameras"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Hikvision"
         }
@@ -5594,6 +6137,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5602,6 +6148,9 @@
       "integration_type": "hub",
       "categories": [
         "presence_location.network_presence"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -5637,6 +6186,9 @@
       "integration_type": "device",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -5723,6 +6275,9 @@
           "categories": [
             "hubs_protocols.smart_home_hubs"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Homematic"
         },
         "homematicip_cloud": {
@@ -5751,6 +6306,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5761,6 +6319,9 @@
         "energy.meters_monitoring",
         "water.meters_leak_detection",
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5821,6 +6382,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -5842,6 +6406,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5851,6 +6418,9 @@
       "categories": [
         "computers_network.nas_servers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -5859,6 +6429,9 @@
       "integration_type": "device",
       "categories": [
         "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5896,6 +6469,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5917,6 +6493,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5925,6 +6504,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -6011,6 +6593,9 @@
       "categories": [
         "lighting.led_strips_controllers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6032,6 +6617,9 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6040,6 +6628,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -6075,6 +6666,9 @@
       "categories": [
         "security_safety.locks_access"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -6096,6 +6690,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -6130,6 +6727,9 @@
       "categories": [
         "hubs_protocols.building_automation"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -6142,6 +6742,9 @@
           "supported_by": "sonos",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "IKEA SYMFONISK"
         },
@@ -6188,6 +6791,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6208,6 +6814,9 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.documents_photos"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6242,6 +6851,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6250,6 +6862,9 @@
       "integration_type": "device",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6260,6 +6875,9 @@
       "categories": [
         "diy_makers",
         "weather_alerts"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -6294,6 +6912,9 @@
       "categories": [
         "diy_makers.web_data_connectors"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
@@ -6323,6 +6944,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -6392,6 +7016,9 @@
         "appliances_cleaning",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "midea"
     },
     "iometer": {
@@ -6399,6 +7026,9 @@
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -6421,6 +7051,9 @@
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6455,6 +7088,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -6475,6 +7111,9 @@
       "integration_type": "device",
       "categories": [
         "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6566,6 +7205,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "israel_rail": {
@@ -6639,6 +7281,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6653,6 +7298,9 @@
       "integration_type": "service",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6697,6 +7345,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6732,6 +7383,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "kaiterra": {
@@ -6752,6 +7406,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6760,6 +7417,9 @@
       "integration_type": "hub",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -6770,6 +7430,9 @@
       "categories": [
         "productivity_information.documents_photos"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6778,6 +7441,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.ev_charging"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -6789,6 +7455,9 @@
         "computers_network.routers_network",
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6797,6 +7466,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -6851,6 +7523,9 @@
       "categories": [
         "presence_location.phones_companion_apps"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6903,6 +7578,9 @@
       "categories": [
         "plugs_switches"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6937,6 +7615,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6963,6 +7644,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6983,6 +7667,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -7055,6 +7742,9 @@
       "categories": [
         "messaging_notifications.push_notifications"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7109,6 +7799,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.building_automation"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7188,6 +7881,9 @@
         "energy.ev_charging",
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7265,6 +7961,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "LG Netcast"
         },
         "lg_soundbar": {
@@ -7273,6 +7972,9 @@
           "iot_class": "local_polling",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "LG Soundbars"
         },
@@ -7305,6 +8007,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "LG webOS TV"
         }
       }
@@ -7315,6 +8020,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7324,6 +8032,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7332,6 +8043,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -7354,6 +8068,9 @@
       "categories": [
         "media_entertainment.music_radio_services"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7374,6 +8091,9 @@
       "integration_type": "device",
       "categories": [
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7398,6 +8118,9 @@
         "plugs_switches",
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "assumed_state"
     },
@@ -7406,6 +8129,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "assumed_state"
@@ -7429,6 +8155,9 @@
         "lighting.bulbs_lamps",
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "shelly"
     },
     "linkplay": {
@@ -7436,6 +8165,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7446,6 +8178,9 @@
       "categories": [
         "presence_location.network_presence",
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -7476,6 +8211,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -7522,6 +8260,9 @@
         "appliances_cleaning",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "midea"
     },
     "livisi": {
@@ -7529,6 +8270,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7538,6 +8282,9 @@
       "integration_type": "service",
       "categories": [
         "ai_voice.ai_models"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7595,6 +8342,9 @@
       "categories": [
         "presence_location.phones_companion_apps"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -7621,6 +8371,9 @@
           "categories": [
             "media_entertainment.speakers_audio",
             "media_entertainment.music_radio_services"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Squeezebox (Lyrion Music Server)"
         }
@@ -7682,6 +8435,9 @@
       "categories": [
         "security_safety.locks_access"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -7725,6 +8481,9 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7740,6 +8499,9 @@
             "plugs_switches",
             "blinds_curtains"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Lutron"
         },
         "lutron_caseta": {
@@ -7751,6 +8513,9 @@
             "plugs_switches",
             "blinds_curtains"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Lutron Cas\u00e9ta"
         },
         "homeworks": {
@@ -7759,6 +8524,9 @@
           "iot_class": "local_push",
           "categories": [
             "lighting.lighting_systems"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Lutron Homeworks"
         }
@@ -7770,6 +8538,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "hunterdouglas_powerview"
     },
     "lw12wifi": {
@@ -7777,6 +8548,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.led_strips_controllers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -7787,6 +8561,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -7796,6 +8573,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "madvr": {
@@ -7803,6 +8583,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -7828,6 +8611,9 @@
           "supported_by": "denonavr",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Marantz"
         },
@@ -7860,6 +8646,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "marytts": {
@@ -7867,6 +8656,9 @@
       "integration_type": "hub",
       "categories": [
         "ai_voice.speech"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -7928,6 +8720,9 @@
       "categories": [
         "ai_voice.ai_models"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -7947,6 +8742,9 @@
       "integration_type": "service",
       "categories": [
         "productivity_information"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -7990,6 +8788,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -8121,6 +8922,9 @@
       "categories": [
         "plugs_switches",
         "sensors"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -8261,6 +9065,9 @@
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Midea ccm15 AC Controller"
         },
         "midea": {
@@ -8271,6 +9078,9 @@
             "climate.heat_pumps_air_conditioning",
             "appliances_cleaning",
             "climate.water_heaters"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Midea"
         }
@@ -8321,6 +9131,9 @@
         "computers_network.routers_network",
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8342,6 +9155,9 @@
       "integration_type": "service",
       "categories": [
         "media_entertainment.gaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -8393,6 +9209,9 @@
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Mitsubishi Comfort"
         }
       }
@@ -8402,6 +9221,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.cameras"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -8463,6 +9285,9 @@
         "climate.fans_ventilation",
         "lighting.bulbs_lamps"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8470,6 +9295,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -8550,6 +9378,9 @@
           "categories": [
             "blinds_curtains"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Motionblinds"
         },
         "motionblinds_ble": {
@@ -8575,6 +9406,9 @@
       "categories": [
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8584,6 +9418,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -8592,6 +9429,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.music_radio_services"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -8704,6 +9544,9 @@
       "categories": [
         "media_entertainment.music_radio_services"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -8712,6 +9555,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -8734,6 +9580,9 @@
       "categories": [
         "energy.solar_batteries",
         "climate.water_heaters"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -8770,6 +9619,9 @@
       "categories": [
         "plugs_switches",
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -8817,6 +9669,9 @@
       "categories": [
         "sensors.air_quality"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8838,6 +9693,9 @@
       "categories": [
         "lighting.lighting_systems"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -8846,6 +9704,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.building_automation"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -8908,6 +9769,9 @@
         "lighting.bulbs_lamps",
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "shelly"
     },
     "neopool": {
@@ -8927,6 +9791,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -8953,6 +9820,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -8967,6 +9837,9 @@
             "computers_network.routers_network",
             "presence_location.network_presence"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "NETGEAR"
         },
         "netgear_lte": {
@@ -8976,6 +9849,9 @@
           "categories": [
             "computers_network.routers_network",
             "messaging_notifications.email_sms_calls"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "NETGEAR LTE"
         }
@@ -8987,6 +9863,9 @@
       "categories": [
         "plugs_switches"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -8997,6 +9876,9 @@
         "climate.heat_pumps_air_conditioning",
         "appliances_cleaning",
         "climate.water_heaters"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "midea"
     },
@@ -9089,6 +9971,9 @@
       "categories": [
         "messaging_notifications.push_notifications"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -9135,6 +10020,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.building_automation"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -9193,6 +10081,9 @@
       "categories": [
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -9237,6 +10128,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -9307,6 +10201,9 @@
       "categories": [
         "energy.ev_charging"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -9369,6 +10266,9 @@
           "categories": [
             "security_safety.locks_access"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Nuki Bridge"
         }
       },
@@ -9390,6 +10290,9 @@
       "integration_type": "device",
       "categories": [
         "energy.backup_power"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -9424,6 +10327,9 @@
       "categories": [
         "security_safety.alarm_systems"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -9445,6 +10351,9 @@
       "categories": [
         "computers_network.nas_servers",
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling",
@@ -9468,6 +10377,9 @@
       "categories": [
         "messaging_notifications.email_sms_calls"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -9477,6 +10389,9 @@
       "categories": [
         "computers_network.printers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -9485,6 +10400,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -9496,6 +10414,9 @@
         "plugs_switches",
         "lighting.bulbs_lamps",
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "shelly"
     },
@@ -9554,6 +10475,9 @@
         "appliances_cleaning",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "midea"
     },
     "ollama": {
@@ -9561,6 +10485,9 @@
       "integration_type": "service",
       "categories": [
         "ai_voice.ai_models"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -9570,6 +10497,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -9640,6 +10570,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -9648,6 +10581,9 @@
       "integration_type": "device",
       "categories": [
         "security_safety.cameras"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -9731,6 +10667,9 @@
       "categories": [
         "energy.ev_charging"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -9752,6 +10691,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -9760,6 +10702,9 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -9770,6 +10715,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -9778,6 +10726,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.led_strips_controllers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -9855,6 +10806,9 @@
             "presence_location.network_presence",
             "computers_network.routers_network"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "OpenWrt (luci)"
         },
         "ubus": {
@@ -9864,6 +10818,9 @@
           "categories": [
             "presence_location.network_presence",
             "computers_network.routers_network"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "OpenWrt (ubus)"
         }
@@ -9875,6 +10832,9 @@
       "categories": [
         "presence_location.network_presence",
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -9896,6 +10856,9 @@
       "integration_type": "hub",
       "categories": [
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -9928,6 +10891,9 @@
       "integration_type": "device",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -9971,6 +10937,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -9979,6 +10948,9 @@
       "integration_type": "device",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10013,6 +10985,9 @@
       "integration_type": "service",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -10062,6 +11037,9 @@
         "energy.meters_monitoring",
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -10083,6 +11061,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -10096,6 +11077,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Panasonic Blu-Ray Player"
         },
         "panasonic_viera": {
@@ -10104,6 +11088,9 @@
           "iot_class": "local_polling",
           "categories": [
             "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Panasonic Viera"
         }
@@ -10114,6 +11101,9 @@
       "integration_type": "service",
       "categories": [
         "productivity_information.documents_photos"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10136,6 +11126,9 @@
       "integration_type": "device",
       "categories": [
         "energy.ev_charging"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10181,6 +11174,9 @@
       "categories": [
         "diy_makers.boards_hardware",
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -10244,6 +11240,9 @@
             "lighting.lighting_systems",
             "hubs_protocols.building_automation"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Philips Dynalite"
         },
         "hue": {
@@ -10286,6 +11285,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Philips TV"
         }
       }
@@ -10295,6 +11297,9 @@
       "integration_type": "device",
       "categories": [
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10357,6 +11362,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -10366,6 +11374,9 @@
       "categories": [
         "ai_voice.speech",
         "ai_voice.voice_assistants"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "wyoming"
     },
@@ -10386,6 +11397,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10416,6 +11430,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -10425,6 +11442,9 @@
       "categories": [
         "climate.thermostats_heating",
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10460,6 +11480,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -10480,6 +11503,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.nas_servers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10507,6 +11533,9 @@
           "categories": [
             "energy.meters_monitoring"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Powerfox Local"
         }
       }
@@ -10516,6 +11545,9 @@
       "integration_type": "device",
       "categories": [
         "climate.fans_ventilation"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10539,6 +11571,9 @@
         "climate.heat_pumps_air_conditioning",
         "appliances_cleaning",
         "climate.water_heaters"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "midea"
     },
@@ -10582,6 +11617,9 @@
         "diy_makers.boards_hardware",
         "plugs_switches"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -10590,6 +11628,9 @@
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -10642,6 +11683,9 @@
       "categories": [
         "computers_network.nas_servers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -10658,6 +11702,9 @@
       "integration_type": "device",
       "categories": [
         "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10702,6 +11749,9 @@
       "categories": [
         "media_entertainment.gaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -10724,6 +11774,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -10745,6 +11798,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.cameras"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -10815,6 +11871,9 @@
       "categories": [
         "computers_network.nas_servers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -10831,6 +11890,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.nas_servers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10882,6 +11944,9 @@
           "categories": [
             "computers_network.nas_servers"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "QNAP"
         },
         "qnap_qsw": {
@@ -10890,6 +11955,9 @@
           "iot_class": "local_polling",
           "categories": [
             "computers_network.routers_network"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "QNAP QSW"
         }
@@ -10922,6 +11990,9 @@
       "categories": [
         "presence_location.network_presence"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -10930,6 +12001,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.cameras"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -10941,6 +12015,9 @@
         "plugs_switches",
         "lighting.led_strips_controllers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -10949,6 +12026,9 @@
       "integration_type": "device",
       "categories": [
         "climate.air_purifiers_humidifiers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10970,6 +12050,9 @@
       "integration_type": "service",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -10993,6 +12076,9 @@
       "categories": [
         "climate.thermostats_heating"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -11002,6 +12088,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -11010,6 +12099,9 @@
       "integration_type": "device",
       "categories": [
         "computers_network.monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -11042,6 +12134,9 @@
       "integration_type": "device",
       "categories": [
         "garden_plants"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -11085,6 +12180,9 @@
           "categories": [
             "diy_makers.boards_hardware"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Raspberry Pi Remote GPIO"
         }
       }
@@ -11103,6 +12201,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -11135,6 +12236,9 @@
       "integration_type": "hub",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -11169,6 +12273,9 @@
       "categories": [
         "plugs_switches",
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling",
@@ -11241,6 +12348,9 @@
       "categories": [
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -11251,6 +12361,9 @@
         "security_safety.cameras",
         "security_safety.doorbells_intercoms"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -11259,6 +12372,9 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.printers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -11326,6 +12442,9 @@
       "categories": [
         "ai_voice.voice_assistants"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
@@ -11372,6 +12491,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -11433,6 +12555,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -11441,6 +12566,9 @@
       "integration_type": "device",
       "categories": [
         "appliances_cleaning.cleaning"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -11451,6 +12579,9 @@
       "categories": [
         "appliances_cleaning.cleaning"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -11459,6 +12590,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.music_radio_services"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -11471,6 +12605,9 @@
         "appliances_cleaning",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "midea"
     },
     "roth": {
@@ -11482,6 +12619,9 @@
           "iot_class": "local_polling",
           "categories": [
             "climate.thermostats_heating"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Roth Touchline"
         },
@@ -11539,6 +12679,9 @@
       "categories": [
         "computers_network.nas_servers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -11548,6 +12691,9 @@
       "categories": [
         "computers_network.routers_network",
         "presence_location.network_presence"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -11575,6 +12721,9 @@
           "categories": [
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Russound RNET"
         }
       }
@@ -11589,6 +12738,9 @@
           "categories": [
             "sensors",
             "hubs_protocols.wireless_protocols"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Ruuvi Gateway"
         },
@@ -11625,6 +12777,9 @@
       "categories": [
         "computers_network.nas_servers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -11633,6 +12788,9 @@
       "integration_type": "hub",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -11657,6 +12815,9 @@
           "iot_class": "local_polling",
           "categories": [
             "appliances_cleaning.cooking"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Samsung Family Hub"
         },
@@ -11689,6 +12850,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Samsung Smart TV"
         },
         "syncthru": {
@@ -11697,6 +12861,9 @@
           "iot_class": "local_polling",
           "categories": [
             "computers_network.printers"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Samsung SyncThru Printer"
         }
@@ -11719,6 +12886,9 @@
       "integration_type": "device",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -11803,6 +12973,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "screenlogic": {
@@ -11810,6 +12983,9 @@
       "integration_type": "hub",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -11819,6 +12995,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.nas_servers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -12047,6 +13226,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -12055,6 +13237,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.nas_servers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -12092,6 +13277,9 @@
             "lighting.bulbs_lamps",
             "energy.meters_monitoring"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Shelly"
         }
       },
@@ -12124,6 +13312,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -12269,6 +13460,9 @@
         "media_entertainment",
         "lighting"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -12295,6 +13489,9 @@
             "presence_location.network_presence",
             "computers_network.routers_network"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Sky Hub"
         },
         "sky_remote": {
@@ -12303,6 +13500,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Sky Remote Control"
         }
@@ -12350,6 +13550,9 @@
       "categories": [
         "health_wellbeing"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -12387,6 +13590,9 @@
           "categories": [
             "blinds_curtains"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Slide Local"
         }
       }
@@ -12397,6 +13603,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -12405,6 +13614,9 @@
       "integration_type": "device",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -12443,6 +13655,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "motion_blinds"
     },
     "smart_home": {
@@ -12450,6 +13665,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -12470,6 +13688,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -12553,6 +13774,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -12586,6 +13810,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -12595,6 +13822,9 @@
       "categories": [
         "computers_network.monitoring",
         "presence_location.network_presence"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -12670,6 +13900,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -12680,6 +13913,9 @@
         "energy.meters_monitoring",
         "plugs_switches"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -12688,6 +13924,9 @@
       "integration_type": "device",
       "categories": [
         "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -12710,6 +13949,9 @@
       "integration_type": "hub",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -12745,6 +13987,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -12753,6 +13998,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -12767,6 +14015,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Sony Bravia TV"
         },
         "ps4": {
@@ -12775,6 +14026,9 @@
           "iot_class": "local_polling",
           "categories": [
             "media_entertainment.gaming"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Sony PlayStation 4"
         },
@@ -12785,6 +14039,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Sony Projector"
         },
         "songpal": {
@@ -12793,6 +14050,9 @@
           "iot_class": "local_push",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Sony Songpal"
         },
@@ -12816,6 +14076,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -12833,6 +14096,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.alarm_systems"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -12866,6 +14132,9 @@
       "integration_type": "service",
       "categories": [
         "diy_makers.web_data_connectors"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push",
@@ -12938,6 +14207,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -12958,6 +14230,9 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers.web_data_connectors"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -12997,6 +14272,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -13005,6 +14283,9 @@
       "integration_type": "virtual",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "lyngdorf"
     },
@@ -13108,6 +14389,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -13179,6 +14463,9 @@
         "presence_location.network_presence",
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -13188,6 +14475,9 @@
       "categories": [
         "hubs_protocols.smart_home_hubs",
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -13236,6 +14526,9 @@
         "climate.water_heaters",
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
@@ -13257,6 +14550,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.nas_servers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -13285,6 +14581,9 @@
             "computers_network.nas_servers",
             "security_safety.cameras"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Synology DSM"
         },
         "synology_srm": {
@@ -13294,6 +14593,9 @@
           "categories": [
             "computers_network.routers_network",
             "presence_location.network_presence"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Synology SRM"
         }
@@ -13314,6 +14616,9 @@
       "categories": [
         "computers_network.monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -13332,6 +14637,9 @@
       "integration_type": "device",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -13366,6 +14674,9 @@
       "integration_type": "device",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -13438,6 +14749,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -13446,6 +14760,9 @@
       "integration_type": "hub",
       "categories": [
         "diy_makers.web_data_connectors"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -13456,6 +14773,9 @@
       "categories": [
         "energy.ev_charging"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -13465,6 +14785,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -13473,6 +14796,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.locks_access"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -13534,6 +14860,9 @@
       "categories": [
         "diy_makers.web_data_connectors"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -13542,6 +14871,9 @@
       "integration_type": "device",
       "categories": [
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -13565,6 +14897,9 @@
           "categories": [
             "energy.solar_batteries"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Tesla Powerwall"
         },
         "tesla_wall_connector": {
@@ -13573,6 +14908,9 @@
           "iot_class": "local_polling",
           "categories": [
             "energy.ev_charging"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Tesla Wall Connector"
         },
@@ -13624,6 +14962,9 @@
       "integration_type": "device",
       "categories": [
         "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -13725,6 +15066,9 @@
       "categories": [
         "appliances_cleaning.cleaning"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -13742,6 +15086,9 @@
         "presence_location.network_presence",
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -13750,6 +15097,9 @@
       "integration_type": "service",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling",
@@ -13814,6 +15164,9 @@
           "categories": [
             "appliances_cleaning.cooking"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Tilt Pi"
         }
       }
@@ -13868,6 +15221,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -13877,6 +15233,9 @@
       "categories": [
         "presence_location.network_presence",
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -13922,6 +15281,9 @@
       "categories": [
         "vehicles_transport.cars_evs"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -13932,6 +15294,9 @@
         "climate.heat_pumps_air_conditioning",
         "appliances_cleaning",
         "climate.water_heaters"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "midea"
     },
@@ -13959,6 +15324,9 @@
             "lighting.bulbs_lamps",
             "security_safety.cameras"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "TP-Link Smart Home"
         },
         "tplink_omada": {
@@ -13967,6 +15335,9 @@
           "iot_class": "local_polling",
           "categories": [
             "computers_network.routers_network"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "TP-Link Omada"
         },
@@ -13978,6 +15349,9 @@
             "plugs_switches",
             "lighting.bulbs_lamps",
             "security_safety.cameras"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Tapo"
         }
@@ -14008,6 +15382,9 @@
           "iot_class": "local_push",
           "categories": [
             "presence_location.trackers"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Traccar Server"
         }
@@ -14100,6 +15477,9 @@
           "categories": [
             "climate.thermostats_heating"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Trane Local"
         }
       }
@@ -14109,6 +15489,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network.nas_servers"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -14220,6 +15603,9 @@
       "categories": [
         "lighting.led_strips_controllers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14270,6 +15656,9 @@
           "categories": [
             "computers_network.routers_network"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Ubiquiti airOS"
         },
         "unifi": {
@@ -14280,6 +15669,9 @@
             "computers_network.routers_network",
             "presence_location.network_presence"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "UniFi Network"
         },
         "unifi_access": {
@@ -14288,6 +15680,9 @@
           "iot_class": "local_push",
           "categories": [
             "security_safety.locks_access"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "UniFi Access"
         },
@@ -14298,6 +15693,9 @@
           "categories": [
             "presence_location.network_presence"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "UniFi AP"
         },
         "unifiprotect": {
@@ -14307,6 +15705,9 @@
           "categories": [
             "security_safety.cameras",
             "security_safety.doorbells_intercoms"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "UniFi Protect"
         }
@@ -14335,6 +15736,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -14404,6 +15808,9 @@
         "presence_location.network_presence",
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -14425,6 +15832,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14433,6 +15843,9 @@
       "integration_type": "virtual",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "motion_blinds"
     },
@@ -14488,6 +15901,9 @@
       "categories": [
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -14496,6 +15912,9 @@
       "integration_type": "device",
       "categories": [
         "energy.ev_charging"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -14506,6 +15925,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "pooldose"
     },
     "vallox": {
@@ -14513,6 +15935,9 @@
       "integration_type": "device",
       "categories": [
         "climate.fans_ventilation"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -14524,6 +15949,9 @@
         "climate.heat_pumps_air_conditioning",
         "appliances_cleaning",
         "climate.water_heaters"
+      ],
+      "connectivity": [
+        "network"
       ],
       "supported_by": "midea"
     },
@@ -14543,6 +15971,9 @@
       "integration_type": "hub",
       "categories": [
         "garden_plants"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -14566,6 +15997,9 @@
       "categories": [
         "blinds_curtains"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14574,6 +16008,9 @@
       "integration_type": "device",
       "categories": [
         "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -14617,6 +16054,9 @@
       "categories": [
         "sensors",
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -14678,6 +16118,9 @@
           "categories": [
             "energy.solar_batteries"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Victron GX"
         },
         "victron_ble": {
@@ -14712,6 +16155,9 @@
       "categories": [
         "computers_network.routers_network"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14745,6 +16191,9 @@
       "categories": [
         "security_safety.cameras"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14755,6 +16204,9 @@
         "media_entertainment.tv_streaming",
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14764,6 +16216,9 @@
       "categories": [
         "media_entertainment"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14772,6 +16227,9 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.routers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -14803,6 +16261,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14811,6 +16272,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -14844,6 +16308,9 @@
         "appliances_cleaning",
         "climate.water_heaters"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "midea"
     },
     "wake_on_lan": {
@@ -14851,6 +16318,9 @@
       "integration_type": "service",
       "categories": [
         "computers_network"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -14897,6 +16367,9 @@
       "categories": [
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -14930,6 +16403,9 @@
       "categories": [
         "energy.meters_monitoring"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -14953,6 +16429,9 @@
           "iot_class": "local_push",
           "categories": [
             "weather_alerts"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "WeatherFlow"
         },
@@ -14989,6 +16468,9 @@
       "categories": [
         "computers_network.nas_servers"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -15010,6 +16492,9 @@
       "categories": [
         "plugs_switches",
         "lighting.bulbs_lamps"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -15035,6 +16520,9 @@
         "ai_voice.speech",
         "ai_voice.voice_assistants"
       ],
+      "connectivity": [
+        "network"
+      ],
       "supported_by": "wyoming"
     },
     "whois": {
@@ -15055,6 +16543,9 @@
       "categories": [
         "sensors"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -15063,6 +16554,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -15074,6 +16568,9 @@
         "plugs_switches",
         "lighting",
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -15121,6 +16618,9 @@
         "lighting.bulbs_lamps",
         "plugs_switches"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -15131,6 +16631,9 @@
         "lighting.led_strips_controllers",
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -15139,6 +16642,9 @@
       "integration_type": "hub",
       "categories": [
         "blinds_curtains"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -15192,6 +16698,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -15200,6 +16709,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -15224,6 +16736,9 @@
         "ai_voice.speech",
         "ai_voice.voice_assistants"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -15242,6 +16757,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.cameras"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -15294,6 +16812,9 @@
           "categories": [
             "media_entertainment.tv_streaming"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Xiaomi TV"
         },
         "xiaomi_weather": {
@@ -15315,6 +16836,9 @@
           "categories": [
             "security_safety.cameras",
             "presence_location.network_presence"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Xiaomi"
         }
@@ -15338,6 +16862,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -15438,6 +16965,9 @@
           "categories": [
             "media_entertainment.speakers_audio"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Yamaha Network Receivers"
         },
         "yamaha_musiccast": {
@@ -15446,6 +16976,9 @@
           "iot_class": "local_push",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "MusicCast"
         }
@@ -15486,6 +17019,9 @@
       "categories": [
         "garden_plants"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -15499,6 +17035,9 @@
           "categories": [
             "lighting.bulbs_lamps"
           ],
+          "connectivity": [
+            "network"
+          ],
           "name": "Yeelight"
         },
         "yeelightsunflower": {
@@ -15507,6 +17046,9 @@
           "iot_class": "local_polling",
           "categories": [
             "lighting.bulbs_lamps"
+          ],
+          "connectivity": [
+            "network"
           ],
           "name": "Yeelight Sunflower"
         }
@@ -15517,6 +17059,9 @@
       "integration_type": "device",
       "categories": [
         "security_safety.cameras"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -15552,6 +17097,9 @@
         "energy.meters_monitoring",
         "water.meters_leak_detection"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -15560,6 +17108,9 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -15590,6 +17141,9 @@
       "categories": [
         "energy.solar_batteries"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -15608,6 +17162,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "network"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -15616,6 +17173,9 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -15626,6 +17186,9 @@
       "categories": [
         "plugs_switches",
         "hubs_protocols.smart_home_hubs"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -15666,6 +17229,9 @@
       "integration_type": "hub",
       "categories": [
         "security_safety.cameras"
+      ],
+      "connectivity": [
+        "network"
       ],
       "config_flow": false,
       "iot_class": "local_polling"

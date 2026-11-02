@@ -5,6 +5,7 @@
   "categories": ["computers_network.monitoring"],
   "codeowners": ["@timmo001"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["media_source"],
   "documentation": "https://www.home-assistant.io/integrations/system_bridge",
   "integration_type": "device",
