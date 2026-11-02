@@ -4,8 +4,9 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pyimouapi.const import PARAM_REF, PARAM_STATE
+from pyimouapi.const import PARAM_REF, PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException
+from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -20,6 +21,7 @@ from homeassistant.components.imou.const import (
     PARAM_OVERCHARGE_SWITCH,
     PARAM_PLUG_SWITCH,
 )
+from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -193,3 +195,86 @@ async def test_countdown_expires_to_zero(
 
     assert hass.states.get(entity_id).state == "0.0"
     assert device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] == "0"
+
+
+@pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [PLUG_MOCK_DEVICES], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_countdown_cancelled_when_device_leaves_account(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Removing the last device cancels its local countdown before sync_all."""
+    entity_id = "number.smart_plug_countdown_timer_min"
+    device = PLUG_MOCK_DEVICES[0]
+    device_key = device.device_id
+    coordinator = mock_config_entry.runtime_data
+
+    async def _set_countdown(dev: ImouHaDevice, text_type: str, value: str) -> None:
+        device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] = value
+
+    mock_imou_ha_device_manager.async_set_text_value.side_effect = _set_countdown
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 10},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert coordinator.countdown.ends_at(device_key) is not None
+
+    mock_imou_ha_device_manager.async_get_devices.return_value = []
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.countdown.ends_at(device_key) is None
+
+
+@pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [PLUG_MOCK_DEVICES], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_countdown_preserves_deadline_while_offline(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Offline status polls must not reset the local countdown from stale text."""
+    entity_id = "number.smart_plug_countdown_timer_min"
+    device = PLUG_MOCK_DEVICES[0]
+    device_key = device.device_id
+    coordinator = mock_config_entry.runtime_data
+
+    async def _set_countdown(dev: ImouHaDevice, text_type: str, value: str) -> None:
+        device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] = value
+
+    mock_imou_ha_device_manager.async_set_text_value.side_effect = _set_countdown
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 10},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert coordinator.countdown.remaining_minutes(device_key) == 9
+
+    async def _mark_offline(devices: list[ImouHaDevice]) -> set[str]:
+        device.sensors[PARAM_STATUS][PARAM_STATE] = DeviceStatus.OFFLINE.value
+        return set()
+
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = _mark_offline
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] == "10"
+    assert coordinator.countdown.remaining_minutes(device_key) == 7

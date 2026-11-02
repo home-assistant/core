@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from math import ceil
 from typing import TYPE_CHECKING
 
-from pyimouapi.const import PARAM_STATE
-from pyimouapi.ha_device import ImouHaDevice
+from pyimouapi.const import PARAM_STATE, PARAM_STATUS
+from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import (
@@ -96,6 +96,10 @@ class CountdownTracker:
         device: ImouHaDevice,
     ) -> None:
         """Replace the local clock with remaining minutes from a cloud refresh."""
+        status = device.sensors.get(PARAM_STATUS, {}).get(PARAM_STATE)
+        if status == DeviceStatus.OFFLINE.value:
+            # Offline refreshes keep the last countdown text; do not reset the clock.
+            return
         self.start_minutes(
             hass,
             coordinator,
@@ -110,6 +114,12 @@ class CountdownTracker:
         for device in coordinator.devices:
             if PARAM_COUNT_DOWN_SWITCH in device.texts:
                 self.sync_from_device(hass, coordinator, device)
+
+    def cancel_device(self, device_key: str) -> None:
+        """Drop the local clock for a device that left the account."""
+        self._cancel_expire(device_key)
+        self._ends.pop(device_key, None)
+        self._maybe_stop_tick()
 
     def async_unload(self) -> None:
         """Drop every timer when the config entry unloads."""
