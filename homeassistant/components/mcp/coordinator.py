@@ -8,6 +8,12 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 import httpx2
+
+# The mcp library imports jsonschema only when it first checks a tool's
+# structured content, and that import reads the JSON Schema meta-schemas from
+# disk. Import it here, while the integration is loaded in the executor, so
+# that file I/O does not happen inside the event loop.
+import jsonschema  # noqa: F401
 from mcp import MCPError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
