@@ -194,7 +194,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
         else:
             until = dt_util.now() + duration
 
-
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )

@@ -111,7 +111,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         else:
             until = dt_util.now() + duration
 
-
         if state:
             await self.coordinator.call_client_api(self._evo_device.set_on(until=until))
         else:
