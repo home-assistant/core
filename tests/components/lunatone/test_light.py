@@ -276,10 +276,17 @@ async def test_turn_on_off_broadcast_last_brightness(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the broadcast light can be turned on and off and last brightness is set correctly."""
+    turn_on_brightness_value = 80.0
     line_id = mock_lunatone_dali_broadcast.line
     entity_id = f"light.dali_line_{line_id}"
     light_status = iter(
-        ((True, 80.0), (False, 50.0), (False, 0.0), (True, 80.0), (False, 0.0))
+        (
+            (True, turn_on_brightness_value),
+            (False, 50.0),
+            (False, 0.0),
+            (True, turn_on_brightness_value),
+            (False, 0.0),
+        )
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -302,7 +309,9 @@ async def test_turn_on_off_broadcast_last_brightness(
     )
 
     assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 1
-    mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
+    mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited_with(
+        turn_on_brightness_value
+    )
 
     state = hass.states.get(entity_id)
     assert state
@@ -345,7 +354,9 @@ async def test_turn_on_off_broadcast_last_brightness(
     )
 
     assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 4
-    mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
+    mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited_with(
+        turn_on_brightness_value
+    )
 
     state = hass.states.get(entity_id)
     assert state
