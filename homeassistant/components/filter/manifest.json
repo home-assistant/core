@@ -4,7 +4,6 @@
   "categories": ["helpers.calculate_value"],
   "codeowners": ["@dgomes"],
   "config_flow": true,
-  "connectivity": ["host"],
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/filter",
   "integration_type": "helper",

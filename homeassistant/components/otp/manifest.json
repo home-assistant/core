@@ -4,7 +4,6 @@
   "categories": ["helpers"],
   "codeowners": [],
   "config_flow": true,
-  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/otp",
   "integration_type": "helper",
   "iot_class": "local_polling",

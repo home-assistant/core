@@ -4,7 +4,6 @@
   "categories": ["productivity_information.shopping_groceries"],
   "codeowners": [],
   "config_flow": true,
-  "connectivity": ["host"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/shopping_list",
   "iot_class": "local_push",

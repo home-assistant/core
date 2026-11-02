@@ -3,7 +3,6 @@
   "name": "Timer",
   "categories": ["helpers.store_value"],
   "codeowners": [],
-  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/timer",
   "integration_type": "helper",
   "quality_scale": "internal"

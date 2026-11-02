@@ -8,7 +8,6 @@
   ],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
-  "connectivity": ["host"],
   "dependencies": ["hardware", "homeassistant_hardware", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_yellow",
   "integration_type": "hardware",

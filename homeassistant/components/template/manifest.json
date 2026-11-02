@@ -5,7 +5,6 @@
   "categories": ["helpers.calculate_value"],
   "codeowners": ["@Petro31", "@home-assistant/core"],
   "config_flow": true,
-  "connectivity": ["host"],
   "dependencies": ["blueprint"],
   "documentation": "https://www.home-assistant.io/integrations/template",
   "integration_type": "helper",

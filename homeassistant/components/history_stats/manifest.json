@@ -4,7 +4,6 @@
   "categories": ["helpers.calculate_value"],
   "codeowners": [],
   "config_flow": true,
-  "connectivity": ["host"],
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/history_stats",
   "integration_type": "helper",
