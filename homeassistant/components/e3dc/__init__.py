@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> None
     entry.async_on_unload(device.close)
 
     coordinator = E3dcDataUpdateCoordinator(hass, entry, device)
-    # The first poll also reads the identity
+    # The first poll also reads the identity and probes which blocks the station serves
     await coordinator.async_config_entry_first_refresh()
     if device.serial_number != entry.unique_id:
         raise ConfigEntryError(

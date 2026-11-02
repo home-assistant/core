@@ -23,7 +23,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_SERIAL, seed, seed_identity
 
-PV_POWER = "sensor.s10_x_pv_power"
+PV_POWER = "sensor.e3_dc_s10_x_pv_power"
 
 
 async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:

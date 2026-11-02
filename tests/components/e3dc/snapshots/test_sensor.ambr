@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.s10_x_additional_feeder_power-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_additional_feeder_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_additional_feeder_power',
+    'entity_id': 'sensor.e3_dc_s10_x_additional_feeder_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,23 +41,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.s10_x_additional_feeder_power-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_additional_feeder_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X Additional feeder power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Additional feeder power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_additional_feeder_power',
+    'entity_id': 'sensor.e3_dc_s10_x_additional_feeder_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '300',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_battery-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_battery',
+    'entity_id': 'sensor.e3_dc_s10_x_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -96,23 +96,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_battery-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X Battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_battery',
+    'entity_id': 'sensor.e3_dc_s10_x_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '87',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_battery_power-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_battery_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -128,7 +128,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_battery_power',
+    'entity_id': 'sensor.e3_dc_s10_x_battery_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -154,23 +154,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.s10_x_battery_power-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_battery_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X Battery power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Battery power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_battery_power',
+    'entity_id': 'sensor.e3_dc_s10_x_battery_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-1200',
+    'state': '1200',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_emergency_power-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_emergency_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -192,7 +192,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_emergency_power',
+    'entity_id': 'sensor.e3_dc_s10_x_emergency_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,11 +215,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.s10_x_emergency_power-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_emergency_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X Emergency power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Emergency power',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'not_supported',
         'active',
@@ -229,14 +229,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_emergency_power',
+    'entity_id': 'sensor.e3_dc_s10_x_emergency_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'inactive',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_grid_power-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_grid_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -252,7 +252,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_grid_power',
+    'entity_id': 'sensor.e3_dc_s10_x_grid_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -278,23 +278,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.s10_x_grid_power-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_grid_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X Grid power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Grid power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_grid_power',
+    'entity_id': 'sensor.e3_dc_s10_x_grid_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-600',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_house_power-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_house_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -310,7 +310,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_house_power',
+    'entity_id': 'sensor.e3_dc_s10_x_house_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -336,23 +336,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.s10_x_house_power-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_house_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X House power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X House power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_house_power',
+    'entity_id': 'sensor.e3_dc_s10_x_house_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '870',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_pv_power-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_pv_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -368,7 +368,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_pv_power',
+    'entity_id': 'sensor.e3_dc_s10_x_pv_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -394,23 +394,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.s10_x_pv_power-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_pv_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X PV power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X PV power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_pv_power',
+    'entity_id': 'sensor.e3_dc_s10_x_pv_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5321',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_self_consumption-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_self_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -426,7 +426,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_self_consumption',
+    'entity_id': 'sensor.e3_dc_s10_x_self_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -449,22 +449,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_self_consumption-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X Self-consumption',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Self-consumption',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_self_consumption',
+    'entity_id': 'sensor.e3_dc_s10_x_self_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '82',
+    'state': '89',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_self_sufficiency-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_self_sufficiency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -480,7 +480,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_self_sufficiency',
+    'entity_id': 'sensor.e3_dc_s10_x_self_sufficiency',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -503,22 +503,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_self_sufficiency-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_self_sufficiency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X Self-sufficiency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Self-sufficiency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_self_sufficiency',
+    'entity_id': 'sensor.e3_dc_s10_x_self_sufficiency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '26',
+    'state': '100',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_wallbox_power-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_wallbox_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -534,7 +534,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_wallbox_power',
+    'entity_id': 'sensor.e3_dc_s10_x_wallbox_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -560,23 +560,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.s10_x_wallbox_power-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_wallbox_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X Wallbox power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Wallbox power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_wallbox_power',
+    'entity_id': 'sensor.e3_dc_s10_x_wallbox_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11000',
+    'state': '2951',
   })
 # ---
-# name: test_all_entities[sensor.s10_x_wallbox_solar_power-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_wallbox_solar_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -592,7 +592,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.s10_x_wallbox_solar_power',
+    'entity_id': 'sensor.e3_dc_s10_x_wallbox_solar_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -618,19 +618,19 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.s10_x_wallbox_solar_power-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_wallbox_solar_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S10 X Wallbox solar power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Wallbox solar power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.s10_x_wallbox_solar_power',
+    'entity_id': 'sensor.e3_dc_s10_x_wallbox_solar_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4200',
+    'state': '2951',
   })
 # ---

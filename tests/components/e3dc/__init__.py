@@ -7,6 +7,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 
 MOCK_SERIAL = "S10-12345678912"
 MOCK_MODEL = "S10 X"
+MOCK_TITLE = f"E3/DC {MOCK_MODEL}"
 MOCK_FIRMWARE = "S10_2026_04"
 
 MOCK_ENTRY_DATA = {CONF_HOST: "192.168.1.100", CONF_PORT: 502}
@@ -54,15 +55,18 @@ def seed_power_station(unit: MockModbusUnit) -> None:
     seed(
         unit,
         {
+            # PV and the additional feeder supply what the battery, house, wallbox
+            # and grid take
             40068: int32_words(5321),  # PV power
-            40070: int32_words(-1200),  # Battery power, discharging
+            40070: int32_words(1200),  # Battery power, charging
             40072: int32_words(870),  # House power
             40074: int32_words(-600),  # Grid power, feeding in
-            40078: int32_words(11000),  # Wallbox power
-            40080: int32_words(4200),  # Wallbox solar power
-            40082: 6738,  # Self-sufficiency 26 % (high byte), self-consumption 82 %
+            40076: int32_words(300),  # Additional feeder power
+            40078: int32_words(2951),  # Wallbox power
+            40080: int32_words(2951),  # Wallbox solar power
+            40082: (100 << 8) | 89,  # Self-sufficiency 100 %, self-consumption 89 %
             40083: 87,  # Battery state of charge, in %
             40084: 2,  # Emergency power not active
-            40085: 0b0010100,  # EMS status: emergency power ready, feed-in limited
+            40085: 0b0000100,  # EMS status: emergency power ready
         },
     )

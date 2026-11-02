@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
-from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL, seed, seed_identity
+from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL, MOCK_TITLE, seed, seed_identity
 
 
 def _patch_temporary_unit(connection: MockModbusConnection) -> _patch[AsyncMock]:
@@ -45,7 +45,7 @@ def identified() -> MockModbusConnection:
 @pytest.mark.parametrize(
     ("model", "title"),
     [
-        pytest.param(MOCK_MODEL, f"E3/DC {MOCK_MODEL}", id="model"),
+        pytest.param(MOCK_MODEL, MOCK_TITLE, id="model"),
         pytest.param("one", "E3/DC One", id="lower_case_model"),
         pytest.param("", "E3/DC", id="no_model"),
     ],
@@ -79,7 +79,6 @@ async def test_user_step_success(
 @pytest.mark.parametrize(
     ("error", "expected"),
     [
-        pytest.param(ModbusTimeoutError(), "cannot_connect", id="timeout"),
         pytest.param(HomeAssistantError("in use"), "cannot_connect", id="in_use"),
         pytest.param(RuntimeError("bug"), "unknown", id="unexpected"),
     ],
@@ -91,7 +90,7 @@ async def test_user_step_cannot_connect(
     error: Exception,
     expected: str,
 ) -> None:
-    """Test the form shows an error when the connection fails."""
+    """Test the form shows an error when opening the connection fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -105,6 +104,30 @@ async def test_user_step_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected}
 
+    with _patch_temporary_unit(identified):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_ENTRY_DATA
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_timeout(
+    hass: HomeAssistant, identified: MockModbusConnection
+) -> None:
+    """Test the form shows an error when the power station does not answer."""
+    identified.for_unit(1).fail_requests(ModbusTimeoutError())
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with _patch_temporary_unit(identified):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_ENTRY_DATA
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    identified.for_unit(1).fail_requests(None)
     with _patch_temporary_unit(identified):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_ENTRY_DATA
