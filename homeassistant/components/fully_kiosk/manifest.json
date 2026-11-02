@@ -5,6 +5,7 @@
   "categories": ["computers_network"],
   "codeowners": ["@cgarwood"],
   "config_flow": true,
+  "connectivity": ["mqtt", "network"],
   "dhcp": [
     {
       "registered_devices": true

@@ -1,6 +1,6 @@
 """Types for OPNsense routers."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from aiopnsense import OPNsenseClient
@@ -14,6 +14,7 @@ class OPNsenseRuntimeData:
 
     client: OPNsenseClient
     tracker_interfaces: list[str]
+    tracked_devices: set[str] = field(default_factory=set)
 
 
 type DeviceDetails = dict[str, Any]

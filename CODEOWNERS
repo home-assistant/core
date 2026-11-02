@@ -2263,8 +2263,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/yandex_transport/ @rishatik92 @devbis
 /homeassistant/components/yardian/ @aeon-matrix
 /tests/components/yardian/ @aeon-matrix
-/homeassistant/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
-/tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
+/homeassistant/components/yeelight/ @shenxn @starkillerOG @alexyao2015
+/tests/components/yeelight/ @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward
 /homeassistant/components/yi/ @bachya
 /homeassistant/components/yolink/ @matrixd2
