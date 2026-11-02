@@ -74,8 +74,8 @@ grpcio-reflection==1.83.1
 # runtime requirement install cannot pull in a botocore version that is
 # incompatible with aiobotocore.
 # see https://github.com/home-assistant/core/issues/167399
-boto3==1.42.97
-botocore==1.42.97
+boto3==1.43.117
+botocore==1.43.117
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0

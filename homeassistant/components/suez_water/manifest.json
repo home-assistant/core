@@ -5,6 +5,7 @@
   "categories": ["water.meters_leak_detection"],
   "codeowners": ["@ooii", "@jb101010-2"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/suez_water",
   "integration_type": "service",
   "iot_class": "cloud_polling",
