@@ -4495,13 +4495,12 @@ async def test_devices_membership_by_entry_supported_by_id_deprecated(
     "integration_frame_path", ["custom_components/test_integration"]
 )
 @pytest.mark.usefixtures("mock_integration_frame")
-async def test_get_or_create_reports_each_deprecation_once(
+async def test_get_or_create_reports_deprecation_once(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a call with several deprecated arguments reports each of them once."""
-    invalid_type = "passes a non-string value of type int as default_manufacturer"
+    """Test a deprecated argument is reported once over repeated calls."""
     deprecated = "with a deprecated `default_manufacturer` parameter"
 
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
@@ -4509,11 +4508,27 @@ async def test_get_or_create_reports_each_deprecation_once(
             device_registry.async_get_or_create(
                 config_entry_id=mock_config_entry.entry_id,
                 identifiers={("bridgeid", "0123")},
-                default_manufacturer=123,
+                default_manufacturer="manufacturer",
             )
 
-    assert caplog.text.count(invalid_type) == 1
     assert caplog.text.count(deprecated) == 1
+
+
+@pytest.mark.parametrize("field", ["default_manufacturer", "default_model"])
+async def test_get_or_create_deprecated_defaults_invalid_type(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    field: str,
+) -> None:
+    """Test the deprecated default fields reject non-string values."""
+    with pytest.raises(
+        TypeError, match=f"Device registry field {field} must be a string, got int"
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("bridgeid", "0123")},
+            **{field: 123},
+        )
 
 
 @pytest.mark.parametrize(
@@ -7741,10 +7756,8 @@ async def test_disable_config_entry_disables_devices(
         (URL("https://"), pytest.raises(ValueError)),
         (URL("gopher://localhost"), pytest.raises(ValueError)),
         (URL("homeassistant://"), pytest.raises(ValueError)),
-        # Exception implements __str__
-        (Exception("https://example.com"), nullcontext()),
-        (Exception("https://"), pytest.raises(ValueError)),
-        (Exception(), pytest.raises(ValueError)),
+        (Exception("https://example.com"), pytest.raises(TypeError)),
+        (1, pytest.raises(TypeError)),
     ],
 )
 async def test_device_info_configuration_url_validation(
@@ -7789,25 +7802,14 @@ async def test_device_info_configuration_url_validation(
         "sw_version",
     ],
 )
-@pytest.mark.parametrize(
-    ("value", "stored_value", "expected_log"),
-    [
-        (1.0, "1.0", "passes a non-string value of type float as {field}"),
-        ((1, 2), "(1, 2)", "passes a non-string value of type tuple as {field}"),
-        ("hw-1", "hw-1", ""),
-        (None, None, ""),
-    ],
-)
+@pytest.mark.parametrize("value", ["hw-1", None])
 async def test_device_info_string_field_validation(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    caplog: pytest.LogCaptureFixture,
     field: str,
-    value: Any,
-    stored_value: str | None,
-    expected_log: str,
+    value: str | None,
 ) -> None:
-    """Test string device info fields are validated and coerced."""
+    """Test string device info fields accept strings and None."""
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry()
@@ -7819,7 +7821,7 @@ async def test_device_info_string_field_validation(
         name="name",
         **{field: value},
     )
-    assert getattr(entry, field) == stored_value
+    assert getattr(entry, field) == value
 
     update_device = device_registry.async_get_or_create(
         config_entry_id=config_entry_2.entry_id,
@@ -7828,9 +7830,50 @@ async def test_device_info_string_field_validation(
     )
     updated = device_registry.async_update_device(update_device.id, **{field: value})
     assert updated is not None
-    assert getattr(updated, field) == stored_value
+    assert getattr(updated, field) == value
 
-    assert expected_log.format(field=field) in caplog.text
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "hw_version",
+        "manufacturer",
+        "model",
+        "model_id",
+        "serial_number",
+        "sw_version",
+    ],
+)
+@pytest.mark.parametrize(("value", "type_name"), [(1.0, "float"), ((1, 2), "tuple")])
+async def test_device_info_string_field_invalid_type(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    field: str,
+    value: Any,
+    type_name: str,
+) -> None:
+    """Test string device info fields reject non-string values."""
+    config_entry_1 = MockConfigEntry()
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry()
+    config_entry_2.add_to_hass(hass)
+    expected = f"Device registry field {field} must be a string, got {type_name}"
+
+    with pytest.raises(TypeError, match=expected):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry_1.entry_id,
+            identifiers={("something", "1234")},
+            name="name",
+            **{field: value},
+        )
+
+    update_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        identifiers={("something", "5678")},
+        name="name",
+    )
+    with pytest.raises(TypeError, match=expected):
+        device_registry.async_update_device(update_device.id, **{field: value})
 
 
 @pytest.mark.parametrize("load_registries", [False])
