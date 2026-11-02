@@ -1,0 +1,70 @@
+# serializer version: 1
+# name: test_media_player[media_player.bravia_tv_model-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'HDMI 1',
+        'HDMI 2',
+        'AV/Component',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('braviatv', 'very_unique_string')]>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.bravia_tv_model',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.TV: 'tv'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'braviatv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 155581>,
+    'translation_key': None,
+    'unique_id': 'very_unique_string',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player[media_player.bravia_tv_model-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BRAVIA TV-Model',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: 'extInput:hdmi?port=1',
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'HDMI 1',
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'HDMI 1',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'HDMI 1',
+        'HDMI 2',
+        'AV/Component',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 155581>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.25,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.bravia_tv_model',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
