@@ -5,6 +5,7 @@
   "categories": ["media_entertainment"],
   "codeowners": ["@chishm"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/dlna_dmr",
   "integration_type": "device",

@@ -9,7 +9,7 @@ from homeassistant.helpers.typing import StateType
 DOMAIN: Final = "palazzetti"
 PALAZZETTI: Final = "Palazzetti"
 LOGGER = logging.getLogger(__package__)
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=60)
 ON_OFF_NOT_AVAILABLE = "on_off_not_available"
 ERROR_INVALID_FAN_MODE = "invalid_fan_mode"
 ERROR_INVALID_TARGET_TEMPERATURE = "invalid_target_temperature"

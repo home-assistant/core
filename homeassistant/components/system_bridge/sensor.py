@@ -620,6 +620,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="cpu_power_package",
         translation_key="cpu_power_package",
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
@@ -1133,6 +1134,7 @@ async def async_setup_entry(
                         translation_key="gpu_power_usage",
                         translation_placeholders={"gpu_name": gpu.name},
                         entity_registry_enabled_default=False,
+                        device_class=SensorDeviceClass.POWER,
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfPower.WATT,
                         value=lambda data, k=index: gpu_power_usage(data, k),
@@ -1227,6 +1229,7 @@ async def async_setup_entry(
                             translation_key="cpu_power_core",
                             translation_placeholders={"cpu_id": str(cpu.id)},
                             entity_registry_enabled_default=False,
+                            device_class=SensorDeviceClass.POWER,
                             native_unit_of_measurement=UnitOfPower.WATT,
                             state_class=SensorStateClass.MEASUREMENT,
                             suggested_display_precision=2,

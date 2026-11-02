@@ -4,6 +4,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@darkrain-nl"],
   "config_flow": true,
+  "connectivity": ["modbus"],
   "dependencies": ["modbus", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/sofar",
   "integration_type": "device",
