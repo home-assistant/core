@@ -194,7 +194,10 @@ class PendingDiscovered(TypedDict):
 
 @dataclass(slots=True, frozen=True)
 class KeptDevices:
-    """The devices a device discovery payload keeps when it omits a component."""
+    """The parent device and child devices a device discovery payload keeps.
+
+    Used to clean up the devices of the components the payload omits.
+    """
 
     # None when the parent device of the payload is not registered
     parent_device_id: str | None
