@@ -673,7 +673,8 @@ def stream_worker(
         int(1 / video_stream.time_base),
         int(1 / audio_stream.time_base) if audio_stream else 1,
     )
-    # Packets can keep arriving without ever passing the checks below
+    # The checks below can discard packets indefinitely,
+    # so check for a stop on every packet read
     unvalidated_packets = PeekIterator(
         takewhile(
             lambda _: not quit_event.is_set(),
