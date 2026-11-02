@@ -1,5 +1,6 @@
 """Test the Z-Wave JS services."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import probatio
@@ -41,7 +42,7 @@ from homeassistant.components.zwave_js.const import (
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -2073,8 +2074,43 @@ async def test_refresh_notifications(
     client.async_send_command.reset_mock()
     client.async_send_command_no_wait.reset_mock()
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REFRESH_NOTIFICATIONS,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_NOTIFICATION_TYPE: 1,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+
 
 @pytest.mark.parametrize("target", [ATTR_ENTITY_ID, ATTR_DEVICE_ID])
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_CONFIG_PARAMETER: 102,
+                ATTR_CONFIG_PARAMETER_BITMASK: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            id="set_config_parameter",
+        ),
+        pytest.param(
+            SERVICE_REFRESH_NOTIFICATIONS,
+            {ATTR_NOTIFICATION_TYPE: 1},
+            id="refresh_notifications",
+        ),
+    ],
+)
 async def test_service_driver_not_ready(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -2082,6 +2118,8 @@ async def test_service_driver_not_ready(
     multisensor_6: MagicMock,
     integration: MockConfigEntry,
     target: str,
+    service: str,
+    service_data: dict[str, Any],
 ) -> None:
     """Test a service call fails with a runtime error while the driver is not ready."""
     entity_entry = entity_registry.async_get(AIR_TEMPERATURE_SENSOR)
@@ -2097,13 +2135,8 @@ async def test_service_driver_not_ready(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_CONFIG_PARAMETER,
-            {
-                target: targets[target],
-                ATTR_CONFIG_PARAMETER: 102,
-                ATTR_CONFIG_PARAMETER_BITMASK: 1,
-                ATTR_CONFIG_VALUE: 1,
-            },
+            service,
+            {target: targets[target], **service_data},
             blocking=True,
         )
 

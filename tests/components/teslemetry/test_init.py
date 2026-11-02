@@ -1848,6 +1848,32 @@ async def test_local_gateway_not_found_raises_repair(
     }
 
 
+async def test_gateway_repair_cleared_on_first_local_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+    mock_powerwall_live_status: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A repair raised by a failed setup connect clears once a local poll succeeds."""
+    mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("timed out")
+
+    await _setup_entry_with_powerwall(hass, entry, AsyncMock(return_value=None))
+
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+
+    await _tick_local_live(hass, freezer, 1)
+
+    assert mock_powerwall_live_status.await_count == 1
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+    assert "could not be found" in caplog.text
+    assert "timed out" in caplog.text
+
+
 @pytest.mark.parametrize(
     "connect_error",
     [

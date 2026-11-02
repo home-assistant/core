@@ -454,7 +454,7 @@ aioruuvigateway==0.1.0
 aiosaj==0.2.2
 
 # homeassistant.components.seafile
-aioseafile==0.1.1
+aioseafile==0.1.3
 
 # homeassistant.components.shelly
 aioshelly==14.0.1
@@ -1385,7 +1385,7 @@ horimote==0.4.1
 huawei-lte-api==1.11.0
 
 # homeassistant.components.huum
-huum==0.8.2
+huum==0.8.4
 
 # homeassistant.components.hydroquebec_peak
 hydropeak-opendata==0.2.0
@@ -3195,7 +3195,7 @@ simplisafe-python==2026.06.0
 sisyphus-control==3.1.4
 
 # homeassistant.components.skoda
-skoda-public-api==1.3.0
+skoda-public-api==1.4.0
 
 # homeassistant.components.sky_remote
 skyboxremote==0.0.6
