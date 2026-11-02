@@ -324,15 +324,15 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
             currently_downloaded_models: set[str] = {
                 model_info["model"] for model_info in response.get("models", [])
             }
-
-            if self._model not in currently_downloaded_models:
-                # Store the user input to use after download
-                self._config_data = user_input
-                # Ollama server needs to download model first
-                return await self.async_step_download()
         except Exception:
             _LOGGER.exception("Failed to check model availability")
             return self.async_abort(reason="cannot_connect")
+
+        if self._model not in currently_downloaded_models:
+            # Store the user input to use after download
+            self._config_data = user_input
+            # Ollama server needs to download model first
+            return await self.async_step_download()
 
         # Model is already downloaded, create/update the entry
         if self._is_new:
