@@ -462,6 +462,9 @@
       "categories": [
         "health_wellbeing"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -3290,6 +3293,9 @@
       "categories": [
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -3472,6 +3478,9 @@
       "integration_type": "device",
       "categories": [
         "media_entertainment.speakers_audio"
+      ],
+      "connectivity": [
+        "infrared"
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
@@ -5276,6 +5285,9 @@
           "categories": [
             "buttons_remotes"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "Global Cach\u00e9 iTach TCP/IP to IR"
         }
       }
@@ -5679,6 +5691,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "Gree Infrared"
         }
@@ -7525,6 +7540,9 @@
       "categories": [
         "buttons_remotes"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": false,
       "iot_class": "local_push"
     },
@@ -7835,6 +7853,9 @@
       "categories": [
         "lighting"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -7932,6 +7953,9 @@
           "categories": [
             "media_entertainment.tv_streaming",
             "climate.heat_pumps_air_conditioning"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "LG Infrared"
         },
@@ -8410,6 +8434,9 @@
       "categories": [
         "buttons_remotes"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -8607,6 +8634,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "media_entertainment.speakers_audio"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "Marantz Infrared"
         },
@@ -10547,6 +10577,9 @@
       "categories": [
         "climate.heat_pumps_air_conditioning"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "supported_by": "gree_infrared"
     },
     "onkyo": {
@@ -10901,6 +10934,9 @@
       "categories": [
         "lighting.bulbs_lamps"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -11180,6 +11216,9 @@
       "categories": [
         "media_entertainment.speakers_audio"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -11251,6 +11290,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "infrared"
           ],
           "name": "Philips Infrared"
         },
@@ -12828,6 +12870,9 @@
             "media_entertainment.tv_streaming",
             "climate.heat_pumps_air_conditioning"
           ],
+          "connectivity": [
+            "infrared"
+          ],
           "name": "Samsung Infrared"
         },
         "samsungtv": {
@@ -13360,6 +13405,9 @@
       "integration_type": "device",
       "categories": [
         "climate.fans_ventilation"
+      ],
+      "connectivity": [
+        "infrared"
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
