@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import TypeVar, override
+from typing import override
 
 from google_weather_api import (
     CurrentConditionsResponse,
@@ -33,16 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 # that costs an extra request per update. Keep it to a single page.
 HOURLY_FORECAST_HOURS = 24
 
-T = TypeVar(
-    "T",
-    bound=(
-        CurrentConditionsResponse
-        | DailyForecastResponse
-        | HourlyForecastResponse
-        | None
-    ),
-)
-
 
 @dataclass
 class GoogleWeatherSubEntryRuntimeData:
@@ -61,10 +51,15 @@ class GoogleWeatherRuntimeData:
     subentries_runtime_data: dict[str, GoogleWeatherSubEntryRuntimeData]
 
 
+type _GoogleWeatherDataType = (
+    CurrentConditionsResponse | DailyForecastResponse | HourlyForecastResponse | None
+)
 type GoogleWeatherConfigEntry = ConfigEntry[GoogleWeatherRuntimeData]
 
 
-class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
+class GoogleWeatherBaseCoordinator[T: _GoogleWeatherDataType](
+    TimestampDataUpdateCoordinator[T]
+):
     """Base class for Google Weather coordinators."""
 
     config_entry: GoogleWeatherConfigEntry

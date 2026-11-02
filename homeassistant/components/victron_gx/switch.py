@@ -71,13 +71,9 @@ class VictronSwitch(VictronBaseEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if TYPE_CHECKING:
-            assert isinstance(self._metric, VictronVenusWritableMetric)
-        self._metric.set(BINARY_SENSOR_ON_ID)
+        self._set_metric_value(BINARY_SENSOR_ON_ID)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        if TYPE_CHECKING:
-            assert isinstance(self._metric, VictronVenusWritableMetric)
-        self._metric.set(BINARY_SENSOR_OFF_ID)
+        self._set_metric_value(BINARY_SENSOR_OFF_ID)

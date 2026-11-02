@@ -4,6 +4,7 @@
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@gtdiehl", "@jcalbert", "@hastarin"],
   "config_flow": true,
+  "connectivity": ["zigbee"],
   "dhcp": [
     {
       "macaddress": "D8D5B9*"

@@ -42,7 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType
+from homeassistant.helpers.typing import StateType, Undefined
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_MAX, RPM
@@ -357,7 +357,7 @@ class QswSensor(QswSensorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, entry, type_id)
 
-        if description.name is UNDEFINED:
+        if description.name is Undefined:
             self._attr_has_entity_name = True
         else:
             self._attr_name = f"{self.product} {description.name}"

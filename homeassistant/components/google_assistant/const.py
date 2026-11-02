@@ -118,7 +118,6 @@ TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
 TYPE_VALVE = f"{PREFIX_TYPES}VALVE"
 TYPE_WATERHEATER = f"{PREFIX_TYPES}WATERHEATER"
 
-SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
 HOMEGRAPH_SCOPE = "https://www.googleapis.com/auth/homegraph"
 HOMEGRAPH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token"

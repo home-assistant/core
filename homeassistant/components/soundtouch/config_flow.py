@@ -52,6 +52,36 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host."""
+        errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                device = await self.hass.async_add_executor_job(
+                    soundtouch_device, user_input[CONF_HOST]
+                )
+            except RequestException:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(device.config.device_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): cv.string}),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
+
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
