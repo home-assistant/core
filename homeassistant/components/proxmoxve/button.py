@@ -5,10 +5,12 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, override
 
-import aiohttp
 from aioproxmox.exceptions import (
     ProxmoxAPIError,
     ProxmoxAuthError,
+    ProxmoxConnectionError,
+    ProxmoxSSLError,
+    ProxmoxTimeoutError,
     ResourceNotFoundError,
 )
 from aioproxmox.model.pve import ContainerResource, QemuResource
@@ -326,17 +328,17 @@ class ProxmoxBaseButton(ButtonEntity):
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
-        except aiohttp.ClientSSLError as err:
+        except ProxmoxSSLError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="ssl_error",
             ) from err
-        except TimeoutError as err:
+        except ProxmoxTimeoutError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
-        except aiohttp.ClientConnectionError as err:
+        except ProxmoxConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
