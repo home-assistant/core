@@ -122,139 +122,6 @@ CHANNEL_ATTRIBUTES = {
     ATTR_MEDIA_TITLE: "News",
 }
 
-APPS_BROWSE_RESULT = {
-    "title": "Applications",
-    "media_class": "directory",
-    "media_content_type": "apps",
-    "media_content_id": "apps",
-    "children_media_class": "app",
-    "can_play": False,
-    "can_expand": True,
-    "can_search": False,
-    "search_media_classes": None,
-    "thumbnail": None,
-    "not_shown": 0,
-    "children": [
-        {
-            "title": "Netflix",
-            "media_class": "app",
-            "media_content_type": "app",
-            "media_content_id": "com.sony.dtv.com.netflix.ninja",
-            "children_media_class": None,
-            "can_play": False,
-            "can_expand": False,
-            "can_search": False,
-            "search_media_classes": None,
-            "thumbnail": f"/api/media_player_proxy/{ENTITY_ID}/browse_media/app"
-            "/com.sony.dtv.com.netflix.ninja?token=mock_token",
-        },
-        {
-            "title": "Settings",
-            "media_class": "app",
-            "media_content_type": "app",
-            "media_content_id": "com.sony.dtv.com.android.tv.settings",
-            "children_media_class": None,
-            "can_play": False,
-            "can_expand": False,
-            "can_search": False,
-            "search_media_classes": None,
-            "thumbnail": f"/api/media_player_proxy/{ENTITY_ID}/browse_media/app"
-            "/com.sony.dtv.com.android.tv.settings?token=mock_token",
-        },
-        {
-            "title": "YouTube",
-            "media_class": "app",
-            "media_content_type": "app",
-            "media_content_id": "com.sony.dtv.com.google.android.youtube.tv",
-            "children_media_class": None,
-            "can_play": False,
-            "can_expand": False,
-            "can_search": False,
-            "search_media_classes": None,
-            "thumbnail": f"/api/media_player_proxy/{ENTITY_ID}/browse_media/app"
-            "/com.sony.dtv.com.google.android.youtube.tv?token=mock_token",
-        },
-    ],
-}
-
-CHANNELS_BROWSE_RESULT = {
-    "title": "Channels",
-    "media_class": "directory",
-    "media_content_type": "channels",
-    "media_content_id": "channels",
-    "children_media_class": "channel",
-    "can_play": False,
-    "can_expand": True,
-    "can_search": False,
-    "search_media_classes": None,
-    "thumbnail": None,
-    "not_shown": 0,
-    "children": [
-        {
-            "title": "TVP 1",
-            "media_class": "channel",
-            "media_content_type": "channel",
-            "media_content_id": "tv:dvbt?trip=1.2.3&srvName=TVP1",
-            "children_media_class": None,
-            "can_play": False,
-            "can_expand": False,
-            "can_search": False,
-            "search_media_classes": None,
-            "thumbnail": None,
-        },
-        {
-            "title": "TVP 2",
-            "media_class": "channel",
-            "media_content_type": "channel",
-            "media_content_id": "tv:dvbt?trip=1.2.4&srvName=TVP2",
-            "children_media_class": None,
-            "can_play": False,
-            "can_expand": False,
-            "can_search": False,
-            "search_media_classes": None,
-            "thumbnail": None,
-        },
-        {
-            "title": "TVN",
-            "media_class": "channel",
-            "media_content_type": "channel",
-            "media_content_id": "tv:dvbt?trip=1.2.5&srvName=TVN",
-            "children_media_class": None,
-            "can_play": False,
-            "can_expand": False,
-            "can_search": False,
-            "search_media_classes": None,
-            "thumbnail": None,
-        },
-    ],
-}
-
-ROOT_BROWSE_RESULT = {
-    "title": "Sony TV",
-    "media_class": "directory",
-    "media_content_type": "",
-    "media_content_id": "",
-    "children_media_class": "directory",
-    "can_play": False,
-    "can_expand": True,
-    "can_search": False,
-    "search_media_classes": None,
-    "thumbnail": None,
-    "not_shown": 0,
-    "children": [
-        {
-            key: value
-            for key, value in APPS_BROWSE_RESULT.items()
-            if key not in ("children", "not_shown")
-        },
-        {
-            key: value
-            for key, value in CHANNELS_BROWSE_RESULT.items()
-            if key not in ("children", "not_shown")
-        },
-    ],
-}
-
 
 @pytest.mark.usefixtures("mock_braviatv_client")
 async def test_media_player(
@@ -614,18 +481,16 @@ async def test_command_error(
 
 
 @pytest.mark.parametrize(
-    ("browse_data", "app_list_calls", "expected_result"),
+    ("browse_data", "app_list_calls"),
     [
-        ({}, 2, ROOT_BROWSE_RESULT),
+        ({}, 2),
         (
             {"media_content_type": "apps", "media_content_id": "apps"},
             1,
-            APPS_BROWSE_RESULT,
         ),
         (
             {"media_content_type": "channels", "media_content_id": "channels"},
             1,
-            CHANNELS_BROWSE_RESULT,
         ),
     ],
 )
@@ -636,7 +501,7 @@ async def test_browse_media(
     mock_braviatv_client: AsyncMock,
     browse_data: dict[str, str],
     app_list_calls: int,
-    expected_result: dict[str, Any],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test browsing apps and channels."""
     client = await hass_ws_client(hass)
@@ -650,7 +515,7 @@ async def test_browse_media(
         response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == expected_result
+    assert response["result"] == snapshot
     # Browsing the root refreshes the sources fetched during setup
     assert mock_braviatv_client.get_app_list.call_count == app_list_calls
 
