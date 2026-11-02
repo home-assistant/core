@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_REF, PARAM_STATE
 from pyimouapi.exceptions import ImouException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imou.const import (
@@ -26,8 +31,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import DEFAULT_PLUG_TEXTS, create_online_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 DEFAULT_PLUG_SWITCHES = {
     PARAM_PLUG_SWITCH: {PARAM_STATE: True},
