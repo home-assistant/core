@@ -16,7 +16,7 @@ from aiohasupervisor.models import (
 )
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -216,7 +216,7 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
 
 SCHEMA_MOUNT_RELOAD = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
+        probatio.Required(CommonServiceArgument.DEVICE_ID): selector.DeviceSelector(
             selector.DeviceSelectorConfig(
                 filter=selector.DeviceFilterSelectorConfig(
                     integration=DOMAIN,
@@ -490,7 +490,10 @@ def async_register_network_storage_services(
         """Handle service calls for Hass.io."""
         # A mount is always a main device, and the check below reads its model
         device, _ = async_get_device_and_config_entry(
-            hass, DOMAIN, service.data[ATTR_DEVICE_ID], include_child_devices=False
+            hass,
+            DOMAIN,
+            service.data[CommonServiceArgument.DEVICE_ID],
+            include_child_devices=False,
         )
 
         if device.name is None or device.model != SupervisorEntityModel.MOUNT:

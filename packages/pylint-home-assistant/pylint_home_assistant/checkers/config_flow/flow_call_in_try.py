@@ -2,9 +2,10 @@
 
 A ``try`` block in a flow step should only contain the code that can raise the
 errors it catches, such as the calls to the device or service. Creating the
-entry, showing a form and handling the unique ID belong after it, in ``else:``
-or after the ``try`` statement. The unique ID helpers raise ``AbortFlow``,
-which a broad ``except Exception`` swallows and reports as an unknown error.
+entry, showing a form, handling the unique ID and moving on to another step
+belong after it, in ``else:`` or after the ``try`` statement. The unique ID
+helpers raise ``AbortFlow``, also when called from another step, which a broad
+``except Exception`` swallows and reports as an unknown error.
 
 ``W7457`` (``home-assistant-flow-call-in-try``)
 """
@@ -86,7 +87,7 @@ def _flow_calls(node: nodes.NodeNG) -> Iterator[nodes.Call]:
     match node:
         case nodes.Call(
             func=nodes.Attribute(attrname=attrname, expr=nodes.Name(name="self"))
-        ) if attrname in _FLOW_METHODS:
+        ) if attrname in _FLOW_METHODS or attrname.startswith("async_step_"):
             yield node
     children = (
         (*node.handlers, *node.orelse, *node.finalbody)
@@ -112,11 +113,11 @@ class FlowCallInTryChecker(BaseChecker):
             ),
             "home-assistant-flow-call-in-try",
             (
-                "Used when a flow creates an entry, shows a form, aborts or "
-                "handles the unique ID inside a `try` block with `except` "
-                "handlers. Those calls don't raise the errors the handlers "
-                "catch, and a broad handler swallows the `AbortFlow` raised by "
-                "the unique ID helpers."
+                "Used when a flow creates an entry, shows a form, aborts, "
+                "handles the unique ID or moves on to another step inside a "
+                "`try` block with `except` handlers. Those calls don't raise "
+                "the errors the handlers catch, and a broad handler swallows "
+                "the `AbortFlow` raised by the unique ID helpers."
             ),
         ),
     }
