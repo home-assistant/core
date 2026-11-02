@@ -36,6 +36,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    MOCK_DATA,
     MOCK_USER_ID,
     get_aqualink_device,
     get_aqualink_system,
@@ -223,10 +224,10 @@ async def test_setup_login_retry_exceptions(
 
 async def test_setup_backfills_unique_id(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     client: AqualinkClient,
 ) -> None:
     """Test setup assigns a unique ID to existing entries."""
+    config_entry = MockConfigEntry(domain="iaqualink", data=MOCK_DATA, minor_version=2)
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
@@ -252,10 +253,10 @@ async def test_setup_backfills_unique_id(
 
 async def test_setup_coerces_int_account_id_to_str(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     client: AqualinkClient,
 ) -> None:
     """Test setup stores an int account ID from the library as a string."""
+    config_entry = MockConfigEntry(domain="iaqualink", data=MOCK_DATA, minor_version=2)
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
