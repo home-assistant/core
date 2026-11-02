@@ -4,7 +4,6 @@
   "categories": ["helpers"],
   "codeowners": ["@fabaff"],
   "config_flow": true,
-  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/random",
   "integration_type": "helper",
   "iot_class": "calculated",

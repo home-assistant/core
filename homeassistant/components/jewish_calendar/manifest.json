@@ -4,7 +4,6 @@
   "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@tsvi"],
   "config_flow": true,
-  "connectivity": ["host"],
   "documentation": "https://www.home-assistant.io/integrations/jewish_calendar",
   "iot_class": "calculated",
   "loggers": ["hdate"],

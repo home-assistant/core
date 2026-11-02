@@ -1078,9 +1078,6 @@
       "categories": [
         "computers_network"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "calculated",
       "single_config_entry": true
@@ -1145,9 +1142,6 @@
       "integration_type": "service",
       "categories": [
         "helpers.calculate_value"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "calculated"
@@ -1809,9 +1803,6 @@
       "categories": [
         "media_entertainment.music_radio_services"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "local_polling"
     },
@@ -1847,9 +1838,6 @@
         "helpers",
         "productivity_information.documents_photos"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "calculated"
     },
@@ -1868,9 +1856,6 @@
       "integration_type": "hub",
       "categories": [
         "lighting"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "single_config_entry": true
@@ -1938,9 +1923,6 @@
       "integration_type": "hub",
       "categories": [
         "helpers.calculate_value"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": false,
       "iot_class": "calculated"
@@ -2145,9 +2127,6 @@
       "categories": [
         "computers_network.cloud_developer_tools"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "calculated"
     },
@@ -2207,9 +2186,6 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.cloud_developer_tools"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": false,
       "iot_class": "calculated",
@@ -2271,9 +2247,6 @@
       "categories": [
         "lighting",
         "presence_location"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": false,
       "iot_class": "calculated"
@@ -3590,9 +3563,6 @@
       "integration_type": "hub",
       "categories": [
         "lighting"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": false,
       "iot_class": "calculated"
@@ -5633,9 +5603,6 @@
       "categories": [
         "productivity_information.calendars_todos"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "calculated"
     },
@@ -5724,9 +5691,6 @@
       "integration_type": "hub",
       "categories": [
         "productivity_information.calendars_todos"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "calculated",
@@ -5915,9 +5879,6 @@
       "integration_type": "hub",
       "categories": [
         "computers_network.cloud_developer_tools"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": false,
       "iot_class": "calculated",
@@ -7340,9 +7301,6 @@
       "integration_type": "service",
       "categories": [
         "weather_alerts"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "calculated",
@@ -9146,9 +9104,6 @@
         "presence_location",
         "helpers.calculate_value"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "calculated"
     },
@@ -9220,9 +9175,6 @@
       "integration_type": "hub",
       "categories": [
         "media_entertainment.speakers_audio"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": false,
       "iot_class": "local_polling"
@@ -9385,9 +9337,6 @@
       "integration_type": "hub",
       "categories": [
         "ai_voice.image_recognition"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": false,
       "iot_class": "calculated"
@@ -11242,9 +11191,6 @@
       "categories": [
         "weather_alerts.forecasts"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "calculated",
       "single_config_entry": true
@@ -12366,9 +12312,6 @@
       "categories": [
         "media_entertainment"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "calculated"
     },
@@ -13485,9 +13428,6 @@
       "categories": [
         "helpers.calculate_value"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "calculated"
     },
@@ -13565,9 +13505,6 @@
       "categories": [
         "helpers.calculate_value"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "calculated"
     },
@@ -13610,9 +13547,6 @@
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "calculated"
@@ -13707,9 +13641,6 @@
         "helpers",
         "security_safety.alarm_systems"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": false,
       "iot_class": "calculated"
     },
@@ -13717,9 +13648,6 @@
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "calculated"
@@ -13729,9 +13657,6 @@
       "categories": [
         "helpers.calculate_value",
         "sensors.temperature_humidity"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "calculated"
@@ -13752,9 +13677,6 @@
       "integration_type": "helper",
       "categories": [
         "helpers"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "calculated"
@@ -13784,9 +13706,6 @@
       "integration_type": "helper",
       "categories": [
         "helpers"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "calculated"
@@ -13829,9 +13748,6 @@
       "categories": [
         "helpers.calculate_value"
       ],
-      "connectivity": [
-        "host"
-      ],
       "config_flow": true,
       "iot_class": "calculated"
     },
@@ -13839,9 +13755,6 @@
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
-      ],
-      "connectivity": [
-        "host"
       ],
       "config_flow": true,
       "iot_class": "calculated"
