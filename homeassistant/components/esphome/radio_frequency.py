@@ -91,12 +91,12 @@ class EsphomeRadioFrequencyReceiverEntity(
     async def async_added_to_hass(self) -> None:
         """Register callbacks including RF receive subscription."""
         await super().async_added_to_hass()
+        self.async_on_remove(self._async_unsubscribe_receive)
         self._async_subscribe_receive()
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from the device on entity removal."""
-        await super().async_will_remove_from_hass()
+    @callback
+    def _async_unsubscribe_receive(self) -> None:
+        """Unsubscribe from RF receive events."""
         if self._unsub_receive is not None:
             self._unsub_receive()
             self._unsub_receive = None
@@ -119,6 +119,7 @@ class EsphomeRadioFrequencyReceiverEntity(
         if self._entry_data.available:
             self._async_subscribe_receive()
         elif self._unsub_receive is not None:
+            # Subscription died with the dropped connection; just clear the reference
             self._unsub_receive = None
 
     @callback
