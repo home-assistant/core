@@ -168,6 +168,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             _LOGGER.debug("Removed Imou device(s): %s", ", ".join(removed_keys))
             device_registry = dr.async_get(self.hass)
             for device_key in removed_keys:
+                self.countdown.cancel_device(device_key)
                 del self.devices_by_key[device_key]
                 if device := device_registry.async_get_device_by_identifier(
                     (DOMAIN, device_key), self.config_entry.entry_id
