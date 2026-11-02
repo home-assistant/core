@@ -8,8 +8,8 @@ from pytest_homeassistant.common import async_load_json_array_fixture, snapshot_
 from requests_mock import Mocker
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -35,7 +35,7 @@ async def test_lock(hass: HomeAssistant) -> None:
 
     with patch("jaraco.abode.devices.lock.Lock.lock") as mock_lock:
         await hass.services.async_call(
-            LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+            LOCK_DOMAIN, LockService.LOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()
         mock_lock.assert_called_once()
@@ -47,7 +47,7 @@ async def test_unlock(hass: HomeAssistant) -> None:
 
     with patch("jaraco.abode.devices.lock.Lock.unlock") as mock_unlock:
         await hass.services.async_call(
-            LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+            LOCK_DOMAIN, LockService.UNLOCK, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()
         mock_unlock.assert_called_once()
