@@ -1,16 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_data": "[%key:component::lg_soundbar::config::error::no_data%]",
-      "not_supported": "The discovered device does not report its unique identifier. Add it manually instead."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_data": "Device did not return any data required to an entry."
     },
-    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {
@@ -19,9 +15,6 @@
         "data_description": {
           "host": "The hostname or IP address of your LG Soundbar."
         }
-      },
-      "zeroconf_confirm": {
-        "description": "Do you want to set up {name}?"
       }
     }
   },

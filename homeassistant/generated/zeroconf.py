@@ -778,12 +778,6 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
-    "_lg-smart-device._tcp.local.": [
-        {
-            "domain": "lg_soundbar",
-            "name": "lg_smart_audio-*",
-        },
-    ],
     "_lifx._udp.local.": [
         {
             "domain": "lifx",
