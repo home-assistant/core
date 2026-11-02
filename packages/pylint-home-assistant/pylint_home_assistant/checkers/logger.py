@@ -94,12 +94,16 @@ class HassLoggerFormatChecker(BaseChecker):
             func_name = node.func.name
         else:
             return
-        if (
-            func_name == "getLogger"
-            and node.args
-            and isinstance(node.args[0], nodes.Name)
-            and node.args[0].name == "__name__"
-        ):
+        if func_name != "getLogger":
+            return
+        if node.args:
+            name_node = node.args[0]
+        else:
+            name_node = next(
+                (keyword.value for keyword in node.keywords if keyword.arg == "name"),
+                None,
+            )
+        if isinstance(name_node, nodes.Name) and name_node.name == "__name__":
             self.add_message("home-assistant-logger-const-name", node=node)
 
 

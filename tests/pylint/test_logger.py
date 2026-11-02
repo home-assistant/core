@@ -39,6 +39,14 @@ def logger_checker_fixture(linter: UnittestLinter) -> BaseChecker:
         pytest.param(
             """
             import logging
+            LOGGER = logging.getLogger(name=__package__)
+            """,
+            "homeassistant.components.pylint_test.const",
+            id="const_package_keyword",
+        ),
+        pytest.param(
+            """
+            import logging
             LIB_LOGGER = logging.getLogger("library")
             """,
             "homeassistant.components.pylint_test.const",
@@ -99,6 +107,13 @@ def test_logger_const_name_good(
             LOGGER = getLogger(__name__)
             """,
             id="imported_function",
+        ),
+        pytest.param(
+            """
+            import logging
+            LOGGER = logging.getLogger(name=__name__)
+            """,
+            id="keyword_argument",
         ),
     ],
 )
