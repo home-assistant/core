@@ -8,7 +8,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from homeassistant import auth
 from homeassistant.components.auth import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.setup import async_setup_component
 
 from tests.test_util import mock_real_ip
@@ -29,16 +29,16 @@ EMPTY_CONFIG = []
 async def async_setup_auth(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
-    provider_configs: list[dict[str, Any]] | UndefinedType = UNDEFINED,
-    module_configs: list[dict[str, Any]] | UndefinedType = UNDEFINED,
+    provider_configs: list[dict[str, Any]] | Undefined = Undefined,
+    module_configs: list[dict[str, Any]] | Undefined = Undefined,
     setup_api: bool = False,
     custom_ip: str | None = None,
 ):
     """Set up authentication and create an HTTP client."""
     hass.auth = await auth.auth_manager_from_config(
         hass,
-        BASE_CONFIG if provider_configs is UNDEFINED else provider_configs,
-        EMPTY_CONFIG if module_configs is UNDEFINED else module_configs,
+        BASE_CONFIG if provider_configs is Undefined else provider_configs,
+        EMPTY_CONFIG if module_configs is Undefined else module_configs,
     )
     ensure_auth_manager_loaded(hass.auth)
     await async_setup_component(hass, DOMAIN, {})

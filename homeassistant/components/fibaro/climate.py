@@ -7,7 +7,6 @@ from typing import Any, override
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
     PRESET_AWAY,
     PRESET_BOOST,
     ClimateEntity,
@@ -133,10 +132,14 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         self._target_temp_device: DeviceModel | None = None
         self._op_mode_device: DeviceModel | None = None
         self._fan_mode_device: DeviceModel | None = None
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
         siblings = self.controller.get_siblings(fibaro_device)
-        _LOGGER.debug("%s siblings: %s", self.ha_id, siblings)
+        _LOGGER.debug(
+            "%s (%s) siblings: %s",
+            fibaro_device.name,
+            fibaro_device.fibaro_id,
+            siblings,
+        )
         tempunit: str | None = "C"
         for device in siblings:
             # Detecting temperature device, one strong and one weak way of
@@ -216,13 +219,14 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         """Call when entity is added to hass."""
         _LOGGER.debug(
             (
-                "Climate %s\n"
+                "Climate %s (%s)\n"
                 "- _temp_sensor_device %s\n"
                 "- _target_temp_device %s\n"
                 "- _op_mode_device %s\n"
                 "- _fan_mode_device %s"
             ),
-            self.ha_id,
+            self.fibaro_device.name,
+            self.fibaro_device.fibaro_id,
             self._temp_sensor_device.fibaro_id if self._temp_sensor_device else "None",
             self._target_temp_device.fibaro_id if self._target_temp_device else "None",
             self._op_mode_device.fibaro_id if self._op_mode_device else "None",

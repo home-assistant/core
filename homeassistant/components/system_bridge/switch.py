@@ -1,6 +1,6 @@
 """Support for System Bridge switches."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from systembridgeconnector.models.modules.displays import DisplayPowerState
 
@@ -9,8 +9,13 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import AUDIO_INPUT
 from .coordinator import SystemBridgeConfigEntry
-from .entity import SystemBridgeDisplayEntity
+from .entity import (
+    SystemBridgeAudioDeviceEntity,
+    SystemBridgeDisplayEntity,
+    async_add_new_audio_devices,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -46,6 +51,22 @@ async def async_setup_entry(
     _async_add_new_displays()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_displays))
 
+    async_add_new_audio_devices(
+        entry,
+        AUDIO_INPUT,
+        lambda devices: async_add_entities(
+            SystemBridgeAudioInputMuteSwitch(
+                coordinator,
+                entry.data[CONF_PORT],
+                f"audio_input_{device.id}_mute",
+                AUDIO_INPUT,
+                device,
+            )
+            for device in devices
+        ),
+        lambda device: device.muted is not None,
+    )
+
 
 class SystemBridgeDisplayPowerSwitch(SystemBridgeDisplayEntity, SwitchEntity):
     """Define a System Bridge display power switch."""
@@ -69,3 +90,34 @@ class SystemBridgeDisplayPowerSwitch(SystemBridgeDisplayEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the display off."""
         await self._async_display_control(power_state=DisplayPowerState.OFF)
+
+
+class SystemBridgeAudioInputMuteSwitch(SystemBridgeAudioDeviceEntity, SwitchEntity):
+    """Define a System Bridge audio input mute switch."""
+
+    _attr_translation_key = "audio_input_mute"
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return if the input is muted."""
+        if (device := self._device) is None:
+            return None
+        return device.muted
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Mute the input."""
+        await self._async_set_muted(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Unmute the input."""
+        await self._async_set_muted(False)
+
+    async def _async_set_muted(self, muted: bool) -> None:
+        """Set the input's mute state."""
+        device = self._device
+        if TYPE_CHECKING:
+            assert device is not None
+        await self._async_audio_control(device, muted=muted)
