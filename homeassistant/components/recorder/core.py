@@ -1471,8 +1471,10 @@ class Recorder(threading.Thread):
         engine_url = get_engine_db_url(self.db_url)
         backend_name = engine_url.get_backend_name()
         driver_name = engine_url.get_driver_name()
-        # Other SQLite drivers, such as the encrypted pysqlcipher, can't be
-        # opened by the plain sqlite3 file checks
+        # Only the default pysqlite driver gets the SQLite specific setup below.
+        # Other SQLite drivers, such as the encrypted pysqlcipher, need a key to
+        # read the file, so the sqlite3 based corruption check would see a
+        # healthy database as corrupt and move it away.
         using_pysqlite = backend_name == "sqlite" and driver_name == "pysqlite"
         using_file_sqlite = using_pysqlite and is_file_sqlite_url(engine_url)
 
