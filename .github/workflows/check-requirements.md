@@ -1,12 +1,17 @@
 ---
 on:
-  workflow_run:
-    workflows: ["Check requirements (deterministic)"]
-    types: [completed]
-  # On workflow_run the actor is the PR author, so the default role gate
-  # (admin/maintainer/write) skips every PR from an outside contributor — which is
-  # exactly who this review is for. The job is read-only and its single safe-output
-  # is a sanitized comment on the PR recorded in the trusted upstream artifact.
+  # Dispatched by the agentic workflow relay once the deterministic stage succeeds.
+  # gh-aw requires workflow_run triggers to be scoped to trusted branches, which
+  # pull request head branches cannot satisfy.
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run ID of the successful Check requirements (deterministic) run"
+        required: true
+        type: number
+  # Relay dispatches run as github-actions[bot], and dispatching already requires
+  # write access. The job is read-only and its single safe-output is a sanitized
+  # comment on the PR recorded in the trusted upstream artifact.
   roles: all
 permissions:
   contents: read
@@ -18,6 +23,10 @@ network:
     - python
     - gitlab.com
     - codeberg.org
+# Copilot CLI mode disables web-fetch; SDK mode provides a proxy-aware replacement.
+engine:
+  id: copilot
+  copilot-sdk: true
 tools:
   web-fetch: {}
   github:
@@ -36,7 +45,6 @@ jobs:
     # true when no tracked requirement file changed since the last comment,
     # which is our cue to skip the (token-spending) agent. Recover the PR number
     # to comment on either way.
-    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -47,11 +55,11 @@ jobs:
     steps:
       - name: Download deterministic-results artifact
         id: download
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           name: check-requirements-deterministic
           path: /tmp/deterministic
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ inputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Resolve skip and PR number from the artifact
         id: prepare
@@ -59,36 +67,22 @@ jobs:
           echo "skip=$(jq -r '.skip_aw' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
           echo "pr_number=$(jq -r '.pr_number' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.id }}
+  group: ${{ github.workflow }}-${{ inputs.run_id }}
   cancel-in-progress: true
+  job-discriminator: ${{ github.run_id }}
 steps:
   - name: Download deterministic-results artifact
-    if: github.event.workflow_run.conclusion == 'success'
-    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+    uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
     with:
       name: check-requirements-deterministic
       path: /tmp/gh-aw/deterministic
-      run-id: ${{ github.event.workflow_run.id }}
+      run-id: ${{ inputs.run_id }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
-post-steps:
-  - name: Verify agent produced an add_comment safe-output
-    if: always() && github.event.workflow_run.conclusion == 'success'
-    run: |
-      OUTPUT=/tmp/gh-aw/agent_output.json
-      if [ ! -f "${OUTPUT}" ]; then
-        echo "::error::Agent output file ${OUTPUT} is missing; the agent did not run to completion."
-        exit 1
-      fi
-      if ! grep -q '"add_comment"' "${OUTPUT}"; then
-        echo "::error::Agent did not emit an add_comment safe-output; no review comment was posted to the PR."
-        echo "Agent output:"
-        cat "${OUTPUT}"
-        exit 1
-      fi
 description: >
   Resolves the deterministic-stage artifact's NEEDS_AGENT checks for changed
   Python package requirements on PRs targeting the core repo, then posts the
-  final review comment. Triggered by completion of the deterministic workflow.
+  final review comment. Dispatched by the agentic workflow relay when the
+  deterministic workflow succeeds.
   Reads the uploaded artifact from disk, replaces placeholders for any check
   whose status is `needs_agent`, and posts the merged comment using the PR
   number recorded inside the artifact itself. Each check kind has a dedicated
@@ -407,6 +401,3 @@ workflow on its own; a human reviewer decides whether to merge.
 - Be constructive; reference the inspected file by URL when useful.
 - Comment dedup is handled by gh-aw's `add_comment` safe-output via
   the `<!-- requirements-check -->` marker.
-- If `/tmp/gh-aw/deterministic/results.json` is missing (upstream
-  cancelled/failed), emit nothing — the post-step verification is
-  gated and won't complain.

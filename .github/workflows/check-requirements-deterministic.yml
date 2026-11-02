@@ -4,7 +4,8 @@ name: Check requirements (deterministic)
 #
 # Runs the deterministic Python checks and uploads the structured
 # results as an artifact. Stage 2 (the agentic workflow defined in
-# `check-requirements.md`) consumes the artifact on completion.
+# `check-requirements.md`) consumes the artifact once
+# `agentic-workflow-relay.yml` dispatches it.
 
 # yamllint disable-line rule:truthy
 on:

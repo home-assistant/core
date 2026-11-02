@@ -1,0 +1,61 @@
+name: Agentic workflow relay
+
+# Starts the agentic stage of a two-stage pipeline once its stage 1 succeeds.
+#
+# gh-aw only accepts workflow_run triggers scoped to trusted branches, which
+# pull request head branches cannot satisfy, so the agentic workflows are
+# started through workflow_dispatch instead. Nothing from the triggering run
+# is checked out or executed; only its ID and title are passed on.
+
+# yamllint disable-line rule:truthy
+on:
+  # Only dispatches by run ID and never runs code from the pull request.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
+    workflows:
+      - "Check requirements (deterministic)"
+      - "Quality scale reviewer (trigger)"
+    types: [completed]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    name: Dispatch the agentic workflow
+    if: >-
+      github.repository_owner == 'home-assistant'
+      && github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.repository.id == github.repository_id
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write # To dispatch the agentic workflow
+    steps:
+      - name: Dispatch the agentic workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_WORKFLOW: ${{ github.event.workflow_run.name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          TITLE: ${{ github.event.workflow_run.display_title }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          case "${SOURCE_WORKFLOW}" in
+            "Check requirements (deterministic)")
+              gh workflow run check-requirements.lock.yml \
+                --repo "${GITHUB_REPOSITORY}" --ref "${DEFAULT_BRANCH}" \
+                -f run_id="${RUN_ID}"
+              ;;
+            "Quality scale reviewer (trigger)")
+              gh workflow run quality-scale-reviewer.lock.yml \
+                --repo "${GITHUB_REPOSITORY}" --ref "${DEFAULT_BRANCH}" \
+                -f run_id="${RUN_ID}" -f title="${TITLE}"
+              ;;
+            *)
+              echo "::error::No agentic workflow configured for ${SOURCE_WORKFLOW}"
+              exit 1
+              ;;
+          esac
