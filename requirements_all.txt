@@ -3574,7 +3574,7 @@ wolf-comm==0.0.52
 wsdot==0.0.1
 
 # homeassistant.components.wyoming
-wyoming==1.10.2
+wyoming==1.11.0
 
 # homeassistant.components.xiaomi_ble
 xiaomi-ble==1.21.2
