@@ -197,3 +197,30 @@ async def test_select_unavailable_without_access(
 
     assert (state := hass.states.get(HISTORY))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_select_added_when_shared_as_admin(
+    hass: HomeAssistant,
+    mock_seafile_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the select is added once the library is shared with the account as admin."""
+    libraries = mock_seafile_client.get_libraries.return_value
+    mock_seafile_client.get_libraries.return_value = [
+        dataclasses.replace(library, type="srepo", permission="rw")
+        for library in libraries
+    ]
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(HISTORY) is None
+
+    mock_seafile_client.get_libraries.return_value = [
+        dataclasses.replace(library, type="srepo", permission="admin")
+        for library in libraries
+    ]
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(HISTORY))
+    assert state.state == "keep_all"
