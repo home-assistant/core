@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from huum.const import SaunaStatus
-from huum.exceptions import SafetyException
+from huum.exceptions import HuumError, SafetyException
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -97,7 +97,13 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
             temperature = int(self.native_target_temperature)
             await self._turn_on(temperature)
         elif hvac_mode == HVACMode.OFF:
-            await self.coordinator.huum.turn_off()
+            try:
+                await self.coordinator.huum.turn_off()
+            except HuumError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="communication_error",
+                ) from err
         await self.coordinator.async_refresh()
 
     @override
@@ -118,4 +124,9 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_turn_on",
+            ) from err
+        except HuumError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
             ) from err

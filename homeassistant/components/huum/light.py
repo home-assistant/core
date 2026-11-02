@@ -3,11 +3,14 @@
 import logging
 from typing import Any, override
 
+from huum.exceptions import HuumError
+
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONFIG_LIGHT, CONFIG_STEAMER_AND_LIGHT
+from .const import CONFIG_LIGHT, CONFIG_STEAMER_AND_LIGHT, DOMAIN
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
 
@@ -61,5 +64,11 @@ class HuumLight(HuumBaseEntity, LightEntity):
             await self._toggle_light()
 
     async def _toggle_light(self) -> None:
-        await self.coordinator.huum.toggle_light()
+        try:
+            await self.coordinator.huum.toggle_light()
+        except HuumError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
         await self.coordinator.async_refresh()
