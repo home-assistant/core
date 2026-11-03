@@ -804,6 +804,33 @@ async def test_one_stream_fans_out_to_recording_and_live(
             )
         assert camera.async_create_stream.await_count == 1
         assert list(stream.outputs()) == ["homekit_secure_video"]
+        output = stream.outputs()["homekit_secure_video"]
+        async with asyncio.timeout(5):
+            while not (
+                segment := next(
+                    (
+                        segment
+                        for segment in output.get_segments()
+                        if segment.parts
+                        and segment.parts[0].has_keyframe
+                        and (
+                            len(segment.parts) >= 2
+                            or (
+                                segment.complete
+                                and any(
+                                    following.stream_id == segment.stream_id
+                                    and following.sequence == segment.sequence + 1
+                                    and following.parts
+                                    for following in output.get_segments()
+                                )
+                            )
+                        )
+                    ),
+                    None,
+                )
+            ):
+                await asyncio.sleep(0.01)
+        leases[1]._live_start = (segment.stream_id, segment.sequence)
         live = leases[1].live_parts()
         async with asyncio.timeout(5):
             init = await anext(live)
@@ -824,9 +851,9 @@ async def test_one_stream_fans_out_to_recording_and_live(
         assert "homekit_secure_video" not in stream.outputs()
         await live.aclose()
     finally:
+        stream_worker_sync.resume()
         for lease in leases:
             await lease.close()
-        stream_worker_sync.resume()
         await stream.stop()
 
 
