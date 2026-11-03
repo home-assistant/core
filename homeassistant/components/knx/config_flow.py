@@ -1,8 +1,8 @@
 """Config flow for KNX."""
 
 import asyncio
-from collections.abc import AsyncGenerator
-from typing import Any, Final, Literal, override
+from collections.abc import AsyncGenerator, Mapping
+from typing import TYPE_CHECKING, Any, Final, Literal, NamedTuple, override
 from urllib.parse import quote, unquote, urlparse, urlunparse
 
 from knx_telegram_store import ConnectionErrorKind
@@ -31,6 +31,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.field_visibility import FieldCondition
 from homeassistant.helpers.typing import Undefined, VolDictType
 
 from .const import (
@@ -39,6 +40,7 @@ from .const import (
     CONF_KNX_DEFAULT_RATE_LIMIT,
     CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_KNXKEY_FILENAME,
     CONF_KNX_KNXKEY_PASSWORD,
     CONF_KNX_LOCAL_IP,
     CONF_KNX_MCAST_GRP,
@@ -77,7 +79,11 @@ from .const import (
     KNXConfigEntryData,
     KNXConfigEntryOptions,
 )
-from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
+from .storage.keyring import (
+    DEFAULT_KNX_KEYRING_FILENAME,
+    load_stored_knxkeys_file,
+    save_uploaded_knxkeys_file,
+)
 from .validation import ia_validator, ip_v4_validator
 
 CONF_KNX_GATEWAY: Final = "gateway"
@@ -116,6 +122,20 @@ CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
 
 OPTION_MANUAL_TUNNEL: Final = "Manual"
 
+CONF_KNX_SECURE_KEY_SOURCE: Final = "key_source"
+KEY_SOURCE_KNXKEYS_EXISTING: Final = "knxkeys_existing"
+KEY_SOURCE_KNXKEYS_UPLOAD: Final = "knxkeys_upload"
+KEY_SOURCE_MANUAL: Final = "manual"
+
+_KEYRING_UPLOAD_VISIBLE: Final[FieldCondition] = {
+    "field": CONF_KNX_SECURE_KEY_SOURCE,
+    "value": KEY_SOURCE_KNXKEYS_UPLOAD,
+}
+_MANUAL_KEYS_VISIBLE: Final[FieldCondition] = {
+    "field": CONF_KNX_SECURE_KEY_SOURCE,
+    "value": KEY_SOURCE_MANUAL,
+}
+
 _IA_SELECTOR = selector.TextSelector()
 _IP_SELECTOR = selector.TextSelector()
 _PORT_SELECTOR = probatio.All(
@@ -126,6 +146,35 @@ _PORT_SELECTOR = probatio.All(
     ),
     probatio.Coerce(int),
 )
+_PASSWORD_SELECTOR = selector.TextSelector(
+    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
+)
+
+
+class StoredKeyring(NamedTuple):
+    """Keyring file stored by a previous import."""
+
+    keyring: Keyring
+    filename: str
+    password: str
+
+
+def _describe_connection(data: Mapping[str, Any]) -> str:
+    """Return a human readable description of a configured connection."""
+    connection_type = data.get(CONF_KNX_CONNECTION_TYPE)
+    if connection_type in CONF_KNX_TUNNELING_TYPE_LABELS:
+        description = (
+            f"{CONF_KNX_TUNNELING_TYPE_LABELS[connection_type]}"
+            f" @ {data[CONF_HOST]}:{data[CONF_PORT]}"
+        )
+        if tunnel_endpoint_ia := data.get(CONF_KNX_TUNNEL_ENDPOINT_IA):
+            description += f" as {tunnel_endpoint_ia}"
+        return description
+    if connection_type == CONF_KNX_ROUTING:
+        return f"Routing as {data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+    if connection_type == CONF_KNX_ROUTING_SECURE:
+        return f"Secure Routing as {data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
+    return CONF_KNX_AUTOMATIC.capitalize()
 
 
 class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -141,6 +190,8 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         self.new_title: str | None = None
 
         self._keyring: Keyring | None = None
+        self._stored_keyring: StoredKeyring | None = None
+        self._stored_keyring_loaded = False
         self._found_gateways: list[GatewayDescriptor] = []
         self._found_tunnels: list[GatewayDescriptor] = []
         self._selected_tunnel: GatewayDescriptor | None = None
@@ -230,12 +281,20 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of existing entry."""
         entry = self._get_reconfigure_entry()
         self.initial_data = dict(entry.data)  # type: ignore[assignment]
+        if (stored_keyring := await self._async_get_stored_keyring()) is not None:
+            keyring_project = stored_keyring.keyring.project_name
+        else:
+            keyring_project = self.initial_data.get(CONF_KNX_KNXKEY_FILENAME) or "-"
         return self.async_show_menu(
             step_id="reconfigure",
             menu_options=[
                 "connection_type",
                 "secure_knxkeys",
             ],
+            description_placeholders={
+                "current_connection": _describe_connection(self.initial_data),
+                "keyring_project": keyring_project,
+            },
         )
 
     async def async_step_connection_type(
@@ -277,10 +336,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             self.new_title = CONF_KNX_AUTOMATIC.capitalize()
             return self.finish_flow()
 
-        supported_connection_types = {
-            CONF_KNX_TUNNELING: CONF_KNX_TUNNELING.capitalize(),
-            CONF_KNX_ROUTING: CONF_KNX_ROUTING.capitalize(),
-        }
+        supported_connection_types = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
 
         self._gatewayscanner = GatewayScanner(
             self._xknx, stop_on_found=0, timeout_in_seconds=2
@@ -294,9 +350,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             pass  # scan finished, no interfaces discovered
         else:
             # add automatic at first position only if a gateway responded
-            supported_connection_types = {
-                CONF_KNX_AUTOMATIC: CONF_KNX_AUTOMATIC.capitalize()
-            } | supported_connection_types
+            supported_connection_types.insert(0, CONF_KNX_AUTOMATIC)
 
         default_connection_type: Literal["automatic", "tunneling", "routing"]
         _current_conn = self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
@@ -316,7 +370,13 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         fields = {
             probatio.Required(
                 CONF_KNX_CONNECTION_TYPE, default=default_connection_type
-            ): probatio.In(supported_connection_types)
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=supported_connection_types,
+                    mode=selector.SelectSelectorMode.LIST,
+                    translation_key="connection_type",
+                )
+            )
         }
         return self.async_show_form(
             step_id="connection_type", data_schema=probatio.Schema(fields)
@@ -360,7 +420,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             if connection_type == CONF_KNX_TUNNELING_TCP:
                 return await self.async_step_tcp_tunnel_endpoint()
             if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
-                return await self.async_step_secure_key_source_menu_tunnel()
+                return await self.async_step_secure_tunnel()
             self.new_title = f"Tunneling @ {self._selected_tunnel}"
             return self.finish_flow()
 
@@ -500,13 +560,15 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             selected_tunneling_type = user_input[CONF_KNX_TUNNELING_TYPE]
+            # hidden for TCP tunneling types
+            route_back = user_input.get(CONF_KNX_ROUTE_BACK, False)
             if not errors:
                 try:
                     self._selected_tunnel = await request_description(
                         gateway_ip=_host_ip,
                         gateway_port=user_input[CONF_PORT],
                         local_ip=_local_ip,
-                        route_back=user_input[CONF_KNX_ROUTE_BACK],
+                        route_back=route_back,
                     )
                 except CommunicationError:
                     errors["base"] = "cannot_connect"
@@ -524,7 +586,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     connection_type=selected_tunneling_type,
                     host=_host,
                     port=user_input[CONF_PORT],
-                    route_back=user_input[CONF_KNX_ROUTE_BACK],
+                    route_back=route_back,
                     local_ip=_local,
                     device_authentication=None,
                     user_id=None,
@@ -533,7 +595,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
                 if selected_tunneling_type == CONF_KNX_TUNNELING_TCP_SECURE:
-                    return await self.async_step_secure_key_source_menu_tunnel()
+                    return await self.async_step_secure_tunnel()
                 _proto = (
                     "UDP" if selected_tunneling_type == CONF_KNX_TUNNELING else "TCP"
                 )
@@ -583,11 +645,19 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         fields: VolDictType = {
             probatio.Required(
                 CONF_KNX_TUNNELING_TYPE, default=default_type
-            ): probatio.In(CONF_KNX_TUNNELING_TYPE_LABELS),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(CONF_KNX_TUNNELING_TYPE_LABELS),
+                    mode=selector.SelectSelectorMode.LIST,
+                    translation_key="tunneling_type",
+                )
+            ),
             probatio.Required(CONF_HOST, default=ip_address): _IP_SELECTOR,
             probatio.Required(CONF_PORT, default=port): _PORT_SELECTOR,
-            probatio.Required(
-                CONF_KNX_ROUTE_BACK, default=_route_back
+            data_entry_flow.Required(
+                CONF_KNX_ROUTE_BACK,
+                default=_route_back,
+                visible={"field": CONF_KNX_TUNNELING_TYPE, "value": CONF_KNX_TUNNELING},
             ): selector.BooleanSelector(),
             probatio.Optional(CONF_KNX_LOCAL_IP): _IP_SELECTOR,
         }
@@ -598,26 +668,189 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manual_tunnel", data_schema=probatio.Schema(fields), errors=errors
         )
 
-    async def async_step_secure_tunnel_manual(
-        self, user_input: dict | None = None
-    ) -> ConfigFlowResult:
-        """Configure ip secure tunneling manually."""
-        errors: dict = {}
+    async def _async_get_stored_keyring(self) -> StoredKeyring | None:
+        """Return the keyring imported by a previous flow if it can be loaded."""
+        if self._stored_keyring_loaded:
+            return self._stored_keyring
+        self._stored_keyring_loaded = True
+        filename = self.initial_data.get(CONF_KNX_KNXKEY_FILENAME)
+        password = self.initial_data.get(CONF_KNX_KNXKEY_PASSWORD)
+        if filename is None or password is None:
+            return None
+        try:
+            keyring = await load_stored_knxkeys_file(self.hass, filename, password)
+        except InvalidSecureConfiguration, FileNotFoundError:
+            return None
+        self._stored_keyring = StoredKeyring(keyring, filename, password)
+        return self._stored_keyring
 
-        if user_input is not None:
-            self.new_entry_data |= KNXConfigEntryData(
-                device_authentication=user_input[CONF_KNX_SECURE_DEVICE_AUTHENTICATION],
-                user_id=user_input[CONF_KNX_SECURE_USER_ID],
-                user_password=user_input[CONF_KNX_SECURE_USER_PASSWORD],
-                tunnel_endpoint_ia=None,
-            )
-            self.new_title = f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
+    def _validate_keyring(
+        self, keyring: Keyring
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        """Check that a keyring provides the keys for the configured connection.
+
+        Return form errors and description placeholders.
+        """
+        if self.connection_type == CONF_KNX_ROUTING_SECURE and (
+            keyring.backbone is None or keyring.backbone.decrypted_key is None
+        ):
+            return {"base": "keyfile_no_backbone_key"}, {}
+        if (
+            self._selected_tunnel is not None
+            and (host_ia := self._selected_tunnel.individual_address)
+            and not keyring.get_tunnel_interfaces_by_host(host=host_ia)
+        ):
+            return {"base": "keyfile_no_tunnel_for_host"}, {CONF_HOST: str(host_ia)}
+        return {}, {}
+
+    async def _async_keyring_selected(
+        self, keyring: Keyring, filename: str, password: str
+    ) -> ConfigFlowResult:
+        """Store the keyring in the entry data and continue the flow."""
+        self._keyring = keyring
+        self.new_entry_data |= KNXConfigEntryData(
+            knxkeys_filename=filename,
+            knxkeys_password=password,
+            backbone_key=None,
+            sync_latency_tolerance=None,
+        )
+        if self.connection_type in (CONF_KNX_ROUTING, CONF_KNX_ROUTING_SECURE):
             return self.finish_flow()
 
-        fields = {
+        # Tunneling / Automatic
+        # skip selection step if the keyring includes the configured tunnel
+        if self.tunnel_endpoint_ia is not None and self.tunnel_endpoint_ia in [
+            str(_if.individual_address) for _if in keyring.interfaces
+        ]:
+            return self.finish_flow()
+        return await self.async_step_knxkeys_tunnel_select()
+
+    async def _async_handle_keyring_source(
+        self,
+        key_source: str,
+        user_input: dict[str, Any],
+        errors: dict[str, str],
+        description_placeholders: dict[str, str],
+    ) -> ConfigFlowResult | None:
+        """Continue the flow with the stored or uploaded keyring.
+
+        Return None and fill `errors` if the keyring can't be used.
+        """
+        if key_source == KEY_SOURCE_KNXKEYS_EXISTING:
+            if TYPE_CHECKING:
+                # only offered when a stored keyring was loaded
+                assert self._stored_keyring is not None
+            keyring, filename, password = self._stored_keyring
+        else:
+            password = user_input[CONF_KNX_KNXKEY_PASSWORD]
+            filename = f"{DOMAIN}/{DEFAULT_KNX_KEYRING_FILENAME}"
+            try:
+                keyring = await save_uploaded_knxkeys_file(
+                    self.hass,
+                    uploaded_file_id=user_input[CONF_KEYRING_FILE],
+                    password=password,
+                    is_usable=lambda keyring: not self._validate_keyring(keyring)[0],
+                )
+            except InvalidSecureConfiguration:
+                errors[CONF_KNX_KNXKEY_PASSWORD] = "keyfile_invalid_signature"
+                return None
+
+        keyring_errors, keyring_placeholders = self._validate_keyring(keyring)
+        if keyring_errors:
+            errors.update(keyring_errors)
+            description_placeholders.update(keyring_placeholders)
+            return None
+        if key_source == KEY_SOURCE_KNXKEYS_UPLOAD:
+            # the uploaded file replaced the stored one
+            self._stored_keyring = StoredKeyring(keyring, filename, password)
+        return await self._async_keyring_selected(keyring, filename, password)
+
+    def _add_suggested_values(
+        self, data_schema: probatio.Schema, user_input: dict[str, Any]
+    ) -> probatio.Schema:
+        """Keep the entered values after an error.
+
+        The uploaded file is consumed by the failed attempt, so it is not suggested.
+        """
+        return self.add_suggested_values_to_schema(
+            data_schema,
+            {
+                key: value
+                for key, value in user_input.items()
+                if key != CONF_KEYRING_FILE
+            },
+        )
+
+    async def _async_key_source_fields(self, manual_configured: bool) -> VolDictType:
+        """Return the fields to select the IP Secure key source and upload a keyring."""
+        sources = [KEY_SOURCE_KNXKEYS_UPLOAD, KEY_SOURCE_MANUAL]
+        if await self._async_get_stored_keyring() is not None:
+            sources.insert(0, KEY_SOURCE_KNXKEYS_EXISTING)
+            default_source = KEY_SOURCE_KNXKEYS_EXISTING
+        elif manual_configured:
+            default_source = KEY_SOURCE_MANUAL
+        else:
+            default_source = KEY_SOURCE_KNXKEYS_UPLOAD
+        return {
             probatio.Required(
+                CONF_KNX_SECURE_KEY_SOURCE, default=default_source
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=sources,
+                    mode=selector.SelectSelectorMode.LIST,
+                    translation_key="secure_key_source",
+                )
+            ),
+            data_entry_flow.Required(
+                CONF_KEYRING_FILE, visible=_KEYRING_UPLOAD_VISIBLE
+            ): selector.FileSelector(
+                config=selector.FileSelectorConfig(accept=".knxkeys")
+            ),
+            data_entry_flow.Required(
+                probatio.Secret(CONF_KNX_KNXKEY_PASSWORD),
+                default=self.initial_data.get(CONF_KNX_KNXKEY_PASSWORD),
+                visible=_KEYRING_UPLOAD_VISIBLE,
+            ): selector.TextSelector(),
+        }
+
+    async def async_step_secure_tunnel(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure the IP Secure keys for a tunneling connection."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        if user_input is not None:
+            if user_input[CONF_KNX_SECURE_KEY_SOURCE] == KEY_SOURCE_MANUAL:
+                self.new_entry_data |= KNXConfigEntryData(
+                    device_authentication=user_input[
+                        CONF_KNX_SECURE_DEVICE_AUTHENTICATION
+                    ],
+                    user_id=user_input[CONF_KNX_SECURE_USER_ID],
+                    user_password=user_input[CONF_KNX_SECURE_USER_PASSWORD],
+                    tunnel_endpoint_ia=None,
+                )
+                self.new_title = f"Secure Tunneling @ {self.new_entry_data[CONF_HOST]}"
+                return self.finish_flow()
+            if (
+                result := await self._async_handle_keyring_source(
+                    user_input[CONF_KNX_SECURE_KEY_SOURCE],
+                    user_input,
+                    errors,
+                    description_placeholders,
+                )
+            ) is not None:
+                return result
+
+        fields: VolDictType = {
+            **await self._async_key_source_fields(
+                manual_configured=self.initial_data.get(CONF_KNX_SECURE_USER_ID)
+                is not None
+            ),
+            data_entry_flow.Required(
                 CONF_KNX_SECURE_USER_ID,
                 default=self.initial_data.get(CONF_KNX_SECURE_USER_ID, 2),
+                visible=_MANUAL_KEYS_VISIBLE,
             ): probatio.All(
                 selector.NumberSelector(
                     selector.NumberSelectorConfig(
@@ -626,62 +859,75 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 probatio.Coerce(int),
             ),
-            probatio.Required(
+            data_entry_flow.Required(
                 CONF_KNX_SECURE_USER_PASSWORD,
                 default=self.initial_data.get(CONF_KNX_SECURE_USER_PASSWORD),
-            ): selector.TextSelector(
-                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
-            ),
-            probatio.Required(
+                visible=_MANUAL_KEYS_VISIBLE,
+            ): _PASSWORD_SELECTOR,
+            data_entry_flow.Required(
                 CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
                 default=self.initial_data.get(CONF_KNX_SECURE_DEVICE_AUTHENTICATION),
-            ): selector.TextSelector(
-                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
-            ),
+                visible=_MANUAL_KEYS_VISIBLE,
+            ): _PASSWORD_SELECTOR,
         }
+        data_schema = probatio.Schema(fields)
+        if user_input is not None:
+            data_schema = self._add_suggested_values(data_schema, user_input)
         return self.async_show_form(
-            step_id="secure_tunnel_manual",
-            data_schema=probatio.Schema(fields),
+            step_id="secure_tunnel",
+            data_schema=data_schema,
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
-    async def async_step_secure_routing_manual(
-        self, user_input: dict | None = None
+    async def async_step_secure_routing(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure ip secure routing manually."""
-        errors: dict = {}
+        """Configure the IP Secure keys for a routing connection."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                key_bytes = bytes.fromhex(user_input[CONF_KNX_ROUTING_BACKBONE_KEY])
-                if len(key_bytes) != 16:
-                    raise ValueError  # noqa: TRY301
-            except ValueError:
-                errors[CONF_KNX_ROUTING_BACKBONE_KEY] = "invalid_backbone_key"
-            if not errors:
-                self.new_entry_data |= KNXConfigEntryData(
-                    backbone_key=user_input[CONF_KNX_ROUTING_BACKBONE_KEY],
-                    sync_latency_tolerance=user_input[
-                        CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE
-                    ],
+            if user_input[CONF_KNX_SECURE_KEY_SOURCE] == KEY_SOURCE_MANUAL:
+                try:
+                    key_bytes = bytes.fromhex(user_input[CONF_KNX_ROUTING_BACKBONE_KEY])
+                    if len(key_bytes) != 16:
+                        raise ValueError  # noqa: TRY301
+                except ValueError:
+                    errors[CONF_KNX_ROUTING_BACKBONE_KEY] = "invalid_backbone_key"
+                if not errors:
+                    self.new_entry_data |= KNXConfigEntryData(
+                        backbone_key=user_input[CONF_KNX_ROUTING_BACKBONE_KEY],
+                        sync_latency_tolerance=user_input[
+                            CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE
+                        ],
+                    )
+                    return self.finish_flow()
+            elif (
+                result := await self._async_handle_keyring_source(
+                    user_input[CONF_KNX_SECURE_KEY_SOURCE],
+                    user_input,
+                    errors,
+                    description_placeholders,
                 )
-                self.new_title = (
-                    "Secure Routing as"
-                    f" {self.new_entry_data[CONF_KNX_INDIVIDUAL_ADDRESS]}"
-                )
-                return self.finish_flow()
+            ) is not None:
+                return result
 
-        fields = {
-            probatio.Required(
+        fields: VolDictType = {
+            **await self._async_key_source_fields(
+                manual_configured=self.initial_data.get(CONF_KNX_ROUTING_BACKBONE_KEY)
+                is not None
+            ),
+            data_entry_flow.Required(
                 CONF_KNX_ROUTING_BACKBONE_KEY,
                 default=self.initial_data.get(CONF_KNX_ROUTING_BACKBONE_KEY),
-            ): selector.TextSelector(
-                selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
-            ),
-            probatio.Required(
+                visible=_MANUAL_KEYS_VISIBLE,
+            ): _PASSWORD_SELECTOR,
+            data_entry_flow.Required(
                 CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
                 default=self.initial_data.get(CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE)
                 or 1000,
+                visible=_MANUAL_KEYS_VISIBLE,
             ): probatio.All(
                 selector.NumberSelector(
                     selector.NumberSelectorConfig(
@@ -694,10 +940,14 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Coerce(int),
             ),
         }
+        data_schema = probatio.Schema(fields)
+        if user_input is not None:
+            data_schema = self._add_suggested_values(data_schema, user_input)
         return self.async_show_form(
-            step_id="secure_routing_manual",
-            data_schema=probatio.Schema(fields),
+            step_id="secure_routing",
+            data_schema=data_schema,
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_secure_knxkeys(
@@ -705,38 +955,18 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Manage upload of new KNX Keyring file."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            password = user_input[CONF_KNX_KNXKEY_PASSWORD]
-            try:
-                self._keyring = await save_uploaded_knxkeys_file(
-                    self.hass,
-                    uploaded_file_id=user_input[CONF_KEYRING_FILE],
-                    password=password,
+            if (
+                result := await self._async_handle_keyring_source(
+                    KEY_SOURCE_KNXKEYS_UPLOAD,
+                    user_input,
+                    errors,
+                    description_placeholders,
                 )
-            except InvalidSecureConfiguration:
-                errors[CONF_KNX_KNXKEY_PASSWORD] = "keyfile_invalid_signature"
-
-            if not errors and self._keyring:
-                self.new_entry_data |= KNXConfigEntryData(
-                    knxkeys_filename=f"{DOMAIN}/{DEFAULT_KNX_KEYRING_FILENAME}",
-                    knxkeys_password=password,
-                    backbone_key=None,
-                    sync_latency_tolerance=None,
-                )
-                # Routing
-                if self.connection_type in (CONF_KNX_ROUTING, CONF_KNX_ROUTING_SECURE):
-                    return self.finish_flow()
-
-                # Tunneling / Automatic
-                # skip selection step if we have a keyfile update
-                # that includes a configured tunnel
-                if self.tunnel_endpoint_ia is not None and self.tunnel_endpoint_ia in [
-                    str(_if.individual_address) for _if in self._keyring.interfaces
-                ]:
-                    return self.finish_flow()
-                if not errors:
-                    return await self.async_step_knxkeys_tunnel_select()
+            ) is not None:
+                return result
 
         fields = {
             probatio.Required(CONF_KEYRING_FILE): selector.FileSelector(
@@ -751,14 +981,13 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="secure_knxkeys",
             data_schema=probatio.Schema(fields),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_knxkeys_tunnel_select(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
         """Select if a specific tunnel should be used from knxkeys file."""
-        errors = {}
-        description_placeholders = {}
         if user_input is not None:
             selected_tunnel_ia: str | None = None
             _if_user_id: int | None = None
@@ -791,19 +1020,17 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.finish_flow()
 
-        # this step is only called from async_step_secure_knxkeys
-        # so self._keyring is always set
-        assert self._keyring
+        if TYPE_CHECKING:
+            # this step is only called after a keyring was selected
+            assert self._keyring
 
         # Filter for selected tunnel
-        if self._selected_tunnel is not None:
-            if host_ia := self._selected_tunnel.individual_address:
-                self._tunnel_endpoints = self._keyring.get_tunnel_interfaces_by_host(
-                    host=host_ia
-                )
-            if not self._tunnel_endpoints:
-                errors["base"] = "keyfile_no_tunnel_for_host"
-                description_placeholders = {CONF_HOST: str(host_ia)}
+        if self._selected_tunnel is not None and (
+            host_ia := self._selected_tunnel.individual_address
+        ):
+            self._tunnel_endpoints = self._keyring.get_tunnel_interfaces_by_host(
+                host=host_ia
+            )
         else:
             self._tunnel_endpoints = self._keyring.interfaces
 
@@ -840,8 +1067,6 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            errors=errors,
-            description_placeholders=description_placeholders,
         )
 
     async def async_step_routing(
@@ -900,7 +1125,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 if connection_type == CONF_KNX_ROUTING_SECURE:
                     self.new_title = f"Secure Routing as {_individual_address}"
-                    return await self.async_step_secure_key_source_menu_routing()
+                    return await self.async_step_secure_routing()
                 self.new_title = f"Routing as {_individual_address}"
                 return self.finish_flow()
 
@@ -928,24 +1153,6 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="routing", data_schema=probatio.Schema(fields), errors=errors
-        )
-
-    async def async_step_secure_key_source_menu_tunnel(
-        self, user_input: dict | None = None
-    ) -> ConfigFlowResult:
-        """Show the key source menu."""
-        return self.async_show_menu(
-            step_id="secure_key_source_menu_tunnel",
-            menu_options=["secure_knxkeys", "secure_tunnel_manual"],
-        )
-
-    async def async_step_secure_key_source_menu_routing(
-        self, user_input: dict | None = None
-    ) -> ConfigFlowResult:
-        """Show the key source menu."""
-        return self.async_show_menu(
-            step_id="secure_key_source_menu_routing",
-            menu_options=["secure_knxkeys", "secure_routing_manual"],
         )
 
 
