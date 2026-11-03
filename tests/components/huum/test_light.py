@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from huum.exceptions import RequestError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -16,6 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 ENTITY_ID = "light.huum_sauna_light"
@@ -79,3 +81,23 @@ async def test_light_turn_on(
         blocking=True,
     )
     mock_huum_client.toggle_light.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_light_communication_error(
+    hass: HomeAssistant,
+    mock_huum_client: AsyncMock,
+) -> None:
+    """Test that API errors when toggling the light are raised as HomeAssistantError."""
+    mock_huum_client.toggle_light.side_effect = RequestError()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the Huum sauna",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )

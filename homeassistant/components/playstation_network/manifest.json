@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.gaming"],
   "codeowners": ["@jackjpowell", "@tr4nt0r"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "macaddress": "AC8995*"

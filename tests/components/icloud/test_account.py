@@ -44,7 +44,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import Store
 
-from .conftest import MockAppleDevice, MockDevicesContainer
+from . import MockAppleDevice, MockDevicesContainer
 from .const import (
     DEVICE,
     DEVICE_2,
@@ -694,12 +694,10 @@ class StrictAppleDevice(MockAppleDevice):
     and raises for them.
     """
 
-    def status(self, additional):
+    def status(self, key):
         """Return the requested fields, filling in the missing ones."""
-        return {field: self._status.get(field) for field in additional} | {
-            field: value
-            for field, value in self._status.items()
-            if field not in additional
+        return {field: self._status.get(field) for field in key} | {
+            field: value for field, value in self._status.items() if field not in key
         }
 
     def __getitem__(self, key):

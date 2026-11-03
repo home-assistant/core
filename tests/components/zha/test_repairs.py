@@ -244,6 +244,23 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
     assert issue is None
 
 
+async def test_no_warn_on_ziggurat_firmware(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that OpenThread RCP firmware with Ziggurat is not reported as wrong."""
+    with patch(
+        "homeassistant.components.zha.repairs.wrong_silabs_firmware.probe_silabs_firmware_type",
+        return_value=ApplicationType.SPINEL_ZIGGURAT,
+    ):
+        assert not await warn_on_wrong_silabs_firmware(hass, device=SKYCONNECT_DEVICE)
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
+    )
+    assert issue is None
+
+
 async def test_no_warn_on_socket(hass: HomeAssistant) -> None:
     """Test that no warning is issued when the device is a socket."""
     with patch(

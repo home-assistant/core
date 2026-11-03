@@ -472,7 +472,7 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
                 }
             ),
             description_placeholders={
-                CONF_SERIAL: self.config_entry.unique_id,
-                CONF_HOST: self.config_entry.data[CONF_HOST],
+                "serial": self.config_entry.unique_id,
+                "host": self.config_entry.data[CONF_HOST],
             },
         )
