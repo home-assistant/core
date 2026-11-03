@@ -333,7 +333,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         return self.async_show_form(
             step_id="verify_radio",
             description_placeholders={
-                CONF_NAME: self._radio_mgr.radio_type.description,
+                "name": self._radio_mgr.radio_type.description,
                 "docs_recommended_adapters_url": (
                     "https://www.home-assistant.io/integrations/zha/#recommended-zigbee-radio-adapters-and-modules"
                 ),
@@ -894,7 +894,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                CONF_NAME: self.context.get("title_placeholders", {}).get(
+                "name": self.context.get("title_placeholders", {}).get(
                     CONF_NAME, self._radio_mgr.device_path or ""
                 )
             },

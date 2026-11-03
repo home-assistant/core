@@ -323,7 +323,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             description_placeholders={
-                CONF_HOST: existing_data[CONF_HOST],
+                "host": existing_data[CONF_HOST],
                 "sample_ip": "http://192.168.10.100:80",
             },
             step_id="reauth_confirm",

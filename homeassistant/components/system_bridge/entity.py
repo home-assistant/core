@@ -1,7 +1,7 @@
 """Base entity for the system bridge integration."""
 
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 from typing import override
 
 from systembridgeconnector.const import EventType
@@ -10,6 +10,7 @@ from systembridgeconnector.models.audio_control import AudioControl
 from systembridgeconnector.models.display_control import DisplayControl
 from systembridgeconnector.models.modules.audio import AudioDevice
 from systembridgeconnector.models.modules.displays import Display, DisplayPowerState
+from systembridgeconnector.models.response import Response
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
@@ -55,6 +56,26 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
             name=self._hostname,
             sw_version=self._version,
         )
+
+    async def _async_system_control(self, request: Awaitable[Response]) -> None:
+        """Send a system control, raising if it fails."""
+        try:
+            response = await request
+        except ConnectionClosedException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                translation_placeholders={
+                    "title": self.coordinator.config_entry.title,
+                    "host": self.coordinator.config_entry.data[CONF_HOST],
+                },
+            ) from e
+        if response.type == EventType.ERROR:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="system_control_failed",
+                translation_placeholders={"error": response.message or ""},
+            )
 
 
 class SystemBridgeDisplayEntity(SystemBridgeEntity):

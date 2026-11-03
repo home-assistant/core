@@ -54,6 +54,11 @@ SENSORS_TYPE_COUNT = "sensors_count"
 _LOGGER = logging.getLogger(__name__)
 
 
+def unnamed_client_name(mac: str) -> str:
+    """Return the tracker name of a client without a name."""
+    return mac.replace(":", "_")
+
+
 def get_device_identifier(entry: ConfigEntry) -> tuple[str, str]:
     """Return the device registry identifier of the router."""
     return (DOMAIN, entry.unique_id or "AsusWRT")
@@ -142,7 +147,7 @@ class AsusWrtDevInfo:
         utc_point_in_time = dt_util.utcnow()
         if dev_info:
             if not self._name:
-                self._name = dev_info.name or self._mac.replace(":", "_")
+                self._name = dev_info.name or None
             self._ip_address = dev_info.ip
             self._last_activity = utc_point_in_time
             self._connected = True
@@ -268,7 +273,10 @@ class AsusWrtRouter:
                     entry.entity_id, new_unique_id=device_mac
                 )
 
-            self._devices[device_mac] = AsusWrtDevInfo(device_mac, entry.original_name)
+            name = entry.original_name
+            if name == unnamed_client_name(device_mac):
+                name = None
+            self._devices[device_mac] = AsusWrtDevInfo(device_mac, name)
 
         # Migrate entities to new unique id format
         self._migrate_entities_unique_id()

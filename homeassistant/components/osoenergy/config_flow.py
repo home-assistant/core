@@ -51,7 +51,7 @@ class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_SCHEMA_STEP_USER,
             errors=errors,
-            description_placeholders={CONF_PORTAL_URL: OSOENERGY_PORTAL_URL},
+            description_placeholders={"portal_url": OSOENERGY_PORTAL_URL},
         )
 
     async def get_user_email(self, subscription_key: str) -> str | None:
@@ -74,5 +74,5 @@ class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 _SCHEMA_STEP_USER, self._get_reauth_entry().data
             ),
-            description_placeholders={CONF_PORTAL_URL: OSOENERGY_PORTAL_URL},
+            description_placeholders={"portal_url": OSOENERGY_PORTAL_URL},
         )

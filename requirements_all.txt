@@ -50,7 +50,7 @@ PlexAPI==4.18.2
 ProgettiHWSW==0.1.4
 
 # homeassistant.components.cast
-PyChromecast==14.1.0
+PyChromecast==14.1.1
 
 # homeassistant.components.flume
 PyFlume==0.6.5
@@ -307,7 +307,7 @@ aioharmony==1.0.10
 aiohasupervisor==0.9.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.39.1
+aiohomeconnect==0.41.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==4.0.1
@@ -496,7 +496,7 @@ aiothreema==0.3.0
 aiotractive==2.0.0
 
 # homeassistant.components.unifi
-aiounifi==97
+aiounifi==98
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -1454,7 +1454,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==10.5.0
+infrared-protocols==10.6.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.7.1
