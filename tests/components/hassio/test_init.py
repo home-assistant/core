@@ -28,6 +28,7 @@ from aiohasupervisor.models import (
     PartialBackupOptions,
     PartialRestoreOptions,
     SupervisorOptions,
+    UpdateChannel,
 )
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
@@ -371,6 +372,28 @@ async def test_setup_onboarding_supervisor_no_update(
     supervisor_client.supervisor.update.assert_called_once()
 
 
+async def test_setup_onboarding_does_not_enable_auto_update_on_beta_channel(
+    hass: HomeAssistant,
+    supervisor_info: AsyncMock,
+) -> None:
+    """Test onboarding does not enable automatic updates on a beta channel."""
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, channel=UpdateChannel.BETA
+    )
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, unique_id=DOMAIN)
+    entry.add_to_hass(hass)
+
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch("homeassistant.components.hassio.async_is_onboarded", return_value=False),
+    ):
+        result = await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert result
+    assert OPTION_CORE_AUTO_UPDATE not in entry.options
+
+
 async def test_setup_onboarding_preserves_explicit_auto_update_disabled(
     hass: HomeAssistant,
 ) -> None:
@@ -398,9 +421,7 @@ async def test_setup_onboarded_preserves_unset_auto_update_option(
     hass: HomeAssistant,
 ) -> None:
     """Test existing installations are not given the new-install default."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={}, options={}, unique_id=DOMAIN
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 
     with (
