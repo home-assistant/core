@@ -161,6 +161,6 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                CONF_EMAIL: self._auth_data[CONF_EMAIL],
+                "email": self._auth_data[CONF_EMAIL],
             },
         )

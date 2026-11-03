@@ -54,6 +54,11 @@ SENSORS_TYPE_COUNT = "sensors_count"
 _LOGGER = logging.getLogger(__name__)
 
 
+def unnamed_client_name(mac: str) -> str:
+    """Return the tracker name of a client without a name."""
+    return mac.replace(":", "_")
+
+
 def get_device_identifier(entry: ConfigEntry) -> tuple[str, str]:
     """Return the device registry identifier of the router."""
     return (DOMAIN, entry.unique_id or "AsusWRT")
@@ -142,7 +147,7 @@ class AsusWrtDevInfo:
         utc_point_in_time = dt_util.utcnow()
         if dev_info:
             if not self._name:
-                self._name = dev_info.name or self._mac.replace(":", "_")
+                self._name = dev_info.name or None
             self._ip_address = dev_info.ip
             self._last_activity = utc_point_in_time
             self._connected = True
@@ -268,7 +273,10 @@ class AsusWrtRouter:
                     entry.entity_id, new_unique_id=device_mac
                 )
 
-            self._devices[device_mac] = AsusWrtDevInfo(device_mac, entry.original_name)
+            name = entry.original_name
+            if name == unnamed_client_name(device_mac):
+                name = None
+            self._devices[device_mac] = AsusWrtDevInfo(device_mac, name)
 
         # Migrate entities to new unique id format
         self._migrate_entities_unique_id()
@@ -374,6 +382,12 @@ class AsusWrtRouter:
         self._on_close.clear()
 
     @callback
+    def async_forget_device(self, mac: str) -> None:
+        """Stop tracking a client until it connects again."""
+        if self._devices.pop(mac, None) is not None:
+            async_dispatcher_send(self.hass, self.signal_device_removed, mac)
+
+    @callback
     def async_on_close(self, func: CALLBACK_TYPE) -> None:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
@@ -423,6 +437,11 @@ class AsusWrtRouter:
     def signal_device_update(self) -> str:
         """Event specific per AsusWrt entry to signal updates in devices."""
         return f"{DOMAIN}-device-update"
+
+    @property
+    def signal_device_removed(self) -> str:
+        """Event specific per AsusWrt entry to signal a removed device."""
+        return f"{DOMAIN}-device-removed-{self._entry.entry_id}"
 
     @property
     def host(self) -> str:

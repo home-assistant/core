@@ -83,6 +83,9 @@
           "low": "mdi:cash-minus"
         }
       },
+      "current_quarter_hour_electricity_price": {
+        "default": "mdi:cash-multiple"
+      },
       "current_sustainability_score": {
         "default": "mdi:leaf"
       },
