@@ -79,6 +79,7 @@ from .const import (
     MAIN_COORDINATOR,
     OPTION_ADD_ON_BACKUP_BEFORE_UPDATE,
     OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
+    OPTION_CORE_AUTO_UPDATE,
     OPTION_CORE_BACKUP_BEFORE_UPDATE,
     STATS_COORDINATOR,
     UPDATE_KEY_NETWORK,
@@ -500,6 +501,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues_coordinator
 
     auto_update = AutoUpdateManager(hass, entry, coordinator)
+    if (
+        not async_is_onboarded(hass)
+        and auto_update.unavailable_reason is None
+        and OPTION_CORE_AUTO_UPDATE not in entry.options
+    ):
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, OPTION_CORE_AUTO_UPDATE: True},
+        )
     await auto_update.async_setup()
     hass.data[DATA_AUTO_UPDATE] = auto_update
 
