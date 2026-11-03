@@ -193,8 +193,8 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={
-                CONF_NAME: reauth_entry.title,
-                CONF_API_KEY: reauth_entry.data.get(CONF_API_KEY, ""),
+                "name": reauth_entry.title,
+                "api_key": reauth_entry.data.get(CONF_API_KEY, ""),
             },
         )
 
