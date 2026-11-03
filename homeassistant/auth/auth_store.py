@@ -7,7 +7,8 @@ import itertools
 from logging import getLogger
 from typing import Any
 
-from homeassistant.core import HassJob, HassJobType, HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -315,7 +316,7 @@ class AuthStore:
         self._async_schedule_save()
 
     @callback
-    def _async_flush_token_usage(self) -> None:
+    def _async_flush_token_usage(self, _event: Event) -> None:
         """Save pending long-lived access token usage on shutdown."""
         if self._usage_save_timer is not None:
             self._usage_save_timer.cancel()
@@ -349,8 +350,9 @@ class AuthStore:
         if self._loaded:
             raise RuntimeError("Auth storage is already loaded")
         self._loaded = True
-        self.hass.async_add_shutdown_job(
-            HassJob(self._async_flush_token_usage, job_type=HassJobType.Callback)
+        # Shutdown jobs run while requests are still authenticated
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_flush_token_usage
         )
 
         dev_reg = dr.async_get(self.hass)

@@ -33,7 +33,7 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
 from homeassistant.auth.models import Credentials
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, HassJob, HassJobType, HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
@@ -964,6 +964,36 @@ async def test_log_access_token_usage_saved_on_stop(
 
     manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
     await hass.async_stop(force=True)
+
+    stored_tokens = {
+        token["id"]: token for token in hass_storage["auth"]["data"]["refresh_tokens"]
+    }
+    assert stored_tokens[refresh_token.id]["last_used_ip"] == "192.168.0.1"
+
+
+async def test_log_access_token_usage_in_shutdown_job_saved_on_stop(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test token usage logged by a later shutdown job is saved on stop."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Script",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    await flush_store(manager._store._store)
+
+    # Requests are still authenticated while shutdown jobs run
+    remove_job = hass.async_add_shutdown_job(
+        HassJob(
+            lambda: manager.async_log_access_token_usage(refresh_token, "192.168.0.1"),
+            job_type=HassJobType.Callback,
+        )
+    )
+    await hass.async_stop(force=True)
+    # The hass fixture stops Home Assistant again on teardown
+    remove_job()
 
     stored_tokens = {
         token["id"]: token for token in hass_storage["auth"]["data"]["refresh_tokens"]
