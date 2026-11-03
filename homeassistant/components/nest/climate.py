@@ -5,7 +5,6 @@ from typing import Any, cast, override
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, HumidityTrait, TemperatureTrait
-from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
@@ -113,7 +112,6 @@ class ThermostatEntity(ClimateEntity):
         self._attr_unique_id = device.name
         self._attr_device_info = self._device_info.device_info
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-        self._requested_preset_mode: str | None = None
         if mode_trait := device.traits.get(ThermostatModeTrait.NAME):
             self._attr_hvac_modes = [
                 THERMOSTAT_MODE_MAP[mode]
@@ -133,18 +131,8 @@ class ThermostatEntity(ClimateEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
         self.async_on_remove(
-            self._device.add_event_callback(self._async_handle_device_event)
+            self._device.add_update_listener(self.async_write_ha_state)
         )
-
-    async def _async_handle_device_event(self, event_message: EventMessage) -> None:
-        """Handle device updates and reconcile a requested preset mode."""
-        if (
-            self._requested_preset_mode is not None
-            and event_message.resource_update_traits
-            and ThermostatEcoTrait.NAME in event_message.resource_update_traits
-        ):
-            self._requested_preset_mode = None
-        self.async_write_ha_state()
 
     @property
     @override
@@ -334,12 +322,7 @@ class ThermostatEntity(ClimateEntity):
             temperature_description = f"temperature range {low_temp} to {high_temp}"
 
         # SDM API does not allow setting temperature while in ECO preset mode.
-        preset_mode = (
-            self._requested_preset_mode
-            if self._requested_preset_mode is not None
-            else self.preset_mode
-        )
-        if preset_mode == PRESET_ECO:
+        if self.preset_mode == PRESET_ECO:
             raise HomeAssistantError(
                 f"Error setting {self.entity_id} {temperature_description}: "
                 "Cannot set temperature while in ECO preset mode."
@@ -385,12 +368,7 @@ class ThermostatEntity(ClimateEntity):
         """Set new target preset mode."""
         if preset_mode not in self.preset_modes:
             raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
-        if self._requested_preset_mode:
-            current_preset_mode = self._requested_preset_mode
-        else:
-            current_preset_mode = self.preset_mode
-        # API doesn't like duplicate preset modes
-        if current_preset_mode == preset_mode:
+        if self.preset_mode == preset_mode:  # API doesn't like duplicate preset modes
             return
         trait = self._device.traits[ThermostatEcoTrait.NAME]
         try:
@@ -399,9 +377,6 @@ class ThermostatEntity(ClimateEntity):
             raise HomeAssistantError(
                 f"Error setting {self.entity_id} preset mode to {preset_mode}: {err}"
             ) from err
-        self._requested_preset_mode = preset_mode
-        if self.preset_mode == preset_mode:
-            self._requested_preset_mode = None
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
