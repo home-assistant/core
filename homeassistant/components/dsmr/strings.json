@@ -50,6 +50,30 @@
       "actual_threshold_electricity": {
         "name": "Actual threshold electricity"
       },
+      "belgium_equipment_identifier": {
+        "name": "Electricity meter identifier"
+      },
+      "belgium_gas_device_type": {
+        "name": "Gas meter device type"
+      },
+      "belgium_gas_equipment_identifier": {
+        "name": "Gas meter identifier"
+      },
+      "belgium_gas_valve_position": {
+        "name": "Gas valve position"
+      },
+      "belgium_maximum_demand_history": {
+        "name": "Historical monthly maximum demand"
+      },
+      "belgium_switch_position": {
+        "name": "Electricity switch position"
+      },
+      "belgium_text_message": {
+        "name": "Meter text message"
+      },
+      "belgium_version_information": {
+        "name": "Belgian P1 version"
+      },
       "current_average_demand": {
         "name": "Current average demand"
       },
@@ -215,30 +239,6 @@
       },
       "water_meter_reading": {
         "name": "Water consumption"
-      },
-      "belgium_version_information": {
-        "name": "Belgian P1 version"
-      },
-      "belgium_equipment_identifier": {
-        "name": "Electricity meter identifier"
-      },
-      "belgium_switch_position": {
-        "name": "Electricity switch position"
-      },
-      "belgium_text_message": {
-        "name": "Meter text message"
-      },
-      "belgium_maximum_demand_history": {
-        "name": "Historical monthly maximum demand"
-      },
-      "belgium_gas_device_type": {
-        "name": "Gas meter device type"
-      },
-      "belgium_gas_equipment_identifier": {
-        "name": "Gas meter identifier"
-      },
-      "belgium_gas_valve_position": {
-        "name": "Gas valve position"
       }
     }
   },
