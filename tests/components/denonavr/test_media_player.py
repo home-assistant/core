@@ -24,7 +24,12 @@ from homeassistant.components.denonavr.services import (
     DenonAvrServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    STATE_UNAVAILABLE,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -96,7 +101,7 @@ async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
     await setup_denonavr(hass)
 
     data = {
-        ATTR_ENTITY_ID: ENTITY_ID,
+        CommonServiceArgument.ENTITY_ID: ENTITY_ID,
         DenonAvrServiceArgument.COMMAND: "test_command",
     }
     await hass.services.async_call(DOMAIN, DenonAvrService.GET_COMMAND, data)
@@ -110,7 +115,7 @@ async def test_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
     await setup_denonavr(hass)
 
     data = {
-        ATTR_ENTITY_ID: ENTITY_ID,
+        CommonServiceArgument.ENTITY_ID: ENTITY_ID,
         DenonAvrServiceArgument.DYNAMIC_EQ: True,
     }
     # Verify on call
@@ -135,7 +140,7 @@ async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
         DOMAIN,
         DenonAvrService.UPDATE_AUDYSSEY,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
         },
     )
     await hass.async_block_till_done()

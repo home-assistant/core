@@ -36,7 +36,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DenonAvrService.GET_COMMAND,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={probatio.Required(DenonAvrServiceArgument.COMMAND): cv.string},
-        func=f"async_{DenonAvrService.GET_COMMAND}",
+        func="async_get_command",
     )
     service.async_register_platform_entity_service(
         hass,
@@ -44,7 +44,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DenonAvrService.SET_DYNAMIC_EQ,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={probatio.Required(DenonAvrServiceArgument.DYNAMIC_EQ): cv.boolean},
-        func=f"async_{DenonAvrService.SET_DYNAMIC_EQ}",
+        func="async_set_dynamic_eq",
     )
     service.async_register_platform_entity_service(
         hass,
@@ -52,5 +52,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DenonAvrService.UPDATE_AUDYSSEY,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
-        func=f"async_{DenonAvrService.UPDATE_AUDYSSEY}",
+        func="async_update_audyssey",
     )
