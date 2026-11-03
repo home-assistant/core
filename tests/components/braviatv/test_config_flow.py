@@ -20,6 +20,7 @@ from homeassistant.components.braviatv.const import (
 )
 from homeassistant.config_entries import (
     SOURCE_DHCP,
+    SOURCE_IGNORE,
     SOURCE_SSDP,
     SOURCE_USER,
     ConfigEntryDisabler,
@@ -177,6 +178,10 @@ async def test_dhcp_discovery(
     reload_count: int,
 ) -> None:
     """Test that DHCP discovery updates the host of a known device only."""
+    # Ignored entries have no data, so the DHCP step must skip them
+    MockConfigEntry(
+        domain=DOMAIN, source=SOURCE_IGNORE, data={}, unique_id="ignored_tv_uuid"
+    ).add_to_hass(hass)
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
