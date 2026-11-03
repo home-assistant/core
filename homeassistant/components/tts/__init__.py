@@ -829,6 +829,7 @@ async def _async_convert_audio_owned(  # noqa: C901
 
     async def close_before_spawn(primary: BaseException) -> None:
         """Keep the primary error and retrieve an interrupted close result."""
+        handle.cleanup = close_prespawn
         close_task = close_prespawn()
         try:
             await _async_ffmpeg_join(close_task)
@@ -923,8 +924,11 @@ async def _async_convert_audio_owned(  # noqa: C901
                 if handle.requested.done():
                     raise asyncio.CancelledError
                 yield chunk
+            native_primary: BaseException | None = None
+        except BaseException as err:
+            native_primary = err
+            raise
         finally:
-            native_primary = sys.exception()
             native_cleanup = close_native()
             native_cleanup.add_done_callback(_ffmpeg_late_result)
             try:
