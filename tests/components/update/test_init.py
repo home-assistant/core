@@ -1114,6 +1114,59 @@ async def test_release_notes_message_missing_translation(
 
 
 @pytest.mark.parametrize(
+    ("message_language", "expected_language"),
+    [
+        pytest.param({"language": "de"}, "de", id="frontend_language"),
+        pytest.param({}, "en", id="default_language"),
+    ],
+)
+async def test_release_notes_messages_language(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    message_language: dict[str, str],
+    expected_language: str,
+) -> None:
+    """Test release notes messages are translated in the requested language."""
+    entity = MockUpdateEntity(
+        name="Update with release notes messages",
+        unique_id="with_release_notes_messages",
+        installed_version="1.0.0",
+        latest_version="1.0.1",
+        supported_features=UpdateEntityFeature.RELEASE_NOTES,
+        release_notes_messages=(
+            RELEASE_NOTES_MESSAGE_DO_NOT_INTERRUPT,
+            REVIEW_DOCS_MESSAGE,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.update.async_get_translations",
+        wraps=async_get_translations,
+    ) as mock_get_translations:
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "update/release_notes",
+                "entity_id": "update.update_with_release_notes_messages",
+                **message_language,
+            }
+        )
+        result = await client.receive_json()
+
+    assert result["success"]
+    assert [call.args[1] for call in mock_get_translations.call_args_list] == [
+        expected_language,
+        expected_language,
+    ]
+
+
+@pytest.mark.parametrize(
     ("entity_values", "entity_description", "expected"),
     [
         pytest.param(

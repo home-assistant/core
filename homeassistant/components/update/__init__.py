@@ -127,6 +127,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     {
         probatio.Required("type"): "update/release_notes",
         probatio.Required("entity_id"): cv.entity_id,
+        probatio.Optional("language"): str,
     }
 )
 @websocket_api.async_response
@@ -164,7 +165,9 @@ async def websocket_release_notes(
         messages: list[dict[str, str]] = []
     else:
         messages = await _async_translate_release_notes_messages(
-            hass, entity.release_notes_messages
+            hass,
+            msg.get("language", hass.config.language),
+            entity.release_notes_messages,
         )
     connection.send_result(
         msg["id"],
@@ -173,18 +176,20 @@ async def websocket_release_notes(
 
 
 async def _async_translate_release_notes_messages(
-    hass: HomeAssistant, messages: tuple[UpdateReleaseNotesMessage, ...]
+    hass: HomeAssistant,
+    language: str,
+    messages: tuple[UpdateReleaseNotesMessage, ...],
 ) -> list[dict[str, str]]:
     """Translate release notes messages."""
     if not messages:
         return []
 
     entity_component_translations = await async_get_translations(
-        hass, hass.config.language, "entity_component", {DOMAIN}
+        hass, language, "entity_component", {DOMAIN}
     )
     entity_translations = await async_get_translations(
         hass,
-        hass.config.language,
+        language,
         "entity",
         {
             message.translation_domain
