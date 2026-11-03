@@ -52,7 +52,7 @@ class AtombergFan(AtombergEntity, FanEntity):
     @override
     def is_on(self) -> bool:
         """Return whether the fan is on."""
-        return self.device_state[COMMAND_POWER]
+        return bool(self.device_state[COMMAND_POWER])
 
     @property
     @override

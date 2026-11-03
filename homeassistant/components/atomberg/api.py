@@ -150,9 +150,10 @@ class AtombergClient:
             "POST", "/v1/get_lock_dynamic_pin", json_body=body
         )
         try:
-            return message["data"]
+            data: dict[str, Any] = message["data"]
         except (KeyError, TypeError) as err:
             raise AtombergError("Unexpected guest PIN response") from err
+        return data
 
     async def _async_get_access_token(self) -> str:
         async with self._token_lock:

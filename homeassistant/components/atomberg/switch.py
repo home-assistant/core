@@ -55,7 +55,7 @@ class AtombergSleepSwitch(AtombergEntity, SwitchEntity):
     @override
     def is_on(self) -> bool:
         """Return whether sleep mode is on."""
-        return self.device_state[COMMAND_SLEEP]
+        return bool(self.device_state[COMMAND_SLEEP])
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

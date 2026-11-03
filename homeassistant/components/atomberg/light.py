@@ -65,7 +65,7 @@ class AtombergLight(AtombergEntity, LightEntity):
     @override
     def is_on(self) -> bool:
         """Return whether the LED is on."""
-        return self.device_state[COMMAND_LED]
+        return bool(self.device_state[COMMAND_LED])
 
     @property
     @override
@@ -82,7 +82,8 @@ class AtombergLight(AtombergEntity, LightEntity):
         """Return the light mode."""
         if COMMAND_LIGHT_MODE not in self.device.supported_commands:
             return None
-        return self.device_state[COMMAND_LIGHT_MODE]
+        mode: str | None = self.device_state[COMMAND_LIGHT_MODE]
+        return mode
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
