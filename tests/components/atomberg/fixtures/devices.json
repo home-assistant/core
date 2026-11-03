@@ -1,0 +1,89 @@
+[
+  {
+    "device_id": "a4cf12abcdef",
+    "name": "Living Room",
+    "model": "Renesa+",
+    "series": "I1",
+    "color": "white",
+    "device_type": "fan",
+    "supported_commands": [
+      {
+        "command": "power"
+      },
+      {
+        "command": "speed"
+      },
+      {
+        "command": "sleep"
+      },
+      {
+        "command": "timer"
+      },
+      {
+        "command": "led"
+      },
+      {
+        "command": "brightness"
+      },
+      {
+        "command": "light_mode"
+      }
+    ]
+  },
+  {
+    "device_id": "a4cf12123456",
+    "name": "Bedroom",
+    "model": "Studio+",
+    "series": "R1",
+    "color": "brown",
+    "device_type": "fan",
+    "supported_commands": [
+      {
+        "command": "power"
+      },
+      {
+        "command": "speed"
+      }
+    ]
+  },
+  {
+    "device_id": "a4cf12aa0001",
+    "name": "Kitchen Water Purifier",
+    "model": "Water Purifier",
+    "series": "W1",
+    "color": "white",
+    "device_type": "water_purifier",
+    "supported_commands": [
+      {
+        "command": "mode"
+      },
+      {
+        "command": "fallback_mode"
+      },
+      {
+        "command": "tds_threshold"
+      },
+      {
+        "command": "idle_sleep"
+      },
+      {
+        "command": "sleep_mode"
+      },
+      {
+        "command": "start_utc"
+      },
+      {
+        "command": "stop_utc"
+      }
+    ]
+  },
+  {
+    "device_id": "a4cf12999999",
+    "name": "Front Door",
+    "model": "Lock",
+    "series": "smart_lock_black",
+    "color": "black",
+    "device_type": "lock",
+    "supported_commands": []
+  }
+]

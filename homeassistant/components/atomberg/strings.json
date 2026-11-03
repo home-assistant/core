@@ -1,0 +1,158 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect your Atomberg account",
+        "description": "Enable developer mode in the Atomberg Home app to generate an API key and refresh token. See the [Atomberg developer portal]({portal_url}) for details.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "refresh_token": "Refresh token"
+        },
+        "data_description": {
+          "api_key": "The API key generated in the Atomberg Home app.",
+          "refresh_token": "The refresh token generated in the Atomberg Home app."
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Atomberg credentials are no longer valid. Enter a new API key and refresh token for the same account.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "refresh_token": "Refresh token"
+        },
+        "data_description": {
+          "api_key": "[%key:component::atomberg::config::step::user::data_description::api_key%]",
+          "refresh_token": "[%key:component::atomberg::config::step::user::data_description::refresh_token%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "wrong_account": "The new credentials belong to a different account."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "filter_choked": {
+        "name": "Filter choked"
+      },
+      "valve_fault": {
+        "name": "Valve fault"
+      },
+      "system_fault": {
+        "name": "System fault"
+      },
+      "no_water": {
+        "name": "No water"
+      },
+      "tank_full": {
+        "name": "Tank full"
+      }
+    },
+    "button": {
+      "guest_pin": {
+        "name": "Generate guest PIN"
+      }
+    },
+    "light": {
+      "led": {
+        "name": "LED"
+      }
+    },
+    "number": {
+      "tds_threshold": {
+        "name": "TDS threshold"
+      }
+    },
+    "select": {
+      "timer": {
+        "name": "Timer",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "1_hour": "1 hour",
+          "2_hours": "2 hours",
+          "3_hours": "3 hours",
+          "6_hours": "6 hours"
+        }
+      },
+      "purification_mode": {
+        "name": "Purification mode",
+        "state": {
+          "ro_only": "RO only",
+          "adaptive": "Adaptive",
+          "tastetune_50_100": "TasteTune 50-100 ppm",
+          "tastetune_75_125": "TasteTune 75-125 ppm",
+          "tastetune_100_150": "TasteTune 100-150 ppm",
+          "vacation": "Vacation"
+        }
+      },
+      "fallback_mode": {
+        "name": "Fallback mode",
+        "state": {
+          "ro_only": "RO only",
+          "tastetune_50_100": "TasteTune 50-100 ppm",
+          "tastetune_75_125": "TasteTune 75-125 ppm",
+          "tastetune_100_150": "TasteTune 100-150 ppm"
+        }
+      }
+    },
+    "sensor": {
+      "input_tds": {
+        "name": "Input TDS"
+      },
+      "tank_tds": {
+        "name": "Tank TDS"
+      },
+      "last_reported": {
+        "name": "Last reported"
+      },
+      "unlock_count": {
+        "name": "Unlock count"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      }
+    },
+    "switch": {
+      "sleep_mode": {
+        "name": "Sleep mode"
+      },
+      "idle_sleep": {
+        "name": "Idle display sleep"
+      },
+      "sleep_window": {
+        "name": "Sleep window"
+      }
+    },
+    "time": {
+      "sleep_window_start": {
+        "name": "Sleep window start"
+      },
+      "sleep_window_end": {
+        "name": "Sleep window end"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Atomberg rejected the command: {error}"
+    },
+    "communication_error": {
+      "message": "Error communicating with the Atomberg cloud: {error}"
+    },
+    "invalid_auth": {
+      "message": "The Atomberg credentials are invalid."
+    },
+    "sleep_window_not_set": {
+      "message": "Set the sleep window start and end time first."
+    },
+    "update_error": {
+      "message": "Error fetching data from the Atomberg cloud: {error}"
+    }
+  }
+}
