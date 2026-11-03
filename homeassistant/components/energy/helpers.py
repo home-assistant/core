@@ -22,12 +22,13 @@ def generate_power_sensor_unique_id(source_type: str, config: PowerConfig) -> st
         from_id = config["stat_rate_from"].replace(".", "_")
         to_id = config["stat_rate_to"].replace(".", "_")
         return f"energy_power_{source_type}_combined_{from_id}_{to_id}"
-    if any(sensors := _direction_sensors(config)):
-        # Every direction keeps its slot, so another set of sensors is another id
-        sensor_ids = "_".join(
-            sensor.replace(".", "_") if sensor else "none" for sensor in sensors
-        )
-        return f"energy_power_{source_type}_directions_{sensor_ids}"
+    if directions := [
+        f"{power_key.removeprefix('stat_rate_')}={sensor}"
+        for _, power_key in BATTERY_DIRECTIONS
+        if (sensor := config.get(power_key))
+    ]:
+        # Entity IDs never contain "," or "=", so each config gets its own ID
+        return f"energy_power_{source_type}_directions_{','.join(directions)}"
     # Unreachable: schema validation ensures one of the methods above is used
     raise RuntimeError("Invalid power config: missing required keys")
 

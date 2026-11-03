@@ -423,12 +423,21 @@ POWER_CONFIG_SCHEMA = probatio.All(
     _validate_power_config,
 )
 
+
+def _power_entity_id(value: str) -> str:
+    """Validate a power sensor is an entity, since its state is combined."""
+    if not valid_entity_id(value):
+        raise probatio.Invalid("Battery direction power must be an entity")
+    return value
+
+
 BATTERY_POWER_CONFIG_SCHEMA = probatio.All(
     probatio.Schema(
         {
             **_POWER_CONFIG_METHODS,
             **{
-                probatio.Optional(power_key): str for _, power_key in BATTERY_DIRECTIONS
+                probatio.Optional(power_key): probatio.All(str, _power_entity_id)
+                for _, power_key in BATTERY_DIRECTIONS
             },
         }
     ),

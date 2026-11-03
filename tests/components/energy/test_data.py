@@ -1292,6 +1292,16 @@ GRID = {
         ),
         pytest.param(
             [
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "external:battery_from_grid",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                }
+            ],
+            id="external_direction_energy",
+        ),
+        pytest.param(
+            [
                 BATTERY_TOTALS,
                 {"type": "battery", **BATTERY_DIRECTIONS_ENERGY},
             ],
@@ -1418,6 +1428,17 @@ async def test_battery_measurement_schema_valid(sources: list[dict[str, Any]]) -
             ],
             "only one configuration method",
             id="direction_and_inverted_power",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {"stat_rate_to_home": "external:battery_power"},
+                }
+            ],
+            "Battery direction power must be an entity",
+            id="external_direction_power",
         ),
         pytest.param(
             [{**GRID, "power_config": {"stat_rate_to_home": "sensor.power"}}],

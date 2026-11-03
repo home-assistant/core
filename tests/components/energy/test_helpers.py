@@ -121,20 +121,20 @@ def test_generate_power_sensor_entity_id_grid() -> None:
                 "stat_rate_to_home": "sensor.to_home",
                 "stat_rate_to_grid": "sensor.to_grid",
             },
-            "energy_power_battery_directions_sensor_from_grid_sensor_from_solar"
-            "_sensor_to_home_sensor_to_grid",
+            "energy_power_battery_directions_from_grid=sensor.from_grid,"
+            "from_solar=sensor.from_solar,to_home=sensor.to_home,to_grid=sensor.to_grid",
             "sensor.energy_battery_from_grid_from_solar_to_home_to_grid_net_power",
             id="all_directions",
         ),
         pytest.param(
             {"stat_rate_to_grid": "sensor.to_grid", "stat_rate_from_grid": "sensor.a"},
-            "energy_power_battery_directions_sensor_a_none_none_sensor_to_grid",
+            "energy_power_battery_directions_from_grid=sensor.a,to_grid=sensor.to_grid",
             "sensor.energy_battery_a_to_grid_net_power",
-            id="subset_keeps_slots",
+            id="subset_in_slot_order",
         ),
         pytest.param(
             {"stat_rate_to_home": "sensor.a"},
-            "energy_power_battery_directions_none_none_sensor_a_none",
+            "energy_power_battery_directions_to_home=sensor.a",
             "sensor.energy_battery_a_net_power",
             id="one_direction",
         ),
@@ -146,3 +146,18 @@ def test_generate_power_sensor_ids_battery_directions(
     """Test ID generation for battery direction power sensors."""
     assert generate_power_sensor_unique_id("battery", config) == unique_id
     assert generate_power_sensor_entity_id("battery", config) == entity_id
+
+
+def test_generate_power_sensor_unique_id_battery_directions_distinct() -> None:
+    """Test direction configs whose joined entity IDs look alike get distinct IDs."""
+    first = {
+        "stat_rate_from_grid": "sensor.a_sensor_b",
+        "stat_rate_from_solar": "sensor.c",
+    }
+    second = {
+        "stat_rate_from_grid": "sensor.a",
+        "stat_rate_from_solar": "sensor.b_sensor_c",
+    }
+    assert generate_power_sensor_unique_id(
+        "battery", first
+    ) != generate_power_sensor_unique_id("battery", second)
