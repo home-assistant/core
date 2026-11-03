@@ -1263,6 +1263,8 @@ async def test_cost_sensor_gas_price_unit_mismatch(
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.CUBIC_FEET, 374.025974025974),
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.GALLONS, 50.0),
+        # 128 fl. oz. = 1 gal, 100 fl. oz. growth @ 0.5/gal:
+        (US_CUSTOMARY_SYSTEM, UnitOfVolume.FLUID_OUNCES, 0.390625),
         (METRIC_SYSTEM, UnitOfVolume.CUBIC_METERS, 50.0),
     ],
 )

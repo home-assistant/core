@@ -61,6 +61,7 @@ VALID_VOLUME_UNITS_WATER: set[str] = {
     UnitOfVolume.CENTUM_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
+    UnitOfVolume.FLUID_OUNCES,
     UnitOfVolume.GALLONS,
     UnitOfVolume.LITERS,
     UnitOfVolume.MILLE_CUBIC_FEET,
