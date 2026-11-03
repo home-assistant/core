@@ -4,8 +4,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.skoda.const import DOMAIN
-from homeassistant.components.skoda.services import SERVICE_GET_IMAGE_URL
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.components.skoda.services import SkodaService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -22,8 +22,8 @@ async def test_get_image_url(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_IMAGE_URL,
-        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
+        SkodaService.GET_IMAGE_URL,
+        {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -45,8 +45,8 @@ async def test_get_image_url_render_unavailable(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_IMAGE_URL,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
+            SkodaService.GET_IMAGE_URL,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id},
             blocking=True,
             return_response=True,
         )
@@ -66,8 +66,8 @@ async def test_get_image_url_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_IMAGE_URL,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
+            SkodaService.GET_IMAGE_URL,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id},
             blocking=True,
             return_response=True,
         )
