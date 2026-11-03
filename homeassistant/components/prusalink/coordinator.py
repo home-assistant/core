@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from time import monotonic
-from typing import TypeVar, override
+from typing import override
 
 from httpx2 import ConnectError
 from pyprusalink import (
@@ -36,21 +36,13 @@ _MINIMUM_REFRESH_INTERVAL = 1.0
 # endpoints always return data or raise on failure. Using `bound=` rather
 # than constraint members so `JobInfo | None` fits without forcing a union
 # into the constraint list.
-T = TypeVar(
-    "T",
-    bound=PrinterStatus
-    | LegacyPrinterStatus
-    | JobInfo
-    | PrinterInfo
-    | VersionInfo
-    | None,
+type _PrusaDataType = (
+    PrinterStatus | LegacyPrinterStatus | JobInfo | PrinterInfo | VersionInfo | None
 )
-
-
 type PrusaLinkConfigEntry = ConfigEntry[dict[str, PrusaLinkUpdateCoordinator]]
 
 
-class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
+class PrusaLinkUpdateCoordinator[T: _PrusaDataType](DataUpdateCoordinator[T], ABC):
     """Update coordinator for the printer."""
 
     config_entry: PrusaLinkConfigEntry

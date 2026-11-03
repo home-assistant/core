@@ -39,7 +39,6 @@ async def async_setup_entry(
         config_entry=config_entry,
         client=client,
     )
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -102,10 +101,3 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(
             config_entry, unique_id=new_unique_id, minor_version=2
         )
-
-
-async def update_listener(
-    hass: HomeAssistant, config_entry: BraviaTVConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)

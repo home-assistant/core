@@ -8,7 +8,10 @@ import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
-from homeassistant.components.http.const import DATA_SUPERVISOR_USER
+from homeassistant.components.http.const import (
+    DATA_SUPERVISOR_USER,
+    MAX_UNAUTHENTICATED_BODY_SIZE,
+)
 from homeassistant.components.websocket_api import DOMAIN
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -304,6 +307,32 @@ async def test_auth_sending_invalid_json_disconnects(
 
         auth_msg = await ws.receive()
         assert auth_msg.type == WSMsgType.close
+
+
+async def test_auth_sending_too_large_message_disconnects(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test a too large auth message disconnects before it is parsed."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    async with client.ws_connect(URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg["type"] == TYPE_AUTH_REQUIRED
+
+        with patch(
+            "homeassistant.components.websocket_api.http.json_loads"
+        ) as mock_json_loads:
+            await ws.send_str(
+                f'{{"type": "auth", "access_token": '
+                f'"{"a" * MAX_UNAUTHENTICATED_BODY_SIZE}"}}'
+            )
+            auth_msg = await ws.receive()
+
+    assert auth_msg.type is WSMsgType.CLOSE
+    mock_json_loads.assert_not_called()
 
 
 async def test_auth_sending_binary_disconnects(

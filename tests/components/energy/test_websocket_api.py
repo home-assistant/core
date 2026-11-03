@@ -1380,3 +1380,68 @@ async def test_fossil_energy_consumption_missing_sum(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {}
+
+
+async def test_save_home_source(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a whole-home consumption meter can be saved."""
+    client = await hass_ws_client(hass)
+    sources = [
+        {
+            "type": "solar",
+            "stat_energy_from": "sensor.solar_production",
+            "config_entry_solar_forecast": None,
+        },
+        {
+            "type": "home",
+            "stat_energy_to": "sensor.home_energy",
+            "stat_rate": "sensor.home_power",
+            "name": "Main meter",
+        },
+    ]
+
+    await client.send_json(
+        {"id": 5, "type": "energy/save_prefs", "energy_sources": sources}
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == sources
+
+    await client.send_json({"id": 6, "type": "energy/get_prefs"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["energy_sources"] == sources
+
+
+@pytest.mark.parametrize(
+    "energy_sources",
+    [
+        pytest.param(
+            [
+                {"type": "home", "stat_energy_to": "sensor.home_a"},
+                {"type": "home", "stat_energy_to": "sensor.home_b"},
+            ],
+            id="two_home_sources",
+        ),
+        pytest.param([{"type": "home"}], id="missing_stat_energy_to"),
+    ],
+)
+async def test_save_home_source_invalid(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    energy_sources: list[dict[str, Any]],
+) -> None:
+    """Test invalid home source configurations are rejected."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 5, "type": "energy/save_prefs", "energy_sources": energy_sources}
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"

@@ -110,6 +110,21 @@ set_home_cooling_mode:
       selector:
         text:
 
+arm_anyway:
+  target:
+    entity:
+      integration: homematicip_cloud
+      domain: alarm_control_panel
+  fields:
+    mode:
+      required: true
+      selector:
+        select:
+          options:
+            - home
+            - away
+          translation_key: arm_anyway_mode
+
 pull_latch:
   fields:
     device_id:

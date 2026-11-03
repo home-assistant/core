@@ -3,6 +3,7 @@
   "name": "Flock",
   "categories": ["messaging_notifications.chat_apps"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/flock",
   "iot_class": "cloud_push",
   "quality_scale": "legacy"

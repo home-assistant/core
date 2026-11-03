@@ -1486,33 +1486,6 @@ def test_unit_conversion_factory_allow_none(
 @pytest.mark.parametrize(
     ("value", "from_unit", "expected", "to_unit"),
     [
-        (100, UnitOfTemperature.CELSIUS, 180, UnitOfTemperature.FAHRENHEIT),
-        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
-        (100, UnitOfTemperature.FAHRENHEIT, 55.5556, UnitOfTemperature.CELSIUS),
-        (100, UnitOfTemperature.FAHRENHEIT, 55.5556, UnitOfTemperature.KELVIN),
-        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
-        (100, UnitOfTemperature.KELVIN, 180, UnitOfTemperature.FAHRENHEIT),
-    ],
-)
-def test_temperature_convert_with_interval(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test conversion to other units."""
-    expected = pytest.approx(expected)
-    assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
-    assert (
-        "The deprecated function convert_interval was called. It will be removed "
-        "in HA Core 2026.12.0. Use TemperatureDeltaConverter.convert instead"
-    ) in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("value", "from_unit", "expected", "to_unit"),
-    [
         (
             100,
             UnitOfTemperature.CELSIUS,

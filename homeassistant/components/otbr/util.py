@@ -69,7 +69,9 @@ def _handle_otbr_error[**_P, _R](
         try:
             return await func(self, *args, **kwargs)
         except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
-            raise HomeAssistantError("Failed to call OTBR API") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from exc
 
     return _func
 
