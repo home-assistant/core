@@ -248,34 +248,34 @@ async def test_update_entity_states(
 
 @pytest.fixture
 def sleeping_node(
-    client: MagicMock, zooz_zse43_state: dict[str, Any], wakeup: str | None
+    client: MagicMock, zooz_zse43_state: dict[str, Any], metadata: dict[str, str]
 ) -> Node:
-    """Mock a sleeping node with the given wake-up instructions."""
+    """Mock a sleeping node with the given device config metadata."""
     state = deepcopy(zooz_zse43_state)
-    state["deviceConfig"]["metadata"]["wakeup"] = wakeup
+    state["deviceConfig"]["metadata"] = metadata
     node = Node(client, state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
 
 @pytest.mark.parametrize(
-    ("wakeup", "expected_message"),
+    ("metadata", "expected_message"),
     [
         pytest.param(
-            "Click the Z-Wave button 4 times quickly.\n",
+            {"wakeup": "Click the Z-Wave button 4 times quickly.\n"},
             "This is a battery powered sleeping device. You may need to wake it up"
             " manually for the update to begin. To wake up this device:\n\n"
             "Click the Z-Wave button 4 times quickly.",
             id="wakeup_instructions",
         ),
         pytest.param(
-            None,
+            {},
             "This is a battery powered sleeping device. You may need to wake it up"
             " manually for the update to begin.",
             id="no_wakeup_instructions",
         ),
         pytest.param(
-            "  \n",
+            {"wakeup": "  \n"},
             "This is a battery powered sleeping device. You may need to wake it up"
             " manually for the update to begin.",
             id="blank_wakeup_instructions",
