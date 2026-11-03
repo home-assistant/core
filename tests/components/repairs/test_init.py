@@ -8,9 +8,12 @@ import pytest
 from pytest_homeassistant.common import mock_platform
 from pytest_homeassistant.typing import WebSocketGenerator
 
+from homeassistant.components.repairs import repairs_flow_manager
 from homeassistant.components.repairs.const import DOMAIN
+from homeassistant.components.repairs.issue_handler import RepairsFlowManager
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -544,3 +547,14 @@ async def test_sync_methods(
 
     assert msg["success"]
     assert msg["result"] == {"issues": []}
+
+
+async def test_flow_manager_helper(hass: HomeAssistant) -> None:
+    """Test accessing the repairs flow manager with the helper."""
+    with pytest.raises(HomeAssistantError):
+        repairs_flow_manager(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    flow_manager = repairs_flow_manager(hass)
+    assert isinstance(flow_manager, RepairsFlowManager)

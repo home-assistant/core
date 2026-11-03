@@ -2,13 +2,7 @@
 
 from enum import StrEnum
 
-from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
-from homeassistant.util.hass_dict import HassDict, HassKey
-
 DOMAIN = "repairs"
-
-REPAIRS: HassKey[HassDict] = HassKey(DOMAIN)
-PLATFORMS: HassKey[LazyIntegrationPlatforms] = HassKey("platforms")
 
 
 class FlowType(StrEnum):

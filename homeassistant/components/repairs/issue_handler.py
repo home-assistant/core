@@ -10,12 +10,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, PLATFORMS, REPAIRS
+from .const import DOMAIN
 from .models import RepairsFlow, RepairsFlowContext, RepairsFlowResult, RepairsProtocol
-
-FLOW_MANAGER: HassKey[RepairsFlowManager] = HassKey("flow_manager")
 
 
 class ConfirmRepairFlow(RepairsFlow):
@@ -126,8 +123,8 @@ class RepairsFlowManager(
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Initialize repairs."""
-    hass.data[REPAIRS][FLOW_MANAGER] = RepairsFlowManager(hass)
-    hass.data[REPAIRS][PLATFORMS] = LazyIntegrationPlatforms(
+    hass.data[DOMAIN]["flow_manager"] = RepairsFlowManager(hass)
+    hass.data[DOMAIN]["platforms"] = LazyIntegrationPlatforms(
         hass, DOMAIN, _process_repairs_platform
     )
 
