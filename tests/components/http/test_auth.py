@@ -16,7 +16,6 @@ from pytest_homeassistant.common import MockUser
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 import yarl
 
-from homeassistant.auth.auth_store import LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN, User
 from homeassistant.auth.providers import trusted_networks
@@ -270,7 +269,7 @@ async def test_auth_logs_long_lived_access_token_usage(
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    freezer.tick(LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL)
+    freezer.tick(timedelta(minutes=1))
     req = await client.get("/", headers={"Authorization": f"Bearer {access_token}"})
     assert req.status == HTTPStatus.OK
     assert refresh_token.last_used_at == dt_util.utcnow()

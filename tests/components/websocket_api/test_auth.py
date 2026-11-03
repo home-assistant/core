@@ -1,5 +1,6 @@
 """Test auth of websocket API."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 import aiohttp
@@ -9,7 +10,6 @@ import pytest
 from pytest_homeassistant.common import MockUser
 from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant.auth.auth_store import LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL
 from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components.http.const import (
@@ -156,7 +156,7 @@ async def test_auth_logs_long_lived_access_token_usage(
     await hass.async_block_till_done()
     client = await hass_client_no_auth()
 
-    freezer.tick(LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL)
+    freezer.tick(timedelta(minutes=1))
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
         assert auth_msg["type"] == TYPE_AUTH_REQUIRED

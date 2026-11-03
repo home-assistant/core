@@ -33,7 +33,7 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
 from homeassistant.auth.models import Credentials
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
@@ -877,51 +877,7 @@ async def test_create_long_lived_access_token(mock_hass) -> None:
 async def test_log_access_token_usage_long_lived_access_token(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test long-lived access token usage is logged at most once per interval."""
-    manager = await auth.auth_manager_from_config(hass, [], [])
-    user = MockUser().add_to_auth_manager(manager)
-    refresh_token = await manager.async_create_refresh_token(
-        user,
-        client_name="GPS Logger",
-        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
-    )
-    manager.async_create_access_token(refresh_token)
-
-    # Creating the access token logs usage, but the first use is still recorded
-    freezer.tick(timedelta(seconds=1))
-    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
-    first_used_at = dt_util.utcnow()
-    assert refresh_token.last_used_at == first_used_at
-    assert refresh_token.last_used_ip == "192.168.0.1"
-
-    freezer.tick(
-        auth_store.LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL - timedelta(seconds=1)
-    )
-    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
-    assert refresh_token.last_used_at == first_used_at
-
-    # A different IP is recorded within the interval
-    manager.async_log_access_token_usage(refresh_token, "192.168.0.2")
-    assert refresh_token.last_used_at == dt_util.utcnow()
-    assert refresh_token.last_used_ip == "192.168.0.2"
-
-    freezer.tick(auth_store.LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL)
-    manager.async_log_access_token_usage(refresh_token, "192.168.0.2")
-    assert refresh_token.last_used_at == dt_util.utcnow()
-    assert refresh_token.expire_at is None
-
-    await flush_store(manager._store._store)
-    store2 = auth_store.AuthStore(hass)
-    await store2.async_load()
-    stored_token = store2.async_get_refresh_token(refresh_token.id)
-    assert stored_token.last_used_at == refresh_token.last_used_at
-    assert stored_token.last_used_ip == "192.168.0.2"
-
-
-async def test_log_access_token_usage_does_not_postpone_pending_save(
-    hass: HomeAssistant,
-) -> None:
-    """Test logging token usage doesn't postpone an already pending save."""
+    """Test long-lived access token usage is saved once after a delay."""
     manager = await auth.auth_manager_from_config(hass, [], [])
     user = MockUser().add_to_auth_manager(manager)
     token_1 = await manager.async_create_refresh_token(
@@ -940,18 +896,98 @@ async def test_log_access_token_usage_does_not_postpone_pending_save(
     with patch.object(
         store, "async_delay_save", wraps=store.async_delay_save
     ) as mock_delay_save:
+        freezer.tick(timedelta(seconds=1))
         manager.async_log_access_token_usage(token_1, "192.168.0.1")
         manager.async_log_access_token_usage(token_2, "192.168.0.2")
+        freezer.tick(timedelta(seconds=1))
+        manager.async_log_access_token_usage(token_1, "192.168.0.3")
+        assert token_1.last_used_at == dt_util.utcnow()
+        assert token_1.last_used_ip == "192.168.0.3"
+        assert mock_delay_save.call_count == 0
+
+        freezer.tick(auth_store.LONG_LIVED_ACCESS_TOKEN_USAGE_SAVE_DELAY)
+        async_fire_time_changed(hass)
         assert mock_delay_save.call_count == 1
 
-        await flush_store(store)
-        manager.async_log_access_token_usage(token_1, "192.168.0.3")
-        assert mock_delay_save.call_count == 2
-
-    # The pending save picked up the usage logged after scheduling it
+    await flush_store(store)
     store2 = auth_store.AuthStore(hass)
     await store2.async_load()
+    stored_token_1 = store2.async_get_refresh_token(token_1.id)
+    assert stored_token_1.last_used_at == token_1.last_used_at
+    assert stored_token_1.last_used_ip == "192.168.0.3"
+    assert token_1.expire_at is None
     assert store2.async_get_refresh_token(token_2.id).last_used_ip == "192.168.0.2"
+
+
+async def test_log_access_token_usage_saved_by_other_save(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a save landing before the delay also saves the token usage."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Script",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    store = manager._store._store
+    await flush_store(store)
+
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    await manager.async_update_user(user, name="Updated")
+    await flush_store(store)
+
+    with patch.object(store, "async_delay_save") as mock_delay_save:
+        freezer.tick(auth_store.LONG_LIVED_ACCESS_TOKEN_USAGE_SAVE_DELAY)
+        async_fire_time_changed(hass)
+        mock_delay_save.assert_not_called()
+
+    store2 = auth_store.AuthStore(hass)
+    await store2.async_load()
+    assert store2.async_get_refresh_token(refresh_token.id).last_used_ip == (
+        "192.168.0.1"
+    )
+
+
+async def test_log_access_token_usage_saved_on_stop(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test pending token usage is saved when Home Assistant stops."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Script",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    await flush_store(manager._store._store)
+
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    await hass.async_stop(force=True)
+
+    stored_tokens = {
+        token["id"]: token for token in hass_storage["auth"]["data"]["refresh_tokens"]
+    }
+    assert stored_tokens[refresh_token.id]["last_used_ip"] == "192.168.0.1"
+
+
+async def test_log_access_token_usage_while_stopping(hass: HomeAssistant) -> None:
+    """Test token usage logged while stopping is saved without a delay."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Script",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    store = manager._store._store
+    await flush_store(store)
+
+    hass.set_state(CoreState.stopping)
+    with patch.object(store, "async_delay_save") as mock_delay_save:
+        manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    mock_delay_save.assert_called_once()
+    assert manager._store._usage_save_timer is None
 
 
 async def test_log_access_token_usage_ignores_normal_token(
