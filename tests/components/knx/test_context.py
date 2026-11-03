@@ -641,3 +641,36 @@ async def test_bus_cover_cause_survives_long_travel(
     assert hass.states.get(COVER_ENTITY_ID).context is manual_context
     assert len(events) == 2
     assert events[1].data["source"] == "1.1.24"
+
+
+@pytest.mark.parametrize("platform", ["light", "switch"])
+async def test_repeated_command_without_device_update(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+    platform: str,
+) -> None:
+    """An unchanged command cannot replace the cause without a device callback."""
+    await knx.setup_integration(
+        {platform: {"name": "test", "address": "1/1/1", "state_address": "1/1/2"}},
+        state_updater=False,
+    )
+    await knx.receive_response("1/1/2", False)
+    entity_id = f"{platform}.test"
+    context = Context(parent_id=Context().id)
+    await hass.services.async_call(
+        platform, "turn_on", {"entity_id": entity_id}, blocking=True, context=context
+    )
+    await knx.assert_write("1/1/1", True)
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+    freezer.tick(timedelta(seconds=1))
+    await knx.receive_write("1/1/1", True, source="1.1.23")
+    assert hass.states.get(entity_id).state == "on"
+    assert hass.states.get(entity_id).context is context
+    assert not events
+
+    # The unobserved command also leaves the recent-service feedback window intact.
+    await knx.receive_write("1/1/2", False, source="1.1.40")
+    assert hass.states.get(entity_id).state == "off"
+    assert hass.states.get(entity_id).context is context
+    assert not events
