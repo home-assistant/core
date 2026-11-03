@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import override
 
-from e3dc_ess_modbus import E3dcPowerStation, EmergencyPowerStatus
+from e3dc_ess_modbus import E3dcPowerStation, EmergencyPowerStatus, PowerMeterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -34,10 +34,27 @@ class E3dcSensorDescription(SensorEntityDescription):
     """Describe an E3/DC sensor."""
 
     value_fn: Callable[[E3dcPowerStation], StateType | IntEnum]
+    exists_fn: Callable[[E3dcPowerStation], bool] = lambda _: True
+
+
+def _has_wallbox(device: E3dcPowerStation) -> bool:
+    """Whether a wallbox is configured."""
+    return bool(device.wallboxes.configured)
+
+
+def _has_additional_feeder(device: E3dcPowerStation) -> bool:
+    """Whether a power meter measures an additional feeder, e.g. a second PV inverter."""
+    return any(
+        meter.meter_type
+        in (PowerMeterType.EXTERNAL_PRODUCTION, PowerMeterType.EXTERNAL_FARM)
+        for meter in device.power_meter_readings.values()
+    )
 
 
 def _power(
-    key: str, value_fn: Callable[[E3dcPowerStation], int | None]
+    key: str,
+    value_fn: Callable[[E3dcPowerStation], int | None],
+    exists_fn: Callable[[E3dcPowerStation], bool] = lambda _: True,
 ) -> E3dcSensorDescription:
     """A power flow sensor, in watts."""
     return E3dcSensorDescription(
@@ -47,6 +64,7 @@ def _power(
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=value_fn,
+        exists_fn=exists_fn,
     )
 
 
@@ -55,9 +73,17 @@ SENSORS: tuple[E3dcSensorDescription, ...] = (
     _power("battery_power", lambda device: device.power.battery_power),
     _power("house_power", lambda device: device.power.house_power),
     _power("grid_power", lambda device: device.power.grid_power),
-    _power("additional_power", lambda device: device.power.additional_power),
-    _power("wallbox_power", lambda device: device.power.wallbox_power),
-    _power("wallbox_solar_power", lambda device: device.power.wallbox_solar_power),
+    _power(
+        "additional_power",
+        lambda device: device.power.additional_power,
+        _has_additional_feeder,
+    ),
+    _power("wallbox_power", lambda device: device.power.wallbox_power, _has_wallbox),
+    _power(
+        "wallbox_solar_power",
+        lambda device: device.power.wallbox_solar_power,
+        _has_wallbox,
+    ),
     E3dcSensorDescription(
         key="battery_soc",
         device_class=SensorDeviceClass.BATTERY,
@@ -85,6 +111,10 @@ SENSORS: tuple[E3dcSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=_enum_options(EmergencyPowerStatus),
         value_fn=lambda device: device.power.emergency_power_status,
+        exists_fn=lambda device: (
+            device.power.emergency_power_status
+            is not EmergencyPowerStatus.NOT_SUPPORTED
+        ),
     ),
 )
 
@@ -96,7 +126,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the E3/DC sensor platform."""
     coordinator = entry.runtime_data
-    async_add_entities(E3dcSensor(coordinator, description) for description in SENSORS)
+    async_add_entities(
+        E3dcSensor(coordinator, description)
+        for description in SENSORS
+        if description.exists_fn(coordinator.device)
+    )
 
 
 class E3dcSensor(E3dcEntity, SensorEntity):

@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # The components the entities read
 POLLED_COMPONENTS = ("power",)
+# The components that tell which optional hardware is installed, read once
+HARDWARE_COMPONENTS = ("wallboxes", "power_meters")
 
 type E3dcConfigEntry = ConfigEntry[E3dcDataUpdateCoordinator]
 
@@ -61,9 +63,17 @@ class E3dcDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
     @override
+    async def _async_setup(self) -> None:
+        await self._async_poll(HARDWARE_COMPONENTS)
+
+    @override
     async def _async_update_data(self) -> None:
+        await self._async_poll(POLLED_COMPONENTS)
+
+    async def _async_poll(self, components: tuple[str, ...]) -> None:
+        """Read the components from the power station, or raise."""
         try:
-            report = await self.device.async_poll(POLLED_COMPONENTS)
+            report = await self.device.async_poll(components)
         except NotAnE3dcError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,

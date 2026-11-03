@@ -68,5 +68,8 @@ def seed_power_station(unit: MockModbusUnit) -> None:
             40083: 87,  # Battery state of charge, in %
             40084: 2,  # Emergency power not active
             40085: 0b0000100,  # EMS status: emergency power ready
+            40088: 0b1,  # Wallbox 0 available
+            40105: 1,  # Power meter 0 at the grid connection point
+            40109: 2,  # Power meter 1 measures an additional feeder
         },
     )
