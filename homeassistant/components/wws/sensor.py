@@ -51,7 +51,6 @@ SENSORS: tuple[WwsSensorEntityDescription, ...] = (
     WwsSensorEntityDescription(
         key="consumption_kwh",
         translation_key="yesterdays_consumption",
-        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=lambda entity: _measurement_value(entity.latest_measurement),
