@@ -20,8 +20,7 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerResourceView,
 )
 
-from .const import DOMAIN
-from .issue_handler import RepairsFlowManager
+from .issue_handler import FLOW_MANAGER, REPAIRS, RepairsFlowManager
 from .models import RepairsFlowResult
 
 
@@ -32,8 +31,8 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_ignore_issue)
     websocket_api.async_register_command(hass, ws_list_issues)
 
-    hass.http.register_view(RepairsFlowIndexView(hass.data[DOMAIN]["flow_manager"]))
-    hass.http.register_view(RepairsFlowResourceView(hass.data[DOMAIN]["flow_manager"]))
+    hass.http.register_view(RepairsFlowIndexView(hass.data[REPAIRS][FLOW_MANAGER]))
+    hass.http.register_view(RepairsFlowResourceView(hass.data[REPAIRS][FLOW_MANAGER]))
 
 
 @callback
