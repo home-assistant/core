@@ -304,7 +304,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(
                         reason="account_mismatch",
                         description_placeholders={
-                            CONF_USERNAME: entry.data[CONF_USERNAME],
+                            "username": entry.data[CONF_USERNAME],
                             "wrong_username": account.username,
                         },
                     )
@@ -319,7 +319,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
-            description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+            description_placeholders={"username": entry.data[CONF_USERNAME]},
         )
 
     async def async_step_reconfigure(
@@ -366,7 +366,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                         return self.async_abort(
                             reason="account_mismatch",
                             description_placeholders={
-                                CONF_USERNAME: entry.data[CONF_USERNAME],
+                                "username": entry.data[CONF_USERNAME],
                                 "wrong_username": account.username,
                             },
                         )
@@ -398,8 +398,8 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 errors=errors,
                 description_placeholders={
-                    CONF_NAME: entry.title,
-                    CONF_USERNAME: entry.data[CONF_USERNAME],
+                    "name": entry.title,
+                    "username": entry.data[CONF_USERNAME],
                 },
             )
 
@@ -410,7 +410,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input,
             ),
             errors=errors,
-            description_placeholders={CONF_NAME: entry.title},
+            description_placeholders={"name": entry.title},
         )
 
     async def async_step_reconfigure_user(
@@ -510,5 +510,5 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                 data_schema=TOPIC_FILTER_SCHEMA,
                 suggested_values=subentry_data,
             ),
-            description_placeholders={CONF_TOPIC: subentry_data[CONF_TOPIC]},
+            description_placeholders={"topic": subentry_data[CONF_TOPIC]},
         )

@@ -144,7 +144,17 @@ class HomeConnectRuntimeData:
         while True:
             try:
                 async for event_message in self.client.stream_all_events():
-                    retry_time = 10
+                    if event_message is None:
+                        # Event message is None when the connection is established successfully
+                        if retry_time > 10:
+                            # We want to refresh all appliances' data if it isn't the first time
+                            # we connect to the event stream (i.e. after a stream error)
+                            retry_time = 10
+                            for (
+                                appliance_coordinator
+                            ) in self.appliance_coordinators.values():
+                                await appliance_coordinator.attempt_refresh_and_call_listeners()
+                        continue
                     event_message_ha_id = event_message.ha_id
                     if event_message_ha_id in self.appliance_coordinators:
                         if event_message.type == EventType.DEPAIRED:
@@ -294,6 +304,25 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             if context == event_key
         ]
 
+    async def attempt_refresh_and_call_listeners(self) -> None:
+        """Attempt to refresh the appliance data.
+
+        Check if the appliance data has been refreshed too often recently to avoid
+        hitting the API rate limit. Once refreshed, call all global listeners
+        that are not listening for the DEPAIRED event.
+        """
+        if self.refreshed_too_often_recently():
+            return
+
+        await self.async_refresh()
+        for (
+            listener,
+            context,
+        ) in self.global_listeners.values():
+            if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
+                listener()
+        self.call_all_event_listeners()
+
     async def event_listener(self, event_message: EventMessage) -> None:
         """Match event with listener for event type."""
         # Clear before storing the items, as the message can
@@ -368,17 +397,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 self._call_event_listener(event_message)
 
             case EventType.CONNECTED | EventType.PAIRED:
-                if self.refreshed_too_often_recently():
-                    return
-
-                await self.async_refresh()
-                for (
-                    listener,
-                    context,
-                ) in self.global_listeners.values():
-                    if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
-                        listener()
-                self.call_all_event_listeners()
+                await self.attempt_refresh_and_call_listeners()
 
             case EventType.DISCONNECTED:
                 self.data.info.connected = False

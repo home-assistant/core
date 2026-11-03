@@ -186,8 +186,8 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="link",
             errors=errors,
             description_placeholders={
-                CONF_HOST: self.harmony_config[CONF_NAME],
-                CONF_NAME: self.harmony_config[CONF_HOST],
+                "host": self.harmony_config[CONF_NAME],
+                "name": self.harmony_config[CONF_HOST],
             },
         )
 

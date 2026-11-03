@@ -313,7 +313,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 ATTR_SERIAL: self.unique_id,
-                CONF_IP_ADDRESS: self.ip_address,
+                "ip_address": self.ip_address,
             },
         )
 
@@ -418,7 +418,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_URL: reconfigure_entry.data[CONF_URL]},
             ),
             errors=errors,
-            description_placeholders={CONF_USERNAME: reconfigure_entry.title},
+            description_placeholders={"username": reconfigure_entry.title},
         )
 
 
