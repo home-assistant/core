@@ -2,20 +2,25 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
+from collections.abc import Mapping
 from contextlib import suppress
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.components import cloud
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.components import cloud, person
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.config_entries import ConfigEntry, OperationNotAllowed
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     ATTR_APP_DATA,
+    ATTR_DEVICE_NAME,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     ATTR_PUSH_WEBSOCKET_CHANNEL,
     CONF_CLOUDHOOK_URL,
+    CONF_USER_ID,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
@@ -81,14 +86,57 @@ async def async_create_cloud_hook(
         return hook
 
 
-async def async_retire_webhook(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Retire the webhook of an entry and delete its cloudhook."""
-    webhook_id = entry.data[CONF_WEBHOOK_ID]
+async def async_retire_webhook(
+    hass: HomeAssistant, registration: Mapping[str, Any]
+) -> None:
+    """Retire the webhook of a registration and delete its cloudhook."""
+    webhook_id = registration[CONF_WEBHOOK_ID]
     hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
 
-    if CONF_CLOUDHOOK_URL in entry.data:
+    if CONF_CLOUDHOOK_URL in registration:
         with suppress(cloud.CloudNotAvailable, ValueError):
             await cloud.async_delete_cloudhook(hass, webhook_id)
+
+
+async def async_update_registration(
+    hass: HomeAssistant, entry: ConfigEntry, registration: dict[str, Any]
+) -> bool:
+    """Update the entry of an app which registers again.
+
+    Return True if the entry has been reloaded with the new registration.
+    """
+    old_registration = entry.data
+    entity_registry = er.async_get(hass)
+
+    # Sensor unique IDs are prefixed with the webhook ID
+    old_prefix = f"{old_registration[CONF_WEBHOOK_ID]}_"
+    new_prefix = f"{registration[CONF_WEBHOOK_ID]}_"
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if entity.unique_id.startswith(old_prefix):
+            entity_registry.async_update_entity(
+                entity.entity_id,
+                new_unique_id=new_prefix + entity.unique_id.removeprefix(old_prefix),
+            )
+
+    hass.config_entries.async_update_entry(
+        entry, title=registration[ATTR_DEVICE_NAME], data=registration
+    )
+    try:
+        reloaded = await hass.config_entries.async_reload(entry.entry_id)
+    except OperationNotAllowed:
+        reloaded = False
+    if not reloaded:
+        return False
+
+    await async_retire_webhook(hass, old_registration)
+
+    if devt_entity_id := entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, registration[ATTR_DEVICE_ID]
+    ):
+        await person.async_add_user_device_tracker(
+            hass, registration[CONF_USER_ID], devt_entity_id
+        )
+    return True

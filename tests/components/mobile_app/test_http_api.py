@@ -1,5 +1,6 @@
 """Tests for the mobile_app HTTP API."""
 
+import asyncio
 from binascii import unhexlify
 from http import HTTPStatus
 import json
@@ -11,6 +12,7 @@ import pytest
 from pytest_homeassistant.common import MockUser
 from pytest_homeassistant.typing import ClientSessionGenerator
 
+from homeassistant.components import mobile_app
 from homeassistant.components.mobile_app.const import (
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
@@ -18,9 +20,14 @@ from homeassistant.components.mobile_app.const import (
     DATA_DELETED_IDS,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -76,7 +83,6 @@ async def test_registration_again_updates_entry(
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an app registering again updates its existing entry."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -117,7 +123,6 @@ async def test_registration_again_updates_entry(
     assert entry.state is ConfigEntryState.LOADED
     assert hass.data[DOMAIN][DATA_DELETED_IDS] == [old_webhook_id]
     assert entity_registry.async_get("device_tracker.test_1")
-    assert "same unique ID exists" not in caplog.text
 
     # The device is kept with its customization and gets the new name
     assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == [
@@ -151,6 +156,218 @@ async def test_registration_again_updates_entry(
         for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     } == {"device_tracker.test_1", "sensor.test_1_battery_state"}
     assert hass.states.get("sensor.test_1_battery_state").state == "50"
+
+
+async def test_registration_again_disabled_entry(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test an app registering again for a disabled entry gets an error."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    old_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations",
+        json={**REGISTER_CLEARTEXT, "device_name": "Test 2"},
+    )
+    assert resp.status == HTTPStatus.CONFLICT
+
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.disabled_by is ConfigEntryDisabler.USER
+    assert entry.title == "Test 1"
+    assert entry.data[CONF_WEBHOOK_ID] == old_webhook_id
+    assert hass.data[DOMAIN][DATA_DELETED_IDS] == []
+
+
+async def test_registration_again_unload_fails(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test an app registering again gets an error if the entry can't be unloaded."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    with patch(
+        "homeassistant.components.mobile_app.async_unload_entry",
+        side_effect=Exception("Unload failed"),
+    ):
+        resp = await api_client.post(
+            "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+        )
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert hass.data[DOMAIN][DATA_DELETED_IDS] == []
+
+    # The entry can't be reloaded until Home Assistant is restarted
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert hass.data[DOMAIN][DATA_DELETED_IDS] == []
+
+
+async def test_registration_again_setup_fails(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test an app registering again gets an error if the entry can't be set up."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    with patch(
+        "homeassistant.components.mobile_app.async_setup_entry",
+        side_effect=Exception("Setup failed"),
+    ):
+        resp = await api_client.post(
+            "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+        )
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert hass.data[DOMAIN][DATA_DELETED_IDS] == []
+
+
+async def test_registration_again_during_setup(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test an app registering again while its entry is set up waits for the setup."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    old_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    setup_started = asyncio.Event()
+    continue_setup = asyncio.Event()
+    original_setup_entry = mobile_app.async_setup_entry
+
+    async def _blocking_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        setup_started.set()
+        await continue_setup.wait()
+        await original_setup_entry(hass, entry)
+
+    with patch.object(mobile_app, "async_setup_entry", _blocking_setup_entry):
+        reload_task = hass.async_create_task(
+            hass.config_entries.async_reload(entry.entry_id)
+        )
+        await setup_started.wait()
+        assert entry.state is ConfigEntryState.SETUP_IN_PROGRESS
+
+        register_task = asyncio.create_task(
+            api_client.post("/api/mobile_app/registrations", json=REGISTER_CLEARTEXT)
+        )
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert not register_task.done()
+
+        continue_setup.set()
+        assert await reload_task
+        resp = await register_task
+
+    assert resp.status == HTTPStatus.CREATED
+    new_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_WEBHOOK_ID] == new_webhook_id
+    assert hass.data[DOMAIN][DATA_DELETED_IDS] == [old_webhook_id]
+
+
+async def test_registration_again_deletes_old_cloudhook(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test an app registering again deletes the cloudhook of the old webhook."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    async def _get_or_create_cloudhook(_hass: HomeAssistant, webhook_id: str) -> str:
+        return f"https://hooks.nabu.casa/{webhook_id}"
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
+            side_effect=_get_or_create_cloudhook,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_listen_cloudhook_change",
+            return_value=lambda: None,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            return_value="https://remote.ui",
+        ),
+        patch(
+            "homeassistant.components.cloud.async_delete_cloudhook"
+        ) as mock_delete_cloudhook,
+    ):
+        resp = await api_client.post(
+            "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+        )
+        assert resp.status == HTTPStatus.CREATED
+        old_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert entry.data[CONF_CLOUDHOOK_URL] == (
+            f"https://hooks.nabu.casa/{old_webhook_id}"
+        )
+
+        resp = await api_client.post(
+            "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+        )
+        assert resp.status == HTTPStatus.CREATED
+        new_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+
+    mock_delete_cloudhook.assert_called_once_with(hass, old_webhook_id)
+    assert entry.data[CONF_CLOUDHOOK_URL] == (
+        f"https://hooks.nabu.casa/{new_webhook_id}"
+    )
+
+
+async def test_registration_flow_aborts_for_existing_entry(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the registration flow doesn't replace an existing entry."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, data=dict(REGISTER_CLEARTEXT), context={"source": "registration"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
 
 
 async def test_registration_encryption(

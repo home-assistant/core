@@ -1,8 +1,8 @@
 {
   "config": {
     "abort": {
-      "install_app": "Open the mobile app to set up the integration with Home Assistant. See [the docs]({apps_url}) for a list of compatible apps.",
-      "registration_updated": "The registration of the app has been updated."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "install_app": "Open the mobile app to set up the integration with Home Assistant. See [the docs]({apps_url}) for a list of compatible apps."
     },
     "step": {
       "confirm": {

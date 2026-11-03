@@ -33,7 +33,7 @@ from .const import (
     DOMAIN,
     SCHEMA_APP_DATA,
 )
-from .util import async_create_cloud_hook
+from .util import async_create_cloud_hook, async_update_registration
 
 
 class RegistrationsView(HomeAssistantView):
@@ -68,6 +68,16 @@ class RegistrationsView(HomeAssistantView):
         webhook_id = secrets.token_hex()
         user = request["hass_user"]
 
+        entry = None
+        if ATTR_DEVICE_ID in data:
+            entry = hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, f"{data[ATTR_APP_ID]}-{data[ATTR_DEVICE_ID]}"
+            )
+        if entry is not None and entry.disabled_by:
+            return self.json_message(
+                "The registration of this device is disabled", HTTPStatus.CONFLICT
+            )
+
         if (
             not user.local_only
             and cloud.async_active_subscription(hass)
@@ -88,11 +98,17 @@ class RegistrationsView(HomeAssistantView):
         if not slugify(data[ATTR_DEVICE_NAME], separator=""):
             data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
 
-        await hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, data=data, context={"source": "registration"}
+        if entry is None:
+            await hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, data=data, context={"source": "registration"}
+                )
             )
-        )
+        elif not await async_update_registration(hass, entry, data):
+            return self.json_message(
+                "Failed to update the registration",
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
         remote_ui_url = None
         if not user.local_only and cloud.async_active_subscription(hass):

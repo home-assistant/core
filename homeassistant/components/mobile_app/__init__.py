@@ -213,6 +213,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
 
+    async def _async_unload_webhook() -> None:
+        # The entry data may have a new webhook ID by now if the app registered again
+        webhook_unregister(hass, webhook_id)
+        del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+        del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
+        await hass_notify.async_reload(hass, DOMAIN)
+
+    entry.async_on_unload(_async_unload_webhook)
+
     await _async_setup_cloudhook(hass, entry, registration[CONF_USER_ID], webhook_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -231,17 +240,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a mobile app entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    webhook_id = entry.data[CONF_WEBHOOK_ID]
-
-    webhook_unregister(hass, webhook_id)
-    del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
-    del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
-    await hass_notify.async_reload(hass, DOMAIN)
-
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
-    await async_retire_webhook(hass, entry)
+    await async_retire_webhook(hass, entry.data)
 
 
 class _MobileAppStore(Store[dict[str, Any]]):
