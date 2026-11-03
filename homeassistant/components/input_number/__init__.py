@@ -45,7 +45,6 @@ _LOGGER = logging.getLogger(__name__)
 MODE_SLIDER = "slider"
 MODE_BOX = "box"
 
-ATTR_INITIAL = "initial"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"

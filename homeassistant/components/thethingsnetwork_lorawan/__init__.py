@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from lorawan_connection import ConnectionUnavailable, Unsubscribe
 from lorawan_connection.backend.tts import AuthenticationError, TTSConnection
+from yarl import URL
 
 from homeassistant.components import lorawan
 from homeassistant.config_entries import ConfigEntry
@@ -40,10 +41,18 @@ async def async_setup_entry(
         application_ids=entry.data[CONF_APPLICATION_IDS],
         network_id=entry.entry_id,
     )
+    endpoint = URL(entry.data[CONF_ENDPOINT])
+    # Hosted TTN serves its console on the default HTTPS port. Self-hosted
+    # servers can use any port, so their console address is unknown.
+    configuration_url = (
+        str(endpoint.with_port(None).with_path("/console/"))
+        if endpoint.host and endpoint.host.endswith(".cloud.thethings.network")
+        else None
+    )
     try:
         await connection.async_connect()
         unregister = await lorawan.async_register_connection(
-            hass, entry, connection=connection
+            hass, entry, connection=connection, configuration_url=configuration_url
         )
     except AuthenticationError as error:
         await connection.close()

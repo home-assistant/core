@@ -448,11 +448,14 @@ def enum(enumClass: type[Enum]) -> probatio.All:
     return probatio.All(probatio.In(enumClass.__members__), enumClass.__getitem__)
 
 
+_WHITESPACE = re.compile(r"\s")
+
+
 def icon(value: Any) -> str:
     """Validate icon."""
-    str_value = str(value)
+    str_value = str(value).strip()
 
-    if ":" in str_value:
+    if ":" in str_value and not _WHITESPACE.search(str_value):
         return str_value
 
     raise probatio.Invalid('Icons should be specified in the form "prefix:name"')
@@ -864,7 +867,7 @@ def url_no_path(value: Any) -> str:
 
 def x10_address(value: str) -> str:
     """Validate an x10 address."""
-    regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
+    regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)\Z")
     if not regex.match(value):
         raise probatio.Invalid("Invalid X10 Address")
     return str(value).lower()
@@ -1303,20 +1306,23 @@ TARGET_ID_FIELDS: VolDictType = {
     probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
 }
 
+TARGET_EXCLUDE_SCHEMA = probatio.Schema(TARGET_ID_FIELDS)
+
 TARGET_FIELDS: VolDictType = {
     **TARGET_ID_FIELDS,
-    probatio.Optional(CONF_EXCLUDE): probatio.Schema(TARGET_ID_FIELDS),
+    probatio.Optional(CONF_EXCLUDE): TARGET_EXCLUDE_SCHEMA,
 }
 
-ENTITY_SERVICE_EXCLUDE_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(ATTR_ENTITY_ID): entity_ids,
-        probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
-        probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
-        probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
-        probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
-    }
-)
+
+def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
+    """Reject a target which only has an exclude block.
+
+    Not part of TARGET_FIELDS, which also validates partial targets while editing.
+    """
+    if CONF_EXCLUDE in value and not any(value.get(key) for key in TARGET_ID_KEYS):
+        raise probatio.Invalid("an exclude block requires a target to exclude from")
+    return value
+
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids,
@@ -1336,7 +1342,7 @@ ENTITY_SERVICE_FIELDS: VolDictType = {
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(CONF_EXCLUDE): ENTITY_SERVICE_EXCLUDE_SCHEMA,
+    probatio.Optional(CONF_EXCLUDE): TARGET_EXCLUDE_SCHEMA,
 }
 
 TARGET_SERVICE_FIELDS: VolDictType = {
@@ -1344,15 +1350,6 @@ TARGET_SERVICE_FIELDS: VolDictType = {
     # by entity registry ID.
     **ENTITY_SERVICE_FIELDS,
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids_or_uuids,
-    probatio.Optional(CONF_EXCLUDE): probatio.Schema(
-        {
-            probatio.Optional(ATTR_ENTITY_ID): entity_ids_or_uuids,
-            probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
-            probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
-            probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
-            probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
-        }
-    ),
 }
 
 _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
@@ -1391,7 +1388,7 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     probatio.Optional(CONF_EXCLUDE): probatio.Schema(
         {
             probatio.Optional(ATTR_ENTITY_ID): probatio.Any(
-                entity_ids_or_uuids,
+                TARGET_ID_FIELDS[ATTR_ENTITY_ID],
                 dynamic_template,
                 probatio.All(list, template_complex),
             ),
@@ -1544,7 +1541,8 @@ SERVICE_SCHEMA = probatio.All(
             ),
             probatio.Optional(CONF_ENTITY_ID): comp_entity_ids,
             probatio.Optional(CONF_TARGET): probatio.Any(
-                _TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
+                probatio.All(_TARGET_SERVICE_FIELDS_TEMPLATED, exclude_requires_target),
+                dynamic_template,
             ),
             probatio.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.

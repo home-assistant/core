@@ -4,6 +4,7 @@
   "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@nikolairahimi"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["dhcp"],
   "dhcp": [{ "registered_devices": true }],
   "documentation": "https://www.home-assistant.io/integrations/mitsubishi_comfort",

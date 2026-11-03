@@ -154,7 +154,8 @@ class ElectraClimateEntity(ClimateEntity):
         # a command to the API
         self._last_state_update = 0
 
-        # count the consecutive update failures, used to print error log
+        # count the consecutive update failures, used to print error log,
+        # reset on a successful update
         self._consecutive_failures = 0
         self._skip_update = True
         self._was_available = True
@@ -191,6 +192,7 @@ class ElectraClimateEntity(ClimateEntity):
                 self._skip_update = False
             else:
                 await self._api.get_last_telemtry(self._electra_ac_device)
+                self._consecutive_failures = 0
 
             if not self.available:
                 # show the warning once upon state change
@@ -228,7 +230,6 @@ class ElectraClimateEntity(ClimateEntity):
                 self._consecutive_failures,
             )
 
-        self._consecutive_failures = 0
         self._update_device_attrs()
 
     @override

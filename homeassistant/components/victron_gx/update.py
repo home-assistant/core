@@ -2,7 +2,12 @@
 
 from typing import Any, override
 
-from victron_mqtt import FirmwareUpdateError, FirmwareUpdateInfo
+from victron_mqtt import (
+    FirmwareUpdateError,
+    FirmwareUpdateInfo,
+    NotConnectedError,
+    PublishError,
+)
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -133,6 +138,16 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key=err.reason.value,
+            ) from err
+        except NotConnectedError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_connected",
+            ) from err
+        except PublishError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="publish_failed",
             ) from err
         finally:
             self._installing = False

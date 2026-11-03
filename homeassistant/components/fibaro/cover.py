@@ -7,7 +7,6 @@ from pyfibaro.fibaro_device import DeviceModel
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    ENTITY_ID_FORMAT,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -39,13 +38,6 @@ async def async_setup_entry(
 
 class PositionableFibaroCover(FibaroEntity, CoverEntity):
     """Representation of a fibaro cover which supports positioning."""
-
-    def __init__(
-        self, fibaro_device: DeviceModel, controller: FibaroController
-    ) -> None:
-        """Initialize the device."""
-        super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @staticmethod
     def bound(position: int | None) -> int | None:
@@ -122,7 +114,6 @@ class FibaroCover(FibaroEntity, CoverEntity):
     ) -> None:
         """Initialize the device."""
         super().__init__(fibaro_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
