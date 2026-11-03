@@ -3,6 +3,7 @@
   "name": "Synology Chat",
   "categories": ["messaging_notifications.chat_apps"],
   "codeowners": [],
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/synology_chat",
   "iot_class": "cloud_push",
   "quality_scale": "legacy"

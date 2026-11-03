@@ -11,6 +11,7 @@
   "categories": ["garden_plants"],
   "codeowners": ["@elupus"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/gardena_bluetooth",
   "integration_type": "device",

@@ -26,7 +26,7 @@ PHONE = MockDevice("11:22:33:44:55:66", "Phone")
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock config-entry setup for flow tests."""
     with patch(
-        "homeassistant.components.sky_hub.async_setup_entry", return_value=True
+        "homeassistant.components.sky_hub.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 

@@ -10,9 +10,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    ATTR_DURATION,
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
     DATA_COMPONENT,
     DOMAIN,
     SirenEntityFeature,
@@ -49,8 +46,8 @@ def process_turn_on_params(
     """
 
     if not siren.supported_features & SirenEntityFeature.TONES:
-        params.pop(ATTR_TONE, None)
-    elif (tone := params.get(ATTR_TONE)) is not None:
+        params.pop(SirenServiceArgument.TONE.value, None)
+    elif (tone := params.get(SirenServiceArgument.TONE.value)) is not None:
         # Raise an exception if the specified tone isn't available
         is_tone_dict_value = bool(
             isinstance(siren.available_tones, dict)
@@ -72,14 +69,14 @@ def process_turn_on_params(
         # to transform it to the corresponding dict key before returning
         if is_tone_dict_value:
             assert isinstance(siren.available_tones, dict)
-            params[ATTR_TONE] = next(
+            params[SirenServiceArgument.TONE.value] = next(
                 key for key, value in siren.available_tones.items() if value == tone
             )
 
     if not siren.supported_features & SirenEntityFeature.DURATION:
-        params.pop(ATTR_DURATION, None)
+        params.pop(SirenServiceArgument.DURATION.value, None)
     if not siren.supported_features & SirenEntityFeature.VOLUME_SET:
-        params.pop(ATTR_VOLUME_LEVEL, None)
+        params.pop(SirenServiceArgument.VOLUME_LEVEL.value, None)
 
     return params
 

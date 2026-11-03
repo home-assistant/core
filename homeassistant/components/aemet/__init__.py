@@ -18,7 +18,7 @@ from .coordinator import AemetConfigEntry, AemetData, WeatherUpdateCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
     """Set up AEMET OpenData as config entry."""
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME) or entry.title
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]

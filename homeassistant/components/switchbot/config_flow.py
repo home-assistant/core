@@ -263,7 +263,6 @@ class SwitchbotConfigFlow(
         if user_input is not None:
             return await self._async_create_entry_from_discovery(user_input)
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm",
             data_schema=probatio.Schema({}),

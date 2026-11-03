@@ -1810,7 +1810,7 @@ async def _async_reconfigure(
     assert result["step_id"] == "pubsub_subscription"
 
     with patch(
-        "homeassistant.components.nest.async_setup_entry", return_value=True
+        "homeassistant.components.nest.async_setup_entry", return_value=None
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"subscription_name": subscription_name}

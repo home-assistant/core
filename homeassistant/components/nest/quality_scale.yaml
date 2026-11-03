@@ -63,7 +63,7 @@ rules:
   docs-known-limitations: todo
   stale-devices: done
   docs-supported-functions: todo
-  repair-issues: todo
+  repair-issues: done
   reconfiguration-flow: done
   entity-category: todo
   dynamic-devices: done

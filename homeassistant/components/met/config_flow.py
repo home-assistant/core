@@ -14,12 +14,14 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -34,6 +36,19 @@ from .const import (
     HOME_LOCATION_NAME,
 )
 
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_LOCATION): LocationSelector(
+            LocationSelectorConfig(radius=False)
+        ),
+        probatio.Required(CONF_ELEVATION): NumberSelector(
+            NumberSelectorConfig(
+                mode=NumberSelectorMode.BOX, unit_of_measurement=UnitOfLength.METERS
+            )
+        ),
+    }
+)
+
 
 @callback
 def configured_instances(hass: HomeAssistant) -> set[str]:
@@ -43,19 +58,9 @@ def configured_instances(hass: HomeAssistant) -> set[str]:
         if entry.data.get("track_home"):
             entries.append("home")
             continue
-        entries.append(
-            f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
-        )
+        location = entry.data.get(CONF_LOCATION, entry.data)
+        entries.append(f"{location[CONF_LATITUDE]}-{location[CONF_LONGITUDE]}")
     return set(entries)
-
-
-def _location_data(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Return config entry data for a fixed location."""
-    return {
-        CONF_LATITUDE: user_input[CONF_LATITUDE],
-        CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-        CONF_ELEVATION: user_input[CONF_ELEVATION],
-    }
 
 
 def _fixed_location_title(data: Mapping[str, Any]) -> str:
@@ -68,60 +73,14 @@ def _has_generated_title(config_entry: ConfigEntry) -> bool:
     if config_entry.data.get(CONF_TRACK_HOME, False):
         return config_entry.title == HOME_LOCATION_NAME
 
-    return config_entry.title == _fixed_location_title(config_entry.data)
-
-
-def _get_data_schema(
-    hass: HomeAssistant, config_entry: ConfigEntry | None = None
-) -> probatio.Schema:
-    """Get a schema with default values."""
-    # If tracking home or no config entry is passed in,
-    # default value come from Home location
-    if config_entry is None or config_entry.data.get(CONF_TRACK_HOME, False):
-        return probatio.Schema(
-            {
-                probatio.Required(
-                    CONF_LATITUDE, default=hass.config.latitude
-                ): cv.latitude,
-                probatio.Required(
-                    CONF_LONGITUDE, default=hass.config.longitude
-                ): cv.longitude,
-                probatio.Required(
-                    CONF_ELEVATION, default=hass.config.elevation
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        mode=NumberSelectorMode.BOX,
-                        unit_of_measurement=UnitOfLength.METERS,
-                    )
-                ),
-            }
-        )
-    # Not tracking home, default values come from config entry
-    return probatio.Schema(
-        {
-            probatio.Required(
-                CONF_LATITUDE, default=config_entry.data.get(CONF_LATITUDE)
-            ): cv.latitude,
-            probatio.Required(
-                CONF_LONGITUDE, default=config_entry.data.get(CONF_LONGITUDE)
-            ): cv.longitude,
-            probatio.Required(
-                CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)
-            ): NumberSelector(
-                NumberSelectorConfig(
-                    mode=NumberSelectorMode.BOX,
-                    unit_of_measurement=UnitOfLength.METERS,
-                )
-            ),
-        }
-    )
+    return config_entry.title == _fixed_location_title(config_entry.data[CONF_LOCATION])
 
 
 class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Met component."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @override
     async def async_step_user(
@@ -131,19 +90,29 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            data = _location_data(user_input)
+            location = user_input[CONF_LOCATION]
             if (
-                f"{data[CONF_LATITUDE]}-{data[CONF_LONGITUDE]}"
+                f"{location[CONF_LATITUDE]}-{location[CONF_LONGITUDE]}"
                 not in configured_instances(self.hass)
             ):
                 return self.async_create_entry(
-                    title=_fixed_location_title(data), data=data
+                    title=_fixed_location_title(location), data=user_input
                 )
             errors["base"] = "already_configured"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_get_data_schema(self.hass),
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                user_input
+                or {
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    },
+                    CONF_ELEVATION: self.hass.config.elevation,
+                },
+            ),
             errors=errors,
         )
 
@@ -182,18 +151,31 @@ class MetOptionsFlowHandler(OptionsFlowWithReload):
         """Configure options for Met."""
 
         if user_input is not None:
-            data = _location_data(user_input)
             title = (
-                _fixed_location_title(data)
+                _fixed_location_title(user_input[CONF_LOCATION])
                 if _has_generated_title(self.config_entry)
                 else self.config_entry.title
             )
             self.hass.config_entries.async_update_entry(
-                self.config_entry, data=data, title=title
+                self.config_entry, data=user_input, title=title
             )
-            return self.async_create_entry(title=title, data=data)
+            return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=_get_data_schema(self.hass, config_entry=self.config_entry),
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                user_input
+                or (
+                    self.config_entry.data
+                    if not self.config_entry.data.get(CONF_TRACK_HOME, False)
+                    else {
+                        CONF_LOCATION: {
+                            CONF_LATITUDE: self.hass.config.latitude,
+                            CONF_LONGITUDE: self.hass.config.longitude,
+                        },
+                        CONF_ELEVATION: self.hass.config.elevation,
+                    }
+                ),
+            ),
         )
