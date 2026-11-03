@@ -76,6 +76,12 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "display_on_time": {
+        "name": "Display on-time"
+      },
       "energy_saving_enter_duration": {
         "name": "Energy-saving enter duration"
       },
@@ -99,6 +105,13 @@
           "normally_closed": "Normally closed",
           "normally_open": "Normally open",
           "unsupported": "Unsupported"
+        }
+      },
+      "dimmer_phase_control": {
+        "name": "Dimmer phase control",
+        "state": {
+          "leading": "Leading edge phase cut",
+          "trailing": "Trailing edge phase cut"
         }
       },
       "display_direction": {

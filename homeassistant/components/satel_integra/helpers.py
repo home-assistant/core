@@ -7,6 +7,7 @@ from satel_integra import (
     SatelNoResponseError,
     SatelResultCode,
 )
+from satel_integra.exceptions import SatelCommandExpiredError, SatelNotConnectedError
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -32,6 +33,11 @@ async def async_validate_command(command: Awaitable[object]) -> None:
             translation_domain=DOMAIN,
             translation_key="command_rejected",
             translation_placeholders={"result_code": f"0x{int(err.result.code):02X}"},
+        ) from err
+    except (SatelCommandExpiredError, SatelNotConnectedError) as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_sent",
         ) from err
     except SatelNoResponseError as err:
         raise HomeAssistantError(

@@ -2,7 +2,11 @@
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
@@ -12,6 +16,23 @@ from homeassistant.components.bthome.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import INVALID_PAYLOAD, make_bthome_v2_adv, make_encrypted_bthome_v1_adv
+
+MAC_IN_MANUFACTURER_DATA = BluetoothServiceInfoBleak(
+    name="TEST DEVICE 8D18B2",
+    address="A4:C1:38:8D:18:B2",
+    device=generate_ble_device("A4:C1:38:8D:18:B2", None),
+    rssi=-56,
+    manufacturer_data={2409: b"\x01\xa4\xc1\x38\x8d\x18\xb2\x02"},
+    service_data={
+        "0000fcd2-0000-1000-8000-00805f9b34fb": b"\x40\x02\xca\x09\x03\xbf\x13"
+    },
+    service_uuids=["0000fcd2-0000-1000-8000-00805f9b34fb"],
+    source="local",
+    advertisement=generate_advertisement_data(local_name="Not it"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)
 
 
 @pytest.mark.parametrize(
@@ -40,6 +61,12 @@ from . import INVALID_PAYLOAD, make_bthome_v2_adv, make_encrypted_bthome_v1_adv
             {},
             INVALID_PAYLOAD,
             id="mac_in_payload",
+        ),
+        pytest.param(
+            "A4:C1:38:8D:18:B2",
+            {},
+            MAC_IN_MANUFACTURER_DATA,
+            id="mac_in_manufacturer_data",
         ),
     ],
 )

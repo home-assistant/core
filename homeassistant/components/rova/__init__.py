@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RovaConfigEntry) -> None
             severity=IssueSeverity.ERROR,
             translation_key="no_rova_area",
             translation_placeholders={
-                CONF_ZIP_CODE: entry.data[CONF_ZIP_CODE],
+                "zip_code": entry.data[CONF_ZIP_CODE],
             },
         )
         raise ConfigEntryError("Rova does not collect garbage in this area")

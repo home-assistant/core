@@ -181,7 +181,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )

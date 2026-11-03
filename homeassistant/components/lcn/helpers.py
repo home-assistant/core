@@ -102,7 +102,7 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key="invalid_domain",
-        translation_placeholders={CONF_DOMAIN: domain_name},
+        translation_placeholders={"domain": domain_name},
     )
 
 

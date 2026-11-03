@@ -61,6 +61,7 @@
       "absolute_power": { "name": "Absolute power" },
       "active_power": { "name": "Active power" },
       "active_power_export": { "name": "Power feed-in" },
+      "active_power_export_phase": { "name": "Power feed-in {phase}" },
       "active_power_import": { "name": "Power consumption" },
       "active_power_phase": { "name": "Active power {phase}" },
       "apparent_power_export": { "name": "Apparent power feed-in" },
