@@ -147,6 +147,44 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         const.DOMAIN,
+        const.SERVICE_SET_CONFIG_PARAMETER,
+        _async_set_config_parameter,
+        schema=probatio.Schema(
+            probatio.All(
+                {
+                    **TARGET_VALIDATORS,
+                    probatio.Optional(const.ATTR_ENDPOINT, default=0): probatio.Coerce(
+                        int
+                    ),
+                    probatio.Required(const.ATTR_CONFIG_PARAMETER): probatio.Any(
+                        probatio.Coerce(int), cv.string
+                    ),
+                    probatio.Optional(
+                        const.ATTR_CONFIG_PARAMETER_BITMASK
+                    ): probatio.Any(probatio.Coerce(int), BITMASK_SCHEMA),
+                    probatio.Required(const.ATTR_CONFIG_VALUE): probatio.Any(
+                        probatio.Coerce(int), BITMASK_SCHEMA, cv.string
+                    ),
+                    probatio.Inclusive(const.ATTR_VALUE_SIZE, "raw"): probatio.All(
+                        probatio.Coerce(int),
+                        probatio.Range(min=1, max=4),
+                        check_base_2,
+                    ),
+                    probatio.Inclusive(const.ATTR_VALUE_FORMAT, "raw"): probatio.Coerce(
+                        ConfigurationValueFormat
+                    ),
+                },
+                probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+                probatio.AtMostOne(
+                    const.ATTR_CONFIG_PARAMETER_BITMASK, const.ATTR_VALUE_SIZE
+                ),
+                parameter_name_does_not_need_bitmask,
+            ),
+        ),
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
         const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
         _async_bulk_set_partial_config_parameters,
         schema=probatio.Schema(
@@ -476,6 +514,94 @@ def _async_get_nodes(call: ServiceCall) -> set[ZwaveNode]:
     return nodes
 
 
+async def _async_set_config_parameter(call: ServiceCall) -> None:
+    """Set a config value on a node."""
+    nodes = _async_get_nodes(call)
+    endpoint = call.data[const.ATTR_ENDPOINT]
+    property_or_property_name = call.data[const.ATTR_CONFIG_PARAMETER]
+    property_key = call.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
+    new_value = call.data[const.ATTR_CONFIG_VALUE]
+    value_size = call.data.get(const.ATTR_VALUE_SIZE)
+    value_format = call.data.get(const.ATTR_VALUE_FORMAT)
+
+    nodes_without_endpoints: set[ZwaveNode] = set()
+    # Remove nodes that don't have the specified endpoint
+    for node in nodes:
+        if endpoint not in node.endpoints:
+            nodes_without_endpoints.add(node)
+    nodes = nodes.difference(nodes_without_endpoints)
+    if not nodes:
+        raise HomeAssistantError(
+            "None of the specified nodes have the specified endpoint"
+        )
+    if nodes_without_endpoints and _LOGGER.isEnabledFor(logging.WARNING):
+        _LOGGER.warning(
+            "The following nodes do not have endpoint %x and will be skipped: %s",
+            endpoint,
+            nodes_without_endpoints,
+        )
+
+    # If value_size isn't provided, we will use the utility function which includes
+    # additional checks and protections. If it is provided, we will use the
+    # node.async_set_raw_config_parameter_value method which calls the
+    # Configuration CC set API.
+    results = await asyncio.gather(
+        *(
+            async_set_config_parameter(
+                node,
+                new_value,
+                property_or_property_name,
+                property_key=property_key,
+                endpoint=endpoint,
+            )
+            if value_size is None
+            else node.endpoints[endpoint].async_set_raw_config_parameter_value(
+                new_value,
+                property_or_property_name,
+                property_key=property_key,
+                value_size=value_size,
+                value_format=value_format,
+            )
+            for node in nodes
+        ),
+        return_exceptions=True,
+    )
+
+    def process_results(
+        nodes_or_endpoints_list: Sequence[_NodeOrEndpointType], _results: list[Any]
+    ) -> None:
+        """Process results for given nodes or endpoints."""
+        for node_or_endpoint, result in get_valid_responses_from_results(
+            nodes_or_endpoints_list, _results
+        ):
+            if value_size is None:
+                # async_set_config_parameter still returns
+                # (Value, SetConfigParameterResult)
+                zwave_value = result[0]
+                cmd_status = result[1]
+            else:
+                # async_set_raw_config_parameter_value now
+                # returns just SetConfigParameterResult
+                cmd_status = result
+                zwave_value = f"parameter {property_or_property_name}"
+
+            if cmd_status.status == CommandStatus.ACCEPTED:
+                msg = "Set configuration parameter %s on Node %s with value %s"
+            else:
+                msg = (
+                    "Added command to queue to set"
+                    " configuration parameter %s on %s "
+                    "with value %s. Parameter will be set when the device wakes up"
+                )
+            _LOGGER.info(msg, zwave_value, node_or_endpoint, new_value)
+        raise_exceptions_from_results(nodes_or_endpoints_list, _results)
+
+    if value_size is None:
+        process_results(list(nodes), results)
+    else:
+        process_results([node.endpoints[endpoint] for node in nodes], results)
+
+
 async def _async_bulk_set_partial_config_parameters(call: ServiceCall) -> None:
     """Bulk set multiple partial config values on a node."""
     nodes = _async_get_nodes(call)
@@ -715,47 +841,6 @@ class ZWaveServices:
         # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
-            const.SERVICE_SET_CONFIG_PARAMETER,
-            self.async_set_config_parameter,
-            schema=probatio.Schema(
-                probatio.All(
-                    {
-                        **TARGET_VALIDATORS,
-                        probatio.Optional(
-                            const.ATTR_ENDPOINT, default=0
-                        ): probatio.Coerce(int),
-                        probatio.Required(const.ATTR_CONFIG_PARAMETER): probatio.Any(
-                            probatio.Coerce(int), cv.string
-                        ),
-                        probatio.Optional(
-                            const.ATTR_CONFIG_PARAMETER_BITMASK
-                        ): probatio.Any(probatio.Coerce(int), BITMASK_SCHEMA),
-                        probatio.Required(const.ATTR_CONFIG_VALUE): probatio.Any(
-                            probatio.Coerce(int), BITMASK_SCHEMA, cv.string
-                        ),
-                        probatio.Inclusive(const.ATTR_VALUE_SIZE, "raw"): probatio.All(
-                            probatio.Coerce(int),
-                            probatio.Range(min=1, max=4),
-                            check_base_2,
-                        ),
-                        probatio.Inclusive(
-                            const.ATTR_VALUE_FORMAT, "raw"
-                        ): probatio.Coerce(ConfigurationValueFormat),
-                    },
-                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
-                    probatio.AtMostOne(
-                        const.ATTR_CONFIG_PARAMETER_BITMASK, const.ATTR_VALUE_SIZE
-                    ),
-                    parameter_name_does_not_need_bitmask,
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
             const.SERVICE_REFRESH_VALUE,
             self.async_poll_value,
             schema=probatio.Schema(
@@ -841,93 +926,6 @@ class ZWaveServices:
                 ),
             ),
         )
-
-    async def async_set_config_parameter(self, service: ServiceCall) -> None:
-        """Set a config value on a node."""
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        endpoint = service.data[const.ATTR_ENDPOINT]
-        property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
-        property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
-        new_value = service.data[const.ATTR_CONFIG_VALUE]
-        value_size = service.data.get(const.ATTR_VALUE_SIZE)
-        value_format = service.data.get(const.ATTR_VALUE_FORMAT)
-
-        nodes_without_endpoints: set[ZwaveNode] = set()
-        # Remove nodes that don't have the specified endpoint
-        for node in nodes:
-            if endpoint not in node.endpoints:
-                nodes_without_endpoints.add(node)
-        nodes = nodes.difference(nodes_without_endpoints)
-        if not nodes:
-            raise HomeAssistantError(
-                "None of the specified nodes have the specified endpoint"
-            )
-        if nodes_without_endpoints and _LOGGER.isEnabledFor(logging.WARNING):
-            _LOGGER.warning(
-                "The following nodes do not have endpoint %x and will be skipped: %s",
-                endpoint,
-                nodes_without_endpoints,
-            )
-
-        # If value_size isn't provided, we will use the utility function which includes
-        # additional checks and protections. If it is provided, we will use the
-        # node.async_set_raw_config_parameter_value method which calls the
-        # Configuration CC set API.
-        results = await asyncio.gather(
-            *(
-                async_set_config_parameter(
-                    node,
-                    new_value,
-                    property_or_property_name,
-                    property_key=property_key,
-                    endpoint=endpoint,
-                )
-                if value_size is None
-                else node.endpoints[endpoint].async_set_raw_config_parameter_value(
-                    new_value,
-                    property_or_property_name,
-                    property_key=property_key,
-                    value_size=value_size,
-                    value_format=value_format,
-                )
-                for node in nodes
-            ),
-            return_exceptions=True,
-        )
-
-        def process_results(
-            nodes_or_endpoints_list: Sequence[_NodeOrEndpointType], _results: list[Any]
-        ) -> None:
-            """Process results for given nodes or endpoints."""
-            for node_or_endpoint, result in get_valid_responses_from_results(
-                nodes_or_endpoints_list, _results
-            ):
-                if value_size is None:
-                    # async_set_config_parameter still returns
-                    # (Value, SetConfigParameterResult)
-                    zwave_value = result[0]
-                    cmd_status = result[1]
-                else:
-                    # async_set_raw_config_parameter_value now
-                    # returns just SetConfigParameterResult
-                    cmd_status = result
-                    zwave_value = f"parameter {property_or_property_name}"
-
-                if cmd_status.status == CommandStatus.ACCEPTED:
-                    msg = "Set configuration parameter %s on Node %s with value %s"
-                else:
-                    msg = (
-                        "Added command to queue to set"
-                        " configuration parameter %s on %s "
-                        "with value %s. Parameter will be set when the device wakes up"
-                    )
-                _LOGGER.info(msg, zwave_value, node_or_endpoint, new_value)
-            raise_exceptions_from_results(nodes_or_endpoints_list, _results)
-
-        if value_size is None:
-            process_results(list(nodes), results)
-        else:
-            process_results([node.endpoints[endpoint] for node in nodes], results)
 
     async def async_poll_value(self, service: ServiceCall) -> None:
         """Poll value on a node."""

@@ -478,7 +478,7 @@ async def test_set_config_parameter(
     client.async_send_command.reset_mock()
 
     # Test setting config parameter with no valid nodes raises Exception
-    with pytest.raises(probatio.MultipleInvalid):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -490,6 +490,8 @@ async def test_set_config_parameter(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
 
     client.async_send_command_no_wait.reset_mock()
     client.async_send_command.reset_mock()
@@ -1165,6 +1167,20 @@ async def test_set_value(
                 ATTR_PROPERTY: "local",
                 ATTR_VALUE: 2,
                 ATTR_WAIT_FOR_RESULT: True,
+            },
+            blocking=True,
+        )
+
+    # Test setting a value with no valid nodes raises Exception
+    with pytest.raises(probatio.MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
             },
             blocking=True,
         )
@@ -2169,6 +2185,11 @@ async def test_refresh_notifications(
                 ATTR_PARAMETERS: [1, 2],
             },
             id="invoke_cc_api",
+        ),
+        pytest.param(
+            SERVICE_SET_VALUE,
+            {ATTR_COMMAND_CLASS: 117, ATTR_PROPERTY: "local", ATTR_VALUE: 2},
+            id="set_value",
         ),
     ],
 )
