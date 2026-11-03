@@ -457,7 +457,7 @@ aiosaj==0.2.2
 aioseafile==0.1.3
 
 # homeassistant.components.shelly
-aioshelly==14.0.1
+aioshelly==14.1.0
 
 # homeassistant.components.skybell
 aioskybell==23.12.0
