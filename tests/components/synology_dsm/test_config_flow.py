@@ -609,6 +609,39 @@ async def test_reauth_wrong_nas(hass: HomeAssistant, service: MagicMock) -> None
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_without_unique_id(
+    hass: HomeAssistant, service: MagicMock
+) -> None:
+    """Test reauthentication succeeds for an entry without a unique ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: f"{PASSWORD}_invalid",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == PASSWORD
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfig_user(hass: HomeAssistant, service: MagicMock) -> None:
     """Test re-configuration of already existing entry by user."""
     MockConfigEntry(

@@ -278,10 +278,11 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_nas")
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=config_data
-            )
+            reauth_entry = self._get_reauth_entry()
+            # Without a stored unique ID there is no serial to verify the NAS against
+            if reauth_entry.unique_id is not None:
+                self._abort_if_unique_id_mismatch(reason="wrong_nas")
+            return self.async_update_reload_and_abort(reauth_entry, data=config_data)
 
         if existing_entry:
             return self.async_update_reload_and_abort(
