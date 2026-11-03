@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from dali.driver.serial import DriverLubaRs232
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.dali.const import CONF_BUS_POWER, DOMAIN
+from homeassistant.components.dali.const import CONF_BUS_POWER, DOMAIN, luba232_uri
 from homeassistant.components.usb import (
     SerialDevice,
     USBDevice,
@@ -60,6 +60,26 @@ USB_PORT = USBDevice(
 
 BY_ID_PATH = "/dev/serial/by-id/usb-Lunatone_USB-DALI2"
 PORT_LABEL = "Lunatone USB-DALI2 (123456)"
+
+
+def test_luba232_uri_preserves_serial_proxy_query() -> None:
+    """Test a serial-proxy device's query parameters survive URI construction.
+
+    python-dali reads only the URI path, so the whole device string, including
+    an ESPHome serial-proxy port query, must live there rather than being split
+    into the query component and dropped.
+    """
+    uri = luba232_uri("esphome://10.0.0.5:6638?port=/dev/ttyUSB0")
+    assert uri.scheme == "luba232"
+    assert uri.path == "esphome://10.0.0.5:6638?port=/dev/ttyUSB0"
+    assert uri.query == ""
+
+
+def test_luba232_uri_plain_device() -> None:
+    """Test a plain serial device maps to the luba232 path unchanged."""
+    uri = luba232_uri("/dev/ttyACM0")
+    assert uri.scheme == "luba232"
+    assert uri.path == "/dev/ttyACM0"
 
 
 def test_probe_uses_a_supported_connect_argument() -> None:

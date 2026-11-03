@@ -1,6 +1,19 @@
 """Constants for the Tridonic DALI integration."""
 
+from urllib.parse import ParseResult
+
 DOMAIN = "dali"
+
+
+def luba232_uri(device: str) -> ParseResult:
+    """Return the python-dali luba232 driver URI for a serial device.
+
+    The device is kept in the URI path: the driver reads only the path, so a
+    serial-proxy device's query parameters would be lost if the device were
+    passed as a plain ``luba232:<device>`` string and split by urlparse.
+    """
+    return ParseResult("luba232", "", device, "", "", "")
+
 
 CONF_BUS_POWER = "bus_power"
 

@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 
-from .const import CONF_BUS_POWER, DOMAIN, GEAR_ID_INFIX
+from .const import CONF_BUS_POWER, DOMAIN, GEAR_ID_INFIX, luba232_uri
 from .coordinator import DaliConfigEntry, DaliCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 async def async_setup_entry(hass: HomeAssistant, entry: DaliConfigEntry) -> None:
     """Set up Tridonic DALI from a config entry."""
     driver = DriverLubaRs232(
-        uri=f"luba232:{entry.data[CONF_DEVICE]}",
+        uri=luba232_uri(entry.data[CONF_DEVICE]),
         bus_power=entry.data.get(CONF_BUS_POWER, False),
     )
 
