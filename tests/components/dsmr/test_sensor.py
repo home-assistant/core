@@ -2135,3 +2135,97 @@ def test_belgian_long_text_message_state() -> None:
     entity = DSMREntity(description, entry, telegram, None, None)
     assert entity.native_value == message[:255]
     assert entity.extra_state_attributes == {"full_message": message}
+
+
+@pytest.mark.parametrize("newest_first", [True, False])
+async def test_belgian_history_sensor_integration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    newest_first: bool,
+) -> None:
+    """Create the history entity and update its published state through telegrams."""
+    connection_factory, _transport, _protocol = dsmr_connection_fixture
+    entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data={
+            "port": "/dev/ttyUSB0",
+            "dsmr_version": "5B",
+            "serial_id": "1234",
+        },
+        options={"time_between_update": 0},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    def history_telegram(
+        monthly_peaks: tuple[tuple[dt.datetime, str], ...],
+    ) -> Telegram:
+        """Construct a DSMR telegram with its historical demand buffer."""
+        telegram = Telegram()
+        telegram.add(
+            BELGIUM_MAXIMUM_DEMAND_13_MONTHS,
+            [
+                MBusObjectPeak(
+                    (0, 0),
+                    [
+                        {"value": month},
+                        {"value": month - dt.timedelta(days=5)},
+                        {"value": Decimal(peak), "unit": "kW"},
+                    ],
+                )
+                for month, peak in monthly_peaks
+            ],
+            "BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
+        )
+        return telegram
+
+    october = (dt.datetime(2026, 11, 1, tzinfo=dt.UTC), "3.277")
+    september = (dt.datetime(2026, 10, 1, tzinfo=dt.UTC), "3.175")
+    months = (october, september) if newest_first else (september, october)
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+    telegram_callback(history_telegram(months))
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", "dsmr", "1234_belgium_maximum_demand_history"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "3.277"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "kW"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+    assert state.attributes["monthly_peaks"] == [
+        {
+            "month": ("2026-10" if month == october[0] else "2026-09"),
+            "peak": float(peak),
+            "occurred": (month - dt.timedelta(days=5)).isoformat(),
+        }
+        for month, peak in months
+    ]
+
+    telegram_callback(history_telegram(((dt.datetime(2026, 12, 1, tzinfo=dt.UTC), "4.125"),)))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "4.125"
+    assert state.attributes["monthly_peaks"] == [
+        {
+            "month": "2026-11",
+            "peak": 4.125,
+            "occurred": "2026-11-26T00:00:00+00:00",
+        }
+    ]
+
+    telegram_callback(history_telegram(()))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["monthly_peaks"] == []
