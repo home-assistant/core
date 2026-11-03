@@ -774,6 +774,7 @@ async def _async_convert_audio_owned(  # noqa: C901
     source_owner: _AudioSourceOwner | None = None
     header_task: asyncio.Task | None = None
     prespawn_cleanup: asyncio.Task | None = None
+    acquiring_process = False
     if is_streaming_wav:
         assert isinstance(audio_input, AsyncGenerator)
         source_owner = _AudioSourceOwner(hass, audio_input, handle.requested)
@@ -814,6 +815,10 @@ async def _async_convert_audio_owned(  # noqa: C901
 
     def prespawn_finished(task: asyncio.Task) -> None:
         _ffmpeg_late_result(task)
+        # Closing the source does not settle an in-flight process acquisition.
+        # After acquisition succeeds, critical child cleanup owns terminal.
+        if acquiring_process or handle.cleanup is not close_prespawn:
+            return
         if not handle.terminal.done():
             handle.terminal.set_result(None)
         _conversion_coordinator(hass).active.discard(handle)
@@ -831,6 +836,9 @@ async def _async_convert_audio_owned(  # noqa: C901
         """Keep the primary error and retrieve an interrupted close result."""
         handle.cleanup = close_prespawn
         close_task = close_prespawn()
+        if close_task.done():
+            # Shutdown may have closed the source before acquisition failed.
+            prespawn_finished(close_task)
         try:
             await _async_ffmpeg_join(close_task)
         except asyncio.CancelledError:
@@ -903,7 +911,7 @@ async def _async_convert_audio_owned(  # noqa: C901
         block_align = pcm_format.channels * 2
         try:
             if handle.requested.done():
-                raise asyncio.CancelledError
+                raise asyncio.CancelledError  # noqa: TRY301
             yield struct.pack(
                 "<4sI4s4sIHHIIHH4sI",
                 b"RIFF",
@@ -922,7 +930,7 @@ async def _async_convert_audio_owned(  # noqa: C901
             )
             async for chunk in audio_input:
                 if handle.requested.done():
-                    raise asyncio.CancelledError
+                    raise asyncio.CancelledError  # noqa: TRY301
                 yield chunk
             native_primary: BaseException | None = None
         except BaseException as err:
@@ -1000,6 +1008,7 @@ async def _async_convert_audio_owned(  # noqa: C901
     command.extend(["-fflags", "+bitexact"])
     command.append("pipe:1")  # Send output to stdout.
 
+    acquiring_process = True
     try:
         process = await asyncio.create_subprocess_exec(
             *command,
@@ -1008,6 +1017,7 @@ async def _async_convert_audio_owned(  # noqa: C901
             stderr=asyncio.subprocess.PIPE,
         )
     except BaseException as primary:
+        acquiring_process = False
         if is_input_gen:
             await close_before_spawn(primary)
         raise
@@ -1216,6 +1226,7 @@ async def _async_convert_audio_owned(  # noqa: C901
         else None
     )
     handle.cleanup = ensure_cleanup
+    acquiring_process = False
     handle.ready.set_result(None)
     if handle.requested.done():
         ensure_cleanup()
