@@ -3,7 +3,7 @@
 from collections.abc import Awaitable
 from typing import Any
 
-from skoda_public_api.api_layer.exceptions import OpenApiError
+from skoda_public_api.api_layer.exceptions import OpenApiError, OpenApiTimeoutError
 from skoda_public_api.models.active_ventilation import ActiveVentilation
 from skoda_public_api.models.air_conditioning import AirConditioning
 from skoda_public_api.models.auxiliary_heating import AuxiliaryHeating
@@ -17,6 +17,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import SkodaUpdateCoordinator
+
+_COMMAND_ERRORS: dict[int | None, str] = {
+    422: "command_not_supported",
+    429: "rate_limit_exceeded",
+    504: "vehicle_not_responding",
+}
 
 
 class SkodaEntity(CoordinatorEntity[SkodaUpdateCoordinator]):
@@ -81,9 +87,13 @@ class SkodaEntity(CoordinatorEntity[SkodaUpdateCoordinator]):
         """Send a command to the vehicle, raising a translated error on failure."""
         try:
             await command
+        except OpenApiTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="vehicle_not_responding",
+            ) from err
         except OpenApiError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
+                translation_key=_COMMAND_ERRORS.get(err.status_code, "command_failed"),
             ) from err

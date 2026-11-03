@@ -11,7 +11,13 @@ from pytest_homeassistant.common import (
     async_load_json_object_fixture,
     snapshot_platform,
 )
-from skoda_public_api.api_layer.exceptions import OpenApiError
+from skoda_public_api.api_layer.exceptions import (
+    OpenApiError,
+    OpenApiRateLimitError,
+    OpenApiServerError,
+    OpenApiTimeoutError,
+    OpenApiUnsupportedError,
+)
 from skoda_public_api.models.enums import ChargingState, VentilationState
 from skoda_public_api.models.vehicle import VehicleResponse
 from syrupy.assertion import SnapshotAssertion
@@ -149,14 +155,26 @@ async def test_switch_actions(
     assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        (OpenApiError("boom"), "command_failed"),
+        (OpenApiUnsupportedError(), "command_not_supported"),
+        (OpenApiRateLimitError(), "rate_limit_exceeded"),
+        (OpenApiServerError("timeout", 504), "vehicle_not_responding"),
+        (OpenApiTimeoutError(), "vehicle_not_responding"),
+    ],
+)
 async def test_switch_action_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_skoda_client: AsyncMock,
+    error: OpenApiError,
+    translation_key: str,
 ) -> None:
     """Test a failed command raises a translated error and keeps the state."""
     await setup_integration(hass, mock_config_entry)
-    mock_skoda_client.stop_charging.side_effect = OpenApiError("boom")
+    mock_skoda_client.stop_charging.side_effect = error
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -166,7 +184,7 @@ async def test_switch_action_error(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "command_failed"
+    assert exc_info.value.translation_key == translation_key
     assert (state := hass.states.get("switch.enyaq_coupe_charging"))
     assert state.state == STATE_ON
 

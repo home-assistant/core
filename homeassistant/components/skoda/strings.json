@@ -122,7 +122,16 @@
   },
   "exceptions": {
     "command_failed": {
-      "message": "Failed to send the command to the vehicle: {error}"
+      "message": "Failed to send the command to the vehicle."
+    },
+    "command_not_supported": {
+      "message": "The vehicle does not support this command."
+    },
+    "rate_limit_exceeded": {
+      "message": "The Škoda API rejected the command because the rate limit was reached or the vehicle's 12 V battery is low. Try again later."
+    },
+    "vehicle_not_responding": {
+      "message": "The vehicle did not respond in time. Try again later."
     }
   }
 }
