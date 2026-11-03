@@ -18,16 +18,10 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.const import (
-    ATTR_DYNAMIC_EQ,
-    CONF_USE_TELNET,
-    CONF_ZONE2,
-)
+from homeassistant.components.denonavr.const import CONF_USE_TELNET, CONF_ZONE2
 from homeassistant.components.denonavr.services import (
-    ATTR_COMMAND,
-    SERVICE_GET_COMMAND,
-    SERVICE_SET_DYNAMIC_EQ,
-    SERVICE_UPDATE_AUDYSSEY,
+    DenonAvrService,
+    DenonAvrServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
@@ -103,9 +97,9 @@ async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COMMAND: "test_command",
+        DenonAvrServiceArgument.COMMAND: "test_command",
     }
-    await hass.services.async_call(DOMAIN, SERVICE_GET_COMMAND, data)
+    await hass.services.async_call(DOMAIN, DenonAvrService.GET_COMMAND, data)
     await hass.async_block_till_done()
 
     client.async_get_command.assert_awaited_with("test_command")
@@ -117,15 +111,15 @@ async def test_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_DYNAMIC_EQ: True,
+        DenonAvrServiceArgument.DYNAMIC_EQ: True,
     }
     # Verify on call
-    await hass.services.async_call(DOMAIN, SERVICE_SET_DYNAMIC_EQ, data)
+    await hass.services.async_call(DOMAIN, DenonAvrService.SET_DYNAMIC_EQ, data)
     await hass.async_block_till_done()
 
     # Verify off call
-    data[ATTR_DYNAMIC_EQ] = False
-    await hass.services.async_call(DOMAIN, SERVICE_SET_DYNAMIC_EQ, data)
+    data[DenonAvrServiceArgument.DYNAMIC_EQ] = False
+    await hass.services.async_call(DOMAIN, DenonAvrService.SET_DYNAMIC_EQ, data)
     await hass.async_block_till_done()
 
     client.async_dynamic_eq_on.assert_called_once()
@@ -139,7 +133,7 @@ async def test_update_audyssey(hass: HomeAssistant, client: MagicMock) -> None:
     # Verify call
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_AUDYSSEY,
+        DenonAvrService.UPDATE_AUDYSSEY,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
         },
