@@ -167,10 +167,7 @@ class SwitchbotConfigFlow(
                 return self.async_abort(reason="unknown")
             return await self.async_step_select_device()
 
-        if self._oauth_next_step == "encrypted_key":
-            return await self._async_retrieve_encryption_key_by_token()
-
-        return self.async_abort(reason="oauth_error")
+        return await self._async_retrieve_encryption_key_by_token()
 
     async def _async_retrieve_encryption_key_by_token(self) -> ConfigFlowResult:
         """Retrieve an encryption key with the current flow's OAuth token."""
