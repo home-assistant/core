@@ -144,7 +144,7 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
-            description_placeholders={CONF_BASE_URL: reauth_entry.data[CONF_BASE_URL]},
+            description_placeholders={"base_url": reauth_entry.data[CONF_BASE_URL]},
             errors=errors,
         )
 

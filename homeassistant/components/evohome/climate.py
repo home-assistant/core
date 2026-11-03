@@ -8,7 +8,6 @@ import evohomeasync2 as evo
 from evohomeasync2.const import (
     SZ_CAN_BE_TEMPORARY,
     SZ_DURATION,
-    SZ_MODE,
     SZ_PERIOD,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_MODE,
@@ -194,8 +193,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
         else:
             until = dt_util.utcnow() + duration
 
-        until = dt_util.as_utc(until) if until else None
-
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
@@ -263,7 +260,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
                 await self.coordinator.async_ensure_schedule(self._evo_device)
                 until = self.setpoints.get(NEXT_SP_FROM)
 
-        until = dt_util.as_utc(until) if until else None
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
@@ -311,7 +307,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
         temperature = self._evo_device.target_heat_temperature
         assert temperature is not None  # mypy check
 
-        until = dt_util.as_utc(until) if until else None
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
@@ -372,7 +367,7 @@ class EvoController(EvoClimateEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mode_not_supported",
-                translation_placeholders={SZ_MODE: mode},
+                translation_placeholders={"mode": mode},
             )
 
         timing_mode: str | None = None
@@ -389,13 +384,13 @@ class EvoController(EvoClimateEntity):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="mode_cant_be_temporary",
-                    translation_placeholders={SZ_MODE: mode},
+                    translation_placeholders={"mode": mode},
                 )
             if mode_info.get(SZ_TIMING_MODE) != timing_mode:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key=f"mode_cant_have_{timing_mode}",
-                    translation_placeholders={SZ_MODE: mode},
+                    translation_placeholders={"mode": mode},
                 )
 
         await self._set_tcs_mode(mode_info[SZ_SYSTEM_MODE], until=until)

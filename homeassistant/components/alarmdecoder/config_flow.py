@@ -259,7 +259,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="zone_details",
-            description_placeholders={CONF_ZONE_NUMBER: self.selected_zone},
+            description_placeholders={"zone_number": self.selected_zone},
             data_schema=probatio.Schema(
                 {
                     probatio.Optional(

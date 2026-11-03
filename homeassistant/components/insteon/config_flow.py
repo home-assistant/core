@@ -157,7 +157,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm_usb",
-            description_placeholders={CONF_NAME: self._device_name},
+            description_placeholders={"name": self._device_name},
         )
 
     @override
