@@ -1,6 +1,10 @@
 """Services for Fritz integration."""
 
+<<<<<<< HEAD
 from enum import StrEnum
+=======
+from typing import cast
+>>>>>>> 3e598991084 (next round of rebase improvements for review comments)
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -24,8 +28,15 @@ from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_register_admin_service,
 )
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
-from .const import CONF_ALLOW_MESH_INFO_NON_ADMIN, DOMAIN, LOGGER, MeshRoles
+from .const import (
+    CONF_ALLOW_MESH_INFO_NON_ADMIN,
+    DOMAIN,
+    FRITZ_EXCEPTIONS,
+    LOGGER,
+    MeshRoles,
+)
 from .coordinator import FritzConfigEntry
 
 
@@ -65,9 +76,9 @@ SERVICE_SCHEMA_DIAL = probatio.Schema(
 )
 
 SERVICE_GET_MESH_INFO = "get_mesh_info"
-SERVICE_SCHEMA_GET_MESH_INFO = vol.Schema(
+SERVICE_SCHEMA_GET_MESH_INFO = probatio.Schema(
     {
-        vol.Required("device_id"): str,
+        probatio.Required("device_id"): str,
     }
 )
 
@@ -194,28 +205,55 @@ async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
         )
 
     avm_wrapper = target_entry.runtime_data
+    hass = service_call.hass
 
+    if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_mesh_info_slave_node",
+        )
+
+    # Not cached by the coordinator if device tracking or mesh discovery is disabled
     if (mesh_topology := avm_wrapper.mesh_topology_raw) is None:
         if not avm_wrapper.fritz_status.device_has_mesh_support:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_mesh_info_no_mesh_support",
             )
-        if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+        try:
+            topology = await hass.async_add_executor_job(
+                avm_wrapper.fritz_hosts.get_mesh_topology
+            )
+        except FritzActionError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_mesh_info_slave_node",
+            ) from ex
+        except FRITZ_EXCEPTIONS as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_mesh_info_fetch_failed",
+            ) from ex
+        if not topology or not isinstance(topology, dict):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_mesh_info_fetch_failed",
             )
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="service_mesh_info_fetch_failed",
-        )
+        mesh_topology = cast(JsonObjectType, topology)
 
     if (hosts_attributes := avm_wrapper.hosts_attributes_raw) is None:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="service_hosts_info_fetch_failed",
-        )
+        try:
+            hosts_attributes = cast(
+                JsonArrayType,
+                await hass.async_add_executor_job(
+                    avm_wrapper.fritz_hosts.get_hosts_attributes
+                ),
+            )
+        except FRITZ_EXCEPTIONS as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_hosts_info_fetch_failed",
+            ) from ex
 
     return {
         "mesh_topology": mesh_topology,

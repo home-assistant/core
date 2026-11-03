@@ -1,7 +1,7 @@
 {
   "common": {
     "data_allow_mesh_info_non_admin": "Allow non-admin users to get mesh info",
-    "data_description_allow_mesh_info_non_admin": "Allow non-admin users to call the get mesh info service.",
+    "data_description_allow_mesh_info_non_admin": "Allow non-admin users to call the get mesh info service. Warning: this may expose sensitive network information.",
     "data_description_feature_device_tracking": "Enable or disable the network device tracking feature.",
     "data_description_host": "The hostname or IP address of your FRITZ!Box router.",
     "data_description_password": "Password for the FRITZ!Box.",

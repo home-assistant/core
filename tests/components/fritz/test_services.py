@@ -3,6 +3,7 @@
 from unittest.mock import PropertyMock, patch
 
 from fritzconnection.core.exceptions import (
+    FritzActionError,
     FritzActionFailedError,
     FritzConnectionException,
     FritzServiceError,
@@ -11,7 +12,14 @@ from probatio import MultipleInvalid
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 
-from homeassistant.components.fritz.const import DOMAIN, MeshRoles
+from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
+from homeassistant.components.fritz.const import (
+    CONF_ALLOW_MESH_INFO_NON_ADMIN,
+    CONF_FEATURE_DEVICE_TRACKING,
+    CONF_OLD_DISCOVERY,
+    DOMAIN,
+    MeshRoles,
+)
 from homeassistant.components.fritz.services import SERVICE_GET_MESH_INFO, FritzService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
@@ -358,12 +366,10 @@ async def test_service_dial_unloaded(
         )
 
 
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
 async def test_get_mesh_info_service_returns_stored_values(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    fc_class_mock,
-    fh_class_mock,
-    fs_class_mock,
 ) -> None:
     """Test entry services return stored values per config entry."""
 
@@ -374,8 +380,51 @@ async def test_get_mesh_info_service_returns_stored_values(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
+    )
+    assert device
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_MESH_INFO,
+        {"device_id": device.id},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {
+        "mesh_topology": MOCK_MESH_DATA,
+        "hosts_attributes": MOCK_HOST_ATTRIBUTES_DATA,
+    }
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        pytest.param({CONF_FEATURE_DEVICE_TRACKING: False}, id="no_device_tracking"),
+        pytest.param({CONF_OLD_DISCOVERY: True}, id="old_discovery"),
+    ],
+)
+async def test_get_mesh_info_service_fetches_on_demand(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    options: dict[str, bool],
+) -> None:
+    """Test mesh info is fetched on demand when not collected by device tracking."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA, options=options)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.mesh_topology_raw is None
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -423,8 +472,8 @@ async def test_get_mesh_info_non_admin_permission(
     read_only_group = await hass.auth.async_get_group(GROUP_ID_READ_ONLY)
     non_admin_user = MockUser(groups=[read_only_group]).add_to_hass(hass)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -474,8 +523,8 @@ async def test_get_mesh_info_admin_always_allowed(
     admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
     admin_user = MockUser(groups=[admin_group]).add_to_hass(hass)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -511,8 +560,8 @@ async def test_get_mesh_info_internal_call_always_allowed(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -553,6 +602,8 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
         "hosts_attributes",
         "has_mesh_support",
         "mesh_role",
+        "mesh_side_effect",
+        "hosts_side_effect",
         "expected_key",
     ),
     [
@@ -561,6 +612,8 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
             MOCK_HOST_ATTRIBUTES_DATA,
             False,
             MeshRoles.NONE,
+            None,
+            None,
             "service_mesh_info_no_mesh_support",
             id="no_mesh_support",
         ),
@@ -569,6 +622,8 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
             MOCK_HOST_ATTRIBUTES_DATA,
             True,
             MeshRoles.SLAVE,
+            None,
+            None,
             "service_mesh_info_slave_node",
             id="slave_node",
         ),
@@ -577,14 +632,38 @@ async def test_get_mesh_info_service_raises_on_invalid_entry(
             MOCK_HOST_ATTRIBUTES_DATA,
             True,
             MeshRoles.NONE,
+            FritzActionError("boom"),
+            None,
+            "service_mesh_info_slave_node",
+            id="slave_node_on_demand",
+        ),
+        pytest.param(
+            None,
+            MOCK_HOST_ATTRIBUTES_DATA,
+            True,
+            MeshRoles.NONE,
+            FritzConnectionException("boom"),
+            None,
             "service_mesh_info_fetch_failed",
             id="fetch_failed",
+        ),
+        pytest.param(
+            None,
+            MOCK_HOST_ATTRIBUTES_DATA,
+            True,
+            MeshRoles.NONE,
+            [{}],
+            None,
+            "service_mesh_info_fetch_failed",
+            id="fetch_empty",
         ),
         pytest.param(
             MOCK_MESH_DATA,
             None,
             True,
             MeshRoles.MASTER,
+            None,
+            FritzConnectionException("boom"),
             "service_hosts_info_fetch_failed",
             id="hosts_fetch_failed",
         ),
@@ -600,6 +679,8 @@ async def test_get_mesh_info_raises_on_missing_data(
     hosts_attributes: list | None,
     has_mesh_support: bool,
     mesh_role: MeshRoles,
+    mesh_side_effect: Exception | list[dict] | None,
+    hosts_side_effect: Exception | None,
     expected_key: str,
 ) -> None:
     """Test that missing mesh topology or host attributes raise a proper error."""
@@ -614,8 +695,8 @@ async def test_get_mesh_info_raises_on_missing_data(
     avm_wrapper._hosts_attributes_raw = hosts_attributes
     avm_wrapper.mesh_role = mesh_role
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
@@ -625,6 +706,14 @@ async def test_get_mesh_info_raises_on_missing_data(
             "device_has_mesh_support",
             new_callable=PropertyMock,
             return_value=has_mesh_support,
+        ),
+        patch.object(
+            avm_wrapper.fritz_hosts, "get_mesh_topology", side_effect=mesh_side_effect
+        ),
+        patch.object(
+            avm_wrapper.fritz_hosts,
+            "get_hosts_attributes",
+            side_effect=hosts_side_effect,
         ),
         pytest.raises(HomeAssistantError) as exc_info,
     ):

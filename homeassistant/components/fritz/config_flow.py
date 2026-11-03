@@ -277,7 +277,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_FEATURE_DEVICE_TRACKING,
                         default=DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CONF_ALLOW_MESH_INFO_NON_ADMIN,
                         default=DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
                     ): bool,
@@ -308,7 +308,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_FEATURE_DEVICE_TRACKING,
                         default=DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CONF_ALLOW_MESH_INFO_NON_ADMIN,
                         default=DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
                     ): bool,
@@ -508,7 +508,7 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlowWithReload):
                         DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
                     ),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_ALLOW_MESH_INFO_NON_ADMIN,
                     default=options.get(
                         CONF_ALLOW_MESH_INFO_NON_ADMIN,
