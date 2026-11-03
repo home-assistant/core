@@ -11,8 +11,11 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant import const
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.ecobee.climate import PRESET_AWAY_INDEFINITELY, Thermostat
-from homeassistant.components.ecobee.const import DOMAIN, EcobeeServiceArgument
-from homeassistant.components.ecobee.services import _async_get_thermostats
+from homeassistant.components.ecobee.const import DOMAIN
+from homeassistant.components.ecobee.services import (
+    EcobeeServiceArgument,
+    _async_get_thermostats,
+)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,

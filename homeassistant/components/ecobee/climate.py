@@ -41,9 +41,8 @@ from .const import (
     ECOBEE_MODEL_TO_NAME,
     LOGGER,
     MANUFACTURER,
-    EcobeeServiceArgument,
 )
-from .services import _async_get_thermostats
+from .services import EcobeeServiceArgument, _async_get_thermostats
 from .util import is_indefinite_hold
 
 PRESET_AWAY_INDEFINITELY = "away_indefinitely"

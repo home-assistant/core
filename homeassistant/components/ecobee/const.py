@@ -1,6 +1,5 @@
 """Constants for the ecobee integration."""
 
-from enum import StrEnum
 import logging
 
 from homeassistant.components.weather import (
@@ -86,37 +85,3 @@ ECOBEE_WEATHER_SYMBOL_TO_HASS = {
     21: "hazy",
     -2: None,
 }
-
-
-class EcobeeService(StrEnum):
-    """Store keys for ecobee services."""
-
-    CREATE_VACATION = "create_vacation"
-    DELETE_VACATION = "delete_vacation"
-    RESUME_PROGRAM = "resume_program"
-    SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
-    SET_DST_MODE = "set_dst_mode"
-    SET_MIC_MODE = "set_mic_mode"
-    SET_OCCUPANCY_MODES = "set_occupancy_modes"
-    SET_SENSORS_USED_IN_CLIMATE = "set_sensors_used_in_climate"
-
-
-class EcobeeServiceArgument(StrEnum):
-    """Store keys for ecobee service arguments."""
-
-    VACATION_NAME = "vacation_name"
-    COOL_TEMP = "cool_temp"
-    HEAT_TEMP = "heat_temp"
-    START_DATE = "start_date"
-    START_TIME = "start_time"
-    END_DATE = "end_date"
-    END_TIME = "end_time"
-    FAN_MODE = "fan_mode"
-    FAN_MIN_ON_TIME = "fan_min_on_time"
-    RESUME_ALL = "resume_all"
-    DST_ENABLED = "dst_enabled"
-    MIC_ENABLED = "mic_enabled"
-    AUTO_AWAY = "auto_away"
-    FOLLOW_ME = "follow_me"
-    PRESET_MODE = "preset_mode"
-    DEVICE_IDS = "device_ids"
