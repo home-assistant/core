@@ -96,7 +96,10 @@ class AtombergWaterPurifierModeSelect(AtombergEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the active mode."""
-        return self._modes.get(self.device_state.get(self._command))
+        mode = self.device_state.get(self._command)
+        if mode is None:
+            return None
+        return self._modes.get(mode)
 
     @override
     async def async_select_option(self, option: str) -> None:

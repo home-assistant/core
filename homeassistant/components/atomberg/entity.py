@@ -2,11 +2,7 @@
 
 from typing import Any, override
 
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import AtombergDevice
@@ -28,7 +24,7 @@ class AtombergEntity(CoordinatorEntity[AtombergCoordinator]):
         self._attr_unique_id = f"{device.device_id}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
-            connections={(CONNECTION_NETWORK_MAC, format_mac(device.device_id))},
+            connections={(CONNECTION_NETWORK_MAC, device.device_id)},
             manufacturer="Atomberg",
             model=device.model,
             model_id=device.series,
