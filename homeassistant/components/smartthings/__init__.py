@@ -147,13 +147,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     client.refresh_token_function = _refresh_token
 
+    refresh_failing = False
+
     # The event stream makes no requests, so nothing else refreshes the token,
     # and SmartThings stops delivering events once it has expired.
     async def _async_keep_token_valid(_: datetime) -> None:
+        nonlocal refresh_failing
         try:
             await session.async_ensure_token_valid()
         except OAuth2TokenRequestBaseError as err:
-            _LOGGER.debug("Error refreshing the token: %s", err)
+            if not refresh_failing:
+                _LOGGER.warning("Error refreshing the token: %s", err)
+            refresh_failing = True
+        else:
+            refresh_failing = False
 
     entry.async_on_unload(
         async_track_time_interval(hass, _async_keep_token_valid, TOKEN_CHECK_INTERVAL)

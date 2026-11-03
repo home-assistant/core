@@ -516,23 +516,59 @@ async def test_error_refreshing_token_while_loaded(
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
     status: int,
     reauth_flows: int,
 ) -> None:
-    """Test a failed token refresh keeps the entry loaded."""
+    """Test a failed token refresh keeps the entry loaded and warns once."""
     await setup_integration(hass, mock_config_entry)
     aioclient_mock.post(
         "https://auth-global.api.smartthings.com/oauth/token", status=status
     )
 
-    freezer.tick(timedelta(hours=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    for delta in (timedelta(hours=1), timedelta(minutes=1)):
+        freezer.tick(delta)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 2
     assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.flow.async_progress()) == reauth_flows
+    assert caplog.text.count("Error refreshing the token") == 1
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_warning_after_token_refresh_recovered(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed token refresh warns again after a successful one."""
+    await setup_integration(hass, mock_config_entry)
+    token_url = "https://auth-global.api.smartthings.com/oauth/token"
+    new_token = {
+        "access_token": "new-access-token",
+        "refresh_token": "new-refresh-token",
+        "expires_in": 86399,
+    }
+
+    for delta, response in (
+        (timedelta(hours=1), {"status": 500}),
+        (timedelta(minutes=1), {"json": new_token}),
+        (timedelta(days=1), {"status": 500}),
+    ):
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(token_url, **response)
+        freezer.tick(delta)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.data["token"]["access_token"] == "new-access-token"
+    assert caplog.text.count("Error refreshing the token") == 2
 
 
 async def test_missing_token(
