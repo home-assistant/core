@@ -30,9 +30,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, patch
 
 from homeassistant.components.dsmr.sensor import (
-    DSMRBelgiumDemandHistory,
     SENSORS,
     SENSORS_MBUS_DEVICE_TYPE,
+    DSMRBelgiumDemandHistory,
 )
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
@@ -1986,8 +1986,7 @@ def test_belgian_diagnostic_descriptions() -> None:
         "belgium_gas_valve_position",
     }
     gas_descriptions = {
-        description.key: description
-        for description in SENSORS_MBUS_DEVICE_TYPE[3]
+        description.key: description for description in SENSORS_MBUS_DEVICE_TYPE[3]
     }
     assert gas_keys <= gas_descriptions.keys()
 
@@ -1997,8 +1996,7 @@ def test_belgian_monthly_demand_history() -> None:
     from dsmr_parser.obis_references import BELGIUM_MAXIMUM_DEMAND_13_MONTHS
 
     description = next(
-        item for item in SENSORS
-        if item.key == "belgium_maximum_demand_history"
+        item for item in SENSORS if item.key == "belgium_maximum_demand_history"
     )
     telegram = Telegram()
     peaks = [
@@ -2039,3 +2037,47 @@ def test_belgian_monthly_demand_history() -> None:
             }
         ]
     }
+
+
+def test_belgian_diagnostics_preserve_text_and_gas_unique_ids() -> None:
+    """Diagnostics must not overwrite consumption IDs or convert text."""
+    from homeassistant.components.dsmr.sensor import DSMREntity
+
+    entry = MockConfigEntry(
+        domain="dsmr",
+        data={"serial_id": "1234", "serial_id_gas": "5678", "dsmr_version": "5B"},
+    )
+    for key, value in (
+        ("belgium_version_information", "0050221"),
+        ("belgium_equipment_identifier", "000A0123"),
+        ("belgium_text_message", "Meter message"),
+    ):
+        description = next(item for item in SENSORS if item.key == key)
+        telegram = Telegram()
+        telegram.add(
+            (0, 0),
+            CosemObject((0, 0), [{"value": value, "unit": None}]),
+            description.obis_reference,
+        )
+        entity = DSMREntity(description, entry, telegram, None, None)
+        assert entity.native_value == value
+
+    from dsmr_parser.objects import MbusDevice
+
+    device = MbusDevice(channel_id=1)
+    device.add(
+        (0, 1),
+        CosemObject((0, 1), [{"value": "0000000088", "unit": None}]),
+        "MBUS_EQUIPMENT_IDENTIFIER",
+    )
+    telegram = Telegram()
+    telegram.MBUS_DEVICES = [device]
+    ids = set()
+    for description in SENSORS_MBUS_DEVICE_TYPE[3]:
+        entity = DSMREntity(description, entry, telegram, None, None, "5678", 1)
+        assert entity.unique_id not in ids
+        ids.add(entity.unique_id)
+        if description.key == "gas_reading":
+            assert entity.unique_id == "5678"
+        if description.key == "belgium_gas_equipment_identifier":
+            assert entity.native_value == "0000000088"
