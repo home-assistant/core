@@ -26,10 +26,7 @@ rules:
   docs-triggers:
     status: exempt
     comment: This integration does not have any triggers.
-  entity-event-setup:
-    status: exempt
-    comment: |
-      Entities of this integration does not explicitly subscribe to events.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
