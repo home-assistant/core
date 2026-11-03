@@ -869,6 +869,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 **placeholders,
-                CONF_MAC: reconfigure_entry.unique_id,
+                "mac": reconfigure_entry.unique_id,
             },
         )

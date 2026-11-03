@@ -259,7 +259,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="link",
-                description_placeholders={CONF_NAME: self.name or self.blid},
+                description_placeholders={"name": self.name or self.blid},
             )
         assert self.host
         tls_context = await self.hass.async_add_executor_job(generate_tls_context)
