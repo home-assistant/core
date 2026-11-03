@@ -115,8 +115,8 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 ),
                 description_placeholders={
-                    TUYA_RESPONSE_MSG: info.get(TUYA_RESPONSE_MSG, "Unknown error"),
-                    TUYA_RESPONSE_CODE: info.get(TUYA_RESPONSE_CODE, 0),
+                    "msg": info.get(TUYA_RESPONSE_MSG, "Unknown error"),
+                    "code": info.get(TUYA_RESPONSE_CODE, 0),
                 },
             )
 
