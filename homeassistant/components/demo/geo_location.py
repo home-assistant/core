@@ -1,17 +1,24 @@
 """Demo platform for the geolocation component."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from math import cos, pi, radians, sin
 import random
 from typing import override
 
 from homeassistant.components.geo_location import GeolocationEvent
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,23 +48,47 @@ EVENTS = [
 SOURCE = "demo"
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
+    """Raise an issue for the deprecated YAML platform configuration."""
+    # Setting up this platform sets up the Demo config entry, which adds the events
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_geo_location_platform_config",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_geo_location_platform_config",
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the Demo geolocations."""
-    DemoManager(hass, add_entities)
+    DemoManager(hass, config_entry, async_add_entities)
 
 
 class DemoManager:
     """Device manager for demo geolocation events."""
 
-    def __init__(self, hass: HomeAssistant, add_entities: AddEntitiesCallback) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
         """Initialise the demo geolocation event manager."""
         self._hass = hass
-        self._add_entities = add_entities
+        self._config_entry = config_entry
+        self._async_add_entities = async_add_entities
         self._managed_devices: list[DemoGeolocationEvent] = []
         self._update(count=NUMBER_OF_DEMO_DEVICES)
         self._init_regular_updates()
@@ -90,13 +121,21 @@ class DemoManager:
 
     def _init_regular_updates(self) -> None:
         """Schedule regular updates based on configured time interval."""
-        track_time_interval(
-            self._hass,
-            lambda now: self._update(),
-            DEFAULT_UPDATE_INTERVAL,
-            cancel_on_shutdown=True,
+        self._config_entry.async_on_unload(
+            async_track_time_interval(
+                self._hass,
+                self._handle_interval,
+                DEFAULT_UPDATE_INTERVAL,
+                cancel_on_shutdown=True,
+            )
         )
 
+    @callback
+    def _handle_interval(self, now: datetime) -> None:
+        """Replace one event on each interval."""
+        self._update()
+
+    @callback
     def _update(self, count: int = 1) -> None:
         """Remove events and add new random events."""
         # Remove devices.
@@ -106,7 +145,7 @@ class DemoManager:
                 if device:
                     _LOGGER.debug("Removing %s", device)
                     self._managed_devices.remove(device)
-                    self._hass.add_job(device.async_remove())
+                    self._hass.async_create_task(device.async_remove())
         # Generate new devices from events.
         new_devices = []
         for _ in range(1, count + 1):
@@ -114,7 +153,7 @@ class DemoManager:
             _LOGGER.debug("Adding %s", new_device)
             new_devices.append(new_device)
             self._managed_devices.append(new_device)
-        self._add_entities(new_devices)
+        self._async_add_entities(new_devices)
 
 
 class DemoGeolocationEvent(GeolocationEvent):

@@ -108,6 +108,12 @@
       }
     }
   },
+  "issues": {
+    "deprecated_geo_location_platform_config": {
+      "description": "The whole `platform: demo` entry under the `geo_location:` section in configuration.yaml is deprecated and should be removed. The demo geolocation events are now provided by the Demo integration itself. Please adjust your configuration.yaml and restart Home Assistant to fix this issue.",
+      "title": "The Demo geolocation platform configuration is deprecated"
+    }
+  },
   "options": {
     "step": {
       "init": {
