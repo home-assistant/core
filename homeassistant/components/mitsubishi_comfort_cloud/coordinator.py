@@ -5,11 +5,15 @@ import logging
 from typing import override
 
 from mitsubishi_comfort import CloudIndoorUnit, CommandResult
-from mitsubishi_comfort.exceptions import AuthenticationError, MitsubishiComfortError
+from mitsubishi_comfort.exceptions import (
+    AuthenticationError,
+    DeviceConnectionError,
+    MitsubishiComfortError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -72,6 +76,12 @@ class MitsubishiComfortCloudCoordinator(DataUpdateCoordinator[CloudIndoorUnit]):
             return await command
         except AuthenticationError:
             self.config_entry.async_start_reauth(self.hass)
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"device_name": self.device.name},
+            ) from err
         except MitsubishiComfortError as err:
             _LOGGER.debug("Command failed for %s: %s", self.device.name, err)
         return CommandResult(success=False)

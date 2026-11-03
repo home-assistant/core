@@ -58,7 +58,7 @@ async def test_user(
         pytest.param(RuntimeError("unexpected"), "unknown", id="unexpected"),
     ],
 )
-@pytest.mark.parametrize("method", ["login", "get_zones"])
+@pytest.mark.parametrize("method", ["login", "discover_cloud_devices"])
 async def test_errors(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,
@@ -84,23 +84,10 @@ async def test_errors(
     assert result["result"].unique_id == mock_cloud_account.user_id
 
 
-@pytest.mark.parametrize(
-    "zones",
-    [
-        pytest.param([], id="empty"),
-        pytest.param(
-            [{"adapter": {"deviceSerial": "STATION", "isHeadless": True}}],
-            id="station-only",
-        ),
-        pytest.param([{"name": "No adapter"}, {"adapter": {}}], id="no-serial"),
-    ],
-)
-async def test_no_devices(
-    hass: HomeAssistant, mock_cloud_account: AsyncMock, zones: list[dict]
-) -> None:
+async def test_no_devices(hass: HomeAssistant, mock_cloud_account: AsyncMock) -> None:
     """Only supported indoor units permit setup."""
-    supported_zones = mock_cloud_account.get_zones.return_value
-    mock_cloud_account.get_zones.return_value = zones
+    supported_devices = mock_cloud_account.discover_cloud_devices.return_value
+    mock_cloud_account.discover_cloud_devices.return_value = {}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -109,7 +96,7 @@ async def test_no_devices(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "no_devices"}
-    mock_cloud_account.get_zones.return_value = supported_zones
+    mock_cloud_account.discover_cloud_devices.return_value = supported_devices
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )

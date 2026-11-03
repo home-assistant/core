@@ -72,12 +72,20 @@ async def test_cloud_commands(
 
 
 @pytest.mark.parametrize(
-    ("error", "reauth_steps"),
+    ("error", "reauth_steps", "message"),
     [
-        pytest.param(CommandError("rejected"), [], id="rejected"),
-        pytest.param(DeviceConnectionError("timeout"), [], id="timeout"),
+        pytest.param(CommandError("rejected"), [], "did not accept", id="rejected"),
         pytest.param(
-            AuthenticationError("expired"), ["reauth_confirm"], id="authentication"
+            DeviceConnectionError("timeout"),
+            [],
+            "Error communicating with Living Room",
+            id="timeout",
+        ),
+        pytest.param(
+            AuthenticationError("expired"),
+            ["reauth_confirm"],
+            "did not accept",
+            id="authentication",
         ),
     ],
 )
@@ -87,13 +95,14 @@ async def test_cloud_command_failure(
     mock_cloud_account: AsyncMock,
     error: Exception,
     reauth_steps: list[str],
+    message: str,
 ) -> None:
     """Failed commands preserve state and only auth failures request reauth."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     mock_cloud_account.send_command.side_effect = error
-    with pytest.raises(HomeAssistantError, match="did not accept"):
+    with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             "set_hvac_mode",
@@ -192,30 +201,61 @@ async def test_action_error(
     await hass.async_block_till_done()
     before = hass.states.get(ENTITY_ID)
     mock_cloud_account.send_command.side_effect = DeviceConnectionError("offline")
-    with pytest.raises(HomeAssistantError, match="did not accept"):
+    with pytest.raises(
+        HomeAssistantError, match="Error communicating with Living Room"
+    ) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             service,
             {ATTR_ENTITY_ID: ENTITY_ID, **data},
             blocking=True,
         )
+    assert exc_info.value.__cause__ is mock_cloud_account.send_command.side_effect
+    assert exc_info.value.translation_key == "communication_error"
     assert hass.states.get(ENTITY_ID) == before
 
 
 @pytest.mark.parametrize(
-    ("results", "expected_low", "expected_high"),
+    ("results", "expected_low", "expected_high", "message"),
     [
-        pytest.param([CommandError("rejected"), None], 20.0, 24.0, id="cool-fails"),
-        pytest.param([None, CommandError("rejected")], 21.0, 26.0, id="heat-fails"),
+        pytest.param(
+            [CommandError("rejected"), None],
+            20.0,
+            24.0,
+            "did not accept",
+            id="cool-fails",
+        ),
+        pytest.param(
+            [None, CommandError("rejected")],
+            21.0,
+            26.0,
+            "did not accept",
+            id="heat-fails",
+        ),
+        pytest.param(
+            [DeviceConnectionError("offline"), None],
+            21.0,
+            24.0,
+            "Error communicating with Living Room",
+            id="cool-connection-fails",
+        ),
+        pytest.param(
+            [None, DeviceConnectionError("offline")],
+            21.0,
+            26.0,
+            "Error communicating with Living Room",
+            id="heat-connection-fails",
+        ),
     ],
 )
 async def test_partial_temperature_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_cloud_account: AsyncMock,
-    results: list[CommandError | None],
+    results: list[CommandError | DeviceConnectionError | None],
     expected_low: float,
     expected_high: float,
+    message: str,
 ) -> None:
     """Preserve an accepted setpoint when the other command is rejected."""
     mock_cloud_account.get_device_details.return_value["operationMode"] = "auto"
@@ -223,7 +263,7 @@ async def test_partial_temperature_failure(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     mock_cloud_account.send_command.side_effect = results
-    with pytest.raises(HomeAssistantError, match="did not accept"):
+    with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             "set_temperature",
@@ -434,11 +474,17 @@ async def test_unsupported_combined_mode_temperature(
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "message"),
     [
-        pytest.param(CommandError("rejected"), id="rejected"),
-        pytest.param(DeviceConnectionError("offline"), id="connection"),
-        pytest.param(AuthenticationError("expired"), id="authentication"),
+        pytest.param(CommandError("rejected"), "did not accept", id="rejected"),
+        pytest.param(
+            DeviceConnectionError("offline"),
+            "Error communicating with Living Room",
+            id="connection",
+        ),
+        pytest.param(
+            AuthenticationError("expired"), "did not accept", id="authentication"
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -456,6 +502,7 @@ async def test_failed_mode_change_stops_temperature_commands(
     mock_config_entry: MockConfigEntry,
     mock_cloud_account: AsyncMock,
     error: Exception,
+    message: str,
     data: dict[str, str | float],
 ) -> None:
     """A failed mode command must not change any setpoints or optimistic state."""
@@ -465,9 +512,7 @@ async def test_failed_mode_change_stops_temperature_commands(
     before = hass.states.get(ENTITY_ID)
     mock_cloud_account.send_command.side_effect = error
 
-    with pytest.raises(
-        HomeAssistantError, match="did not accept the requested HVAC mode"
-    ):
+    with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             "set_temperature",

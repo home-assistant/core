@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from mitsubishi_comfort import DeviceInfo
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -40,13 +41,18 @@ def mock_cloud_account() -> Generator[AsyncMock]:
     ):
         account = mock_cls.return_value
         account.user_id = "user-12345"
-        account.get_sites.return_value = [{"id": MOCK_SITE}]
-        account.get_zones.return_value = [
-            {
-                "name": "Living Room",
-                "adapter": {"deviceSerial": MOCK_SERIAL, "isHeadless": False},
-            }
-        ]
+        account.discover_cloud_devices.return_value = {
+            MOCK_SERIAL: DeviceInfo(
+                serial=MOCK_SERIAL,
+                label="Living Room",
+                site_id=MOCK_SITE,
+                unit_type="ductless",
+                address="",
+                mac="",
+                password="",
+                crypto_serial="",
+            )
+        }
         account.get_zone_state.return_value = {}
         account.get_device_details.return_value = {
             "connected": True,

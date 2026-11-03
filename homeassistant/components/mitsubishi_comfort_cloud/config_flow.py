@@ -13,7 +13,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .helpers import async_discover_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +49,7 @@ class MitsubishiComfortCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await account.login()
-                devices = await async_discover_devices(account)
+                devices = await account.discover_cloud_devices()
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
             except DeviceConnectionError:

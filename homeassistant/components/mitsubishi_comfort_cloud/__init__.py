@@ -20,7 +20,6 @@ from .coordinator import (
     MitsubishiComfortCloudConfigEntry,
     MitsubishiComfortCloudCoordinator,
 )
-from .helpers import async_discover_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +35,7 @@ async def async_setup_entry(
     )
     try:
         await account.login()
-        devices = await async_discover_devices(account)
+        devices = await account.discover_cloud_devices()
     except AuthenticationError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="authentication_failed"

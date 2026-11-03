@@ -271,16 +271,16 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
         if ATTR_HVAC_MODE in kwargs:
             await self.async_handle_set_hvac_mode_service(kwargs[ATTR_HVAC_MODE])
         mode = self._effective_mode
-        wrote = False
         failed = False
 
+        # Publish accepted setpoints before a subsequent command can fail.
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             result = await self.coordinator.async_command(
                 self._device.set_cool_setpoint(kwargs[ATTR_TARGET_TEMP_HIGH])
             )
             if result.success:
                 self._optimistic[_OPT_COOL_SETPOINT] = result.value
-                wrote = True
+                self.async_write_ha_state()
             else:
                 failed = True
 
@@ -290,7 +290,7 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
             )
             if result.success:
                 self._optimistic[_OPT_HEAT_SETPOINT] = result.value
-                wrote = True
+                self.async_write_ha_state()
             else:
                 failed = True
 
@@ -302,7 +302,7 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
                 )
                 if result.success:
                     self._optimistic[_OPT_COOL_SETPOINT] = result.value
-                    wrote = True
+                    self.async_write_ha_state()
                 else:
                     failed = True
             elif mode in ("heat", "autoHeat"):
@@ -311,7 +311,7 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
                 )
                 if result.success:
                     self._optimistic[_OPT_HEAT_SETPOINT] = result.value
-                    wrote = True
+                    self.async_write_ha_state()
                 else:
                     failed = True
             else:
@@ -321,9 +321,6 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
                     mode,
                 )
 
-        # Apply whatever succeeded before surfacing the failure to the user.
-        if wrote:
-            self.async_write_ha_state()
         if failed:
             self._command_failed("set_temperature_failed")
 

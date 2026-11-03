@@ -56,6 +56,7 @@ async def test_setup(
     assert not device.connections
     assert not issue_registry.issues
     assert hass.states.get("climate.living_room") == snapshot
+    mock_cloud_account.discover_cloud_devices.assert_awaited_once_with()
     mock_cloud_account.get_zone_state.assert_awaited_once_with(MOCK_SITE, MOCK_SERIAL)
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
@@ -78,7 +79,9 @@ async def test_setup(
         ),
     ],
 )
-@pytest.mark.parametrize("method", ["login", "get_zones", "get_device_details"])
+@pytest.mark.parametrize(
+    "method", ["login", "discover_cloud_devices", "get_device_details"]
+)
 async def test_setup_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -106,7 +109,7 @@ async def test_no_devices(
     mock_cloud_account: AsyncMock,
 ) -> None:
     """An account without supported units fails setup."""
-    mock_cloud_account.get_zones.return_value = []
+    mock_cloud_account.discover_cloud_devices.return_value = {}
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
@@ -142,8 +145,15 @@ async def test_partial_failure(
 ) -> None:
     """One failed unit does not hide working units on the account."""
     assert await async_setup_component(hass, "homeassistant", {})
-    mock_cloud_account.get_zones.return_value.append(
-        {"name": "Bedroom", "adapter": {"deviceSerial": "SECOND"}}
+    mock_cloud_account.discover_cloud_devices.return_value["SECOND"] = DeviceInfo(
+        serial="SECOND",
+        label="Bedroom",
+        site_id=MOCK_SITE,
+        unit_type="ductless",
+        address="",
+        mac="",
+        password="",
+        crypto_serial="",
     )
     mock_cloud_account.get_device_details.side_effect = [
         mock_cloud_account.get_device_details.return_value,
@@ -192,29 +202,6 @@ async def test_unexpected_refresh_error(
     ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_discovery_filters(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_cloud_account: AsyncMock,
-) -> None:
-    """Skip sites without IDs, stations, and zones without adapters."""
-    mock_cloud_account.get_sites.return_value.insert(0, {})
-    mock_cloud_account.get_zones.return_value.extend(
-        [
-            {
-                "name": "Station",
-                "adapter": {"deviceSerial": "STATION", "isHeadless": True},
-            },
-            {"name": "Empty zone"},
-        ]
-    )
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert list(mock_config_entry.runtime_data) == [MOCK_SERIAL]
-    mock_cloud_account.get_zones.assert_awaited_once_with(MOCK_SITE)
 
 
 async def test_local_data_does_not_switch_transport(
