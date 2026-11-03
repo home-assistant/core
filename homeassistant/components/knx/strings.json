@@ -48,7 +48,7 @@
           "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT.",
           "tunneling_type": "Select the tunneling type of your KNX/IP tunneling device. Older interfaces may only support `UDP`."
         },
-        "description": "Please enter the connection information of your tunneling device.",
+        "description": "Please enter the connection information of your tunneling device.\n\nKeys for KNX Data Secure can be added later with 'Import KNX keyring file' in the connection settings.",
         "title": "Tunnel settings"
       },
       "reconfigure": {
@@ -124,7 +124,7 @@
           "user_id": "This usually is tunnel number +1. So first tunnel in the list presented in ETS would have User-ID `2`.",
           "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS."
         },
-        "description": "Please enter your IP Secure information.",
+        "description": "Please enter your IP Secure information.\n\nKeys for KNX Data Secure can be added later with 'Import KNX keyring file' in the connection settings.",
         "title": "Secure tunneling"
       },
       "tcp_tunnel_endpoint": {
@@ -143,6 +143,7 @@
         "data_description": {
           "gateway": "Select a KNX tunneling interface you want use for the connection."
         },
+        "description": "Keys for KNX Data Secure can be added later with 'Import KNX keyring file' in the connection settings.",
         "title": "Tunnel"
       }
     }
