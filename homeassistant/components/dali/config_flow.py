@@ -19,7 +19,7 @@ from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import CONF_BUS_POWER, DOMAIN
+from .const import CONF_BUS_POWER, DOMAIN, luba232_uri
 
 
 def _serial_port_label(port: SerialDevice) -> str:
@@ -55,7 +55,7 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
         the user can be asked whether to enable it. Raises OSError or
         TimeoutError when the interface cannot be reached.
         """
-        driver = DriverLubaRs232(uri=f"luba232:{device}")
+        driver = DriverLubaRs232(uri=luba232_uri(device))
         try:
             # Probe read-only: do not write the interface's settings, so a bus
             # already powered by the integrated supply is not depowered.
