@@ -2112,6 +2112,13 @@ DESIRED_STATE_SWITCH_2 = {
     "cmd_t": "sw2/set",
     "uniq_id": "sw2",
 }
+DESIRED_STATE_TRIGGER = {
+    "p": "device_automation",
+    "automation_type": "trigger",
+    "topic": "button1",
+    "type": "button_short_press",
+    "subtype": "button_1",
+}
 
 
 def _desired_state_payload(
@@ -2162,16 +2169,7 @@ async def test_device_discovery_replace_all_components(
         hass,
         DESIRED_STATE_DEVICE_TOPIC,
         _desired_state_payload(
-            {
-                "trigger": {
-                    "p": "device_automation",
-                    "automation_type": "trigger",
-                    "topic": "button1",
-                    "type": "button_short_press",
-                    "subtype": "button_1",
-                },
-                "sw1": switch_1,
-            },
+            {"trigger": DESIRED_STATE_TRIGGER, "sw1": switch_1},
             {"cns": [["mac", "AA:BB:CC:DD:EE:FF"]], "name": "Parent"},
         ),
     )
@@ -3589,6 +3587,51 @@ async def test_remove_device_discovered_device(
         0,
         True,
         message_expiry_interval=None,
+    )
+
+
+async def test_remove_device_receiving_cleared_topic_while_publishing(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing a device when the broker returns the cleared topic early.
+
+    The empty payload removes the components and the device through discovery,
+    before the device triggers and the device are removed after the publish.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+    async_fire_mqtt_message(
+        hass,
+        DESIRED_STATE_DEVICE_TOPIC,
+        _desired_state_payload(
+            {"trigger": DESIRED_STATE_TRIGGER, "sw1": DESIRED_STATE_SWITCH_1}
+        ),
+    )
+    await hass.async_block_till_done()
+    device_id = _desired_state_device_id(hass, device_registry)
+    assert device_id is not None
+    assert await mqtt.device_trigger.async_get_triggers(hass, device_id)
+    assert entity_registry.async_is_registered("switch.parent_switch_1")
+    mqtt_mock.async_publish.reset_mock()
+
+    async def _receive_cleared_topic(topic: str, *args: Any, **kwargs: Any) -> None:
+        async_fire_mqtt_message(hass, topic, "")
+
+    mqtt_mock.async_publish.side_effect = _receive_cleared_topic
+
+    response = await ws_client.remove_device(device_id)
+    assert response["success"]
+    await hass.async_block_till_done()
+    assert _desired_state_device_id(hass, device_registry) is None
+    assert not entity_registry.async_is_registered("switch.parent_switch_1")
+    assert not await mqtt.device_trigger.async_get_triggers(hass, device_id)
+    mqtt_mock.async_publish.assert_called_once_with(
+        DESIRED_STATE_DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
     )
 
 

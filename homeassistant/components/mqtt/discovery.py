@@ -555,8 +555,6 @@ async def async_start(  # noqa: C901
             diff = _async_diff_device_discovery(
                 hass, topic, object_id, node_id, device_payload
             )
-            if not device_payload and not diff.removed_components:
-                return
             origin_info = get_origin_log_string(device_payload, include_url=False)
             # Without desired components, the removals clean up all devices left
             # empty. The removals are done first, so a renamed component can keep
