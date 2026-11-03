@@ -6,7 +6,7 @@ from collections.abc import Generator
 from http import HTTPStatus
 import json
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
@@ -15,14 +15,17 @@ from pytest_homeassistant.common import MockUser
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import mobile_app, person
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.mobile_app.config_flow import MobileAppFlowHandler
 from homeassistant.components.mobile_app.const import (
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
     DATA_DELETED_IDS,
+    DATA_REGISTRATION_LOCK,
     DOMAIN,
 )
+from homeassistant.components.mobile_app.http_api import RegistrationsView
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryDisabler,
@@ -437,6 +440,120 @@ async def test_registration_again_during_setup(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.data[CONF_WEBHOOK_ID] == new_webhook_id
     assert hass.data[DOMAIN][DATA_DELETED_IDS] == [old_webhook_id]
+
+
+async def test_registration_again_request_cancelled(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a registration is completed if its request is cancelled."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    old_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    unload_started = asyncio.Event()
+    continue_unload = asyncio.Event()
+    original_unload_entry = mobile_app.async_unload_entry
+
+    async def _blocking_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        unload_started.set()
+        await continue_unload.wait()
+        await original_unload_entry(hass, entry)
+
+    request = MagicMock()
+    request.app = {KEY_HASS: hass}
+    request.json = AsyncMock(
+        return_value={**REGISTER_CLEARTEXT, "device_name": "Test 2"}
+    )
+    request.__getitem__.side_effect = {"hass_user": hass_admin_user}.__getitem__
+
+    with patch.object(mobile_app, "async_unload_entry", _blocking_unload_entry):
+        post_task = asyncio.create_task(RegistrationsView().post(request))
+        await unload_started.wait()
+        post_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await post_task
+
+        continue_unload.set()
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.title == "Test 2"
+    assert entry.data[CONF_WEBHOOK_ID] != old_webhook_id
+    assert hass.data[DOMAIN][DATA_DELETED_IDS] == [old_webhook_id]
+    assert not hass.data[DOMAIN][DATA_REGISTRATION_LOCK].locked()
+
+
+async def test_webhook_command_keeps_registration(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test a webhook command uses its registration if the app registers again."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    old_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+
+    command_started = asyncio.Event()
+    continue_command = asyncio.Event()
+
+    async def _blocking_instance_id(hass: HomeAssistant) -> str:
+        command_started.set()
+        await continue_command.wait()
+        return "mock-instance-id"
+
+    with (
+        patch(
+            "homeassistant.components.mobile_app.webhook.instance_id.async_get",
+            _blocking_instance_id,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=False),
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            return_value="https://remote.ui",
+        ),
+        patch(
+            "homeassistant.components.mobile_app.webhook.async_is_local_only_user",
+            return_value=False,
+        ) as mock_is_local_only_user,
+    ):
+        command_task = asyncio.create_task(
+            api_client.post(
+                f"/api/webhook/{old_webhook_id}",
+                json={"type": "get_config", "data": {}},
+            )
+        )
+        await command_started.wait()
+
+        # Another user registers the app again while the command is handled
+        read_only_client = await hass_client(hass_read_only_access_token)
+        resp = await read_only_client.post(
+            "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+        )
+        assert resp.status == HTTPStatus.CREATED
+
+        continue_command.set()
+        resp = await command_task
+
+    assert resp.status == HTTPStatus.OK
+    mock_is_local_only_user.assert_called_once_with(hass, hass_admin_user.id)
 
 
 @pytest.fixture

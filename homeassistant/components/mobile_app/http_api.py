@@ -1,6 +1,7 @@
 """Provides an HTTP API for mobile_app."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
+import asyncio
 from contextlib import suppress
 from http import HTTPStatus
 import secrets
@@ -75,9 +76,15 @@ class RegistrationsView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         user = request["hass_user"]
 
-        # Serialize registrations, an app registering again updates its entry
-        async with hass.data[DOMAIN][DATA_REGISTRATION_LOCK]:
-            registered = await _async_register(hass, user, data)
+        # Shield so the registration is completed or rolled back, even if the
+        # app hangs up
+        registered = await asyncio.shield(
+            hass.async_create_task(
+                _async_register(hass, user, data),
+                "mobile_app registration",
+                eager_start=True,
+            )
+        )
         if not registered:
             return self.json_message(
                 "Failed to register the app", HTTPStatus.INTERNAL_SERVER_ERROR
@@ -101,6 +108,13 @@ class RegistrationsView(HomeAssistantView):
 
 async def _async_register(hass: HomeAssistant, user: User, data: dict) -> bool:
     """Register an app, return True if successful."""
+    # Serialize registrations, an app registering again updates its entry
+    async with hass.data[DOMAIN][DATA_REGISTRATION_LOCK]:
+        return await _async_register_locked(hass, user, data)
+
+
+async def _async_register_locked(hass: HomeAssistant, user: User, data: dict) -> bool:
+    """Register an app while holding the registration lock."""
     webhook_id = secrets.token_hex()
 
     if (
@@ -128,10 +142,8 @@ async def _async_register(hass: HomeAssistant, user: User, data: dict) -> bool:
     ):
         return await async_update_registration(hass, entry, data)
 
-    result = await hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, data=data, context={"source": "registration"}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, data=data, context={"source": "registration"}
     )
     if result["type"] is FlowResultType.CREATE_ENTRY:
         return True
