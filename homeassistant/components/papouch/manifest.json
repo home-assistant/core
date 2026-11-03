@@ -8,5 +8,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["aiopapouch==0.4.4"]
+  "requirements": ["aiopapouch==0.4.5"]
 }
