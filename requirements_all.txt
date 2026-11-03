@@ -496,7 +496,7 @@ aiothreema==0.2.0
 aiotractive==2.0.0
 
 # homeassistant.components.unifi
-aiounifi==97
+aiounifi==98
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
