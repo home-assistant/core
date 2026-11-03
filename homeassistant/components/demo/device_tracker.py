@@ -6,7 +6,7 @@ from homeassistant.components.device_tracker import SeeCallback
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SERVICE_RANDOMIZE_DEVICE_TRACKER_DATA
+from .const import DOMAIN, DemoService
 
 
 def setup_scanner(
@@ -48,6 +48,6 @@ def setup_scanner(
 
     # Should be adjusted to register actions in setup_services in services.py
     # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.register(DOMAIN, SERVICE_RANDOMIZE_DEVICE_TRACKER_DATA, observe)
+    hass.services.register(DOMAIN, DemoService.RANDOMIZE_DEVICE_TRACKER_DATA, observe)
 
     return True
