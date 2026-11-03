@@ -5,11 +5,6 @@
         "default": "mdi:shield-home"
       }
     },
-    "datetime": {
-      "count_down_switch": {
-        "default": "mdi:timer-outline"
-      }
-    },
     "button": {
       "ptz_down": {
         "default": "mdi:arrow-down-bold"
@@ -22,6 +17,11 @@
       },
       "ptz_up": {
         "default": "mdi:arrow-up-bold"
+      }
+    },
+    "datetime": {
+      "count_down_switch": {
+        "default": "mdi:timer-outline"
       }
     },
     "select": {
