@@ -231,6 +231,11 @@ class SamsungTVBridge(ABC):
         """Return True if the TV supports the Frame art mode API."""
         return False
 
+    @property
+    def art_mode_support_unknown(self) -> bool:
+        """Return True if Frame support can not be determined yet."""
+        return False
+
     async def async_get_art_mode(self) -> bool | None:
         """Return True if the TV is showing art, None if unknown."""
         return None
@@ -630,6 +635,12 @@ class SamsungTVWSBridge(
     def supports_art_mode(self) -> bool:
         """Return True if the TV supports the Frame art mode API."""
         return self._get_device_spec("FrameTVSupport") == "true"
+
+    @property
+    @override
+    def art_mode_support_unknown(self) -> bool:
+        """Return True while the device info has not been read yet."""
+        return self._device_info is None
 
     @override
     async def async_get_art_mode(self) -> bool | None:

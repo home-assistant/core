@@ -3,7 +3,7 @@
 from typing import override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
@@ -24,19 +24,30 @@ async def async_setup_entry(
         async_add_entities([SamsungTVArtModeBinarySensor(coordinator=coordinator)])
         return
 
+    if not coordinator.bridge.art_mode_support_unknown:
+        return
+
     # Frame support is only known once device info was read, which fails
     # while the TV is unreachable, so add the sensor when it shows up later.
-    added = False
+    remove_listener: CALLBACK_TYPE | None = None
 
     @callback
     def _async_add_when_supported() -> None:
-        nonlocal added
-        if added or not coordinator.bridge.supports_art_mode:
+        nonlocal remove_listener
+        if remove_listener is None or coordinator.bridge.art_mode_support_unknown:
             return
-        added = True
-        async_add_entities([SamsungTVArtModeBinarySensor(coordinator=coordinator)])
+        remove_listener()
+        remove_listener = None
+        if coordinator.bridge.supports_art_mode:
+            async_add_entities([SamsungTVArtModeBinarySensor(coordinator=coordinator)])
 
-    entry.async_on_unload(coordinator.async_add_listener(_async_add_when_supported))
+    @callback
+    def _async_remove_listener() -> None:
+        if remove_listener is not None:
+            remove_listener()
+
+    remove_listener = coordinator.async_add_listener(_async_add_when_supported)
+    entry.async_on_unload(_async_remove_listener)
 
 
 class SamsungTVArtModeBinarySensor(SamsungTVEntity, BinarySensorEntity):
@@ -49,6 +60,12 @@ class SamsungTVArtModeBinarySensor(SamsungTVEntity, BinarySensorEntity):
         super().__init__(coordinator=coordinator)
         self._attr_unique_id = f"{self._attr_unique_id}_art_mode"
         self._attr_is_on = coordinator.art_mode
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the art mode is known, also while the TV is off."""
+        return self.coordinator.last_update_success and not self._bridge.auth_failed
 
     @callback
     @override
