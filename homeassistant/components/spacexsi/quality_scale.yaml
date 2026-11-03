@@ -96,5 +96,5 @@ rules:
   async-dependency: done
   inject-websession:
     status: done
-    comment: The client receives Home Assistant's shared aiohttp and httpx sessions.
+    comment: The client receives Home Assistant's shared aiohttp and httpx2 sessions.
   strict-typing: done
