@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.const import MODEL_2PM_G3, MODEL_BULB, MODEL_BUTTON1
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -497,6 +497,49 @@ async def test_rpc_no_reload_on_ui_cfg_change(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id)
+
+
+@pytest.mark.parametrize(
+    ("exception", "reauth_flows"),
+    [
+        (DeviceConnectionError, 0),
+        (RpcCallError(999), 0),
+        (InvalidAuthError, 1),
+    ],
+)
+async def test_rpc_ui_cfg_change_update_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    exception: Exception,
+    reauth_flows: int,
+) -> None:
+    """Test RPC UI config change when fetching the updated config fails."""
+    monkeypatch.setattr(
+        mock_rpc_device, "update_powerstrip_ui_config", AsyncMock(side_effect=exception)
+    )
+    entry = await init_integration(hass, 2)
+
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "powerstrip_ui",
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.flow.async_progress()) == reauth_flows
 
 
 async def test_rpc_reload_with_invalid_auth(

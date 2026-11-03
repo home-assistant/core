@@ -651,6 +651,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 "Error updating %s config for %s: %s", component, self.name, err
             )
             return
+        except InvalidAuthError:
+            await self.async_shutdown_device_and_start_reauth()
+            return
         self.async_update_listeners()
 
     @callback
