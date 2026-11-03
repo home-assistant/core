@@ -1,6 +1,7 @@
 """Test the Music Assistant integration init."""
 
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from music_assistant_client.exceptions import (
@@ -33,10 +34,21 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    create_players_from_fixture,
     setup_dashboards,
     setup_integration_from_fixtures,
     trigger_subscription_callback,
 )
+
+PLAYER_1_ID = "00:00:00:00:00:01"
+PLAYER_2_ID = "00:00:00:00:00:02"
+PLAYER_2_ENTITY_ID = "media_player.my_super_test_player_2"
+EXPOSE_TO_HA_VALUE = {
+    "key": ATTR_CONF_EXPOSE_PLAYER_TO_HA,
+    "type": "boolean",
+    "label": ATTR_CONF_EXPOSE_PLAYER_TO_HA,
+    "default_value": True,
+}
 
 
 @pytest.mark.parametrize("error", [CannotConnect, TimeoutError])
@@ -371,20 +383,48 @@ async def test_dashboard_device_id_namespaced(
     assert device_registry.async_get(dashboard_device.id)
 
 
-async def test_player_config_expose_to_ha_toggle(
+@pytest.mark.parametrize(
+    ("hide_config", "show_config"),
+    [
+        pytest.param(
+            {
+                "values": {
+                    ATTR_CONF_EXPOSE_PLAYER_TO_HA: {
+                        **EXPOSE_TO_HA_VALUE,
+                        "value": False,
+                    }
+                }
+            },
+            {
+                "values": {
+                    ATTR_CONF_EXPOSE_PLAYER_TO_HA: {**EXPOSE_TO_HA_VALUE, "value": True}
+                }
+            },
+            id="expose_to_ha",
+        ),
+        pytest.param(
+            {"enabled": False, "values": {}},
+            {"enabled": True, "values": {}},
+            id="enabled",
+        ),
+    ],
+)
+async def test_player_config_toggle(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     music_assistant_client: MagicMock,
+    hide_config: dict[str, Any],
+    show_config: dict[str, Any],
 ) -> None:
-    """Test player exposure toggle via config update."""
+    """Test a player config update hiding a player from HA and restoring it."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     await hass.async_block_till_done()
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     # Initial state: player should be exposed (from fixture)
     entity_id = "media_player.test_player_1"
-    player_id = "00:00:00:00:00:01"
+    player_id = PLAYER_1_ID
     assert hass.states.get(entity_id)
     assert entity_registry.async_get(entity_id)
     device_entry = device_registry.async_get_device_by_identifier(
@@ -393,27 +433,13 @@ async def test_player_config_expose_to_ha_toggle(
     assert device_entry
     assert player_id in config_entry.runtime_data.discovered_players
 
-    # Simulate player config update: expose_to_ha = False
-    # Trigger the subscription callback
-    event_data = {
-        "player_id": player_id,
-        "provider": "test",
-        "values": {
-            ATTR_CONF_EXPOSE_PLAYER_TO_HA: {
-                "key": ATTR_CONF_EXPOSE_PLAYER_TO_HA,
-                "type": "boolean",
-                "value": False,
-                "label": ATTR_CONF_EXPOSE_PLAYER_TO_HA,
-                "default_value": True,
-            }
-        },
-    }
+    # Simulate a player config update that hides the player from HA
     await trigger_subscription_callback(
         hass,
         music_assistant_client,
         EventType.PLAYER_CONFIG_UPDATED,
         player_id,
-        event_data,
+        {"player_id": player_id, "provider": "test", **hide_config},
     )
 
     # Verify player was removed from HA
@@ -425,25 +451,13 @@ async def test_player_config_expose_to_ha_toggle(
     )
     assert not device_entry
 
-    # Now test re-adding the player: expose_to_ha = True
+    # Now test re-adding the player with a config update that shows it again
     await trigger_subscription_callback(
         hass,
         music_assistant_client,
         EventType.PLAYER_CONFIG_UPDATED,
         player_id,
-        {
-            "player_id": player_id,
-            "provider": "test",
-            "values": {
-                ATTR_CONF_EXPOSE_PLAYER_TO_HA: {
-                    "key": ATTR_CONF_EXPOSE_PLAYER_TO_HA,
-                    "type": "boolean",
-                    "value": True,
-                    "label": ATTR_CONF_EXPOSE_PLAYER_TO_HA,
-                    "default_value": True,
-                }
-            },
-        },
+        {"player_id": player_id, "provider": "test", **show_config},
     )
 
     # Verify player was re-added to HA
@@ -454,6 +468,128 @@ async def test_player_config_expose_to_ha_toggle(
         (DOMAIN, player_id), config_entry.entry_id
     )
     assert device_entry
+
+
+@pytest.mark.parametrize(
+    ("enabled", "expose_to_ha", "expected_added"),
+    [
+        pytest.param(True, True, True, id="exposed"),
+        pytest.param(False, True, False, id="disabled"),
+        pytest.param(True, False, False, id="not_exposed"),
+    ],
+)
+async def test_player_added_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+    enabled: bool,
+    expose_to_ha: bool,
+    expected_added: bool,
+) -> None:
+    """Test a newly added player is only set up when enabled and exposed to HA."""
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    player = create_players_from_fixture()[0]
+    player.player_id = "new_player"
+    player.name = "New Player"
+    player.enabled = enabled
+    player.expose_to_ha = expose_to_ha
+    music_assistant_client.players._players[player.player_id] = player
+
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.PLAYER_ADDED, player.player_id, player
+    )
+
+    assert (
+        player.player_id in config_entry.runtime_data.discovered_players
+    ) is expected_added
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, player.player_id), config_entry.entry_id
+    )
+    assert (device_entry is not None) is expected_added
+
+
+@pytest.mark.parametrize(
+    ("enabled", "expose_to_ha", "expected_present"),
+    [
+        pytest.param(True, True, True, id="exposed"),
+        pytest.param(False, True, False, id="disabled"),
+        pytest.param(True, False, False, id="not_exposed"),
+    ],
+)
+async def test_setup_removes_hidden_player(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+    enabled: bool,
+    expose_to_ha: bool,
+    expected_present: bool,
+) -> None:
+    """Test setup drops the device of a player disabled or hidden while disconnected."""
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, PLAYER_2_ID), config_entry.entry_id
+    )
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    player = music_assistant_client.players._players[PLAYER_2_ID]
+    player.enabled = enabled
+    player.expose_to_ha = expose_to_ha
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, PLAYER_2_ID), config_entry.entry_id
+    )
+    assert (device_entry is not None) is expected_present
+    assert (hass.states.get(PLAYER_2_ENTITY_ID) is not None) is expected_present
+
+
+@pytest.mark.parametrize(
+    ("extra_configs", "expected_present"),
+    [
+        pytest.param([], False, id="config_removed"),
+        pytest.param(
+            [
+                PlayerConfig(
+                    values={}, provider="test", player_id="stale_player", enabled=False
+                )
+            ],
+            False,
+            id="config_disabled",
+        ),
+        pytest.param(
+            [PlayerConfig(values={}, provider="test", player_id="stale_player")],
+            True,
+            id="player_not_registered",
+        ),
+    ],
+)
+async def test_setup_stale_device_cleanup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+    extra_configs: list[PlayerConfig],
+    expected_present: bool,
+) -> None:
+    """Test setup only keeps a device of an unregistered player with an enabled config."""
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "stale_player")},
+    )
+    player_configs = await music_assistant_client.config.get_player_configs()
+    music_assistant_client.config.get_player_configs = AsyncMock(
+        return_value=[*player_configs, *extra_configs]
+    )
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "stale_player"), config_entry.entry_id
+    )
+    assert (device_entry is not None) is expected_present
 
 
 async def test_authentication_required_triggers_reauth(
