@@ -2,6 +2,9 @@
 
 from typing import TYPE_CHECKING
 
+from yarl import URL
+
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,7 +29,8 @@ class QubeEntity(CoordinatorEntity[QubeCoordinator]):
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="Qube",
-            model="Heat Pump",
+            manufacturer="HR-energy",
+            model="Qube",
             sw_version=coordinator.sw_version,
+            configuration_url=URL.build(scheme="http", host=entry.data[CONF_HOST]),
         )

@@ -5,6 +5,7 @@ import sys
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
 
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
@@ -43,8 +44,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, async_mock_service
 
 
 async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:

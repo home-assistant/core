@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import group
 from homeassistant.const import (
@@ -28,7 +29,6 @@ from homeassistant.helpers.template.render_info import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import UnitSystem
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import assert_result_info, render, render_to_info
 
 
@@ -249,6 +249,38 @@ def test_states_function(hass: HomeAssistant) -> None:
 
     result = render(hass, """{{ ['test.object'] | map("states") | first | default }}""")
     assert result == "available"
+
+
+@pytest.mark.parametrize(
+    "template_string",
+    [
+        pytest.param("{{ states('sensor.test') }}", id="function"),
+        pytest.param("{{ 'sensor.test' | states }}", id="filter"),
+        pytest.param("{{ ['sensor.test'] | map('states') | first }}", id="map"),
+    ],
+)
+def test_states_tracks_changes(hass: HomeAssistant, template_string: str) -> None:
+    """Read current states and collect dependencies on every render."""
+    tmpl = template.Template(template_string, hass)
+    assert_result_info(tmpl.async_render_to_info(), "unknown", entities=["sensor.test"])
+    hass.states.async_set("sensor.test", "first")
+    assert_result_info(tmpl.async_render_to_info(), "first", entities=["sensor.test"])
+    hass.states.async_set("sensor.test", "second")
+    assert_result_info(tmpl.async_render_to_info(), "second", entities=["sensor.test"])
+    hass.states.async_remove("sensor.test")
+    assert_result_info(tmpl.async_render_to_info(), "unknown", entities=["sensor.test"])
+
+
+def test_states_filter_limited(hass: HomeAssistant) -> None:
+    """The states filter must not expose states in limited templates."""
+    hass.states.async_set("sensor.test", "first")
+    assert (
+        template.Template("{{ 'sensor.test' | states }}", hass).async_render()
+        == "first"
+    )
+    tmpl = template.Template("{{ 'sensor.test' | states }}", hass)
+    with pytest.raises(TemplateError, match="not supported in limited templates"):
+        tmpl.async_render(limited=True)
 
 
 async def test_state_translated(

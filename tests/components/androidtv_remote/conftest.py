@@ -4,11 +4,10 @@ from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.androidtv_remote.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -16,7 +15,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.androidtv_remote.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -26,7 +25,7 @@ def mock_unload_entry() -> Generator[AsyncMock]:
     """Mock unloading a config entry."""
     with patch(
         "homeassistant.components.androidtv_remote.async_unload_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_unload_entry:
         yield mock_unload_entry
 

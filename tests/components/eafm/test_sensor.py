@@ -1,12 +1,13 @@
 """Tests for polling measures."""
 
 from collections.abc import Callable, Coroutine
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.eafm import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,8 +15,6 @@ from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 DUMMY_REQUEST_INFO = aiohttp.client.RequestInfo(
     url="http://example.com", method="GET", headers={}, real_url="http://example.com"
@@ -54,7 +53,7 @@ async def async_setup_test_fixture(
         else:
             mock_get_station.return_value = value
 
-        next_update = dt_util.utcnow() + datetime.timedelta(60 * 15)
+        next_update = dt_util.utcnow() + dt.timedelta(60 * 15)
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 

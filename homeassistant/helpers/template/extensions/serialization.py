@@ -1,11 +1,13 @@
 """Serialization functions for Home Assistant templates."""
 
+from functools import partial
 import json
 import logging
 from struct import error as StructError, pack, unpack_from
 from typing import TYPE_CHECKING, Any
 
 import orjson
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.helpers.template.helpers import raise_no_default
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -17,7 +19,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 _ORJSON_PASSTHROUGH_OPTIONS = (
     orjson.OPT_PASSTHROUGH_DATACLASS | orjson.OPT_PASSTHROUGH_DATETIME
@@ -121,12 +123,21 @@ class SerializationExtension(BaseTemplateExtension):
         if ensure_ascii:
             # For those who need ascii, we can't use orjson,
             # so we fall back to the json library.
-            return json.dumps(
-                value,
+            if sort_keys:
+                # json cannot sort mixed key types, so stringify keys like orjson
+                value = json.loads(json.dumps(value))
+            dumps = partial(
+                json.dumps,
                 ensure_ascii=ensure_ascii,
                 indent=2 if pretty_print else None,
                 sort_keys=sort_keys,
             )
+            try:
+                return dumps(value, allow_nan=False)
+            except ValueError:
+                # Serialize NaN and Infinity as null, like orjson does
+                value = json.loads(json.dumps(value), parse_constant=lambda _: None)
+            return dumps(value)
 
         option = (
             _ORJSON_PASSTHROUGH_OPTIONS

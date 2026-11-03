@@ -1,6 +1,5 @@
 """Base entity for OpenEVSE."""
 
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_SERIAL_NUMBER
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -31,7 +30,5 @@ class OpenEVSEEntity(CoordinatorEntity[OpenEVSEDataUpdateCoordinator]):
             manufacturer="OpenEVSE",
         )
         if unique_id:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, unique_id)
-            }
-            self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
+            self._attr_device_info.connections = {(CONNECTION_NETWORK_MAC, unique_id)}
+            self._attr_device_info.serial_number = unique_id

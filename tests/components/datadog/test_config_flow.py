@@ -2,14 +2,14 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.datadog.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import MOCK_CONFIG, MOCK_DATA, MOCK_OPTIONS
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(hass: HomeAssistant) -> None:
@@ -148,6 +148,14 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         )
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.datadog.config_flow.DogStatsd",
+    ):
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=new_options
+        )
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
 
     # ValueError Case
     with patch(

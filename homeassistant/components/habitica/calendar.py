@@ -87,7 +87,10 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
     @property
     def start_of_today(self) -> datetime:
         """Habitica daystart."""
-        return dt_util.start_of_local_day(self.coordinator.data.user.lastCron)
+        if (last_cron := self.coordinator.data.user.lastCron) is None:
+            return dt_util.start_of_local_day()
+
+        return dt_util.start_of_local_day(dt_util.as_local(last_cron))
 
     def get_recurrence_dates(
         self, recurrences: rrule, start_date: datetime, end_date: datetime | None = None

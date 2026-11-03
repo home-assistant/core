@@ -12,7 +12,7 @@ from .coordinator import GeocachingConfigEntry, GeocachingDataUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -> None:
     """Set up Geocaching from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
 
@@ -26,9 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

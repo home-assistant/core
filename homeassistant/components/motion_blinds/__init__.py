@@ -9,7 +9,8 @@ from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, AsyncMotionMul
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -22,6 +23,7 @@ from .const import (
 from .coordinator import DataUpdateCoordinatorMotionBlinds, MotionBlindsConfigEntry
 from .entity import gateway_device_info
 from .gateway import ConnectMotionGateway
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +42,18 @@ class MotionBlindsData:
 MOTION_BLINDS_DATA: HassKey[MotionBlindsData] = HassKey(DOMAIN)
 
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Motionblinds integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: MotionBlindsConfigEntry
-) -> bool:
+) -> None:
     """Set up the motion_blinds components from a config entry."""
     if (motion_data := hass.data.get(MOTION_BLINDS_DATA)) is None:
         motion_data = hass.data[MOTION_BLINDS_DATA] = MotionBlindsData()
@@ -94,7 +105,11 @@ async def async_setup_entry(
     if not await connect_gateway_class.async_connect_gateway(
         host, key, blind_type_list
     ):
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        )
     motion_gateway = connect_gateway_class.gateway_device
 
     coordinator = DataUpdateCoordinatorMotionBlinds(
@@ -123,36 +138,35 @@ async def async_setup_entry(
         blind.device_type not in DEVICE_TYPES_WIFI
         for blind in motion_gateway.device_list.values()
     ):
-        dr.async_get(hass).async_get_or_create(
+        dr.async_get(hass).async_get_or_create_from_info(
             config_entry_id=entry.entry_id,
-            **gateway_device_info(motion_gateway),
+            device_info=gateway_device_info(motion_gateway),
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MotionBlindsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
     motion_data = hass.data[MOTION_BLINDS_DATA]
-    if unload_ok and motion_data.multicast is not None:
-        motion_data.multicast.Unregister_motion_gateway(config_entry.data[CONF_HOST])
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
 
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        # No motion gateways left, stop Motion multicast
-        if motion_data.unsub_stop is not None:
-            motion_data.unsub_stop()
-            motion_data.unsub_stop = None
-        _LOGGER.debug("Shutting down Motion Listener")
         if motion_data.multicast is not None:
-            motion_data.multicast.Stop_listen()
-            motion_data.multicast = None
-
-    return unload_ok
+            motion_data.multicast.Unregister_motion_gateway(
+                config_entry.data[CONF_HOST]
+            )
+    finally:
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
+            # No motion gateways left, stop Motion multicast
+            if motion_data.unsub_stop is not None:
+                motion_data.unsub_stop()
+                motion_data.unsub_stop = None
+            _LOGGER.debug("Shutting down Motion Listener")
+            if motion_data.multicast is not None:
+                motion_data.multicast.Stop_listen()
+                motion_data.multicast = None

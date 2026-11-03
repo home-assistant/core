@@ -1,0 +1,62 @@
+{
+  "domain": "okok_scale",
+  "name": "OKOK Scale",
+  "bluetooth": [
+    {
+      "connectable": false,
+      "manufacturer_id": 4554
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [2, 4],
+      "manufacturer_id": 61695
+    },
+    {
+      "connectable": false,
+      "manufacturer_id": 8394
+    },
+    {
+      "connectable": false,
+      "local_name": "10:96:1A:*"
+    },
+    {
+      "connectable": false,
+      "local_name": "50:FB:19:*"
+    },
+    {
+      "connectable": false,
+      "local_name": "60:65:F4:*"
+    },
+    {
+      "connectable": false,
+      "local_name": "78:66:A5:*"
+    },
+    {
+      "connectable": false,
+      "local_name": "80:F4:16:*"
+    },
+    {
+      "connectable": false,
+      "local_name": "98:F6:7A:*"
+    },
+    {
+      "connectable": false,
+      "local_name": "B4:56:5D:*"
+    },
+    {
+      "connectable": false,
+      "local_name": "F0:2C:59:*"
+    }
+  ],
+  "categories": ["health_wellbeing"],
+  "codeowners": ["@rrooggiieerr"],
+  "config_flow": true,
+  "connectivity": ["bluetooth"],
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/okok_scale/",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["okokscale"],
+  "quality_scale": "platinum",
+  "requirements": ["okokscale==0.0.5"]
+}

@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock, patch
 
 from pyefergy import exceptions
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.efergy.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 TOKEN = "9p6QGJ7dpZfO3fqPTBk1fyEmjV1cGoLT"
 MULTI_SENSOR_TOKEN = "9r6QGF7dpZfO3fqPTBl1fyRmjV1cGoLT"

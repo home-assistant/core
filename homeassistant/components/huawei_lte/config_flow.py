@@ -102,7 +102,8 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
                     probatio.Optional(
-                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD) or ""
+                        probatio.Secret(CONF_PASSWORD),
+                        default=user_input.get(CONF_PASSWORD) or "",
                     ): str,
                 }
             ),
@@ -125,7 +126,8 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
                     probatio.Optional(
-                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD) or ""
+                        probatio.Secret(CONF_PASSWORD),
+                        default=user_input.get(CONF_PASSWORD) or "",
                     ): str,
                 }
             ),

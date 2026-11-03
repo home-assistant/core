@@ -26,8 +26,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.os_error import os_read_error
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_MEDIA, DOMAIN
@@ -82,7 +83,7 @@ class CollectionImageImageEntity(ImageEntity):
         """Set the entity to unavailable state."""
         self._attr_available = False
         self.path = None
-        self._attr_image_url = UNDEFINED
+        self._attr_image_url = Undefined
         self._cached_image = None
         self.async_write_ha_state()
         raise HomeAssistantError(
@@ -202,7 +203,7 @@ class CollectionImageImageEntity(ImageEntity):
         """Clear the displayed image."""
         self._attr_image_last_updated = None
         self.path = None
-        self._attr_image_url = UNDEFINED
+        self._attr_image_url = Undefined
         self._attr_content_type = DEFAULT_CONTENT_TYPE
         self.async_write_ha_state()
 
@@ -213,6 +214,7 @@ class CollectionImageImageEntity(ImageEntity):
         try:
             resolved = await async_resolve_media(self.hass, image_id, self.entity_id)
         except Unresolvable as err:
+            self._current_image_id = image_id
             self._clear_image()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -222,8 +224,7 @@ class CollectionImageImageEntity(ImageEntity):
                     "id": image_id,
                 },
             ) from err
-        finally:
-            self._current_image_id = image_id
+        self._current_image_id = image_id
 
         try:
             valid_image_content_type(resolved.mime_type)
@@ -244,11 +245,17 @@ class CollectionImageImageEntity(ImageEntity):
             self._attr_image_url = async_process_play_media_url(self.hass, resolved.url)
         else:
             self.path = resolved.path
-            self._attr_image_url = UNDEFINED
+            self._attr_image_url = Undefined
 
         self._attr_content_type = resolved.mime_type
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return {"current_media_id": self._current_image_id}
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -271,13 +278,6 @@ class CollectionImageImageEntity(ImageEntity):
             try:
                 return self.path.read_bytes()
             except OSError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="image_read_error",
-                    translation_placeholders={
-                        "path": str(self.path),
-                        "error": str(err),
-                    },
-                ) from err
+                raise os_read_error(err, str(self.path)) from err
 
         return None

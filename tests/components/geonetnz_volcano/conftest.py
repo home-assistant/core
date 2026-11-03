@@ -1,17 +1,15 @@
 """Configuration for GeoNet NZ Volcano tests."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geonetnz_volcano import DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -24,7 +22,6 @@ def config_entry():
             CONF_LONGITUDE: 174.7,
             CONF_RADIUS: 25,
             CONF_UNIT_SYSTEM: "metric",
-            CONF_SCAN_INTERVAL: 300.0,
         },
         title="-41.2, 174.7",
     )

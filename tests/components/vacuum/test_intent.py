@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.vacuum import (
     DOMAIN,
@@ -15,8 +16,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, intent
-
-from tests.common import async_mock_service
 
 
 async def test_start(hass: HomeAssistant) -> None:

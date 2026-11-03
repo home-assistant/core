@@ -36,7 +36,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         data_schema = {
             probatio.Required(
-                CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+                probatio.Secret(CONF_API_KEY), default=user_input.get(CONF_API_KEY, "")
             ): str,
             probatio.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
             probatio.Optional(

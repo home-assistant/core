@@ -8,6 +8,7 @@ from aiotankerkoenig import (
     Sort,
     Station,
     Tankerkoenig,
+    TankerkoenigError,
     TankerkoenigInvalidKeyError,
 )
 import probatio
@@ -98,6 +99,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_form_user(
                 user_input, errors={CONF_API_KEY: "invalid_auth"}
             )
+        except TankerkoenigError:
+            return self._show_form_user(user_input, errors={"base": "cannot_connect"})
 
         # no stations found
         if len(stations) == 0:
@@ -155,6 +158,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             await async_get_nearby_stations(tankerkoenig, user_input)
         except TankerkoenigInvalidKeyError:
             return self._show_form_reauth(user_input, {CONF_API_KEY: "invalid_auth"})
+        except TankerkoenigError:
+            return self._show_form_reauth(user_input, {"base": "cannot_connect"})
 
         return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
@@ -175,7 +180,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_NAME, default=user_input.get(CONF_NAME, "")
                     ): cv.string,
                     probatio.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+                        probatio.Secret(CONF_API_KEY),
+                        default=user_input.get(CONF_API_KEY, ""),
                     ): cv.string,
                     probatio.Required(
                         CONF_LOCATION,
@@ -214,7 +220,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+                        probatio.Secret(CONF_API_KEY),
+                        default=user_input.get(CONF_API_KEY, ""),
                     ): cv.string,
                 }
             ),
@@ -262,6 +269,8 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             )
         except TankerkoenigInvalidKeyError:
             return self.async_show_form(step_id="init", errors={"base": "invalid_auth"})
+        except TankerkoenigError:
+            return self.async_abort(reason="cannot_connect")
 
         if stations:
             for station in stations:

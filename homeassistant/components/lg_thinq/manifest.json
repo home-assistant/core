@@ -1,8 +1,10 @@
 {
   "domain": "lg_thinq",
   "name": "LG ThinQ",
+  "categories": ["appliances_cleaning", "climate"],
   "codeowners": ["@LG-ThinQ-Integration"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "macaddress": "34E6E6*"

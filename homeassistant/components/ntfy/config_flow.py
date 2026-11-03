@@ -304,7 +304,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(
                         reason="account_mismatch",
                         description_placeholders={
-                            CONF_USERNAME: entry.data[CONF_USERNAME],
+                            "username": entry.data[CONF_USERNAME],
                             "wrong_username": account.username,
                         },
                     )
@@ -319,7 +319,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
-            description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+            description_placeholders={"username": entry.data[CONF_USERNAME]},
         )
 
     async def async_step_reconfigure(
@@ -366,7 +366,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                         return self.async_abort(
                             reason="account_mismatch",
                             description_placeholders={
-                                CONF_USERNAME: entry.data[CONF_USERNAME],
+                                "username": entry.data[CONF_USERNAME],
                                 "wrong_username": account.username,
                             },
                         )
@@ -389,6 +389,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
         if entry.data[CONF_USERNAME]:
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="reconfigure_user",
                 data_schema=self.add_suggested_values_to_schema(
@@ -397,8 +398,8 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 errors=errors,
                 description_placeholders={
-                    CONF_NAME: entry.title,
-                    CONF_USERNAME: entry.data[CONF_USERNAME],
+                    "name": entry.title,
+                    "username": entry.data[CONF_USERNAME],
                 },
             )
 
@@ -409,7 +410,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input,
             ),
             errors=errors,
-            description_placeholders={CONF_NAME: entry.title},
+            description_placeholders={"name": entry.title},
         )
 
     async def async_step_reconfigure_user(
@@ -443,6 +444,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                 k=16,
             )
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="add_topic",
             data_schema=self.add_suggested_values_to_schema(
@@ -508,5 +510,5 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                 data_schema=TOPIC_FILTER_SCHEMA,
                 suggested_values=subentry_data,
             ),
-            description_placeholders={CONF_TOPIC: subentry_data[CONF_TOPIC]},
+            description_placeholders={"topic": subentry_data[CONF_TOPIC]},
         )

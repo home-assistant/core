@@ -35,17 +35,17 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
             CONF_CLIENT_ID,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
         probatio.Required(
-            CONF_CLIENT_SECRET,
+            probatio.Secret(CONF_CLIENT_SECRET),
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
         probatio.Required(
-            CONF_ACCESS_TOKEN,
+            probatio.Secret(CONF_ACCESS_TOKEN),
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
     }
 )
 REAUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(
-            CONF_ACCESS_TOKEN,
+            probatio.Secret(CONF_ACCESS_TOKEN),
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
     }
 )
@@ -55,10 +55,10 @@ STEP_RECONFIGURE_SCHEMA = probatio.Schema(
             CONF_CLIENT_ID,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
         probatio.Required(
-            CONF_CLIENT_SECRET,
+            probatio.Secret(CONF_CLIENT_SECRET),
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
         probatio.Required(
-            CONF_ACCESS_TOKEN,
+            probatio.Secret(CONF_ACCESS_TOKEN),
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
     }
 )
