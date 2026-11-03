@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_local_address": "The power station announced itself, but on no network Home Assistant is connected to."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,7 @@
       "not_e3dc": "The device answered, but it is not an E3/DC power station in E3/DC protocol mode. Set the Modbus protocol to E3DC in the power station's Smart Home menu.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {
@@ -20,6 +22,9 @@
           "port": "The Modbus TCP port set in the power station's Smart Home menu."
         },
         "description": "Set up an E3/DC home power station over Modbus TCP. Turn Modbus on in the power station's Smart Home menu and set its protocol to E3DC first."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up {name} at {host}?"
       }
     }
   },

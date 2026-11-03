@@ -52,12 +52,8 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info:
-    status: exempt
-    comment: Modbus devices have no discovery protocol to update connection info from.
-  discovery:
-    status: exempt
-    comment: Modbus devices are not announced over any discoverable protocol.
+  discovery-update-info: done
+  discovery: done
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: todo
