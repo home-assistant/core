@@ -88,8 +88,8 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="init",
                 description_placeholders={
-                    CONF_NAME: self.conf.name,
-                    CONF_HOST: self.conf.host,
+                    "name": self.conf.name,
+                    "host": self.conf.host,
                 },
             )
 

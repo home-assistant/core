@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DEFAULT_TITLE, DOMAIN
@@ -53,7 +53,7 @@ class WithingsFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+                description_placeholders={"name": self._get_reauth_entry().title},
             )
         return await self.async_step_user()
 
