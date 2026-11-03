@@ -1004,7 +1004,7 @@ async def test_zha_group_entity_name_migrated_only_once(
 
 def _add_light_members(
     app_controller: ControllerApplication,
-    zigpy_device_mock: Callable[..., zigpy.device.Device],
+    zigpy_device_mock: Callable[..., zigpy.device.ZigbeeDevice],
 ) -> None:
     """Add two lights to the group, so it also gets a light group entity."""
     group = app_controller.groups[FIXTURE_GRP_WITH_ENTITIES_ID]
@@ -1040,7 +1040,7 @@ async def test_zha_group_entity_areas_migrated_with_several_entities(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[Any, Any, None]],
     zigpy_app_controller_with_group: ControllerApplication,
-    zigpy_device_mock: Callable[..., zigpy.device.Device],
+    zigpy_device_mock: Callable[..., zigpy.device.ZigbeeDevice],
     config_entry: MockConfigEntry,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
@@ -1109,7 +1109,7 @@ async def test_zha_group_entity_name_not_migrated_with_several_entities(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[Any, Any, None]],
     zigpy_app_controller_with_group: ControllerApplication,
-    zigpy_device_mock: Callable[..., zigpy.device.Device],
+    zigpy_device_mock: Callable[..., zigpy.device.ZigbeeDevice],
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -1251,7 +1251,7 @@ async def test_zha_group_cleanup_leaves_other_integrations_alone(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[Any, Any, None]],
     zigpy_app_controller_with_group: ControllerApplication,
-    zigpy_device_mock: Callable[..., zigpy.device.Device],
+    zigpy_device_mock: Callable[..., zigpy.device.ZigbeeDevice],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the group cleanup only removes ZHA's own group entities.

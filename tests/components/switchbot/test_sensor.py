@@ -304,7 +304,7 @@ async def test_remote(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_universal_remote_sensor(hass: HomeAssistant) -> None:
-    """Test setting up the Universal Remote battery sensor."""
+    """Test setting up the Universal Remote battery sensor and charging binary sensor."""
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, UNIVERSAL_REMOTE_SERVICE_INFO)
 
@@ -323,6 +323,7 @@ async def test_universal_remote_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 2
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
     battery_sensor = hass.states.get("sensor.test_name_battery")
     battery_sensor_attrs = battery_sensor.attributes
@@ -336,6 +337,11 @@ async def test_universal_remote_sensor(hass: HomeAssistant) -> None:
     assert rssi_sensor.state == "-60"
     assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal"
     assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
+
+    charging_sensor = hass.states.get("binary_sensor.test_name_charging")
+    charging_sensor_attrs = charging_sensor.attributes
+    assert charging_sensor.state == STATE_OFF
+    assert charging_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Charging"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

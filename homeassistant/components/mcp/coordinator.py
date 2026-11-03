@@ -8,6 +8,10 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 import httpx2
+
+# mcp imports jsonschema lazily to validate tool results, and that import
+# reads schema files from disk, so load it here in the import executor.
+import jsonschema  # noqa: F401
 from mcp import MCPError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
@@ -265,6 +269,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.token_manager = token_manager
+        self.server_info: InitializeResult | None = None
 
     @override
     async def _async_update_data(self) -> list[llm.Tool]:
@@ -277,7 +282,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(
                     self.hass, self.config_entry.data[CONF_URL], self.token_manager
-                ) as (session, _):
+                ) as (session, server_info):
                     result = await session.list_tools()
         except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when listing tools: %s", error)
@@ -303,6 +308,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         _LOGGER.debug("Received tools: %s", result.tools)
+        self.server_info = server_info
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:

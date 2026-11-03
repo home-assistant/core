@@ -43,6 +43,7 @@ from .const import (
     SERVICE_RELOAD_RESOURCES,
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
+    LovelaceService,
 )
 from .services import async_setup_services
 
@@ -59,6 +60,7 @@ __all__ = [
     "MODE_STORAGE",
     "SERVICE_RELOAD_RESOURCES",
     "LovelaceData",
+    "LovelaceService",
 ]
 
 

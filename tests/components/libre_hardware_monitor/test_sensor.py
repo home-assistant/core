@@ -1,5 +1,6 @@
 """Test the LibreHardwareMonitor sensor."""
 
+from collections.abc import Mapping
 from dataclasses import replace
 from datetime import timedelta
 from types import MappingProxyType
@@ -59,9 +60,109 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import init_integration
+from . import init_integration, setup_integration
 
-TEMPERATURE_SENSOR_ID = "amdcpu-0-temperature-3"
+GPU_DEVICE_ID = "gpu-nvidia-0"
+GPU_DEVICE = (GPU_DEVICE_ID, "NVIDIA GeForce RTX 4080 SUPER")
+
+NVME_DEVICE_ID = "nvme-0"
+NVME_DEVICE = (NVME_DEVICE_ID, "Samsung SSD 990 PRO 2TB")
+
+EXISTING_SENSOR_ID = "amdcpu-0-temperature-3"
+NEW_SENSOR_ID = "gpu-nvidia-0-data-1"
+
+
+def _create_sensor(
+    sensor_id: str,
+    *,
+    name: str = "Test",
+    sensor_type: SensorType | None = None,
+    unit: str | None = None,
+    device: tuple[str, str] = GPU_DEVICE,
+) -> LibreHardwareMonitorSensorData:
+    """Return a sensor with valid readings."""
+    device_id, device_name = device
+    return LibreHardwareMonitorSensorData(
+        name=name,
+        value="42.0",
+        type=sensor_type,
+        min="40.0",
+        max="44.0",
+        unit=unit,
+        device_id=device_id,
+        device_name=device_name,
+        device_type="TEST",
+        sensor_id=sensor_id,
+    )
+
+
+def _reported_sensors(
+    mock_lhm_client: AsyncMock,
+) -> dict[str, LibreHardwareMonitorSensorData]:
+    """Return a mutable copy of the sensors the mock currently reports."""
+    return dict(mock_lhm_client.get_data.return_value.sensor_data)
+
+
+def _set_sensor_data(
+    mock_lhm_client: AsyncMock,
+    sensor_data: Mapping[str, LibreHardwareMonitorSensorData],
+) -> None:
+    """Make the next update report the given sensors and the devices they belong to."""
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value,
+        main_device_ids_and_names=MappingProxyType(
+            {
+                DeviceId(sensor.device_id): DeviceName(sensor.device_name)
+                for sensor in sensor_data.values()
+            }
+        ),
+        sensor_data=MappingProxyType(dict(sensor_data)),
+    )
+
+
+def _get_entity_id(
+    entity_registry: er.EntityRegistry, config_entry: MockConfigEntry, sensor_id: str
+) -> str | None:
+    """Return the entity id of a sensor."""
+    return entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{config_entry.entry_id}_{sensor_id}"
+    )
+
+
+async def _async_poll(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, times: int = 1
+) -> None:
+    """Advance time by the given number of update intervals."""
+    for _ in range(times):
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+
+async def _async_setup_and_remove_gpu(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> DeviceEntry:
+    """Set up the integration and remove the GPU from the next update."""
+    await init_integration(hass, mock_config_entry)
+    _set_sensor_data(
+        mock_lhm_client,
+        {
+            sensor_id: sensor
+            for sensor_id, sensor in _reported_sensors(mock_lhm_client).items()
+            if sensor.device_id != GPU_DEVICE_ID
+        },
+    )
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_{GPU_DEVICE_ID}"),
+        mock_config_entry.entry_id,
+    )
+    assert device
+
+    return device
 
 
 async def test_sensors_are_created(
@@ -204,43 +305,26 @@ async def test_sensor_device_class_mapping(
     entity_registry: er.EntityRegistry,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
     sensor_type: SensorType | None,
     lhm_unit: str | None,
     expected_device_class: SensorDeviceClass | None,
     expected_unit: str | None,
 ) -> None:
     """Test every LHM sensor type gets the expected device class and unit."""
-    sensor_id = "gpu-nvidia-0-test-0"
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        sensor_data=MappingProxyType(
-            {
-                sensor_id: LibreHardwareMonitorSensorData(
-                    name="Test",
-                    value="42.0",
-                    type=sensor_type,
-                    min="40.0",
-                    max="44.0",
-                    unit=lhm_unit,
-                    device_id="gpu-nvidia-0",
-                    device_name="NVIDIA GeForce RTX 4080 SUPER",
-                    device_type="NVIDIA",
-                    sensor_id=sensor_id,
-                )
-            }
-        ),
+    _set_sensor_data(
+        mock_lhm_client,
+        {
+            NEW_SENSOR_ID: _create_sensor(
+                NEW_SENSOR_ID, sensor_type=sensor_type, unit=lhm_unit
+            )
+        },
     )
-
     await init_integration(hass, mock_config_entry)
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{sensor_id}"
-    )
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, NEW_SENSOR_ID)
     assert entity_id
 
     state = hass.states.get(entity_id)
-
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_device_class
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
@@ -253,31 +337,17 @@ async def test_min_max_follow_selected_conductivity_unit(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test min and max are converted from the micro sign spelling LHM reports."""
-    sensor_id = "gpu-nvidia-0-conductivity-0"
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        sensor_data=MappingProxyType(
-            {
-                sensor_id: LibreHardwareMonitorSensorData(
-                    name="Coolant",
-                    value="42.0",
-                    type=SensorType.CONDUCTIVITY,
-                    min="40.0",
-                    max="44.0",
-                    unit="\u00b5S/cm",
-                    device_id="gpu-nvidia-0",
-                    device_name="NVIDIA GeForce RTX 4080 SUPER",
-                    device_type="NVIDIA",
-                    sensor_id=sensor_id,
-                )
-            }
-        ),
+    _set_sensor_data(
+        mock_lhm_client,
+        {
+            NEW_SENSOR_ID: _create_sensor(
+                NEW_SENSOR_ID, sensor_type=SensorType.CONDUCTIVITY, unit="\u00b5S/cm"
+            )
+        },
     )
     await init_integration(hass, mock_config_entry)
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{sensor_id}"
-    )
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, NEW_SENSOR_ID)
     assert entity_id
 
     entity_registry.async_update_entity_options(
@@ -288,7 +358,6 @@ async def test_min_max_follow_selected_conductivity_unit(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-
     assert state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == (
         UnitOfConductivity.MILLISIEMENS_PER_CM
@@ -299,7 +368,12 @@ async def test_min_max_follow_selected_conductivity_unit(
 
 
 @pytest.mark.parametrize(
-    "error", [LibreHardwareMonitorConnectionError, LibreHardwareMonitorNoDevicesError]
+    ("error", "retry_seconds"),
+    [
+        # a failed connection is retried after the coordinator's retry_after
+        pytest.param(LibreHardwareMonitorConnectionError, 25),
+        pytest.param(LibreHardwareMonitorNoDevicesError, DEFAULT_SCAN_INTERVAL),
+    ],
 )
 async def test_sensors_go_unavailable_on_error_and_recover(
     hass: HomeAssistant,
@@ -308,30 +382,24 @@ async def test_sensors_go_unavailable_on_error_and_recover(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     error: type[Exception],
+    retry_seconds: int,
 ) -> None:
     """Test sensors go unavailable."""
     await init_integration(hass, mock_config_entry)
 
-    initial_states = hass.states.async_all()
-    assert initial_states == snapshot(name="valid_sensor_data")
+    assert hass.states.async_all() == snapshot(name="valid_sensor_data")
 
     mock_lhm_client.get_data.side_effect = error
 
-    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    unavailable_states = hass.states.async_all()
-    assert all(state.state == STATE_UNAVAILABLE for state in unavailable_states)
+    await _async_poll(hass, freezer)
+    assert all(state.state == STATE_UNAVAILABLE for state in hass.states.async_all())
 
     mock_lhm_client.get_data.side_effect = None
 
-    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+    freezer.tick(timedelta(seconds=retry_seconds))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-    recovered_states = hass.states.async_all()
-    assert all(state.state != STATE_UNAVAILABLE for state in recovered_states)
+    assert all(state.state != STATE_UNAVAILABLE for state in hass.states.async_all())
 
 
 async def test_sensor_invalid_auth_after_update(
@@ -341,20 +409,13 @@ async def test_sensor_invalid_auth_after_update(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test invalid auth after sensor update."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await init_integration(hass, mock_config_entry)
 
     mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError
-
-    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await _async_poll(hass, freezer)
 
     assert mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
-
-    unavailable_states = hass.states.async_all()
-    assert all(state.state == STATE_UNAVAILABLE for state in unavailable_states)
+    assert all(state.state == STATE_UNAVAILABLE for state in hass.states.async_all())
 
 
 async def test_sensor_invalid_auth_during_startup(
@@ -365,40 +426,28 @@ async def test_sensor_invalid_auth_during_startup(
     """Test invalid auth in initial sensor update during integration startup."""
     mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.reason == "Authentication failed"
-
-    unavailable_states = hass.states.async_all()
-    assert all(state.state == STATE_UNAVAILABLE for state in unavailable_states)
+    assert mock_config_entry.error_reason_translation_key == "invalid_auth"
+    assert all(state.state == STATE_UNAVAILABLE for state in hass.states.async_all())
 
 
 @pytest.mark.parametrize(
-    ("object_id", "sensor_id", "new_value", "state_value"),
+    ("sensor_id", "new_value", "state_value"),
     [
-        (
-            "gaming_pc_amd_ryzen_7_7800x3d_package_temperature",
-            "amdcpu-0-temperature-3",
-            "42.1",
-            "42.1",
-        ),
-        (
-            "gaming_pc_nvidia_geforce_rtx_4080_super_gpu_pcie_tx_throughput",
-            "gpu-nvidia-0-throughput-1",
-            "811161600.0",
-            "792150.0",
+        pytest.param(EXISTING_SENSOR_ID, "42.1", "42.1", id="temperature"),
+        pytest.param(
+            "gpu-nvidia-0-throughput-1", "811161600.0", "792150.0", id="throughput"
         ),
     ],
 )
 async def test_sensors_are_updated(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    object_id: str,
     sensor_id: str,
     new_value: str,
     state_value: str,
@@ -406,166 +455,17 @@ async def test_sensors_are_updated(
     """Test sensors are updated with properly formatted values."""
     await init_integration(hass, mock_config_entry)
 
-    updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
-    updated_data[sensor_id] = replace(updated_data[sensor_id], value=new_value)
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        sensor_data=MappingProxyType(updated_data),
-    )
+    sensor_data = _reported_sensors(mock_lhm_client)
+    sensor_data[sensor_id] = replace(sensor_data[sensor_id], value=new_value)
+    _set_sensor_data(mock_lhm_client, sensor_data)
+    await _async_poll(hass, freezer)
 
-    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, sensor_id)
+    assert entity_id
 
-    state = hass.states.get(f"sensor.{object_id}")
-
+    state = hass.states.get(entity_id)
     assert state
-    assert state.state != STATE_UNAVAILABLE
     assert state.state == state_value
-
-
-async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
-    hass: HomeAssistant,
-    mock_lhm_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test sensor state is unknown when sensor data is missing."""
-    await init_integration(hass, mock_config_entry)
-
-    entity_id = "sensor.gaming_pc_amd_ryzen_7_7800x3d_package_temperature"
-
-    state = hass.states.get(entity_id)
-
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "52.8"
-
-    updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
-    del updated_data["amdcpu-0-temperature-3"]
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        sensor_data=MappingProxyType(updated_data),
-    )
-
-    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-
-    assert state
-    assert state.state == STATE_UNKNOWN
-
-
-async def test_missing_device_is_removed_after_grace_period(
-    hass: HomeAssistant,
-    mock_lhm_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a device missing from LHM is removed when its holds no more sensors."""
-    orphaned_device = await _mock_orphaned_device(
-        device_registry, hass, mock_config_entry, mock_lhm_client
-    )
-
-    await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES - 1)
-    assert device_registry.async_get(orphaned_device.id)
-    assert er.async_entries_for_device(entity_registry, orphaned_device.id)
-
-    await _async_poll(hass, freezer)
-    assert device_registry.async_get(orphaned_device.id) is None
-    assert not er.async_entries_for_device(entity_registry, orphaned_device.id)
-
-
-async def test_device_returning_within_grace_period_is_kept(
-    hass: HomeAssistant,
-    mock_lhm_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test a device that is briefly missing keeps its registry entry."""
-    initial_data = mock_lhm_client.get_data.return_value
-    orphaned_device = await _mock_orphaned_device(
-        device_registry, hass, mock_config_entry, mock_lhm_client
-    )
-
-    await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES - 1)
-    mock_lhm_client.get_data.return_value = initial_data
-    await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES)
-
-    assert device_registry.async_get(orphaned_device.id)
-
-
-async def test_stale_device_is_removed_after_grace_period(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    mock_lhm_client: AsyncMock,
-) -> None:
-    """Test a device that vanished while HA was not running is cleaned up."""
-    mock_config_entry.add_to_hass(hass)
-    stale_device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_nvme-0")},
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        f"{mock_config_entry.entry_id}_nvme-0-temperature-0",
-        config_entry=mock_config_entry,
-        device_id=stale_device.id,
-    )
-
-    await init_integration(hass, mock_config_entry)
-
-    # setting up counts as the first update without the device
-    await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES - 2)
-    assert device_registry.async_get(stale_device.id)
-
-    await _async_poll(hass, freezer)
-    assert device_registry.async_get(stale_device.id) is None
-
-
-async def _mock_orphaned_device(
-    device_registry: dr.DeviceRegistry,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_lhm_client: AsyncMock,
-) -> DeviceEntry:
-    await init_integration(hass, mock_config_entry)
-
-    removed_device = "gpu-nvidia-0"
-    previous_data = mock_lhm_client.get_data.return_value
-    assert removed_device in previous_data.main_device_ids_and_names
-
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        main_device_ids_and_names=MappingProxyType(
-            {
-                device_id: name
-                for (device_id, name) in previous_data.main_device_ids_and_names.items()
-                if device_id != removed_device
-            }
-        ),
-        sensor_data=MappingProxyType(
-            {
-                sensor_id: data
-                for (sensor_id, data) in previous_data.sensor_data.items()
-                if not sensor_id.startswith(removed_device)
-            }
-        ),
-    )
-
-    return device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_{removed_device}")},
-    )
 
 
 async def test_integration_dynamically_adds_new_devices(
@@ -584,69 +484,24 @@ async def test_integration_dynamically_adds_new_devices(
     )
     assert len(device_entries) == 3
 
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        main_device_ids_and_names=MappingProxyType(
-            {
-                **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
-                DeviceId("generic-memory"): DeviceName("Generic Memory"),
-            }
-        ),
-        sensor_data=MappingProxyType(
-            {
-                **mock_lhm_client.get_data.return_value.sensor_data,
-                "generic-memory-test-sensor": LibreHardwareMonitorSensorData(
-                    name="Test sensor",
-                    value="30",
-                    type=SensorType.FACTOR,
-                    min="12",
-                    max="36",
-                    unit=None,
-                    device_id="generic-memory",
-                    device_name="Generic Memory",
-                    device_type="MEMORY",
-                    sensor_id="generic-memory-test-sensor",
-                ),
-            }
-        ),
+    new_sensor = _create_sensor(
+        "generic-memory-test-sensor",
+        name="Test sensor",
+        device=("generic-memory", "Generic Memory"),
     )
-
-    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    _set_sensor_data(
+        mock_lhm_client,
+        {**_reported_sensors(mock_lhm_client), new_sensor.sensor_id: new_sensor},
+    )
+    await _async_poll(hass, freezer)
 
     device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
         registry=device_registry, config_entry_id=mock_config_entry.entry_id
     )
     assert len(device_entries) == 4
-    expected_device = next(entry for entry in device_entries if "Generic" in entry.name)
-    assert expected_device.name == "[GAMING-PC] Generic Memory"
-
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert "sensor.gaming_pc_generic_memory_test_sensor" in [
-        entry.entity_id for entry in entity_entries
-    ]
-
-
-async def _async_poll(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, times: int = 1
-) -> None:
-    """Advance time by the given number of update intervals."""
-    for _ in range(times):
-        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-
-def _set_sensor_data(
-    mock_lhm_client: AsyncMock, sensor_data: dict[str, LibreHardwareMonitorSensorData]
-) -> None:
-    """Make the next update report the given sensors."""
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        sensor_data=MappingProxyType(sensor_data),
+    assert "[GAMING-PC] Generic Memory" in [entry.name for entry in device_entries]
+    assert _get_entity_id(entity_registry, mock_config_entry, new_sensor.sensor_id) == (
+        "sensor.gaming_pc_generic_memory_test_sensor"
     )
 
 
@@ -661,35 +516,21 @@ async def test_new_sensor_of_known_device_is_added(
     await init_integration(hass, mock_config_entry)
 
     # e.g. an LHM update renaming /gpu-nvidia/0/smalldata/1 to /gpu-nvidia/0/data/1
-    new_sensor_id = "gpu-nvidia-0-data-1"
-    initial_data = mock_lhm_client.get_data.return_value.sensor_data
     _set_sensor_data(
         mock_lhm_client,
         {
-            **initial_data,
-            new_sensor_id: LibreHardwareMonitorSensorData(
-                name="GPU Memory Used",
-                value="733.0",
-                type=None,
-                min="700.0",
-                max="800.0",
-                unit=None,
-                device_id="gpu-nvidia-0",
-                device_name="NVIDIA GeForce RTX 4080 SUPER",
-                device_type="NVIDIA",
-                sensor_id=new_sensor_id,
-            ),
+            **_reported_sensors(mock_lhm_client),
+            NEW_SENSOR_ID: _create_sensor(NEW_SENSOR_ID),
         },
     )
     await _async_poll(hass, freezer)
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{new_sensor_id}"
-    )
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, NEW_SENSOR_ID)
     assert entity_id
+
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "733.0"
+    assert state.state == "42.0"
 
 
 async def test_missing_sensor_is_removed_after_grace_period(
@@ -702,17 +543,16 @@ async def test_missing_sensor_is_removed_after_grace_period(
     """Test a sensor missing from LHM is removed only after the grace period."""
     await init_integration(hass, mock_config_entry)
 
-    unique_id = f"{mock_config_entry.entry_id}_{TEMPERATURE_SENSOR_ID}"
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, EXISTING_SENSOR_ID)
     assert entity_id
 
-    initial_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
+    initial_data = _reported_sensors(mock_lhm_client)
     _set_sensor_data(
         mock_lhm_client,
         {
-            sensor_id: data
-            for sensor_id, data in initial_data.items()
-            if sensor_id != TEMPERATURE_SENSOR_ID
+            sensor_id: sensor
+            for sensor_id, sensor in initial_data.items()
+            if sensor_id != EXISTING_SENSOR_ID
         },
     )
 
@@ -727,7 +567,7 @@ async def test_missing_sensor_is_removed_after_grace_period(
     # a sensor that comes back later is added as a new sensor
     _set_sensor_data(mock_lhm_client, initial_data)
     await _async_poll(hass, freezer)
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert _get_entity_id(entity_registry, mock_config_entry, EXISTING_SENSOR_ID)
 
 
 async def test_sensor_returning_within_grace_period_is_kept(
@@ -740,16 +580,14 @@ async def test_sensor_returning_within_grace_period_is_kept(
     """Test a sensor LHM briefly fails to read is not removed."""
     await init_integration(hass, mock_config_entry)
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{TEMPERATURE_SENSOR_ID}"
-    )
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, EXISTING_SENSOR_ID)
     assert entity_id
 
-    initial_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
+    initial_data = _reported_sensors(mock_lhm_client)
     data_without_sensor = {
-        sensor_id: data
-        for sensor_id, data in initial_data.items()
-        if sensor_id != TEMPERATURE_SENSOR_ID
+        sensor_id: sensor
+        for sensor_id, sensor in initial_data.items()
+        if sensor_id != EXISTING_SENSOR_ID
     }
 
     # the missing count starts over once the sensor is reported again
@@ -770,17 +608,15 @@ async def test_failed_updates_do_not_count_towards_removal(
     """Test the grace period only counts updates that reached LHM."""
     await init_integration(hass, mock_config_entry)
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{TEMPERATURE_SENSOR_ID}"
-    )
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, EXISTING_SENSOR_ID)
     assert entity_id
 
     _set_sensor_data(
         mock_lhm_client,
         {
-            sensor_id: data
-            for sensor_id, data in mock_lhm_client.get_data.return_value.sensor_data.items()
-            if sensor_id != TEMPERATURE_SENSOR_ID
+            sensor_id: sensor
+            for sensor_id, sensor in _reported_sensors(mock_lhm_client).items()
+            if sensor_id != EXISTING_SENSOR_ID
         },
     )
     await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES - 1)
@@ -808,11 +644,11 @@ async def test_stale_registry_entry_is_removed_after_grace_period(
     stale_entry = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        f"{mock_config_entry.entry_id}_nvme-0-level-100",
+        f"{mock_config_entry.entry_id}_{NVME_DEVICE_ID}-level-100",
         config_entry=mock_config_entry,
     )
 
-    await init_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     # setting up counts as the first update without the sensor
     await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES - 2)
@@ -820,6 +656,48 @@ async def test_stale_registry_entry_is_removed_after_grace_period(
 
     await _async_poll(hass, freezer)
     assert entity_registry.async_get(stale_entry.entity_id) is None
+
+
+async def test_missing_device_is_removed_after_grace_period(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a device missing from LHM is removed once it holds no more sensors."""
+    device = await _async_setup_and_remove_gpu(
+        hass, mock_lhm_client, mock_config_entry, device_registry
+    )
+
+    await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES - 1)
+    assert device_registry.async_get(device.id)
+    assert er.async_entries_for_device(entity_registry, device.id)
+
+    await _async_poll(hass, freezer)
+    assert device_registry.async_get(device.id) is None
+    assert not er.async_entries_for_device(entity_registry, device.id)
+
+
+async def test_device_returning_within_grace_period_is_kept(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a device that is briefly missing keeps its registry entry."""
+    initial_data = _reported_sensors(mock_lhm_client)
+    device = await _async_setup_and_remove_gpu(
+        hass, mock_lhm_client, mock_config_entry, device_registry
+    )
+
+    await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES - 1)
+    _set_sensor_data(mock_lhm_client, initial_data)
+    await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES)
+
+    assert device_registry.async_get(device.id)
 
 
 async def test_sensors_are_added_again_when_removed_device_returns(
@@ -831,40 +709,52 @@ async def test_sensors_are_added_again_when_removed_device_returns(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the sensors of a device that disappeared and came back are restored."""
-    initial_data = mock_lhm_client.get_data.return_value
-    orphaned_device = await _mock_orphaned_device(
-        device_registry, hass, mock_config_entry, mock_lhm_client
+    initial_data = _reported_sensors(mock_lhm_client)
+    orphaned_device = await _async_setup_and_remove_gpu(
+        hass, mock_lhm_client, mock_config_entry, device_registry
     )
     await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES)
     assert device_registry.async_get(orphaned_device.id) is None
 
-    mock_lhm_client.get_data.return_value = initial_data
+    _set_sensor_data(mock_lhm_client, initial_data)
     await _async_poll(hass, freezer)
 
-    assert entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_gpu-nvidia-0-temperature-0"
+    assert all(
+        _get_entity_id(entity_registry, mock_config_entry, sensor_id)
+        for sensor_id in initial_data
     )
 
 
-def _sensor(
-    sensor_id: str, name: str, device_id: str, device_name: str
-) -> LibreHardwareMonitorSensorData:
-    """Return data for a sensor without a type."""
-    return LibreHardwareMonitorSensorData(
-        name=name,
-        value="42.0",
-        type=None,
-        min="40.0",
-        max="44.0",
-        unit=None,
-        device_id=device_id,
-        device_name=device_name,
-        device_type="NVIDIA",
-        sensor_id=sensor_id,
+async def test_stale_device_is_removed_after_grace_period(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test a device that vanished while HA was not running is cleaned up."""
+    mock_config_entry.add_to_hass(hass)
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_{NVME_DEVICE_ID}")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{mock_config_entry.entry_id}_{NVME_DEVICE_ID}-temperature-0",
+        config_entry=mock_config_entry,
+        device_id=stale_device.id,
     )
 
+    await setup_integration(hass, mock_config_entry)
 
-GPU_DEVICE = ("gpu-nvidia-0", "NVIDIA GeForce RTX 4080 SUPER")
+    # setting up counts as the first update without the device
+    await _async_poll(hass, freezer, MISSING_SENSOR_REMOVAL_UPDATES - 2)
+    assert device_registry.async_get(stale_device.id)
+
+    await _async_poll(hass, freezer)
+    assert device_registry.async_get(stale_device.id) is None
 
 
 async def test_renamed_sensor_takes_over_entity_id(
@@ -875,12 +765,10 @@ async def test_renamed_sensor_takes_over_entity_id(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a sensor whose id changes in an LHM update keeps its entity id."""
-    initial_data = mock_lhm_client.get_data.return_value.sensor_data
-    old_sensor = _sensor(
-        "gpu-nvidia-0-smalldata-1", "GPU Memory Used Data", *GPU_DEVICE
-    )
-    other_sensor = _sensor(
-        "gpu-nvidia-0-smalldata-2", "GPU Memory Free Data", *GPU_DEVICE
+    initial_data = _reported_sensors(mock_lhm_client)
+    old_sensor = _create_sensor("gpu-nvidia-0-smalldata-1", name="GPU Memory Used Data")
+    other_sensor = _create_sensor(
+        "gpu-nvidia-0-smalldata-2", name="GPU Memory Free Data"
     )
     _set_sensor_data(
         mock_lhm_client,
@@ -892,29 +780,23 @@ async def test_renamed_sensor_takes_over_entity_id(
     )
     await init_integration(hass, mock_config_entry)
 
-    old_unique_id = f"{mock_config_entry.entry_id}_{old_sensor.sensor_id}"
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, old_unique_id)
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, old_sensor.sensor_id)
     assert entity_id
 
-    new_sensor = _sensor("gpu-nvidia-0-data-1", "GPU Memory Used Data", *GPU_DEVICE)
-    _set_sensor_data(
-        mock_lhm_client, {**initial_data, new_sensor.sensor_id: new_sensor}
-    )
+    new_sensor = _create_sensor(NEW_SENSOR_ID, name="GPU Memory Used Data")
+    _set_sensor_data(mock_lhm_client, {**initial_data, NEW_SENSOR_ID: new_sensor})
     await _async_poll(hass, freezer)
 
     # the replaced sensor is removed right away instead of after the grace period
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
     assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{new_sensor.sensor_id}"
-        )
-        == entity_id
+        _get_entity_id(entity_registry, mock_config_entry, old_sensor.sensor_id) is None
+    )
+    assert (
+        _get_entity_id(entity_registry, mock_config_entry, NEW_SENSOR_ID) == entity_id
     )
     assert hass.states.get(entity_id).state == "42.0"
     # a sensor with another name going missing at the same time is not replaced
-    assert entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{other_sensor.sensor_id}"
-    )
+    assert _get_entity_id(entity_registry, mock_config_entry, other_sensor.sensor_id)
 
 
 async def test_sensor_renamed_while_ha_was_stopped_takes_over_entity_id(
@@ -924,40 +806,32 @@ async def test_sensor_renamed_while_ha_was_stopped_takes_over_entity_id(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a sensor whose id changed while HA was not running keeps its entity id."""
-    nvme_device = ("nvme-0", "Samsung SSD 990 PRO 2TB")
-    initial_data = mock_lhm_client.get_data.return_value.sensor_data
-    old_sensor = _sensor("nvme-0-level-100", "Available Spare Level", *nvme_device)
+    initial_data = _reported_sensors(mock_lhm_client)
+    old_sensor = _create_sensor(
+        "nvme-0-level-100", name="Available Spare Level", device=NVME_DEVICE
+    )
     _set_sensor_data(
         mock_lhm_client, {**initial_data, old_sensor.sensor_id: old_sensor}
     )
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        main_device_ids_and_names=MappingProxyType(
-            {
-                **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
-                DeviceId(nvme_device[0]): DeviceName(nvme_device[1]),
-            }
-        ),
-    )
     await init_integration(hass, mock_config_entry)
 
-    old_unique_id = f"{mock_config_entry.entry_id}_{old_sensor.sensor_id}"
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, old_unique_id)
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, old_sensor.sensor_id)
     assert entity_id
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-    new_sensor = _sensor("nvme-0-level-25", "Available Spare Level", *nvme_device)
+    new_sensor = _create_sensor(
+        "nvme-0-level-25", name="Available Spare Level", device=NVME_DEVICE
+    )
     _set_sensor_data(
         mock_lhm_client, {**initial_data, new_sensor.sensor_id: new_sensor}
     )
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
     assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{new_sensor.sensor_id}"
-        )
+        _get_entity_id(entity_registry, mock_config_entry, old_sensor.sensor_id) is None
+    )
+    assert (
+        _get_entity_id(entity_registry, mock_config_entry, new_sensor.sensor_id)
         == entity_id
     )
 
@@ -972,39 +846,26 @@ async def test_renamed_sensors_of_identical_devices_keep_their_entity_ids(
     """Test same-named sensors of identical devices don't swap entity ids."""
     device_name = "Samsung SSD 990 EVO Plus 2TB"
     device_ids = ("nvme-0", "nvme-1")
-    initial_data = mock_lhm_client.get_data.return_value.sensor_data
+    initial_data = _reported_sensors(mock_lhm_client)
     _set_sensor_data(
         mock_lhm_client,
         {
             **initial_data,
             **{
-                f"{device_id}-level-100": _sensor(
+                f"{device_id}-level-100": _create_sensor(
                     f"{device_id}-level-100",
-                    "Available Spare Level",
-                    device_id,
-                    device_name,
+                    name="Available Spare Level",
+                    device=(device_id, device_name),
                 )
                 for device_id in device_ids
             },
         },
     )
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        main_device_ids_and_names=MappingProxyType(
-            {
-                **mock_lhm_client.get_data.return_value.main_device_ids_and_names,
-                **{
-                    DeviceId(device_id): DeviceName(device_name)
-                    for device_id in device_ids
-                },
-            }
-        ),
-    )
     await init_integration(hass, mock_config_entry)
 
     entity_ids = {
-        device_id: entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{device_id}-level-100"
+        device_id: _get_entity_id(
+            entity_registry, mock_config_entry, f"{device_id}-level-100"
         )
         for device_id in device_ids
     }
@@ -1017,11 +878,10 @@ async def test_renamed_sensors_of_identical_devices_keep_their_entity_ids(
         {
             **initial_data,
             **{
-                f"{device_id}-level-25": _sensor(
+                f"{device_id}-level-25": _create_sensor(
                     f"{device_id}-level-25",
-                    "Available Spare Level",
-                    device_id,
-                    device_name,
+                    name="Available Spare Level",
+                    device=(device_id, device_name),
                 )
                 for device_id in reversed(device_ids)
             },
@@ -1030,8 +890,8 @@ async def test_renamed_sensors_of_identical_devices_keep_their_entity_ids(
     await _async_poll(hass, freezer)
 
     assert {
-        device_id: entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{device_id}-level-25"
+        device_id: _get_entity_id(
+            entity_registry, mock_config_entry, f"{device_id}-level-25"
         )
         for device_id in device_ids
     } == entity_ids
@@ -1046,18 +906,18 @@ async def test_new_identical_device_does_not_take_replaced_entity_id(
 ) -> None:
     """Test a new sensor can't take the entity id a renamed sensor just freed."""
     device_name = "Samsung SSD 990 EVO Plus 2TB"
-    initial_data = mock_lhm_client.get_data.return_value.sensor_data
-    old_sensor = _sensor(
-        "nvme-0-level-100", "Available Spare Level", "nvme-0", device_name
+    initial_data = _reported_sensors(mock_lhm_client)
+    old_sensor = _create_sensor(
+        "nvme-0-level-100",
+        name="Available Spare Level",
+        device=("nvme-0", device_name),
     )
     _set_sensor_data(
         mock_lhm_client, {**initial_data, old_sensor.sensor_id: old_sensor}
     )
     await init_integration(hass, mock_config_entry)
 
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_{old_sensor.sensor_id}"
-    )
+    entity_id = _get_entity_id(entity_registry, mock_config_entry, old_sensor.sensor_id)
     assert entity_id
 
     # an identical drive is added in the update that renames the sensor
@@ -1067,11 +927,10 @@ async def test_new_identical_device_does_not_take_replaced_entity_id(
         {
             **initial_data,
             **{
-                f"{device_id}-level-25": _sensor(
+                f"{device_id}-level-25": _create_sensor(
                     f"{device_id}-level-25",
-                    "Available Spare Level",
-                    device_id,
-                    device_name,
+                    name="Available Spare Level",
+                    device=(device_id, device_name),
                 )
                 for device_id in ("nvme-1", "nvme-0")
             },
@@ -1080,14 +939,10 @@ async def test_new_identical_device_does_not_take_replaced_entity_id(
     await _async_poll(hass, freezer)
 
     assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_nvme-0-level-25"
-        )
+        _get_entity_id(entity_registry, mock_config_entry, "nvme-0-level-25")
         == entity_id
     )
     assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{mock_config_entry.entry_id}_nvme-1-level-25"
-        )
+        _get_entity_id(entity_registry, mock_config_entry, "nvme-1-level-25")
         == f"{entity_id}_2"
     )

@@ -426,7 +426,7 @@ def zigpy_device_mock(zigpy_app_controller) -> Callable[..., zigpy.device.Zigbee
 @pytest.fixture
 def zigpy_app_controller_with_switches(
     zigpy_app_controller: ControllerApplication,
-    zigpy_device_mock: Callable[..., zigpy.device.Device],
+    zigpy_device_mock: Callable[..., zigpy.device.ZigbeeDevice],
 ) -> ControllerApplication:
     """Add two groupable switch devices to the app controller."""
     endpoint_config = {

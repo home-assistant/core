@@ -1,0 +1,29 @@
+[
+  {
+    "grpid": 2,
+    "attrib": 0,
+    "date": 1564660860,
+    "created": 1564660860,
+    "modified": 1564660860,
+    "category": 1,
+    "deviceid": "thermo-device",
+    "hash_deviceid": "thermo-hash",
+    "measures": [
+      {
+        "type": 12,
+        "unit": -1,
+        "value": 373
+      },
+      {
+        "type": 71,
+        "unit": -1,
+        "value": 373
+      },
+      {
+        "type": 73,
+        "unit": -1,
+        "value": 351
+      }
+    ]
+  }
+]
