@@ -21,13 +21,14 @@ from homeassistant.components.datetime import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.imou.const import (
+    COUNT_DOWN_MAX_MINUTES,
     PARAM_COUNT_DOWN_SWITCH,
     PARAM_PLUG_SWITCH,
 )
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -258,3 +259,74 @@ async def test_countdown_preserves_deadline_while_offline(
     assert coordinator.countdown.ends_at(device_key) == end
     # Offline devices are unavailable, but the local end time is unchanged.
     assert hass.states.get(entity_id).state == "unavailable"
+
+
+@pytest.mark.parametrize("platforms", [[Platform.DATETIME]], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_set_countdown_rejects_beyond_cloud_limit(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Deadlines beyond the cloud max are rejected instead of silently shortened."""
+    now = dt_util.utcnow()
+    freezer.move_to(now)
+    too_far = now + timedelta(minutes=COUNT_DOWN_MAX_MINUTES + 1)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DATETIME_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "datetime.smart_plug_turn_off_at",
+                ATTR_DATETIME: too_far,
+            },
+            blocking=True,
+        )
+
+    mock_imou_ha_device_manager.async_set_text_value.assert_not_called()
+
+
+@pytest.mark.parametrize("platforms", [[Platform.DATETIME]], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_countdown_preserves_deadline_on_aligned_online_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+    imou_mock_devices: list[ImouHaDevice],
+) -> None:
+    """Online polls that still report the same whole minutes keep the end time."""
+    entity_id = "datetime.smart_plug_turn_off_at"
+    device = imou_mock_devices[0]
+    device_key = device.device_id
+    coordinator = mock_config_entry.runtime_data
+    now = dt_util.utcnow()
+    freezer.move_to(now)
+    end = now + timedelta(minutes=10)
+
+    async def _set_countdown(dev: ImouHaDevice, text_type: str, value: str) -> None:
+        device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] = value
+
+    mock_imou_ha_device_manager.async_set_text_value.side_effect = _set_countdown
+
+    await hass.services.async_call(
+        DATETIME_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_DATETIME: end},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert coordinator.countdown.ends_at(device_key) == end
+
+    # Mid-minute online poll: cloud still reports the same whole remaining minutes.
+    freezer.move_to(now + timedelta(minutes=2, seconds=30))
+    device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] = str(
+        coordinator.countdown.remaining_minutes(device_key)
+    )
+    coordinator.countdown.sync_from_device(hass, coordinator, device)
+
+    assert coordinator.countdown.ends_at(device_key) == end
+    assert hass.states.get(entity_id).state == end.isoformat(timespec="seconds")

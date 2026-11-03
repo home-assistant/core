@@ -8,9 +8,15 @@ from pyimouapi.ha_device import ImouHaDevice
 from homeassistant.components.datetime import DateTimeEntity, DateTimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import PARAM_COUNT_DOWN_SWITCH, imou_device_identifier
+from .const import (
+    COUNT_DOWN_MAX_MINUTES,
+    DOMAIN,
+    PARAM_COUNT_DOWN_SWITCH,
+    imou_device_identifier,
+)
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .countdown import minutes_until
 from .entity import ImouEntity
@@ -75,6 +81,14 @@ class ImouCountdownDateTime(ImouEntity, DateTimeEntity):
     async def async_set_value(self, value: datetime) -> None:
         """Write remaining minutes derived from the chosen end time."""
         minutes = minutes_until(value)
+        if minutes > COUNT_DOWN_MAX_MINUTES:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="countdown_too_far",
+                translation_placeholders={
+                    "hours": str(COUNT_DOWN_MAX_MINUTES // 60),
+                },
+            )
         await self._async_write_text(str(minutes))
         self.coordinator.countdown.start_minutes(
             self.hass, self.coordinator, self._device_key, minutes
