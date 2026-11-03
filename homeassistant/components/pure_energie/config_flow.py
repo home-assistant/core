@@ -96,7 +96,7 @@ class PureEnergieFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                CONF_NAME: "Pure Energie Meter",
+                "name": "Pure Energie Meter",
                 "model": self.discovered_device.model,
             },
         )
