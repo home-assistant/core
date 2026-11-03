@@ -4,6 +4,7 @@
 import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
+import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import cloud, person
@@ -34,6 +35,8 @@ from .helpers import savable_state
 
 if TYPE_CHECKING:
     from .notify import MobileAppNotificationService
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -80,11 +83,16 @@ async def async_create_cloud_hook(
     """Create a cloud hook."""
     async with _CLOUD_HOOK_LOCK:
         hook = await cloud.async_get_or_create_cloudhook(hass, webhook_id)
-        # The app may have registered again with another webhook while awaiting
-        if entry and entry.data[CONF_WEBHOOK_ID] == webhook_id:
-            hass.config_entries.async_update_entry(
-                entry, data={**entry.data, CONF_CLOUDHOOK_URL: hook}
-            )
+        if entry is None:
+            return hook
+        if entry.data[CONF_WEBHOOK_ID] != webhook_id:
+            # The app registered again with another webhook while awaiting
+            with suppress(cloud.CloudNotAvailable, ValueError):
+                await cloud.async_delete_cloudhook(hass, webhook_id)
+            return hook
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_CLOUDHOOK_URL: hook}
+        )
         return hook
 
 
@@ -173,13 +181,19 @@ async def async_update_registration(
             entry, title=old_title, data=old_registration
         )
         if old_disabled_by:
-            await hass.config_entries.async_set_disabled_by(
-                entry.entry_id, old_disabled_by
-            )
+            # Fails if the entry is in a state which can't be unloaded
+            with suppress(OperationNotAllowed):
+                await hass.config_entries.async_set_disabled_by(
+                    entry.entry_id, old_disabled_by
+                )
         await async_delete_registration_cloudhook(hass, registration)
         return False
 
-    await async_retire_webhook(hass, old_registration)
+    # The app uses the new registration, so it must not fail on cleanup errors
+    try:
+        await async_retire_webhook(hass, old_registration)
+    except Exception:
+        _LOGGER.exception("Error retiring the old webhook of %s", entry.title)
 
     entity_registry = er.async_get(hass)
     if devt_entity_id := entity_registry.async_get_entity_id(

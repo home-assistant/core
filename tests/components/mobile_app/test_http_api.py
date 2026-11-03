@@ -336,10 +336,41 @@ async def test_registration_again_disabled_entry_setup_fails(
     assert entry.data == old_data
 
 
+async def test_registration_again_disabled_entry_failed_unload(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test registering again for a disabled entry which failed to unload."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    old_data = dict(entry.data)
+    with patch(
+        "homeassistant.components.mobile_app.async_unload_entry",
+        side_effect=Exception("Unload failed"),
+    ):
+        await hass.config_entries.async_set_disabled_by(
+            entry.entry_id, ConfigEntryDisabler.USER
+        )
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert (await resp.json()) == {"message": "Failed to register the app"}
+    assert entry.disabled_by is ConfigEntryDisabler.USER
+    assert entry.data == old_data
+
+
 async def test_old_cloudhook_not_stored_after_registering_again(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test a cloudhook created for the old webhook isn't stored in the entry."""
+    """Test a cloudhook created for the old webhook is deleted, not stored."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     api_client = await hass_client()
 
@@ -357,12 +388,18 @@ async def test_old_cloudhook_not_stored_after_registering_again(
     new_data = dict(entry.data)
 
     # A cloudhook which was being created for the old webhook completes
-    with patch(
-        "homeassistant.components.cloud.async_get_or_create_cloudhook",
-        return_value="https://hooks.nabu.casa/old",
+    with (
+        patch(
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
+            return_value="https://hooks.nabu.casa/old",
+        ),
+        patch(
+            "homeassistant.components.cloud.async_delete_cloudhook"
+        ) as mock_delete_cloudhook,
     ):
         await async_create_cloud_hook(hass, old_webhook_id, entry)
     assert entry.data == new_data
+    mock_delete_cloudhook.assert_called_once_with(hass, old_webhook_id)
 
 
 async def test_registration_concurrent(
@@ -672,6 +709,37 @@ async def test_registration_again_deletes_old_cloudhook(
 
     mock_delete_cloudhook.assert_called_once_with(hass, old_webhook_id)
     assert entry.data[CONF_CLOUDHOOK_URL] == f"https://hooks.nabu.casa/{new_webhook_id}"
+
+
+async def test_registration_again_old_cloudhook_deletion_fails(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_delete_cloudhook: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test failing to delete the old cloudhook doesn't fail the registration."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    old_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    mock_delete_cloudhook.side_effect = TimeoutError
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    new_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+
+    mock_delete_cloudhook.assert_called_once_with(hass, old_webhook_id)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_WEBHOOK_ID] == new_webhook_id
+    assert hass.data[DOMAIN][DATA_DELETED_IDS] == [old_webhook_id]
+    assert "Error retiring the old webhook of Test 1" in caplog.text
 
 
 async def test_registration_again_fails_deletes_new_cloudhook(

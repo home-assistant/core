@@ -123,7 +123,7 @@ class MobileAppNotifyEntity(NotifyEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_not_connected_for_local_push_notifications",
-                translation_placeholders={"device_name": self._config_entry.title},
+                translation_placeholders={"device_name": device_name},
             )
 
     @callback
