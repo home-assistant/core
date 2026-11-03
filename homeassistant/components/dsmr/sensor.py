@@ -635,7 +635,7 @@ SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
             dsmr_versions={"5B"},
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-                is_gas=True,
+            is_gas=True,
         ),
         DSMRSensorEntityDescription(
             key="belgium_gas_equipment_identifier",
@@ -644,7 +644,7 @@ SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
             dsmr_versions={"5B"},
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-                is_gas=True,
+            is_gas=True,
         ),
         DSMRSensorEntityDescription(
             key="belgium_gas_valve_position",
@@ -653,7 +653,7 @@ SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
             dsmr_versions={"5B"},
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-                is_gas=True,
+            is_gas=True,
         ),
         DSMRSensorEntityDescription(
             key="gas_reading",
@@ -810,7 +810,7 @@ def create_mbus_entities(
 
 def get_dsmr_object(
     telegram: Telegram | None, mbus_id: int, obis_reference: str
-) -> DSMRObject | None:
+) -> DSMRObject | list | None:
     """Extract DSMR object from telegram."""
     if not telegram:
         return None
@@ -1169,7 +1169,7 @@ class DSMREntity(SensorEntity):
 
 
 class DSMRBelgiumDemandHistory(DSMREntity):
-    """Expose the most recent valid Belgian monthly demand and all peak records."""
+    """Expose the latest completed Belgian monthly demand and its peak history."""
 
     def __init__(
         self,
@@ -1197,6 +1197,7 @@ class DSMRBelgiumDemandHistory(DSMREntity):
         return (
             isinstance(month, datetime)
             and 2000 <= month.year <= 2100
+            and isinstance(getattr(peak, "occurred", None), datetime)
             and getattr(peak, "value", None) is not None
         )
 
@@ -1210,7 +1211,7 @@ class DSMRBelgiumDemandHistory(DSMREntity):
         return {
             "monthly_peaks": [
                 {
-                    "month": peak.datetime.strftime("%Y-%m"),
+                    "month": peak.occurred.strftime("%Y-%m") if isinstance(peak.occurred, datetime) else peak.datetime.strftime("%Y-%m"),
                     "peak": float(peak.value),
                     "occurred": (
                         peak.occurred.isoformat()
