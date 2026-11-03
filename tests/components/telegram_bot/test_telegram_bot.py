@@ -113,7 +113,6 @@ from homeassistant.core import (
     ServiceResponse,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file
 
@@ -2798,36 +2797,3 @@ def test_read_file_errors(error: OSError, translation_key: str) -> None:
 
     assert err.value.translation_key == translation_key
     assert err.value.translation_placeholders == {"file_path": "/some/file.jpg"}
-
-
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    ["component.telegram_bot.issues.migrate_chat_ids_in_target.title"],
-)
-async def test_target_issues_deleted(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_broadcast_config_entry: MockConfigEntry,
-    mock_external_calls: None,
-) -> None:
-    """Test leftover issues about the removed target parameter are deleted."""
-    for issue_id in (
-        "migrate_chat_ids_in_target_automation.test_send_message",
-        "migrate_chat_ids_in_target_call_service_send_photo",
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="migrate_chat_ids_in_target",
-        )
-    assert len(issue_registry.issues) == 2
-
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert len(issue_registry.issues) == 0

@@ -18,7 +18,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-    issue_registry as ir,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -85,15 +84,6 @@ PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
     async_setup_services(hass)
-
-    # The issues are persistent and the `target` parameter they were raised for
-    # has been removed
-    issue_registry = ir.async_get(hass)
-    for issue_domain, issue_id in list(issue_registry.issues):
-        if issue_domain == DOMAIN and issue_id.startswith(
-            "migrate_chat_ids_in_target_"
-        ):
-            issue_registry.async_delete(DOMAIN, issue_id)
 
     return True
 
