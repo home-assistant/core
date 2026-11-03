@@ -167,7 +167,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1200',
+    'state': '-1200',
   })
 # ---
 # name: test_all_entities[sensor.e3_dc_s10_x_emergency_power-entry]
