@@ -116,7 +116,8 @@ class WebDavBackupAgent(BackupAgent):
     @cached_property
     def _backup_path(self) -> str:
         """Return the path to the backup."""
-        return self._entry.data.get(CONF_BACKUP_PATH, "")
+        # Avoid "//file" paths when the backup path is the root
+        return self._entry.data.get(CONF_BACKUP_PATH, "").rstrip("/")
 
     @handle_backup_errors
     @override
