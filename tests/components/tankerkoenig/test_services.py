@@ -4,19 +4,16 @@ from dataclasses import replace
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tankerkoenig.const import (
-    DOMAIN,
-    SERVICE_GET_OPENING_TIMES,
-)
+from homeassistant.components.tankerkoenig.const import DOMAIN
+from homeassistant.components.tankerkoenig.services import TankerkoenigService
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import STATION
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "binary_sensor.station_somewhere_street_1_status"
 
@@ -29,7 +26,7 @@ async def test_get_opening_times(
     """Test the opening times of a station are returned."""
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_OPENING_TIMES,
+        TankerkoenigService.GET_OPENING_TIMES,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
@@ -64,7 +61,7 @@ async def test_get_opening_times_without_list(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_OPENING_TIMES,
+        TankerkoenigService.GET_OPENING_TIMES,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
