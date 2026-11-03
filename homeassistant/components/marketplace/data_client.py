@@ -1,5 +1,7 @@
 """Client for the catalog data."""
 
+from collections.abc import Callable
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientSession, ClientTimeout
@@ -33,7 +35,12 @@ class CatalogClient:
 
     async def async_get_category(self, category: str) -> dict[str, dict[str, Any]]:
         """Fetch the repositories of a category, by id, the valid ones only."""
-        data, etag = await self._async_get_section(category)
+        return await self._async_get_section(
+            category, partial(self._valid_category, category)
+        )
+
+    def _valid_category(self, category: str, data: Any) -> dict[str, dict[str, Any]]:
+        """Return the valid repositories of a category, by id."""
         if not isinstance(data, dict):
             raise MarketplaceError(
                 translation_domain=DOMAIN,
@@ -63,7 +70,6 @@ class CatalogClient:
         if data and not repositories:
             raise _nothing_valid(category)
 
-        self._remember_etag(category, etag)
         return repositories
 
     async def async_get_removed(self) -> list[dict[str, Any]]:
@@ -82,7 +88,14 @@ class CatalogClient:
         self, section: str, validator: probatio.Schema
     ) -> list[dict[str, Any]]:
         """Fetch a section that is a list, the valid entries only."""
-        data, etag = await self._async_get_section(section)
+        return await self._async_get_section(
+            section, partial(self._valid_list, section, validator)
+        )
+
+    def _valid_list(
+        self, section: str, validator: probatio.Schema, data: Any
+    ) -> list[dict[str, Any]]:
+        """Return the valid entries of a section that is a list."""
         if not isinstance(data, list):
             raise MarketplaceError(
                 translation_domain=DOMAIN,
@@ -101,7 +114,6 @@ class CatalogClient:
         if data and not entries:
             raise _nothing_valid(section)
 
-        self._remember_etag(section, etag)
         return entries
 
     def _remember_etag(self, section: str, etag: str | None) -> None:
@@ -111,11 +123,13 @@ class CatalogClient:
         """
         self._etags[f"{section}/data.json"] = etag
 
-    async def _async_get_section(self, section: str) -> tuple[Any, str | None]:
-        """Fetch a section from the first endpoint that answers, with its ETag.
+    async def _async_get_section[T](
+        self, section: str, validate: Callable[[Any], T]
+    ) -> T:
+        """Fetch a section from the first endpoint with a usable answer.
 
-        An endpoint that fails falls back to the next. A 304 raises
-        NotModifiedError.
+        An endpoint that fails, or answers with something unusable, falls
+        back to the next. A 304 raises NotModifiedError.
         """
         failed: list[str] = []
         error: MarketplaceError | None = None
@@ -123,6 +137,7 @@ class CatalogClient:
         for base in self._endpoints.bases(Endpoint.CATALOG):
             try:
                 data, etag = await self._async_fetch(base, section)
+                result = validate(data)
             except NotModifiedError:
                 self._endpoints.worked(Endpoint.CATALOG, base, failed)
                 raise
@@ -131,8 +146,9 @@ class CatalogClient:
                 failed.append(base)
                 continue
 
+            self._remember_etag(section, etag)
             self._endpoints.worked(Endpoint.CATALOG, base, failed)
-            return data, etag
+            return result
 
         # A profile has at least one catalog endpoint
         if TYPE_CHECKING:

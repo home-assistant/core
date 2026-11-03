@@ -31,31 +31,48 @@ class Endpoint(StrEnum):
 class DownloadProfile:
     """The endpoints the Marketplace gets its content from.
 
-    A field with several URLs tries them in order, a mirror that is down or
-    behind falls back to the next one.
+    An endpoint takes one URL, or several to try in order: a mirror that is
+    down falls back to the next one.
     """
 
+    # Stored in the options of the config entry
     id: str
-    # Who runs the endpoints, the user trusts them with all Marketplace traffic
+
+    # Who runs the endpoints. The user trusts them with all Marketplace
+    # traffic, so the options and the repair name them.
     operator: str
-    # The GitHub REST API, aiogithubapi takes a single base URL
+
+    # The GitHub REST API. A single URL, aiogithubapi takes one base URL.
     api: str
-    # Only GitHub itself gets the token of a connected account
+
+    # Only GitHub itself gets the token of a connected GitHub account
     uses_github_account: bool = False
-    # Archives and release assets
+
+    # Repository archives and release assets
     github: Sequence[str]
-    # The content of single files
+
+    # The content of single files, such as hacs.json and README.md
     raw: Sequence[str]
+
+    # The catalog of repositories, and the removed and critical lists
     catalog: Sequence[str]
-    # Where to look when a check fails, by the health check it belongs to
+
+    # The status page to point at when a health check fails, by check
     status_pages: dict[str, str] = field(default_factory=dict)
-    # Suggested to users in these countries when the catalog is out of reach
+
+    # Suggested through a repair to users in these countries, when the
+    # catalog cannot be reached
     countries: frozenset[str] = frozenset()
 
     def __post_init__(self) -> None:
-        """Turn a single URL into a sequence, the rest of the code iterates."""
+        """Turn an endpoint with a single URL into a sequence of one.
+
+        The rest of the code can then always loop over the URLs.
+        """
         for endpoint in Endpoint:
-            if isinstance(urls := getattr(self, endpoint), str):
+            urls = getattr(self, endpoint)
+            if isinstance(urls, str):
+                # The dataclass is frozen, this is how it can still be set
                 object.__setattr__(self, endpoint, (urls,))
 
     def bases(self, endpoint: Endpoint) -> tuple[str, ...]:
@@ -65,40 +82,42 @@ class DownloadProfile:
 
 GITHUB_STATUS = "https://www.githubstatus.com/"
 
+GITHUB = DownloadProfile(
+    id=DEFAULT_PROFILE,
+    operator="GitHub and the Open Home Foundation",
+    api="https://api.github.com",
+    uses_github_account=True,
+    github="https://github.com",
+    raw="https://raw.githubusercontent.com",
+    catalog="https://data-v2.hacs.xyz",
+    status_pages={
+        "api": GITHUB_STATUS,
+        Endpoint.GITHUB: GITHUB_STATUS,
+        Endpoint.CATALOG: "https://www.cloudflarestatus.com/",
+    },
+)
+
+# The mirrors serve the same paths as GitHub, raw content below /raw
+CHINA_MIRRORS = DownloadProfile(
+    id="hasscn",
+    operator="the Home Assistant China community (hasscn.top)",
+    api="https://ghapi.hacs.vip",
+    github=("https://ghrp2.hacs.vip", "https://ghrp.hacs.vip"),
+    raw=("https://ghrp2.hacs.vip/raw", "https://ghrp.hacs.vip/raw"),
+    # The mirror of the catalog can lag behind, the original is the fallback
+    catalog=("https://data-v2.hacs.vip", "https://data-v2.hacs.xyz"),
+    countries=frozenset({"CN"}),
+)
+
+# The profiles a user can choose from, by id
 PROFILES: dict[str, DownloadProfile] = {
-    profile.id: profile
-    for profile in (
-        DownloadProfile(
-            id=DEFAULT_PROFILE,
-            operator="GitHub and the Open Home Foundation",
-            api="https://api.github.com",
-            uses_github_account=True,
-            github="https://github.com",
-            raw="https://raw.githubusercontent.com",
-            catalog="https://data-v2.hacs.xyz",
-            status_pages={
-                "api": GITHUB_STATUS,
-                Endpoint.GITHUB: GITHUB_STATUS,
-                Endpoint.CATALOG: "https://www.cloudflarestatus.com/",
-            },
-        ),
-        DownloadProfile(
-            id="hasscn",
-            operator="the Home Assistant China community (hasscn.top)",
-            api="https://ghapi.hacs.vip",
-            github=("https://ghrp2.hacs.vip", "https://ghrp.hacs.vip"),
-            raw=("https://ghrp2.hacs.vip/raw", "https://ghrp.hacs.vip/raw"),
-            # The mirror of the catalog can lag behind, the original is the fallback
-            catalog=("https://data-v2.hacs.vip", "https://data-v2.hacs.xyz"),
-            countries=frozenset({"CN"}),
-        ),
-    )
+    profile.id: profile for profile in (GITHUB, CHINA_MIRRORS)
 }
 
 
 def get_profile(profile_id: str | None) -> DownloadProfile:
     """Return a profile by id, the default for one that is not (or no longer) known."""
-    return PROFILES.get(profile_id or DEFAULT_PROFILE, PROFILES[DEFAULT_PROFILE])
+    return PROFILES.get(profile_id or DEFAULT_PROFILE, GITHUB)
 
 
 class ProfileEndpoints:
@@ -117,14 +136,19 @@ class ProfileEndpoints:
     def bases(self, endpoint: Endpoint) -> list[str]:
         """Return the base URLs to try, the one that worked last first."""
         bases = list(self.profile.bases(endpoint))
-        if (preferred := self._preferred.get(endpoint)) in bases:
+
+        preferred = self._preferred.get(endpoint)
+        if preferred in bases:
             bases.remove(preferred)
             bases.insert(0, preferred)
+
         return bases
 
     def worked(self, endpoint: Endpoint, base: str, failed: Sequence[str]) -> None:
         """Remember the base that answered, after the ones that did not."""
         self._preferred[endpoint] = base
+
+        # Once per endpoint, not on every download that falls back
         if not failed or endpoint in self._fallback_logged:
             return
 
@@ -140,20 +164,29 @@ class ProfileEndpoints:
 def async_suggest_profile(hass: HomeAssistant, active: DownloadProfile) -> None:
     """Suggest a profile meant for the country of the user, if there is one."""
     country = hass.config.country
+
     for profile in PROFILES.values():
         if profile.id == active.id or country not in profile.countries:
             continue
 
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"{PROFILE_ISSUE_PREFIX}{profile.id}",
-            data={"profile": profile.id},
-            is_fixable=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="download_profile",
-            translation_placeholders={"operator": profile.operator},
-        )
+        async_create_profile_suggestion(hass, profile)
+
+
+@callback
+def async_create_profile_suggestion(
+    hass: HomeAssistant, profile: DownloadProfile
+) -> None:
+    """Create the issue that suggests a profile."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{PROFILE_ISSUE_PREFIX}{profile.id}",
+        data={"profile": profile.id},
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="download_profile",
+        translation_placeholders={"operator": profile.operator},
+    )
 
 
 @callback
@@ -163,8 +196,12 @@ def async_withdraw_profile_suggestions(hass: HomeAssistant) -> None:
     Not the ones the user ignored, deleting an issue forgets the ignore.
     """
     issue_registry = ir.async_get(hass)
+
     for profile_id in PROFILES:
         issue_id = f"{PROFILE_ISSUE_PREFIX}{profile_id}"
+
         issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-        if issue is not None and issue.dismissed_version is None:
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
+        if issue is None or issue.dismissed_version is not None:
+            continue
+
+        ir.async_delete_issue(hass, DOMAIN, issue_id)

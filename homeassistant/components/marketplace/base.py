@@ -974,9 +974,12 @@ class MarketplaceManager:
             return None
 
         bases = self.endpoints.bases(remote_file.endpoint)
+        last_base = bases[-1]
         failed: list[str] = []
+
         for base in bases:
-            final = len(failed) == len(bases) - 1
+            # Trying the next endpoint is quicker than retrying this one
+            final = base == last_base
             filecontent = await self._async_download_url(
                 f"{base}/{remote_file.path}",
                 final=final,
@@ -984,10 +987,13 @@ class MarketplaceManager:
                 handle_rate_limit=handle_rate_limit,
                 limit=limit,
             )
+
             if filecontent is not None:
                 self.endpoints.worked(remote_file.endpoint, base, failed)
                 return filecontent
+
             failed.append(base)
+
         return None
 
     async def _async_download_url(

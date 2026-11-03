@@ -10,7 +10,7 @@ from homeassistant.helpers import issue_registry as ir
 
 from .const import CONF_PROFILE, DOMAIN
 from .critical import CRITICAL_ISSUE_PREFIX, async_acknowledge_critical_repository
-from .profiles import PROFILE_ISSUE_PREFIX, get_profile
+from .profiles import PROFILE_ISSUE_PREFIX, async_create_profile_suggestion, get_profile
 
 
 class RestartRequiredFixFlow(RepairsFlow):
@@ -111,10 +111,12 @@ class DownloadProfileFixFlow(RepairsFlow):
 
         Aborting keeps the issue, a completed fix flow would delete it and
         the ignore with it. The issue can be gone by now, the catalog was
-        reached again while the menu was open.
+        reached again while the menu was open. It is created again, the
+        ignore is only remembered on the issue.
         """
-        if ir.async_get(self.hass).async_get_issue(DOMAIN, self.issue_id):
-            ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, ignore=True)
+        if ir.async_get(self.hass).async_get_issue(DOMAIN, self.issue_id) is None:
+            async_create_profile_suggestion(self.hass, self.profile)
+        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, ignore=True)
         return self.async_abort(reason="issue_ignored")
 
 

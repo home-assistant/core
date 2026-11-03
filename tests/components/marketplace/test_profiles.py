@@ -340,6 +340,46 @@ async def test_catalog_falls_back_to_the_original(
 
 
 @pytest.mark.parametrize("download_profile", ["hasscn"])
+@pytest.mark.parametrize(
+    ("method", "args", "section", "unusable", "usable"),
+    [
+        pytest.param(
+            "async_get_category",
+            ("integration",),
+            "integration",
+            {"error": "upstream unavailable"},
+            _catalog(1),
+            id="category",
+        ),
+        pytest.param(
+            "async_get_removed",
+            (),
+            "removed",
+            {"error": "upstream unavailable"},
+            [{"repository": "owner/repository", "removal_type": "remove"}],
+            id="list",
+        ),
+    ],
+)
+async def test_catalog_answer_that_is_unusable_falls_back(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    method: str,
+    args: tuple[str, ...],
+    section: str,
+    unusable: dict[str, Any],
+    usable: dict[str, Any] | list[dict[str, Any]],
+) -> None:
+    """Test a mirror answering JSON that is no catalog falls back to the original."""
+    mirror = f"https://data-v2.hacs.vip/{section}/data.json"
+    original = f"https://data-v2.hacs.xyz/{section}/data.json"
+    response_mocker.add(mirror, mocked_response(mirror, json_content=unusable))
+    response_mocker.add(original, mocked_response(original, json_content=usable))
+
+    assert await getattr(marketplace.data_client, method)(*args)
+
+
+@pytest.mark.parametrize("download_profile", ["hasscn"])
 async def test_catalog_that_fails_everywhere_raises_the_last_error(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
@@ -481,6 +521,30 @@ async def test_profile_suggestion_ignored(
     await hass.config_entries.async_reload(init_integration.entry_id)
     await _unreachable_catalog(get_marketplace(hass))
 
+    issue = issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+
+
+async def test_profile_suggestion_ignored_after_the_catalog_is_back(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    marketplace: MarketplaceManager,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test ignoring sticks when the catalog came back while the menu was open."""
+    assert await async_setup_component(hass, "repairs", {})
+    hass.config.country = "CN"
+    await _unreachable_catalog(marketplace)
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, PROFILE_ISSUE_ID)
+    ir.async_delete_issue(hass, DOMAIN, PROFILE_ISSUE_ID)
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": "ignore"}
+    )
+
+    assert data["reason"] == "issue_ignored"
     issue = issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID)
     assert issue is not None
     assert issue.dismissed_version is not None
