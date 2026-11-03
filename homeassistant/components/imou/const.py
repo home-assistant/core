@@ -65,6 +65,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.DATETIME,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

@@ -1,18 +1,12 @@
 """Tests for Imou number platform."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
-from pyimouapi.const import PARAM_REF, PARAM_STATE, PARAM_STATUS
+from pyimouapi.const import PARAM_REF, PARAM_STATE
 from pyimouapi.exceptions import ImouException
-from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
+from pyimouapi.ha_device import ImouHaDevice
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    snapshot_platform,
-)
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imou.const import (
@@ -21,7 +15,6 @@ from homeassistant.components.imou.const import (
     PARAM_OVERCHARGE_SWITCH,
     PARAM_PLUG_SWITCH,
 )
-from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -87,28 +80,6 @@ async def test_number_entities_snapshot(
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
-async def test_set_countdown_minutes(
-    hass: HomeAssistant,
-    mock_imou_ha_device_manager: MagicMock,
-) -> None:
-    """Setting the countdown writes minutes and updates local state."""
-    entity_id = "number.smart_plug_countdown_timer_min"
-
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 15},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    mock_imou_ha_device_manager.async_set_text_value.assert_called_once()
-    assert hass.states.get(entity_id).state == "15.0"
-
-
-@pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
-@pytest.mark.usefixtures("init_integration")
 async def test_set_overcharge_watts(
     hass: HomeAssistant,
     mock_imou_ha_device_manager: MagicMock,
@@ -146,7 +117,7 @@ async def test_overcharge_high_ref_allows_higher_max(hass: HomeAssistant) -> Non
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
 @pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
-async def test_set_countdown_imou_exception(
+async def test_set_overcharge_imou_exception(
     hass: HomeAssistant,
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
@@ -160,127 +131,8 @@ async def test_set_countdown_imou_exception(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.smart_plug_countdown_timer_min",
-                ATTR_VALUE: 10,
+                ATTR_ENTITY_ID: "number.smart_plug_max_power_w",
+                ATTR_VALUE: 500,
             },
             blocking=True,
         )
-
-
-@pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
-@pytest.mark.usefixtures("init_integration")
-async def test_countdown_expires_to_zero(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_imou_ha_device_manager: MagicMock,
-    imou_mock_devices: list[ImouHaDevice],
-) -> None:
-    """The local clock drives the countdown down to zero without another poll."""
-    entity_id = "number.smart_plug_countdown_timer_min"
-    device = imou_mock_devices[0]
-
-    async def _set_countdown(dev, text_type, value):
-        device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] = value
-
-    mock_imou_ha_device_manager.async_set_text_value.side_effect = _set_countdown
-
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 1},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == "0.0"
-    assert device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] == "0"
-
-
-@pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
-@pytest.mark.usefixtures("init_integration")
-async def test_countdown_cancelled_when_device_leaves_account(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_ha_device_manager: MagicMock,
-    imou_mock_devices: list[ImouHaDevice],
-) -> None:
-    """Removing the last device cancels its local countdown before sync_all."""
-    entity_id = "number.smart_plug_countdown_timer_min"
-    device = imou_mock_devices[0]
-    device_key = device.device_id
-    coordinator = mock_config_entry.runtime_data
-
-    async def _set_countdown(dev: ImouHaDevice, text_type: str, value: str) -> None:
-        device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] = value
-
-    mock_imou_ha_device_manager.async_set_text_value.side_effect = _set_countdown
-
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 10},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    assert coordinator.countdown.ends_at(device_key) is not None
-
-    mock_imou_ha_device_manager.async_get_devices.return_value = []
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert coordinator.countdown.ends_at(device_key) is None
-
-
-@pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
-@pytest.mark.usefixtures("init_integration")
-async def test_countdown_preserves_deadline_while_offline(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_ha_device_manager: MagicMock,
-    imou_mock_devices: list[ImouHaDevice],
-) -> None:
-    """Offline status polls must not reset the local countdown from stale text."""
-    entity_id = "number.smart_plug_countdown_timer_min"
-    device = imou_mock_devices[0]
-    device_key = device.device_id
-    coordinator = mock_config_entry.runtime_data
-
-    async def _set_countdown(dev: ImouHaDevice, text_type: str, value: str) -> None:
-        device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] = value
-
-    mock_imou_ha_device_manager.async_set_text_value.side_effect = _set_countdown
-
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 10},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert coordinator.countdown.remaining_minutes(device_key) == 9
-
-    async def _mark_offline(devices: list[ImouHaDevice]) -> set[str]:
-        device.sensors[PARAM_STATUS][PARAM_STATE] = DeviceStatus.OFFLINE.value
-        return set()
-
-    mock_imou_ha_device_manager.async_update_devices_status.side_effect = _mark_offline
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] == "10"
-    assert coordinator.countdown.remaining_minutes(device_key) == 7

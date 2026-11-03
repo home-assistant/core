@@ -1,4 +1,4 @@
-"""Local remaining-time clock for the plug countdown number."""
+"""Local end-time tracking for the plug countdown datetime."""
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
@@ -9,18 +9,17 @@ from pyimouapi.const import PARAM_STATE, PARAM_STATUS
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time,
-    async_track_time_interval,
-)
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from .const import PARAM_COUNT_DOWN_SWITCH, imou_device_identifier
+from .const import (
+    COUNT_DOWN_MAX_MINUTES,
+    PARAM_COUNT_DOWN_SWITCH,
+    imou_device_identifier,
+)
 
 if TYPE_CHECKING:
     from .coordinator import ImouDataUpdateCoordinator
-
-_TICK = timedelta(minutes=1)
 
 
 def parse_countdown_minutes(device: ImouHaDevice) -> int:
@@ -32,24 +31,28 @@ def parse_countdown_minutes(device: ImouHaDevice) -> int:
         return 0
 
 
+def minutes_until(value: datetime, *, now: datetime | None = None) -> int:
+    """Return whole minutes from now until value, clamped to the cloud range."""
+    current = now or dt_util.utcnow()
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    secs = (value - current).total_seconds()
+    if secs <= 0:
+        return 0
+    return min(COUNT_DOWN_MAX_MINUTES, ceil(secs / 60))
+
+
 class CountdownTracker:
-    """Count remaining minutes locally so the number still moves without a poll."""
+    """Remember when each plug's countdown ends.
+
+    The datetime entity exposes that end time. Home Assistant does not rewrite
+    state every minute; the UI can show remaining time from the timestamp.
+    """
 
     def __init__(self) -> None:
         """Initialize empty tracking state."""
         self._ends: dict[str, datetime] = {}
         self._expire_unsub: dict[str, Callable[[], None]] = {}
-        self._tick_unsub: Callable[[], None] | None = None
-
-    def remaining_minutes(self, device_key: str) -> int:
-        """Return whole minutes left, rounding up so 1s still shows as 1."""
-        end = self._ends.get(device_key)
-        if end is None:
-            return 0
-        secs = (end - dt_util.utcnow()).total_seconds()
-        if secs <= 0:
-            return 0
-        return ceil(secs / 60)
 
     def ends_at(self, device_key: str) -> datetime | None:
         """Return the local end time, if a countdown is running."""
@@ -62,11 +65,10 @@ class CountdownTracker:
         device_key: str,
         minutes: int,
     ) -> None:
-        """Start, replace, or cancel the local clock for one device."""
+        """Start, replace, or cancel the local end time for one device."""
         self._cancel_expire(device_key)
         if minutes <= 0:
             self._ends.pop(device_key, None)
-            self._maybe_stop_tick()
             return
         self._arm(
             hass,
@@ -81,7 +83,7 @@ class CountdownTracker:
         coordinator: ImouDataUpdateCoordinator,
         device: ImouHaDevice,
     ) -> None:
-        """Start from the device value when Home Assistant has no local clock yet."""
+        """Start from the device value when Home Assistant has no local end yet."""
         device_key = imou_device_identifier(device)
         if device_key in self._ends:
             return
@@ -95,10 +97,10 @@ class CountdownTracker:
         coordinator: ImouDataUpdateCoordinator,
         device: ImouHaDevice,
     ) -> None:
-        """Replace the local clock with remaining minutes from a cloud refresh."""
+        """Replace the local end with remaining minutes from a cloud refresh."""
         status = device.sensors.get(PARAM_STATUS, {}).get(PARAM_STATE)
         if status == DeviceStatus.OFFLINE.value:
-            # Offline refreshes keep the last countdown text; do not reset the clock.
+            # Offline refreshes keep the last countdown text; do not reset the end.
             return
         self.start_minutes(
             hass,
@@ -116,10 +118,9 @@ class CountdownTracker:
                 self.sync_from_device(hass, coordinator, device)
 
     def cancel_device(self, device_key: str) -> None:
-        """Drop the local clock for a device that left the account."""
+        """Drop the local end for a device that left the account."""
         self._cancel_expire(device_key)
         self._ends.pop(device_key, None)
-        self._maybe_stop_tick()
 
     def async_unload(self) -> None:
         """Drop every timer when the config entry unloads."""
@@ -127,7 +128,6 @@ class CountdownTracker:
             unsub()
         self._expire_unsub.clear()
         self._ends.clear()
-        self._maybe_stop_tick()
 
     def _arm(
         self,
@@ -145,32 +145,11 @@ class CountdownTracker:
             device = coordinator.get_device(device_key)
             if device is not None and PARAM_COUNT_DOWN_SWITCH in device.texts:
                 device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] = "0"
-            self._maybe_stop_tick()
             coordinator.async_update_listeners()
 
         self._expire_unsub[device_key] = async_track_point_in_utc_time(
             hass, _expire, end
         )
-        self._ensure_tick(hass, coordinator)
-
-    def _ensure_tick(
-        self, hass: HomeAssistant, coordinator: ImouDataUpdateCoordinator
-    ) -> None:
-        if self._tick_unsub is not None:
-            return
-
-        @callback
-        def _tick(_now: datetime) -> None:
-            coordinator.async_update_listeners()
-
-        self._tick_unsub = async_track_time_interval(hass, _tick, _TICK)
-
-    def _maybe_stop_tick(self) -> None:
-        if self._ends:
-            return
-        if self._tick_unsub is not None:
-            self._tick_unsub()
-            self._tick_unsub = None
 
     def _cancel_expire(self, device_key: str) -> None:
         unsub = self._expire_unsub.pop(device_key, None)
