@@ -20,6 +20,7 @@ from aiohttp.web import (
     middleware,
 )
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
+from orjson import JSONDecodeError
 import probatio
 
 from homeassistant.config import load_yaml_config_file
@@ -132,10 +133,15 @@ async def process_wrong_login(request: Request) -> None:
                 gethostbyaddr, request.remote
             )
 
-    base_msg = (
-        "Login attempt or request with invalid authentication from"
-        f" {remote_host} ({remote_addr})."
-    )
+    try:
+        form_data = await request.json()
+        username = form_data.get("username")
+
+        base_msg = f"Failed login attempt (with username: '{username}') from {remote_host} ({remote_addr})."
+    except JSONDecodeError:
+        base_msg = (
+            f"Request with invalid authentication from {remote_host} ({remote_addr})."
+        )
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
