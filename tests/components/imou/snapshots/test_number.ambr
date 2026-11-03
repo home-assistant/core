@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_number_entities_snapshot[imou_mock_devices0-platforms0][number.smart_plug_countdown_timer_min-entry]
+# name: test_number_entities_snapshot[plug_mock_devices-platforms0][number.smart_plug_countdown_timer_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_number_entities_snapshot[imou_mock_devices0-platforms0][number.smart_plug_countdown_timer_min-state]
+# name: test_number_entities_snapshot[plug_mock_devices-platforms0][number.smart_plug_countdown_timer_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
@@ -60,7 +60,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_number_entities_snapshot[imou_mock_devices0-platforms0][number.smart_plug_max_power_w-entry]
+# name: test_number_entities_snapshot[plug_mock_devices-platforms0][number.smart_plug_max_power_w-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -102,7 +102,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_number_entities_snapshot[imou_mock_devices0-platforms0][number.smart_plug_max_power_w-state]
+# name: test_number_entities_snapshot[plug_mock_devices-platforms0][number.smart_plug_max_power_w-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
