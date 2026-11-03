@@ -1,12 +1,20 @@
-"""Tests for LIFX device registry repair."""
+"""Tests for LIFX device registry handling."""
 
+from unittest.mock import patch
+
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lifx.const import DOMAIN
 from homeassistant.components.lifx.entity import async_repair_device_registry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
+from . import async_setup_lifx_entry
 from .helpers import MAC_ADDRESS, SERIAL, create_mock_light
 
 INCORRECT_OFFSET_MAC = "d0:73:d5:dd:ee:cd"
@@ -208,3 +216,127 @@ def test_matching_mac_from_other_integration_is_not_mutated(
     assert repaired is not None
     assert preserved_other == other
     assert repaired.connections == {(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+
+
+@pytest.mark.parametrize(
+    ("label", "expected_name"),
+    [
+        pytest.param("My Group Pendant", "Pendant", id="area_prefix"),
+        pytest.param("my group - Pendant", "Pendant", id="case_and_separator"),
+        pytest.param("My Group", "My Group", id="label_is_area"),
+        pytest.param("My Groupie", "My Groupie", id="no_word_boundary"),
+        pytest.param("Pendant My Group", "Pendant My Group", id="area_not_leading"),
+    ],
+)
+async def test_new_device_name_drops_group_label(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    label: str,
+    expected_name: str,
+) -> None:
+    """Test a new device drops the LIFX group it is suggested into."""
+    device = create_mock_light()
+    device.state.label = label
+    entry = await async_setup_lifx_entry(hass, device)
+
+    registry_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry.entry_id
+    )
+    assert registry_device is not None
+    assert registry_device.name == expected_name
+    assert registry_device.area_id == "my_group"
+
+
+@pytest.mark.parametrize(
+    ("area_name", "label", "expected_name"),
+    [
+        pytest.param("Kitchen", "Kitchen Pendant", "Pendant", id="assigned_area"),
+        pytest.param(
+            "Kitchen", "My Group Pendant", "My Group Pendant", id="group_not_area"
+        ),
+        pytest.param(None, "My Group Pendant", "My Group Pendant", id="no_area"),
+    ],
+)
+async def test_existing_device_name_drops_its_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    area_name: str | None,
+    label: str,
+    expected_name: str,
+) -> None:
+    """Test a registered device drops the area it is in, not its LIFX group."""
+    device = create_mock_light()
+    entry = await async_setup_lifx_entry(hass, device)
+    registry_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry.entry_id
+    )
+    assert registry_device is not None
+    area_id = (
+        area_registry.async_get_or_create(area_name).id
+        if area_name is not None
+        else None
+    )
+    device_registry.async_update_device(registry_device.id, area_id=area_id)
+    device.state.label = label
+
+    with patch("homeassistant.components.lifx.Device.connect", return_value=device):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    reloaded = device_registry.async_get(registry_device.id)
+    assert reloaded is not None
+    assert reloaded.name == expected_name
+
+
+@pytest.mark.parametrize(
+    ("entity_id_parts", "expected_name", "expected_entity_id"),
+    [
+        pytest.param(
+            [
+                er.EntityNamePart.AREA,
+                er.EntityNamePart.DEVICE,
+                er.EntityNamePart.ENTITY,
+            ],
+            "Pendant",
+            "light.my_group_pendant",
+            id="area_in_format",
+        ),
+        pytest.param(
+            [er.EntityNamePart.DEVICE, er.EntityNamePart.ENTITY],
+            "My Group Pendant",
+            "light.my_group_pendant",
+            id="area_not_in_format",
+        ),
+        pytest.param(
+            [
+                er.EntityNamePart.FLOOR,
+                er.EntityNamePart.DEVICE,
+                er.EntityNamePart.ENTITY,
+            ],
+            "My Group Pendant",
+            "light.my_group_pendant",
+            id="floor_without_area",
+        ),
+    ],
+)
+async def test_new_device_name_follows_entity_id_format(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_id_parts: list[er.EntityNamePart],
+    expected_name: str,
+    expected_entity_id: str,
+) -> None:
+    """Test the area is only dropped when the entity ID format starts with it."""
+    entity_registry.async_update_settings(entity_id_parts=entity_id_parts)
+    device = create_mock_light()
+    device.state.label = "My Group Pendant"
+    entry = await async_setup_lifx_entry(hass, device)
+
+    registry_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry.entry_id
+    )
+    assert registry_device is not None
+    assert registry_device.name == expected_name
+    assert entity_registry.async_get(expected_entity_id) is not None

@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import LIFXConfigEntry, LIFXState, LIFXUpdateCoordinator
+from .util import async_device_name
 
 
 @callback
@@ -65,11 +66,14 @@ class LIFXEntity(CoordinatorEntity[LIFXUpdateCoordinator]):
             else f"{coordinator.serial_number}_{description.key}"
         )
         state = coordinator.data
+        device = dr.async_get(coordinator.hass).async_get_device_by_identifier(
+            (DOMAIN, state.serial), coordinator.config_entry.entry_id
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, state.serial)},
             connections={(dr.CONNECTION_NETWORK_MAC, state.mac_address)},
             manufacturer="LIFX",
-            name=state.label,
+            name=async_device_name(coordinator.hass, device, state),
             serial_number=state.serial,
             model=state.model,
             model_id=(

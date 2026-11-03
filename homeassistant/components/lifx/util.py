@@ -20,12 +20,17 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.util import color as color_util
 
 from .const import CONF_SERIAL, DOMAIN, LOGGER
 
 if TYPE_CHECKING:
-    from .coordinator import LIFXConfigEntry
+    from .coordinator import LIFXConfigEntry, LIFXState
 
 _SERIAL_PATTERN = re.compile(
     r"(?:[0-9a-f]{12}|(?:[0-9a-f]{2}:){5}[0-9a-f]{2})", re.IGNORECASE
@@ -46,6 +51,39 @@ async def async_resolve_host(hass: HomeAssistant, host: str) -> str:
     except ValueError:
         return await hass.async_add_executor_job(gethostbyname, host)
     return host
+
+
+@callback
+def async_device_name(
+    hass: HomeAssistant, device: dr.DeviceEntry | None, state: LIFXState
+) -> str:
+    """Return the label to name a device by, without a leading area name.
+
+    Entity IDs start with the area by default, so a bulb labelled "Kitchen
+    Pendant" in the Kitchen area would become light.kitchen_kitchen_pendant.
+    The label is kept whole when the entity ID format leaves the area out.
+    """
+    parts = er.async_get(hass).settings.entity_id_parts
+    # No setting means the default format, which starts with the area
+    if parts is not None and er.EntityNamePart.AREA not in parts:
+        return state.label
+    if device is None:
+        # A device not yet registered is about to be put in its LIFX group
+        return _strip_area_name(state.label, state.group.label)
+    if (
+        device.area_id is None
+        or (area := ar.async_get(hass).async_get_area(device.area_id)) is None
+    ):
+        return state.label
+    return _strip_area_name(state.label, area.name)
+
+
+def _strip_area_name(label: str, area_name: str) -> str:
+    """Return a label without the area name it starts with, if any."""
+    pattern = rf"{re.escape(area_name.strip())}[\s_\-:]+(?=\S)"
+    if not area_name or (match := re.match(pattern, label, re.IGNORECASE)) is None:
+        return label
+    return label[match.end() :]
 
 
 @callback

@@ -158,7 +158,7 @@ async def test_config_entry_owns_one_persistent_device(hass: HomeAssistant) -> N
 async def test_device_is_named_after_its_label(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test the device carries the label the bulb reports, group prefix and all."""
+    """Test the device drops the group it is put in from the label it reports."""
     device = create_mock_light()
     device.state.label = "My Group Downlight"
 
@@ -168,8 +168,8 @@ async def test_device_is_named_after_its_label(
         (DOMAIN, SERIAL), entry.entry_id
     )
     assert registered is not None
-    assert registered.name == "My Group Downlight"
-    assert hass.states.get("light.my_group_my_group_downlight")
+    assert registered.name == "Downlight"
+    assert hass.states.get("light.my_group_downlight")
 
 
 async def test_first_refresh_failure_closes_device(hass: HomeAssistant) -> None:

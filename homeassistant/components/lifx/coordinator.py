@@ -30,7 +30,7 @@ from lifx import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -41,7 +41,7 @@ from .const import (
     LOGGER,
     MAX_MISSED_POLLS,
 )
-from .util import device_error
+from .util import async_device_name, device_error
 
 type LIFXState = (
     LightState
@@ -58,6 +58,8 @@ type LIFXConfigEntry = ConfigEntry[LIFXUpdateCoordinator]
 
 class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
     """Gather typed state for one persistent LIFX device."""
+
+    config_entry: LIFXConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, entry: LIFXConfigEntry, device: Device
@@ -113,7 +115,31 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
         self._missed_polls = 0
         state = self.device.state
         assert state is not None
+        self._async_sync_device_name(state)
         return cast(LIFXState, state)
+
+    @callback
+    def _async_sync_device_name(self, state: LIFXState) -> None:
+        """Rename the device after its label or area changes."""
+        if not state.label:
+            return
+        registry = dr.async_get(self.hass)
+        # The device is not registered until the first refresh has added its entities
+        device_entry = registry.async_get_device_by_identifier(
+            (DOMAIN, self.device.serial), self.config_entry.entry_id
+        )
+        if device_entry is None:
+            return
+        name = async_device_name(self.hass, device_entry, state)
+        if device_entry.name == name:
+            return
+        LOGGER.debug(
+            "Renaming LIFX device %s from %s to %s",
+            self.device.serial,
+            device_entry.name,
+            name,
+        )
+        registry.async_update_device(device_entry.id, name=name)
 
     @property
     def last_read_succeeded(self) -> bool:
