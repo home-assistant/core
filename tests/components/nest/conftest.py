@@ -13,6 +13,11 @@ from google_nest_sdm import diagnostics
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from google_nest_sdm.streaming_manager import StreamingManager
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from yarl import URL
 
 from homeassistant.components.application_credentials import (
@@ -38,9 +43,6 @@ from .common import (
     PlatformSetup,
     YieldFixture,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 FAKE_TOKEN = "some-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"

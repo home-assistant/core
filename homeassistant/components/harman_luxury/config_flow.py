@@ -85,7 +85,6 @@ class HarmanLuxuryConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self._name, data={CONF_HOST: self._host}
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"name": self._name},

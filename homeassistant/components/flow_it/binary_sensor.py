@@ -1,4 +1,4 @@
-"""Binary sensor platform for Flow-it."""
+"""Binary sensor platform for AriaQ."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -15,58 +15,58 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlowItConfigEntry
-from .entity import FlowItVmcEntity
+from .coordinator import AriaQConfigEntry
+from .entity import AriaQVmcEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class FlowItVmcBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes Flow-it binary sensor entity."""
+class AriaQVmcBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes AriaQ binary sensor entity."""
 
     value_fn: Callable[[MachineStatusResponse], bool | None]
 
 
-BINARY_SENSORS: tuple[FlowItVmcBinarySensorEntityDescription, ...] = (
-    FlowItVmcBinarySensorEntityDescription(
+BINARY_SENSORS: tuple[AriaQVmcBinarySensorEntityDescription, ...] = (
+    AriaQVmcBinarySensorEntityDescription(
         key="bypass_on",
         translation_key="bypass_on",
         value_fn=lambda data: data.data.mode.bypassOn,
     ),
-    FlowItVmcBinarySensorEntityDescription(
+    AriaQVmcBinarySensorEntityDescription(
         key="condensation",
         translation_key="condensation",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.data.alert.condensation,
     ),
-    FlowItVmcBinarySensorEntityDescription(
+    AriaQVmcBinarySensorEntityDescription(
         key="ice",
         translation_key="ice",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.data.alert.ice,
     ),
-    FlowItVmcBinarySensorEntityDescription(
+    AriaQVmcBinarySensorEntityDescription(
         key="service",
         translation_key="service",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.data.alert.service,
     ),
-    FlowItVmcBinarySensorEntityDescription(
+    AriaQVmcBinarySensorEntityDescription(
         key="update_reboot",
         translation_key="update_reboot",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.data.alert.update_reboot,
     ),
-    FlowItVmcBinarySensorEntityDescription(
+    AriaQVmcBinarySensorEntityDescription(
         key="warmup",
         translation_key="warmup",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.data.alert.warmup,
     ),
-    FlowItVmcBinarySensorEntityDescription(
+    AriaQVmcBinarySensorEntityDescription(
         key="worries",
         translation_key="worries",
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -78,21 +78,21 @@ BINARY_SENSORS: tuple[FlowItVmcBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: FlowItConfigEntry,
+    config_entry: AriaQConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Flow-it binary sensors."""
+    """Set up the AriaQ binary sensors."""
     data = config_entry.runtime_data
     async_add_entities(
-        FlowItVmcBinarySensor(data.coordinator, data.vmc, description)
+        AriaQVmcBinarySensor(data.coordinator, data.vmc, description)
         for description in BINARY_SENSORS
     )
 
 
-class FlowItVmcBinarySensor(FlowItVmcEntity, BinarySensorEntity):
-    """Flow-it binary sensor entity."""
+class AriaQVmcBinarySensor(AriaQVmcEntity, BinarySensorEntity):
+    """AriaQ binary sensor entity."""
 
-    entity_description: FlowItVmcBinarySensorEntityDescription
+    entity_description: AriaQVmcBinarySensorEntityDescription
 
     @override
     @property

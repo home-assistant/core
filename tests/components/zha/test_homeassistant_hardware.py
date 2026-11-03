@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zigpy.application import ControllerApplication
 
 from homeassistant.components.homeassistant_hardware import (
@@ -21,8 +22,6 @@ from homeassistant.components.zha.homeassistant_hardware import get_firmware_inf
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_get_firmware_info_normal(hass: HomeAssistant) -> None:

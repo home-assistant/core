@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from httpx2 import AsyncClient, HTTPError, HTTPStatusError, Request, Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.volvo.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.components.volvo.services import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_api")

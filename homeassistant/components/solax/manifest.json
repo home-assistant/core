@@ -1,8 +1,10 @@
 {
   "domain": "solax",
   "name": "SolaX Power",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@squishykid", "@Darsstar"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/solax",
   "integration_type": "device",
   "iot_class": "local_polling",

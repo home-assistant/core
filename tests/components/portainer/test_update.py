@@ -20,6 +20,13 @@ from pyportainer.models.image_pull import DockerImagePullEvent
 from pyportainer.models.portainer import PortainerSystemVersion
 from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+    load_json_value_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import DOMAIN
@@ -45,14 +52,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-    load_json_value_fixture,
-    snapshot_platform,
-)
 
 ENTITY_ID = "update.funny_chatelet_image_update_available"
 SERVER_UPDATE_ENTITY_ID = "update.portainer_test_update"

@@ -4,6 +4,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.ness_alarm.const import (
@@ -17,8 +18,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow(
@@ -220,6 +219,16 @@ async def test_zone_subentry_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_ZONE_NUMBER: "already_configured"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_ZONE_NUMBER: 2,
+            CONF_TYPE: BinarySensorDeviceClass.DOOR,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zone_subentry_reconfigure(hass: HomeAssistant) -> None:

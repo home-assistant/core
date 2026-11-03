@@ -12,10 +12,14 @@ import smtplib
 import socket
 import ssl
 
-from homeassistant.components import camera, image, tts
-from homeassistant.components.media_source import async_resolve_media
+from homeassistant.components import tts
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.os_error import os_read_error
 
 from .const import ATTR_HTML, DOMAIN
 
@@ -133,9 +137,8 @@ def _attach_file(
             )
         with open(atch_name, "rb") as attachment_file:
             file_bytes = attachment_file.read()
-    except FileNotFoundError:
-        _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
-        return None
+    except OSError as err:
+        raise os_read_error(err, str(atch_name)) from err
 
     attachment: MIMEImage | MIMEApplication | None = None
     try:
@@ -212,19 +215,12 @@ async def _resolve_media(
 ) -> tuple[bytes, str | None, str | None]:
     """Resolve media from a media source."""
     media_content_id: str = media_source["media_content_id"]
-    if media_content_id.startswith("media-source://camera/"):
-        entity_id = media_content_id.removeprefix("media-source://camera/")
-        snapshot = await camera.async_get_image(hass, entity_id)
-        return snapshot.content, snapshot.content_type, None
-
-    if media_content_id.startswith("media-source://image/"):
-        entity_id = media_content_id.removeprefix("media-source://image/")
-        img = await image.async_get_image(hass, entity_id)
-        return img.content, img.content_type, None
-
     if media_content_id.startswith("media-source://tts/"):
         ext, audio = await tts.async_get_media_source_audio(hass, media_content_id)
         return audio, mimetypes.types_map.get("." + ext), None
+
+    if (media_image := await async_get_media_image(hass, media_content_id)) is not None:
+        return media_image.content, media_image.mime_type, None
 
     media = await async_resolve_media(hass, media_source["media_content_id"], None)
 
@@ -234,9 +230,11 @@ async def _resolve_media(
             translation_key="media_source_not_supported",
             translation_placeholders={"media_content_id": media_content_id},
         )
-
-    return (
-        await hass.async_add_executor_job(media.path.read_bytes),
-        media.mime_type,
-        media.path.name,
-    )
+    try:
+        return (
+            await hass.async_add_executor_job(media.path.read_bytes),
+            media.mime_type,
+            media.path.name,
+        )
+    except OSError as err:
+        raise os_read_error(err, str(media.path)) from err

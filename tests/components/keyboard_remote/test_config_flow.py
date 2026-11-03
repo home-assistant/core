@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.keyboard_remote import CONFIG_SCHEMA
 from homeassistant.components.keyboard_remote.const import (
@@ -37,8 +38,6 @@ from .conftest import (
     FAKE_DEVICE_REAL_PATH,
     FakeInput,
 )
-
-from tests.common import MockConfigEntry
 
 BT_REMOTE_NAME = "BT Remote"
 BY_PATH_LINK = "/dev/input/by-path/pci-0000:00:14.0-usb-0:1:1.0-event-kbd"
@@ -267,6 +266,7 @@ async def test_user_step_hides_configured_devices(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_PATH] == FAKE_DEVICE_PATH_2
+    assert result["result"].unique_id == REMOTE_BY_ID_BASENAME
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

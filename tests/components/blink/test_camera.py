@@ -4,13 +4,12 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.blink.camera import BlinkCamera
 from homeassistant.components.blink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

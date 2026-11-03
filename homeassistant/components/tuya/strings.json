@@ -29,6 +29,11 @@
       }
     }
   },
+  "device": {
+    "channel": {
+      "name": "Channel {index}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "bag_full": {
@@ -224,17 +229,11 @@
       "indexed_cook_temperature": {
         "name": "Cooking temperature {index}"
       },
-      "indexed_irrigation_duration": {
-        "name": "Irrigation duration {index}"
-      },
       "indexed_maximum_brightness": {
         "name": "Maximum brightness {index}"
       },
       "indexed_minimum_brightness": {
         "name": "Minimum brightness {index}"
-      },
-      "indexed_power_warning_threshold": {
-        "name": "Power warning threshold {index}"
       },
       "indexed_temperature": {
         "name": "Temperature {index}"
@@ -268,6 +267,9 @@
       },
       "powder": {
         "name": "Powder"
+      },
+      "power_warning_threshold": {
+        "name": "Power warning threshold"
       },
       "sensitivity": {
         "name": "Sensitivity"
@@ -743,6 +745,9 @@
       "concentration_carbon_dioxide": {
         "name": "Concentration of carbon dioxide"
       },
+      "countdown_end": {
+        "name": "Countdown end"
+      },
       "current": {
         "name": "[%key:component::sensor::entity_component::current::name%]"
       },
@@ -757,6 +762,9 @@
       },
       "duster_cloth_life": {
         "name": "Duster cloth lifetime"
+      },
+      "energy_today": {
+        "name": "Energy today"
       },
       "excretion_time_day": {
         "name": "Excretion duration"
@@ -800,45 +808,11 @@
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
-      "indexed_apparent_power": {
-        "name": "Apparent power channel {index}"
-      },
-      "indexed_current": {
-        "name": "Current channel {index}"
-      },
-      "indexed_energy_today": {
-        "name": "Energy today channel {index}"
-      },
       "indexed_humidity_outdoor": {
         "name": "Outdoor humidity channel {index}"
       },
-      "indexed_meter_status": {
-        "name": "Status channel {index}",
-        "state": {
-          "close": "[%key:common::state::closed%]",
-          "idle": "[%key:common::state::idle%]",
-          "monitor": "Monitoring",
-          "warning": "Warning",
-          "working": "Working"
-        }
-      },
-      "indexed_power": {
-        "name": "Power channel {index}"
-      },
-      "indexed_power_factor": {
-        "name": "Power factor channel {index}"
-      },
-      "indexed_reactive_power": {
-        "name": "Reactive power channel {index}"
-      },
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
-      },
-      "indexed_total_energy": {
-        "name": "Total energy channel {index}"
-      },
-      "indexed_voltage": {
-        "name": "Voltage channel {index}"
       },
       "inverter_output_power": {
         "name": "Inverter output power"
@@ -891,6 +865,16 @@
       },
       "luminosity": {
         "name": "Luminosity"
+      },
+      "meter_status": {
+        "name": "Status",
+        "state": {
+          "close": "[%key:common::state::closed%]",
+          "idle": "[%key:common::state::idle%]",
+          "monitor": "Monitoring",
+          "warning": "Warning",
+          "working": "Working"
+        }
       },
       "methane": {
         "name": "[%key:component::tuya::entity::binary_sensor::methane::name%]"
@@ -981,6 +965,9 @@
       },
       "precipitation_today": {
         "name": "Total precipitation today"
+      },
+      "pump_speed": {
+        "name": "Speed"
       },
       "pump_time": {
         "name": "Water pump duration"
@@ -1164,9 +1151,6 @@
       "indexed_alarm": {
         "name": "Alarm {index}"
       },
-      "indexed_socket": {
-        "name": "Socket {index}"
-      },
       "indexed_switch": {
         "name": "Switch {index}"
       },
@@ -1292,9 +1276,6 @@
       }
     },
     "valve": {
-      "indexed_valve": {
-        "name": "Valve {index}"
-      },
       "valve": {
         "name": "Valve"
       }
@@ -1324,6 +1305,12 @@
     },
     "send_command_failed": {
       "message": "Failed to send the command to the Tuya cloud."
+    }
+  },
+  "issues": {
+    "deprecated_entity_new_valve": {
+      "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
+      "title": "{name} is deprecated"
     }
   },
   "selector": {

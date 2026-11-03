@@ -1,5 +1,6 @@
 """Test collection extension."""
 
+import random
 from typing import Any
 
 import pytest
@@ -161,6 +162,24 @@ def test_shuffle(hass: HomeAssistant) -> None:
     # (but we can't guarantee it for small lists)
     assert len(result3) == 5
     assert set(result3) == {1, 2, 3, 4, 5}
+
+
+@pytest.mark.parametrize(
+    ("template", "seed"),
+    [
+        pytest.param("{{ shuffle(range(10) | list, seed=0) }}", 0, id="keyword_zero"),
+        pytest.param("{{ shuffle(range(10) | list, 0) }}", 0, id="positional_zero"),
+        pytest.param("{{ shuffle(range(10) | list, seed='') }}", "", id="empty_string"),
+        pytest.param("{{ shuffle(range(10) | list, seed=42) }}", 42, id="nonzero"),
+    ],
+)
+def test_shuffle_falsy_seed_is_deterministic(
+    hass: HomeAssistant, template: str, seed: Any
+) -> None:
+    """Test shuffle with a falsy seed still uses that seed."""
+    expected = list(range(10))
+    random.Random(seed).shuffle(expected)
+    assert render(hass, template) == expected
 
 
 def test_flatten(hass: HomeAssistant) -> None:

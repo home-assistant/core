@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from homematicip.connection.rest_connection import RestResult
 import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN
@@ -90,7 +91,9 @@ async def test_pull_latch_rejected_by_access_point(
             auth_channel,
             "async_pull_latch",
             new_callable=AsyncMock,
-            return_value={"errorCode": "INVALID_AUTHORIZATION_PIN"},
+            return_value=RestResult(
+                status=400, text='{"errorCode": "INVALID_AUTHORIZATION_PIN"}'
+            ),
         ),
         pytest.raises(HomeAssistantError),
     ):

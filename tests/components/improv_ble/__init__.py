@@ -1,10 +1,12 @@
 """Tests for the Improv via BLE integration."""
 
 from improv_ble_client import SERVICE_DATA_UUID, SERVICE_UUID
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 IMPROV_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="00123456",

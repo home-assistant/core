@@ -112,7 +112,7 @@ def ws_list_issues(
             "translation_placeholders": issue.translation_placeholders,
         }
         for issue in issue_registry.issues.values()
-        if issue.active
+        if issue.active and not issue_registry.async_is_hidden(issue)
     ]
     connection.send_result(msg["id"], {"issues": issues})
 

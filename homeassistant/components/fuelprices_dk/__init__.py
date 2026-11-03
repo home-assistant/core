@@ -14,7 +14,7 @@ type FuelpricesDkConfigEntry = ConfigEntry[dict[str, FuelPricesDKCoordinator]]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: FuelpricesDkConfigEntry
-) -> bool:
+) -> None:
     """Set up Fuelprices.dk from a config entry."""
     config_entry.async_on_unload(config_entry.add_update_listener(_update_listener))
     api_key = config_entry.data[CONF_API_KEY]
@@ -38,7 +38,6 @@ async def async_setup_entry(
 
     config_entry.runtime_data = runtime_data
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
 async def _update_listener(hass: HomeAssistant, entry: FuelpricesDkConfigEntry) -> None:
@@ -48,6 +47,6 @@ async def _update_listener(hass: HomeAssistant, entry: FuelpricesDkConfigEntry) 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: FuelpricesDkConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

@@ -220,7 +220,6 @@ SENSORS: Final = (
     ),
     SensorEntityDescription(
         key="power factor",
-        translation_key="power_factor",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,

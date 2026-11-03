@@ -336,6 +336,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "electrasmart",
+        "hostname": "elrssid*",
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
@@ -514,23 +518,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "imou",
-        "macaddress": "38AF29*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "3CE36B*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "3CEF8C*",
-    },
-    {
-        "domain": "imou",
         "macaddress": "906A94*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "A0BD1D*",
     },
     {
         "domain": "imou",
@@ -539,14 +527,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "imou",
         "macaddress": "AC3DFA*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "B44C3B*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "FCB69D*",
     },
     {
         "domain": "incomfort",
@@ -1543,6 +1523,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "F0A731*",
     },
     {
+        "domain": "trmnl",
+        "hostname": "trmnl-*",
+    },
+    {
         "domain": "tuya",
         "macaddress": "105A17*",
     },
@@ -1654,6 +1638,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "vistapool",
         "hostname": "sugarwifi",
+    },
+    {
+        "domain": "whirlpool",
+        "macaddress": "88E712*",
     },
     {
         "domain": "withings",

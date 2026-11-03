@@ -47,7 +47,7 @@ def make_ready_handler(
     return _on_message
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GreencellConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GreencellConfigEntry) -> None:
     """Set up Greencell from a config entry."""
 
     if not await mqtt.async_wait_for_mqtt_client(hass):
@@ -83,9 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreencellConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GreencellConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GreencellConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

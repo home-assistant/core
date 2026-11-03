@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smtp.const import (
     CONF_ENCRYPTION,
@@ -24,8 +25,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from tests.common import MockConfigEntry
-
 USER_INPUT = {
     CONF_SENDER: "email@example.com",
     CONF_SENDER_NAME: "Home Assistant",
@@ -42,7 +41,7 @@ USER_INPUT = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.smtp.async_setup_entry", return_value=True
+        "homeassistant.components.smtp.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -113,10 +112,10 @@ def mock_client_context() -> Generator[None]:
 
     with (
         patch(
-            "homeassistant.components.smtp.config_flow.client_context"
+            "homeassistant.components.smtp.config_flow.create_client_context"
         ) as mock_client,
         patch(
-            "homeassistant.components.smtp.client_context",
+            "homeassistant.components.smtp.create_client_context",
             new=mock_client,
         ),
     ):

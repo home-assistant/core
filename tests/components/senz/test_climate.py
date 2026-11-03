@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from httpx2 import RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 TEST_DOMAIN = CLIMATE_DOMAIN
 TEST_ENTITY_ID = "climate.test_room_1"

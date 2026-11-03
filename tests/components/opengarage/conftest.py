@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opengarage.const import CONF_DEVICE_KEY, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -47,6 +46,7 @@ def mock_opengarage() -> Generator[MagicMock]:
             "name": "abcdef",
             "mac": "aa:bb:cc:dd:ee:ff",
             "fwv": 120,
+            "light": 0,
         }
         yield client
 
@@ -68,6 +68,6 @@ async def init_integration(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.opengarage.async_setup_entry", return_value=True
+        "homeassistant.components.opengarage.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup

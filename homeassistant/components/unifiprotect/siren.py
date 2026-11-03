@@ -1,25 +1,25 @@
 """UniFi Protect siren platform (Public API)."""
 
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
-from uiprotect.data import DeviceState, PublicDeviceModel, Siren, SirenDuration
+from uiprotect.data import PublicDeviceModel, Siren, SirenDuration
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
     ATTR_VOLUME_LEVEL,
     SirenEntity,
+    SirenEntityDescription,
     SirenEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
-from .data import ProtectData, UFPConfigEntry
+from .const import DOMAIN
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
+from .entity import ProtectDeviceEntity
 from .utils import async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,85 +58,38 @@ async def async_setup_entry(
     )
 
 
-class ProtectSiren(SirenEntity):
+_SIREN_DESCRIPTION = SirenEntityDescription(key="siren")
+
+
+class ProtectSiren(ProtectDeviceEntity, SirenEntity):
     """Siren entity for a UniFi Protect siren device (Public API)."""
 
-    _attr_has_entity_name = True
-    _attr_attribution = DEFAULT_ATTRIBUTION
     _attr_name = None  # device name is the entity name
-    _attr_should_poll = False
     _attr_supported_features = (
         SirenEntityFeature.TURN_ON
         | SirenEntityFeature.TURN_OFF
         | SirenEntityFeature.DURATION
         | SirenEntityFeature.VOLUME_SET
     )
+    _state_attrs = ("_attr_available", "_attr_is_on")
+    _ufp_uses_public = True
 
     def __init__(self, data: ProtectData, siren: Siren) -> None:
         """Initialise the siren entity."""
-        self.data = data
-        self._siren_id = siren.id
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        self._attr_unique_id = f"{siren.mac}_siren"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, siren.mac)},
-            identifiers={(DOMAIN, siren.mac)},
-            manufacturer=DEFAULT_BRAND,
-            name=siren.name,
-            model="Siren",
-            via_device_id=data.nvr_device_id,
-        )
-        self._siren_mac = siren.mac
-        self._update_from_siren(siren)
+        # The description key keeps the legacy ``{mac}_siren`` unique ID.
+        super().__init__(data, siren, _SIREN_DESCRIPTION)
 
     @property
     def _siren(self) -> Siren | None:
-        api = self.data.api
-        if not api.has_public_bootstrap:
-            return None
-        return api.public_bootstrap.sirens.get(self._siren_id)
+        return cast(Siren | None, self.data.async_get_public_device(self.device))
 
     @callback
-    def _update_from_siren(self, siren: Siren) -> None:
-        """Refresh cached attributes from the siren object."""
-        # A siren that dropped off the console stays in the bootstrap.
-        self._attr_available = (
-            self.data.last_public_update_success
-            and siren.state is DeviceState.CONNECTED
-        )
-        self._attr_is_on = siren.is_active
-
-    @callback
-    def _async_updated(self, _obj: PublicDeviceModel | None) -> None:
-        """Handle a public devices WS update for this siren.
-
-        The state is always re-read from the public bootstrap: the library
-        merges WS updates into it before dispatching, and ``None`` carries no
-        object to read. A timed run ending is announced by the library as a
-        regular update.
-        """
-        prev_state = (self._attr_available, self._attr_is_on)
-
-        if (siren := self._siren) is None:
-            # Gone from the bootstrap (delete event): mark unavailable and off.
-            self._attr_available = False
-            self._attr_is_on = False
-        else:
-            self._update_from_siren(siren)
-
-        if (self._attr_available, self._attr_is_on) != prev_state:
-            self.async_write_ha_state()
-
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to public WS updates dispatched by ProtectData."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.data.async_subscribe_public(self._siren_mac, self._async_updated)
-        )
-        # Refresh from the bootstrap: a WS update or delete that landed between
-        # entity construction and this subscription would otherwise be missed.
-        self._async_updated(None)
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        # A siren gone from the bootstrap (delete event) reads as off.
+        siren = cast(Siren | None, self._ufp_public_obj)
+        self._attr_is_on = siren is not None and siren.is_active
 
     @async_ufp_instance_command
     @override

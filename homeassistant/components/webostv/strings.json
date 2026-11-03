@@ -89,9 +89,6 @@
     },
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type: {trigger_type}"
-    },
-    "unknown_trigger_platform": {
-      "message": "Unknown trigger platform: {platform}"
     }
   },
   "options": {
@@ -158,6 +155,22 @@
         }
       },
       "name": "Select sound output"
+    }
+  },
+  "triggers": {
+    "turn_on": {
+      "description": "Triggers when one or more LG webOS TVs are requested to turn on.",
+      "fields": {
+        "device_id": {
+          "description": "The TVs to listen to. At least one device or entity is required.",
+          "name": "Devices"
+        },
+        "entity_id": {
+          "description": "The TV media players to listen to. At least one device or entity is required.",
+          "name": "Entities"
+        }
+      },
+      "name": "TV turn on requested"
     }
   }
 }

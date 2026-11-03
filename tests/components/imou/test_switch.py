@@ -7,6 +7,11 @@ from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imou.const import PARAM_HEADER_DETECT
@@ -25,8 +30,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import DEFAULT_SWITCHES, UNKNOWN_SWITCH_KEY, create_online_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def _apply_switch_operation(

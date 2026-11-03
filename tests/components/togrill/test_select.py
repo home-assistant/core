@@ -3,6 +3,8 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from syrupy.assertion import SnapshotAssertion
 from togrill_bluetooth.packets import (
     GrillType,
@@ -22,9 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import TOGRILL_SERVICE_INFO, setup_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
@@ -105,7 +104,7 @@ async def test_setup(
                     temperature_1=50.0,
                 ),
             ],
-            "select.probe_1_grill_type",
+            "select.pro_05_probe_1_grill_type",
             "veal",
             PacketA303Write(probe=1, grill_type=GrillType.VEAL, taste=None),
             id="grill_type",
@@ -118,7 +117,7 @@ async def test_setup(
                     grill_type=GrillType.BEEF,
                 ),
             ],
-            "select.probe_1_taste",
+            "select.pro_05_probe_1_taste",
             "medium",
             PacketA303Write(probe=1, grill_type=GrillType.BEEF, taste=Taste.MEDIUM),
             id="taste",
@@ -132,7 +131,7 @@ async def test_setup(
                     taste=Taste.MEDIUM,
                 ),
             ],
-            "select.probe_1_taste",
+            "select.pro_05_probe_1_taste",
             "none",
             PacketA303Write(probe=1, grill_type=GrillType.BEEF, taste=None),
             id="taste_none",

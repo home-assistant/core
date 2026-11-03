@@ -1,7 +1,9 @@
 {
   "domain": "ripple",
   "name": "Ripple",
+  "categories": ["finance"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ripple",
   "iot_class": "cloud_polling",
   "loggers": ["pyripple"],

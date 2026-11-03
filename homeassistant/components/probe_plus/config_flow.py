@@ -40,6 +40,8 @@ def title(discovery_info: BluetoothServiceInfo) -> str:
 class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BT Probe."""
 
+    MINOR_VERSION = 2
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Discovery] = {}
@@ -75,7 +77,6 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_MODEL: discovery.discovery_info.name,
                 },
             )
-        self._set_confirm_only()
         assert self.unique_id
         return self.async_show_form(
             step_id="bluetooth_confirm",
