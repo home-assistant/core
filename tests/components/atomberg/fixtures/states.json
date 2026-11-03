@@ -37,9 +37,7 @@
     },
     "system_faults": {
       "healthy": false,
-      "codes": [
-        "NO_WATER"
-      ]
+      "codes": ["NO_WATER"]
     },
     "ts_epoch_seconds": 1793700000
   },
