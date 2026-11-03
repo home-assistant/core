@@ -13,7 +13,7 @@ from .coordinator import ClickyConfigEntry, ClickyCoordinator
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> None:
     """Set up Clicky Web Analytics from a config entry."""
 
     session = async_get_clientsession(hass)
@@ -29,12 +29,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
 
 def device_info(name: str) -> DeviceInfo:
