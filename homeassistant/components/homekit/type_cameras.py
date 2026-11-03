@@ -18,6 +18,7 @@ from pyhap.hap_handler import HAPStatusError
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
+from homeassistant.components.camera.const import PREF_ORIENTATION  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.stream import Orientation
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -30,7 +31,9 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import (
+    async_track_entity_registry_updated_event,
     async_track_state_change_event,
     async_track_time_interval,
 )
@@ -418,10 +421,48 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             )
 
         if self._hksv:
+            self._subscriptions.append(
+                async_track_entity_registry_updated_event(
+                    self.hass,
+                    self.entity_id,
+                    self._async_camera_registry_updated,
+                    job_type=HassJobType.Callback,
+                )
+            )
             self.hass.async_create_background_task(
                 self._hksv.start(), "homekit.hksv-start"
             )
         super().run()
+
+    @callback
+    def _async_camera_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Reconcile recording after the camera's orientation changes."""
+        if event.data["action"] != "update" or "options" not in event.data["changes"]:
+            return
+        entry = er.async_get(self.hass).async_get(self.entity_id)
+        if entry is None:
+            return
+        old_options = event.data["changes"]["options"]
+        old_orientation = old_options.get(camera.DOMAIN, {}).get(
+            PREF_ORIENTATION, Orientation.NO_TRANSFORM
+        )
+        camera_options = entry.options.get(camera.DOMAIN)
+        new_orientation = (
+            camera_options.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM)
+            if camera_options is not None
+            else Orientation.NO_TRANSFORM
+        )
+        if old_orientation != new_orientation:
+            # CameraPreferences updates the shared settings after the registry event.
+            self.hass.loop.call_soon(self._async_camera_orientation_changed)
+
+    @callback
+    def _async_camera_orientation_changed(self) -> None:
+        """Notify the controller after the preference update completes."""
+        if self._hksv and not self._camera_stopping:
+            self._hksv.source_orientation_changed()
 
     @callback
     def _async_update_motion_state_event(

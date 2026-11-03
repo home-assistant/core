@@ -122,7 +122,9 @@ class HKSVController:
         self._active_hardware: HardwareEncoder | None = None
         self._active_copy = (False, False)
         self._shared: Any = None
-        self._process_key: tuple[RecordingConfiguration, bool] | None = None
+        self._process_key: tuple[RecordingConfiguration, bool, Orientation] | None = (
+            None
+        )
         self._reconcile_task: asyncio.Task | None = None
         self._monitor_task: asyncio.Task | None = None
         self._restart_attempts = 0
@@ -384,6 +386,10 @@ class HKSVController:
         if self._reconcile_task is None or self._reconcile_task.done():
             self._reconcile_task = asyncio.create_task(self._reconcile())
 
+    def source_orientation_changed(self) -> None:
+        """Reconcile recording when the shared camera orientation changes."""
+        self._schedule_reconcile()
+
     async def _cleanup(
         self, process: RecordingProcess | None, shared: SharedCameraStream | None
     ) -> None:
@@ -417,7 +423,14 @@ class HKSVController:
                     if self.active and self.camera_active and config
                     else None
                 )
-                if desired == self._process_key:
+                if desired is None:
+                    if self._process is None and self._shared is None:
+                        return
+                elif (
+                    self._process is not None
+                    and self._shared is not None
+                    and (*desired, self._shared.orientation) == self._process_key
+                ):
                     return
                 previous, self._process = self._process, None
                 old_shared, self._shared = self._shared, None
@@ -495,7 +508,7 @@ class HKSVController:
                 ):
                     await self._cleanup(process, shared)
                     continue
-                self._process, self._process_key = process, desired
+                self._process, self._process_key = process, (*desired, orientation)
                 self._active_hardware = hardware
                 self._active_copy = (copy_video, copy_audio)
                 self._shared = shared

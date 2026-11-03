@@ -43,6 +43,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1581,3 +1582,46 @@ async def test_live_orientation_change_during_observation(
     assert codec == "libx264"
     assert "-noautorotate" in source
     assert "transpose=cclock,scale=" in options
+
+
+async def test_secure_video_reconciles_camera_preference_orientation(
+    hass: HomeAssistant, run_driver, entity_registry: er.EntityRegistry
+) -> None:
+    """An orientation preference change notifies only its active camera."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    registry = entity_registry
+    camera_entry = registry.async_get_or_create("camera", "demo", "test")
+    other_entry = registry.async_get_or_create("camera", "demo", "other")
+    hass.states.async_set(camera_entry.entity_id, "idle")
+    prefs = camera.CameraPreferences(hass)
+    await prefs.async_load()
+    settings = await prefs.get_dynamic_stream_settings(camera_entry.entity_id)
+    acc = Camera(hass, run_driver, "Camera", camera_entry.entity_id, 2, {})
+    orientations = []
+    controller = SimpleNamespace(
+        start=AsyncMock(),
+        close=AsyncMock(),
+        source_orientation_changed=MagicMock(
+            side_effect=lambda: orientations.append(settings.orientation)
+        ),
+    )
+    acc._hksv = controller
+    acc.run()
+    await prefs.async_update(camera_entry.entity_id, orientation=Orientation.MIRROR)
+    await hass.async_block_till_done()
+    assert orientations == [Orientation.MIRROR]
+    await prefs.async_update(camera_entry.entity_id, orientation=Orientation.FLIP)
+    await hass.async_block_till_done()
+    assert orientations == [Orientation.MIRROR, Orientation.FLIP]
+    registry.async_update_entity(camera_entry.entity_id, name="Renamed camera")
+    registry.async_update_entity_options(
+        camera_entry.entity_id, "other", {"value": True}
+    )
+    await prefs.async_update(camera_entry.entity_id, orientation=Orientation.FLIP)
+    await prefs.async_update(other_entry.entity_id, orientation=Orientation.MIRROR)
+    await hass.async_block_till_done()
+    assert orientations == [Orientation.MIRROR, Orientation.FLIP]
+    await acc.stop()
+    await prefs.async_update(camera_entry.entity_id, orientation=Orientation.ROTATE_180)
+    await hass.async_block_till_done()
+    assert orientations == [Orientation.MIRROR, Orientation.FLIP]

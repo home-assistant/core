@@ -1373,3 +1373,140 @@ async def test_recording_respects_shared_source_orientation(
     assert command.call_args.kwargs["orientation"] == Orientation.ROTATE_RIGHT
     controller._monitor_task.cancel()
     await asyncio.gather(controller._monitor_task, return_exceptions=True)
+
+
+async def test_recording_reconciles_changed_source_orientation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A changed orientation restarts recording despite an unchanged source URL."""
+    lease = MagicMock()
+    lease.orientation = Orientation.MIRROR
+    lease.close = AsyncMock()
+    source = AsyncMock(return_value=lease)
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = True
+    controller.active = True
+    controller.audio_active = True
+    controller.configuration = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    processes = [MagicMock(), MagicMock()]
+    for process in processes:
+        process.start = AsyncMock()
+        process.stop = AsyncMock()
+        process.wait = AsyncMock(side_effect=asyncio.Event().wait)
+    command = MagicMock(return_value=["ffmpeg"])
+    monkeypatch.setattr(c, "RecordingProcess", MagicMock(side_effect=processes))
+    monkeypatch.setattr(c, "ffmpeg_command", command)
+    monkeypatch.setattr(controller, "_probe_copy", AsyncMock(return_value=(True, True)))
+    monkeypatch.setattr(c._HARDWARE_PROBE, "select", AsyncMock(return_value=None))
+    await controller._reconcile()
+    first_monitor = controller._monitor_task
+    try:
+        lease.orientation = Orientation.FLIP
+        controller._schedule_reconcile()
+        await controller._reconcile_task
+        assert source.await_count == 2
+        processes[0].stop.assert_awaited_once()
+        assert controller._process is processes[1]
+        assert [call.kwargs["orientation"] for call in command.call_args_list] == [
+            Orientation.MIRROR,
+            Orientation.FLIP,
+        ]
+        assert all(call.kwargs["copy_audio"] for call in command.call_args_list)
+        assert not any(call.kwargs["copy_video"] for call in command.call_args_list)
+    finally:
+        tasks = {
+            task
+            for task in (first_monitor, controller._monitor_task)
+            if task is not None
+        }
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+
+async def test_orientation_change_during_recording_start(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A change during process startup is retried with the latest orientation."""
+    started, release = asyncio.Event(), asyncio.Event()
+    lease = MagicMock()
+    lease.orientation = Orientation.MIRROR
+    lease.close = AsyncMock()
+    source = AsyncMock(return_value=lease)
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = True
+    controller.active = True
+    controller.configuration = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    first, second = MagicMock(), MagicMock()
+
+    async def first_start(_data: object) -> None:
+        started.set()
+        await release.wait()
+
+    first.start = AsyncMock(side_effect=first_start)
+    first.stop = AsyncMock()
+    second.start = AsyncMock()
+    second.wait = AsyncMock(side_effect=asyncio.Event().wait)
+    command = MagicMock(return_value=["ffmpeg"])
+    monkeypatch.setattr(c, "RecordingProcess", MagicMock(side_effect=[first, second]))
+    monkeypatch.setattr(c, "ffmpeg_command", command)
+    monkeypatch.setattr(
+        controller, "_probe_copy", AsyncMock(return_value=(False, False))
+    )
+    monkeypatch.setattr(c._HARDWARE_PROBE, "select", AsyncMock(return_value=None))
+    controller._schedule_reconcile()
+    try:
+        await started.wait()
+        lease.orientation = Orientation.FLIP
+        controller.source_orientation_changed()
+        release.set()
+        await controller._reconcile_task
+        first.stop.assert_awaited_once()
+        assert controller._process is second
+        assert [call.kwargs["orientation"] for call in command.call_args_list] == [
+            Orientation.MIRROR,
+            Orientation.FLIP,
+        ]
+    finally:
+        release.set()
+        tasks = {
+            task
+            for task in (controller._reconcile_task, controller._monitor_task)
+            if task is not None
+        }
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+
+@pytest.mark.parametrize(
+    ("ready", "active", "camera_active", "closed"),
+    [
+        (False, True, True, False),
+        (True, False, True, False),
+        (True, True, False, False),
+        (True, True, True, True),
+    ],
+)
+async def test_orientation_change_does_not_open_inactive_camera(
+    ready: bool, active: bool, camera_active: bool, closed: bool
+) -> None:
+    """Orientation notifications do not bypass loading, shutdown or privacy."""
+    source = AsyncMock()
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = ready
+    controller.active = active
+    controller.camera_active = camera_active
+    controller._closed = closed
+    controller.configuration = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    controller.source_orientation_changed()
+    if controller._reconcile_task is not None:
+        await controller._reconcile_task
+    source.assert_not_awaited()
