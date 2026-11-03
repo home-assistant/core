@@ -5,10 +5,11 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime
+import html
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
+from json.decoder import JSONDecodeError
 import logging
-import re
 from socket import gethostbyaddr
 from typing import Any, Concatenate, Final
 
@@ -21,7 +22,6 @@ from aiohttp.web import (
     middleware,
 )
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
-from orjson import JSONDecodeError
 import probatio
 
 from homeassistant.config import load_yaml_config_file
@@ -140,7 +140,7 @@ async def process_wrong_login(request: Request) -> None:
 
     try:
         form_data = await request.json()
-        username = re.escape(form_data.get("username"))
+        username = html.escape(form_data.get("username"))
 
         base_msg = f"Failed login attempt (with username: '{username}') from {remote_host} ({remote_addr})."
     except JSONDecodeError:
