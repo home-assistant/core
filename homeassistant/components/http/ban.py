@@ -133,15 +133,17 @@ async def process_wrong_login(request: Request) -> None:
                 gethostbyaddr, request.remote
             )
 
+    base_msg = (
+        f"Request with invalid authentication from {remote_host} ({remote_addr})."
+    )
+
     try:
         form_data = await request.json()
         username = form_data.get("username")
 
         base_msg = f"Failed login attempt (with username: '{username}') from {remote_host} ({remote_addr})."
     except JSONDecodeError:
-        base_msg = (
-            f"Request with invalid authentication from {remote_host} ({remote_addr})."
-        )
+        pass
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
