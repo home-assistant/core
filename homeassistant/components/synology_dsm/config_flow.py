@@ -246,13 +246,14 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             self.api = None
             return self._show_form(step_id, user_input, errors)
 
-        with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
-            self.shares = await self.api.file.get_shared_folders(only_writable=True)
-
         # Reauth keeps the backup location from the entry options
-        if self.shares and not backup_path and self.source != SOURCE_REAUTH:
-            self.saved_user_input = user_input
-            return await self.async_step_backup_share()
+        if self.source != SOURCE_REAUTH:
+            with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
+                self.shares = await self.api.file.get_shared_folders(only_writable=True)
+
+            if self.shares and not backup_path:
+                self.saved_user_input = user_input
+                return await self.async_step_backup_share()
 
         # unique_id should be serial for services purpose
         existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)

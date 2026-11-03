@@ -574,6 +574,7 @@ async def test_reauth_with_filestation(
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_PASSWORD] == PASSWORD
     assert entry.options == options
+    service_with_filestation.file.get_shared_folders.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
