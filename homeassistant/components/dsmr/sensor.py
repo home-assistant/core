@@ -2,7 +2,7 @@
 
 import asyncio
 from asyncio import CancelledError
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -39,6 +39,10 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
@@ -62,6 +66,8 @@ from .const import (
     LOGGER,
     RFXTRX_DSMR_PROTOCOL,
 )
+
+EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
@@ -771,12 +777,7 @@ def is_supported_description(
 
 
 def create_mbus_entities(
-    hass: HomeAssistant,
-    telegram: Telegram,
-    entry: ConfigEntry,
-    dsmr_version: str,
-    discovered: dict[int, set[str]],
-    channel_identifiers: dict[int, str],
+    hass: HomeAssistant, telegram: Telegram, entry: ConfigEntry, dsmr_version: str
 ) -> Generator[DSMREntity]:
     """Create MBUS Entities."""
     mbus_devices: list[MbusDevice] = getattr(telegram, "MBUS_DEVICES", [])
@@ -786,42 +787,18 @@ def create_mbus_entities(
         type_ = int(device_type.value)
 
         if type_ not in SENSORS_MBUS_DEVICE_TYPE:
-            if device.channel_id not in discovered:
-                LOGGER.warning("Unsupported MBUS_DEVICE_TYPE (%d)", type_)
-                discovered[device.channel_id] = set()
+            LOGGER.warning("Unsupported MBUS_DEVICE_TYPE (%d)", type_)
             continue
 
-        discovered_descriptions = discovered.setdefault(device.channel_id, set())
-        descriptions = [
-            description
-            for description in SENSORS_MBUS_DEVICE_TYPE[type_]
-            if description.key not in discovered_descriptions
-            and is_supported_description(device, description, dsmr_version)
-        ]
-        if not descriptions:
-            continue
+        if identifier := getattr(device, "MBUS_EQUIPMENT_IDENTIFIER", None):
+            serial_ = identifier.value
+            rename_old_gas_to_mbus(hass, entry, serial_)
+        else:
+            serial_ = ""
 
-        # A previously identified gas meter may already have registry entries
-        # after reload. Wait for its identifier rather than create duplicates
-        # from a partial telegram using a temporary device identity.
-        if type_ == MbusDeviceType.GAS and not channel_identifiers.get(
-            device.channel_id
-        ):
-            device_registry = dr.async_get(hass)
-            if any(
-                device_entry.name == DEVICE_NAME_GAS
-                and (DOMAIN, entry.entry_id) not in device_entry.identifiers
-                for device_entry in dr.async_entries_for_config_entry(
-                    device_registry, entry.entry_id
-                )
-            ):
+        for description in SENSORS_MBUS_DEVICE_TYPE.get(type_, ()):
+            if not is_supported_description(device, description, dsmr_version):
                 continue
-
-        # Keep the established identity if a later telegram omits the identifier.
-        serial_ = channel_identifiers.get(device.channel_id, "")
-
-        for description in descriptions:
-            discovered_descriptions.add(description.key)
             yield DSMREntity(
                 description,
                 entry,
@@ -856,118 +833,44 @@ async def async_setup_entry(
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
     entities: list[DSMREntity] = []
-    discovered: dict[int, set[str]] = {0: set()}
-    channel_identifiers: dict[int, str] = {}
+    initialized: bool = False
+    add_entities_handler: Callable[[], None] | None
 
     @callback
-    def reconcile_mbus_identifiers(telegram: Telegram) -> None:
-        """Preserve M-Bus identities when an identifier arrives after discovery."""
-        for device in getattr(telegram, "MBUS_DEVICES", []):
-            identifier = getattr(device, "MBUS_EQUIPMENT_IDENTIFIER", None)
-            if identifier is None or not (serial := identifier.value):
-                continue
-            channel = device.channel_id
-            known_serial = channel_identifiers.get(channel)
-            if known_serial == serial:
-                continue
-            if known_serial is not None:
-                LOGGER.warning(
-                    "M-Bus identifier changed for channel %s; keeping existing identity",
-                    channel,
-                )
-                continue
-            channel_identifiers[channel] = serial
-            rename_old_gas_to_mbus(hass, entry, serial)
+    def init_async_add_entities(telegram: Telegram) -> None:
+        """Add the sensor entities after the first telegram was received."""
+        nonlocal add_entities_handler
+        assert add_entities_handler is not None
+        add_entities_handler()
+        add_entities_handler = None
 
-            registry = er.async_get(hass)
-            device_registry = dr.async_get(hass)
-            for entity in entities:
-                if entity._mbus_id != channel:
-                    continue
-                description = entity.entity_description
-                if not (description.is_gas or description.is_water or description.is_heat):
-                    continue
-                new_unique_id = serial
-                if description.key.startswith("belgium_gas_"):
-                    new_unique_id += f"_{description.key}"
-                old_unique_id = entity.unique_id
-                if old_unique_id is None:
-                    continue
-                registered_id = registry.async_get_entity_id(
-                    SENSOR_DOMAIN, DOMAIN, old_unique_id
-                )
-                if registered_id is not None:
-                    registered_entry = registry.async_get(registered_id)
-                    if registered_entry is None:
-                        continue
-                    existing_id = registry.async_get_entity_id(
-                        SENSOR_DOMAIN, DOMAIN, new_unique_id
-                    )
-                    if existing_id is not None and existing_id != registered_id:
-                        LOGGER.warning(
-                            "M-Bus identity %s already registered; preserving existing entry",
-                            new_unique_id,
-                        )
-                        continue
-                    old_device_id = registered_entry.device_id
-                    new_device = device_registry.async_get_or_create(
-                        config_entry_id=entry.entry_id,
-                        identifiers={(DOMAIN, serial)},
-                    )
-                    registry.async_update_entity(
-                        registered_id,
-                        new_unique_id=new_unique_id,
-                        device_id=new_device.id,
-                    )
-                    if old_device_id is not None and not er.async_entries_for_device(
-                        registry, old_device_id, include_disabled_entities=True
-                    ):
-                        device_registry.async_remove_device(old_device_id)
-                entity._attr_unique_id = new_unique_id
-                device_name = (
-                    DEVICE_NAME_GAS
-                    if description.is_gas
-                    else DEVICE_NAME_WATER if description.is_water else DEVICE_NAME_HEAT
-                )
-                entity._attr_device_info = DeviceInfo(
-                    identifiers={(DOMAIN, serial)}, name=device_name
-                )
+        entities.extend(create_mbus_entities(hass, telegram, entry, dsmr_version))
 
-    @callback
-    def async_discover_entities(telegram: Telegram) -> None:
-        """Add sensor entities for newly received fields."""
-        reconcile_mbus_identifiers(telegram)
-        new_entities = list(
-            create_mbus_entities(
-                hass, telegram, entry, dsmr_version, discovered, channel_identifiers
-            )
+        entities.extend(
+            [
+                (
+                    DSMRBelgiumDemandHistory(description, entry, telegram)
+                    if description.key == "belgium_maximum_demand_history"
+                    else DSMREntity(
+                        description,
+                        entry,
+                        telegram,
+                        *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                    )
+                )
+                for description in SENSORS
+                if is_supported_description(telegram, description, dsmr_version)
+                and (
+                    (not description.is_gas and not description.is_heat)
+                    or CONF_SERIAL_ID_GAS in entry.data
+                )
+            ]
         )
-        for description in SENSORS:
-            if (
-                description.key in discovered[0]
-                or not is_supported_description(telegram, description, dsmr_version)
-                or (
-                    (description.is_gas or description.is_heat)
-                    and CONF_SERIAL_ID_GAS not in entry.data
-                )
-            ):
-                continue
-            new_entities.append(
-                DSMRBelgiumDemandHistory(description, entry, telegram)
-                if description.key == "belgium_maximum_demand_history"
-                else DSMREntity(
-                    description,
-                    entry,
-                    telegram,
-                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
-                )
-            )
-            discovered[0].add(description.key)
+        async_add_entities(entities)
 
-        if new_entities:
-            entities.extend(new_entities)
-            async_add_entities(new_entities)
-
+    add_entities_handler = async_dispatcher_connect(
+        hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), init_async_add_entities
+    )
     min_time_between_updates = timedelta(
         seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
@@ -975,14 +878,18 @@ async def async_setup_entry(
     @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram: Telegram | None) -> None:
         """Update entities with latest telegram and trigger state update."""
+        nonlocal initialized
         # Make all device entities aware of new telegram
         for entity in entities:
             entity.update_data(telegram)
 
         entry.runtime_data.telegram = telegram
 
-        if telegram:
-            async_discover_entities(telegram)
+        if not initialized and telegram:
+            initialized = True
+            async_dispatcher_send(
+                hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
+            )
 
     # Legacy network entries stored host and port separately; combine them into
     # the single socket://host:port form newer entries already use, in memory
@@ -1121,6 +1028,8 @@ async def async_setup_entry(
 
     @callback
     def _async_stop(_: Event) -> None:
+        if add_entities_handler is not None:
+            add_entities_handler()
         task.cancel()
 
     # Make sure task is cancelled on shutdown (or tests complete)

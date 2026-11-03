@@ -6,7 +6,6 @@ Entity to be updated with new values.
 """
 
 import asyncio
-from copy import deepcopy
 import datetime as dt
 from decimal import Decimal
 from itertools import chain, repeat
@@ -26,7 +25,6 @@ from dsmr_parser.obis_references import (
     MBUS_DEVICE_TYPE,
     MBUS_EQUIPMENT_IDENTIFIER,
     MBUS_METER_READING,
-    MBUS_VALVE_POSITION,
 )
 from dsmr_parser.objects import CosemObject, MBusObject, MBusObjectPeak, Telegram
 import pytest
@@ -50,7 +48,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
-    Platform,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
@@ -1178,9 +1175,7 @@ async def test_belgian_meter_alt(
 
 
 async def test_belgian_meter_mbus(
-    hass: HomeAssistant,
-    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
     """Test if Belgian meter is correctly parsed."""
     (connection_factory, _transport, _protocol) = dsmr_connection_fixture
@@ -1327,10 +1322,6 @@ async def test_belgian_meter_mbus(
         water_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == UnitOfVolume.CUBIC_METERS
     )
-
-    telegram_callback(telegram)
-    await hass.async_block_till_done()
-    assert caplog.text.count("Unsupported MBUS_DEVICE_TYPE (6)") == 1
 
 
 async def test_belgian_meter_low(
@@ -2146,25 +2137,25 @@ def test_belgian_long_text_message_state() -> None:
     assert entity.extra_state_attributes == {"full_message": message}
 
 
-@pytest.mark.parametrize(
-    "month_values",
-    [
-        pytest.param(((11, "3.277"), (10, "3.175")), id="newest_first"),
-        pytest.param(((10, "3.175"), (11, "3.277")), id="oldest_first"),
-    ],
-)
+@pytest.mark.parametrize("newest_first", [True, False])
 async def test_belgian_history_sensor_integration(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
-    mock_config_entry: MockConfigEntry,
-    electricity_telegram: Telegram,
-    caplog: pytest.LogCaptureFixture,
-    month_values: tuple[tuple[int, str], ...],
+    newest_first: bool,
 ) -> None:
     """Create the history entity and update its published state through telegrams."""
     connection_factory, _transport, _protocol = dsmr_connection_fixture
-    entry = mock_config_entry
+    entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data={
+            "port": "/dev/ttyUSB0",
+            "dsmr_version": "5B",
+            "serial_id": "1234",
+        },
+        options={"time_between_update": 0},
+    )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -2191,26 +2182,16 @@ async def test_belgian_history_sensor_integration(
         )
         return telegram
 
-    months = tuple(
-        (dt.datetime(2026, month, 1, tzinfo=dt.UTC), peak)
-        for month, peak in month_values
-    )
+    october = (dt.datetime(2026, 11, 1, tzinfo=dt.UTC), "3.277")
+    september = (dt.datetime(2026, 10, 1, tzinfo=dt.UTC), "3.175")
+    months = (october, september) if newest_first else (september, october)
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
-    telegram_callback(electricity_telegram)
-    await hass.async_block_till_done()
-    assert (
-        entity_registry.async_get_entity_id(
-            Platform.SENSOR, "dsmr", "1234_belgium_maximum_demand_history"
-        )
-        is None
-    )
-
     telegram_callback(history_telegram(months))
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, "dsmr", "1234_belgium_maximum_demand_history"
+        "sensor", "dsmr", "1234_belgium_maximum_demand_history"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -2220,22 +2201,14 @@ async def test_belgian_history_sensor_integration(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
     assert state.attributes["monthly_peaks"] == [
         {
-            "month": (month - dt.timedelta(days=1)).strftime("%Y-%m"),
+            "month": ("2026-10" if month == october[0] else "2026-09"),
             "peak": float(peak),
             "occurred": (month - dt.timedelta(days=5)).isoformat(),
         }
         for month, peak in months
     ]
 
-    telegram_callback(electricity_telegram)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id) == state
-
-    updated_telegram = history_telegram(
-        ((dt.datetime(2026, 12, 1, tzinfo=dt.UTC), "4.125"),)
-    )
-    telegram_callback(updated_telegram)
-    telegram_callback(updated_telegram)
+    telegram_callback(history_telegram(((dt.datetime(2026, 12, 1, tzinfo=dt.UTC), "4.125"),)))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -2256,258 +2229,3 @@ async def test_belgian_history_sensor_integration(
     assert state is not None
     assert state.state == STATE_UNKNOWN
     assert state.attributes["monthly_peaks"] == []
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 2
-    assert "does not generate unique IDs" not in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("dsmr_version", "expected_diagnostics"),
-    [
-        pytest.param("5B", {"1234_belgium_version_information"}, id="belgian"),
-        pytest.param("5", set(), id="other_version"),
-    ],
-)
-async def test_late_belgian_diagnostic(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
-    mock_config_entry: MockConfigEntry,
-    electricity_telegram: Telegram,
-    dsmr_version: str,
-    expected_diagnostics: set[str],
-) -> None:
-    """Discover disabled diagnostics on later telegrams only for Belgian meters."""
-    connection_factory, _transport, _protocol = dsmr_connection_fixture
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={**mock_config_entry.data, "dsmr_version": dsmr_version},
-    )
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    telegram_callback = connection_factory.call_args_list[0][0][2]
-    telegram_callback(electricity_telegram)
-    await hass.async_block_till_done()
-
-    telegram = deepcopy(electricity_telegram)
-    telegram.add(
-        obis_references.BELGIUM_VERSION_INFORMATION,
-        CosemObject((0, 0), [{"value": "0050221", "unit": None}]),
-        "BELGIUM_VERSION_INFORMATION",
-    )
-    telegram_callback(telegram)
-    telegram_callback(telegram)
-    await hass.async_block_till_done()
-    assert {
-        entity.unique_id
-        for entity in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-    } == {"1234_current_electricity_usage"} | expected_diagnostics
-    for unique_id in expected_diagnostics:
-        entity_id = entity_registry.async_get_entity_id(
-            Platform.SENSOR, "dsmr", unique_id
-        )
-        assert entity_id is not None
-        assert (
-            entity_registry.async_get(entity_id).disabled_by
-            is er.RegistryEntryDisabler.INTEGRATION
-        )
-        assert hass.states.get(entity_id) is None
-
-
-async def test_late_mbus_entities(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
-    mock_config_entry: MockConfigEntry,
-    electricity_telegram: Telegram,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Discover late M-Bus devices and fields once, retaining missing readings."""
-    connection_factory, _transport, _protocol = dsmr_connection_fixture
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    telegram_callback = connection_factory.call_args_list[0][0][2]
-    telegram_callback(electricity_telegram)
-    await hass.async_block_till_done()
-
-    devices_telegram = deepcopy(electricity_telegram)
-    for channel in (1, 2):
-        devices_telegram.add(
-            MBUS_DEVICE_TYPE,
-            CosemObject((0, channel), [{"value": 3, "unit": None}]),
-            "MBUS_DEVICE_TYPE",
-        )
-        devices_telegram.add(
-            MBUS_EQUIPMENT_IDENTIFIER,
-            CosemObject((0, channel), [{"value": f"gas_{channel}", "unit": None}]),
-            "MBUS_EQUIPMENT_IDENTIFIER",
-        )
-    telegram_callback(devices_telegram)
-    await hass.async_block_till_done()
-    for channel in (1, 2):
-        assert (
-            entity_registry.async_get_entity_id(
-                Platform.SENSOR, "dsmr", f"gas_{channel}_belgium_gas_device_type"
-            )
-            is not None
-        )
-        assert (
-            entity_registry.async_get_entity_id(
-                Platform.SENSOR, "dsmr", f"gas_{channel}"
-            )
-            is None
-        )
-
-    readings_telegram = deepcopy(devices_telegram)
-    for channel in (1, 2):
-        readings_telegram.add(
-            MBUS_VALVE_POSITION,
-            CosemObject((0, channel), [{"value": 1, "unit": None}]),
-            "MBUS_VALVE_POSITION",
-        )
-        readings_telegram.add(
-            MBUS_METER_READING,
-            MBusObject(
-                (0, channel),
-                [
-                    {"value": dt.datetime(2026, 11, 1, tzinfo=dt.UTC)},
-                    {"value": Decimal(channel), "unit": "m3"},
-                ],
-            ),
-            "MBUS_METER_READING",
-        )
-    telegram_callback(readings_telegram)
-    telegram_callback(readings_telegram)
-    await hass.async_block_till_done()
-    for channel in (1, 2):
-        entity_id = entity_registry.async_get_entity_id(
-            Platform.SENSOR, "dsmr", f"gas_{channel}"
-        )
-        assert entity_id is not None
-        assert hass.states.get(entity_id).state == f"{channel}.0"
-        valve_entity_id = entity_registry.async_get_entity_id(
-            Platform.SENSOR, "dsmr", f"gas_{channel}_belgium_gas_valve_position"
-        )
-        assert valve_entity_id is not None
-        assert (
-            entity_registry.async_get(valve_entity_id).disabled_by
-            is er.RegistryEntryDisabler.INTEGRATION
-        )
-
-    telegram_callback(electricity_telegram)
-    await hass.async_block_till_done()
-    for channel in (1, 2):
-        entity_id = entity_registry.async_get_entity_id(
-            Platform.SENSOR, "dsmr", f"gas_{channel}"
-        )
-        assert hass.states.get(entity_id).state == f"{channel}.0"
-    assert (
-        len(
-            er.async_entries_for_config_entry(
-                entity_registry, mock_config_entry.entry_id
-            )
-        )
-        == 9
-    )
-    assert "does not generate unique IDs" not in caplog.text
-
-
-@pytest.mark.parametrize("identifier_first", [True, False])
-async def test_mbus_identity_stable_across_partial_telegrams(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
-    mock_config_entry: MockConfigEntry,
-    electricity_telegram: Telegram,
-    identifier_first: bool,
-) -> None:
-    """Preserve M-Bus entity identities when identifier fields arrive or vanish."""
-    connection_factory, _transport, _protocol = dsmr_connection_fixture
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    telegram_callback = connection_factory.call_args_list[0][0][2]
-    telegram_callback(electricity_telegram)
-    await hass.async_block_till_done()
-
-    def gas_telegram(*, with_identifier: bool) -> Telegram:
-        """Create a gas telegram that may omit the equipment identifier."""
-        telegram = deepcopy(electricity_telegram)
-        telegram.add(
-            MBUS_DEVICE_TYPE,
-            CosemObject((0, 1), [{"value": 3, "unit": None}]),
-            "MBUS_DEVICE_TYPE",
-        )
-        telegram.add(
-            MBUS_METER_READING,
-            MBusObject(
-                (0, 1),
-                [
-                    {"value": dt.datetime(2026, 11, 1, tzinfo=dt.UTC)},
-                    {"value": Decimal("1.500"), "unit": "m3"},
-                ],
-            ),
-            "MBUS_METER_READING",
-        )
-        if with_identifier:
-            telegram.add(
-                MBUS_EQUIPMENT_IDENTIFIER,
-                CosemObject((0, 1), [{"value": "gas_stable", "unit": None}]),
-                "MBUS_EQUIPMENT_IDENTIFIER",
-            )
-        return telegram
-
-    telegram_callback(gas_telegram(with_identifier=identifier_first))
-    await hass.async_block_till_done()
-    initial_entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert len(initial_entities) == (4 if identifier_first else 3)
-
-    telegram_callback(gas_telegram(with_identifier=not identifier_first))
-    await hass.async_block_till_done()
-    telegram_callback(gas_telegram(with_identifier=False))
-    await hass.async_block_till_done()
-
-    expected = {
-        "1234_current_electricity_usage",
-        "gas_stable",
-        "gas_stable_belgium_gas_device_type",
-        "gas_stable_belgium_gas_equipment_identifier",
-    }
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert {entity.unique_id for entity in entries} == expected
-    assert len({entity.device_id for entity in entries if entity.unique_id.startswith("gas_stable")}) == 1
-
-    consumption_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, "dsmr", "gas_stable"
-    )
-    assert consumption_id is not None
-    assert hass.states.get(consumption_id).state == "1.5"
-
-    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    reloaded_callback = connection_factory.call_args_list[-1][0][2]
-    reloaded_callback(gas_telegram(with_identifier=False))
-    await hass.async_block_till_done()
-    assert {
-        entity.unique_id
-        for entity in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-    } == expected
-
-    reloaded_callback(gas_telegram(with_identifier=True))
-    await hass.async_block_till_done()
-    assert {
-        entity.unique_id
-        for entity in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-    } == expected
-    assert hass.states.get(consumption_id).state == "1.5"
