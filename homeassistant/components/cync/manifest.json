@@ -4,6 +4,7 @@
   "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@Kinachi249"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/cync",
   "integration_type": "hub",
   "iot_class": "cloud_push",

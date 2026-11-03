@@ -37,7 +37,7 @@ from . import (
 )
 from .conftest import MOCK_LEDSTRIP_STATUS_AURORA, MOCK_LEDSTRIP_STATUS_RAINBOW
 
-LEDSTRIP_ENTITY_ID = f"{SELECT_DOMAIN}.test_name_ledstrip_0_effect_palette"
+LEDSTRIP_ENTITY_ID = f"{SELECT_DOMAIN}.test_name_effect_palette"
 
 
 @pytest.fixture(autouse=True)

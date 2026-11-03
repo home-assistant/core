@@ -195,6 +195,32 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Roomba host."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await validate_input(self.hass, {**entry.data, **user_input})
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or entry.data,
+            ),
+            errors=errors,
+        )
+
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -233,7 +259,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="link",
-                description_placeholders={CONF_NAME: self.name or self.blid},
+                description_placeholders={"name": self.name or self.blid},
             )
         assert self.host
         tls_context = await self.hass.async_add_executor_job(generate_tls_context)

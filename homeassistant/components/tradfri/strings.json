@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_gateway": "The gateway at this address is not the gateway that was configured."
     },
     "error": {
       "cannot_authenticate": "Cannot authenticate, is your gateway paired with another server like e.g. HomeKit?",
@@ -20,6 +21,14 @@
         },
         "description": "You can find the security code on the back of your gateway.",
         "title": "Enter security code"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::tradfri::config::step::auth::data_description::host%]"
+        }
       }
     }
   },

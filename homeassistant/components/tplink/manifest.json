@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@rytilahti", "@bdraco", "@sdb9696"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network", "ffmpeg", "stream"],
   "dhcp": [
     {

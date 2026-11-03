@@ -20,7 +20,7 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_MANUFACTURER
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -37,6 +37,7 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
+    ATTR_MANUFACTURER,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
