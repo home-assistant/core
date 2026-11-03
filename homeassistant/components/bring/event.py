@@ -10,6 +10,7 @@ from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import BringEntityStateAttribute
 from .coordinator import BringActivityCoordinator, BringConfigEntry
 from .entity import BringBaseEntity
 
@@ -76,7 +77,7 @@ class BringEventEntity(BringBaseEntity, EventEntity):
             activity = bring_list.activity.timeline[0]
             attributes = asdict(activity.content)
 
-            attributes["last_activity_by"] = next(
+            attributes[BringEntityStateAttribute.LAST_ACTIVITY_BY] = next(
                 (
                     x.name
                     for x in bring_list.users.users
@@ -98,7 +99,11 @@ class BringEventEntity(BringBaseEntity, EventEntity):
 
         return (
             f"https://api.getbring.com/rest/v2/bringusers/profilepictures/{public_uuid}"
-            if (public_uuid := self.state_attributes.get("publicUserUuid"))
+            if (
+                public_uuid := self.state_attributes.get(
+                    BringEntityStateAttribute.PUBLIC_USER_UUID
+                )
+            )
             else super().entity_picture
         )
 

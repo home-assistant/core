@@ -22,11 +22,8 @@ from homeassistant.helpers import (
     service,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, BringEntityStateAttribute
 from .coordinator import BringConfigEntry
-
-ATTR_ACTIVITY = "uuid"
-ATTR_RECEIVER = "publicUserUuid"
 
 
 class BringService(StrEnum):
@@ -99,8 +96,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             await coordinator.bring.notify(
                 list_uuid,
                 BringNotificationType.LIST_ACTIVITY_STREAM_REACTION,
-                receiver=state.attributes[ATTR_RECEIVER],
-                activity=state.attributes[ATTR_ACTIVITY],
+                receiver=state.attributes[BringEntityStateAttribute.PUBLIC_USER_UUID],
+                activity=state.attributes[BringEntityStateAttribute.ACTIVITY_UUID],
                 activity_type=ActivityType(activity.upper()),
                 reaction=reaction,
             )

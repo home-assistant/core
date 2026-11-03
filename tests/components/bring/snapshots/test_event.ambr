@@ -55,7 +55,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baumarkt Activities',
       'items': list([
       ]),
-      'last_activity_by': 'Bring',
+      <BringEntityStateAttribute.LAST_ACTIVITY_BY: 'last_activity_by'>: 'Bring',
       'publicUserUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
       'purchase': list([
         dict({
@@ -142,7 +142,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Einkauf Activities',
       'items': list([
       ]),
-      'last_activity_by': 'Bring',
+      <BringEntityStateAttribute.LAST_ACTIVITY_BY: 'last_activity_by'>: 'Bring',
       'publicUserUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
       'purchase': list([
         dict({
