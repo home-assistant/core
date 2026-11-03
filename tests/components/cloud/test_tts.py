@@ -76,25 +76,10 @@ def test_default_voice_is_valid(language: str, voice: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("engine_id", "platform_config"),
+    "engine_id",
     [
-        (
-            DOMAIN,
-            None,
-        ),
-        (
-            DOMAIN,
-            {
-                "platform": DOMAIN,
-                "service_name": "yaml",
-                "language": "fr-FR",
-                "gender": "female",
-            },
-        ),
-        (
-            "tts.home_assistant_cloud",
-            None,
-        ),
+        DOMAIN,
+        "tts.home_assistant_cloud",
     ],
 )
 async def test_prefs_default_voice(
@@ -102,11 +87,10 @@ async def test_prefs_default_voice(
     cloud: MagicMock,
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     engine_id: str,
-    platform_config: dict[str, Any] | None,
 ) -> None:
     """Test cloud provider uses the preferences."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, TTS_DOMAIN, {TTS_DOMAIN: platform_config})
+    assert await async_setup_component(hass, TTS_DOMAIN, {TTS_DOMAIN: None})
     await hass.async_block_till_done()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -120,7 +104,6 @@ async def test_prefs_default_voice(
     engine = get_engine_instance(hass, engine_id)
 
     assert engine is not None
-    # The platform config provider will be overridden by the discovery info provider.
     assert engine.default_language == "en-US"
     assert engine.default_options == {"audio_output": "mp3"}
 
@@ -129,6 +112,24 @@ async def test_prefs_default_voice(
 
     assert engine.default_language == "nl-NL"
     assert engine.default_options == {"audio_output": "mp3"}
+
+
+@pytest.mark.usefixtures("cloud")
+async def test_yaml_platform_config_not_supported(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the cloud text-to-speech platform can't be configured in YAML."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(
+        hass, TTS_DOMAIN, {TTS_DOMAIN: {"platform": DOMAIN, "service_name": "yaml"}}
+    )
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(TTS_DOMAIN, "yaml")
+    assert (
+        "Configuring the cloud text-to-speech platform in YAML is no longer supported"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(

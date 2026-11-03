@@ -225,12 +225,17 @@ async def async_get_engine(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> CloudProvider:
+) -> CloudProvider | None:
     """Set up Cloud speech component."""
+    if discovery_info is None:
+        _LOGGER.error(
+            "Configuring the cloud text-to-speech platform in YAML is no longer"
+            " supported, remove `platform: cloud` from the `tts:` section"
+        )
+        return None
     cloud = hass.data[DATA_CLOUD]
     cloud_provider = CloudProvider(cloud)
-    if discovery_info is not None:
-        discovery_info["platform_loaded"].set()
+    discovery_info["platform_loaded"].set()
     return cloud_provider
 
 
