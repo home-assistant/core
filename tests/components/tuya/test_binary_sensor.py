@@ -148,7 +148,7 @@ async def test_drop_state_update(
     """Test drop_state transitions: normal -> off, drop -> on."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    entity_id = "binary_sensor.60gren_ti_die_dao_zigbee"
+    entity_id = "binary_sensor.60gren_ti_die_dao_zigbee_fall"
     assert hass.states.get(entity_id).state == "off"
 
     await notification_helper.async_send_device_update(
