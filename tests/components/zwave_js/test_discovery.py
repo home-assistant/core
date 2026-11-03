@@ -100,7 +100,10 @@ async def test_zvidar_state(hass: HomeAssistant, client, zvidar, integration) ->
 
 
 async def test_simon_io_700_roller_blind(
-    hass: HomeAssistant, client, simon_io_700_roller_blind, integration
+    hass: HomeAssistant,
+    client: MagicMock,
+    simon_io_700_roller_blind: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that Simon IO 700 roller blind multilevel switch value is discovered as a cover."""
     node = simon_io_700_roller_blind

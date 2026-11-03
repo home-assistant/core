@@ -298,10 +298,13 @@ def zvidar_state_fixture() -> dict[str, Any]:
 
 
 @pytest.fixture(name="simon_io_700_roller_blind_state", scope="package")
-def simon_io_700_roller_blind_state_fixture() -> dict[str, Any]:
+def simon_io_700_roller_blind_state_fixture() -> NodeDataType:
     """Load the Simon IO 700 series roller blind node state fixture data."""
-    return load_json_object_fixture(
-        "cover_simon_io_700_roller_blind_state.json", DOMAIN
+    return cast(
+        NodeDataType,
+        load_json_object_fixture(
+            "cover_simon_io_700_roller_blind_state.json", DOMAIN
+        ),
     )
 
 
@@ -1169,7 +1172,9 @@ def zvidar_cover_fixture(client, zvidar_state) -> Node:
 
 
 @pytest.fixture(name="simon_io_700_roller_blind")
-def simon_io_700_roller_blind_fixture(client, simon_io_700_roller_blind_state) -> Node:
+def simon_io_700_roller_blind_fixture(
+    client: MagicMock, simon_io_700_roller_blind_state: NodeDataType
+) -> Node:
     """Mock a Simon IO 700 series roller blind node."""
     node = Node(client, copy.deepcopy(simon_io_700_roller_blind_state))
     client.driver.controller.nodes[node.node_id] = node
