@@ -2,6 +2,9 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -10,9 +13,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import CoolMasterNetMock
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 def _mock_config_entry(host: str) -> MockConfigEntry:

@@ -5,6 +5,11 @@ from types import SimpleNamespace
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    async_capture_events,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components.camera import CameraEntityFeature
@@ -49,8 +54,6 @@ from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
-
-from tests.common import MockConfigEntry, MockEntityPlatform, async_capture_events
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 

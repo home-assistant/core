@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
-
 TEST_API_NAME = "Memory Server"
 MCP_SERVER_URL = "http://1.1.1.1:8080/mcp"
 CLIENT_ID = "test-client-id"
@@ -38,7 +37,7 @@ OAUTH_TOKEN_URL = "https://example-auth-server.com/token-path"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.mcp.async_setup_entry", return_value=True
+        "homeassistant.components.mcp.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -11,6 +11,7 @@ from homematicip.exceptions.connection_exceptions import (
     HmipConnectionError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.const import (
@@ -30,8 +31,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .helper import HAPID, HAPPIN, HomeFactory
-
-from tests.common import MockConfigEntry
 
 
 async def test_auth_setup(hass: HomeAssistant) -> None:

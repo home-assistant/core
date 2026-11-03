@@ -2,6 +2,8 @@
 
 from datetime import datetime, timedelta
 
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+
 from homeassistant.components import plant
 from homeassistant.components.plant.const import ATTR_MAX_BRIGHTNESS_HISTORY
 from homeassistant.components.plant.entity import DailyHistory
@@ -17,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.setup import async_setup_component
-
-from tests.components.recorder.common import async_wait_recording_done
 
 GOOD_DATA = {
     "moisture": 50,

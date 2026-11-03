@@ -8,6 +8,8 @@ from music_assistant_models.enums import DashboardType, EventType
 from music_assistant_models.errors import MusicAssistantError
 from music_assistant_models.player import PlayerMedia
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -42,9 +44,6 @@ from .common import (
     snapshot_music_assistant_entities,
     trigger_subscription_callback,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 KITCHEN_ENTITY_ID = "media_player.kitchen_display"
 HALLWAY_ENTITY_ID = "media_player.hallway_display"

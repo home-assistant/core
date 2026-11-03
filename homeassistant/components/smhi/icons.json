@@ -22,9 +22,6 @@
       "frozen_precipitation": {
         "default": "mdi:weather-snowy-rainy"
       },
-      "fwi": {
-        "default": "mdi:pine-tree-fire"
-      },
       "fwiindex": {
         "default": "mdi:pine-tree-fire"
       },

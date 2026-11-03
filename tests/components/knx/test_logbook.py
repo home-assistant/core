@@ -6,6 +6,13 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    async_capture_events,
+    mock_restore_cache,
+)
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import WebSocketGenerator
 from xknx.dpt import DPTBinary
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
@@ -21,10 +28,6 @@ from homeassistant.util import dt as dt_util
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import MockUser, async_capture_events, mock_restore_cache
-from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import WebSocketGenerator
 
 LIGHT_ENTITY_ID = "light.test"
 SWITCH_ENTITY_ID = "switch.test"

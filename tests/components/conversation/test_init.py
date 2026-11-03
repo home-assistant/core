@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -31,9 +33,6 @@ from homeassistant.helpers import chat_session, intent
 from homeassistant.setup import async_setup_component
 
 from . import MockAgent
-
-from tests.common import MockUser, async_mock_service
-from tests.typing import ClientSessionGenerator
 
 AGENT_ID_OPTIONS = [
     None,
@@ -307,7 +306,7 @@ async def test_async_handle_sentence_triggers(
         language=hass.config.language,
     )
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         actual_response = await async_handle_sentence_triggers(
@@ -349,7 +348,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         language=hass.config.language,
     )
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         result = await async_handle_intents(hass, user_input, chat_log)
@@ -369,7 +368,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         language=hass.config.language,
     )
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         async_get_chat_log(hass, session, user_input2) as chat_log,
     ):
         result = await async_handle_intents(hass, user_input2, chat_log)

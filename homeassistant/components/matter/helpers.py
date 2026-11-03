@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
+    from .models import MatterEntityInfo
 
 
 class MissingNode(HomeAssistantError):
@@ -45,6 +46,16 @@ def get_matter(hass: HomeAssistant) -> MatterAdapter:
     return entries[0].runtime_data.adapter
 
 
+def get_discovery_key(endpoint: MatterEndpoint, entity_info: MatterEntityInfo) -> str:
+    """Return the key under which the adapter tracks a discovered entity."""
+    return (
+        f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
+        f"{entity_info.primary_attribute.cluster_id}_"
+        f"{entity_info.primary_attribute.attribute_id}_"
+        f"{entity_info.entity_description.key}"
+    )
+
+
 def get_operational_instance_id(
     server_info: ServerInfoMessage,
     node: MatterNode,
@@ -67,20 +78,60 @@ def get_device_endpoint(endpoint: MatterEndpoint) -> MatterEndpoint:
     return endpoint.node.get_compose_parent(endpoint.endpoint_id) or endpoint
 
 
+def _get_device_id_for_device_endpoint(
+    server_info: ServerInfoMessage, device_endpoint: MatterEndpoint
+) -> str:
+    """Return HA device_id for the endpoint a device is derived from."""
+    operational_instance_id = get_operational_instance_id(
+        server_info, device_endpoint.node
+    )
+    if device_endpoint.is_bridged_device:
+        # Append endpoint ID if this endpoint is a bridged device
+        postfix = str(device_endpoint.endpoint_id)
+    else:
+        # this should be compatible with previous versions
+        postfix = "MatterNodeDevice"
+    return f"{operational_instance_id}-{postfix}"
+
+
 def get_device_id(
     server_info: ServerInfoMessage,
     endpoint: MatterEndpoint,
 ) -> str:
     """Return HA device_id for the given MatterEndpoint."""
-    operational_instance_id = get_operational_instance_id(server_info, endpoint.node)
-    endpoint = get_device_endpoint(endpoint)
-    if endpoint.is_bridged_device:
-        # Append endpoint ID if this endpoint is a bridged device
-        postfix = str(endpoint.endpoint_id)
-    else:
-        # this should be compatible with previous versions
-        postfix = "MatterNodeDevice"
-    return f"{operational_instance_id}-{postfix}"
+    return _get_device_id_for_device_endpoint(
+        server_info, get_device_endpoint(endpoint)
+    )
+
+
+def get_legacy_device_id(
+    server_info: ServerInfoMessage,
+    endpoint: MatterEndpoint,
+) -> str:
+    """Return the device_id matter-python-client <1.5.0 would have generated.
+
+    matter-python-client 1.5.0 changed `get_compose_parent()` to resolve to the top
+    of a composition instead of the closest parent, which can change the device_id
+    (and therefore entity unique_id) of a part nested below another part. Only used
+    to find entity registry entries that still use the pre-1.5.0 unique_id so they
+    can be migrated.
+    """
+    closest_parent = endpoint.node.get_closest_compose_parent(endpoint.endpoint_id)
+    return _get_device_id_for_device_endpoint(server_info, closest_parent or endpoint)
+
+
+def get_entity_unique_id(
+    device_id: str, endpoint: MatterEndpoint, entity_info: MatterEntityInfo
+) -> str:
+    """Return the unique_id for an entity discovered on a MatterEndpoint."""
+    primary_attribute = entity_info.primary_attribute
+    return (
+        f"{device_id}-"
+        f"{endpoint.endpoint_id}-"
+        f"{entity_info.entity_description.key}-"
+        f"{primary_attribute.cluster_id}-"
+        f"{primary_attribute.attribute_id}"
+    )
 
 
 def get_node_device_identifier(

@@ -7,6 +7,11 @@ from unittest.mock import patch
 
 from axis.models.api import CONTEXT
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from syrupy.assertion import SnapshotAssertion
 from yarl import URL
 
@@ -23,9 +28,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, RtspEventMock
 from .const import DEFAULT_HOST, NAME
-
-from tests.common import snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 API_DISCOVERY_LIGHT_CONTROL = {
     "id": "light-control",

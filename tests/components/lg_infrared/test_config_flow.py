@@ -3,6 +3,15 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as mock_infrared_emitter_entity_id,
+    RECEIVER_ENTITY_ID as mock_infrared_receiver_entity_id,
+)
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.infrared import DATA_COMPONENT as INFRARED_DATA_COMPONENT
@@ -18,16 +27,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigFl
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
-from tests.components.infrared import (
-    EMITTER_ENTITY_ID as mock_infrared_emitter_entity_id,
-    RECEIVER_ENTITY_ID as mock_infrared_receiver_entity_id,
-)
-from tests.components.infrared.common import (
-    MockInfraredEmitterEntity,
-    MockInfraredReceiverEntity,
-)
 
 SECOND_EMITTER_ENTITY_ID = "infrared.second_ir_emitter"
 SECOND_RECEIVER_ENTITY_ID = "infrared.second_ir_receiver"

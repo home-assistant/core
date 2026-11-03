@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from sfrbox_api.exceptions import SFRBoxApiError, SFRBoxAuthenticationError, SFRBoxError
 from sfrbox_api.models import SystemInfo
 from syrupy.assertion import SnapshotAssertion
@@ -14,8 +15,6 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 WAN_STATUS_ENTITY_ID = "binary_sensor.sfr_box_wan_status"
 

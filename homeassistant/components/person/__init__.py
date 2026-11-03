@@ -14,22 +14,7 @@ from homeassistant.components.image_upload import (
     DOMAIN as IMAGE_UPLOAD_DOMAIN,
     ImageStorageCollection,
 )
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
-    ATTR_GPS_ACCURACY,
-    ATTR_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_NAME,
-    CONF_ID,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
-    SERVICE_RELOAD,
-    STATE_HOME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    EntityStateAttribute,
-)
+from homeassistant.const import ATTR_ID, CONF_ID, CONF_NAME, SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -41,7 +26,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import (  # noqa: F401
+from .const import (
     CONF_DEVICE_TRACKERS,
     CONF_PICTURE,
     CONF_USER_ID,
@@ -55,9 +40,7 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SOURCE = "source"
 ATTR_USER_ID = "user_id"
-ATTR_DEVICE_TRACKERS = "device_trackers"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2
@@ -89,6 +72,19 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+__all__ = [
+    "ATTR_USER_ID",
+    "DOMAIN",
+    "SERVICE_RELOAD",
+    "Person",
+    "PersonEntityStateAttribute",
+    "PersonStorageCollection",
+    "async_add_user_device_tracker",
+    "async_create_person",
+    "entities_in_person",
+    "persons_with_entity",
+]
+
 
 async def async_create_person(
     hass: HomeAssistant,
@@ -100,8 +96,8 @@ async def async_create_person(
     """Create a new person."""
     await hass.data[DATA_PERSON].storage_collection.async_create_item(
         {
-            ATTR_NAME: name,
-            ATTR_USER_ID: user_id,
+            CONF_NAME: name,
+            CONF_USER_ID: user_id,
             CONF_DEVICE_TRACKERS: device_trackers or [],
         }
     )
@@ -114,7 +110,7 @@ async def async_add_user_device_tracker(
     coll = hass.data[DATA_PERSON].storage_collection
 
     for person in coll.async_items():
-        if person.get(ATTR_USER_ID) != user_id:
+        if person.get(CONF_USER_ID) != user_id:
             continue
 
         device_trackers = person[CONF_DEVICE_TRACKERS]
@@ -457,7 +453,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _handle_user_removed(event: Event) -> None:
         """Handle a user being removed."""
-        user_id = event.data[ATTR_USER_ID]
+        user_id = event.data["user_id"]
         for person in storage_collection.async_items():
             if person[CONF_USER_ID] == user_id:
                 await storage_collection.async_update_item(

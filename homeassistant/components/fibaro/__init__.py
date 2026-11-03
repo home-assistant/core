@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceInfo
-from homeassistant.util import slugify
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
@@ -206,8 +205,11 @@ class FibaroController:
         return [{(DOMAIN, str(fibaro_id))} for fibaro_id in self._device_infos]
 
     def get_room_name(self, room_id: int) -> str | None:
-        """Get the room name by room id."""
-        return self._room_map.get(room_id)
+        """Get the room name by room id or "Unknown" if room does not exist."""
+        room_name = self._room_map.get(room_id)
+        if not room_name:
+            room_name = "Unknown"
+        return room_name
 
     def read_scenes(self) -> list[SceneModel]:
         """Return list of scenes."""
@@ -237,24 +239,14 @@ class FibaroController:
         last_endpoint = None
         for device in devices:
             try:
-                device.fibaro_controller = self
-                room_name = self.get_room_name(device.room_id)
-                if not room_name:
-                    room_name = "Unknown"
-                device.room_name = room_name
-                device.friendly_name = f"{room_name} {device.name}"
-                device.ha_id = (
-                    f"{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
-                )
-
                 platform = self._map_device_to_platform(device)
                 if platform is None:
                     continue
-                device.unique_id_str = f"{slugify(self.hub_serial)}.{device.fibaro_id}"
+
                 self._device_map[device.fibaro_id] = device
                 _LOGGER.debug(
                     "%s (%s, %s) -> %s %s",
-                    device.ha_id,
+                    device.fibaro_id,
                     device.type,
                     device.base_type,
                     platform,
@@ -268,11 +260,11 @@ class FibaroController:
                 if device.has_endpoint_id:
                     _LOGGER.debug(
                         "climate device: %s, endPointId: %s",
-                        device.ha_id,
+                        device.fibaro_id,
                         device.endpoint_id,
                     )
                 else:
-                    _LOGGER.debug("climate device: %s, no endPointId", device.ha_id)
+                    _LOGGER.debug("climate device: %s, no endPointId", device.fibaro_id)
                 # If a sibling of this device has been added, skip this one
                 # otherwise add the first visible device in the group
                 # which is a hack, but solves a problem with FGT having

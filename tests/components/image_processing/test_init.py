@@ -4,6 +4,8 @@ from collections.abc import Callable
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_capture_events
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components import http, image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
@@ -12,9 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from . import common
-
-from tests.common import assert_setup_component, async_capture_events
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)

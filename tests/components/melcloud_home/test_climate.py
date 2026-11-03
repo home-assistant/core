@@ -17,6 +17,12 @@ from aiomelcloudhome import (
     UserContext,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -50,13 +56,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    SnapshotAssertion,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 ATA_ENTITY_ID = "climate.living_room_ac"
 ATW_ZONE1_ENTITY_ID = "climate.heat_pump_zone_1"

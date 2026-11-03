@@ -51,6 +51,11 @@ UPDATE_FIELDS: VolDictType = {
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "DOMAIN",
+    "async_scan_tag",
+]
+
 
 class TagIDExistsError(HomeAssistantError):
     """Raised when an item is not found."""

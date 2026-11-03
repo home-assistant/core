@@ -3,6 +3,9 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
+
 from homeassistant.components import media_source, spotify
 from homeassistant.components.forked_daapd.browse_media import (
     MediaContent,
@@ -16,9 +19,6 @@ from homeassistant.components.spotify.const import (  # pylint: disable=home-ass
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_MASTER_ENTITY_NAME = "media_player.owntone_server"
 

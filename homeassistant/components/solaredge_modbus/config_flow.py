@@ -199,8 +199,6 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=self._discovered_title, data=self._discovered
             )
 
-        self._set_confirm_only()
-
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={

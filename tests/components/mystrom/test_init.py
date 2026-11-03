@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 from pymystrom.exceptions import MyStromConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mystrom.const import DOMAIN
@@ -21,8 +22,6 @@ from . import (
     get_default_switch_state,
 )
 from .conftest import DEVICE_MAC
-
-from tests.common import MockConfigEntry
 
 
 async def init_integration(

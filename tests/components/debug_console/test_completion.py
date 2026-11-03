@@ -8,12 +8,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import MockHAClientWebSocket
 
 from homeassistant.components.debug_console.completion import _top_level_modules
 
 from . import async_execute, async_send
-
-from tests.typing import MockHAClientWebSocket
 
 COMPLETION_SETUP = """
 class Thing:

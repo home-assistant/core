@@ -5,6 +5,8 @@ from unittest.mock import Mock
 from urllib.error import HTTPError, URLError
 
 from panasonic_viera import SOAPError
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -27,8 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_INPUTS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "media_player.panasonic_viera_tv"
 
@@ -94,11 +94,19 @@ async def test_media_player_select_source(
     assert state_tv.attributes[ATTR_INPUT_SOURCE] == "HDMI2"
 
 
+@pytest.mark.parametrize(
+    "probe_error",
+    [
+        pytest.param(SOAPError(), id="soap_error"),
+        pytest.param(HTTPError(None, 404, None, None, None), id="http_not_found"),
+        pytest.param(HTTPError(None, 500, None, None, None), id="http_soap_fault"),
+    ],
+)
 async def test_media_player_select_source_unsupported(
-    hass: HomeAssistant, mock_remote: Mock
+    hass: HomeAssistant, mock_remote: Mock, probe_error: Exception
 ) -> None:
     """Test a TV without the PAC service does not offer source selection."""
-    mock_remote.list_inputs = Mock(side_effect=SOAPError)
+    mock_remote.list_inputs = Mock(side_effect=probe_error)
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

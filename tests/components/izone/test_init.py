@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from pizone import ControllerCommandError, ControllerEndpoint, UnpairedBridgeError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.izone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .conftest import async_load_yaml_exclude, create_mock_controller
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(

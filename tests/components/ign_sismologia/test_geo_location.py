@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from georss_ign_sismologia_client import IgnSismologiaFeed
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -33,8 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "ign_sismologia", CONF_RADIUS: 200}]}
 

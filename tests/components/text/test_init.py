@@ -3,6 +3,11 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.text import (
     ATTR_MAX,
@@ -22,12 +27,6 @@ from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 
 from .common import MockRestoreText, MockTextEntity
-
-from tests.common import (
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache_with_extra_data,
-    setup_test_component_platform,
-)
 
 
 async def test_text_default(hass: HomeAssistant) -> None:

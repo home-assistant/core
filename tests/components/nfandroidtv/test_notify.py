@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 from notifications_android_tv.notifications import ConnectError
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
@@ -41,8 +42,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import NAME
-
-from tests.common import AsyncMock, MockConfigEntry, snapshot_platform
 
 LEGACY_SERVICE_NAME = "android_tv_fire_tv_1_2_3_4"
 ENTITY_ID = "notify.android_tv_fire_tv_1_2_3_4"

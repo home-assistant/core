@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests import ConnectionError as RequestsConnectionError, HTTPError, Timeout
 
 from homeassistant.components.nederlandse_spoorwegen.const import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import API_KEY
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(

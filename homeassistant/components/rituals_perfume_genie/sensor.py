@@ -13,11 +13,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RitualsConfigEntry
-from .entity import DiffuserSensorsEntity
+from .entity import DiffuserSensorsEntity, async_add_diffusers
 
 PARALLEL_UPDATES = 0
 
@@ -74,12 +74,18 @@ async def async_setup_entry(
     """Set up the diffuser sensors."""
     runtime_data = config_entry.runtime_data
 
-    async_add_entities(
-        RitualsSensorEntity(coordinator, description, description.sensor)
-        for hublot, coordinator in runtime_data.sensors.items()
-        for description in ENTITY_DESCRIPTIONS
-        if description.has_fn(runtime_data.hubs.data[hublot])
-    )
+    @callback
+    def add_diffusers(hublots: list[str]) -> None:
+        async_add_entities(
+            RitualsSensorEntity(
+                runtime_data.sensors[hublot], description, description.sensor
+            )
+            for hublot in hublots
+            for description in ENTITY_DESCRIPTIONS
+            if description.has_fn(runtime_data.hubs.data[hublot])
+        )
+
+    async_add_diffusers(config_entry, add_diffusers)
 
 
 class RitualsSensorEntity(DiffuserSensorsEntity, SensorEntity):

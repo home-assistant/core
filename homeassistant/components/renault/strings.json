@@ -240,14 +240,35 @@
     "authentication_expired": {
       "message": "The Renault login has expired, re-authenticate the Renault integration"
     },
+    "authentication_failed": {
+      "message": "Failed to log in to the Renault servers, re-authenticate the Renault integration"
+    },
     "battery_soc_unavailable": {
       "message": "Battery state of charge data is currently unavailable"
+    },
+    "cannot_connect": {
+      "message": "Failed to connect to the Renault servers"
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Renault servers"
+    },
+    "endpoint_denied": {
+      "message": "Access to this data was denied by the Renault servers"
+    },
+    "endpoint_not_supported": {
+      "message": "This data is not supported by the vehicle"
     },
     "no_config_entry_for_device": {
       "message": "No loaded config entry was found for device with ID {device_id}"
     },
+    "no_vehicle_details": {
+      "message": "Failed to retrieve vehicle details from the Renault servers"
+    },
+    "throttled": {
+      "message": "The Renault servers are throttling requests"
+    },
     "unknown_error": {
-      "message": "An unknown error occurred while communicating with the Renault servers: {error}"
+      "message": "An unknown error occurred while communicating with the Renault servers"
     }
   },
   "issues": {

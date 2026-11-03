@@ -4,6 +4,7 @@ import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -34,8 +35,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
-
-from tests.common import async_fire_time_changed
 
 CONFIG = {DOMAIN: {CONF_RADIUS: 200}}
 

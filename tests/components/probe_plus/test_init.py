@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.probe_plus.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_probe_plus")
@@ -126,6 +125,9 @@ async def test_migrate_entry_no_unique_id(
 
     assert entry.version == 1
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.reason == (
+        "Could not migrate the config entry because it has no unique ID"
+    )
 
 
 async def test_migrate_entry_future_version(

@@ -1,10 +1,10 @@
 """Tests for the Debug console integration setup."""
 
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.debug_console.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_setup(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> None:

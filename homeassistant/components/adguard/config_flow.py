@@ -27,6 +27,17 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DOMAIN, LOGGER
 
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=3000): probatio.Coerce(int),
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(CONF_SSL, default=True): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+    }
+)
+
 
 async def _async_validate_connection(
     hass: HomeAssistant,
@@ -74,16 +85,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_HOST): str,
-                    probatio.Required(CONF_PORT, default=3000): probatio.Coerce(int),
-                    probatio.Optional(CONF_USERNAME): str,
-                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
-                    probatio.Required(CONF_SSL, default=True): bool,
-                    probatio.Required(CONF_VERIFY_SSL, default=True): bool,
-                }
-            ),
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors or {},
         )
 
@@ -213,6 +215,58 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
                     ): str,
                     probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection to AdGuard Home."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
+
+            if error := await _async_validate_connection(
+                self.hass,
+                host=user_input[CONF_HOST],
+                port=user_input[CONF_PORT],
+                ssl=user_input[CONF_SSL],
+                verify_ssl=user_input[CONF_VERIFY_SSL],
+                username=user_input.get(CONF_USERNAME),
+                password=user_input.get(CONF_PASSWORD),
+            ):
+                errors["base"] = error
+            else:
+                # Disabled entries are not migrated on setup, and the
+                # migration matches entities by the current host and port.
+                await reconfigure_entry.async_migrate(self.hass)
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_SSL: user_input[CONF_SSL],
+                        CONF_USERNAME: user_input.get(CONF_USERNAME),
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                    },
+                )
+
+        suggested_values = user_input or reconfigure_entry.data
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {
+                    key: value
+                    for key, value in suggested_values.items()
+                    if key != CONF_PASSWORD and value is not None
+                },
             ),
             errors=errors,
         )

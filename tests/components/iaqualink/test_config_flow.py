@@ -9,6 +9,7 @@ from iaqualink.exception import (
     AqualinkServiceUnauthorizedException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.iaqualink import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -16,8 +17,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="192.168.1.23",
@@ -80,7 +79,7 @@ async def test_dhcp_discovery_starts_user_flow(
         ),
         patch(
             "homeassistant.components.iaqualink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

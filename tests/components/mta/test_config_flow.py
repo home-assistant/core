@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pymta import MTAFeedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mta.const import (
     CONF_LINE,
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_BUS_STOPS
-
-from tests.common import MockConfigEntry
 
 
 async def test_main_entry_flow_without_token(

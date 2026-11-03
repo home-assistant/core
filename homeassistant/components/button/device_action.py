@@ -14,7 +14,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from .const import DOMAIN, SERVICE_PRESS
+from .const import DOMAIN, ButtonService
 
 ACTION_TYPES = {"press"}
 
@@ -59,7 +59,7 @@ async def async_call_action_from_config(
     """Execute a device action."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
             ATTR_ENTITY_ID: config[CONF_ENTITY_ID],
         },

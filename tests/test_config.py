@@ -12,6 +12,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    get_test_config_dir,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 import yaml
 
@@ -24,14 +31,6 @@ from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.util.yaml import SECRET_YAML, load_yaml_dict
-
-from .common import (
-    MockModule,
-    MockPlatform,
-    get_test_config_dir,
-    mock_integration,
-    mock_platform,
-)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)

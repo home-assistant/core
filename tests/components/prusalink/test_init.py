@@ -6,6 +6,7 @@ from unittest.mock import patch
 from httpx2 import ConnectError
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.prusalink import DOMAIN
 from homeassistant.components.prusalink.config_flow import PrusaLinkConfigFlow
@@ -18,8 +19,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("mock_api")
 

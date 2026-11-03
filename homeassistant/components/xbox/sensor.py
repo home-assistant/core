@@ -80,7 +80,9 @@ class XboxStorageDeviceSensorEntityDescription(
     value_fn: Callable[[StorageDevice], StateType]
 
 
-def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any]:
+def now_playing_attributes(
+    person: Person, title: Title | None, total_achievements: int | None
+) -> dict[str, Any]:
     """Attributes of the currently played title."""
     attributes: dict[str, Any] = {
         "short_description": None,
@@ -143,7 +145,7 @@ def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any
             {
                 "achievements": (
                     f"{achievement.current_achievements}"
-                    f" / {achievement.total_achievements}"
+                    f" / {total_achievements or achievement.total_achievements}"
                 ),
                 "gamerscore": (
                     f"{achievement.current_gamerscore} / {achievement.total_gamerscore}"

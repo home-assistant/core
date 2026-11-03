@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from aiovitesy.exceptions import CannotAuthenticate, CannotConnect, VitesyError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.vitesy.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_unload(

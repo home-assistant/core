@@ -1,15 +1,14 @@
 """Test config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant import config_entries
 from homeassistant.components.tasmota.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-
-from tests.common import MockConfigEntry
-from tests.typing import MqttMockHAClient
 
 
 async def test_mqtt_abort_if_existing_entry(

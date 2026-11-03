@@ -16,7 +16,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -73,6 +74,8 @@ from .const import (
     LightEntityCapabilityAttribute,
     LightEntityFeature,
     LightEntityStateAttribute,
+    LightService,
+    LightServiceArgument,
 )
 from .entity import LightEntity, LightEntityDescription
 from .helper import (
@@ -152,6 +155,8 @@ __all__ = [
     "LightEntityDescription",
     "LightEntityFeature",
     "LightEntityStateAttribute",
+    "LightService",
+    "LightServiceArgument",
     "Profiles",
     "brightness_supported",
     "color_supported",
@@ -197,14 +202,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 def _coerce_none(value: str) -> None:
@@ -329,7 +339,9 @@ class Profiles:
                 if not state_on or not params:
                     self.apply_profile(name, params)
                 elif self.data[name].transition is not None:
-                    params.setdefault(ATTR_TRANSITION, self.data[name].transition)
+                    params.setdefault(
+                        LightServiceArgument.TRANSITION, self.data[name].transition
+                    )
 
     @callback
     def apply_profile(self, name: str, params: dict[str, Any]) -> None:
@@ -338,21 +350,21 @@ class Profiles:
             return
 
         color_attributes = (
-            ATTR_COLOR_NAME,
-            ATTR_COLOR_TEMP_KELVIN,
-            ATTR_HS_COLOR,
-            ATTR_RGB_COLOR,
-            ATTR_RGBW_COLOR,
-            ATTR_RGBWW_COLOR,
-            ATTR_XY_COLOR,
-            ATTR_WHITE,
+            LightServiceArgument.COLOR_NAME,
+            LightServiceArgument.COLOR_TEMP_KELVIN,
+            LightServiceArgument.HS_COLOR,
+            LightServiceArgument.RGB_COLOR,
+            LightServiceArgument.RGBW_COLOR,
+            LightServiceArgument.RGBWW_COLOR,
+            LightServiceArgument.XY_COLOR,
+            LightServiceArgument.WHITE,
         )
 
         if profile.hs_color is not None and not any(
             color_attribute in params for color_attribute in color_attributes
         ):
-            params[ATTR_HS_COLOR] = profile.hs_color
+            params[LightServiceArgument.HS_COLOR] = profile.hs_color
         if profile.brightness is not None:
-            params.setdefault(ATTR_BRIGHTNESS, profile.brightness)
+            params.setdefault(LightServiceArgument.BRIGHTNESS, profile.brightness)
         if profile.transition is not None:
-            params.setdefault(ATTR_TRANSITION, profile.transition)
+            params.setdefault(LightServiceArgument.TRANSITION, profile.transition)

@@ -16,6 +16,11 @@ from aioautomower.model import (
 from aioautomower.model.model_mower import UNKNOWN_ERROR
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
@@ -25,8 +30,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensor_unknown_states(

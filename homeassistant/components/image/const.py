@@ -41,3 +41,15 @@ MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE = {
     b"\xff\xd8\xff\xe1": "image/jpeg",
     b"\xff\xd8\xff\xe2": "image/jpeg",
 }
+
+
+class ImageService(StrEnum):
+    """Store keys for image services."""
+
+    SNAPSHOT = "snapshot"
+
+
+class ImageServiceArgument(StrEnum):
+    """Store keys for image service arguments."""
+
+    FILENAME = "filename"

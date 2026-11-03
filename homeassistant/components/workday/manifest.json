@@ -12,5 +12,5 @@
   "iot_class": "local_polling",
   "loggers": ["holidays"],
   "quality_scale": "internal",
-  "requirements": ["holidays==0.106"]
+  "requirements": ["holidays==0.107"]
 }

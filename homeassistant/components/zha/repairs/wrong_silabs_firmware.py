@@ -95,6 +95,10 @@ async def warn_on_wrong_silabs_firmware(
         # reconnect, it should work
         raise AlreadyRunningEZSP
 
+    if app_type == ApplicationType.SPINEL_ZIGGURAT:
+        # ZHA uses this firmware through the Ziggurat radio type
+        return False
+
     hardware_type = _detect_radio_hardware(hass, device)
     ir.async_create_issue(
         hass,

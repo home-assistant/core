@@ -8,6 +8,7 @@ from aiohttp import ClientError
 from pydrawise import APIError, NotAuthorizedError
 from pydrawise.schema import Zone
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hydrawise.const import (
     ATTR_DURATION,
@@ -20,8 +21,6 @@ from homeassistant.components.hydrawise.const import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 
 async def test_start_watering(
@@ -111,7 +110,7 @@ async def test_suspend(
     [
         (APIError("Boom"), "command_error"),
         (ClientError("Boom"), "command_error"),
-        (TimeoutError, "command_error"),
+        (TimeoutError(), "command_error"),
         (NotAuthorizedError("HTTP 401"), "invalid_auth"),
     ],
 )

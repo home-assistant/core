@@ -17,6 +17,12 @@ import av
 from freezegun import freeze_time
 import numpy as np
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
@@ -40,9 +46,6 @@ from .common import (
     create_nest_event,
 )
 from .conftest import FakeAuth
-
-from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 DOMAIN = "nest"
 DEVICE_NAME = "Front"
@@ -437,7 +440,7 @@ async def test_event_order(
         aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
     ]
     event_session_id1 = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
-    event_timestamp1 = dt_util.now()
+    event_timestamp1 = dt_util.utcnow()
     await subscriber.async_receive_event(
         create_event(
             event_session_id1,
@@ -479,14 +482,18 @@ async def test_event_order(
     # Motion event is most recent
     assert len(browse.children) == 2
     assert browse.children[0].domain == DOMAIN
-    event_timestamp_string = event_timestamp2.strftime(DATE_STR_FORMAT)
+    event_timestamp_string = dt_util.as_local(event_timestamp2).strftime(
+        DATE_STR_FORMAT
+    )
     assert browse.children[0].title == f"Motion @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
     assert not browse.children[0].can_play
 
     # Person event is next
     assert browse.children[1].domain == DOMAIN
-    event_timestamp_string = event_timestamp1.strftime(DATE_STR_FORMAT)
+    event_timestamp_string = dt_util.as_local(event_timestamp1).strftime(
+        DATE_STR_FORMAT
+    )
     assert browse.children[1].title == f"Person @ {event_timestamp_string}"
     assert not browse.children[1].can_expand
     assert not browse.children[1].can_play
@@ -504,7 +511,7 @@ async def test_multiple_image_events_in_session(
     await setup_platform()
 
     event_session_id = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
-    event_timestamp1 = dt_util.now()
+    event_timestamp1 = dt_util.utcnow()
     event_timestamp2 = event_timestamp1 + dt.timedelta(seconds=5)
 
     assert len(hass.states.async_all()) == 1
@@ -567,7 +574,9 @@ async def test_multiple_image_events_in_session(
     event = browse.children[0]
     assert event.domain == DOMAIN
     assert event.identifier == f"{device.id}/{event_identifier2}"
-    event_timestamp_string = event_timestamp2.strftime(DATE_STR_FORMAT)
+    event_timestamp_string = dt_util.as_local(event_timestamp2).strftime(
+        DATE_STR_FORMAT
+    )
     assert event.title == f"Person @ {event_timestamp_string}"
     assert not event.can_expand
     assert not event.can_play
@@ -576,7 +585,9 @@ async def test_multiple_image_events_in_session(
     event = browse.children[1]
     assert event.domain == DOMAIN
     assert event.identifier == f"{device.id}/{event_identifier1}"
-    event_timestamp_string = event_timestamp1.strftime(DATE_STR_FORMAT)
+    event_timestamp_string = dt_util.as_local(event_timestamp1).strftime(
+        DATE_STR_FORMAT
+    )
     assert event.title == f"Motion @ {event_timestamp_string}"
     assert not event.can_expand
     assert not event.can_play
@@ -620,7 +631,7 @@ async def test_multiple_clip_preview_events_in_session(
     """Test multiple events published within the same event session."""
     await setup_platform()
 
-    event_timestamp1 = dt_util.now()
+    event_timestamp1 = dt_util.utcnow()
     event_timestamp2 = event_timestamp1 + dt.timedelta(seconds=5)
 
     assert len(hass.states.async_all()) == 1
@@ -676,7 +687,9 @@ async def test_multiple_clip_preview_events_in_session(
     assert len(browse.children) == 1
     event = browse.children[0]
     assert event.domain == DOMAIN
-    event_timestamp_string = event_timestamp1.strftime(DATE_STR_FORMAT)
+    event_timestamp_string = dt_util.as_local(event_timestamp1).strftime(
+        DATE_STR_FORMAT
+    )
     assert event.identifier == f"{device.id}/{event_identifier2}"
     assert event.title == f"Motion, Person @ {event_timestamp_string}"
     assert not event.can_expand
@@ -1381,7 +1394,7 @@ async def test_camera_event_media_eviction(
     # No events published yet
     assert len(browse.children) == 0
 
-    event_timestamp = dt_util.now()
+    event_timestamp = dt_util.utcnow()
     for i in range(7):
         auth.responses = [aiohttp.web.Response(body=f"image-bytes-{i}".encode())]
         ts = event_timestamp + dt.timedelta(seconds=i)

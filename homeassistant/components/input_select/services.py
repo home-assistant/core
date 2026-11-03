@@ -2,22 +2,17 @@
 
 import probatio
 
-from homeassistant.components.select import (
-    ATTR_CYCLE,
-    ATTR_OPTION,
-    ATTR_OPTIONS,
-    SERVICE_SELECT_FIRST,
-    SERVICE_SELECT_LAST,
-    SERVICE_SELECT_NEXT,
-    SERVICE_SELECT_OPTION,
-    SERVICE_SELECT_PREVIOUS,
-)
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DATA_INPUT_SELECT, DOMAIN, SERVICE_SET_OPTIONS
+from .const import (
+    DATA_INPUT_SELECT,
+    DOMAIN,
+    InputSelectService,
+    InputSelectServiceArgument,
+)
 
 RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 
@@ -38,33 +33,37 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD,
+        InputSelectService.RELOAD,
         _async_reload_service,
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
     component = hass.data[DATA_INPUT_SELECT].component
-    component.async_register_entity_service(SERVICE_SELECT_FIRST, None, "async_first")
-    component.async_register_entity_service(SERVICE_SELECT_LAST, None, "async_last")
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT,
-        {probatio.Optional(ATTR_CYCLE, default=True): bool},
+        InputSelectService.SELECT_FIRST, None, "async_first"
+    )
+    component.async_register_entity_service(
+        InputSelectService.SELECT_LAST, None, "async_last"
+    )
+    component.async_register_entity_service(
+        InputSelectService.SELECT_NEXT,
+        {probatio.Optional(InputSelectServiceArgument.CYCLE, default=True): bool},
         "async_next",
     )
     component.async_register_entity_service(
-        SERVICE_SELECT_OPTION,
-        {probatio.Required(ATTR_OPTION): cv.string},
+        InputSelectService.SELECT_OPTION,
+        {probatio.Required(InputSelectServiceArgument.OPTION): cv.string},
         "async_select_option",
     )
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS,
-        {probatio.Optional(ATTR_CYCLE, default=True): bool},
+        InputSelectService.SELECT_PREVIOUS,
+        {probatio.Optional(InputSelectServiceArgument.CYCLE, default=True): bool},
         "async_previous",
     )
     component.async_register_entity_service(
-        SERVICE_SET_OPTIONS,
+        InputSelectService.SET_OPTIONS,
         {
-            probatio.Required(ATTR_OPTIONS): probatio.All(
+            probatio.Required(InputSelectServiceArgument.OPTIONS): probatio.All(
                 probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
             )
         },

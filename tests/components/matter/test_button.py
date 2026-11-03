@@ -15,6 +15,12 @@ from homeassistant.helpers import entity_registry as er
 from .common import snapshot_matter_entities
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.BUTTON
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_buttons(
     hass: HomeAssistant,

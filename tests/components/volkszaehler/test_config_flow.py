@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 from volkszaehler.exceptions import (
     VolkszaehlerApiConnectionError,
     VolkszaehlerNoDataAvailable,
@@ -21,8 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 async def test_create_entry(

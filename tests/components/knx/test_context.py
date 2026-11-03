@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
 from xknx.telegram import Telegram, TelegramDirection
 
 from homeassistant.components.knx.const import EVENT_KNX_STATE_CHANGED
@@ -12,8 +13,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events, async_fire_time_changed
 
 LIGHT_ENTITY_ID = "light.test"
 SWITCH_ENTITY_ID = "switch.test"

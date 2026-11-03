@@ -11,6 +11,7 @@ from google_health_api.exceptions import (
     HealthAuthException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.google_health.coordinator import POLLING_INTERVAL
@@ -19,8 +20,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_google_health_client")

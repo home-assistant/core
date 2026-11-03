@@ -1,6 +1,9 @@
 """Tests for diagnostics data."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -12,10 +15,6 @@ from .const import (
     STORED_ENTRY_DATA_CLOUD,
     STORED_ENTRY_DATA_SELF_HOSTED,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(

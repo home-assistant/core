@@ -4,14 +4,17 @@ from unittest.mock import MagicMock
 
 from PySrDaliGateway import CallbackEventType
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import find_device_listener, trigger_availability_callback
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 ENTITY_ID = "sensor.illuminance_sensor_0000_20"
 
