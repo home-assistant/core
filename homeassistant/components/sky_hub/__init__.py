@@ -10,9 +10,10 @@ from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, ISSUE_LEGACY_KNOWN_DEVICES, PLATFORMS
@@ -92,3 +93,27 @@ async def _async_check_legacy_known_devices(
 async def async_unload_entry(hass: HomeAssistant, entry: SkyHubConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: SkyHubConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Allow removing a client device while the client is not connected."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
+    if entry.state is not ConfigEntryState.LOADED:
+        return True
+    coordinator = entry.runtime_data
+    device_macs = {
+        mac
+        for connection_type, mac in device_entry.connections
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    if any(dr.format_mac(mac) in device_macs for mac in coordinator.data):
+        return False
+    # Forget the client, so it is added again when it reconnects
+    coordinator.tracked_macs -= {
+        mac for mac in coordinator.tracked_macs if dr.format_mac(mac) in device_macs
+    }
+    return True

@@ -92,30 +92,30 @@
 # name: test_set_operation_mode[botched]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 12, 30, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 8, 30, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
     }),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 12, 30, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 8, 30, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
     }),
   ])
 # ---
 # name: test_set_operation_mode[default]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 13, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 13, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
 # name: test_set_operation_mode[sys_006]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 14, 30, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 16, 30, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
     }),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 14, 30, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 16, 30, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
     }),
   ])
 # ---
