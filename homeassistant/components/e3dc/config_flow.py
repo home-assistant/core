@@ -104,7 +104,9 @@ class E3dcConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device, errors = await self._async_validate(user_input)
             if device is not None:
-                await self.async_set_unique_id(device.serial_number)
+                await self.async_set_unique_id(
+                    device.serial_number, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=_title(device.model), data=user_input

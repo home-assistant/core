@@ -317,3 +317,31 @@ async def test_zeroconf_no_local_address(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_local_address"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_step_after_failed_discovery(
+    hass: HomeAssistant, identified: MockModbusConnection
+) -> None:
+    """Test manual setup on a custom port succeeds while discovery is pending."""
+    identified.for_unit(1).fail_requests(ModbusTimeoutError())
+    with _patch_temporary_unit(identified):
+        discovery = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+        )
+    assert discovery["step_id"] == "zeroconf_confirm"
+
+    identified.for_unit(1).fail_requests(None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with _patch_temporary_unit(identified):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.100", CONF_PORT: 1502}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: "192.168.1.100", CONF_PORT: 1502}
+    assert result["result"].unique_id == MOCK_SERIAL
+    # Creating the entry ends the discovery flow for the same power station
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
