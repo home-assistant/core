@@ -265,3 +265,61 @@ async def test_timer_updates_real_sensor_without_changed_advertisements(
         async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done(wait_background_tasks=True)
         assert poll.await_count == 2
+
+
+@pytest.mark.usefixtures("mock_bluetooth", "entity_registry_enabled_by_default")
+async def test_unchanged_passive_broadcast_keeps_cache_fresh(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Identical advertisements keep passive readings past the cache lifetime."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=ADDRESS)
+    entry.add_to_hass(hass)
+    await async_setup_with_default_adapter(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    device = generate_ble_device(ADDRESS, "Battery Monitor")
+    advertisement = generate_advertisement_data(
+        local_name="Battery Monitor",
+        manufacturer_data={11628: bytes.fromhex("b1e65b448775c27f1b9e78c09d53")},
+        rssi=-60,
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass, device, advertisement, monotonic(), "passive-proxy", False
+    )
+    with (
+        patch(
+            "homeassistant.components.bmx_monitor.async_validate_device",
+            return_value="valid_passive",
+        ),
+        patch("bmx_ble.protocol.monotonic", side_effect=monotonic),
+        patch(
+            "homeassistant.components.bmx_monitor.coordinator.monotonic_time_coarse",
+            side_effect=monotonic,
+        ),
+        patch(
+            "homeassistant.components.bluetooth.active_update_processor.monotonic_time_coarse",
+            side_effect=monotonic,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{ADDRESS}-battery_voltage"
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "12.88"
+
+        # Four fallback reads span 240 s, beyond the 180 s cache lifetime.
+        for _ in range(4):
+            freezer.tick(timedelta(seconds=60))
+            inject_advertisement_with_time_and_source_connectable(
+                hass, device, advertisement, monotonic(), "passive-proxy", False
+            )
+            async_fire_time_changed(hass, dt_util.utcnow())
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert entry.runtime_data.last_poll_successful
+        assert hass.states.get(entity_id).state == "12.88"
+        assert await hass.config_entries.async_unload(entry.entry_id)

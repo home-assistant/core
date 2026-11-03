@@ -11,10 +11,11 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_last_service_info,
     async_process_advertisements,
+    async_register_advertisement_callback,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .coordinator import BMxBluetoothCoordinator
@@ -107,6 +108,19 @@ async def async_setup_entry(
         # Accept advertisements from non-connectable scanners/proxies.  When a
         # connectable path is available it is still preferred for the GATT read.
         connectable=False,
+    )
+
+    @callback
+    def _async_refresh_passive_cache(service_info: BluetoothServiceInfoBleak) -> None:
+        """Keep the passive fallback fresh while the broadcast is unchanged."""
+        device_data.process_advertisement(
+            service_info.manufacturer_data, raw=service_info.raw
+        )
+
+    config_entry.async_on_unload(
+        async_register_advertisement_callback(
+            hass, _async_refresh_passive_cache, address
+        )
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
