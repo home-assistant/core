@@ -46,11 +46,10 @@ def _normalize_host(value: str) -> str:
             url = yarl.URL(cv.url(value))
         except ValueError as err:
             raise probatio.Invalid("invalid url") from err
-        if not url.host:
+        # Keep the port only if it was given, and the brackets of an IPv6 host.
+        if not (host := url.host_port_subcomponent):
             raise probatio.Invalid("invalid url")
-        if url.port is not None:
-            return f"{url.host}:{url.port}"
-        return url.host
+        return host
     return value.strip("/").split("/", 1)[0]
 
 
