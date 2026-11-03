@@ -3,7 +3,6 @@
 import asyncio
 import contextlib
 from datetime import UTC, datetime
-import glob
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -25,7 +24,11 @@ from .backup import backed_up_paths
 from .identity import one_stored_entry_per_name
 from .logger import LOGGER
 from .path import is_safe
-from .storage import async_load_from_storage, async_save_to_storage
+from .storage import (
+    async_load_from_storage,
+    async_save_to_storage,
+    corrupt_copy_of_missing_file,
+)
 
 if TYPE_CHECKING:
     from ..base import MarketplaceManager
@@ -69,17 +72,6 @@ EXPORTED_INSTALLED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("selected_tag", None),
     ("show_beta", False),
 )
-
-
-def _corrupt_copy_of_missing_file(path: str) -> str | None:
-    """Return the copy the storage helper moved a corrupt file to.
-
-    The helper moves it aside and loads nothing, which looks like a first setup
-    on this start and every start after it.
-    """
-    if os.path.exists(path):
-        return None
-    return max(glob.glob(f"{glob.escape(path)}.corrupt.*"), default=None)
 
 
 class MarketplaceData:
@@ -184,12 +176,12 @@ class MarketplaceData:
             return {}
         if not data and (
             corrupt_copy := await self.marketplace.hass.async_add_executor_job(
-                _corrupt_copy_of_missing_file, path
+                corrupt_copy_of_missing_file, path
             )
         ):
             self._log_unreadable(
                 f"{path} could not be parsed and was moved to {corrupt_copy};"
-                " remove that copy to start without the stored data"
+                " remove that copy to start without it"
             )
             return None
         if not isinstance(data, dict):
