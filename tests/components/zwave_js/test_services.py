@@ -833,6 +833,22 @@ async def test_bulk_set_config_parameters(
 
     client.async_send_command.reset_mock()
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_CONFIG_PARAMETER: 102,
+                ATTR_CONFIG_VALUE: 241,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+
 
 async def test_bulk_set_config_parameters_gather(
     hass: HomeAssistant,
@@ -1798,6 +1814,18 @@ async def test_ping(
             blocking=True,
         )
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PING,
+            {ATTR_ENTITY_ID: "sensor.fake"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+
     client.async_send_command.reset_mock()
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
     with pytest.raises(HomeAssistantError):
@@ -1976,6 +2004,24 @@ async def test_invoke_cc_api(
     client.async_send_command.reset_mock()
     client.async_send_command_no_wait.reset_mock()
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_INVOKE_CC_API,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_METHOD_NAME: "someMethod",
+                ATTR_PARAMETERS: [1, 2],
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+
 
 async def test_refresh_notifications(
     hass: HomeAssistant,
@@ -2108,6 +2154,21 @@ async def test_refresh_notifications(
             SERVICE_REFRESH_NOTIFICATIONS,
             {ATTR_NOTIFICATION_TYPE: 1},
             id="refresh_notifications",
+        ),
+        pytest.param(SERVICE_PING, {}, id="ping"),
+        pytest.param(
+            SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+            {ATTR_CONFIG_PARAMETER: 102, ATTR_CONFIG_VALUE: 241},
+            id="bulk_set_partial_config_parameters",
+        ),
+        pytest.param(
+            SERVICE_INVOKE_CC_API,
+            {
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_METHOD_NAME: "someMethod",
+                ATTR_PARAMETERS: [1, 2],
+            },
+            id="invoke_cc_api",
         ),
     ],
 )

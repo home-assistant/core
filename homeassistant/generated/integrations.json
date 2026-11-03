@@ -2627,6 +2627,15 @@
       ],
       "supported_by": "splunk"
     },
+    "croma_infrared": {
+      "name": "Croma Infrared",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.tv_streaming"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "crownstone": {
       "name": "Crownstone",
       "integration_type": "hub",
@@ -4037,6 +4046,9 @@
       "categories": [
         "diy_makers.boards_hardware",
         "sensors.temperature_humidity"
+      ],
+      "connectivity": [
+        "onewire"
       ],
       "supported_by": "onewire"
     },
@@ -6390,6 +6402,9 @@
           "categories": [
             "lighting"
           ],
+          "connectivity": [
+            "rf"
+          ],
           "name": "Honeywell String Lights"
         }
       }
@@ -7595,6 +7610,9 @@
       "categories": [
         "plugs_switches"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -7627,6 +7645,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.building_automation"
+      ],
+      "connectivity": [
+        "knx"
       ],
       "config_flow": true,
       "iot_class": "local_push",
@@ -10237,6 +10258,9 @@
         "appliances_cleaning.cooking",
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -10597,6 +10621,9 @@
       "categories": [
         "diy_makers.boards_hardware",
         "sensors.temperature_humidity"
+      ],
+      "connectivity": [
+        "onewire"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -11385,6 +11412,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols",
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -12264,6 +12294,9 @@
       "categories": [
         "plugs_switches"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": false,
       "iot_class": "assumed_state"
     },
@@ -12495,6 +12528,9 @@
         "hubs_protocols.wireless_protocols",
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": false,
       "iot_class": "assumed_state"
     },
@@ -12503,6 +12539,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -14933,6 +14972,9 @@
           "categories": [
             "hubs_protocols.wireless_protocols"
           ],
+          "connectivity": [
+            "rf"
+          ],
           "name": "TellStick"
         }
       }
@@ -16388,6 +16430,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": false,
       "iot_class": "local_push"
