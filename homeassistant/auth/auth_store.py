@@ -40,6 +40,10 @@ INITIAL_LOAD_SAVE_DELAY = 300
 
 DEFAULT_SAVE_DELAY = 1
 
+# Each save postpones any pending one, so a frequently used long-lived access
+# token must not schedule a save on every request.
+LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL = timedelta(minutes=1)
+
 
 class AuthStore:
     """Stores authentication info.
@@ -284,6 +288,22 @@ class AuthStore:
             refresh_token.expire_at = (
                 refresh_token.last_used_at.timestamp() + REFRESH_TOKEN_EXPIRATION
             )
+        self._async_schedule_save()
+
+    @callback
+    def async_log_long_lived_access_token_usage(
+        self, refresh_token: models.RefreshToken, remote_ip: str | None = None
+    ) -> None:
+        """Update long-lived access token last used information."""
+        now = dt_util.utcnow()
+        if (
+            refresh_token.last_used_at is not None
+            and now - refresh_token.last_used_at
+            < LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL
+        ):
+            return
+        refresh_token.last_used_at = now
+        refresh_token.last_used_ip = remote_ip
         self._async_schedule_save()
 
     @callback

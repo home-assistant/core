@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import jwt
 import probatio
 import pytest
@@ -871,6 +872,57 @@ async def test_create_long_lived_access_token(mock_hass) -> None:
     assert (
         jwt_payload["exp"] - jwt_payload["iat"] == timedelta(days=300).total_seconds()
     )
+
+
+async def test_log_access_token_usage_long_lived_access_token(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test long-lived access token usage is logged at most once per interval."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="GPS Logger",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    manager.async_create_access_token(refresh_token)
+    created_at = refresh_token.last_used_at
+
+    freezer.tick(
+        auth_store.LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL - timedelta(seconds=1)
+    )
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    assert refresh_token.last_used_at == created_at
+    assert refresh_token.last_used_ip is None
+
+    freezer.tick(timedelta(seconds=1))
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    assert refresh_token.last_used_at == dt_util.utcnow()
+    assert refresh_token.last_used_ip == "192.168.0.1"
+    assert refresh_token.expire_at is None
+
+    await flush_store(manager._store._store)
+    store2 = auth_store.AuthStore(hass)
+    await store2.async_load()
+    stored_token = store2.async_get_refresh_token(refresh_token.id)
+    assert stored_token.last_used_at == refresh_token.last_used_at
+    assert stored_token.last_used_ip == "192.168.0.1"
+
+
+async def test_log_access_token_usage_ignores_normal_token(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test usage of a normal refresh token is only logged on token refresh."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    manager.async_create_access_token(refresh_token)
+    last_used_at = refresh_token.last_used_at
+
+    freezer.tick(timedelta(hours=1))
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    assert refresh_token.last_used_at == last_used_at
+    assert refresh_token.last_used_ip is None
 
 
 async def test_one_long_lived_access_token_per_refresh_token(mock_hass) -> None:
