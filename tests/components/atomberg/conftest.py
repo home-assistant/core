@@ -3,10 +3,10 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from atomberg_api import AtombergDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
-from homeassistant.components.atomberg.api import AtombergDevice
 from homeassistant.components.atomberg.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_API_KEY
 

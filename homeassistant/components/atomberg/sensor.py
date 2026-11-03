@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, override
 
+from atomberg_api import DEVICE_TYPE_LOCK, DEVICE_TYPE_WATER_PURIFIER, AtombergDevice
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -16,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .api import DEVICE_TYPE_LOCK, DEVICE_TYPE_WATER_PURIFIER, AtombergDevice
 from .coordinator import AtombergConfigEntry, AtombergCoordinator
 from .entity import AtombergEntity
 

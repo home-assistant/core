@@ -3,11 +3,11 @@
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
+from atomberg_api import AtombergConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.atomberg.api import AtombergConnectionError
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant

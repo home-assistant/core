@@ -2,13 +2,14 @@
 
 from typing import override
 
+from atomberg_api import DEVICE_TYPE_LOCK, AtombergDevice
+
 from homeassistant.components import persistent_notification
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import DEVICE_TYPE_LOCK, AtombergDevice
 from .const import DOMAIN
 from .coordinator import AtombergConfigEntry, AtombergCoordinator
 from .entity import AtombergEntity

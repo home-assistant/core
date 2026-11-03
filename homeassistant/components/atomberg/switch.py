@@ -2,11 +2,7 @@
 
 from typing import Any, override
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from .api import (
+from atomberg_api import (
     COMMAND_IDLE_SLEEP,
     COMMAND_SLEEP,
     COMMAND_SLEEP_WINDOW,
@@ -14,6 +10,11 @@ from .api import (
     DEVICE_TYPE_WATER_PURIFIER,
     AtombergDevice,
 )
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
 from .coordinator import AtombergConfigEntry, AtombergCoordinator
 from .entity import AtombergEntity
 

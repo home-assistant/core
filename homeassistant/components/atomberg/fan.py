@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+from atomberg_api import COMMAND_POWER, COMMAND_SPEED, DEVICE_TYPE_FAN, AtombergDevice
+
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -10,7 +12,6 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .api import COMMAND_POWER, COMMAND_SPEED, DEVICE_TYPE_FAN, AtombergDevice
 from .const import FAN_SPEEDS
 from .coordinator import AtombergConfigEntry, AtombergCoordinator
 from .entity import AtombergEntity

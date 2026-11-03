@@ -2,10 +2,11 @@
 
 from typing import Any, override
 
+from atomberg_api import AtombergDevice
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import AtombergDevice
 from .const import DOMAIN
 from .coordinator import AtombergCoordinator
 

@@ -2,10 +2,10 @@
 
 from unittest.mock import AsyncMock, call
 
+from atomberg_api import AtombergConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.atomberg.api import AtombergConnectionError
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,

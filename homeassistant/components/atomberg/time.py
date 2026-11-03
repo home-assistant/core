@@ -3,18 +3,19 @@
 from datetime import UTC, datetime, time, timedelta
 from typing import override
 
-from homeassistant.components.time import TimeEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
-
-from .api import (
+from atomberg_api import (
     COMMAND_SLEEP_WINDOW,
     COMMAND_START_UTC,
     COMMAND_STOP_UTC,
     DEVICE_TYPE_WATER_PURIFIER,
     AtombergDevice,
 )
+
+from homeassistant.components.time import TimeEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
+
 from .coordinator import AtombergConfigEntry, AtombergCoordinator
 from .entity import AtombergEntity
 

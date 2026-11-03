@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+from atomberg_api import AtombergAuthError, AtombergClient, AtombergError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -10,7 +11,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import AtombergAuthError, AtombergClient, AtombergError
 from .const import CONF_REFRESH_TOKEN, DOMAIN, LOGGER
 
 PORTAL_URL = "https://developer.atomberg-iot.com"

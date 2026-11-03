@@ -2,13 +2,10 @@
 
 from unittest.mock import AsyncMock
 
+from atomberg_api import AtombergAuthError, AtombergConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.atomberg.api import (
-    AtombergAuthError,
-    AtombergConnectionError,
-)
 from homeassistant.components.atomberg.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE

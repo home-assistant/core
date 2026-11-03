@@ -2,11 +2,7 @@
 
 from typing import override
 
-from homeassistant.components.select import SelectEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from .api import (
+from atomberg_api import (
     COMMAND_FALLBACK_MODE,
     COMMAND_MODE,
     COMMAND_TIMER,
@@ -14,6 +10,11 @@ from .api import (
     DEVICE_TYPE_WATER_PURIFIER,
     AtombergDevice,
 )
+
+from homeassistant.components.select import SelectEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
 from .const import (
     TIMER_HOURS,
     TIMER_OPTIONS,

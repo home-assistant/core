@@ -2,13 +2,10 @@
 
 from unittest.mock import AsyncMock
 
+from atomberg_api import AtombergAuthError, AtombergConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.atomberg.api import (
-    AtombergAuthError,
-    AtombergConnectionError,
-)
 from homeassistant.components.atomberg.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY

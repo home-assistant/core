@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
+from atomberg_api import DEVICE_TYPE_WATER_PURIFIER, AtombergDevice
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -12,7 +14,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import DEVICE_TYPE_WATER_PURIFIER, AtombergDevice
 from .coordinator import AtombergConfigEntry, AtombergCoordinator
 from .entity import AtombergEntity
 

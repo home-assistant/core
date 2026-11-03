@@ -2,12 +2,17 @@
 
 from typing import override
 
+from atomberg_api import (
+    COMMAND_TDS_THRESHOLD,
+    DEVICE_TYPE_WATER_PURIFIER,
+    AtombergDevice,
+)
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import COMMAND_TDS_THRESHOLD, DEVICE_TYPE_WATER_PURIFIER, AtombergDevice
 from .const import TDS_THRESHOLD_RANGE
 from .coordinator import AtombergConfigEntry, AtombergCoordinator
 from .entity import AtombergEntity
