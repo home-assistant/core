@@ -1,5 +1,6 @@
 """Config flow for BT Home Hub 5 integration."""
 
+import logging
 from typing import Any, override
 
 from bthomehub5_devicelist import get_devicelist
@@ -11,6 +12,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_HOST, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -46,7 +49,8 @@ class BTHomeHub5ConfigFlow(ConfigFlow, domain=DOMAIN):
                 await _async_validate_host(self.hass, host)
             except requests.exceptions.RequestException:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
@@ -70,7 +74,8 @@ class BTHomeHub5ConfigFlow(ConfigFlow, domain=DOMAIN):
             await _async_validate_host(self.hass, host)
         except requests.exceptions.RequestException:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # noqa: BLE001
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
         return self.async_create_entry(

@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import requests
 
@@ -155,7 +156,9 @@ async def test_user_flow_index_error(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
+async def test_user_flow_unknown_exception(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test user step failure due to generic unexpected exception and recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -172,6 +175,7 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+    assert "Unexpected exception" in caplog.text
 
     with (
         patch(
@@ -253,7 +257,9 @@ async def test_import_flow_cannot_connect(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def test_import_flow_unknown_error(hass: HomeAssistant) -> None:
+async def test_import_flow_unknown_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test import flow aborts on generic exception."""
     with patch(
         "homeassistant.components.bt_home_hub_5.config_flow.get_devicelist",
@@ -267,3 +273,4 @@ async def test_import_flow_unknown_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
+    assert "Unexpected exception" in caplog.text

@@ -21,9 +21,9 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "description": "Configuring BT Home Hub 5 via YAML is deprecated and will be removed in a future release.\n\nYour existing configuration has been imported automatically. Please remove the `bt_home_hub_5` configuration from your configuration.yaml file.",
-      "title": "BT Home Hub 5 YAML configuration is deprecated"
+    "yaml_import_cannot_connect": {
+      "description": "The YAML configuration for BT Home Hub 5 at `{host}` could not be imported.\n\nCheck that `{host}` is a reachable BT Home Hub 5, update your `configuration.yaml` if needed, and restart Home Assistant.",
+      "title": "YAML configuration import failed"
     }
   }
 }
