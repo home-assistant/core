@@ -1190,27 +1190,6 @@ class MqttDiscoveryUpdateMixin(Entity):
             self._async_discovery_callback,
         )
 
-    async def _async_remove_state_and_registry_entry(
-        self: MqttDiscoveryUpdateMixin, payload: MQTTDiscoveryPayload
-    ) -> None:
-        """Remove entity's state and entity registry entry.
-
-        Remove entity from entity registry if it is registered,
-        this also removes the state. If the entity is not in the entity
-        registry, just remove the state.
-        """
-        entity_registry = er.async_get(self.hass)
-        if entity_entry := entity_registry.async_get(self.entity_id):
-            entity_registry.async_remove(self.entity_id)
-            await async_cleanup_removed_component_device(
-                self.hass,
-                entity_entry.device_id,
-                entity_entry.config_entry_id,
-                payload.kept_devices,
-            )
-        else:
-            await self.async_remove(force_remove=True)
-
     async def _async_process_discovery_update(
         self,
         payload: MQTTDiscoveryPayload,
@@ -1230,11 +1209,20 @@ class MqttDiscoveryUpdateMixin(Entity):
         if TYPE_CHECKING:
             assert self._discovery_data
         self._cleanup_discovery_on_remove()
-        if self._migrate_discovery is None:
-            # Unload and cleanup registry
-            await self._async_remove_state_and_registry_entry(payload)
+        entity_registry = er.async_get(self.hass)
+        # A migrating entity is only unloaded, removing a registered entity from
+        # the entity registry also removes its state
+        if self._migrate_discovery is None and (
+            entity_entry := entity_registry.async_get(self.entity_id)
+        ):
+            entity_registry.async_remove(self.entity_id)
+            await async_cleanup_removed_component_device(
+                self.hass,
+                entity_entry.device_id,
+                entity_entry.config_entry_id,
+                payload.kept_devices,
+            )
         else:
-            # Only unload the entity
             await self.async_remove(force_remove=True)
         send_discovery_done(self.hass, self._discovery_data)
 
