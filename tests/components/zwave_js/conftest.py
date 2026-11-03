@@ -302,9 +302,7 @@ def simon_io_700_roller_blind_state_fixture() -> NodeDataType:
     """Load the Simon IO 700 series roller blind node state fixture data."""
     return cast(
         NodeDataType,
-        load_json_object_fixture(
-            "cover_simon_io_700_roller_blind_state.json", DOMAIN
-        ),
+        load_json_object_fixture("cover_simon_io_700_roller_blind_state.json", DOMAIN),
     )
 
 
