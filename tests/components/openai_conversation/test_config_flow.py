@@ -793,6 +793,10 @@ async def test_form_invalid_auth(
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
                 CONF_STORE_RESPONSES: False,
+                CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
+                CONF_PRO_MODE: False,
+                CONF_VERBOSITY: "medium",
                 CONF_SERVICE_TIER: "auto",
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
@@ -1311,6 +1315,10 @@ async def test_subentry_web_search_user_location(
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         CONF_WEB_SEARCH_INLINE_CITATIONS: False,
         CONF_CODE_INTERPRETER: False,
+        CONF_REASONING_EFFORT: "low",
+        CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
+        CONF_PRO_MODE: False,
+        CONF_VERBOSITY: "medium",
     }
 
 

@@ -10,5 +10,3 @@ CONF_START_OFF = "start_off"
 SIGNAL_CONNECTED = "apple_tv_connected"
 SIGNAL_DISCONNECTED = "apple_tv_disconnected"
 SIGNAL_GROUP_CHANGED = "apple_tv_group_changed"
-
-ATTR_TEXT = "text"

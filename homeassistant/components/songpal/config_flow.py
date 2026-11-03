@@ -88,8 +88,8 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="init",
                 description_placeholders={
-                    CONF_NAME: self.conf.name,
-                    CONF_HOST: self.conf.host,
+                    "name": self.conf.name,
+                    "host": self.conf.host,
                 },
             )
 
@@ -142,6 +142,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         name = import_data.get(CONF_NAME)
         endpoint = import_data[CONF_ENDPOINT]
         parsed_url = urlparse(endpoint)
+        self._async_abort_entries_match({CONF_ENDPOINT: endpoint})
 
         # Try to connect to test the endpoint
         try:

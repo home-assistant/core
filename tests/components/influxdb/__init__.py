@@ -75,7 +75,6 @@ BASE_OPTIONS = {
     CONF_COMPONENT_CONFIG: {},
     CONF_COMPONENT_CONFIG_GLOB: {},
     CONF_COMPONENT_CONFIG_DOMAIN: {},
-    CONF_BUCKET: "Home Assistant",
 }
 
 INFLUX_PATH = "homeassistant.components.influxdb"

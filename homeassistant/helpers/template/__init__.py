@@ -32,7 +32,7 @@ from homeassistant.helpers.trace import (
     trace_stack_cv,
     trace_stack_top,
 )
-from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType
+from homeassistant.helpers.typing import TemplateVarsType, Undefined
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -631,7 +631,7 @@ class Template:
         """Render template with value exposed.
 
         If valid JSON will expose value_json too. A caller that has parsed the
-        value already passes it as value_json, or UNDEFINED if it is not JSON.
+        value already passes it as value_json, or Undefined if it is not JSON.
 
         This method must be run in the event loop.
         """
@@ -650,7 +650,7 @@ class Template:
                 variables["value_json"] = json_loads(value)
             except JSON_DECODE_EXCEPTIONS:
                 pass
-        elif value_json is not UNDEFINED:
+        elif value_json is not Undefined:
             variables["value_json"] = value_json
 
         try:

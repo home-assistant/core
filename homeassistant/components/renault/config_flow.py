@@ -284,7 +284,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="two_factor_code",
             data_schema=TWO_FACTOR_CODE_SCHEMA,
             errors=errors,
-            description_placeholders={CONF_EMAIL: self._two_factor_email},
+            description_placeholders={"email": self._two_factor_email},
         )
 
     async def _async_login_complete(self) -> ConfigFlowResult:

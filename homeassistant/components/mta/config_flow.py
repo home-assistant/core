@@ -263,13 +263,14 @@ class BusSubentryFlowHandler(ConfigSubentryFlow):
             # Validate route by fetching stops
             try:
                 self.stops = await self._async_get_stops(route)
+            except MTAFeedError:
+                _LOGGER.debug("Error fetching stops for route %s", route)
+                errors["base"] = "invalid_route"
+            else:
                 if not self.stops:
                     errors["base"] = "invalid_route"
                 else:
                     return await self.async_step_stop()
-            except MTAFeedError:
-                _LOGGER.debug("Error fetching stops for route %s", route)
-                errors["base"] = "invalid_route"
 
         return self.async_show_form(
             step_id="user",
