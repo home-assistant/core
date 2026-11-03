@@ -13,10 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    BREEZ_SERVICE_INFO,
     NOT_SNOOZ_SERVICE_INFO,
     SNOOZ_SERVICE_INFO_NOT_PAIRING,
     SNOOZ_SERVICE_INFO_PAIRING,
     TEST_ADDRESS,
+    TEST_BREEZ_DISPLAY_NAME,
     TEST_PAIRING_TOKEN,
     TEST_SNOOZ_DISPLAY_NAME,
 )
@@ -74,6 +76,18 @@ async def test_async_step_bluetooth_not_snooz(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
+
+
+async def test_async_step_bluetooth_breez(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with a Breez device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=BREEZ_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["description_placeholders"] == {"name": TEST_BREEZ_DISPLAY_NAME}
 
 
 async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
