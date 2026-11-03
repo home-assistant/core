@@ -21,6 +21,7 @@ from homeassistant.components.homekit.const import (
 from homeassistant.components.homekit.hksv_hardware import HardwareEncoder
 from homeassistant.components.homekit.hksv_stream import MediaObservation
 from homeassistant.components.homekit.type_cameras import FFMPEG_PID, Camera
+from homeassistant.components.stream import Orientation
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -381,6 +382,7 @@ async def test_secure_video_live_uses_codec_matching_negotiation(
         yield b""
 
     shared = SimpleNamespace(
+        orientation=Orientation.NO_TRANSFORM,
         live_parts=empty_parts,
         prepare_live_input=AsyncMock(return_value=0.0),
         close=AsyncMock(),
@@ -461,7 +463,7 @@ async def test_live_permission_rechecked_after_media_observation(
         "v_srtp_key": "synthetic",
         "v_ssrc": 12345,
     }
-    shared = SimpleNamespace(close=AsyncMock())
+    shared = SimpleNamespace(orientation=Orientation.NO_TRANSFORM, close=AsyncMock())
     with (
         patch.object(
             accessory, "_async_get_hksv_source", AsyncMock(return_value=shared)
@@ -508,6 +510,7 @@ async def test_shared_live_and_snapshot_privacy(
         await hold.wait()
 
     shared = SimpleNamespace(
+        orientation=Orientation.NO_TRANSFORM,
         live_parts=parts,
         prepare_live_input=AsyncMock(return_value=0.0),
         image=AsyncMock(return_value=b"jpeg"),
@@ -572,7 +575,7 @@ async def test_shared_live_privacy_change_releases_reference(
         stream_active=lambda _index: True,
     )
     accessory._hksv = status
-    shared = SimpleNamespace(close=AsyncMock())
+    shared = SimpleNamespace(orientation=Orientation.NO_TRANSFORM, close=AsyncMock())
 
     async def acquire():
         status.camera_active = False
@@ -714,7 +717,7 @@ async def test_live_exit_releases_shared_source_and_audio_proxy(
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
     hass.states.async_set("camera.test", "idle")
     accessory = Camera(hass, run_driver, "Camera", "camera.test", 2, {})
-    shared = SimpleNamespace(close=AsyncMock())
+    shared = SimpleNamespace(orientation=Orientation.NO_TRANSFORM, close=AsyncMock())
     proxy = SimpleNamespace(async_stop=AsyncMock())
     session = {
         "id": "ended",
@@ -1205,7 +1208,7 @@ async def test_live_observation_cancellation_releases_source(
     accessory = Camera(
         hass, run_driver, "Camera", "camera.test", 2, {"video_codec": "copy"}
     )
-    shared = SimpleNamespace(close=AsyncMock())
+    shared = SimpleNamespace(orientation=Orientation.NO_TRANSFORM, close=AsyncMock())
     accessory._hksv = SimpleNamespace(
         privacy_ready=True,
         camera_active=True,

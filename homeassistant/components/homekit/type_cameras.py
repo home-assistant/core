@@ -19,6 +19,7 @@ from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
+from homeassistant.components.stream import Orientation
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import (
     Event,
@@ -79,6 +80,7 @@ from .const import (
 from .doorbell import HomeDoorbellAccessory
 from .hksv_controller import HKSVController
 from .hksv_hardware import HARDWARE_ENCODER_PROBE as _HARDWARE_PROBE, HardwareEncoder
+from .hksv_media import orientation_video_filter
 from .hksv_rtp import NativeVideoSender
 from .hksv_stream import MediaObservation, SharedCameraStream
 from .util import pid_is_alive, state_changed_event_is_same_state
@@ -269,6 +271,9 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         )
 
         self._hksv: HKSVController | None = None
+        self._camera_stop_task: asyncio.Task[None] | None = None
+        self._camera_stream_stop_tasks: list[asyncio.Task[None]] = []
+        self._camera_stopping = False
         self._hksv_stream_chars: list[Any] = []
         self._hksv_motion_active: Any = None
         self._char_motion_detected = None
@@ -276,6 +281,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             CONF_LINKED_MOTION_SENSOR
         )
         self.motion_is_event = False
+        state = None
         if linked_motion_sensor := self.linked_motion_sensor:
             self.motion_is_event = linked_motion_sensor.startswith("event.")
             state = self.hass.states.get(linked_motion_sensor)
@@ -337,6 +343,8 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                     services.recording.add_linked_service(services.transport)
                     services.recording.add_linked_service(serv_motion)
                     self._hksv = controller
+                    if not self.motion_is_event and state is not None:
+                        controller.motion(state.state == STATE_ON)
                     self._hksv_motion_active = self._hksv_add_characteristic(
                         serv_motion, "StatusActive", True
                     )
@@ -534,6 +542,12 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         )
         preserve_source = bool(self._hksv and self._hksv.preserve_source)
         if video_codec != "copy" and not preserve_source:
+            orientation = (
+                shared.orientation if shared is not None else Orientation.NO_TRANSFORM
+            )
+            if orientation != Orientation.NO_TRANSFORM:
+                input_source = "-noautorotate " + input_source
+                filters = f"{orientation_video_filter(orientation)},{filters}"
             profile_name = self.config[CONF_VIDEO_PROFILE_NAMES][profile]
             encoder_options = ["-vf", filters]
             if video_codec == "libx264":
@@ -556,23 +570,33 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         except Exception:  # noqa: BLE001 - software fallback preserves live
             _LOGGER.warning("%s: Could not inspect HomeKit live source", self.entity_id)
             observed = None
-        if observed is not None and (
-            (
-                preserve_source
-                and observed.video_codec == "h264"
-                and observed.h264_profile_idc in (66, 77, 100)
-                and observed.width > 0
-                and observed.height > 0
-                and observed.observation_seconds >= 2
-            )
-            or live_video_compatible(
-                observed,
-                profile,
-                level,
-                width,
-                height,
-                fps,
-                stream_config["v_max_bitrate"],
+        orientation = (
+            shared.orientation if shared is not None else Orientation.NO_TRANSFORM
+        )
+        if orientation != Orientation.NO_TRANSFORM:
+            input_source = "-noautorotate " + input_source
+            filters = f"{orientation_video_filter(orientation)},{filters}"
+        if (
+            orientation == Orientation.NO_TRANSFORM
+            and observed is not None
+            and (
+                (
+                    preserve_source
+                    and observed.video_codec == "h264"
+                    and observed.h264_profile_idc in (66, 77, 100)
+                    and observed.width > 0
+                    and observed.height > 0
+                    and observed.observation_seconds >= 2
+                )
+                or live_video_compatible(
+                    observed,
+                    profile,
+                    level,
+                    width,
+                    height,
+                    fps,
+                    stream_config["v_max_bitrate"],
+                )
             )
         ):
             return input_source, "copy", "-bsf:v h264_mp4toannexb ", None
@@ -1183,18 +1207,33 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         if motion_reset := getattr(self, "_motion_event_reset", None):
             motion_reset.cancel()
             del self._motion_event_reset
+        if self._camera_stopping:
+            return
+        self._camera_stopping = True
         for session_info in self.sessions.values():
-            self.hass.async_create_background_task(
-                self.stop_stream(session_info), "homekit.camera-stop-stream"
+            self._camera_stream_stop_tasks.append(
+                self.hass.async_create_background_task(
+                    self.stop_stream(session_info), "homekit.camera-stop-stream"
+                )
             )
         super().async_stop()
 
     @override
     async def stop(self) -> None:
-        """Stop recording and HDS before completing accessory teardown."""
-        if self._hksv:
-            await self._hksv.close()
+        """Stop recording, HDS and live streams before accessory teardown."""
+        if self._camera_stop_task is None:
+            self._camera_stop_task = asyncio.create_task(self._async_finish_stop())
+        await asyncio.shield(self._camera_stop_task)
+
+    async def _async_finish_stop(self) -> None:
+        """Own cleanup independently of the caller's cancellation."""
         await super().stop()
+        try:
+            if self._hksv:
+                await self._hksv.close()
+        finally:
+            if self._camera_stream_stop_tasks:
+                await asyncio.gather(*self._camera_stream_stop_tasks)
 
     async def stop_stream(self, session_info: dict[str, Any]) -> None:
         """Stop the stream for the given ``session_id``."""

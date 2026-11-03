@@ -823,6 +823,23 @@ async def test_shared_clock_policy_conflict_and_release() -> None:
         stream.update_source.assert_called_once_with(stream.source)
 
 
+async def test_clock_release_restarts_preloaded_worker_without_outputs() -> None:
+    """A preloaded worker must restore its clock before a later HLS output."""
+    output = Mock()
+    output.requires_wallclock_timestamps = True
+    stream = Mock()
+    stream.pyav_options = {}
+    stream.is_running = True
+    stream.outputs.return_value = {"homekit_secure_video": output}
+
+    async def remove(_output: HKSVStreamOutput) -> None:
+        stream.outputs.return_value = {}
+
+    stream.remove_provider = AsyncMock(side_effect=remove)
+    await SharedCameraStream(stream, output).close()
+    stream.update_source.assert_called_once_with(stream.source)
+
+
 async def test_clock_release_preserves_explicit_camera_option() -> None:
     """Removing an HKSV output does not change an existing camera clock option."""
     output = Mock()

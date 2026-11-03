@@ -16,6 +16,7 @@ from homeassistant.components.homekit import hksv_controller as c
 from homeassistant.components.homekit.hksv_config import RecordingConfiguration
 from homeassistant.components.homekit.hksv_hardware import HardwareEncoder
 from homeassistant.components.homekit.hksv_stream import SharedFragment
+from homeassistant.components.stream import Orientation
 
 
 class Store:
@@ -192,6 +193,7 @@ def test_shared_source_attached_and_detached() -> None:
 
     async def run():
         class Shared:
+            orientation = Orientation.NO_TRANSFORM
             closed = False
 
             async def fragments(self):
@@ -347,6 +349,8 @@ async def test_hardware_runtime_failure_restarts_shared_stream_in_software(
             reports.append(codec)
 
     class Shared:
+        orientation = Orientation.NO_TRANSFORM
+
         async def fragments(self):
             yield object()
 
@@ -749,6 +753,7 @@ async def test_close_joins_cancelled_monitor_cleanup() -> None:
             await gate.wait()
 
     class Shared:
+        orientation = Orientation.NO_TRANSFORM
         closed = False
 
         async def close(self) -> None:
@@ -787,6 +792,7 @@ async def test_start_failure_retries_and_recovers(
 ) -> None:
     """A transient acquisition failure restarts without another setting write."""
     shared = MagicMock()
+    shared.orientation = Orientation.NO_TRANSFORM
     shared.close = AsyncMock()
     source = AsyncMock(side_effect=[RuntimeError("transient"), shared])
     controller = c.HKSVController(source, "ffmpeg", Store())
@@ -863,6 +869,7 @@ async def test_close_joins_cancelled_lease_close() -> None:
             return
 
     class Shared:
+        orientation = Orientation.NO_TRANSFORM
         closed = False
 
         async def close(self) -> None:
@@ -894,6 +901,7 @@ async def test_observe_live_source_uses_supplied_lease(
     """Observe the live lease independently and reject a detached lease."""
 
     class Lease:
+        orientation = Orientation.NO_TRANSFORM
         _closed = False
         attached = True
 
@@ -911,7 +919,7 @@ async def test_observe_live_source_uses_supplied_lease(
 
     controller = c.HKSVController(source, "ffmpeg", Store())
     lease = Lease()
-    observation = object()
+    observation = SimpleNamespace(observation_seconds=3)
     monkeypatch.setattr(c, "inspect_recording", lambda *_: observation)
     assert await controller.observe_live_source(lease) is observation
     lease.attached = False
@@ -1202,3 +1210,166 @@ async def test_camera_privacy_closes_authenticated_hds_socket(
             writer.close()
             await writer.wait_closed()
         await server.close()
+
+
+async def test_reconcile_reenabled_during_cleanup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Changes during cleanup are reconciled without another settings write."""
+    entered, release = asyncio.Event(), asyncio.Event()
+
+    class Previous:
+        async def stop(self) -> None:
+            entered.set()
+            await release.wait()
+
+    lease = MagicMock()
+    lease.orientation = Orientation.NO_TRANSFORM
+    lease.close = AsyncMock()
+    source = AsyncMock(return_value=lease)
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = True
+    controller.active = False
+    controller.configuration = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    controller._process = Previous()
+    controller._process_key = (controller.configuration, False)
+    process = MagicMock()
+    process.start = AsyncMock()
+    process.wait = AsyncMock(side_effect=asyncio.CancelledError)
+    monkeypatch.setattr(c, "RecordingProcess", lambda *_: process)
+    monkeypatch.setattr(
+        controller, "_probe_copy", AsyncMock(return_value=(False, False))
+    )
+    monkeypatch.setattr(c._HARDWARE_PROBE, "select", AsyncMock(return_value=None))
+    controller._schedule_reconcile()
+    await entered.wait()
+    controller.active = True
+    controller._schedule_reconcile()
+    release.set()
+    await controller._reconcile_task
+    assert source.await_count == 1
+    assert controller._process is process
+    controller._monitor_task.cancel()
+    await asyncio.gather(controller._monitor_task, return_exceptions=True)
+
+
+@pytest.mark.parametrize("mode", ["live", "recording"])
+async def test_native_probe_uses_previous_contiguous_media(
+    monkeypatch: pytest.MonkeyPatch, mode: str
+) -> None:
+    """A short partial segment can be measured together with the previous segment."""
+    fragments = (
+        SharedFragment(1, 1, b"init", b"previous", 2),
+        SharedFragment(1, 2, b"init", b"partial", 0.5),
+    )
+    short = SimpleNamespace(observation_seconds=0.5)
+    enough = SimpleNamespace(observation_seconds=2.4)
+    windows: list[tuple[bytes, ...]] = []
+
+    def inspect(_init: bytes, data: tuple[bytes, ...], _strict: bool) -> object:
+        windows.append(data)
+        return short if len(data) == 1 else enough
+
+    class Lease:
+        orientation = Orientation.NO_TRANSFORM
+        _closed = False
+
+        def _check_attached(self) -> None:
+            pass
+
+        def snapshot(
+            self, *, include_partial: bool = False
+        ) -> tuple[SharedFragment, ...]:
+            return fragments
+
+    async def source() -> None:
+        return None
+
+    monkeypatch.setattr(c, "inspect_recording", inspect)
+    monkeypatch.setattr(c, "can_copy_video", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr(
+        c.asyncio, "sleep", AsyncMock(side_effect=AssertionError("probe waited"))
+    )
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    config = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    if mode == "live":
+        assert await controller.observe_live_source(Lease()) is enough
+    else:
+        assert await controller._probe_copy(Lease(), config, False) == (True, False)
+    assert windows == [(b"partial",), (b"previous", b"partial")]
+
+
+@pytest.mark.parametrize(
+    "previous",
+    [
+        SharedFragment(1, 1, b"init", b"previous", 2),
+        SharedFragment(2, 2, b"init", b"previous", 2),
+        SharedFragment(1, 2, b"old init", b"previous", 2),
+    ],
+)
+async def test_native_probe_does_not_combine_discontinuous_media(
+    monkeypatch: pytest.MonkeyPatch, previous: SharedFragment
+) -> None:
+    """Never combine media separated by a gap, generation, or initialization."""
+    short = SimpleNamespace(observation_seconds=0.5)
+    windows: list[tuple[bytes, ...]] = []
+
+    def inspect(_init: bytes, data: tuple[bytes, ...], _strict: bool) -> object:
+        windows.append(data)
+        return short
+
+    class Lease:
+        orientation = Orientation.NO_TRANSFORM
+        _closed = False
+
+        def _check_attached(self) -> None:
+            pass
+
+        def snapshot(
+            self, *, include_partial: bool = False
+        ) -> tuple[SharedFragment, ...]:
+            return previous, SharedFragment(1, 3, b"init", b"partial", 0.5)
+
+    async def source() -> None:
+        return None
+
+    monkeypatch.setattr(c, "inspect_recording", inspect)
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    assert await controller.observe_live_source(Lease()) is short
+    assert windows == [(b"partial",)]
+
+
+async def test_recording_respects_shared_source_orientation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Transform video while preserving independently eligible audio copy."""
+    lease = MagicMock()
+    lease.orientation = Orientation.ROTATE_RIGHT
+    lease.close = AsyncMock()
+    source = AsyncMock(return_value=lease)
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = True
+    controller.active = True
+    controller.audio_active = True
+    controller.configuration = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    process = MagicMock()
+    process.start = AsyncMock()
+    process.wait = AsyncMock(side_effect=asyncio.CancelledError)
+    command = MagicMock(return_value=["ffmpeg"])
+    monkeypatch.setattr(c, "RecordingProcess", lambda *_: process)
+    monkeypatch.setattr(c, "ffmpeg_command", command)
+    monkeypatch.setattr(controller, "_probe_copy", AsyncMock(return_value=(True, True)))
+    monkeypatch.setattr(c._HARDWARE_PROBE, "select", AsyncMock(return_value=None))
+    assert await controller.observe_live_source(lease) is None
+    await controller._reconcile()
+    assert command.call_args.kwargs["copy_video"] is False
+    assert command.call_args.kwargs["copy_audio"] is True
+    assert command.call_args.kwargs["orientation"] == Orientation.ROTATE_RIGHT
+    controller._monitor_task.cancel()
+    await asyncio.gather(controller._monitor_task, return_exceptions=True)

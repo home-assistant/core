@@ -10,6 +10,8 @@ import struct
 import time
 from typing import TYPE_CHECKING
 
+from homeassistant.components.stream.core import Orientation  # pylint: disable=home-assistant-component-root-import
+
 if TYPE_CHECKING:
     from .hksv_config import RecordingConfiguration
     from .hksv_hardware import HardwareEncoder
@@ -318,6 +320,19 @@ class RecordingProcess:
             await asyncio.gather(stderr_task, return_exceptions=True)
 
 
+def orientation_video_filter(orientation: Orientation) -> str:
+    """Return the FFmpeg filters matching the camera orientation."""
+    return {
+        Orientation.MIRROR: "hflip",
+        Orientation.ROTATE_180: "hflip,vflip",
+        Orientation.FLIP: "vflip",
+        Orientation.ROTATE_LEFT_AND_FLIP: "transpose=clock,hflip",
+        Orientation.ROTATE_LEFT: "transpose=cclock",
+        Orientation.ROTATE_RIGHT_AND_FLIP: "transpose=clock,vflip",
+        Orientation.ROTATE_RIGHT: "transpose=clock",
+    }.get(orientation, "")
+
+
 def ffmpeg_command(
     executable: str,
     input_args: list[str],
@@ -327,6 +342,7 @@ def ffmpeg_command(
     copy_video: bool = False,
     copy_audio: bool = False,
     hardware: HardwareEncoder | None = None,
+    orientation: Orientation = Orientation.NO_TRANSFORM,
 ) -> list[str]:
     """Build a fragmented MP4 encoder using the controller's selection."""
     profiles = ("baseline", "main", "high")
@@ -339,6 +355,8 @@ def ffmpeg_command(
         or configuration.audio_codec != 0
     ):
         raise ValueError("Unsupported audio configuration")
+    if copy_video and orientation != Orientation.NO_TRANSFORM:
+        raise ValueError("Video copy cannot apply camera orientation")
     interval = configuration.iframe_ms / 1000
     command = [
         executable,
@@ -346,6 +364,7 @@ def ffmpeg_command(
         "-loglevel",
         "error",
         *(hardware.global_args if hardware is not None else ()),
+        *(["-noautorotate"] if orientation != Orientation.NO_TRANSFORM else []),
         *input_args,
         "-map",
         "0:v:0",
@@ -358,6 +377,8 @@ def ffmpeg_command(
             "force_original_aspect_ratio=decrease:force_divisible_by=2,"
             f"pad={configuration.width}:{configuration.height}:(ow-iw)/2:(oh-ih)/2"
         )
+        if orientation != Orientation.NO_TRANSFORM:
+            video_filter = f"{orientation_video_filter(orientation)},{video_filter}"
         if hardware is not None:
             video_filter += f",{hardware.video_filter}"
         command += ["-vf", video_filter, "-r", str(configuration.fps), "-c:v"]
@@ -388,7 +409,7 @@ def ffmpeg_command(
             f"expr:gte(t,n_forced*{interval})",
         ]
     if audio_enabled:
-        command += ["-map", "0:a:0"]
+        command += ["-map", "0:a:0?"]
         if copy_audio:
             command += ["-c:a", "copy"]
         else:

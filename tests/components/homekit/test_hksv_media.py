@@ -4,8 +4,10 @@ import asyncio
 from collections.abc import AsyncIterator
 from dataclasses import replace
 from io import BytesIO
+from pathlib import Path
 import shutil
 import struct
+import subprocess
 
 import av
 import pytest
@@ -19,6 +21,7 @@ from homeassistant.components.homekit.hksv_media import (
     can_copy_audio,
     can_copy_video,
     ffmpeg_command,
+    orientation_video_filter,
     read_box,
     read_fragments,
     shared_mp4_input,
@@ -29,6 +32,7 @@ from homeassistant.components.homekit.hksv_stream import (
     _has_h264_idr,
     inspect_recording,
 )
+from homeassistant.components.stream import Orientation
 
 
 def box(kind: bytes, data: bytes = b"") -> bytes:
@@ -298,27 +302,55 @@ async def test_shared_input_stops_at_discontinuity() -> None:
     ]
 
 
-async def test_audio_requested_without_input_audio_fails() -> None:
-    """Do not silently create a recording without requested audio."""
+@pytest.mark.parametrize("audio_enabled", [False, True])
+def test_video_only_recording_preserves_copied_packets(
+    tmp_path: Path, audio_enabled: bool
+) -> None:
+    """Missing audio never prevents a video-only source from recording."""
     ffmpeg = shutil.which("ffmpeg")
     if ffmpeg is None:
         pytest.skip("FFmpeg is not installed")
+    source = tmp_path / "source.mp4"
+    subprocess.run(
+        [
+            ffmpeg,
+            "-v",
+            "error",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc=size=320x240:rate=15",
+            "-t",
+            "2",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-g",
+            "15",
+            "-y",
+            str(source),
+        ],
+        check=True,
+        capture_output=True,
+    )
     config = RecordingConfiguration(
         4000, 1, 4000, 0, 0, 500, 1000, 320, 240, 15, 0, 1, 0, 1, 32
     )
     command = ffmpeg_command(
-        ffmpeg,
-        ["-f", "lavfi", "-i", "testsrc=size=320x240:rate=15", "-t", "1"],
-        config,
-        True,
+        ffmpeg, ["-i", str(source)], config, audio_enabled, copy_video=True
     )
-    process = RecordingProcess(command, 4, 5_000_000)
-    await process.start()
-    try:
-        with pytest.raises(RuntimeError, match="initialization"):
-            _ = [packet async for packet in process.fragments()]
-    finally:
-        await process.stop()
+    result = subprocess.run(command, check=True, capture_output=True)
+    with av.open(str(source)) as original, av.open(BytesIO(result.stdout)) as recorded:
+        assert not recorded.streams.audio
+        original_packets = [
+            bytes(packet) for packet in original.demux(video=0) if packet.size
+        ]
+        recorded_packets = [
+            bytes(packet) for packet in recorded.demux(video=0) if packet.size
+        ]
+    assert original_packets
+    assert recorded_packets == original_packets
 
 
 @pytest.mark.parametrize(
@@ -700,6 +732,88 @@ def test_independent_track_commands(copy_video: bool, copy_audio: bool) -> None:
     )
     assert command[command.index("-c:v") + 1] == ("copy" if copy_video else "libx264")
     assert command[command.index("-c:a") + 1] == ("copy" if copy_audio else "aac")
+
+
+@pytest.mark.parametrize(
+    ("orientation", "expected"),
+    [
+        (Orientation.MIRROR, "hflip"),
+        (Orientation.ROTATE_180, "hflip,vflip"),
+        (Orientation.FLIP, "vflip"),
+        (Orientation.ROTATE_LEFT_AND_FLIP, "transpose=clock,hflip"),
+        (Orientation.ROTATE_LEFT, "transpose=cclock"),
+        (Orientation.ROTATE_RIGHT_AND_FLIP, "transpose=clock,vflip"),
+        (Orientation.ROTATE_RIGHT, "transpose=clock"),
+    ],
+)
+def test_recording_orientation_filters(orientation: Orientation, expected: str) -> None:
+    """Apply each camera orientation before scaling and prohibit raw video copy."""
+    config = RecordingConfiguration(
+        4000, 1, 4000, 0, 0, 500, 1000, 320, 240, 15, 0, 1, 0, 1, 32
+    )
+    command = ffmpeg_command(
+        "ffmpeg", ["-i", "pipe:0"], config, False, orientation=orientation
+    )
+    assert command.index("-noautorotate") < command.index("-i")
+    assert command[command.index("-vf") + 1].startswith(expected + ",scale=")
+    with pytest.raises(ValueError, match="Video copy cannot apply"):
+        ffmpeg_command(
+            "ffmpeg",
+            ["-i", "pipe:0"],
+            config,
+            False,
+            copy_video=True,
+            orientation=orientation,
+        )
+
+
+@pytest.mark.parametrize(
+    ("orientation", "expected"),
+    [
+        (Orientation.MIRROR, bytes([30, 20, 10, 60, 50, 40])),
+        (Orientation.ROTATE_180, bytes([60, 50, 40, 30, 20, 10])),
+        (Orientation.FLIP, bytes([40, 50, 60, 10, 20, 30])),
+        (Orientation.ROTATE_LEFT_AND_FLIP, bytes([10, 40, 20, 50, 30, 60])),
+        (Orientation.ROTATE_LEFT, bytes([30, 60, 20, 50, 10, 40])),
+        (Orientation.ROTATE_RIGHT_AND_FLIP, bytes([60, 30, 50, 20, 40, 10])),
+        (Orientation.ROTATE_RIGHT, bytes([40, 10, 50, 20, 60, 30])),
+    ],
+)
+def test_orientation_filter_pixel_positions(
+    orientation: Orientation, expected: bytes
+) -> None:
+    """FFmpeg produces the same pixel positions as Home Assistant orientation."""
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        pytest.skip("FFmpeg is not installed")
+    result = subprocess.run(
+        [
+            ffmpeg,
+            "-v",
+            "error",
+            "-f",
+            "rawvideo",
+            "-pixel_format",
+            "gray",
+            "-video_size",
+            "3x2",
+            "-i",
+            "pipe:0",
+            "-vf",
+            orientation_video_filter(orientation),
+            "-frames:v",
+            "1",
+            "-f",
+            "rawvideo",
+            "-pix_fmt",
+            "gray",
+            "pipe:1",
+        ],
+        input=bytes([10, 20, 30, 40, 50, 60]),
+        capture_output=True,
+        check=True,
+    )
+    assert result.stdout == expected
 
 
 async def test_aac_copy_probe_with_real_ffmpeg() -> None:

@@ -442,11 +442,10 @@ class HomeKit:
                 return
             await self._async_reload_accessories_in_bridge_mode(entity_ids)
 
-    @callback
-    def _async_shutdown_accessory(self, accessory: HomeAccessory) -> None:
+    async def _async_shutdown_accessory(self, accessory: HomeAccessory) -> None:
         """Shutdown an accessory."""
         assert self.driver is not None
-        accessory.async_stop()
+        await accessory.stop()
         # Deallocate the IIDs for the accessory
         iid_manager = accessory.iid_manager
         services: list[Service] = accessory.services
@@ -470,13 +469,13 @@ class HomeKit:
                 "The underlying entity %s disappeared during reload", acc.entity_id
             )
             return
-        self._async_shutdown_accessory(acc)
+        await self._async_shutdown_accessory(acc)
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
             new_acc.run()
             self._async_update_accessories_hash()
 
-    def _async_remove_accessories_by_entity_id(
+    async def _async_remove_accessories_by_entity_id(
         self, entity_ids: Iterable[str]
     ) -> list[str]:
         """Remove accessories by entity id."""
@@ -491,7 +490,7 @@ class HomeKit:
             if aid is None or aid not in self.bridge.accessories:
                 continue
             if acc := self.async_remove_bridge_accessory(aid):
-                self._async_shutdown_accessory(acc)
+                await self._async_shutdown_accessory(acc)
                 removed.append(entity_id)
         return removed
 
@@ -499,7 +498,9 @@ class HomeKit:
         self, entity_ids: Iterable[str]
     ) -> None:
         """Reset accessories in bridge mode."""
-        if not (removed := self._async_remove_accessories_by_entity_id(entity_ids)):
+        if not (
+            removed := await self._async_remove_accessories_by_entity_id(entity_ids)
+        ):
             _LOGGER.debug("No accessories to reset in bridge mode for: %s", entity_ids)
             return
         # With a reset, we need to remove the accessories,
@@ -514,7 +515,7 @@ class HomeKit:
         self, entity_ids: Iterable[str]
     ) -> None:
         """Reload accessories in bridge mode."""
-        removed = self._async_remove_accessories_by_entity_id(entity_ids)
+        removed = await self._async_remove_accessories_by_entity_id(entity_ids)
         await self._async_recreate_removed_accessories_in_bridge_mode(removed)
 
     async def _async_recreate_removed_accessories_in_bridge_mode(

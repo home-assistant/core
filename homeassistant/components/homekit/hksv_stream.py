@@ -15,6 +15,7 @@ from homeassistant.components.camera import get_camera_from_entity_id
 from homeassistant.components.stream.core import (  # pylint: disable=home-assistant-component-root-import
     PROVIDERS,
     IdleTimer,
+    Orientation,
     Segment,
     StreamOutput,
     StreamSettings,
@@ -138,6 +139,11 @@ class SharedCameraStream:
         self._live_start: tuple[int, int] | None = None
         self.live_initial_burst = 0.0
         self._live_start_ready = asyncio.Event()
+
+    @property
+    def orientation(self) -> Orientation:
+        """Return the camera's current stream orientation."""
+        return self._stream.dynamic_stream_settings.orientation
 
     @classmethod
     async def open(
@@ -423,7 +429,7 @@ class SharedCameraStream:
             await self._stream.remove_provider(self._output)
             if (
                 restore_clock
-                and self._stream.outputs()
+                and self._stream.is_running
                 and not any(
                     getattr(output, "requires_wallclock_timestamps", False) is True
                     for output in self._stream.outputs().values()

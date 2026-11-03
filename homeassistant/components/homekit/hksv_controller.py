@@ -6,7 +6,7 @@ The owner must explicitly attach services and stop this controller on teardown.
 import asyncio
 import base64
 from collections.abc import AsyncIterator, Awaitable, Callable
-from contextlib import aclosing
+from contextlib import aclosing, suppress
 from dataclasses import replace
 import logging
 import time
@@ -15,6 +15,7 @@ from typing import Any, NoReturn
 from pyhap.datastream import HDSReject, HDSServer
 from pyhap.secure_video import HKSVServices, RecordingCapabilities, b64, parse_selected
 
+from homeassistant.components.stream.core import Orientation  # pylint: disable=home-assistant-component-root-import
 from homeassistant.exceptions import HomeAssistantError
 
 from .hksv_config import RecordingConfiguration
@@ -423,6 +424,7 @@ class HKSVController:
                 self._process_key = None
                 if previous or old_shared:
                     await self._cleanup(previous, old_shared)
+                    continue
                 if desired is None:
                     return
                 shared = None
@@ -434,6 +436,9 @@ class HKSVController:
                     copy_video, copy_audio = await self._probe_copy(
                         shared, desired[0], desired[1]
                     )
+                    orientation = shared.orientation
+                    if orientation != Orientation.NO_TRANSFORM:
+                        copy_video = False
                     hardware = None
                     if not copy_video and not self._force_software:
                         hardware = await _HARDWARE_PROBE.select(
@@ -452,6 +457,7 @@ class HKSVController:
                         copy_video=copy_video,
                         copy_audio=copy_audio,
                         hardware=hardware,
+                        orientation=orientation,
                     )
                     process = RecordingProcess(
                         command, desired[0].prebuffer_ms / 1000, 32 * 1024 * 1024
@@ -485,6 +491,7 @@ class HKSVController:
                     or not self.camera_active
                     or self.configuration != desired[0]
                     or self.audio_active != desired[1]
+                    or shared.orientation != orientation
                 ):
                     await self._cleanup(process, shared)
                     continue
@@ -504,13 +511,54 @@ class HKSVController:
                 self._monitor_task = asyncio.create_task(self._monitor(process))
                 return
 
+    async def _inspect_native_window(
+        self, fragments: tuple[SharedFragment, ...]
+    ) -> MediaObservation | None:
+        """Prefer the current segment, then a bounded contiguous window."""
+        if not fragments:
+            return None
+        observed = None
+        with suppress(InsufficientMediaError):
+            observed = await asyncio.to_thread(
+                inspect_recording,
+                fragments[-1].initialization,
+                (fragments[-1].data,),
+                False,
+            )
+        if observed is not None and observed.observation_seconds >= 2:
+            return observed
+        window: list[SharedFragment] = []
+        size = 0
+        for fragment in reversed(fragments[-8:]):
+            if window and (
+                fragment.stream_id != window[0].stream_id
+                or fragment.sequence + 1 != window[0].sequence
+                or fragment.initialization != window[0].initialization
+            ):
+                break
+            size += len(fragment.data)
+            if size + len(fragment.initialization) > 32 * 1024 * 1024:
+                break
+            window.insert(0, fragment)
+        if len(window) < 2:
+            return observed
+        try:
+            return await asyncio.to_thread(
+                inspect_recording,
+                window[0].initialization,
+                tuple(fragment.data for fragment in window),
+                False,
+            )
+        except InsufficientMediaError:
+            return observed
+
     async def observe_live_source(
         self, shared: SharedCameraStream | None = None
     ) -> MediaObservation | None:
         """Inspect current shared media without opening another camera connection."""
         supplied = shared is not None
         shared = shared or self._shared
-        if shared is None:
+        if shared is None or shared.orientation != Orientation.NO_TRANSFORM:
             return None
         try:
             fragments = (
@@ -520,19 +568,24 @@ class HKSVController:
             )
             if not fragments:
                 return None
-            selected = fragments[-1:] if self.preserve_source else fragments[-2:]
-            if not self.preserve_source and len(selected) < 2:
-                return None
-            observed = await asyncio.to_thread(
-                inspect_recording,
-                selected[0].initialization,
-                tuple(fragment.data for fragment in selected),
-                not self.preserve_source,
-            )
+            if self.preserve_source:
+                observed = await self._inspect_native_window(fragments)
+            else:
+                selected = fragments[-2:]
+                if len(selected) < 2:
+                    return None
+                observed = await asyncio.to_thread(
+                    inspect_recording,
+                    selected[0].initialization,
+                    tuple(fragment.data for fragment in selected),
+                    True,
+                )
         except Exception:  # noqa: BLE001 - optional inspection must not block live video
             _LOGGER.debug("Could not inspect shared source for live video")
             return None
         else:
+            if shared.orientation != Orientation.NO_TRANSFORM:
+                return None
             if supplied:
                 try:
                     shared._check_attached()  # noqa: SLF001
@@ -571,12 +624,15 @@ class HKSVController:
                 window = tuple(contiguous)
             if window and (self.preserve_source or len(window) >= 2):
                 try:
-                    observed = await asyncio.to_thread(
-                        inspect_recording,
-                        window[0].initialization,
-                        tuple(fragment.data for fragment in window),
-                        not self.preserve_source,
-                    )
+                    if self.preserve_source:
+                        observed = await self._inspect_native_window(fragments)
+                    else:
+                        observed = await asyncio.to_thread(
+                            inspect_recording,
+                            window[0].initialization,
+                            tuple(fragment.data for fragment in window),
+                            True,
+                        )
                 except InsufficientMediaError:
                     pass
                 except ValueError:
@@ -586,7 +642,7 @@ class HKSVController:
                     if not self.preserve_source:
                         return False, False
                 else:
-                    if observed.observation_seconds >= 2:
+                    if observed is not None and observed.observation_seconds >= 2:
                         copy_video = not self._video_copy_disabled and can_copy_video(
                             observed, config, preserve_source=self.preserve_source
                         )
@@ -597,6 +653,8 @@ class HKSVController:
                             and len(fragments) >= 2
                             and fragments[-2].stream_id == fragments[-1].stream_id
                             and fragments[-2].sequence + 1 == fragments[-1].sequence
+                            and fragments[-2].initialization
+                            == fragments[-1].initialization
                         ):
                             try:
                                 audio_observed = await asyncio.to_thread(
