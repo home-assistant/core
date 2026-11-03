@@ -1,6 +1,7 @@
 {
   "domain": "clicky",
   "name": "Clicky Web Analytics",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@avclicky"],
   "config_flow": true,
   "dependencies": [],
