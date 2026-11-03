@@ -55,7 +55,7 @@ async def update_domain_service(call: ServiceCall) -> None:
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={
-                    CONF_DOMAIN: entry.data[CONF_DOMAIN],
+                    "domain": entry.data[CONF_DOMAIN],
                 },
             )
     except ClientError as e:
@@ -63,6 +63,6 @@ async def update_domain_service(call: ServiceCall) -> None:
             translation_domain=DOMAIN,
             translation_key="connection_error",
             translation_placeholders={
-                CONF_DOMAIN: entry.data[CONF_DOMAIN],
+                "domain": entry.data[CONF_DOMAIN],
             },
         ) from e
