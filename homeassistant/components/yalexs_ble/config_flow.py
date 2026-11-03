@@ -186,7 +186,6 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="integration_discovery_confirm",
             description_placeholders={

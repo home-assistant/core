@@ -34,12 +34,6 @@ from anthropic.types import (
     ModelInfo,
     OutputConfigParam,
     RawContentBlockDelta,
-    RawContentBlockDeltaEvent,
-    RawContentBlockStartEvent,
-    RawContentBlockStopEvent,
-    RawMessageDeltaEvent,
-    RawMessageStartEvent,
-    RawMessageStopEvent,
     RedactedThinkingBlock,
     RedactedThinkingBlockParam,
     ServerToolUseBlock,
@@ -55,6 +49,7 @@ from anthropic.types import (
     ThinkingBlock,
     ThinkingBlockParam,
     ThinkingConfigAdaptiveParam,
+    ThinkingConfigBetweenToolsParam,
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
     ThinkingDelta,
@@ -114,10 +109,11 @@ from homeassistant.util.json import JsonArrayType, JsonObjectType
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
+    CONF_EFFORT,
     CONF_MAX_TOKENS,
     CONF_PROMPT_CACHING,
     CONF_THINKING_BUDGET,
-    CONF_THINKING_EFFORT,
+    CONF_THINKING_TYPE,
     CONF_TOOL_SEARCH,
     CONF_WEB_FETCH,
     CONF_WEB_FETCH_MAX_USES,
@@ -131,10 +127,10 @@ from .const import (
     DEFAULT,
     DOMAIN,
     LOGGER,
-    MIN_THINKING_BUDGET,
     PromptCaching,
 )
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
+from .model_options import reconcile_model_options
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -310,10 +306,9 @@ def _convert_content(  # noqa: C901
                 "assistant" if external_tool else "user"
             ):
                 messages.append(
-                    MessageParam(
-                        role="assistant" if external_tool else "user",
-                        content=[tool_result_block],
-                    )
+                    {"role": "assistant", "content": [tool_result_block]}
+                    if external_tool
+                    else {"role": "user", "content": [tool_result_block]}
                 )
             elif isinstance(messages[-1]["content"], str):
                 messages[-1]["content"] = [
@@ -335,10 +330,7 @@ def _convert_content(  # noqa: C901
             # Combine consequent user messages
             if not messages or messages[-1]["role"] != "user":
                 messages.append(
-                    MessageParam(
-                        role="user",
-                        content=content.content if has_text else [],
-                    )
+                    {"role": "user", "content": content.content if has_text else []}
                 )
             elif not has_text:
                 # Attachments are appended to the last user message later
@@ -355,12 +347,7 @@ def _convert_content(  # noqa: C901
         elif isinstance(content, conversation.AssistantContent):
             # Combine consequent assistant messages
             if not messages or messages[-1]["role"] != "assistant":
-                messages.append(
-                    MessageParam(
-                        role="assistant",
-                        content=[],
-                    )
-                )
+                messages.append({"role": "assistant", "content": []})
             elif isinstance(messages[-1]["content"], str):
                 messages[-1]["content"] = [
                     TextBlockParam(type="text", text=messages[-1]["content"]),
@@ -578,25 +565,25 @@ class AnthropicDeltaStream:
 
     def on_message_stream_event(self, event: MessageStreamEvent) -> None:
         """Handle MessageStreamEvent."""
-        if isinstance(event, RawMessageStartEvent):
+        if event.type == "message_start":
             self.on_message_start_event(event.message)
             return
-        if isinstance(event, RawContentBlockStartEvent):
+        if event.type == "content_block_start":
             self.on_content_block_start_event(event.content_block, event.index)
             return
-        if isinstance(event, RawContentBlockDeltaEvent):
+        if event.type == "content_block_delta":
             self.on_content_block_delta_event(event.delta)
             return
-        if isinstance(event, RawContentBlockStopEvent):
+        if event.type == "content_block_stop":
             self.on_content_block_stop_event(event.index)
             return
-        if isinstance(event, RawMessageDeltaEvent):
+        if event.type == "message_delta":
             self.on_message_delta_event(event.delta, event.usage)
             return
-        if isinstance(event, RawMessageStopEvent):
+        if event.type == "message_stop":
             self.on_message_stop_event()
             return
-        LOGGER.debug("Unhandled event type: %s", event.type)  # type: ignore[unreachable]  # pragma: no cover - All types are handled but we want to verify that
+        LOGGER.debug("Unhandled event type: %s", event.type)  # type: ignore[unreachable]
 
     def on_message_start_event(self, message: Message) -> None:
         """Handle RawMessageStartEvent."""
@@ -943,13 +930,14 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _get_model_args(
+    async def _get_model_args(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure: probatio.Schema | None = None,
     ) -> MessageCreateParamsStreaming:
         """Get the model arguments."""
         options: dict[str, Any] = DEFAULT | self.subentry.data
+        reconcile_model_options(options, self.model_info)
 
         preloaded_tools = [
             "intent__HassTurnOn",
@@ -970,14 +958,14 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
         model = options[CONF_CHAT_MODEL]
 
-        model_args = MessageCreateParamsStreaming(
-            model=model,
-            messages=messages,
-            max_tokens=options[CONF_MAX_TOKENS],
-            system=system.content,
-            stream=True,
-            container=container_id,
-        )
+        model_args: MessageCreateParamsStreaming = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": options[CONF_MAX_TOKENS],
+            "system": system.content,
+            "stream": True,
+            "container": container_id,
+        }
 
         if options[CONF_PROMPT_CACHING] != PromptCaching.OFF:
             model_args["diagnostics"] = {
@@ -1005,38 +993,26 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         elif options[CONF_PROMPT_CACHING] == PromptCaching.AUTOMATIC:
             model_args["cache_control"] = {"type": "ephemeral"}
 
-        if (
-            self.model_info.capabilities
-            and self.model_info.capabilities.thinking.types.adaptive.supported
-        ):
-            thinking_effort = options[CONF_THINKING_EFFORT]
-            if thinking_effort != "none":
+        match options.get(CONF_THINKING_TYPE):
+            case "adaptive":
                 model_args["thinking"] = ThinkingConfigAdaptiveParam(
                     type="adaptive", display="summarized"
                 )
-                model_args["output_config"] = OutputConfigParam(effort=thinking_effort)
-            else:
-                model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-        else:
-            thinking_budget = options[CONF_THINKING_BUDGET]
-            if (
-                self.model_info.capabilities
-                and self.model_info.capabilities.thinking.types.enabled.supported
-                and thinking_budget >= MIN_THINKING_BUDGET
-            ):
+            case "enabled":
                 model_args["thinking"] = ThinkingConfigEnabledParam(
-                    type="enabled", display="summarized", budget_tokens=thinking_budget
+                    type="enabled",
+                    display="summarized",
+                    budget_tokens=options[CONF_THINKING_BUDGET],
                 )
-            else:
+            case "between_tools":
+                model_args["thinking"] = ThinkingConfigBetweenToolsParam(
+                    type="between_tools"
+                )
+            case "disabled":
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
 
-            if (
-                self.model_info.capabilities
-                and self.model_info.capabilities.effort.supported
-            ):
-                model_args["output_config"] = OutputConfigParam(
-                    effort=options[CONF_THINKING_EFFORT]
-                )
+        if effort := options.get(CONF_EFFORT):
+            model_args["output_config"] = OutputConfigParam(effort=effort)
 
         tools: list[
             ToolParam
@@ -1053,13 +1029,16 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 for tool in chat_log.llm_api.tools
             ]
 
-        if options[CONF_CODE_EXECUTION]:
+        if options.get(CONF_CODE_EXECUTION, False):
             # The `web_search_20260209` and `web_fetch_20260209` tools
             # automatically enable `code_execution_20260120` tool
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or (not options[CONF_WEB_SEARCH] and not options[CONF_WEB_FETCH])
+                or (
+                    not options.get(CONF_WEB_SEARCH, False)
+                    and not options[CONF_WEB_FETCH]
+                )
             ):
                 tools.append(
                     CodeExecutionTool20250825Param(
@@ -1068,11 +1047,11 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     ),
                 )
 
-        if options[CONF_WEB_SEARCH]:
+        if options.get(CONF_WEB_SEARCH, False):
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or not options[CONF_CODE_EXECUTION]
+                or not options.get(CONF_CODE_EXECUTION, False)
             ):
                 web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
                     WebSearchTool20250305Param(
@@ -1101,7 +1080,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             if (
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
-                or not options[CONF_CODE_EXECUTION]
+                or not options.get(CONF_CODE_EXECUTION, False)
             ):
                 tools.append(
                     WebFetchTool20250910Param(
@@ -1140,7 +1119,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             )
 
         if structure:
-            model_args.setdefault("output_config", OutputConfigParam())["format"] = (
+            model_args.setdefault("output_config", {})["format"] = (
                 JSONOutputFormatParam(
                     type="json_schema",
                     schema=anthropic.transform_schema(
@@ -1156,7 +1135,10 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
             )
 
         if tools:
-            if options[CONF_TOOL_SEARCH] and len(tools) > len(preloaded_tools) + 1:
+            if (
+                options.get(CONF_TOOL_SEARCH, False)
+                and len(tools) > len(preloaded_tools) + 1
+            ):
                 for tool in tools:
                     if not tool["name"].endswith(tuple(preloaded_tools)):
                         tool["defer_loading"] = True

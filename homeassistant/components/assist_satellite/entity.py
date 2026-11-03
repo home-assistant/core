@@ -26,6 +26,7 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import chat_session, entity
@@ -301,7 +302,7 @@ class AssistSatelliteEntity(entity.Entity):
 
         with (
             # Not passing in a conversation ID will force a new one to be created
-            chat_session.async_get_chat_session(self.hass) as session,
+            chat_session.async_get_chat_session(self.hass, context=None) as session,
             conversation.async_get_chat_log(self.hass, session) as chat_log,
         ):
             self._conversation_id = session.conversation_id
@@ -498,8 +499,9 @@ class AssistSatelliteEntity(entity.Entity):
 
         assert self.platform.config_entry is not None
 
+        # The pipeline checks the owner with the input of the user.
         with chat_session.async_get_chat_session(
-            self.hass, self._conversation_id
+            self.hass, self._conversation_id, context=None
         ) as session:
             # Store the conversation ID. If it is no longer valid,
             # get_chat_session will reset it
@@ -667,7 +669,7 @@ class AssistSatelliteEntity(entity.Entity):
 
             tts_options: dict[str, Any] = {}
             if pipeline.tts_voice is not None:
-                tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
+                tts_options[TextToSpeechCommonOption.VOICE] = pipeline.tts_voice
 
             if self.tts_options is not None:
                 tts_options.update(self.tts_options)

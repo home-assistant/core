@@ -1,4 +1,4 @@
-"""Update platform for the WattWächter Plus integration."""
+"""Update platform for the WattWächter integration."""
 
 from typing import Any, override
 
@@ -30,7 +30,7 @@ async def async_setup_entry(
 
 
 class WattwaechterUpdateEntity(WattwaechterEntity, UpdateEntity):
-    """Firmware update entity for WattWächter Plus."""
+    """Firmware update entity for WattWächter devices."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (

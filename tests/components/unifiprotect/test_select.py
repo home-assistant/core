@@ -22,6 +22,7 @@ from uiprotect.data import (
     ModelType,
     NvrArmMode,
     NvrArmModeStatus,
+    Permission,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicHdrMode,
@@ -1734,3 +1735,30 @@ async def test_select_nvr_arm_profile_decoupled_from_private_websocket(
     ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
     assert hass.states.get(ARM_PROFILE_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        pytest.param("hdr_mode", id="hdr_mode"),
+        pytest.param("doorbell_text", id="doorbell_text"),
+    ],
+)
+async def test_select_camera_read_only_user(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+) -> None:
+    """A read-only local user gets the camera selects that write publicly."""
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    assert entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{doorbell.mac}_{key}"
+    )

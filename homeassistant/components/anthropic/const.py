@@ -12,10 +12,11 @@ DEFAULT_AI_TASK_NAME = "Claude AI Task"
 CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
 CONF_CODE_EXECUTION = "code_execution"
+CONF_EFFORT = "effort"
 CONF_MAX_TOKENS = "max_tokens"
 CONF_PROMPT_CACHING = "prompt_caching"
 CONF_THINKING_BUDGET = "thinking_budget"
-CONF_THINKING_EFFORT = "thinking_effort"
+CONF_THINKING_TYPE = "thinking_type"
 CONF_TOOL_SEARCH = "tool_search"
 CONF_WEB_FETCH = "web_fetch"
 CONF_WEB_FETCH_MAX_USES = "web_fetch_max_uses"
@@ -41,10 +42,11 @@ MIN_THINKING_BUDGET = 1024
 DEFAULT = {
     CONF_CHAT_MODEL: "claude-haiku-5-5",
     CONF_CODE_EXECUTION: False,
+    CONF_EFFORT: "low",
     CONF_MAX_TOKENS: 3000,
     CONF_PROMPT_CACHING: PromptCaching.PROMPT.value,
     CONF_THINKING_BUDGET: MIN_THINKING_BUDGET,
-    CONF_THINKING_EFFORT: "low",
+    CONF_THINKING_TYPE: "adaptive",
     CONF_TOOL_SEARCH: False,
     CONF_WEB_FETCH: False,
     CONF_WEB_FETCH_MAX_USES: 5,

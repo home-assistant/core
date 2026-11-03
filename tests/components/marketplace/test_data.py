@@ -77,6 +77,7 @@ async def test_stored_data_is_a_copy(
     mock_repository.data.installed = True
     mock_repository.data.topics = ["lights"]
     mock_repository.data.authors = ["@frenck"]
+    mock_repository.data.integration_categories = ["lighting"]
     marketplace.repositories.register(mock_repository)
 
     marketplace.data.async_store_repository_data(mock_repository)
@@ -84,6 +85,11 @@ async def test_stored_data_is_a_copy(
 
     assert stored["topics"] == ["lights"]
     assert stored["topics"] is not mock_repository.data.topics
+    assert stored["integration_categories"] == ["lighting"]
+    assert (
+        stored["integration_categories"]
+        is not mock_repository.data.integration_categories
+    )
     assert stored["authors"] is not mock_repository.data.authors
     assert (
         stored["repository_manifest"]
@@ -134,6 +140,44 @@ async def test_restore(
 
     assert marketplace.status.new is False
     assert "Loading base repository information" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("stored_categories", "expected"),
+    [
+        pytest.param(["energy.ev_charging"], ["energy.ev_charging"], id="categories"),
+        pytest.param("energy", [], id="broken"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_integration_categories(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+    stored_categories: Any,
+    expected: list[str],
+) -> None:
+    """Test the categories of an integration survive a restart."""
+    create_install_folders(config_dir, RESTORED_REPOSITORIES)
+    data = MarketplaceData(marketplace)
+    stored = {
+        entry: dict(repo_data) for entry, repo_data in RESTORED_REPOSITORIES.items()
+    }
+    stored["1296269"]["integration_categories"] = stored_categories
+
+    async def mocked_load(hass: HomeAssistant, storage_key: str) -> Any:
+        """Return the stored repositories."""
+        return stored if storage_key == "repositories" else {}
+
+    with patch(
+        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
+        side_effect=mocked_load,
+    ):
+        assert await data.restore()
+
+    assert (
+        marketplace.repositories.get_by_id("1296269").data.integration_categories
+        == expected
+    )
 
 
 @pytest.mark.usefixtures("init_integration")

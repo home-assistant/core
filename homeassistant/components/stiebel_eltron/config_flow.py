@@ -92,10 +92,9 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._discovered_host, CONF_PORT: DEFAULT_PORT},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={CONF_HOST: self._discovered_host},
+            description_placeholders={"host": self._discovered_host},
         )
 
     @override

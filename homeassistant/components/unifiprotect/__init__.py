@@ -39,6 +39,7 @@ from .const import (
 )
 from .data import ProtectData, UFPConfigEntry
 from .migrate import (
+    async_deprecate_camera_setting_mirrors,
     async_deprecate_light_setting_mirrors,
     async_deprecate_private_only_entities,
     async_deprecate_ring_and_motion_sensors,
@@ -325,6 +326,7 @@ async def _async_setup_entry(
         hass, entry, {sensor.mac for sensor in bootstrap.sensors.values()}
     )
     async_deprecate_light_setting_mirrors(hass, entry, bootstrap)
+    async_deprecate_camera_setting_mirrors(hass, entry, bootstrap)
     async_deprecate_private_only_entities(hass, entry, bootstrap)
     async_deprecate_ring_and_motion_sensors(hass, entry, bootstrap)
     hass.http.register_view(ThumbnailProxyView(hass))

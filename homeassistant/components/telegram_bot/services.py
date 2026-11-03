@@ -6,15 +6,8 @@ import probatio
 from telegram.constants import InputMediaType
 from telegram.error import TelegramError
 
-from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_DOMAIN,
-    ATTR_ENTITY_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_SERVICE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -23,11 +16,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.target import (
     TargetSelection,
     async_extract_referenced_entity_ids,
@@ -72,8 +61,6 @@ from .const import (
     ATTR_RESIZE_KEYBOARD,
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
-    ATTR_TARGET,
-    ATTR_TIMEOUT,
     ATTR_TITLE,
     ATTR_URL,
     ATTR_USERNAME,
@@ -130,9 +117,6 @@ BASE_SERVICE_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(ATTR_TARGET): probatio.All(
-            probatio.EnsureList(), [probatio.Coerce(int)]
-        ),
         probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Optional(ATTR_CHAT_ID): probatio.All(
             probatio.EnsureList(), [probatio.Coerce(int)]
@@ -146,30 +130,23 @@ BASE_SERVICE_SCHEMA = probatio.Schema(
             probatio.EnsureList(), [cv.string]
         ),
         probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
-        probatio.Optional(ATTR_TIMEOUT): cv.positive_int,
         probatio.Optional(ATTR_MESSAGE_TAG): cv.string,
         probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
     }
 )
 
-SERVICE_SCHEMA_SEND_MESSAGE = probatio.All(
-    cv.deprecated(ATTR_TIMEOUT),
-    BASE_SERVICE_SCHEMA.extend(
-        {
-            probatio.Required(ATTR_MESSAGE): cv.string,
-            probatio.Optional(ATTR_TITLE): cv.string,
-            probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
-        }
-    ),
+SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend(
+    {
+        probatio.Required(ATTR_MESSAGE): cv.string,
+        probatio.Optional(ATTR_TITLE): cv.string,
+        probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
+    }
 )
 
 SERVICE_SCHEMA_SEND_MESSAGE_DRAFT = probatio.Schema(
     {
         probatio.Optional(ATTR_ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
-        ),
-        probatio.Optional(ATTR_TARGET): probatio.All(
-            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Optional(ATTR_CHAT_ID): probatio.All(
@@ -184,41 +161,35 @@ SERVICE_SCHEMA_SEND_MESSAGE_DRAFT = probatio.Schema(
     }
 )
 
-SERVICE_SCHEMA_SEND_CHAT_ACTION = probatio.All(
-    cv.deprecated(ATTR_TIMEOUT),
-    probatio.Schema(
-        {
-            probatio.Optional(ATTR_ENTITY_ID): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-            probatio.Optional(ATTR_TARGET): probatio.All(
-                probatio.EnsureList(), [probatio.Coerce(int)]
-            ),
-            probatio.Optional(ATTR_CHAT_ID): probatio.All(
-                probatio.EnsureList(), [probatio.Coerce(int)]
-            ),
-            probatio.Required(ATTR_CHAT_ACTION): probatio.In(
-                (
-                    CHAT_ACTION_TYPING,
-                    CHAT_ACTION_UPLOAD_PHOTO,
-                    CHAT_ACTION_RECORD_VIDEO,
-                    CHAT_ACTION_UPLOAD_VIDEO,
-                    CHAT_ACTION_RECORD_VOICE,
-                    CHAT_ACTION_UPLOAD_VOICE,
-                    CHAT_ACTION_UPLOAD_DOCUMENT,
-                    CHAT_ACTION_CHOOSE_STICKER,
-                    CHAT_ACTION_FIND_LOCATION,
-                    CHAT_ACTION_RECORD_VIDEO_NOTE,
-                    CHAT_ACTION_UPLOAD_VIDEO_NOTE,
-                )
-            ),
-            probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
-        }
-    ),
+SERVICE_SCHEMA_SEND_CHAT_ACTION = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(ATTR_CHAT_ID): probatio.All(
+            probatio.EnsureList(), [probatio.Coerce(int)]
+        ),
+        probatio.Required(ATTR_CHAT_ACTION): probatio.In(
+            (
+                CHAT_ACTION_TYPING,
+                CHAT_ACTION_UPLOAD_PHOTO,
+                CHAT_ACTION_RECORD_VIDEO,
+                CHAT_ACTION_UPLOAD_VIDEO,
+                CHAT_ACTION_RECORD_VOICE,
+                CHAT_ACTION_UPLOAD_VOICE,
+                CHAT_ACTION_UPLOAD_DOCUMENT,
+                CHAT_ACTION_CHOOSE_STICKER,
+                CHAT_ACTION_FIND_LOCATION,
+                CHAT_ACTION_RECORD_VIDEO_NOTE,
+                CHAT_ACTION_UPLOAD_VIDEO_NOTE,
+            )
+        ),
+        probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
+    }
 )
 
-SERVICE_SCHEMA_BASE_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
+SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     {
         probatio.Optional(ATTR_URL): cv.string,
         probatio.Optional(ATTR_FILE): cv.string,
@@ -229,11 +200,6 @@ SERVICE_SCHEMA_BASE_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
         probatio.Optional(ATTR_VERIFY_SSL): cv.boolean,
         probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
     }
-)
-
-SERVICE_SCHEMA_SEND_FILE = probatio.All(
-    cv.deprecated(ATTR_TIMEOUT),
-    SERVICE_SCHEMA_BASE_SEND_FILE,
 )
 
 SERVICE_SCHEMA_SEND_MEDIA_GROUP = probatio.Schema(
@@ -278,105 +244,87 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = probatio.Schema(
     }
 )
 
-SERVICE_SCHEMA_SEND_STICKER = probatio.All(
-    cv.deprecated(ATTR_TIMEOUT),
-    SERVICE_SCHEMA_BASE_SEND_FILE.extend(
-        {probatio.Optional(ATTR_STICKER_ID): cv.string}
-    ),
+SERVICE_SCHEMA_SEND_STICKER = SERVICE_SCHEMA_SEND_FILE.extend(
+    {probatio.Optional(ATTR_STICKER_ID): cv.string}
 )
 
-SERVICE_SCHEMA_SEND_LOCATION = probatio.All(
-    cv.deprecated(ATTR_TIMEOUT),
-    BASE_SERVICE_SCHEMA.extend(
-        {
-            probatio.Required(ATTR_LONGITUDE): cv.string,
-            probatio.Required(ATTR_LATITUDE): cv.string,
-            probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
-        }
-    ),
+SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend(
+    {
+        probatio.Required(ATTR_LONGITUDE): cv.string,
+        probatio.Required(ATTR_LATITUDE): cv.string,
+        probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
+    }
 )
 
-SERVICE_SCHEMA_SEND_POLL = probatio.All(
-    cv.deprecated(ATTR_TIMEOUT),
-    probatio.Schema(
-        {
-            probatio.Optional(ATTR_ENTITY_ID): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-            probatio.Optional(ATTR_CHAT_ID): probatio.All(
-                probatio.EnsureList(), [probatio.Coerce(int)]
-            ),
-            probatio.Optional(ATTR_TARGET): probatio.All(
-                probatio.EnsureList(), [probatio.Coerce(int)]
-            ),
-            probatio.Required(ATTR_QUESTION): cv.string,
-            probatio.Required(ATTR_OPTIONS): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(ATTR_OPEN_PERIOD): cv.positive_int,
-            probatio.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
-            probatio.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
-            probatio.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
-            probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
-            probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
-        }
-    ),
+SERVICE_SCHEMA_SEND_POLL = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(ATTR_CHAT_ID): probatio.All(
+            probatio.EnsureList(), [probatio.Coerce(int)]
+        ),
+        probatio.Required(ATTR_QUESTION): cv.string,
+        probatio.Required(ATTR_OPTIONS): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(ATTR_OPEN_PERIOD): cv.positive_int,
+        probatio.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
+        probatio.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
+        probatio.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
+        probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
+        probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
+    }
 )
 
-SERVICE_SCHEMA_EDIT_MESSAGE = probatio.All(
-    cv.deprecated(ATTR_TIMEOUT),
-    probatio.Schema(
-        {
-            probatio.Optional(ATTR_ENTITY_ID): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-            probatio.Optional(ATTR_TITLE): cv.string,
-            probatio.Required(ATTR_MESSAGE): cv.string,
-            probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
-                cv.positive_int, probatio.All(cv.string, "last")
-            ),
-            probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
-            probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
-            probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
-            probatio.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
-        }
-    ),
+SERVICE_SCHEMA_EDIT_MESSAGE = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(ATTR_TITLE): cv.string,
+        probatio.Required(ATTR_MESSAGE): cv.string,
+        probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
+            cv.positive_int, probatio.All(cv.string, "last")
+        ),
+        probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
+        probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
+        probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
+        probatio.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
+    }
 )
 
-SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = probatio.All(
-    cv.deprecated(ATTR_TIMEOUT),
-    probatio.Schema(
-        {
-            probatio.Optional(ATTR_ENTITY_ID): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-            probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
-                cv.positive_int, probatio.All(cv.string, "last")
-            ),
-            probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
-            probatio.Optional(ATTR_CAPTION): cv.string,
-            probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
-            probatio.Required(ATTR_MEDIA_TYPE): probatio.In(
-                (
-                    str(InputMediaType.ANIMATION),
-                    str(InputMediaType.AUDIO),
-                    str(InputMediaType.VIDEO),
-                    str(InputMediaType.DOCUMENT),
-                    str(InputMediaType.PHOTO),
-                )
-            ),
-            probatio.Optional(ATTR_URL): cv.string,
-            probatio.Optional(ATTR_FILE): cv.string,
-            probatio.Optional(ATTR_USERNAME): cv.string,
-            probatio.Optional(ATTR_PASSWORD): cv.string,
-            probatio.Optional(ATTR_AUTHENTICATION): cv.string,
-            probatio.Optional(ATTR_VERIFY_SSL): cv.boolean,
-            probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
-        }
-    ),
+SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
+            cv.positive_int, probatio.All(cv.string, "last")
+        ),
+        probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
+        probatio.Optional(ATTR_CAPTION): cv.string,
+        probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
+        probatio.Required(ATTR_MEDIA_TYPE): probatio.In(
+            (
+                str(InputMediaType.ANIMATION),
+                str(InputMediaType.AUDIO),
+                str(InputMediaType.VIDEO),
+                str(InputMediaType.DOCUMENT),
+                str(InputMediaType.PHOTO),
+            )
+        ),
+        probatio.Optional(ATTR_URL): cv.string,
+        probatio.Optional(ATTR_FILE): cv.string,
+        probatio.Optional(ATTR_USERNAME): cv.string,
+        probatio.Optional(ATTR_PASSWORD): cv.string,
+        probatio.Optional(ATTR_AUTHENTICATION): cv.string,
+        probatio.Optional(ATTR_VERIFY_SSL): cv.boolean,
+        probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
+    }
 )
 
 SERVICE_SCHEMA_EDIT_CAPTION = probatio.Schema(
@@ -489,8 +437,6 @@ SERVICE_MAP: dict[str, VolSchemaType] = {
 
 async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
     """Handle sending Telegram Bot message service calls."""
-
-    _deprecate_timeout(service)
 
     # this is the list of targets to send the message to
     targets = _build_targets(service)
@@ -616,40 +562,6 @@ async def _call_service(
     return None
 
 
-def _deprecate_timeout(service: ServiceCall) -> None:
-    if ATTR_TIMEOUT not in service.data:
-        return
-
-    # default: service was called using frontend such as
-    # developer tools or automation editor
-    service_call_origin = "call_service"
-
-    origin = service.context.origin_event
-    if origin and ATTR_ENTITY_ID in origin.data:
-        # automation
-        service_call_origin = origin.data[ATTR_ENTITY_ID]
-    elif origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
-        # script
-        service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
-
-    ir.async_create_issue(
-        service.hass,
-        DOMAIN,
-        "deprecated_timeout_parameter",
-        breaks_in_ha_version="2026.7.0",
-        is_fixable=True,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_timeout_parameter",
-        translation_placeholders={
-            "integration_title": "Telegram Bot",
-            "action": f"{DOMAIN}.{service.service}",
-            "action_origin": service_call_origin,
-        },
-        learn_more_url="https://github.com/home-assistant/core/pull/155198",
-    )
-
-
 def _build_targets(
     service: ServiceCall,
 ) -> list[tuple[TelegramBotConfigEntry, int, str]]:
@@ -659,8 +571,6 @@ def _build_targets(
     The config_entry identifies the bot to use for the service call.
     The chat_id or notify_entity_id identifies the recipient of the message.
     """
-
-    migrate_chat_ids = _warn_chat_id_migration(service)
 
     targets: list[tuple[TelegramBotConfigEntry, int, str]] = []
 
@@ -715,9 +625,9 @@ def _build_targets(
 
     # parse chat IDs from service data: `chat_id`
     if config_entry is not None:
-        chat_ids: set[int] = migrate_chat_ids
+        chat_ids: set[int] = set()
         if ATTR_CHAT_ID in service.data:
-            chat_ids = chat_ids | set(
+            chat_ids = set(
                 [service.data[ATTR_CHAT_ID]]
                 if isinstance(service.data[ATTR_CHAT_ID], int)
                 else service.data[ATTR_CHAT_ID]
@@ -785,67 +695,6 @@ def _build_targets(
         translation_domain=DOMAIN,
         translation_key="missing_notify_entities",
     )
-
-
-def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
-    if not service.data.get(ATTR_TARGET):
-        return set()
-
-    chat_ids: set[int] = set(
-        [service.data[ATTR_TARGET]]
-        if isinstance(service.data[ATTR_TARGET], int)
-        else service.data[ATTR_TARGET]
-    )
-
-    # default: service was called using frontend such as
-    # developer tools or automation editor
-    service_call_origin = "call_service"
-
-    origin = service.context.origin_event
-    if origin and ATTR_ENTITY_ID in origin.data:
-        # automation
-        service_call_origin = origin.data[ATTR_ENTITY_ID]
-    elif origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
-        # script
-        service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
-
-    ir.async_create_issue(
-        service.hass,
-        DOMAIN,
-        f"migrate_chat_ids_in_target_{service_call_origin}_{service.service}",
-        breaks_in_ha_version="2026.9.0",
-        is_fixable=True,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="migrate_chat_ids_in_target",
-        translation_placeholders={
-            "integration_title": "Telegram Bot",
-            "action": f"{DOMAIN}.{service.service}",
-            "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
-            "action_origin": service_call_origin,
-            "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
-            "example_old": (
-                f"```yaml\naction: {service.service}\ndata:\n"
-                "  target:  # to be updated\n"
-                "    - 1234567890\n...\n```"
-            ),
-            "example_new_entity_id": (
-                f"```yaml\naction: {service.service}\ndata:\n"
-                "  entity_id:\n"
-                "    - notify.telegram_bot_1234567890_1234567890"
-                "  # replace with your notify entity\n...\n```"
-            ),
-            "example_new_chat_id": (
-                f"```yaml\naction: {service.service}\ndata:\n"
-                "  chat_id:\n"
-                "    - 1234567890"
-                "  # replace with your chat_id\n...\n```"
-            ),
-        },
-        learn_more_url="https://github.com/home-assistant/core/pull/154868",
-    )
-
-    return chat_ids
 
 
 @callback

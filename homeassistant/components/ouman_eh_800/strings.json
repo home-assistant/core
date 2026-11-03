@@ -55,6 +55,8 @@
   },
   "entity": {
     "binary_sensor": {
+      "circulation_pump": { "name": "Circulation pump" },
+      "relay": { "name": "Relay" },
       "summer_function": { "name": "Summer function" }
     },
     "climate": {

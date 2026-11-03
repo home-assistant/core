@@ -44,7 +44,7 @@ from .const import (
     VEHICLE_DATA_NONE,
 )
 
-WINDOWS_ENTITY_ID = "cover.test_windows"
+WINDOWS_ENTITY_ID = "cover.test_vent_windows"
 TONNEAU_ENTITY_ID = "cover.test_tonneau"
 BLE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 TONNEAU_SERVICES = [
@@ -404,7 +404,7 @@ async def test_cover_services(
     await setup_platform(hass, [Platform.COVER])
 
     # Vent Windows
-    entity_id = "cover.test_windows"
+    entity_id = WINDOWS_ENTITY_ID
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.window_control",
         return_value=COMMAND_OK,
@@ -424,7 +424,7 @@ async def test_cover_services(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            {ATTR_ENTITY_ID: [WINDOWS_ENTITY_ID]},
             blocking=True,
         )
         call.assert_called_once()
@@ -569,7 +569,7 @@ async def test_cover_command_errors(hass: HomeAssistant, response: dict) -> None
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            {ATTR_ENTITY_ID: [WINDOWS_ENTITY_ID]},
             blocking=True,
         )
 
@@ -590,7 +590,7 @@ async def test_cover_command_exception(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            {ATTR_ENTITY_ID: [WINDOWS_ENTITY_ID]},
             blocking=True,
         )
 
@@ -635,7 +635,7 @@ async def test_cover_streaming(
     await hass.async_block_till_done()
 
     # Assert the entities restored their values with concrete assertions
-    assert hass.states.get("cover.test_windows").state == CoverState.CLOSED
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == CoverState.CLOSED
     assert hass.states.get("cover.test_charge_port_door").state == CoverState.CLOSED
     # Frunk and trunk don't get closed state from stream, they show unknown
     assert hass.states.get("cover.test_frunk").state == "unknown"
@@ -668,7 +668,7 @@ async def test_cover_streaming(
     await hass.async_block_till_done()
 
     # Assert the entities get new values with concrete assertions
-    assert hass.states.get("cover.test_windows").state == CoverState.OPEN
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == CoverState.OPEN
     # Charge port door doesn't change with CHARGE_PORT_DOOR_OPEN: False
     assert hass.states.get("cover.test_charge_port_door").state == CoverState.CLOSED
     # Frunk and trunk still show unknown (DOOR_STATE doesn't contain trunk state info)
@@ -703,7 +703,7 @@ async def test_cover_streaming(
 
     # Assert the entities get values with concrete assertions
     # Windows stay open when unknown because of previous state restoration
-    assert hass.states.get("cover.test_windows").state == CoverState.OPEN
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == CoverState.OPEN
     assert hass.states.get("cover.test_charge_port_door").state == "unknown"
     assert hass.states.get("cover.test_frunk").state == "unknown"
     assert hass.states.get("cover.test_trunk").state == "unknown"
