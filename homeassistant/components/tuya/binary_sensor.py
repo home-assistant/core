@@ -255,7 +255,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.DROP_STATE,
-            translation_key="drop",
+            translation_key="fall",
             on_value="drop",
         ),
     ),
