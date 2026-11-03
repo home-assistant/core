@@ -192,7 +192,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             await self.coordinator.async_ensure_schedule(self._evo_device)
             until = self.setpoints.get("next_sp_from")
         else:
-            until = dt_util.now() + duration
+            until = dt_util.utcnow() + duration
 
         until = dt_util.as_utc(until) if until else None
 
@@ -382,7 +382,7 @@ class EvoController(EvoClimateEntity):
         if period is not None:
             timing_mode, until = SZ_PERIOD, dt_util.start_of_local_day() + period
         elif duration is not None:
-            timing_mode, until = SZ_DURATION, dt_util.now() + duration
+            timing_mode, until = SZ_DURATION, dt_util.utcnow() + duration
 
         if timing_mode is not None:
             if not mode_info[SZ_CAN_BE_TEMPORARY]:
