@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-       "name": "Home Assistant",
+      "name": "Home Assistant",
       "type": "debugpy",
       "request": "launch",
       "module": "homeassistant",
