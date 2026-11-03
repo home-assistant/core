@@ -312,7 +312,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=discovered_camera_schema,
             errors=errors,
             description_placeholders={
-                ATTR_SERIAL: self.unique_id,
+                "serial": self.unique_id,
                 "ip_address": self.ip_address,
             },
         )

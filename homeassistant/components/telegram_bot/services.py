@@ -590,7 +590,7 @@ def _build_targets(
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_notify_entity",
-                translation_placeholders={ATTR_ENTITY_ID: notify_entity_id},
+                translation_placeholders={"entity_id": notify_entity_id},
             )
         assert entity_entry.config_entry_id is not None
         notify_config_entry = service.hass.config_entries.async_get_known_entry(
