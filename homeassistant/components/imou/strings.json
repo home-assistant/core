@@ -72,10 +72,12 @@
         "name": "Live view SD"
       }
     },
-    "number": {
+    "datetime": {
       "count_down_switch": {
-        "name": "Countdown timer (min)"
-      },
+        "name": "Turn off at"
+      }
+    },
+    "number": {
       "overcharge_switch": {
         "name": "Max power (W)"
       }
