@@ -56,6 +56,10 @@ class DuplicateCredentialsError(Exception):
     """Raised when new credentials match credentials stored in the meantime."""
 
 
+class LastLoginMethodError(Exception):
+    """Raised when removing credentials would leave the owner unable to log in."""
+
+
 async def auth_manager_from_config(
     hass: HomeAssistant,
     provider_configs: list[dict[str, Any]],
@@ -192,6 +196,9 @@ class AuthManager:
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
         self._create_user_lock = asyncio.Lock()
+        # Removals wait for each other, so two can't each count the other's
+        # credentials as the login that is left.
+        self._remove_credentials_lock = asyncio.Lock()
         self._expire_callback: CALLBACK_TYPE | None = None
         self._remove_expired_job = HassJob(
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
@@ -426,11 +433,22 @@ class AuthManager:
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
         """Remove credentials and end the sessions that signed in with them."""
-        if (provider := self._async_get_auth_provider(credentials)) is not None:
-            await provider.async_will_remove_credentials(credentials)
+        async with self._remove_credentials_lock:
+            user = await self.async_get_user_by_credentials(credentials)
+            # Enforced here to cover every way of removing credentials.
+            if (
+                user is not None
+                and user.is_owner
+                and not self.async_has_other_login_method(user, credentials)
+            ):
+                raise LastLoginMethodError(
+                    "Unable to remove the last login of the owner"
+                )
 
-        user = await self.async_get_user_by_credentials(credentials)
-        await self._store.async_remove_credentials(credentials)
+            if (provider := self._async_get_auth_provider(credentials)) is not None:
+                await provider.async_will_remove_credentials(credentials)
+
+            await self._store.async_remove_credentials(credentials)
 
         if user is None:
             return
@@ -440,6 +458,19 @@ class AuthManager:
                 and refresh_token.credential.id == credentials.id
             ):
                 self.async_remove_refresh_token(refresh_token)
+
+    @callback
+    def async_has_other_login_method(
+        self, user: models.User, *credentials: models.Credentials
+    ) -> bool:
+        """Return if the user can still log in without the given credentials."""
+        removed = {credential.id for credential in credentials}
+        return any(
+            credential.id not in removed
+            and (provider := self._async_get_auth_provider(credential)) is not None
+            and provider.async_is_fallback_login(credential)
+            for credential in user.credentials
+        )
 
     async def async_enable_user_mfa(
         self, user: models.User, mfa_module_id: str, data: Any
