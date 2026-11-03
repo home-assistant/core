@@ -157,14 +157,15 @@ class RecordingProcess:
         self._task: asyncio.Task[None] | None = None
         self._input_task: asyncio.Task[None] | None = None
         self._stderr_task: asyncio.Task[None] | None = None
+        self._stop_task: asyncio.Task[None] | None = None
         self._stderr_bytes = 0
         self._ready = asyncio.Event()
         self._subscribers: dict[asyncio.Queue[bytes | None], int] = {}
 
     async def start(self, input_data: AsyncIterator[bytes] | None = None) -> None:
         """Start FFmpeg and its isolated fragment reader."""
-        if self.process is not None:
-            raise RuntimeError("Recording process is already running")
+        if self.process is not None or self._stop_task is not None:
+            raise RuntimeError("Recording process is already running or stopped")
         self.process = await asyncio.create_subprocess_exec(
             *self.command,
             stdout=asyncio.subprocess.PIPE,
@@ -276,6 +277,11 @@ class RecordingProcess:
 
     async def stop(self) -> None:
         """Stop the reader and reap FFmpeg even if it has already exited."""
+        if self._stop_task is None:
+            self._stop_task = asyncio.create_task(self._stop())
+        await asyncio.shield(self._stop_task)
+
+    async def _stop(self) -> None:
         process, task, input_task, stderr_task = (
             self.process,
             self._task,

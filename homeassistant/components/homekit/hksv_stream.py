@@ -474,6 +474,10 @@ def _has_h264_idr(data: bytes, length_size: int) -> bool:
     return False
 
 
+class InsufficientMediaError(ValueError):
+    """The media window is too short to measure keyframe cadence."""
+
+
 def inspect_recording(
     initialization: bytes, fragments: tuple[bytes, ...], require_two_idrs: bool = True
 ) -> MediaObservation:
@@ -572,7 +576,9 @@ def inspect_recording(
             or last <= first
             or len(keyframes) < (2 if require_two_idrs else 1)
         ):
-            raise ValueError("Insufficient media to measure keyframe interval")
+            raise InsufficientMediaError(
+                "Insufficient media to measure keyframe interval"
+            )
         duration = last - first
         return MediaObservation(
             codec.name,

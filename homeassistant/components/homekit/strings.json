@@ -27,6 +27,7 @@
   },
   "options": {
     "error": {
+      "secure_video_camera_limits": "HomeKit Secure Video requires each selected camera to have max_width of at least 1920, max_height of at least 1080, and max_fps of at least 30. Update the camera configuration before enabling it.",
       "secure_video_custom_source": "HomeKit Secure Video cannot use a custom HomeKit stream source. Remove the custom source before enabling it."
     },
     "step": {

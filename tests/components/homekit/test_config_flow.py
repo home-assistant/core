@@ -2127,3 +2127,57 @@ async def test_secure_video_rejects_custom_source(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("limit", "value"),
+    [("max_width", 1919), ("max_height", 1079), ("max_fps", 29)],
+)
+async def test_secure_video_rejects_insufficient_camera_limits(
+    hass: HomeAssistant, limit: str, value: int
+) -> None:
+    """Validate all camera limits before changing any camera options."""
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+    options = dict(config_entry.options)
+    original = {"camera.front": {"support_audio": True}, "camera.rear": {limit: value}}
+    options["entity_config"] = original
+    hass.config_entries.async_update_entry(config_entry, options=options)
+    hass.states.async_set("camera.front", "idle")
+    hass.states.async_set("camera.rear", "idle")
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"domains": ["camera"], "include_exclude_mode": "include"},
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"entities": ["camera.front", "camera.rear"]}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"camera_secure_video": ["camera.front", "camera.rear"]},
+    )
+    assert result["step_id"] == "cameras"
+    assert result["errors"] == {"camera_secure_video": "secure_video_camera_limits"}
+    assert config_entry.options["entity_config"] == original
+    assert result["data_schema"]({})["camera_audio"] == ["camera.front"]
+    hass.states.async_set("binary_sensor.front_motion", "off")
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "camera_secure_video": ["camera.front"],
+            "camera_audio": ["camera.front"],
+        },
+    )
+    assert result["step_id"] == "secure_video"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"linked_motion_sensor": "binary_sensor.front_motion"},
+    )
+    assert result["step_id"] == "bridged_device_triggers"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options["entity_config"]["camera.front"]["secure_video"] is True
+    assert config_entry.options["entity_config"]["camera.rear"] == {limit: value}

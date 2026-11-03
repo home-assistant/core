@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import shlex
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from haffmpeg.core import FFMPEG_STDERR, HAFFmpeg
 from homekit_audio_proxy import AudioProxy
@@ -518,7 +518,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         )
 
     async def _live_video_parameters(
-        self, stream_config: dict[str, Any]
+        self, stream_config: dict[str, Any], shared: SharedCameraStream | None = None
     ) -> tuple[str, str, str, HardwareEncoder | None]:
         """Choose a verified compatible video path for the selected stream."""
         input_source = "-readrate 1 -i pipe:0"
@@ -550,7 +550,9 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             ]
             return input_source, video_codec, shlex.join(encoder_options) + " ", None
         try:
-            observed = await self._hksv.observe_live_source() if self._hksv else None
+            observed = (
+                await self._hksv.observe_live_source(shared) if self._hksv else None
+            )
         except Exception:  # noqa: BLE001 - software fallback preserves live
             _LOGGER.warning("%s: Could not inspect HomeKit live source", self.entity_id)
             observed = None
@@ -661,37 +663,21 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         input_source: str,
         output: str,
         audio_proxy: AudioProxy | None,
+        shared: SharedCameraStream | None,
     ) -> tuple[HAFFmpeg, SharedCameraStream | None] | None:
-        """Acquire the optional shared input and open its live encoder."""
-        shared = None
-        if self._hksv:
-            try:
-                shared = await self._async_get_hksv_source()
-            except ValueError, RuntimeError, OSError, HomeAssistantError:
-                _LOGGER.warning(
-                    "%s: Shared camera source is unavailable", self.entity_id
-                )
-                if audio_proxy:
-                    await audio_proxy.async_stop()
-                return None
-            except BaseException:
-                if audio_proxy:
-                    await audio_proxy.async_stop()
-                raise
+        """Open the live encoder using the session input."""
+        if shared:
             if not self._live_allowed(session_info):
-                await shared.close()
                 if audio_proxy:
                     await audio_proxy.async_stop()
                 return None
             try:
                 burst = await shared.prepare_live_input()
             except BaseException:
-                await shared.close()
                 if audio_proxy:
                     await audio_proxy.async_stop()
                 raise
             if not self._live_allowed(session_info):
-                await shared.close()
                 if audio_proxy:
                     await audio_proxy.async_stop()
                 return None
@@ -710,14 +696,10 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 stdout_pipe=False,
             )
         except BaseException:
-            if shared:
-                await shared.close()
             if audio_proxy:
                 await audio_proxy.async_stop()
             raise
         if not opened:
-            if shared:
-                await shared.close()
             _LOGGER.error("Failed to open ffmpeg stream")
             if audio_proxy:
                 await audio_proxy.async_stop()
@@ -725,8 +707,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
         if not self._live_allowed(session_info):
             await stream.close(timeout=1)
-            if shared:
-                await shared.close()
             if audio_proxy:
                 await audio_proxy.async_stop()
             return None
@@ -757,13 +737,41 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 stream_config.get("fps"),
                 stream_config.get("a_sample_rate"),
             )
+        shared = None
+        if self._hksv:
+            try:
+                shared = await self._async_get_hksv_source()
+            except ValueError, RuntimeError, OSError, HomeAssistantError:
+                _LOGGER.warning(
+                    "%s: Shared camera source is unavailable", self.entity_id
+                )
+                return False
+        try:
+            return await self._start_stream_with_source(
+                session_info, stream_config, shared
+            )
+        finally:
+            if shared and session_info.get(FFMPEG_SHARED) is not shared:
+                await shared.close()
+
+    async def _start_stream_with_source(
+        self,
+        session_info: dict[str, Any],
+        stream_config: dict[str, Any],
+        shared: SharedCameraStream | None,
+    ) -> bool:
+        """Start a live session using its acquired shared source."""
+        if not self._live_allowed(session_info):
+            return False
         if self._hksv:
             (
                 input_source,
                 video_codec,
                 video_options,
                 hardware,
-            ) = await self._live_video_parameters(stream_config)
+            ) = await self._live_video_parameters(stream_config, shared)
+            if not self._live_allowed(session_info):
+                return False
             audio_codec, audio_application, audio_frame_duration = (
                 self._live_audio_parameters(stream_config)
             )
@@ -834,15 +842,17 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         )
         output = VIDEO_OUTPUT.format(**output_vars)
         if self._hksv and self._hksv.preserve_source and video_codec == "copy":
+            if TYPE_CHECKING:
+                assert shared is not None
             native = await self._start_native_live(
-                session_info, stream_config, audio_proxy, output_vars
+                session_info, stream_config, audio_proxy, output_vars, shared
             )
             if native is not None:
                 return native
         if not self._hksv and self.config[CONF_SUPPORT_AUDIO]:
             output = output + " " + AUDIO_OUTPUT.format(**output_vars)
         opened = await self._open_live_stream(
-            session_info, input_source, output, audio_proxy
+            session_info, input_source, output, audio_proxy, shared
         )
         if opened is None:
             return False
@@ -874,6 +884,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         try:
             stderr_reader = await stream.get_reader(source=FFMPEG_STDERR)
         except BaseException:
+            session_info.pop(FFMPEG_SHARED, None)
             await self._release_shared_live(session_info)
             await stream.close(timeout=1)
             if audio_proxy:
@@ -901,20 +912,17 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         stream_config: dict[str, Any],
         audio_proxy: AudioProxy | None,
         output_vars: dict[str, Any],
+        shared: SharedCameraStream,
     ) -> bool | None:
         """Start one native SRTP sender, falling back if initialization fails."""
-        shared = None
         task = None
         try:
-            shared = await self._async_get_hksv_source()
             if not self._live_allowed(session_info):
-                await shared.close()
                 if audio_proxy:
                     await audio_proxy.async_stop()
                 return False
             burst = await shared.prepare_live_input()
             if not self._live_allowed(session_info):
-                await shared.close()
                 if audio_proxy:
                     await audio_proxy.async_stop()
                 return False
@@ -932,13 +940,11 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             if not self._live_allowed(session_info):
                 task.cancel()
                 await asyncio.gather(task, return_exceptions=True)
-                await shared.close()
                 if audio_proxy:
                     await audio_proxy.async_stop()
                 return False
             if task.done():
                 await task
-                await shared.close()
                 _LOGGER.warning(
                     "%s: Native live video stopped during startup; using FFmpeg",
                     self.entity_id,
@@ -948,8 +954,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             if task:
                 task.cancel()
                 await asyncio.gather(task, return_exceptions=True)
-            if shared:
-                await shared.close()
             if audio_proxy:
                 await audio_proxy.async_stop()
             raise
@@ -957,8 +961,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             if task:
                 task.cancel()
                 await asyncio.gather(task, return_exceptions=True)
-            if shared:
-                await shared.close()
             _LOGGER.warning(
                 "%s: Native live video unavailable; using FFmpeg", self.entity_id
             )

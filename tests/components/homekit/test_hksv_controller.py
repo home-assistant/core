@@ -14,6 +14,7 @@ import pytest
 from homeassistant.components.homekit import hksv_controller as c
 from homeassistant.components.homekit.hksv_config import RecordingConfiguration
 from homeassistant.components.homekit.hksv_hardware import HardwareEncoder
+from homeassistant.components.homekit.hksv_stream import SharedFragment
 
 
 class Store:
@@ -728,3 +729,192 @@ async def test_known_video_copy_failure_keeps_audio_copy(
     await controller._monitor(process)
     assert controller._video_copy_disabled
     assert not controller._audio_copy_disabled
+
+
+async def test_close_joins_cancelled_monitor_cleanup() -> None:
+    """Cancellation cannot orphan either part of a recording lease."""
+    gate = asyncio.Event()
+    stopping = asyncio.Event()
+    closing = asyncio.Event()
+
+    class Process:
+        returncode = 0
+
+        async def wait(self) -> None:
+            return
+
+        async def stop(self) -> None:
+            stopping.set()
+            await gate.wait()
+
+    class Shared:
+        closed = False
+
+        async def close(self) -> None:
+            closing.set()
+            await gate.wait()
+            self.closed = True
+
+    async def source() -> None:
+        return None
+
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller.hds = HDS()
+    process = Process()
+    shared = Shared()
+    controller._process = process
+    controller._shared = shared
+    controller._monitor_task = asyncio.create_task(controller._monitor(process))
+    await stopping.wait()
+    controller._monitor_task.cancel()
+    first = asyncio.create_task(controller.close())
+    await asyncio.sleep(0)
+    first.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await first
+    second = asyncio.create_task(controller.close())
+    await asyncio.sleep(0)
+    assert not second.done()
+    gate.set()
+    await second
+    assert closing.is_set()
+    assert shared.closed
+
+
+async def test_start_failure_retries_and_recovers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A transient acquisition failure restarts without another setting write."""
+    shared = MagicMock()
+    shared.close = AsyncMock()
+    source = AsyncMock(side_effect=[RuntimeError("transient"), shared])
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller.active = True
+    controller._ready = True
+    controller.configuration = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    process = MagicMock()
+    process.start = AsyncMock()
+    process.wait = AsyncMock(side_effect=asyncio.CancelledError)
+    monkeypatch.setattr(c, "RecordingProcess", lambda *_: process)
+    monkeypatch.setattr(
+        controller, "_probe_copy", AsyncMock(return_value=(False, False))
+    )
+    monkeypatch.setattr(c._HARDWARE_PROBE, "select", AsyncMock(return_value=None))
+    monkeypatch.setattr(c.asyncio, "sleep", AsyncMock())
+    await controller._reconcile()
+    assert source.await_count == 2
+    assert controller._process is process
+    controller._monitor_task.cancel()
+    await asyncio.gather(controller._monitor_task, return_exceptions=True)
+
+
+async def test_start_failure_stops_at_retry_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Repeated acquisition failures cannot spin indefinitely."""
+    source = AsyncMock(side_effect=RuntimeError("unavailable"))
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller.active = True
+    controller._ready = True
+    controller.configuration = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    monkeypatch.setattr(c.asyncio, "sleep", AsyncMock())
+    await controller._reconcile()
+    assert source.await_count == 4
+    assert controller._restart_attempts == 3
+
+
+async def test_start_failure_retry_respects_privacy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Disabling the camera during retry prevents another acquisition."""
+    source = AsyncMock(side_effect=RuntimeError("unavailable"))
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller.active = True
+    controller._ready = True
+    controller.configuration = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+
+    async def disable(_delay: float) -> None:
+        controller.camera_active = False
+
+    monkeypatch.setattr(c.asyncio, "sleep", disable)
+    await controller._reconcile()
+    assert source.await_count == 1
+
+
+async def test_close_joins_cancelled_lease_close() -> None:
+    """A lease remains owned when shutdown cancels its original waiter."""
+    gate = asyncio.Event()
+    entered = asyncio.Event()
+
+    class Process:
+        returncode = 0
+
+        async def wait(self) -> None:
+            return
+
+        async def stop(self) -> None:
+            return
+
+    class Shared:
+        closed = False
+
+        async def close(self) -> None:
+            entered.set()
+            await gate.wait()
+            self.closed = True
+
+    async def source() -> None:
+        return None
+
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller.hds = HDS()
+    controller._process = process = Process()
+    controller._shared = shared = Shared()
+    controller._monitor_task = asyncio.create_task(controller._monitor(process))
+    await entered.wait()
+    controller._monitor_task.cancel()
+    closing = asyncio.create_task(controller.close())
+    await asyncio.sleep(0)
+    assert not closing.done()
+    gate.set()
+    await closing
+    assert shared.closed
+
+
+async def test_observe_live_source_uses_supplied_lease(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Observe the live lease independently and reject a detached lease."""
+
+    class Lease:
+        _closed = False
+        attached = True
+
+        def snapshot(
+            self, *, include_partial: bool = False
+        ) -> tuple[SharedFragment, ...]:
+            return (SharedFragment(1, 1, b"init", b"data", 4),)
+
+        def _check_attached(self) -> None:
+            if not self.attached:
+                raise ValueError("detached")
+
+    async def source() -> None:
+        return None
+
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    lease = Lease()
+    observation = object()
+    monkeypatch.setattr(c, "inspect_recording", lambda *_: observation)
+    assert await controller.observe_live_source(lease) is observation
+    lease.attached = False
+    assert await controller.observe_live_source(lease) is None
+    lease.attached = True
+    lease._closed = True
+    assert await controller.observe_live_source(lease) is None

@@ -49,6 +49,9 @@ from .const import (
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
     CONF_LINKED_MOTION_SENSOR,
+    CONF_MAX_FPS,
+    CONF_MAX_HEIGHT,
+    CONF_MAX_WIDTH,
     CONF_SECURE_VIDEO,
     CONF_SECURE_VIDEO_NATIVE,
     CONF_SECURE_VIDEO_PREBUFFER,
@@ -59,6 +62,9 @@ from .const import (
     CONF_VIDEO_CODEC,
     DEFAULT_CONFIG_FLOW_PORT,
     DEFAULT_HOMEKIT_MODE,
+    DEFAULT_MAX_FPS,
+    DEFAULT_MAX_HEIGHT,
+    DEFAULT_MAX_WIDTH,
     DEFAULT_SECURE_VIDEO_PREBUFFER,
     DEFAULT_SECURE_VIDEO_RECEIVE_TIMESTAMPS,
     DOMAIN,
@@ -573,6 +579,16 @@ class OptionsFlowHandler(OptionsFlow):
             for entity_id in user_input.get(CONF_CAMERA_SECURE_VIDEO, [])
         ):
             errors[CONF_CAMERA_SECURE_VIDEO] = "secure_video_custom_source"
+            user_input = None
+
+        if user_input is not None and any(
+            config.get(CONF_MAX_WIDTH, DEFAULT_MAX_WIDTH) < 1920
+            or config.get(CONF_MAX_HEIGHT, DEFAULT_MAX_HEIGHT) < 1080
+            or config.get(CONF_MAX_FPS, DEFAULT_MAX_FPS) < 30
+            for entity_id in user_input.get(CONF_CAMERA_SECURE_VIDEO, [])
+            for config in (hk_options.get(CONF_ENTITY_CONFIG, {}).get(entity_id, {}),)
+        ):
+            errors[CONF_CAMERA_SECURE_VIDEO] = "secure_video_camera_limits"
             user_input = None
 
         if user_input is not None:

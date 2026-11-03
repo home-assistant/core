@@ -376,7 +376,7 @@ async def test_monitored_copy_stops_before_invalid_fragment(
     )
     assert [
         f.data async for f in controller._monitored_copy(Shared(), config, True, False)
-    ] == [b"one"]
+    ] == [b"one", b"two"]
     assert controller._video_copy_disabled
 
 
@@ -1016,3 +1016,346 @@ async def test_native_remux_fragments_start_with_idr() -> None:
             assert _has_h264_idr(bytes(packets[0]), (extra[4] & 3) + 1)
             assert float((packets[-1].dts - packets[0].dts) * packets[0].time_base) <= 4
             assert sum(len(packet.decode()) for packet in packets) > 0
+
+
+async def test_strict_copy_uses_contiguous_two_segment_windows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two-second segments each contain only one IDR, so inspect overlapping pairs."""
+    observed = MediaObservation(
+        "h264",
+        66,
+        31,
+        320,
+        240,
+        None,
+        None,
+        None,
+        None,
+        15,
+        2,
+        15,
+        400_000,
+        300_000,
+        4,
+    )
+    windows: list[tuple[bytes, ...]] = []
+
+    def inspect(
+        _init: bytes, data: tuple[bytes, ...], require_two: bool
+    ) -> MediaObservation:
+        assert require_two
+        windows.append(data)
+        if len(data) < 2:
+            raise ValueError("Only one IDR")
+        return observed
+
+    monkeypatch.setattr(hksv_controller, "inspect_recording", inspect)
+    fragments = tuple(SharedFragment(1, i, b"init", bytes([i]), 2) for i in range(1, 4))
+
+    class Shared:
+        def snapshot(self) -> tuple[SharedFragment, ...]:
+            return fragments
+
+        async def fragments(self) -> AsyncIterator[SharedFragment]:
+            for fragment in fragments:
+                yield fragment
+
+    async def source() -> None:
+        return None
+
+    config = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    controller = hksv_controller.HKSVController(
+        source, "ffmpeg", None, preserve_source=False
+    )
+    assert await controller._probe_copy(Shared(), config, False) == (True, False)
+    assert [
+        f.data async for f in controller._monitored_copy(Shared(), config, True, False)
+    ] == [b"\x01", b"\x02", b"\x03"]
+    assert windows == [
+        (b"\x01", b"\x02", b"\x03"),
+        (b"\x01", b"\x02"),
+        (b"\x01", b"\x02", b"\x03"),
+    ]
+    assert not controller._video_copy_disabled
+
+
+@pytest.mark.parametrize(
+    "next_fragment",
+    [
+        SharedFragment(1, 3, b"init", b"gap", 2),
+        SharedFragment(2, 2, b"init", b"generation", 2),
+    ],
+)
+async def test_strict_copy_rejects_discontinuity(
+    monkeypatch: pytest.MonkeyPatch, next_fragment: SharedFragment
+) -> None:
+    """Never inspect or release a mixed or discontinuous strict window."""
+    inspect = pytest.fail
+    monkeypatch.setattr(hksv_controller, "inspect_recording", inspect)
+
+    class Shared:
+        async def fragments(self) -> AsyncIterator[SharedFragment]:
+            yield SharedFragment(1, 1, b"init", b"first", 2)
+            yield next_fragment
+
+    async def source() -> None:
+        return None
+
+    config = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    controller = hksv_controller.HKSVController(
+        source, "ffmpeg", None, preserve_source=False
+    )
+    assert [
+        f async for f in controller._monitored_copy(Shared(), config, True, False)
+    ] == []
+    assert not controller._video_copy_disabled
+
+
+async def test_recording_stop_survives_cancelled_waiter() -> None:
+    """A cancelled stop caller cannot lose the subprocess cleanup task."""
+    gate = asyncio.Event()
+    entered = asyncio.Event()
+
+    class Process:
+        returncode = None
+
+        def terminate(self) -> None:
+            entered.set()
+
+        async def wait(self) -> int:
+            await gate.wait()
+            self.returncode = 0
+            return 0
+
+    recording = RecordingProcess(["ffmpeg"], 4, 300)
+    process = Process()
+    recording.process = process
+    first = asyncio.create_task(recording.stop())
+    await entered.wait()
+    first.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await first
+    second = asyncio.create_task(recording.stop())
+    await asyncio.sleep(0)
+    assert not second.done()
+    gate.set()
+    await second
+    assert process.returncode == 0
+
+
+async def test_strict_copy_waits_for_short_segments(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A short initial window is accumulated without disabling video copy."""
+    observed = MediaObservation(
+        "h264",
+        66,
+        31,
+        320,
+        240,
+        None,
+        None,
+        None,
+        None,
+        15,
+        1,
+        15,
+        400_000,
+        300_000,
+        3,
+    )
+
+    def inspect(
+        _init: bytes, data: tuple[bytes, ...], _strict: bool
+    ) -> MediaObservation:
+        return replace(observed, observation_seconds=len(data) * 0.75)
+
+    monkeypatch.setattr(hksv_controller, "inspect_recording", inspect)
+    fragments = tuple(
+        SharedFragment(1, i, b"init", bytes([i]), 0.75) for i in range(1, 5)
+    )
+
+    class Shared:
+        async def fragments(self) -> AsyncIterator[SharedFragment]:
+            for fragment in fragments:
+                yield fragment
+
+    async def source() -> None:
+        return None
+
+    config = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    controller = hksv_controller.HKSVController(
+        source, "ffmpeg", None, preserve_source=False
+    )
+    assert [
+        f.data async for f in controller._monitored_copy(Shared(), config, True, False)
+    ] == [b"\x01", b"\x02", b"\x03", b"\x04"]
+    assert not controller._video_copy_disabled
+
+
+async def test_native_copy_combines_short_windows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A short native segment can be validated with its predecessor."""
+    observed = MediaObservation(
+        "h264",
+        66,
+        31,
+        320,
+        240,
+        None,
+        None,
+        None,
+        None,
+        15,
+        1,
+        15,
+        400_000,
+        300_000,
+        3,
+    )
+
+    def inspect(
+        _init: bytes, data: tuple[bytes, ...], _strict: bool
+    ) -> MediaObservation:
+        return replace(observed, observation_seconds=len(data) * 1.5)
+
+    monkeypatch.setattr(hksv_controller, "inspect_recording", inspect)
+
+    class Shared:
+        async def fragments(self) -> AsyncIterator[SharedFragment]:
+            yield SharedFragment(1, 1, b"init", b"one", 1.5)
+            yield SharedFragment(1, 2, b"init", b"two", 1.5)
+            yield SharedFragment(1, 3, b"init", b"three", 1.5)
+
+    async def source() -> None:
+        return None
+
+    config = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    controller = hksv_controller.HKSVController(source, "ffmpeg", None)
+    assert [
+        f.data async for f in controller._monitored_copy(Shared(), config, True, False)
+    ] == [b"one", b"two", b"three"]
+    assert not controller._video_copy_disabled
+
+
+async def test_native_copy_bounds_retained_window(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Previously released fragments still count against the window budget."""
+    observed = MediaObservation(
+        "h264",
+        66,
+        31,
+        320,
+        240,
+        None,
+        None,
+        None,
+        None,
+        15,
+        1,
+        15,
+        400_000,
+        300_000,
+        3,
+    )
+    monkeypatch.setattr(hksv_controller, "inspect_recording", lambda *_: observed)
+    large_fragment = b"x" * (17 * 1024 * 1024)
+
+    class Shared:
+        async def fragments(self) -> AsyncIterator[SharedFragment]:
+            yield SharedFragment(1, 1, b"init", large_fragment, 3)
+            yield SharedFragment(1, 2, b"init", large_fragment, 3)
+
+    async def source() -> None:
+        return None
+
+    config = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    controller = hksv_controller.HKSVController(source, "ffmpeg", None)
+    assert [
+        f.sequence
+        async for f in controller._monitored_copy(Shared(), config, True, False)
+    ] == [1]
+    assert controller._video_copy_disabled
+    assert not controller._audio_copy_disabled
+
+
+@pytest.mark.parametrize(
+    ("copy_video", "copy_audio"), [(True, False), (False, True), (True, True)]
+)
+async def test_copy_disables_attempted_tracks_after_insufficient_window(
+    monkeypatch: pytest.MonkeyPatch, copy_video: bool, copy_audio: bool
+) -> None:
+    """Exhausting a short window forces only attempted tracks to fall back."""
+    observed = MediaObservation(
+        "h264",
+        66,
+        31,
+        320,
+        240,
+        "aac",
+        "LC",
+        24000,
+        1,
+        15,
+        1,
+        15,
+        20_000,
+        20_000,
+        0.8,
+        20_000,
+        2,
+        1000,
+        True,
+    )
+    monkeypatch.setattr(hksv_controller, "inspect_recording", lambda *_: observed)
+    fragments = tuple(
+        SharedFragment(1, i, b"init", bytes([i]), 0.1) for i in range(1, 9)
+    )
+
+    class Shared:
+        def snapshot(self) -> tuple[SharedFragment, ...]:
+            return fragments
+
+        async def fragments(self) -> AsyncIterator[SharedFragment]:
+            for fragment in fragments:
+                yield fragment
+
+    async def source() -> None:
+        return None
+
+    config = RecordingConfiguration(
+        4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
+    )
+    controller = hksv_controller.HKSVController(
+        source, "ffmpeg", None, preserve_source=False
+    )
+    assert [
+        f
+        async for f in controller._monitored_copy(
+            Shared(), config, copy_video, copy_audio
+        )
+    ] == []
+    assert controller._video_copy_disabled is copy_video
+    assert controller._audio_copy_disabled is copy_audio
+    monkeypatch.setattr(
+        hksv_controller,
+        "inspect_recording",
+        lambda *_: replace(observed, observation_seconds=3),
+    )
+    assert await controller._probe_copy(Shared(), config, True) == (
+        not copy_video,
+        not copy_audio,
+    )

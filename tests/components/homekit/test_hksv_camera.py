@@ -405,6 +405,8 @@ async def test_secure_video_live_uses_codec_matching_negotiation(
         patch.object(accessory, "_async_ffmpeg_watch", AsyncMock(return_value=True)),
     ):
         assert await accessory.start_stream(session, selection)
+        accessory._hksv.observe_live_source.assert_awaited_once_with(shared)
+        assert session["ffmpeg_shared"] is shared
         output = ffmpeg_process.open.call_args.kwargs["output"]
         assert f"-c:v {expected_codec}" in output
         if expected_codec != "copy":
@@ -420,6 +422,7 @@ async def test_secure_video_live_uses_codec_matching_negotiation(
             assert "scale=" not in output
         accessory._async_stop_ffmpeg_watch("live-test")
         await accessory._release_shared_live(session)
+        shared.close.assert_awaited_once()
     accessory.sessions.clear()
 
 
@@ -439,7 +442,7 @@ async def test_live_permission_rechecked_after_media_observation(
         stream_active=lambda _index: True,
     )
 
-    async def observe() -> None:
+    async def observe(_shared: object) -> None:
         hksv.camera_active = False
 
     hksv.observe_live_source = observe
@@ -458,13 +461,18 @@ async def test_live_permission_rechecked_after_media_observation(
         "v_srtp_key": "synthetic",
         "v_ssrc": 12345,
     }
+    shared = SimpleNamespace(close=AsyncMock())
     with (
+        patch.object(
+            accessory, "_async_get_hksv_source", AsyncMock(return_value=shared)
+        ),
         patch(
             "homeassistant.components.homekit.type_cameras.HAFFmpeg"
         ) as ffmpeg_factory,
     ):
         assert not await accessory.start_stream(session, selection)
         ffmpeg_factory.assert_not_called()
+    shared.close.assert_awaited_once()
 
 
 async def test_shared_live_and_snapshot_privacy(
@@ -701,10 +709,7 @@ async def test_live_exit_releases_shared_source_and_audio_proxy(
     hass: HomeAssistant, run_driver
 ) -> None:
     """An unexpectedly exited encoder releases its shared lease and audio proxy."""
-    from homeassistant.components.homekit.type_cameras import (  # noqa: PLC0415
-        AUDIO_PROXY,
-        FFMPEG_SHARED,
-    )
+    from homeassistant.components.homekit.type_cameras import AUDIO_PROXY, FFMPEG_SHARED  # noqa: PLC0415
 
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
     hass.states.async_set("camera.test", "idle")
@@ -1121,7 +1126,10 @@ async def test_native_live_session_stop_releases_video(
             "homeassistant.components.homekit.type_cameras.NativeVideoSender", Sender
         ),
     ):
-        assert await accessory._start_native_live(session, selection, None, {}) is True
+        assert (
+            await accessory._start_native_live(session, selection, None, {}, shared)
+            is True
+        )
         await accessory.stop_stream(session)
     assert cancelled.is_set()
     shared.close.assert_awaited_once()
@@ -1179,9 +1187,45 @@ async def test_native_live_privacy_change_during_sender_start(
     ):
         assert (
             await accessory._start_native_live(
-                {"id": "privacy", "stream_idx": 0}, selection, None, {}
+                {"id": "privacy", "stream_idx": 0}, selection, None, {}, shared
             )
             is False
         )
     assert cancelled.is_set()
+    shared.close.assert_not_awaited()
+    await shared.close()
+
+
+async def test_live_observation_cancellation_releases_source(
+    hass: HomeAssistant, run_driver
+) -> None:
+    """Cancellation during source inspection releases the live session lease."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    accessory = Camera(
+        hass, run_driver, "Camera", "camera.test", 2, {"video_codec": "copy"}
+    )
+    shared = SimpleNamespace(close=AsyncMock())
+    accessory._hksv = SimpleNamespace(
+        privacy_ready=True,
+        camera_active=True,
+        stream_active=lambda _: True,
+        preserve_source=False,
+        observe_live_source=AsyncMock(side_effect=asyncio.CancelledError),
+    )
+    selection = {
+        "v_profile_id": b"\x02",
+        "v_level": b"\x02",
+        "width": 1280,
+        "height": 720,
+        "fps": 15,
+        "v_max_bitrate": 1500,
+    }
+    with (
+        patch.object(
+            accessory, "_async_get_hksv_source", AsyncMock(return_value=shared)
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await accessory.start_stream({"id": "cancel", "stream_idx": 0}, selection)
     shared.close.assert_awaited_once()

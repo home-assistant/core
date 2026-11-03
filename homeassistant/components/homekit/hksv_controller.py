@@ -26,6 +26,7 @@ from .hksv_media import (
     shared_mp4_input,
 )
 from .hksv_stream import (
+    InsufficientMediaError,
     MediaObservation,
     SharedCameraStream,
     SharedFragment,
@@ -128,6 +129,8 @@ class HKSVController:
         self._force_software = False
         self._lock = asyncio.Lock()
         self._closed = False
+        self._close_task: asyncio.Task[None] | None = None
+        self._cleanup_tasks: set[asyncio.Task[None]] = set()
         self._stream_active = False
         self._hds_accepted = 0
         self._hds_rejected = 0
@@ -376,6 +379,30 @@ class HKSVController:
         if self._reconcile_task is None or self._reconcile_task.done():
             self._reconcile_task = asyncio.create_task(self._reconcile())
 
+    async def _cleanup(
+        self, process: RecordingProcess | None, shared: SharedCameraStream | None
+    ) -> None:
+        """Retain cleanup ownership even when its caller is cancelled."""
+
+        async def cleanup() -> None:
+            try:
+                if process:
+                    await process.stop()
+            finally:
+                if shared:
+                    await shared.close()
+
+        task = asyncio.create_task(cleanup())
+        self._cleanup_tasks.add(task)
+
+        def finished(done: asyncio.Task[None]) -> None:
+            self._cleanup_tasks.discard(done)
+            if not done.cancelled() and (error := done.exception()):
+                _LOGGER.error("HKSV resource cleanup failed", exc_info=error)
+
+        task.add_done_callback(finished)
+        await asyncio.shield(task)
+
     async def _reconcile(self) -> None:
         async with self._lock:
             while not self._closed:
@@ -390,10 +417,8 @@ class HKSVController:
                 previous, self._process = self._process, None
                 old_shared, self._shared = self._shared, None
                 self._process_key = None
-                if previous:
-                    await previous.stop()
-                if old_shared:
-                    await old_shared.close()
+                if previous or old_shared:
+                    await self._cleanup(previous, old_shared)
                 if desired is None:
                     return
                 shared = None
@@ -434,18 +459,21 @@ class HKSVController:
                     )
                     await process.start(shared_mp4_input(source))
                 except asyncio.CancelledError:
-                    if process:
-                        await process.stop()
-                    if shared:
-                        await shared.close()
+                    await self._cleanup(process, shared)
                     raise
                 except Exception:
-                    if process:
-                        await process.stop()
-                    if shared:
-                        await shared.close()
+                    await self._cleanup(process, shared)
                     _LOGGER.exception("Could not start HKSV recording buffer")
-                    return
+                    if self._restart_attempts >= 3:
+                        _LOGGER.error(
+                            "HKSV recording buffer stopped after repeated FFmpeg failures"
+                        )
+                        return
+                    self._restart_attempts += 1
+                    await asyncio.sleep(2 ** (self._restart_attempts - 1))
+                    if not self.active or not self.camera_active:
+                        return
+                    continue
                 # State may have changed while acquiring source or launching FFmpeg.
                 if (
                     self._closed
@@ -454,8 +482,7 @@ class HKSVController:
                     or self.configuration != desired[0]
                     or self.audio_active != desired[1]
                 ):
-                    await process.stop()
-                    await shared.close()
+                    await self._cleanup(process, shared)
                     continue
                 self._process, self._process_key = process, desired
                 self._active_hardware = hardware
@@ -473,9 +500,12 @@ class HKSVController:
                 self._monitor_task = asyncio.create_task(self._monitor(process))
                 return
 
-    async def observe_live_source(self) -> MediaObservation | None:
+    async def observe_live_source(
+        self, shared: SharedCameraStream | None = None
+    ) -> MediaObservation | None:
         """Inspect current shared media without opening another camera connection."""
-        shared = self._shared
+        supplied = shared is not None
+        shared = shared or self._shared
         if shared is None:
             return None
         try:
@@ -499,6 +529,14 @@ class HKSVController:
             _LOGGER.debug("Could not inspect shared source for live video")
             return None
         else:
+            if supplied:
+                try:
+                    shared._check_attached()  # noqa: SLF001
+                    if shared._closed:  # noqa: SLF001
+                        return None
+                except ValueError:
+                    return None
+                return observed
             return observed if shared is self._shared else None
 
     async def _probe_copy(
@@ -515,15 +553,32 @@ class HKSVController:
                 if self.preserve_source
                 else shared.snapshot()
             )
-            if fragments:
+            window = fragments[-1:]
+            if not self.preserve_source:
+                contiguous: list[SharedFragment] = []
+                for fragment in reversed(fragments[-8:]):
+                    if contiguous and (
+                        fragment.stream_id != contiguous[0].stream_id
+                        or fragment.sequence + 1 != contiguous[0].sequence
+                        or fragment.initialization != contiguous[0].initialization
+                    ):
+                        break
+                    contiguous.insert(0, fragment)
+                window = tuple(contiguous)
+            if window and (self.preserve_source or len(window) >= 2):
                 try:
                     observed = await asyncio.to_thread(
                         inspect_recording,
-                        fragments[-1].initialization,
-                        (fragments[-1].data,),
+                        window[0].initialization,
+                        tuple(fragment.data for fragment in window),
                         not self.preserve_source,
                     )
-                except ValueError, OSError:
+                except InsufficientMediaError:
+                    pass
+                except ValueError:
+                    if not self.preserve_source:
+                        return False, False
+                except OSError:
                     if not self.preserve_source:
                         return False, False
                 else:
@@ -562,25 +617,59 @@ class HKSVController:
         copy_audio: bool,
     ) -> AsyncIterator[SharedFragment]:
         """Validate each overlapping window before releasing copied media."""
-        previous: SharedFragment | None = None
+        window: list[SharedFragment] = []
+        pending: list[SharedFragment] = []
         async for fragment in shared.fragments():
-            if previous is not None and fragment.stream_id != previous.stream_id:
+            if window and (
+                fragment.stream_id != window[-1].stream_id
+                or fragment.sequence != window[-1].sequence + 1
+                or fragment.initialization != window[-1].initialization
+            ):
                 return
-            windows: list[tuple[bytes, ...]] = [(fragment.data,)]
-            if previous is not None:
-                windows.append((previous.data, fragment.data))
-            for window in windows:
+            window.append(fragment)
+            window = window[-(2 if self.preserve_source else 8) :]
+            pending.append(fragment)
+            if (
+                sum(len(item.data) for item in pending) > 32 * 1024 * 1024
+                or sum(len(item.data) for item in window) > 32 * 1024 * 1024
+            ):
+                self._video_copy_disabled |= copy_video
+                self._audio_copy_disabled |= copy_audio
+                return
+            if not self.preserve_source and len(window) < 2:
+                continue
+            windows: list[tuple[bytes, ...]] = (
+                [(fragment.data,)] if self.preserve_source else []
+            )
+            if len(window) >= 2:
+                windows.append(tuple(item.data for item in window))
+            insufficient = False
+            for index, data in enumerate(windows):
                 try:
                     observed = await asyncio.to_thread(
                         inspect_recording,
                         fragment.initialization,
-                        window,
+                        data,
                         not self.preserve_source,
                     )
-                except ValueError, OSError:
+                except InsufficientMediaError:
+                    if index + 1 < len(windows):
+                        continue
+                    insufficient = True
+                    break
+                except ValueError:
                     self._video_copy_disabled |= copy_video
                     self._audio_copy_disabled |= copy_audio
                     return
+                except OSError:
+                    self._video_copy_disabled |= copy_video
+                    self._audio_copy_disabled |= copy_audio
+                    return
+                if observed.observation_seconds < 2:
+                    if index + 1 < len(windows):
+                        continue
+                    insufficient = True
+                    break
                 video_failed = copy_video and not can_copy_video(
                     observed, config, preserve_source=self.preserve_source
                 )
@@ -589,8 +678,15 @@ class HKSVController:
                     self._video_copy_disabled |= video_failed
                     self._audio_copy_disabled |= audio_failed
                     return
-            yield fragment
-            previous = fragment
+            if insufficient:
+                if len(pending) == 8:
+                    self._video_copy_disabled |= copy_video
+                    self._audio_copy_disabled |= copy_audio
+                    return
+                continue
+            for buffered in pending:
+                yield buffered
+            pending.clear()
 
     async def _monitor(self, process: RecordingProcess) -> None:
         """Restart unexpectedly terminated encoders at most three times."""
@@ -626,9 +722,7 @@ class HKSVController:
         self._process = None
         self._process_key = None
         shared, self._shared = self._shared, None
-        await process.stop()
-        if shared:
-            await shared.close()
+        await self._cleanup(process, shared)
         if time.monotonic() - started >= 60:
             self._restart_attempts = 0
         if self._restart_attempts >= 3:
@@ -725,8 +819,14 @@ class HKSVController:
                 )
 
     async def close(self) -> None:
-        """Stop sessions, background reconciliation and the FFmpeg child."""
+        """Stop sessions and join cleanup even if the caller is cancelled."""
         self._closed = True
+        if self._close_task is None:
+            self._close_task = asyncio.create_task(self._close())
+        await asyncio.shield(self._close_task)
+
+    async def _close(self) -> None:
+        """Own the shutdown independently of individual callers."""
         if self._ready:
             try:
                 await self.store.async_save(self._state())
@@ -740,10 +840,10 @@ class HKSVController:
             self._reconcile_task.cancel()
             await asyncio.gather(self._reconcile_task, return_exceptions=True)
         async with self._lock:
-            if self._process:
-                await self._process.stop()
-                self._process = None
-            if self._shared:
-                await self._shared.close()
-                self._shared = None
+            process, self._process = self._process, None
+            shared, self._shared = self._shared, None
+            if process or shared:
+                await self._cleanup(process, shared)
             self._process_key = None
+        if self._cleanup_tasks:
+            await asyncio.gather(*self._cleanup_tasks, return_exceptions=True)
