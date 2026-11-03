@@ -1419,7 +1419,7 @@ async def _async_convert_audio_owned(  # noqa: C901
         check_shutdown()
         complete = True
     finally:
-        primary_error = sys.exception()
+        primary_error = None if complete else sys.exception()
 
         cleanup_task = ensure_cleanup()
         try:
